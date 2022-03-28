@@ -42,6 +42,7 @@
 #include "ns3/ipv4-l3-protocol.h"
 #include "ns3/ipv6-l3-protocol.h"
 
+#include <atomic>
 #include <map>
 #include <unordered_map>
 
@@ -446,7 +447,14 @@ private:
    * Flag to mark when caches are dirty and need to be flushed.  
    * Used for lazy cleanup of caches when there are many topology changes.
    */
+#ifdef NS3_MTP
+  static std::atomic<bool> g_isCacheDirty;
+  static std::atomic<bool> g_cacheFlushing;
+  static std::atomic<bool> g_isMapBuilt;
+  static std::atomic<bool> g_mapBuilding;
+#else
   static bool g_isCacheDirty;
+#endif
 
   /**
    * Nix Epoch, incremented each time a flush is perfomed.

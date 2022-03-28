@@ -41,8 +41,22 @@ NS_LOG_COMPONENT_DEFINE ("NixVectorRouting");
 NS_OBJECT_TEMPLATE_CLASS_DEFINE (NixVectorRouting, Ipv4RoutingProtocol);
 NS_OBJECT_TEMPLATE_CLASS_DEFINE (NixVectorRouting, Ipv6RoutingProtocol);
 
+#ifdef NS3_MTP
+template <typename T>
+std::atomic<bool> NixVectorRouting<T>::g_isCacheDirty (false);
+
+template <typename T>
+std::atomic<bool> NixVectorRouting<T>::g_cacheFlushing (false);
+
+template <typename T>
+std::atomic<bool> NixVectorRouting<T>::g_isMapBuilt (false);
+
+template <typename T>
+std::atomic<bool> NixVectorRouting<T>::g_mapBuilding (false);
+#else
 template <typename T>
 bool NixVectorRouting<T>::g_isCacheDirty = false;
+#endif
 
 // Epoch starts from one to make it easier to spot an uninitialized NixVector during debug.
 template <typename T>
@@ -162,6 +176,9 @@ NixVectorRouting<T>::FlushGlobalNixRoutingCache (void) const
   // IP address to node mapping is potentially invalid so clear it.
   // Will be repopulated in lazy evaluation when mapping is needed.
   g_ipAddressToNodeMap.clear ();
+#ifdef NS3_MTP
+  g_isMapBuilt.store (false, std::memory_order_release);
+#endif
 }
 
 template <typename T>
@@ -500,10 +517,27 @@ NixVectorRouting<T>::GetNodeByIp (IpAddress dest) const
   NS_LOG_FUNCTION (this << dest);
 
   // Populate lookup table if is empty.
+#ifdef NS3_MTP
+  if (!g_isMapBuilt.load (std::memory_order_acquire))
+    {
+      if (g_mapBuilding.exchange (true, std::memory_order_relaxed))
+        {
+          while (!g_isMapBuilt.load (std::memory_order_acquire))
+            ;
+        }
+      else
+        {
+          BuildIpAddressToNodeMap ();
+          g_isMapBuilt.store (true, std::memory_order_release);
+          g_mapBuilding.store (false, std::memory_order_release);
+        }
+    }
+#else
   if ( g_ipAddressToNodeMap.empty () )
     {
       BuildIpAddressToNodeMap ();
     }
+#endif
 
   Ptr<Node> destNode;
 
@@ -527,10 +561,27 @@ Ptr<typename NixVectorRouting<T>::IpInterface>
 NixVectorRouting<T>::GetInterfaceByNetDevice (Ptr<NetDevice> netDevice) const
 {
   // Populate lookup table if is empty.
+#ifdef NS3_MTP
+  if (!g_isMapBuilt.load (std::memory_order_acquire))
+    {
+      if (g_mapBuilding.exchange (true, std::memory_order_relaxed))
+        {
+          while (!g_isMapBuilt.load (std::memory_order_acquire))
+            ;
+        }
+      else
+        {
+          BuildIpAddressToNodeMap ();
+          g_isMapBuilt.store (true, std::memory_order_release);
+          g_mapBuilding.store (false, std::memory_order_release);
+        }
+    }
+#else
   if ( g_netdeviceToIpInterfaceMap.empty () )
     {
       BuildIpAddressToNodeMap ();
     }
+#endif
 
   Ptr<IpInterface> ipInterface;
 
@@ -1039,37 +1090,61 @@ template <typename T>
 void
 NixVectorRouting<T>::NotifyInterfaceUp (uint32_t i)
 {
+#ifdef NS3_MTP
+  g_isCacheDirty.store (true, std::memory_order_release);
+#else
   g_isCacheDirty = true;
+#endif
 }
 template <typename T>
 void
 NixVectorRouting<T>::NotifyInterfaceDown (uint32_t i)
 {
+#ifdef NS3_MTP
+  g_isCacheDirty.store (true, std::memory_order_release);
+#else
   g_isCacheDirty = true;
+#endif
 }
 template <typename T>
 void
 NixVectorRouting<T>::NotifyAddAddress (uint32_t interface, IpInterfaceAddress address)
 {
+#ifdef NS3_MTP
+  g_isCacheDirty.store (true, std::memory_order_release);
+#else
   g_isCacheDirty = true;
+#endif
 }
 template <typename T>
 void
 NixVectorRouting<T>::NotifyRemoveAddress (uint32_t interface, IpInterfaceAddress address)
 {
+#ifdef NS3_MTP
+  g_isCacheDirty.store (true, std::memory_order_release);
+#else
   g_isCacheDirty = true;
+#endif
 }
 template <typename T>
 void
 NixVectorRouting<T>::NotifyAddRoute (IpAddress dst, Ipv6Prefix mask, IpAddress nextHop, uint32_t interface, IpAddress prefixToUse)
 {
+#ifdef NS3_MTP
+  g_isCacheDirty.store (true, std::memory_order_release);
+#else
   g_isCacheDirty = true;
+#endif
 }
 template <typename T>
 void
 NixVectorRouting<T>::NotifyRemoveRoute (IpAddress dst, Ipv6Prefix mask, IpAddress nextHop, uint32_t interface, IpAddress prefixToUse)
 {
+#ifdef NS3_MTP
+  g_isCacheDirty.store (true, std::memory_order_release);
+#else
   g_isCacheDirty = true;
+#endif
 }
 
 template <typename T>
@@ -1365,12 +1440,29 @@ template <typename T>
 void 
 NixVectorRouting<T>::CheckCacheStateAndFlush (void) const
 {
+#ifdef NS3_MTP
+  if (g_isCacheDirty.load (std::memory_order_acquire))
+    {
+      if (g_cacheFlushing.exchange (true, std::memory_order_relaxed))
+        {
+          while (g_isCacheDirty.load (std::memory_order_acquire))
+            ;
+        }
+      else
+        {
+          FlushGlobalNixRoutingCache ();
+          g_isCacheDirty.store (false, std::memory_order_release);
+          g_cacheFlushing.store (false, std::memory_order_release);
+        }
+    }
+#else
   if (g_isCacheDirty)
     {
       FlushGlobalNixRoutingCache ();
       g_epoch++;
       g_isCacheDirty = false;
     }
+#endif
 }
 
 /* Public template function declarations */
