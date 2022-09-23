@@ -91,6 +91,10 @@ NullMessageSimulatorImpl::NullMessageSimulatorImpl ()
 
   NS_ASSERT (g_instance == 0);
   g_instance = this;
+
+  m_msgTime = 0;
+  m_syncTime = 0;
+  m_execTime = 0;
 }
 
 NullMessageSimulatorImpl::~NullMessageSimulatorImpl ()
@@ -308,21 +312,48 @@ NullMessageSimulatorImpl::Run (void)
 
   // Stop will be set if stop is called by simulation.
   m_stop = false;
+
+  std::chrono::time_point<std::chrono::system_clock> msgStart, msgEnd, syncStart, syncEnd, execStart, execEnd;
+
   while (!IsFinished ())
     {
       Time nextTime = Next ();
 
       if ( nextTime <= GetSafeTime () )
         {
+          execStart = std::chrono::system_clock::now ();
+
           ProcessOneEvent ();
+
+          execEnd = std::chrono::system_clock::now ();
+          m_execTime += std::chrono::duration_cast<std::chrono::nanoseconds> (execEnd - execStart).count ();
+          msgStart = std::chrono::system_clock::now ();
+
           HandleArrivingMessagesNonBlocking ();
+
+          msgEnd = std::chrono::system_clock::now ();
+          m_msgTime += std::chrono::duration_cast<std::chrono::nanoseconds> (msgEnd - msgStart).count ();
         }
       else
         {
+          syncStart = std::chrono::system_clock::now ();
+
           // Block until packet or Null Message has been received.
           HandleArrivingMessagesBlocking ();
+
+          syncEnd = std::chrono::system_clock::now ();
+          m_syncTime += std::chrono::duration_cast<std::chrono::nanoseconds> (syncEnd - syncStart).count ();
         }
     }
+
+  std::ofstream fout;
+  fout.open ("results/NM-" + std::to_string (m_myId) + ".csv");
+  fout << "events,msg,sync,exec\n";
+  fout << m_eventCount << ','
+    << m_msgTime << ','
+    << m_syncTime << ','
+    << m_execTime << '\n';
+  fout.close ();
 }
 
 void

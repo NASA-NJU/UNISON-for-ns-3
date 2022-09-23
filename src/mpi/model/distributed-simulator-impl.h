@@ -32,6 +32,8 @@
 #include "ns3/ptr.h"
 
 #include <list>
+#include <vector>
+#include <chrono>
 
 namespace ns3 {
 
@@ -230,6 +232,10 @@ private:
   Time         m_grantedTime; /**< End of current window. */
   static Time  m_lookAhead;   /**< Current window size. */
 
+  std::vector<std::chrono::nanoseconds::rep> m_msgTime;
+  std::vector<std::chrono::nanoseconds::rep> m_syncTime;
+  std::vector<std::chrono::nanoseconds::rep> m_execTime;
+  std::vector<uint32_t> m_roundEventCount;
 };
 
 } // namespace ns3

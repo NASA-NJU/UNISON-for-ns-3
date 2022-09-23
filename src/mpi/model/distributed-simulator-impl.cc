@@ -39,6 +39,8 @@
 
 #include <mpi.h>
 #include <cmath>
+#include <fstream>
+#include <numeric>
 
 namespace ns3 {
 
@@ -366,6 +368,12 @@ DistributedSimulatorImpl::Run (void)
   CalculateLookAhead ();
   m_stop = false;
   m_globalFinished = false;
+
+  uint32_t eventCount = 0;
+  std::chrono::time_point<std::chrono::system_clock> msgStart, msgEnd, syncStart, syncEnd, execStart, execEnd;
+  std::chrono::nanoseconds::rep msgTime = 0, syncTime = 0, execTime = 0;
+  execStart = std::chrono::system_clock::now ();
+
   while (!m_globalFinished)
     {
       Time nextTime = Next ();
@@ -377,6 +385,10 @@ DistributedSimulatorImpl::Run (void)
       // completed.
       if (nextTime > m_grantedTime || IsLocalFinished () )
         {
+          execEnd = std::chrono::system_clock::now ();
+          execTime += std::chrono::duration_cast<std::chrono::nanoseconds> (execEnd - execStart).count ();
+          msgStart = std::chrono::system_clock::now ();
+
           // Can't process next event, calculate a new LBTS
           // First receive any pending messages
           GrantedTimeWindowMpiInterface::ReceiveMessages ();
@@ -384,6 +396,10 @@ DistributedSimulatorImpl::Run (void)
           nextTime = Next ();
           // And check for send completes
           GrantedTimeWindowMpiInterface::TestSendComplete ();
+
+          msgEnd = std::chrono::system_clock::now ();
+          syncStart = std::chrono::system_clock::now ();
+
           // Finally calculate the lbts
           LbtsMessage lMsg (GrantedTimeWindowMpiInterface::GetRxCount (), GrantedTimeWindowMpiInterface::GetTxCount (), 
                             m_myId, IsLocalFinished (), nextTime);
@@ -427,6 +443,26 @@ DistributedSimulatorImpl::Run (void)
                   // Overflow is possible here if near end of representable time.
                   m_grantedTime = smallestTime + m_lookAhead;
                 }
+
+              syncEnd = std::chrono::system_clock::now ();
+              msgTime += std::chrono::duration_cast<std::chrono::nanoseconds> (msgEnd - msgStart).count ();
+              syncTime += std::chrono::duration_cast<std::chrono::nanoseconds> (syncEnd - syncStart).count ();
+              m_msgTime.push_back (msgTime);
+              m_syncTime.push_back (syncTime);
+              m_execTime.push_back (execTime);
+              m_roundEventCount.push_back (eventCount);
+              msgTime = 0;
+              syncTime = 0;
+              execTime = 0;
+              eventCount = 0;
+              execStart = std::chrono::system_clock::now ();
+            }
+          else
+            {
+              syncEnd = std::chrono::system_clock::now ();
+              msgTime += std::chrono::duration_cast<std::chrono::nanoseconds> (msgEnd - msgStart).count ();
+              syncTime += std::chrono::duration_cast<std::chrono::nanoseconds> (syncEnd - syncStart).count ();
+              execStart = std::chrono::system_clock::now ();
             }
         }
 
@@ -435,8 +471,27 @@ DistributedSimulatorImpl::Run (void)
       if ( (nextTime <= m_grantedTime) && (!IsLocalFinished ()) )
         { // Safe to process
           ProcessOneEvent ();
+          eventCount++;
         }
     }
+
+  std::ofstream fout;
+  fout.open ("results/BS-" + std::to_string (m_myId) + ".csv");
+  fout << "round,events,msg,sync,exec\n";
+  fout << -1 << ','
+    << std::accumulate(m_roundEventCount.begin (), m_roundEventCount.end (), 0ULL) << ','
+    << std::accumulate(m_msgTime.begin (), m_msgTime.end (), 0ULL) << ','
+    << std::accumulate(m_syncTime.begin (), m_syncTime.end (), 0ULL) << ','
+    << std::accumulate(m_execTime.begin (), m_execTime.end (), 0ULL) << '\n';
+  for (uint32_t i = 0; i < m_roundEventCount.size (); i++)
+    {
+      fout << i << ','
+        << m_roundEventCount[i] << ','
+        << m_msgTime[i] << ','
+        << m_syncTime[i] << ','
+        << m_execTime[i] << '\n';
+    }
+  fout.close ();
 
   // If the simulator stopped naturally by lack of events, make a
   // consistency test to check that we didn't lose any events along the way.

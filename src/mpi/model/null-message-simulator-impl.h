@@ -36,6 +36,8 @@
 #include <list>
 #include <iostream>
 #include <fstream>
+#include <vector>
+#include <chrono>
 
 namespace ns3 {
 
@@ -230,6 +232,10 @@ private:
 
   /** Singleton instance. */
   static NullMessageSimulatorImpl* g_instance;
+
+  std::chrono::nanoseconds::rep m_msgTime;
+  std::chrono::nanoseconds::rep m_syncTime;
+  std::chrono::nanoseconds::rep m_execTime;
 };
 
 } // namespace ns3
