@@ -1,225 +1,160 @@
 
-UNISON for ns-3
+Artifact Evaluation for UNISON
 ================================
 A fast and user-transparent parallel simulator implementation for ns-3.
-More information about UNISON can be found in our EuroSys '24 paper (coming soon).
 
-## Getting Started
+## Artifact Evaluation Overview
 
-The quickest way to get started is to type the command
+In this branch, you can find various topology models in the `scratch` folder.
 
-```shell
-./ns3 configure --enable-mtp --enable-examples
-```
+There are a lot of parameters you can set via command lines for each topology model.
+The parameters are stored and configured in `scratch/utils/common.cc`.
+Besides, we write a Poisson traffic generator `scratch/utils/traffic-generator.cc` to generate workload according to a flow distribution.
+Every topology model will output flow statistics after the simulation if the FlowMonitor is enabled.
 
-> The build profile is set to default (which uses `-O2 -g` compiler flags) in this case.
-> If you want to get `-O3` optimized build and discard all log outputs, please add `-d optimized` arguments.
+In `scratch/utils/common.cc`, we defined a lot of macros so that the simulator for these models is automatically set according to your build profile.
+`--enable-mtp` will use UNISON, `--enable-mpi` will use traditional distributed simulators.
+If both are enabled, the hybrid simulator is used, and the default sequential simulator is used if neither is enabled.
 
-The `--enable-mtp` option will enable multi-threaded parallelization.
-You can verify UNISON is enabled by checking whether `Multithreaded Simulation : ON` appears in the optional feature list.
+To compare these simulators and parameters, we provided a utility script `exp.py`.
+It can initialize required environments, install dependencies and run simulations according to your parameter sets automatically.
+Please see the document below and the source code for more details.
 
-Now, let's build and run a DCTCP example with default sequential simulation and parallel simulation (using 4 threads) respectively:
+## Setup
 
-```shell
-./ns3 build dctcp-example dctcp-example-mtp
-time ./ns3 run dctcp-example
-time ./ns3 run dctcp-example-mtp
-```
-
-The simulation should finish in 4-5 minutes for `dctcp-example` and 1-2 minutes for `dctcp-example-mtp`, depending on your hardware and your build profile.
-The output in `*.dat` should be in accordance with the comments in the source file.
-
-The speedup of UNISON is more significant for larger topologies and traffic volumes.
-If you are interested in using it to simulate topologies like fat-tree, BCube and 2D-torus, please refer to [Running Evaluations](#running-evaluations).
-
-## Speedup Your Existing Code
-
-To understand how UNISON affects your model code, let's find the differences between two versions of the source files of the above example:
+If you are using Ubuntu, you can initialize the environment in every host you want to run by executing
 
 ```shell
-diff examples/tcp/dctcp-example.cc examples/mtp/dctcp-example-mtp.cc
+./exp.py init
 ```
 
-It turns out that to bring UNISON to existing model code, all you need to do is to include the `ns3/mtp-interface.h` header file and add the following line at the beginning of the `main` function:
+This will turn off hyperthreading, allow kernel profiling and install dependencies including CMake, MPI and Linux perf tools.
 
-```c++
-MtpInterface::Enable (numberOfThreads);
+Additionally, if you want to run distributed simulation experiments (whose name typically contains `-distributed` in `exp.py`), you should have multiple hosts with the same configuration in a LAN.
+You should choose one of the hosts as the master host.
+The master host should be able to SSH into other hosts directly without passwords.
+Then, you should adjust the `conf` variable at the top of `exp.py` of the master host.
+Please make sure that the maximum number of physical cores per host is set according to your hardware info and that the IP addresses of every host (including the master host) are set correctly.
+
+To make sure every host can see the same code and executables, you have to set up an NFS service on the master host, assuming you cloned this repository in your home folder:
+
+```shell
+sudo apt install nfs-kernel-server
+echo "/home/$(whoami)/UNISON-for-ns-3 *(rw,sync,no_root_squash,no_subtree_check)" | sudo tee /etc/exports
+sudo exportfs -a
+sudo service nfs-kernel-server restart
 ```
 
-The parameter `numberOfThreads` is optional.
-If it is omitted, the number of threads is automatically chosen and will not exceed the maximum number of available hardware threads on your system. If you want to enable UNISON for distributed simulation on existing MPI programs for further speedup, place the above line before MPI initialization.
+Then, mount NFS on every other host:
 
-UNISON resolved a lot of thread-safety issues with ns-3's architecture.
-You don't need to consider these issues on your own for most of the time, except if you have custom global statistics other than the built-in flow-monitor.
-In the letter case, if multiple nodes can access your global statistics, you can replace them with atomic variables via `std::atomic<>`.
-For complex custom data structures, you can create critical sections by adding
-
-```c++
-MtpInterface::CriticalSection cs;
+```shell
+mkdir UNISON-for-ns-3
+sudo mount -t nfs $IP_OF_YOUR_MASTER_HOST:/home/$(whoami)/UNISON-for-ns-3 ~/UNISON-for-ns-3
 ```
 
-at the beginning of your methods.
+After these steps, you can now safely run distributed simulation experiments by invoking `exp.py` on the master host.
 
 ## Running Evaluations
 
-To evaluate UNISON, please checkout to [unison-evaluations](https://github.com/NASA-NJU/UNISON-for-ns-3/tree/unison-evaluations) branch.
-In this branch, you can find various topology models in the `scratch` folder.
-There are a lot of parameters you can set for each topology.
-We provided a utility script `exp.py` to compare these simulators and parameters.
-We also provided `process.py` to convert these raw experiment data to CSV files suitable for ploting.
-Please see the [README in that branch](https://github.com/NASA-NJU/UNISON-for-ns-3/tree/unison-evaluations) for more details.
-
-## Module Documentation
-
-### 1. Overview
-
-UNISON for ns-3 is mainly implemented in the `mtp` module, which stands for multi-threaded parallelization.
-This module contains three parts: A parallel simulator implementation `multithreaded-simulator-impl`, an interface to users `mtp-interface`, and `logical-process` to represent LPs in terms of parallel simulation.
-
-All LPs and threads are stored in the `mtp-interface`.
-It controls the simulation progress, schedules LPs to threads and manages the lifecycles of LPs and threads.
-The interface also provides some methods and options for users to tweak the simulation.
-
-Each LP's logic is implemented in `logical-process`. It contains most of the methods of the default sequential simulator plus some auxiliary methods for parallel simulation.
-
-The simulator implementation `multithreaded-simulator-impl` is a derived class from the base simulator.
-It converts calls to the base simulator into calls to logical processes based on the context of the current thread.
-It also provides a partition method for automatic fine-grained topology partition.
-
-For distributed simulation with MPI, we added `hybrid-simulator-impl` in the `mpi` module.
-This simulator uses both `mtp-interface` and `mpi-interface` to coordinate local LPs and global MPI communications.
-We also modified the module to make it locally thread-safe.
-
-### 2. Modifications to ns-3 Architecture
-
-In addition to the `mtp` and `mpi` modules, we also modified the following part of the ns-3 architecture to make it thread-safe, also with some bug fixing for ns-3.
-
-Modifications to the build system to provide `--enable-mtp` option to enable/disable UNISON:
-
-```
-ns3                                                |   2 +
-CMakeLists.txt                                     |   1 +
-build-support/custom-modules/ns3-configtable.cmake |   3 +
-build-support/macros-and-definitions.cmake         |  10 +
+To run one experiment, you can type
+```shell
+nohup ./exp.py $EXPERIMENT_NAME > nohup.out &
 ```
 
-Modifications to the `core` module to make reference counting thread-safe:
+and the script will handle the compiling, running, result parsing process automatically for you.
+It is recommended to use `nohup` since the experiment can take hours to days to finish.
+You can also use `tmux` or `screen` instead of `nohup`.
 
-```
-src/core/CMakeLists.txt                            |   1 +
-src/core/model/atomic-counter.h                    |  49 ++
-src/core/model/hash.h                              |  16 +
-src/core/model/object.cc                           |   2 +
-src/core/model/simple-ref-count.h                  |  11 +-
-```
+You can see all available experiment names, their parameters and their estimated finish time at the bottom of the `exp.py`.
+The description of each parameter and their default values are in the `scratch/utils/common.cc`.
+Here we list some common parameters used during our experiments:
 
-Modifications to the `network` module to make packets thread-safe:
+- `k`: Fat-tree degree
+- `cluster`: # of clusters in a fat-tree, the default is set to `k`
+- `row`: # of 2D-Torus row
+- `col`: # of 2D-Torus column
+- `delay`: Link propagation delay in nanoseconds
+- `bandwidth`: Link bandwidth
+- `buffer`: Buffer size for each port, default is 4MB
+- `ecn`: Enable ECN, default is true
+- `ecmp`: Use per-packet ECMP routing, default is true
+- `flow`: Use per-flow ECMP routing, default is false
+- `rip`: Use RIP dynamic routing, default is false
+- `tcp`: The TCP protocol to be used, default is DCTCP
+- `cdf`: Flow size distribution file. You can find these CDF files in `scratch/cdf`
+- `load`: Traffic load relative to the bisection bandwidth of the current topology
+- `incast`: Incast traffic ratio
+- `victim`: Incast traffic destinations. Multiple destinations are separated by comma
+- `seed`: Random seed for flow generation and other random events in the simulation
+- `flowmon`: Use FlowMonitor to get flow statistics, default is false
+- `time`: Simulated time in seconds
+- `interval`: Print the simulation progress for every `interval` seconds
+- `core`: Number of threads for UNISON, or number of LPs for other PDES algorithms
 
-```
-src/network/model/buffer.cc                        |  15 +-
-src/network/model/buffer.h                         |   7 +
-src/network/model/byte-tag-list.cc                 |  14 +-
-src/network/model/node.cc                          |   7 +
-src/network/model/node.h                           |   7 +
-src/network/model/packet-metadata.cc               |  10 +-
-src/network/model/packet-metadata.h                |  11 +-
-src/network/model/packet-tag-list.h                |  11 +-
-src/network/model/socket.cc                        |   6 +
-src/network/utils/simple-net-device.cc             |   4 +
-```
+If you want to iteratively run experiments under multiple parameter combinations, you can pass a list instead of a single value.
+Moreover, if your parameters are co-relative, you can pass lambda functions to set your parameters.
+The `exp.py` script will automatically handle these cases for you.
+Feel free to adjust these parameters and create new experiments for your own research.
 
-Modifications to the `internet` module to make it thread-safe, plus adding per-flow ECMP routing and increasing # of available ports to support a large number of flows:
-
-```
-src/internet/model/global-route-manager-impl.cc    |   2 +
-src/internet/model/ipv4-end-point-demux.cc         |   2 +-
-src/internet/model/ipv4-global-routing.cc          |  31 +-
-src/internet/model/ipv4-global-routing.h           |   5 +-
-src/internet/model/ipv4-packet-info-tag.cc         |   2 +
-src/internet/model/ipv6-end-point-demux.cc         |   4 +-
-src/internet/model/ipv6-packet-info-tag.cc         |   2 +
-src/internet/model/tcp-option.cc                   |   2 +-
-```
-
-Modifications to the `flow-monitor` module to make it thread-safe:
-
-```
-src/flow-monitor/model/flow-monitor.cc             |  42 +
-src/flow-monitor/model/flow-monitor.h              |   4 +
-src/flow-monitor/model/ipv4-flow-classifier.cc     |  12 +
-src/flow-monitor/model/ipv4-flow-classifier.h      |   4 +
-src/flow-monitor/model/ipv4-flow-probe.cc          |   2 +
-src/flow-monitor/model/ipv6-flow-classifier.cc     |  12 +
-src/flow-monitor/model/ipv6-flow-classifier.h      |   4 +
-src/flow-monitor/model/ipv6-flow-probe.cc          |   2 +
+If you want to see the ongoing experiment, you can use `pgrep` command:
+```shell
+pgrep -af exp.py
 ```
 
-Modifications to the `nix-vector-routing` module to make it thread-safe:
-
-```
-src/nix-vector-routing/model/nix-vector-routing.cc |  92 ++
-src/nix-vector-routing/model/nix-vector-routing.h  |   8 +
-```
-
-### 3. Logging
-
-The reason behind UNISON's fast speed is that it divides the network into multiple logical processes (LPs) with fine granularity and schedules them dynamically.
-To get to know more details of such workflow, you can enable the following log component:
-
-```c++
-LogComponentEnable ("LogicalProcess", LOG_LEVEL_INFO);
-LogComponentEnable ("MultithreadedSimulatorImpl", LOG_LEVEL_INFO);
+and terminate an ongoing experiment via `pkill`:
+```shell
+pkill -f exp.py
+pkill -f ns-3
 ```
 
-### 4. Advanced Options
+## Processing Evaluation Results
 
-These options can be modified at the beginning of the `main` function using the native config syntax of ns-3.
+The raw experiment data and logs are stored in the `results` folder.
+Each experiment will generate a `.sh` file, a `.txt` file and a `.csv` file, all named with the format `NAME-DATE-TIME`.
 
-You can also change the default maximum number of threads by setting
+The first one is all the shell commands automated by `exp.py`.
+If you want to compile and run the experiment manually, you can see the output of the `.sh` file.
 
-```c++
-Config::SetDefault ("ns3::MultithreadedSimulatorImpl::MaxThreads", UintegerValue (8));
-Config::SetDefault ("ns3::HybridSimulatorImpl::MaxThreads", UintegerValue (8));
+The second one is all the text output of the experiment program, including how the topology is set, how the flows are generated and how the IP addresses are assigned.
+
+The last one contains the raw experiment data.
+Each line in the `.csv` file represents an experiment record.
+To parse the results, we provide a utility script `process.py` to convert these raw experiment data to CSV files suitable for plotting.
+You can use this script by giving it a figure ID:
+
+```shell
+./process.py $FIGURE_ID
 ```
 
-The automatic partition will cut off stateless links whose delay is above the threshold.
-The threshold is automatically calculated based on the delay of every link.
-If you are not satisfied with the partition results, you can set a custom threshold by setting
+Then the processed CSV file will be saved in the `results` folder and the figure ID is the filename.
+This utility script will pick up the latest experiment results if you have run one of the experiments multiple times.
+You can see the code for more details.
 
-```c++
-Config::SetDefault ("ns3::MultithreadedSimulatorImpl::MinLookahead", TimeValue (NanoSeconds (500));
-Config::SetDefault ("ns3::HybridSimulatorImpl::MinLookahead", TimeValue (NanoSeconds (500));
+## Updating Evaluation Branches
+
+These evaluation branches `unison-evaluations`, `unison-evaluations-for-mpi` and `unison-evaluations-for-mtp` might be rebased since there might be new commits upon their base `unison` branch for bug fixing.
+If you want to update these branches, please first backup all your custom modifications on these branches and type the following commands:
+
+```shell
+./exp.py update
 ```
 
-The scheduling method determines the priority (estimated completion time of the next round) of each logical process.
-There are five available options:
+or you can do it manually with Git:
 
-- `ByExecutionTime`: LPs with higher execution time of the last round will have higher priority.
-- `ByPendingEventCount`: LPs with more pending events of this round will have higher priority.
-- `ByEventCount`: LPs with more pending events of this round will have higher priority.
-- `BySimulationTime`: LPs with larger current clock time will have higher priority.
-- `None`: Do not schedule. The partition's priority is based on their ID.
+```shell
+git fetch origin
 
-Many experiments show that the first one usually leads to better performance.
-However, you can still choose one according to your taste by setting
+git checkout unison-evaluations
+git reset --hard ns-3.36.1
+git rebase origin/unison-evaluations
 
-```c++
-GlobalValue::Bind ("PartitionSchedulingMethod", StringValue ("ByExecutionTime"));
+git checkout unison-evaluations-for-mpi
+git reset --hard ns-3.36.1
+git rebase origin/unison-evaluations-for-mpi
+
+git checkout unison-evaluations-for-mtp
+git reset --hard ns-3.36.1
+git rebase origin/unison-evaluations-for-mtp
+
+git checkout unison-evaluations
 ```
-
-By default, the scheduling period is 2 when the number of partitions is less than 16, 3 when it is less than 256, 4 when it is less than 4096, etc.
-Since more partitions lead to more scheduling costs.
-You can also set how frequently scheduling occurs by setting
-
-```c++
-GlobalValue::Bind ("PartitionSchedulingPeriod", UintegerValue (4));
-```
-
-## Links
-
-If you find the code useful, please consider citing our paper (coming soon).
-Below are some links that may also be helpful to you:
-
-- [ns-3 Tutorial](https://www.nsnam.org/docs/tutorial/html/index.html)
-- [ns-3 Model Library](https://www.nsnam.org/docs/models/html/index.html)
-- [ns-3 Manual](https://www.nsnam.org/docs/manual/html/index.html)

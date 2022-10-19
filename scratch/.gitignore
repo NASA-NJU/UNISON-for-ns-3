@@ -1,6 +1,12 @@
 # Ignore everything on scratch by default, except the provided examples
 /*
 !.gitignore
-!subdir/
-!scratch-simulator.cc
-!CMakeLists.txt
+!cdf/
+!topos/
+!utils/
+!bcube.cc
+!dqn.cc
+!fat-tree.cc
+!spine-leaf.cc
+!torus.cc
+!wan.cc
