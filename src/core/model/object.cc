@@ -163,6 +163,7 @@ Object::DoGetObject (TypeId tid) const
         }
       if (cur == tid)
         {
+#ifndef NS3_MTP
           // This is an attempt to 'cache' the result of this lookup.
           // the idea is that if we perform a lookup for a TypeId on this object,
           // we are likely to perform the same lookup later so, we make sure
@@ -173,6 +174,7 @@ Object::DoGetObject (TypeId tid) const
           current->m_getObjectCount++;
           // then, update the sort
           UpdateSortedArray (m_aggregates, i);
+#endif
           // finally, return the match
           return const_cast<Object *> (current);
         }
