@@ -23,9 +23,12 @@
 #include <stdint.h>
 #include <vector>
 #include <ostream>
+#include "ns3/atomic-counter.h"
 #include "ns3/assert.h"
 
+#ifndef NS3_MTP
 #define BUFFER_FREE_LIST 1
+#endif
 
 namespace ns3 {
 
@@ -663,7 +666,11 @@ private:
      * The reference count of an instance of this data structure.
      * Each buffer which references an instance holds a count.
      */
+#ifdef NS3_MTP
+    AtomicCounter m_count;
+#else
     uint32_t m_count;
+#endif
     /**
      * the size of the m_data field below.
      */

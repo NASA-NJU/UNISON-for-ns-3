@@ -28,6 +28,7 @@
 #include <stdint.h>
 #include <ostream>
 #include "ns3/type-id.h"
+#include "ns3/atomic-counter.h"
 
 namespace ns3 {
 
@@ -141,7 +142,11 @@ public:
   struct TagData
   {
     struct TagData * next;      /**< Pointer to next in list */
+#ifdef NS3_MTP
+    AtomicCounter count;
+#else
     uint32_t count;             /**< Number of incoming links */
+#endif
     TypeId tid;                 /**< Type of the tag serialized into #data */
     uint32_t size;              /**< Size of the \c data buffer */
     uint8_t data[1];            /**< Serialization buffer */
@@ -358,11 +363,13 @@ PacketTagList::RemoveAll (void)
   struct TagData *prev = 0;
   for (struct TagData *cur = m_next; cur != 0; cur = cur->next)
     {
-      cur->count--;
-      if (cur->count > 0) 
+      if (cur->count-- > 1) 
         {
           break;
         }
+#ifdef NS3_MTP
+      std::atomic_thread_fence (std::memory_order_acquire);
+#endif
       if (prev != 0) 
         {
           prev->~TagData ();

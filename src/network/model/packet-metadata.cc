@@ -59,7 +59,9 @@ PacketMetadata::Enable (void)
                  "after sending any packets.  One way to fix this problem is "
                  "to call ns3::PacketMetadata::Enable () near the beginning of"
                  " the program, before any packets are sent.");
+#ifndef NS3_MTP
   m_enable = true;
+#endif
 }
 
 void 
@@ -67,7 +69,9 @@ PacketMetadata::EnableChecking (void)
 {
   NS_LOG_FUNCTION_NOARGS ();
   Enable ();
+#ifndef NS3_MTP
   m_enableChecking = true;
+#endif
 }
 
 void
@@ -77,8 +81,7 @@ PacketMetadata::ReserveCopy (uint32_t size)
   struct PacketMetadata::Data *newData = PacketMetadata::Create (m_used + size);
   memcpy (newData->m_data, m_data->m_data, m_used);
   newData->m_dirtyEnd = m_used;
-  m_data->m_count--;
-  if (m_data->m_count == 0) 
+  if (m_data->m_count-- == 1) 
     {
       PacketMetadata::Recycle (m_data);
     }
@@ -596,6 +599,9 @@ void
 PacketMetadata::Recycle (struct PacketMetadata::Data *data)
 {
   NS_LOG_FUNCTION (data);
+#ifdef NS3_MTP
+  std::atomic_thread_fence (std::memory_order_acquire);
+#endif
   if (!m_enable)
     {
       PacketMetadata::Deallocate (data);
