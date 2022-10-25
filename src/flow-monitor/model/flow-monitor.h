@@ -23,6 +23,7 @@
 
 #include <vector>
 #include <map>
+#include <atomic>
 
 #include "ns3/ptr.h"
 #include "ns3/object.h"
@@ -294,6 +295,9 @@ private:
   double m_packetSizeBinWidth;  //!< packet size bin width (for histograms)
   double m_flowInterruptionsBinWidth; //!< Flow interruptions bin width (for histograms)
   Time m_flowInterruptionsMinTime; //!< Flow interruptions minimum time
+#ifdef NS3_MTP
+  std::atomic<bool> m_lock;
+#endif
 
   /// Get the stats for a given flow
   /// \param flowId the Flow identification

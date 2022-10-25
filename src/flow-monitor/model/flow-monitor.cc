@@ -83,6 +83,9 @@ FlowMonitor::FlowMonitor ()
   : m_enabled (false)
 {
   NS_LOG_FUNCTION (this);
+#ifdef NS3_MTP
+  m_lock.store (false, std::memory_order_relaxed);
+#endif
 }
 
 void
@@ -146,6 +149,12 @@ FlowMonitor::ReportFirstTx (Ptr<FlowProbe> probe, uint32_t flowId, uint32_t pack
       return;
     }
   Time now = Simulator::Now ();
+
+#ifdef NS3_MTP
+  while (m_lock.exchange (true, std::memory_order_acquire))
+    ;
+#endif
+
   TrackedPacket &tracked = m_trackedPackets[std::make_pair (flowId, packetId)];
   tracked.firstSeenTime = now;
   tracked.lastSeenTime = tracked.firstSeenTime;
@@ -163,6 +172,10 @@ FlowMonitor::ReportFirstTx (Ptr<FlowProbe> probe, uint32_t flowId, uint32_t pack
       stats.timeFirstTxPacket = now;
     }
   stats.timeLastTxPacket = now;
+
+#ifdef NS3_MTP
+  m_lock.store (false, std::memory_order_release);
+#endif
 }
 
 
@@ -175,6 +188,12 @@ FlowMonitor::ReportForwarding (Ptr<FlowProbe> probe, uint32_t flowId, uint32_t p
       NS_LOG_DEBUG ("FlowMonitor not enabled; returning");
       return;
     }
+
+#ifdef NS3_MTP
+  while (m_lock.exchange (true, std::memory_order_acquire))
+    ;
+#endif
+
   std::pair<FlowId, FlowPacketId> key (flowId, packetId);
   TrackedPacketMap::iterator tracked = m_trackedPackets.find (key);
   if (tracked == m_trackedPackets.end ())
@@ -189,6 +208,10 @@ FlowMonitor::ReportForwarding (Ptr<FlowProbe> probe, uint32_t flowId, uint32_t p
 
   Time delay = (Simulator::Now () - tracked->second.firstSeenTime);
   probe->AddPacketStats (flowId, packetSize, delay);
+
+#ifdef NS3_MTP
+  m_lock.store (false, std::memory_order_release);
+#endif
 }
 
 
@@ -201,6 +224,12 @@ FlowMonitor::ReportLastRx (Ptr<FlowProbe> probe, uint32_t flowId, uint32_t packe
       NS_LOG_DEBUG ("FlowMonitor not enabled; returning");
       return;
     }
+
+#ifdef NS3_MTP
+  while (m_lock.exchange (true, std::memory_order_acquire))
+    ;
+#endif
+
   TrackedPacketMap::iterator tracked = m_trackedPackets.find (std::make_pair (flowId, packetId));
   if (tracked == m_trackedPackets.end ())
     {
@@ -255,6 +284,10 @@ FlowMonitor::ReportLastRx (Ptr<FlowProbe> probe, uint32_t flowId, uint32_t packe
                 << flowId << ", packetId=" << packetId << ").");
 
   m_trackedPackets.erase (tracked); // we don't need to track this packet anymore
+
+#ifdef NS3_MTP
+  m_lock.store (false, std::memory_order_release);
+#endif
 }
 
 void
@@ -267,6 +300,11 @@ FlowMonitor::ReportDrop (Ptr<FlowProbe> probe, uint32_t flowId, uint32_t packetI
       NS_LOG_DEBUG ("FlowMonitor not enabled; returning");
       return;
     }
+
+#ifdef NS3_MTP
+  while (m_lock.exchange (true, std::memory_order_acquire))
+    ;
+#endif
 
   probe->AddPacketDropStats (flowId, packetSize, reasonCode);
 
@@ -290,6 +328,10 @@ FlowMonitor::ReportDrop (Ptr<FlowProbe> probe, uint32_t flowId, uint32_t packetI
                     << flowId << ", packetId=" << packetId << ").");
       m_trackedPackets.erase (tracked);
     }
+
+#ifdef NS3_MTP
+  m_lock.store (false, std::memory_order_release);
+#endif
 }
 
 const FlowMonitor::FlowStatsContainer&
