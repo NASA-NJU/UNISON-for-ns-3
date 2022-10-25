@@ -126,6 +126,13 @@ Node::GetSystemId (void) const
   return m_sid;
 }
 
+void
+Node::SetSystemId (uint32_t systemId)
+{
+  NS_LOG_FUNCTION (this << systemId);
+  m_sid = systemId;
+}
+
 uint32_t
 Node::AddDevice (Ptr<NetDevice> device)
 {

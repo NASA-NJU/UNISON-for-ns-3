@@ -95,6 +95,13 @@ public:
   uint32_t GetSystemId (void) const;
 
   /**
+   * \brief Set the system ID for auto-partition in the multithreaded simulator
+   * 
+   * \param systemId the system ID this node will be
+   */
+  void SetSystemId (uint32_t systemId);
+
+  /**
    * \brief Associate a NetDevice to this node.
    *
    * \param device NetDevice to associate to this node.
