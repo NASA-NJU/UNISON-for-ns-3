@@ -873,6 +873,12 @@ macro(process_options)
     endif()
   endif()
 
+  set(ENABLE_MTP FALSE)
+  if(${NS3_MTP})
+    add_definitions(-DNS3_MTP)
+    set(ENABLE_MTP TRUE)
+  endif()
+
   if(${NS3_VERBOSE})
     set_property(GLOBAL PROPERTY TARGET_MESSAGES TRUE)
     set(CMAKE_FIND_DEBUG_MODE TRUE)
@@ -1187,6 +1193,10 @@ macro(process_options)
 
   if(NOT ${ENABLE_MPI})
     list(REMOVE_ITEM libs_to_build mpi)
+  endif()
+
+  if(NOT ${ENABLE_MTP})
+    list(REMOVE_ITEM libs_to_build mtp)
   endif()
 
   if(NOT ${ENABLE_VISUALIZER})

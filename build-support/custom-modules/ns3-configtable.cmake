@@ -148,6 +148,9 @@ macro(write_configtable)
   string(APPEND out "MPI Support                   : ")
   check_on_or_off("${NS3_MPI}" "${MPI_FOUND}")
 
+  string(APPEND out "Multithreaded Simulation      : ")
+  check_on_or_off("${NS3_MTP}" "ON")
+
   string(APPEND out "ns-3 Click Integration        : ")
   check_on_or_off("ON" "${NS3_CLICK}")
 
