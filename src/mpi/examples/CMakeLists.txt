@@ -37,3 +37,18 @@ build_lib_example(
     ${libcsma}
     ${libapplications}
 )
+
+if(${ENABLE_MTP})
+  build_lib_example(
+    NAME simple-hybrid
+    SOURCE_FILES simple-hybrid.cc
+                 mpi-test-fixtures.cc
+    LIBRARIES_TO_LINK
+    ${libmpi}
+    ${libpoint-to-point}
+    ${libinternet}
+    ${libnix-vector-routing}
+    ${libapplications}
+    ${libmtp}
+  )
+endif()

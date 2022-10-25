@@ -48,7 +48,8 @@ public:
 
   // mapped from MultithreadedSimulatorImpl
   EventId Schedule (Time const &delay, EventImpl *event);
-  void ScheduleWithContext (LogicalProcess *remote, uint32_t context, Time const &delay,
+  void ScheduleAt (const uint32_t context, Time const &time, EventImpl *event);
+  void ScheduleWithContext (LogicalProcess *remote, const uint32_t context, Time const &delay,
                             EventImpl *event);
   void InvokeNow (Scheduler::Event const &ev); // cross context immediate invocation
   void Remove (const EventId &id);

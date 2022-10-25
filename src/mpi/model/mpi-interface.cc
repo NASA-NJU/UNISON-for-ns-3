@@ -94,7 +94,7 @@ MpiInterface::SetParallelSimulatorImpl (void)
           g_parallelCommunicationInterface = new NullMessageMpiInterface ();
           useDefault = false;
         }
-      else if (simulationType.compare ("ns3::DistributedSimulatorImpl") == 0)
+      else if (simulationType.compare ("ns3::DistributedSimulatorImpl") == 0 || simulationType.compare("ns3::HybridSimulatorImpl") == 0)
         {
           g_parallelCommunicationInterface = new GrantedTimeWindowMpiInterface ();
           useDefault = false;

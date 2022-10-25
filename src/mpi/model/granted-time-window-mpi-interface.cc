@@ -40,6 +40,9 @@
 #include "ns3/simulator-impl.h"
 #include "ns3/nstime.h"
 #include "ns3/log.h"
+#ifdef NS3_MTP
+#include "ns3/mtp-interface.h"
+#endif
 
 #include <mpi.h>
 
@@ -90,6 +93,10 @@ MPI_Request* GrantedTimeWindowMpiInterface::g_requests;
 char**       GrantedTimeWindowMpiInterface::g_pRxBuffers;
 MPI_Comm     GrantedTimeWindowMpiInterface::g_communicator = MPI_COMM_WORLD;
 bool         GrantedTimeWindowMpiInterface::g_freeCommunicator = false;;
+
+#ifdef NS3_MTP
+std::atomic<bool>     GrantedTimeWindowMpiInterface::g_sending (false);
+#endif
 
 TypeId 
 GrantedTimeWindowMpiInterface::GetTypeId (void)
@@ -210,6 +217,11 @@ GrantedTimeWindowMpiInterface::SendPacket (Ptr<Packet> p, const Time& rxTime, ui
 {
   NS_LOG_FUNCTION (this << p << rxTime.GetTimeStep () << node << dev);
 
+#ifdef NS3_MTP
+  while (g_sending.exchange (true, std::memory_order_acquire))
+    ;
+#endif
+
   SentBuffer sendBuf;
   g_pendingTx.push_back (sendBuf);
   std::list<SentBuffer>::reverse_iterator i = g_pendingTx.rbegin (); // Points to the last element
@@ -229,11 +241,19 @@ GrantedTimeWindowMpiInterface::SendPacket (Ptr<Packet> p, const Time& rxTime, ui
 
   // Find the system id for the destination node
   Ptr<Node> destNode = NodeList::GetNode (node);
+#ifdef NS3_MTP
+  uint32_t nodeSysId = destNode->GetSystemId () & 0xFFFF;
+#else
   uint32_t nodeSysId = destNode->GetSystemId ();
+#endif
 
   MPI_Isend (reinterpret_cast<void *> (i->GetBuffer ()), serializedSize + 16, MPI_CHAR, nodeSysId,
              0, g_communicator, (i->GetRequest ()));
   g_txCount++;
+
+#ifdef NS3_MTP
+  g_sending.store(false, std::memory_order_release);
+#endif
 }
 
 void
@@ -287,8 +307,13 @@ GrantedTimeWindowMpiInterface::ReceiveMessages ()
       NS_ASSERT (pNode && pMpiRec);
 
       // Schedule the rx event
+#ifdef NS3_MTP
+      MtpInterface::GetSystem (pNode->GetSystemId () >> 16)
+          ->ScheduleAt (pNode->GetId (), rxTime, MakeEvent (&MpiReceiver::Receive, pMpiRec, p));
+#else
       Simulator::ScheduleWithContext (pNode->GetId (), rxTime - Simulator::Now (),
                                       &MpiReceiver::Receive, pMpiRec, p);
+#endif
 
       // Re-queue the next read
       MPI_Irecv (g_pRxBuffers[index], MAX_MPI_MSG_SIZE, MPI_CHAR, MPI_ANY_SOURCE, 0,

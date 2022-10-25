@@ -65,10 +65,17 @@ LogicalProcess::CalculateLookAhead ()
       NodeContainer c = NodeContainer::GetGlobal ();
       for (NodeContainer::Iterator iter = c.Begin (); iter != c.End (); ++iter)
         {
+#ifdef NS3_MPI
+          if (((*iter)->GetSystemId () >> 16) != m_systemId)
+            {
+              continue;
+            }
+#else
           if ((*iter)->GetSystemId () != m_systemId)
             {
               continue;
             }
+#endif
           for (uint32_t i = 0; i < (*iter)->GetNDevices (); ++i)
             {
               Ptr<NetDevice> localNetDevice = (*iter)->GetDevice (i);
@@ -184,8 +191,20 @@ LogicalProcess::Schedule (Time const &delay, EventImpl *event)
 }
 
 void
-LogicalProcess::ScheduleWithContext (LogicalProcess *remote, uint32_t context, Time const &delay,
-                                     EventImpl *event)
+LogicalProcess::ScheduleAt (const uint32_t context, Time const &time, EventImpl *event)
+{
+  Scheduler::Event ev;
+
+  ev.impl = event;
+  ev.key.m_ts = time.GetTimeStep ();
+  ev.key.m_context = context;
+  ev.key.m_uid = m_uid++;
+  m_events->Insert (ev);
+}
+
+void
+LogicalProcess::ScheduleWithContext (LogicalProcess *remote, const uint32_t context,
+                                     Time const &delay, EventImpl *event)
 {
   Scheduler::Event ev;
 

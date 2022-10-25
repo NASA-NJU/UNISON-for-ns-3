@@ -29,6 +29,7 @@
 #define NS3_GRANTED_TIME_WINDOW_MPI_INTERFACE_H
 
 #include <stdint.h>
+#include <atomic>
 #include <list>
 
 #include "ns3/nstime.h"
@@ -80,6 +81,7 @@ private:
 
 class Packet;
 class DistributedSimulatorImpl;
+class HybridSimulatorImpl;
 
 /**
  * \ingroup mpi
@@ -110,8 +112,6 @@ public:
   virtual void SendPacket (Ptr<Packet> p, const Time &rxTime, uint32_t node, uint32_t dev);
   virtual MPI_Comm GetCommunicator();
 
-private:
-
   /*
    * The granted time window implementation is a collaboration of several
    * classes.  Methods that should be invoked only by the
@@ -119,7 +119,8 @@ private:
    * It is not intended for state to be shared.
    */
   friend ns3::DistributedSimulatorImpl;
-  
+  friend ns3::HybridSimulatorImpl;
+
   /**
    * Check for received messages complete
    */
@@ -136,7 +137,7 @@ private:
    * \return transmitted count in packets
    */
   static uint32_t GetTxCount ();
-  
+
   /** System ID (rank) for this task. */
   static uint32_t g_sid;
   /** Size of the MPI COM_WORLD group. */
@@ -171,6 +172,10 @@ private:
 
   /** Did ns-3 create the communicator?  Have to free it. */
   static bool g_freeCommunicator;
+
+#ifdef NS3_MTP
+  static std::atomic<bool> g_sending;
+#endif
 };
 
 } // namespace ns3
