@@ -406,7 +406,11 @@ SimpleNetDevice::IsPointToPoint (void) const
     {
       return true;
     }
+#ifdef NS3_MTP
+  return true;
+#else
   return false;
+#endif
 }
 
 bool 
