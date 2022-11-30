@@ -28,6 +28,8 @@ namespace ns3 {
 
 NS_LOG_COMPONENT_DEFINE ("Ipv4PacketInfoTag");
 
+NS_OBJECT_ENSURE_REGISTERED (Ipv4PacketInfoTag);
+
 Ipv4PacketInfoTag::Ipv4PacketInfoTag ()
   : m_addr (Ipv4Address ()),
     m_ifindex (0),

@@ -232,6 +232,8 @@ Ipv6FlowProbe::Ipv6FlowProbe (Ptr<FlowMonitor> monitor,
   Config::ConnectWithoutContextFailSafe (oss.str (), MakeCallback (&Ipv6FlowProbe::QueueDropLogger, Ptr<Ipv6FlowProbe> (this)));
 }
 
+NS_OBJECT_ENSURE_REGISTERED (Ipv6FlowProbeTag);
+
 /* static */
 TypeId
 Ipv6FlowProbe::GetTypeId (void)

@@ -25,6 +25,8 @@
 
 namespace ns3 {
 
+NS_OBJECT_ENSURE_REGISTERED (Ipv6PacketInfoTag);
+
 Ipv6PacketInfoTag::Ipv6PacketInfoTag ()
   : m_addr (Ipv6Address ()),
     m_ifindex (0),

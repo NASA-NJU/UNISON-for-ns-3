@@ -117,6 +117,8 @@ private:
   Ipv4Address m_dst;      //!< IP destination
 };
 
+NS_OBJECT_ENSURE_REGISTERED (Ipv4FlowProbeTag);
+
 TypeId 
 Ipv4FlowProbeTag::GetTypeId (void)
 {
