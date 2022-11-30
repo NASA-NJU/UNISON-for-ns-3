@@ -28,6 +28,7 @@
 #include "ns3/ipv4-routing-table-entry.h"
 #include "ns3/boolean.h"
 #include "ns3/node.h"
+#include "ipv4-queue-disc-item.h"
 #include "ipv4-global-routing.h"
 #include "global-route-manager.h"
 
@@ -47,6 +48,11 @@ Ipv4GlobalRouting::GetTypeId (void)
                    "Set to true if packets are randomly routed among ECMP; set to false for using only one route consistently",
                    BooleanValue (false),
                    MakeBooleanAccessor (&Ipv4GlobalRouting::m_randomEcmpRouting),
+                   MakeBooleanChecker ())
+    .AddAttribute ("FlowEcmpRouting",
+                   "Set to true if flows are randomly routed among ECMP; set to false for using only one route consistently",
+                   BooleanValue (false),
+                   MakeBooleanAccessor (&Ipv4GlobalRouting::m_flowEcmpRouting),
                    MakeBooleanChecker ())
     .AddAttribute ("RespondToInterfaceEvents",
                    "Set to true if you want to dynamically recompute the global routes upon Interface notification events (up/down, or add/remove address)",
@@ -137,7 +143,7 @@ Ipv4GlobalRouting::AddASExternalRouteTo (Ipv4Address network,
 
 
 Ptr<Ipv4Route>
-Ipv4GlobalRouting::LookupGlobal (Ipv4Address dest, Ptr<NetDevice> oif)
+Ipv4GlobalRouting::LookupGlobal (Ipv4Address dest, uint32_t flowHash, Ptr<NetDevice> oif)
 {
   NS_LOG_FUNCTION (this << dest << oif);
   NS_LOG_LOGIC ("Looking for route for destination " << dest);
@@ -220,7 +226,11 @@ Ipv4GlobalRouting::LookupGlobal (Ipv4Address dest, Ptr<NetDevice> oif)
       // ECMP routing is enabled, or always select the first route
       // consistently if random ECMP routing is disabled
       uint32_t selectIndex;
-      if (m_randomEcmpRouting)
+      if (m_flowEcmpRouting)
+        {
+          selectIndex = flowHash % allRoutes.size ();
+        }
+      else if (m_randomEcmpRouting)
         {
           selectIndex = m_rand->GetInteger (0, allRoutes.size ()-1);
         }
@@ -462,6 +472,12 @@ Ptr<Ipv4Route>
 Ipv4GlobalRouting::RouteOutput (Ptr<Packet> p, const Ipv4Header &header, Ptr<NetDevice> oif, Socket::SocketErrno &sockerr)
 {
   NS_LOG_FUNCTION (this << p << &header << oif << &sockerr);
+
+  uint32_t flowHash = 0;
+  if (m_flowEcmpRouting)
+    {
+      flowHash = Ipv4QueueDiscItem (p, Address (), header.GetProtocol (), header).Hash (0);
+    }
 //
 // First, see if this is a multicast packet we have a route for.  If we
 // have a route, then send the packet down each of the specified interfaces.
@@ -475,7 +491,7 @@ Ipv4GlobalRouting::RouteOutput (Ptr<Packet> p, const Ipv4Header &header, Ptr<Net
 // See if this is a unicast packet we have a route for.
 //
   NS_LOG_LOGIC ("Unicast destination- looking up");
-  Ptr<Ipv4Route> rtentry = LookupGlobal (header.GetDestination (), oif);
+  Ptr<Ipv4Route> rtentry = LookupGlobal (header.GetDestination (), flowHash, oif);
   if (rtentry)
     {
       sockerr = Socket::ERROR_NOTERROR;
@@ -492,6 +508,13 @@ Ipv4GlobalRouting::RouteInput  (Ptr<const Packet> p, const Ipv4Header &header, P
                                 LocalDeliverCallback lcb, ErrorCallback ecb)
 { 
   NS_LOG_FUNCTION (this << p << header << header.GetSource () << header.GetDestination () << idev << &lcb << &ecb);
+
+  uint32_t flowHash = 0;
+  if (m_flowEcmpRouting)
+    {
+      flowHash = Ipv4QueueDiscItem (p->Copy (), Address (), header.GetProtocol (), header).Hash (0);
+    }
+
   // Check if input device supports IP
   NS_ASSERT (m_ipv4->GetInterfaceForDevice (idev) >= 0);
   uint32_t iif = m_ipv4->GetInterfaceForDevice (idev);
@@ -524,7 +547,7 @@ Ipv4GlobalRouting::RouteInput  (Ptr<const Packet> p, const Ipv4Header &header, P
     }
   // Next, try to find a route
   NS_LOG_LOGIC ("Unicast destination- looking up global route");
-  Ptr<Ipv4Route> rtentry = LookupGlobal (header.GetDestination ());
+  Ptr<Ipv4Route> rtentry = LookupGlobal (header.GetDestination (), flowHash);
   if (rtentry != 0)
     {
       NS_LOG_LOGIC ("Found unicast destination- calling unicast callback");
