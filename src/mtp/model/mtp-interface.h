@@ -9,6 +9,7 @@
 #include "ns3/simulator.h"
 
 #include <pthread.h>
+#include <chrono>
 
 namespace ns3 {
 
@@ -153,6 +154,12 @@ private:
 
   static pthread_key_t g_key;
   static std::atomic<bool> g_inCriticalSection;
+
+  static std::vector<std::chrono::nanoseconds::rep> g_msgTime;
+  static std::vector<std::chrono::nanoseconds::rep> g_processTime;
+  static std::vector<std::chrono::nanoseconds::rep> g_sortTime;
+  static std::vector<std::chrono::nanoseconds::rep> tl_syncTime;
+  static std::vector<std::chrono::nanoseconds::rep> tl_execTime;
 };
 
 } // namespace ns3

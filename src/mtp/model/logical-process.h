@@ -116,6 +116,8 @@ private:
   std::map<uint32_t, std::vector<std::tuple<uint64_t, uint32_t, uint32_t, Scheduler::Event>>>
       m_mailbox; // event message mail box
   std::chrono::nanoseconds::rep m_executionTime;
+  std::vector<std::chrono::nanoseconds::rep> m_roundExecutionTime;
+  friend class MtpInterface;
 };
 
 } // namespace ns3

@@ -9,7 +9,8 @@
 #include "ns3/config.h"
 
 #include <algorithm>
-#include <cmath>
+#include <fstream>
+#include <numeric>
 
 namespace ns3 {
 
@@ -136,7 +137,68 @@ MtpInterface::Run ()
     {
       ProcessOneRound ();
       CalculateSmallestTime ();
+
+      if (g_globalFinished)
+        {
+          std::ofstream fout;
+          fout.open ("results/MT-" + std::to_string (reinterpret_cast<uint64_t> (pthread_self ())) +
+                     ".csv");
+          fout << "round,sync,exec\n";
+          fout << "-1," << std::accumulate (tl_syncTime.begin (), tl_syncTime.end (), 0ULL) << ','
+               << std::accumulate (tl_execTime.begin (), tl_execTime.end (), 0ULL) << '\n';
+          for (uint32_t i = 0; i < tl_execTime.size (); i++)
+            {
+              fout << i << ',' << (i < tl_syncTime.size () ? tl_syncTime[i] : -1) << ','
+                   << tl_execTime[i] << '\n';
+            }
+          fout.close ();
+        }
     }
+
+  uint64_t idealTime = 0;
+  uint64_t threadTimes[g_threadCount];
+  uint64_t systemTimes[g_systemCount];
+
+  std::ofstream fout;
+  fout.open ("results/MT.csv");
+  fout << "msg,sorting,process,ratio\n";
+
+  for (uint32_t r = 0; r < g_processTime.size (); r++)
+    {
+      for (uint64_t i = 0; i < g_systemCount; i++)
+        {
+          systemTimes[i] = g_systems[i + 1].m_roundExecutionTime[r];
+        }
+
+      std::sort (systemTimes, systemTimes + g_systemCount, std::greater<> ());
+      for (uint64_t t = 0; t < g_threadCount; t++)
+        threadTimes[t] = 0;
+
+      for (uint32_t i = 0; i < g_systemCount; i++)
+        {
+          uint32_t minIdx = 0;
+          for (uint32_t t = 1; t < g_threadCount; t++)
+            if (threadTimes[t] < threadTimes[minIdx])
+              minIdx = t;
+          threadTimes[minIdx] += systemTimes[i];
+        }
+
+      uint64_t maxTime = threadTimes[0];
+      for (uint32_t t = 1; t < g_threadCount; t++)
+        if (threadTimes[t] > maxTime)
+          maxTime = threadTimes[t];
+
+      idealTime += maxTime;
+    }
+
+  fout << std::accumulate (g_msgTime.begin (), g_msgTime.end (), 0ULL) << ','
+       << std::accumulate (g_sortTime.begin (), g_sortTime.end (), 0ULL) << ','
+       << std::accumulate (g_processTime.begin (), g_processTime.end (), 0ULL) << ','
+       << std::accumulate (g_processTime.begin (), g_processTime.end (), 0ULL) /
+              (double) (idealTime)
+       << '\n';
+  fout.close ();
+
   RunAfter ();
 }
 
@@ -167,16 +229,23 @@ MtpInterface::ProcessOneRound ()
   // assign logical process to threads
 
   // determine the priority of logical processes
+  auto sortStart = std::chrono::system_clock::now ();
   if (g_sortFunc != nullptr && g_round++ % g_period == 0)
     {
       std::sort (g_sortedSystemIndices, g_sortedSystemIndices + g_systemCount, g_sortFunc);
     }
+  auto sortEnd = std::chrono::system_clock::now ();
+  g_sortTime.push_back (
+      std::chrono::duration_cast<std::chrono::nanoseconds> (sortEnd - sortStart).count ());
 
+  auto processStart = std::chrono::system_clock::now ();
   // stage 1: process events
   g_recvMsgStage = false;
   g_finishedSystemCount.store (0, std::memory_order_relaxed);
   g_systemIndex.store (0, std::memory_order_release);
   // main thread also needs to process an LP to reduce an extra thread overhead
+
+  std::chrono::nanoseconds::rep execTime = 0;
   while (true)
     {
       uint32_t index = g_systemIndex.fetch_add (1, std::memory_order_acquire);
@@ -185,18 +254,32 @@ MtpInterface::ProcessOneRound ()
           break;
         }
       LogicalProcess *system = &g_systems[g_sortedSystemIndices[index]];
+
+      auto execStart = std::chrono::system_clock::now ();
       system->ProcessOneRound ();
+      auto execEnd = std::chrono::system_clock::now ();
+      execTime +=
+          std::chrono::duration_cast<std::chrono::nanoseconds> (execEnd - execStart).count ();
       g_finishedSystemCount.fetch_add (1, std::memory_order_release);
     }
+  tl_execTime.push_back (execTime);
 
   // logical process barriar synchronization
+  auto syncStart = std::chrono::system_clock::now ();
   while (g_finishedSystemCount.load (std::memory_order_acquire) != g_systemCount)
     ;
+  auto syncEnd = std::chrono::system_clock::now ();
+  tl_syncTime.push_back (
+      std::chrono::duration_cast<std::chrono::nanoseconds> (syncEnd - syncStart).count ());
+  auto processEnd = std::chrono::system_clock::now ();
+  g_processTime.push_back (
+      std::chrono::duration_cast<std::chrono::nanoseconds> (processEnd - processStart).count ());
 
   // stage 2: process the public LP
   g_systems[0].ProcessOneRound ();
 
   // stage 3: receive messages
+  auto msgStart = std::chrono::system_clock::now ();
   g_recvMsgStage = true;
   g_finishedSystemCount.store (0, std::memory_order_relaxed);
   g_systemIndex.store (0, std::memory_order_release);
@@ -215,6 +298,9 @@ MtpInterface::ProcessOneRound ()
   // logical process barriar synchronization
   while (g_finishedSystemCount.load (std::memory_order_acquire) != g_systemCount)
     ;
+  auto msgEnd = std::chrono::system_clock::now ();
+  g_msgTime.push_back (
+      std::chrono::duration_cast<std::chrono::nanoseconds> (msgEnd - msgStart).count ());
 }
 
 void
@@ -276,26 +362,58 @@ MtpInterface::CalculateLookAhead ()
 void *
 MtpInterface::ThreadFunc (void *arg)
 {
+  std::vector<std::chrono::nanoseconds::rep> tl_syncTime, tl_execTime;
+  std::chrono::nanoseconds::rep execTime = 0;
+
   while (!g_globalFinished)
     {
       uint32_t index = g_systemIndex.fetch_add (1, std::memory_order_acquire);
       if (index >= g_systemCount)
         {
+          if (execTime)
+            {
+              tl_execTime.push_back (execTime);
+              execTime = 0;
+            }
+          auto syncStart = std::chrono::system_clock::now ();
           while (g_systemIndex.load (std::memory_order_acquire) >= g_systemCount)
             ;
+          auto syncEnd = std::chrono::system_clock::now ();
+          tl_syncTime.push_back (
+              std::chrono::duration_cast<std::chrono::nanoseconds> (syncEnd - syncStart).count ());
           continue;
         }
       LogicalProcess *system = &g_systems[g_sortedSystemIndices[index]];
       if (g_recvMsgStage)
         {
+          if (execTime)
+            {
+              tl_execTime.push_back (execTime);
+              execTime = 0;
+            }
           system->ReceiveMessages ();
         }
       else
         {
           system->ProcessOneRound ();
+          execTime += system->m_executionTime;
         }
       g_finishedSystemCount.fetch_add (1, std::memory_order_release);
     }
+
+  std::ofstream fout;
+  fout.open ("results/MT-" + std::to_string (reinterpret_cast<uint64_t> (pthread_self ())) +
+             ".csv");
+  fout << "round,sync,exec\n";
+  fout << "-1," << std::accumulate (tl_syncTime.begin (), tl_syncTime.end (), 0ULL) << ','
+       << std::accumulate (tl_execTime.begin (), tl_execTime.end (), 0ULL) << '\n';
+  for (uint32_t i = 0; i < tl_execTime.size (); i++)
+    {
+      fout << i << ',' << (i < tl_syncTime.size () ? tl_syncTime[i] : -1) << ',' << tl_execTime[i]
+           << '\n';
+    }
+  fout.close ();
+
   return nullptr;
 }
 
@@ -364,5 +482,15 @@ bool MtpInterface::g_enabled = false;
 pthread_key_t MtpInterface::g_key;
 
 std::atomic<bool> MtpInterface::g_inCriticalSection (false);
+
+std::vector<std::chrono::nanoseconds::rep> MtpInterface::g_msgTime;
+
+std::vector<std::chrono::nanoseconds::rep> MtpInterface::g_processTime;
+
+std::vector<std::chrono::nanoseconds::rep> MtpInterface::g_sortTime;
+
+std::vector<std::chrono::nanoseconds::rep> MtpInterface::tl_syncTime;
+
+std::vector<std::chrono::nanoseconds::rep> MtpInterface::tl_execTime;
 
 } // namespace ns3

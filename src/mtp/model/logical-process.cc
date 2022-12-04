@@ -174,6 +174,7 @@ LogicalProcess::ProcessOneRound ()
 
   auto end = std::chrono::system_clock::now ();
   m_executionTime = std::chrono::duration_cast<std::chrono::nanoseconds> (end - start).count ();
+  m_roundExecutionTime.push_back (m_executionTime);
 }
 
 EventId
