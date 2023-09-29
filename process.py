@@ -80,7 +80,11 @@ def generate_csv_for_pgfplot(figure_name: list, exp: list, x, y, y_post={}, lege
     with open(fullpath(os.path.join('results', figure_name + '.csv')), 'wt') as f:
         y_labels = sorted({y_label for x_value in data for y_label in data[x_value].keys()})
         f.write(f'{x_label},{",".join(y_labels)}\n')
-        for x_value in sorted(data):
+        try:
+            sorted_data = sorted(data, key=float)
+        except ValueError:
+            sorted_data = sorted(data)
+        for x_value in sorted_data:
             f.write(f'{x_value},{",".join([data[x_value].get(y_label, "") for y_label in y_labels])}\n')
     print('Done!')
 

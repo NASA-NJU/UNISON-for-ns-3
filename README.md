@@ -54,7 +54,7 @@ sudo mount -t nfs $IP_OF_YOUR_MASTER_HOST:/home/$(whoami)/UNISON-for-ns-3 ~/UNIS
 
 After these steps, you can now safely run distributed simulation experiments by invoking `exp.py` on the master host.
 
-## Running Evaluations
+## Running Experiments
 
 To run one experiment, you can type
 ```shell
@@ -107,7 +107,7 @@ pkill -f exp.py
 pkill -f ns-3
 ```
 
-## Processing Evaluation Results
+## Processing Experiment Data
 
 The raw experiment data and logs are stored in the `results` folder.
 Each experiment will generate a `.sh` file, a `.txt` file and a `.csv` file, all named with the format `NAME-DATE-TIME`.
@@ -129,6 +129,9 @@ You can use this script by giving it a figure ID:
 Then the processed CSV file will be saved in the `results` folder and the figure ID is the filename.
 This utility script will pick up the latest experiment results if you have run one of the experiments multiple times.
 You can see the code for more details.
+
+After processing, you can get the plot by compiling `results/plot.tex`, which will produce the final plot in `results/plot.pdf`.
+This TeX file checks whether the CSV file to be plotted is exist and plots the figure via the PGFPlot package.
 
 ## Updating Evaluation Branches
 

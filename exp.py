@@ -383,7 +383,7 @@ if __name__ == '__main__':
               victim=lambda args: '-'.join([str(i) for i in range(int(args['k']) ** 2 // 4)]),
               time=0.1,
               interval=0.01,
-              flowmon=True,
+              flowmon=False,
               core=lambda args: args['cluster'])
 
     # 1 (4d)
@@ -400,7 +400,7 @@ if __name__ == '__main__':
               victim=lambda args: '-'.join([str(i) for i in range(int(args['k']) ** 2 // 4)]),
               time=0.1,
               interval=0.01,
-              flowmon=True,
+              flowmon=False,
               core=1)
 
     # 5a (18h)
