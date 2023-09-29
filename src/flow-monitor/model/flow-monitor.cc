@@ -200,6 +200,9 @@ FlowMonitor::ReportForwarding (Ptr<FlowProbe> probe, uint32_t flowId, uint32_t p
     {
       NS_LOG_WARN ("Received packet forward report (flowId=" << flowId << ", packetId=" << packetId
                                                              << ") but not known to be transmitted.");
+#ifdef NS3_MTP
+      m_lock.store (false, std::memory_order_release);
+#endif
       return;
     }
 
@@ -235,6 +238,9 @@ FlowMonitor::ReportLastRx (Ptr<FlowProbe> probe, uint32_t flowId, uint32_t packe
     {
       NS_LOG_WARN ("Received packet last-tx report (flowId=" << flowId << ", packetId=" << packetId
                                                              << ") but not known to be transmitted.");
+#ifdef NS3_MTP
+      m_lock.store (false, std::memory_order_release);
+#endif
       return;
     }
 
