@@ -20,6 +20,32 @@ To compare these simulators and parameters, we provided a utility script `exp.py
 It can initialize required environments, install dependencies and run simulations according to your parameter sets automatically.
 Please see the document below and the source code for more details.
 
+## Hardware Requirements
+
+In order to run all experiments of UNISON, you should have at least 144 CPU cores and 512GB of memory.
+These computation resources can come from either a single host with many CPU cores (e.g., ARM or AMD Threadripper) or multiple identically configured hosts within a LAN cluster.
+
+However, most of the experiments can be performed on a single commodity computing server with at least 24 CPU cores and 128GB of memory. Moreover, about half of the experiments can be performed just on a single commodity PC with at least 8 CPU cores and 16GB of memory.
+
+If your current hardware doesn't meet the very first requirements (144 cores, 256GB of memory), we provide some alternative small-scale experiments that can be run on a single commodity PC (8 cores, 16GB of memory) or a single commodity computing server (24 cores, 128GB of memory) and reflect similar phenomena at a large scale.
+
+You can see the hardware requirements of each experiment [here](#requirements-of-each-experiment) or by checking the `core` argument in `exp.py`.
+
+## Software Dependencies
+
+A Unix-like operating system installed with
+- Python 3.8 or above
+- g++-7, clang-10 or Xcode 11
+- Git
+- CMake
+- Linux `perf`
+- OpenMPI
+- NFS server/client
+
+is required to compile and run UNISON and all of its related experiments.
+To plot the figures presented in the paper from the experiment data locally, a LaTeX installation with the PGFPlots package is required.
+We recommend to run our experiments with Ubuntu 22.04.
+
 ## Setup
 
 If you are using Ubuntu, you can initialize the environment in every host you want to run by executing
@@ -28,7 +54,7 @@ If you are using Ubuntu, you can initialize the environment in every host you wa
 ./exp.py init
 ```
 
-This will turn off hyperthreading, allow kernel profiling and install dependencies including CMake, MPI and Linux perf tools.
+This will turn off hyperthreading, allow kernel profiling and install software dependencies including CMake, MPI, TeX Live and Linux perf tools.
 
 Additionally, if you want to run distributed simulation experiments (whose name typically contains `-distributed` in `exp.py`), you should have multiple hosts with the same configuration in a LAN.
 You should choose one of the hosts as the master host.
@@ -58,7 +84,7 @@ After these steps, you can now safely run distributed simulation experiments by 
 
 To run one experiment, you can type
 ```shell
-nohup ./exp.py $EXPERIMENT_NAME > nohup.out &
+nohup ./exp.py $EXPERIMENT_NAME > nohup.out 2>&1 &
 ```
 
 and the script will handle the compiling, running, result parsing process automatically for you.
@@ -130,8 +156,74 @@ Then the processed CSV file will be saved in the `results` folder and the figure
 This utility script will pick up the latest experiment results if you have run one of the experiments multiple times.
 You can see the code for more details.
 
-After processing, you can get the plot by compiling `results/plot.tex`, which will produce the final plot in `results/plot.pdf`.
+After processing, you can get the plot by compiling `results/plot.tex` with `pdflatex`, which will produce the final plot in `results/plot.pdf`.
 This TeX file checks whether the CSV file to be plotted is exist and plots the figure via the PGFPlot package.
+
+## Mapping Claims to Figures
+
+| Claim ID | Claim    | Figure IDs |
+|----------|-----------|------------|
+|1| UNISON can achieve 10x speedup over existing PDES approaches | 1 |
+|2| The synchronization time of existing PDES approaches gradually dominates as the traffic inhomogeneity increases | 5a |
+|3| The synchronization time ratio is high in a transient time window for existing PDES approaches, even if the traffic pattern is balanced in macro | 5b |
+|4| The synchronization time is long for low-latency and high-bandwidth networks for existing PDES approaches | 5c, 5d |
+|5| UNISON can significantly reduce the synchronization time to near-zero | 10b |
+|6| UNISON exhibit super-linear speedup and its parallelism is flexible to set | 9 |
+|7| UNISON is also fast with other topologies and under different traffic patterns | 11b |
+|8| The output of UNISON is deterministic under multiple runs while other PDES approaches are not | 13a, 13b |
+|9| Fine-grained partition of UNISON can reduce cache misses which can further reduce the simulation time | 14a |
+|10| The default scheduling metric of UNISON performs better than others and without scheduling | 14b |
+
+## Mapping Figures to Experiment Names
+
+| Figure ID | Required Experiment Names              |
+|-----------|----------------------------------------|
+| 1         | fat-tree-distributed, fat-tree-default |
+| 5a        | mpi-sync-incast                        |
+| 5b        | mpi-sync                               |
+| 5c        | mpi-sync-delay                         |
+| 5d        | mpi-sync-bandwidth                     |
+| 9         | flexible, flexible-barrier, flexible-default |
+| 10a       | mtp-sync-incast, mpi-sync-incast       |
+| 10b       | mtp-sync                               |
+| 11b       | bcube, bcube-old, bcube-default        |
+| 13a       | deterministic                          |
+| 13b       | deterministic                          |
+| 14a       | partition-cache                        |
+| 14b       | scheduling-metrics                     |
+
+It is notable that multiple experiments required by the same figure should be performed under the same hardware configuration.
+If different figures require the same experiment, you can perform this experiment just once.
+
+## Requirements of Each Experiment
+
+| Experiment Name | Cores Required | Dependencies | Expected Machine Time |
+|-----------------|----------------|------------------|-----------------------|
+| fat-tree-distributed | **144** | OpenMPI, NFS server/client | **7 days** |
+| fat-tree-default | 1 | | **4 days** |
+| mpi-sync-incast | 8 | OpenMPI | 18 hours |
+| mpi-sync | 8 | OpenMPI | 1 hour |
+| mpi-sync-delay | 8 | OpenMPI | 20 minutes |
+| mpi-sync-bandwidth | 8 | OpenMPI | 10 minutes |
+| flexible | **24** | | **1 day** |
+| flexible-barrier | 8 | OpenMPI | **3 days** |
+| flexible-default | 1 | | **1 day** |
+| mtp-sync-incast | 8 | | 3 hours |
+| mtp-sync | 8 | | 40 minutes |
+| bcube | **16** | | 40 minutes |
+| bcube-old | 8 | OpenMPI | 2 hours |
+| bcube-default | 1 | | **1 day** |
+| deterministic | 8 | OpenMPI | 4 hours |
+| partition-cache | 1 | Linux perf | **1 day** |
+| scheduling-metrics | **16** | | 4 hours |
+
+The "Dependencies" field is the required software dependencies in addition to
+- Python 3.8 or above
+- g++-7, clang-10 or Xcode 11
+- Git
+- CMake
+
+The fat-tree-distributed and flexible
 
 ## Updating Evaluation Branches
 
