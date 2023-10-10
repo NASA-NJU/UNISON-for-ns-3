@@ -6,13 +6,18 @@ from collections import defaultdict
 import os
 import re
 import shutil
+import subprocess
 
 
 def fullpath(path: str):
+    '''Returns the full path given the path relative to this file'''
+
     return os.path.join(os.path.dirname(__file__), path)
 
 
 def get_the_latest_result_file(exp_name: str) -> str:
+    '''Returns the latest CSV file name given the experiment name'''
+
     potential_filenames = []
     for filename in os.listdir(fullpath('results')):
         if re.match(exp_name + r'-\d{4}-\d{4}.csv', filename):
@@ -24,7 +29,19 @@ def get_the_latest_result_file(exp_name: str) -> str:
     return max(potential_filenames)
 
 
-def generate_csv_for_pgfplot(figure_name: list, exp: list, x, y, y_post={}, legend=None):
+def generate_csv_for_pgfplot(figure_name: str, exp: list, x, y, y_post={}, legend=None):
+    '''
+    Parse raw CSV files given the experiment name and generate a CSV file for plotting
+
+    Parameters:
+        figure_name (str): The output figure name
+        exp (list): The required experiments by the output figure
+        x (str | list[str] | callable): x axis of the figure
+        y (str | list[str] | dict{str: callable}): y axis of the figure
+        y_post (dict{str: callable}): y axis of the figure, whose values require post calculation
+        legend (str | list[str] | None): Legend of the figure
+    '''
+
     data = defaultdict(dict)
     # read raw exp results and store them into `data` by x_value
     for exp_name in exp if isinstance(exp, list) else [exp]:
@@ -89,151 +106,187 @@ def generate_csv_for_pgfplot(figure_name: list, exp: list, x, y, y_post={}, lege
     print('Done!')
 
 
-if len(argv) != 2:
-    print('Usage: ./process.py [figure id]')
-    exit(0)
+def truncate_csv_for_pgfplot(figure_name: str, csv: str, begin: int, end: int):
+    '''
+    Truncate a raw CSV file for plotting
 
-if argv[1] == '1':
-    generate_csv_for_pgfplot(figure_name=argv[1],
-                             exp=['fat-tree-distributed', 'fat-tree-default'],
-                             x='cluster',
-                             y='t',
-                             legend='simulator')
+    Parameters:
+        figure_name (str): The output figure name
+        csv (str): The required raw CSV file
+        begin (int): The beginning of the range of the line number
+        end (int): The end of the range of the line number
+    '''
 
-elif argv[1] == '5a':
-    generate_csv_for_pgfplot(figure_name=argv[1],
-                             exp='mpi-sync-incast',
-                             x='incast',
-                             y=['sync', 'exec', 'msg'],
-                             legend='simulator')
+    try:
+        with open(fullpath(os.path.join('results', csv)), 'rt') as f_in:
+            with open(fullpath(os.path.join('results', figure_name + '.csv')), 'wt') as f_out:
+                print('Reading data from', csv, 'and keep line', begin, '-', end)
+                f_out.write(f_in.readline())
+                for i, line in enumerate(f_in.readlines()):
+                    if begin <= i <= end:
+                        f_out.write(line)
+        print('Done!')
+    except FileNotFoundError:
+        print(f'Error: {csv} not found.')
+        exit(1)
 
-elif argv[1] == '5b':
-    shutil.copy(fullpath('results/mpi-sync.csv'), fullpath('results/5b.csv'))
 
-elif argv[1] == '5c':
-    generate_csv_for_pgfplot(figure_name=argv[1],
-                             exp='mpi-sync-delay',
-                             x='delay',
-                             y={'ratio': lambda line, idx: str(float(line[idx['sync']]) / float(line[idx['t']]))},
-                             legend='simulator')
+if __name__ == '__main__':
 
-elif argv[1] == '5d':
-    generate_csv_for_pgfplot(figure_name=argv[1],
-                             exp='mpi-sync-bandwidth',
-                             x=lambda line, idx: line[idx['bandwidth']].removesuffix('Gbps'),
-                             y={'ratio': lambda line, idx: str(float(line[idx['sync']]) / float(line[idx['t']]))},
-                             legend='simulator')
+    if len(argv) != 2:
+        print('Usage: ./process.py [figure id]')
+        exit(0)
 
-elif argv[1] == '8':
-    generate_csv_for_pgfplot(figure_name=argv[1],
-                             exp='dqn',
-                             x=['cluster', 'k'],
-                             y='t',
-                             legend='simulator')
+    if argv[1] == '1':
+        generate_csv_for_pgfplot(figure_name=argv[1],
+                                 exp=['fat-tree-distributed', 'fat-tree-default'],
+                                 x='cluster',
+                                 y='t',
+                                 legend='simulator')
 
-elif argv[1] == '9':
-    generate_csv_for_pgfplot(figure_name=argv[1],
-                             exp=['flexible', 'flexible-barrier', 'flexible-default'],
-                             x='core',
-                             y='t',
-                             y_post={'speedup-barrier': lambda data, x_value: str(float(data[x_value]['t-barrier']) / float(data['']['t-default'])),
-                                     'speedup-unison': lambda data, x_value: str(float(data[x_value]['t-unison']) / float(data['']['t-default']))},
-                             legend='simulator')
+    elif argv[1] == '5a':
+        generate_csv_for_pgfplot(figure_name=argv[1],
+                                 exp='mpi-sync-incast',
+                                 x='incast',
+                                 y=['sync', 'exec', 'msg'],
+                                 legend='simulator')
 
-elif argv[1] == '10a':
-    generate_csv_for_pgfplot(figure_name=argv[1],
-                             exp=['mtp-sync-incast', 'mpi-sync-incast'],
-                             x='incast',
-                             y=['sync', 'exec', 'msg'],
-                             legend='simulator')
+    elif argv[1] == '5b':
+        truncate_csv_for_pgfplot(figure_name=argv[1],
+                                 csv='mpi-sync.csv',
+                                 begin=0,
+                                 end=1000)
 
-elif argv[1] == '10b':
-    shutil.copy(fullpath('results/mtp-sync.csv'), fullpath('results/10b.csv'))
+    elif argv[1] == '5c':
+        generate_csv_for_pgfplot(figure_name=argv[1],
+                                 exp='mpi-sync-delay',
+                                 x='delay',
+                                 y={'ratio': lambda line, idx: str(float(line[idx['sync']]) / float(line[idx['t']]))},
+                                 legend='simulator')
 
-elif argv[1] == '11a':
-    generate_csv_for_pgfplot(figure_name=argv[1],
-                             exp=['torus-distributed', 'torus'],
-                             x='core',
-                             y='t',
-                             legend='simulator')
+    elif argv[1] == '5d':
+        generate_csv_for_pgfplot(figure_name=argv[1],
+                                 exp='mpi-sync-bandwidth',
+                                 x=lambda line, idx: line[idx['bandwidth']].removesuffix('Gbps'),
+                                 y={'ratio': lambda line, idx: str(float(line[idx['sync']]) / float(line[idx['t']]))},
+                                 legend='simulator')
 
-elif argv[1] == '11b':
-    generate_csv_for_pgfplot(figure_name=argv[1],
-                             exp=['bcube', 'bcube-old', 'bcube-default'],
-                             x='cdf',
-                             y='t',
-                             y_post={'speedup-barrier': lambda data, x_value: str(float(data[x_value]['t-default-']) / float(data[x_value]['t-barrier-8'])),
-                                     'speedup-nullmsg': lambda data, x_value: str(float(data[x_value]['t-default-']) / float(data[x_value]['t-nullmsg-8'])),
-                                     'speedup-unison-8': lambda data, x_value: str(float(data[x_value]['t-default-']) / float(data[x_value]['t-unison-8'])),
-                                     'speedup-unison-16': lambda data, x_value: str(float(data[x_value]['t-default-']) / float(data[x_value]['t-unison-16']))},
-                             legend=['simulator', 'core'])
+    elif argv[1] == '8':
+        generate_csv_for_pgfplot(figure_name=argv[1],
+                                 exp='dqn',
+                                 x=['cluster', 'k'],
+                                 y='t',
+                                 legend='simulator')
 
-elif argv[1] == '11c':
-    generate_csv_for_pgfplot(figure_name=argv[1],
-                             exp='wan',
-                             x='topo',
-                             y='t',
-                             legend='simulator')
+    elif argv[1] == '9':
+        generate_csv_for_pgfplot(figure_name=argv[1],
+                                 exp=['flexible', 'flexible-barrier', 'flexible-default'],
+                                 x='core',
+                                 y='t',
+                                 y_post={'speedup-barrier': lambda data, x_value: str(float(data[x_value]['t-barrier']) / float(data['']['t-default'])),
+                                         'speedup-unison': lambda data, x_value: str(float(data[x_value]['t-unison']) / float(data['']['t-default']))},
+                                 legend='simulator')
 
-elif argv[1] == '12':
-    generate_csv_for_pgfplot(figure_name=argv[1],
-                             exp='accuracy',
-                             x='simulator',
-                             y=['fct', 'e2ed', 'throughput'],
-                             y_post={'fct-error': lambda data, x_value: str(abs(float(data[x_value]['fct']) / float(data['default']['fct']) - 1)),
-                                     'e2ed-error': lambda data, x_value: str(abs(float(data[x_value]['e2ed']) / float(data['default']['e2ed']) - 1)),
-                                     'throughput-error': lambda data, x_value: str(abs(float(data[x_value]['throughput']) / float(data['default']['throughput']) - 1))})
+    elif argv[1] == '10a':
+        generate_csv_for_pgfplot(figure_name=argv[1],
+                                 exp=['mtp-sync-incast', 'mpi-sync-incast'],
+                                 x='incast',
+                                 y=['sync', 'exec', 'msg'],
+                                 legend='simulator')
 
-elif argv[1] == '13a':
-    i = 2
+    elif argv[1] == '10b':
+        truncate_csv_for_pgfplot(figure_name=argv[1],
+                                 csv='mtp-sync.csv',
+                                 begin=0,
+                                 end=1000)
 
-    def counter(line, idx):
-        global i
-        return str((i := i + 1) // 3)
+    elif argv[1] == '11a':
+        generate_csv_for_pgfplot(figure_name=argv[1],
+                                 exp=['torus-distributed', 'torus'],
+                                 x='core',
+                                 y='t',
+                                 legend='simulator')
 
-    generate_csv_for_pgfplot(figure_name=argv[1],
-                             exp='deterministic',
-                             x=counter,
-                             y='ev',
-                             legend='simulator')
+    elif argv[1] == '11b':
+        generate_csv_for_pgfplot(figure_name=argv[1],
+                                 exp=['bcube', 'bcube-old', 'bcube-default'],
+                                 x='cdf',
+                                 y='t',
+                                 y_post={'speedup-barrier': lambda data, x_value: str(float(data[x_value]['t-default-']) / float(data[x_value]['t-barrier-8'])),
+                                         'speedup-nullmsg': lambda data, x_value: str(float(data[x_value]['t-default-']) / float(data[x_value]['t-nullmsg-8'])),
+                                         'speedup-unison-8': lambda data, x_value: str(float(data[x_value]['t-default-']) / float(data[x_value]['t-unison-8'])),
+                                         'speedup-unison-16': lambda data, x_value: str(float(data[x_value]['t-default-']) / float(data[x_value]['t-unison-16']))},
+                                 legend=['simulator', 'core'])
 
-elif argv[1] == '13b':
-    i = 2
+    elif argv[1] == '11c':
+        generate_csv_for_pgfplot(figure_name=argv[1],
+                                 exp='wan',
+                                 x='topo',
+                                 y='t',
+                                 legend='simulator')
 
-    def counter(line, idx):
-        global i
-        return str((i := i + 1) // 3)
+    elif argv[1] == '12':
+        generate_csv_for_pgfplot(figure_name=argv[1],
+                                 exp='accuracy',
+                                 x='simulator',
+                                 y=['fct', 'e2ed', 'throughput'],
+                                 y_post={'fct-error': lambda data, x_value: str(abs(float(data[x_value]['fct']) / float(data['default']['fct']) - 1)),
+                                         'e2ed-error': lambda data, x_value: str(abs(float(data[x_value]['e2ed']) / float(data['default']['e2ed']) - 1)),
+                                         'throughput-error': lambda data, x_value: str(abs(float(data[x_value]['throughput']) / float(data['default']['throughput']) - 1))})
 
-    generate_csv_for_pgfplot(figure_name=argv[1],
-                             exp='deterministic',
-                             x=counter,
-                             y='e2ed',
-                             legend='simulator')
+    elif argv[1] == '13a':
+        i = 2
 
-elif argv[1] == '14a':
-    generate_csv_for_pgfplot(figure_name=argv[1],
-                             exp='partition-cache',
-                             x='system',
-                             y=['miss', 't'])
+        def counter(line, idx):
+            global i
+            return str((i := i + 1) // 3)
 
-elif argv[1] == '14b':
-    generate_csv_for_pgfplot(figure_name=argv[1],
-                             exp='scheduling-metrics',
-                             x='core',
-                             y='slowdown',
-                             legend='sort')
+        generate_csv_for_pgfplot(figure_name=argv[1],
+                                 exp='deterministic',
+                                 x=counter,
+                                 y='ev',
+                                 legend='simulator')
 
-elif argv[1] == '14c':
-    generate_csv_for_pgfplot(figure_name=argv[1],
-                             exp='scheduling-period',
-                             x='period',
-                             y='t')
+    elif argv[1] == '13b':
+        i = 2
 
-elif argv[1] == '15a':
-    shutil.copy(fullpath('results/mpi-exec.csv'), fullpath('results/15a.csv'))
+        def counter(line, idx):
+            global i
+            return str((i := i + 1) // 3)
 
-elif argv[1] == '15b':
-    shutil.copy(fullpath('results/mtp-exec.csv'), fullpath('results/15b.csv'))
+        generate_csv_for_pgfplot(figure_name=argv[1],
+                                 exp='deterministic',
+                                 x=counter,
+                                 y='e2ed',
+                                 legend='simulator')
 
-else:
-    print('no such figure!')
+    elif argv[1] == '14a':
+        generate_csv_for_pgfplot(figure_name=argv[1],
+                                 exp='partition-cache',
+                                 x='system',
+                                 y=['miss', 't'])
+
+    elif argv[1] == '14b':
+        generate_csv_for_pgfplot(figure_name=argv[1],
+                                 exp='scheduling-metrics',
+                                 x='core',
+                                 y='slowdown',
+                                 legend='sort')
+
+    elif argv[1] == '14c':
+        generate_csv_for_pgfplot(figure_name=argv[1],
+                                 exp='scheduling-period',
+                                 x='period',
+                                 y='t')
+
+    elif argv[1] == '15a':
+        shutil.copy(fullpath('results/mpi-exec.csv'), fullpath('results/15a.csv'))
+
+    elif argv[1] == '15b':
+        shutil.copy(fullpath('results/mtp-exec.csv'), fullpath('results/15b.csv'))
+
+    else:
+        print('no such figure!')
+
+    # compile plot.tex with pdflatex to generate plot.pdf
+    subprocess.run('pdflatex -halt-on-error plot.tex', shell=True, cwd=fullpath('results'), capture_output=True)

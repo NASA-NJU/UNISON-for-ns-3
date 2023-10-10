@@ -37,11 +37,19 @@ conf = {
 
 
 class ResultCallback:
+    '''Result callback function wrapper class'''
+
     def __init__(self, names=[], callback=None):
+        '''
+        Parameters:
+            names (list[str]): Result name that can be obtained by the callback function
+            callback (callable): The actual callback function. This function should return a list, each value in the list corresponds to each name in the names
+        '''
         self.names = names
         self.callback = callback
 
     def __call__(self) -> list:
+        '''Call the actual callback function. If the function is not provided, simply return an empty list'''
         if callable(self.callback):
             return self.callback()
         else:
@@ -49,6 +57,12 @@ class ResultCallback:
 
     @staticmethod
     def make(names: list):
+        '''
+        Make the result callback function wrapper
+        
+        Parameters:
+            names (list[str]): Result name that can be obtained by the callback function
+        '''
         def wrapper(func):
             return ResultCallback(names, func)
         return wrapper
@@ -68,13 +82,33 @@ class Experiment:
         self.data_output.close()
 
     def cmd(self, cmd: list, run=True):
+        '''
+        Log the automated shell commands to .sh and .txt files
+
+        Parameters:
+            cmd: The automated commands
+            run: Set to False if just to log the command without running it
+        '''
+
         cmd_str = ' '.join([f'"{c}"' if ' ' in c else c for c in cmd]) + '\n'
         self.cmd_output.write(cmd_str)
         self.raw_output.write(cmd_str)
         if run:
             subprocess.run(cmd)
 
-    def run(self, programs: list, simulators: list, template_cmd='', branch='unison-evaluations', callback=ResultCallback(), example=False, **kwargs):
+    def run(self, programs: list, simulators: list, template_cmd='', branch='unison-evaluations', callback=ResultCallback(), **kwargs):
+        '''
+        Run a batch of experiments
+
+        Parameters:
+            programs (list): Simulation programs
+            simulators (list): Yype of simulators to be used, this can be set to barrier, nullmsg, unison and default
+            template_cmd (str): Command wrapper for actually executed commands, used for perf tools
+            branch (str): Check to this branch first before running. This is used to 
+            callback (ResultCallback): A callback to process the generated text and CSV files during simulation
+            kwargs: These are the various parameters or parameter lists for simulation
+        '''
+
         # checkout
         self.cmd(['git', 'checkout', branch])
 
@@ -98,19 +132,30 @@ class Experiment:
         for args in list(itertools.product(*arg_permutations)):
             for program in programs if isinstance(programs, list) else [programs]:
                 for simulator in simulators if isinstance(simulators, list) else [simulators]:
-                    self.run_once(program, simulator, template_cmd=template_cmd, callback=callback, example=example, **dict([(k, v(dict(args)) if callable(v) else v) for k, v in args]))
+                    self.run_once(program, simulator, template_cmd=template_cmd, callback=callback, **dict([(k, v(dict(args)) if callable(v) else v) for k, v in args]))
 
         # check back
-        self.cmd(['git', 'checkout', branch])
+        self.cmd(['git', 'checkout', 'unison-evaluations'])
 
         # push finished notifications
         if 'report' in conf:
             conf['report'](f'Experiment {self.name} finished.')
 
-    def run_once(self, program: str, simulator: str, template_cmd='', callback=ResultCallback(), example=False, **kwargs):
+    def run_once(self, program: str, simulator: str, template_cmd='', callback=ResultCallback(), **kwargs):
+        '''
+        Build and run a single experiment
+
+        Parameters:
+            program (str): simulation program
+            simulator (str): type of simulator to be used, this can be set to barrier, nullmsg, unison and default
+            template_cmd (str): command wrapper for actually executed commands, used for perf tools
+            callback (ResultCallback): a callback to process the generated text and CSV files during simulation
+            kwargs: these are the various parameters or parameter lists for simulation
+        '''
+
         args = kwargs.copy()
-        enable_modules = ['applications', 'csma', 'flow-monitor', 'mpi', 'mtp', 'nix-vector-routing', 'point-to-point']
-        configure_cmd = ['./ns3', 'configure', '-d', 'optimized', '--enable-examples', '--enable-modules', ','.join(enable_modules)]
+        enable_modules = ['applications', 'flow-monitor', 'mpi', 'mtp', 'nix-vector-routing', 'point-to-point']
+        configure_cmd = ['./ns3', 'configure', '-d', 'optimized', '--enable-modules', ','.join(enable_modules)]
         mpi_cmd = ''
 
         # configure
@@ -149,7 +194,7 @@ class Experiment:
         self.cmd(run_cmd, run=False)
         process = subprocess.Popen(run_cmd, text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
-        # check event count and simulation time
+        # get results from the output of the simulation process
         ev = 0
         t = 0
         flow_count = 0
@@ -195,8 +240,7 @@ class Experiment:
         if t == 0:
             t = t_end - t_start
 
-        # output statistics
-
+        # output statistics to the CSV file
         self.data_output.write(f'{program},{simulator}')
         for _, value in sorted(kwargs.items()):
             self.data_output.write(f',{value}')
@@ -215,6 +259,7 @@ class Experiment:
 
 @ResultCallback.make(['msg', 'sync', 'exec'])
 def get_mpi_time() -> list:
+    '''This callback reads msg, sync, exec time (i.e., P, S, M) of each LP for the barrier and nullmsg simulator, output P and S ratio in each round, and calcluate the average of the sum of every LP's P, S and M in every rounds'''
     t_msg = 0
     t_sync = 0
     t_exec = 0
@@ -241,6 +286,7 @@ def get_mpi_time() -> list:
             t_sync_list.append(t_sync_round_list)
             t_exec_list.append(t_exec_round_list)
             os.unlink(fullname)
+    # convert to seconds
     t_msg /= system_count * 1e9
     t_sync /= system_count * 1e9
     t_exec /= system_count * 1e9
@@ -264,6 +310,7 @@ def get_mpi_time() -> list:
 
 @ResultCallback.make(['msg', 'sync', 'exec', 'sorting', 'process', 'slowdown'])
 def get_mtp_time() -> list:
+    '''This callback reads msg, sync, exec time (i.e., P, S, M) and the slowdown factor of each thread for Unison, output P and S in each round, and calcluate the average of the sum of every thread's P, S and M in every rounds'''
     t_sync = 0
     t_exec = 0
     t_sync_list = []
@@ -296,6 +343,7 @@ def get_mtp_time() -> list:
         t_process = int(line[-2])
         slowdown = float(line[-1])
         os.unlink('results/MT.csv')
+    # convert to seconds
     t_msg /= system_count * 1e9
     t_sync /= system_count * 1e9
     t_exec /= system_count * 1e9
@@ -321,6 +369,7 @@ def get_mtp_time() -> list:
 
 @ResultCallback.make(['miss'])
 def get_cache_miss() -> list:
+    '''This callback reads cache misses from the linux perf output'''
     cache_miss = -1
     with open('results/perf.txt') as f:
         for line in f.readlines():
@@ -350,7 +399,7 @@ if __name__ == '__main__':
     if argv[1] == 'init':
         subprocess.run('sudo apt update', shell=True)
         # install dependencies
-        subprocess.run('sudo apt install build-essential cmake git openmpi-bin openmpi-doc libopenmpi-dev linux-tools-generic ninja-build nfs-common -y', shell=True)
+        subprocess.run('sudo apt install build-essential cmake git openmpi-bin openmpi-doc libopenmpi-dev linux-tools-generic ninja-build nfs-common texlive-latex-recommended texlive-fonts-extra -y', shell=True)
         # allow perf
         subprocess.run('sudo sysctl -w kernel.perf_event_paranoid=-1', shell=True)
         # disable hyper-threading
@@ -492,7 +541,7 @@ if __name__ == '__main__':
               delay=3000,
               bandwidth='100Gbps',
               core=[24, 20, 16, 12, 8, 4, 2])
-              # core=[8, 6, 4, 2]) # for small-scale
+        # core=[8, 6, 4, 2]) # for small-scale
 
     # 9 (3d)
     elif argv[1] == 'flexible-barrier':
@@ -503,7 +552,7 @@ if __name__ == '__main__':
               delay=3000,
               bandwidth='100Gbps',
               core=[8, 4, 2])
-              # core=[4, 2]) # for small-scale
+        # core=[4, 2]) # for small-scale
 
     # 9 (1d)
     elif argv[1] == 'flexible-default':
