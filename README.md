@@ -51,7 +51,7 @@ If it is omitted, the number of threads is automatically chosen and will not exc
 
 UNISON resolved a lot of thread-safety issues with ns-3's architecture.
 You don't need to consider these issues on your own for most of the time, except if you have custom global statistics other than the built-in flow-monitor.
-In the letter case, if multiple nodes can access your global statistics, you can replace them with atomic variables via `std::atomic<>`.
+In the latter case, if multiple nodes can access your global statistics, you can replace them with atomic variables via `std::atomic<>`.
 For complex custom data structures, you can create critical sections by adding
 
 ```c++
