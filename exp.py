@@ -176,6 +176,9 @@ class Experiment:
             configure_cmd.append('--enable-mtp')
             configure_cmd.append('--enable-mpi')
             mpi_cmd = f'mpirun -n {math.ceil(core / conf["maxcore"])} --map-by ppr:1:node --bind-to none'
+        elif simulator != 'default':
+            print(f'No such simulator: {simulator}, skipping')
+            return
         if mpi_cmd != '' and core > conf['maxcore']:
             mpi_cmd += f' --host ' + ','.join([f'{h}:{conf["maxcore"]}' for h in conf['hosts']])
         template_cmd = f'{mpi_cmd} {template_cmd}'.strip()
@@ -520,7 +523,7 @@ if __name__ == '__main__':
     # 8 (2h)
     elif argv[1] == 'dqn':
         e = Experiment(argv[1])
-        e.run('dqn', ['barrier', 'nullmsg', 'mtp', 'default'],
+        e.run('dqn', ['barrier', 'nullmsg', 'unison', 'default'],
               k=[4, 8],
               cluster=[4, 8],
               delay=500000,
@@ -535,7 +538,7 @@ if __name__ == '__main__':
     # 9 (1d)
     elif argv[1] == 'flexible':
         e = Experiment(argv[1])
-        e.run('fat-tree', 'mtp',
+        e.run('fat-tree', 'unison',
               k=8,
               # k=4, # for small-scale
               delay=3000,
@@ -566,7 +569,7 @@ if __name__ == '__main__':
     # 10a (3h)
     elif argv[1] == 'mtp-sync-incast':
         e = Experiment(argv[1])
-        e.run('fat-tree', 'mtp',
+        e.run('fat-tree', 'unison',
               branch='unison-evaluations-for-mtp',
               callback=get_mtp_time,
               k=8,
@@ -583,7 +586,7 @@ if __name__ == '__main__':
     # 10b (40min)
     elif argv[1] == 'mtp-sync':
         e = Experiment(argv[1])
-        e.run('fat-tree', 'mtp',
+        e.run('fat-tree', 'unison',
               branch='unison-evaluations-for-mtp',
               callback=get_mtp_time,
               k=8,

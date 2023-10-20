@@ -223,8 +223,6 @@ The "Dependencies" field is the required software dependencies in addition to
 - Git
 - CMake
 
-The fat-tree-distributed and flexible
-
 ## Updating Evaluation Branches
 
 These evaluation branches `unison-evaluations`, `unison-evaluations-for-mpi` and `unison-evaluations-for-mtp` might be rebased since there might be new commits upon their base `unison` branch for bug fixing.
