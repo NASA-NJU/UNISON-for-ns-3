@@ -180,7 +180,7 @@
                 ]
                 \addplot[agrey, domain=0:24, samples=7, ultra thick]{x};
                 \addplot[ablue, mark=*, thick] table[x=core, y=speedup-barrier, col sep=comma] {9.csv};
-                \addplot[ared, mark=*, thick] table[x=core, y=speedup-mtp, col sep=comma] {9.csv};
+                \addplot[ared, mark=*, thick] table[x=core, y=speedup-unison, col sep=comma] {9.csv};
             \end{axis}
         \end{tikzpicture}}{\texttt{9.csv} not found, please run \texttt{./process.py 9} first}
     \caption{\bf Figure 9}

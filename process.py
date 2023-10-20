@@ -183,8 +183,8 @@ if __name__ == '__main__':
                                  exp=['flexible', 'flexible-barrier', 'flexible-default'],
                                  x='core',
                                  y='t',
-                                 y_post={'speedup-barrier': lambda data, x_value: str(float(data[x_value]['t-barrier']) / float(data['']['t-default'])),
-                                         'speedup-unison': lambda data, x_value: str(float(data[x_value]['t-unison']) / float(data['']['t-default']))},
+                                 y_post={'speedup-barrier': lambda data, x_value: str(float(data['']['t-default']) / float(data[x_value]['t-barrier'])) if 't-barrier' in data[x_value] else '',
+                                         'speedup-unison': lambda data, x_value: str(float(data['']['t-default']) / float(data[x_value]['t-unison'])) if 't-unison' in data[x_value] else ''},
                                  legend='simulator')
 
     elif argv[1] == '10a':
