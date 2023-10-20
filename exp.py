@@ -306,7 +306,7 @@ def get_mpi_time() -> list:
     # output sync ratio in each round
     with open(f'results/mpi-ratio-{system_count}.csv', 'wt') as f:
         f.write('round,ratio\n')
-        for rnd in range(len(t_exec_list[0])):
+        for rnd in range(min([len(i) for i in t_exec_list])):
             f.write(f'{rnd},{t_sync_list[rank][rnd] / (t_sync_list[rank][rnd] + t_exec_list[rank][rnd])}\n')
     return [t_msg, t_sync, t_exec]
 
@@ -365,7 +365,7 @@ def get_mtp_time() -> list:
     # output sync ratio in each round
     with open(f'results/mtp-ratio-{system_count}.csv', 'wt') as f:
         f.write('round,ratio\n')
-        for rnd in range(len(t_exec_list[0])):
+        for rnd in range(min([len(i) for i in t_exec_list])):
             f.write(f'{rnd},{t_sync_list[rank][rnd] / (t_sync_list[rank][rnd] + t_exec_list[rank][rnd])}\n')
     return [t_msg, t_sync, t_exec, t_sorting, t_process, slowdown]
 
