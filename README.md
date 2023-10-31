@@ -54,7 +54,7 @@ If you are using Ubuntu, you can initialize the environment in every host you wa
 ./exp.py init
 ```
 
-This will turn off hyperthreading, allow kernel profiling and install software dependencies including CMake, MPI, TeX Live and Linux perf tools.
+This will turn off hyperthreading, allow kernel profiling and install software dependencies including CMake, OpenMPI, TeX Live and Linux perf tools.
 
 Additionally, if you want to run distributed simulation experiments (whose name typically contains `-distributed` in `exp.py`), you should have multiple hosts with the same configuration in a LAN.
 You should choose one of the hosts as the master host.
@@ -122,17 +122,6 @@ Moreover, if your parameters are co-relative, you can pass lambda functions to s
 The `exp.py` script will automatically handle these cases for you.
 Feel free to adjust these parameters and create new experiments for your own research.
 
-If you want to see the ongoing experiment, you can use `pgrep` command:
-```shell
-pgrep -af exp.py
-```
-
-and terminate an ongoing experiment via `pkill`:
-```shell
-pkill -f exp.py
-pkill -f ns-3
-```
-
 ## Processing Experiment Data
 
 The raw experiment data and logs are stored in the `results` folder.
@@ -157,7 +146,7 @@ This utility script will pick up the latest experiment results if you have run o
 You can see the code for more details.
 
 After processing, you can get the plot by compiling `results/plot.tex` with `pdflatex`, which will produce the final plot in `results/plot.pdf`.
-This TeX file checks whether the CSV file to be plotted is exist and plots the figure via the PGFPlot package.
+This TeX file checks whether the CSV file to be plotted exists and plots the figure via the PGFPlot package.
 
 ## Mapping Claims to Figures
 
@@ -169,10 +158,15 @@ This TeX file checks whether the CSV file to be plotted is exist and plots the f
 |4| The synchronization time is long for low-latency and high-bandwidth networks for existing PDES approaches | 5c, 5d |
 |5| UNISON can significantly reduce the synchronization time to near-zero | 10b |
 |6| UNISON exhibit super-linear speedup and its parallelism is flexible to set | 9 |
-|7| UNISON is also fast with other topologies and under different traffic patterns | 11b |
+|7*| UNISON is also fast with other topologies and under different traffic patterns | 11b |
 |8| The output of UNISON is deterministic under multiple runs while other PDES approaches are not | 13a, 13b |
 |9| Fine-grained partition of UNISON can reduce cache misses which can further reduce the simulation time | 14a |
-|10| The default scheduling metric of UNISON performs better than others and without scheduling | 14b |
+|10*| The default scheduling metric of UNISON performs better than others and without scheduling | 14b |
+
+- For Claim 7, Figure 11a and 11c can also prove the claim, but both of them take over days to complete.
+- For claim 10, the corresponding Figure 14b is the major optimization of the load-adaptive scheduling compared with Figure 14c.
+
+Therefore, we do not add Figure 11a, 11c and 14c into our claims, but you can still evaluate them according to the following section.
 
 ## Mapping Figures to Experiment Names
 
@@ -183,14 +177,21 @@ This TeX file checks whether the CSV file to be plotted is exist and plots the f
 | 5b        | mpi-sync                               |
 | 5c        | mpi-sync-delay                         |
 | 5d        | mpi-sync-bandwidth                     |
+| 8*        | dqn                                    |
 | 9         | flexible, flexible-barrier, flexible-default |
 | 10a       | mtp-sync-incast, mpi-sync-incast       |
 | 10b       | mtp-sync                               |
+| 11a       | tous-disribured, torus                 |
 | 11b       | bcube, bcube-old, bcube-default        |
+| 11c       | wan                                    |
+| 12*       | accuracy                               |
 | 13a       | deterministic                          |
 | 13b       | deterministic                          |
 | 14a       | partition-cache                        |
 | 14b       | scheduling-metrics                     |
+| 14c       | scheduling-period                      |
+
+- Figure 8 and 12 are not covered by your artifact, because they require expensive GPUs and modifications to [MimicNet](https://github.com/eniac/MimicNet) and [DeepQeueuNet](https://github.com/HUAWEI-Theory-Lab/deepqueuenet). However, you can still get part of the data by running the according experiments.
 
 It is notable that multiple experiments required by the same figure should be performed under the same hardware configuration.
 If different figures require the same experiment, you can perform this experiment just once.
@@ -205,27 +206,33 @@ If different figures require the same experiment, you can perform this experimen
 | mpi-sync | 8 | OpenMPI | 1 hour |
 | mpi-sync-delay | 8 | OpenMPI | 20 minutes |
 | mpi-sync-bandwidth | 8 | OpenMPI | 10 minutes |
+| dqn | **16** | OpenMPI | 2 hours |
 | flexible | **24** | | **1 day** |
 | flexible-barrier | 8 | OpenMPI | **3 days** |
 | flexible-default | 1 | | **1 day** |
 | mtp-sync-incast | 8 | | 3 hours |
 | mtp-sync | 8 | | 40 minutes |
+| torus-distributed | **144** | OpenMPI, NFS server/client | **4 days** |
+| torus | **24** | OpenMPI | **5 days** |
 | bcube | **16** | | 40 minutes |
 | bcube-old | 8 | OpenMPI | 2 hours |
 | bcube-default | 1 | | **1 day** |
+| wan | **16** | | **3 days** |
+| accuracy | **4** | OpenMPI | 30 minutes |
 | deterministic | 8 | OpenMPI | 4 hours |
 | partition-cache | 1 | Linux perf | **1 day** |
 | scheduling-metrics | **16** | | 4 hours |
+| scheduling-period | **16** | | **1 day** |
 
 The "Dependencies" field is the required software dependencies in addition to
 - Python 3.8 or above
-- g++-7, clang-10 or Xcode 11
+- g++-7, clang-10, or Xcode 11
 - Git
 - CMake
 
 ## Updating Evaluation Branches
 
-These evaluation branches `unison-evaluations`, `unison-evaluations-for-mpi` and `unison-evaluations-for-mtp` might be rebased since there might be new commits upon their base `unison` branch for bug fixing.
+These evaluation branches `unison-evaluations`, `unison-evaluations-for-mpi`, and `unison-evaluations-for-mtp` might be rebased since there might be new commits upon their base `unison` branch for bug fixing.
 If you want to update these branches, please first backup all your custom modifications on these branches and type the following commands:
 
 ```shell

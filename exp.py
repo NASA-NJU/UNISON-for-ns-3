@@ -741,17 +741,17 @@ if __name__ == '__main__':
               sort=['None', 'ByExecutionTime', 'ByPendingEventCount'],
               core=[4, 8, 12, 16])
 
-    # 14c (2h)
+    # 14c (1d)
     elif argv[1] == 'scheduling-period':
         e = Experiment(argv[1])
         e.run('fat-tree', 'unison',
               branch='unison-evaluations-for-mtp',
               callback=get_mtp_time,
               k=8,
-              bandwidth='100Gbps',
-              time=0.1,
-              period=[1, 2, 4, 8, 16, 32, 64, 128, 256, 512],
-              core=16)
+              bandwidth='10Gbps',
+              time=0.5,
+              period=[1, 2, 4, 8, 16, 32, 64],
+              core=[16] * 10)
 
     else:
         print('No such experiment!')

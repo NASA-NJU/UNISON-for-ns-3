@@ -63,6 +63,8 @@ def generate_csv_for_pgfplot(figure_name: str, exp: list, x, y, y_post={}, legen
                 # get legend
                 if isinstance(legend, list):
                     legend_label = '-' + '-'.join([line[idx[i]] if i in idx else '' for i in legend])
+                elif callable(legend):
+                    legend_label = '-' + legend(line, idx)
                 elif legend is not None:
                     legend_label = '-' + line[idx[legend]]
                 else:
@@ -274,10 +276,18 @@ if __name__ == '__main__':
                                  legend='sort')
 
     elif argv[1] == '14c':
+        i = -1
+
+        def counter(line, idx):
+            global i
+            return str((i := i + 1) % 10)
+
         generate_csv_for_pgfplot(figure_name=argv[1],
                                  exp='scheduling-period',
                                  x='period',
-                                 y='t')
+                                 y='t',
+                                 y_post={'t': lambda data, x_value: str(sum([float(data[x_value]['t-' + str(i)]) for i in range(10)]) / 10)},
+                                 legend=counter)
 
     elif argv[1] == '15a':
         shutil.copy(fullpath('results/mpi-exec.csv'), fullpath('results/15a.csv'))
