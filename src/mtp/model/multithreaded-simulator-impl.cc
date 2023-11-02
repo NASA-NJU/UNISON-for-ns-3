@@ -299,7 +299,11 @@ MultithreadedSimulatorImpl::Partition ()
             }
         }
       std::sort (delays.begin (), delays.end ());
-      if (delays.size () % 2 == 1)
+      if (delays.size () == 0)
+        {
+          m_minLookahead = TimeStep (0);
+        }
+      else if (delays.size () % 2 == 1)
         {
           m_minLookahead = delays[delays.size () / 2];
         }
