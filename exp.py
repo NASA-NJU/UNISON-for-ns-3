@@ -520,7 +520,7 @@ if __name__ == '__main__':
               flowmon=True,
               core=8)
 
-    # 8 (2h)
+    # 8a (2h)
     elif argv[1] == 'dqn':
         e = Experiment(argv[1])
         e.run('dqn', ['barrier', 'nullmsg', 'unison', 'default'],
@@ -535,7 +535,7 @@ if __name__ == '__main__':
               flowmon=True,
               core=16)
 
-    # 9 (1d)
+    # 8b (1d)
     elif argv[1] == 'flexible':
         e = Experiment(argv[1])
         e.run('fat-tree', 'unison',
@@ -546,7 +546,7 @@ if __name__ == '__main__':
               core=[24, 20, 16, 12, 8, 4, 2])
         # core=[8, 6, 4, 2]) # for small-scale
 
-    # 9 (3d)
+    # 8b(3d)
     elif argv[1] == 'flexible-barrier':
         e = Experiment(argv[1])
         e.run('fat-tree', 'barrier',
@@ -557,7 +557,7 @@ if __name__ == '__main__':
               core=[8, 4, 2])
         # core=[4, 2]) # for small-scale
 
-    # 9 (1d)
+    # 8b (1d)
     elif argv[1] == 'flexible-default':
         e = Experiment(argv[1])
         e.run('fat-tree', 'default',
@@ -566,7 +566,7 @@ if __name__ == '__main__':
               delay=3000,
               bandwidth='100Gbps')
 
-    # 10a (3h)
+    # 9a (3h)
     elif argv[1] == 'mtp-sync-incast':
         e = Experiment(argv[1])
         e.run('fat-tree', 'unison',
@@ -583,7 +583,7 @@ if __name__ == '__main__':
               flowmon=True,
               core=8)
 
-    # 10b (40min)
+    # 9b (40min)
     elif argv[1] == 'mtp-sync':
         e = Experiment(argv[1])
         e.run('fat-tree', 'unison',
@@ -600,7 +600,7 @@ if __name__ == '__main__':
         shutil.move('results/mtp-ratio-8.csv', 'results/mtp-sync.csv')
         shutil.move('results/mtp-exec-8.csv', 'results/mtp-exec.csv')
 
-    # 11a (4d)
+    # 10a (4d)
     elif argv[1] == 'torus-distributed':
         e = Experiment(argv[1])
         e.run('torus', ['barrier', 'nullmsg', 'unison'],
@@ -612,7 +612,7 @@ if __name__ == '__main__':
               time=1,
               core=[144, 96, 72, 48])
 
-    # 11a (5d)
+    # 10a (5d)
     elif argv[1] == 'torus':
         e = Experiment(argv[1])
         e.run('torus', ['barrier', 'nullmsg', 'unison'],
@@ -624,7 +624,7 @@ if __name__ == '__main__':
               time=1,
               core=[24, 12, 6])
 
-    # 11b (40min)
+    # 10b (40min)
     elif argv[1] == 'bcube':
         e = Experiment(argv[1])
         e.run('bcube', 'unison',
@@ -638,7 +638,7 @@ if __name__ == '__main__':
               interval=0.01,
               core=[8, 16])
 
-    # 11b (2h)
+    # 10b (2h)
     elif argv[1] == 'bcube-old':
         e = Experiment(argv[1])
         e.run('bcube', ['barrier', 'nullmsg'],
@@ -652,7 +652,7 @@ if __name__ == '__main__':
               interval=0.01,
               core=8)
 
-    # 11b (1d)
+    # 10b (1d)
     elif argv[1] == 'bcube-default':
         e = Experiment(argv[1])
         e.run('bcube', 'default',
@@ -665,7 +665,7 @@ if __name__ == '__main__':
               time=0.1,
               interval=0.01)
 
-    # 11c (3d)
+    # 10c (3d)
     elif argv[1] == 'wan':
         e = Experiment(argv[1])
         e.run('wan', ['unison', 'default'],
@@ -680,28 +680,41 @@ if __name__ == '__main__':
               interval=1,
               core=16)
 
-    # 12 (30min)
+    # 10d (3h)
+    elif argv[1] == 'rdcn':
+        e = Experiment(argv[1])
+        e.run('rdcn', ['unison', 'default'],
+              k=4,
+              delay=3000,
+              bandwidth='10Gbps',
+              flow=True,
+              flowmon=True,
+              time=1,
+              interval=[0.04, 0.02, 0.01, 0.005, 0.0025, 0.00125],
+              core=4)
+
+    # 2 (30min)
     elif argv[1] == 'accuracy':
         e = Experiment(argv[1])
-        e.run('fat-tree', ['barrier', 'nullmsg', 'unison', 'default'],
+        e.run('fat-tree', ['unison', 'default'],
               k=4,
-              cluster=4,
+              cluster=[2, 4],
               delay=500000,
               bandwidth='100Mbps',
               buffer='100p',
               ecn=False,
-              flow=True,
+              flow=False,
               tcp='ns3::TcpNewReno',
               size=500,
               load=0.7,
-              incast=0.5,
+              incast=0.1,
               victim=lambda args: '-'.join([str(int(args['k']) ** 2 * int(args['cluster']) // 4 - i - 1) for i in range(int(args['k']))]),
-              time=20,
+              time=5,
               interval=1,
               flowmon=True,
-              core=4)
+              core=lambda args: args['cluster'])
 
-    # 13 (4h)
+    # 11 (4h)
     elif argv[1] == 'deterministic':
         e = Experiment(argv[1])
         e.run('fat-tree', ['barrier', 'nullmsg', 'unison'],
@@ -714,7 +727,7 @@ if __name__ == '__main__':
               flowmon=True,
               core=[8] * 20)
 
-    # 14a (1d)
+    # 12a (1d)
     elif argv[1] == 'partition-cache':
         e = Experiment(argv[1])
         e.run('torus', 'unison',
@@ -729,7 +742,16 @@ if __name__ == '__main__':
               interval=0.1,
               core=1)
 
-    # 14b (4h)
+    # 12b (20min)
+    elif argv[1] == 'partition-corner-case':
+        e = Experiment(argv[1])
+        e.run('dctcp', 'unison',
+              template_cmd='perf stat -e cache-misses -o results/perf.txt',
+              callback=get_cache_miss,
+              partition=['Auto', 'Bottleneck', 'Coarse'],
+              core=4)
+
+    # 12c (4h)
     elif argv[1] == 'scheduling-metrics':
         e = Experiment(argv[1])
         e.run('fat-tree', 'unison',
@@ -741,7 +763,7 @@ if __name__ == '__main__':
               sort=['None', 'ByExecutionTime', 'ByPendingEventCount'],
               core=[4, 8, 12, 16])
 
-    # 14c (1d)
+    # 12d (1d)
     elif argv[1] == 'scheduling-period':
         e = Experiment(argv[1])
         e.run('fat-tree', 'unison',

@@ -166,7 +166,7 @@
 \end{figure}
 
 \begin{figure}[h]
-    \IfFileExists{9.csv}{
+    \IfFileExists{8b.csv}{
         \begin{tikzpicture}
             \begin{axis}[
                     width=\linewidth,
@@ -179,15 +179,15 @@
                     legend entries={Linear speedup, Barrier, \sys}
                 ]
                 \addplot[agrey, domain=0:24, samples=7, ultra thick]{x};
-                \addplot[ablue, mark=*, thick] table[x=core, y=speedup-barrier, col sep=comma] {9.csv};
-                \addplot[ared, mark=*, thick] table[x=core, y=speedup-unison, col sep=comma] {9.csv};
+                \addplot[ablue, mark=*, thick] table[x=core, y=speedup-barrier, col sep=comma] {8b.csv};
+                \addplot[ared, mark=*, thick] table[x=core, y=speedup-unison, col sep=comma] {8b.csv};
             \end{axis}
-        \end{tikzpicture}}{\texttt{9.csv} not found, please run \texttt{./process.py 9} first}
-    \caption{\bf Figure 9}
+        \end{tikzpicture}}{\texttt{8b.csv} not found, please run \texttt{./process.py 8b} first}
+    \caption{\bf Figure 8b}
 \end{figure}
 
 \begin{figure}[h]
-    \IfFileExists{10a.csv}{
+    \IfFileExists{9a.csv}{
         \begin{tikzpicture}
             \begin{axis}[
                     width=\linewidth,
@@ -203,21 +203,21 @@
                     legend pos=north west,
                     legend image post style={scale=0.6},
                 ]
-                \addplot+[ablue, draw=none, bar shift=-5pt] table[x=incast, y=exec-barrier, col sep=comma] {10a.csv};
-                \addplot+[ablue!60, draw=none, bar shift=-5pt] table[x=incast, y=sync-barrier, col sep=comma] {10a.csv};
+                \addplot+[ablue, draw=none, bar shift=-5pt] table[x=incast, y=exec-barrier, col sep=comma] {9a.csv};
+                \addplot+[ablue!60, draw=none, bar shift=-5pt] table[x=incast, y=sync-barrier, col sep=comma] {9a.csv};
                 \addbar
-                \addplot+[ayellow, draw=none, bar shift=0pt] table[x=incast, y=exec-nullmsg, col sep=comma] {10a.csv};
-                \addplot+[ayellow!40, draw=none, bar shift=0pt] table[x=incast, y=sync-nullmsg, col sep=comma] {10a.csv};
+                \addplot+[ayellow, draw=none, bar shift=0pt] table[x=incast, y=exec-nullmsg, col sep=comma] {9a.csv};
+                \addplot+[ayellow!40, draw=none, bar shift=0pt] table[x=incast, y=sync-nullmsg, col sep=comma] {9a.csv};
                 \addbar
-                \addplot+[ared, draw=none, bar shift=5pt] table[x=incast, y=exec-unison, col sep=comma] {10a.csv};
-                \addplot+[ared!50, draw=none, bar shift=5pt] table[x=incast, y=sync-unison, col sep=comma] {10a.csv};
+                \addplot+[ared, draw=none, bar shift=5pt] table[x=incast, y=exec-unison, col sep=comma] {9a.csv};
+                \addplot+[ared!50, draw=none, bar shift=5pt] table[x=incast, y=sync-unison, col sep=comma] {9a.csv};
             \end{axis}
-        \end{tikzpicture}}{\texttt{10a.csv} not found, please run \texttt{./process.py 10a} first}
-    \caption{\bf Figure 10a}
+        \end{tikzpicture}}{\texttt{9a.csv} not found, please run \texttt{./process.py 9a} first}
+    \caption{\bf Figure 9a}
 \end{figure}
 
 \begin{figure}[h]
-    \IfFileExists{10b.csv}{
+    \IfFileExists{9b.csv}{
         \begin{tikzpicture}
             \begin{axis}[
                     width=1\linewidth,
@@ -227,14 +227,14 @@
                     ylabel={$S_U/T$},
                     ymode=log
                 ]
-                \addplot [ared] table[x=round, y=ratio, col sep=comma] {10b.csv};
+                \addplot [ared] table[x=round, y=ratio, col sep=comma] {9b.csv};
             \end{axis}
-        \end{tikzpicture}}{\texttt{10b.csv} not found, please run \texttt{./process.py 10b} first}
-    \caption{\bf Figure 10b}
+        \end{tikzpicture}}{\texttt{9b.csv} not found, please run \texttt{./process.py 9b} first}
+    \caption{\bf Figure 9b}
 \end{figure}
 
 \begin{figure}[h]
-    \IfFileExists{11b.csv}{
+    \IfFileExists{10b.csv}{
         \begin{tikzpicture}
             \begin{axis}[
                     width=\linewidth,
@@ -248,17 +248,17 @@
                     legend pos=north west,
                     enlarge x limits={abs=0.18\linewidth},
                 ]
-                \addplot+[ablue, draw=none, bar shift=-12pt] table[x=cdf, y=speedup-barrier, col sep=comma] {11b.csv};
-                \addplot+[ayellow, draw=none, bar shift=-4pt] table[x=cdf, y=speedup-nullmsg, col sep=comma] {11b.csv};
-                \addplot+[agreen, draw=none, bar shift=4pt] table[x=cdf, y=speedup-unison-8, col sep=comma] {11b.csv};
-                \addplot+[ared, draw=none, bar shift=12pt] table[x=cdf, y=speedup-unison-16, col sep=comma] {11b.csv};
+                \addplot+[ablue, draw=none, bar shift=-12pt] table[x=cdf, y=speedup-barrier, col sep=comma] {10b.csv};
+                \addplot+[ayellow, draw=none, bar shift=-4pt] table[x=cdf, y=speedup-nullmsg, col sep=comma] {10b.csv};
+                \addplot+[agreen, draw=none, bar shift=4pt] table[x=cdf, y=speedup-unison-8, col sep=comma] {10b.csv};
+                \addplot+[ared, draw=none, bar shift=12pt] table[x=cdf, y=speedup-unison-16, col sep=comma] {10b.csv};
             \end{axis}
-        \end{tikzpicture}}{\texttt{11b.csv} not found, please run \texttt{./process.py 11b} first}
-    \caption{\bf Figure 11b}
+        \end{tikzpicture}}{\texttt{10b.csv} not found, please run \texttt{./process.py 10b} first}
+    \caption{\bf Figure 10b}
 \end{figure}
 
 \begin{figure}[h]
-    \IfFileExists{13a.csv}{
+    \IfFileExists{11a.csv}{
         \begin{tikzpicture}
             \begin{axis}[
                     width=\linewidth,
@@ -269,17 +269,17 @@
                     legend entries={Barrier, Nulmsg, \sys},
                     legend style={at={(0.97, 0.3)}, anchor=south east}
                 ]
-                \addplot[ablue, very thick] table[x=x, y=ev-barrier, col sep=comma] {13a.csv};
-                \addplot[ayellow, very thick] table[x=x, y=ev-nullmsg, col sep=comma] {13a.csv};
-                \addplot[ared, very thick] table[x=x, y=ev-unison, col sep=comma] {13a.csv};
+                \addplot[ablue, very thick] table[x=x, y=ev-barrier, col sep=comma] {11a.csv};
+                \addplot[ayellow, very thick] table[x=x, y=ev-nullmsg, col sep=comma] {11a.csv};
+                \addplot[ared, very thick] table[x=x, y=ev-unison, col sep=comma] {11a.csv};
             \end{axis}
         \end{tikzpicture}
-    }{\texttt{13a.csv} not found, please run \texttt{./process.py 13a} first}
-    \caption{\bf Figure 13a}
+    }{\texttt{11a.csv} not found, please run \texttt{./process.py 11a} first}
+    \caption{\bf Figure 11a}
 \end{figure}
 
 \begin{figure}[h]
-    \IfFileExists{13b.csv}{
+    \IfFileExists{11b.csv}{
         \begin{tikzpicture}
             \begin{axis}[
                     width=\linewidth,
@@ -290,17 +290,17 @@
                     legend entries={Barrier, Nulmsg, \sys},
                     legend style={at={(0.03, 0.15)}, anchor=south west}
                 ]
-                \addplot[ablue, very thick] table[x=x, y=e2ed-barrier, col sep=comma] {13b.csv};
-                \addplot[ayellow, very thick] table[x=x, y=e2ed-nullmsg, col sep=comma] {13b.csv};
-                \addplot[ared, very thick] table[x=x, y=e2ed-unison, col sep=comma] {13b.csv};
+                \addplot[ablue, very thick] table[x=x, y=e2ed-barrier, col sep=comma] {11b.csv};
+                \addplot[ayellow, very thick] table[x=x, y=e2ed-nullmsg, col sep=comma] {11b.csv};
+                \addplot[ared, very thick] table[x=x, y=e2ed-unison, col sep=comma] {11b.csv};
             \end{axis}
         \end{tikzpicture}
-    }{\texttt{13b.csv} not found, please run \texttt{./process.py 13b} first}
-    \caption{\bf Figure 13b}
+    }{\texttt{11b.csv} not found, please run \texttt{./process.py 11b} first}
+    \caption{\bf Figure 11b}
 \end{figure}
 
 \begin{figure}[h]
-    \IfFileExists{14a.csv}{
+    \IfFileExists{12a.csv}{
         \begin{tikzpicture}
             \begin{axis}[
                     width=0.9\linewidth,
@@ -311,7 +311,7 @@
                     legend entries={Simulation time},
                     legend style={at={(0.97, 0.8)}, anchor=north east}
                 ]
-                \addplot[ablue,mark=square*,mark size=1.5pt] table[x=system,y=t,col sep=comma] {14a.csv};
+                \addplot[ablue,mark=square*,mark size=1.5pt] table[x=system,y=t,col sep=comma] {12a.csv};
             \end{axis}
             \begin{axis}[
                     width=0.9\linewidth,
@@ -323,14 +323,14 @@
                     legend entries={Cache misses},
                     legend pos=north east,
                 ]
-                \addplot[ared,mark=*,mark size=1.5pt,thick] table[x=system,y=miss,col sep=comma] {14a.csv};
+                \addplot[ared,mark=*,mark size=1.5pt,thick] table[x=system,y=miss,col sep=comma] {12a.csv};
             \end{axis}
-        \end{tikzpicture}}{\texttt{14a.csv} not found, please run \texttt{./process.py 14a} first}
-    \caption{\bf Figure 14a}
+        \end{tikzpicture}}{\texttt{12a.csv} not found, please run \texttt{./process.py 12a} first}
+    \caption{\bf Figure 12a}
 \end{figure}
 
 \begin{figure}[h]
-    \IfFileExists{14b.csv}{
+    \IfFileExists{12c.csv}{
         \begin{tikzpicture}
             \begin{axis}[
                     width=0.95\linewidth,
@@ -341,12 +341,12 @@
                     legend entries={By \# of pending event, By processing time, None},
                     legend pos=north west,
                 ]
-                \addplot[ayellow,mark=*,thick] table[x=core,y=slowdown-ByPendingEventCount,col sep=comma] {14b.csv};
-                \addplot[ared,mark=triangle*,thick] table[x=core,y=slowdown-ByExecutionTime,col sep=comma] {14b.csv};
-                \addplot[ablue,mark=square*,thick] table[x=core,y=slowdown-None,col sep=comma] {14b.csv};
+                \addplot[ayellow,mark=*,thick] table[x=core,y=slowdown-ByPendingEventCount,col sep=comma] {12c.csv};
+                \addplot[ared,mark=triangle*,thick] table[x=core,y=slowdown-ByExecutionTime,col sep=comma] {12c.csv};
+                \addplot[ablue,mark=square*,thick] table[x=core,y=slowdown-None,col sep=comma] {12c.csv};
             \end{axis}
-        \end{tikzpicture}}{\texttt{14b.csv} not found, please run \texttt{./process.py 14b} first}
-    \caption{\bf Figure 14b}
+        \end{tikzpicture}}{\texttt{12c.csv} not found, please run \texttt{./process.py 12c} first}
+    \caption{\bf Figure 12c}
 \end{figure}
 
 \clearpage

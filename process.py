@@ -173,14 +173,14 @@ if __name__ == '__main__':
                                  y={'ratio': lambda line, idx: str(float(line[idx['sync']]) / float(line[idx['t']]))},
                                  legend='simulator')
 
-    elif argv[1] == '8':
+    elif argv[1] == '8a':
         generate_csv_for_pgfplot(figure_name=argv[1],
                                  exp='dqn',
                                  x=['cluster', 'k'],
                                  y='t',
                                  legend='simulator')
 
-    elif argv[1] == '9':
+    elif argv[1] == '8b':
         generate_csv_for_pgfplot(figure_name=argv[1],
                                  exp=['flexible', 'flexible-barrier', 'flexible-default'],
                                  x='core',
@@ -189,27 +189,27 @@ if __name__ == '__main__':
                                          'speedup-unison': lambda data, x_value: str(float(data['']['t-default']) / float(data[x_value]['t-unison'])) if 't-unison' in data[x_value] else ''},
                                  legend='simulator')
 
-    elif argv[1] == '10a':
+    elif argv[1] == '9a':
         generate_csv_for_pgfplot(figure_name=argv[1],
                                  exp=['mtp-sync-incast', 'mpi-sync-incast'],
                                  x='incast',
                                  y=['sync', 'exec', 'msg'],
                                  legend='simulator')
 
-    elif argv[1] == '10b':
+    elif argv[1] == '9b':
         truncate_csv_for_pgfplot(figure_name=argv[1],
                                  csv='mtp-sync.csv',
                                  begin=0,
                                  end=1000)
 
-    elif argv[1] == '11a':
+    elif argv[1] == '10a':
         generate_csv_for_pgfplot(figure_name=argv[1],
                                  exp=['torus-distributed', 'torus'],
                                  x='core',
                                  y='t',
                                  legend='simulator')
 
-    elif argv[1] == '11b':
+    elif argv[1] == '10b':
         generate_csv_for_pgfplot(figure_name=argv[1],
                                  exp=['bcube', 'bcube-old', 'bcube-default'],
                                  x='cdf',
@@ -220,23 +220,33 @@ if __name__ == '__main__':
                                          'speedup-unison-16': lambda data, x_value: str(float(data[x_value]['t-default-']) / float(data[x_value]['t-unison-16']))},
                                  legend=['simulator', 'core'])
 
-    elif argv[1] == '11c':
+    elif argv[1] == '10c':
         generate_csv_for_pgfplot(figure_name=argv[1],
                                  exp='wan',
                                  x='topo',
                                  y='t',
                                  legend='simulator')
 
-    elif argv[1] == '12':
+    elif argv[1] == '10d':
+        generate_csv_for_pgfplot(figure_name=argv[1],
+                                 exp='rdcn',
+                                 x='interval',
+                                 y='t',
+                                 legend='simulator')
+
+    elif argv[1] == '2':
         generate_csv_for_pgfplot(figure_name=argv[1],
                                  exp='accuracy',
-                                 x='simulator',
+                                 x=['simulator', 'cluster'],
                                  y=['fct', 'e2ed', 'throughput'],
-                                 y_post={'fct-error': lambda data, x_value: str(abs(float(data[x_value]['fct']) / float(data['default']['fct']) - 1)),
-                                         'e2ed-error': lambda data, x_value: str(abs(float(data[x_value]['e2ed']) / float(data['default']['e2ed']) - 1)),
-                                         'throughput-error': lambda data, x_value: str(abs(float(data[x_value]['throughput']) / float(data['default']['throughput']) - 1))})
+                                 y_post={'FCT': lambda data, x_value: str(float(data[x_value]['fct']) / 1e3),
+                                         'RTT': lambda data, x_value: str(float(data[x_value]['e2ed']) * 2 / 1e3),
+                                         'THR': lambda data, x_value: str(float(data[x_value]['throughput']) * 1e3),
+                                         'FCT-error': lambda data, x_value: str(abs(float(data[x_value]['fct']) / float(data['default-' + x_value.split('-')[-1]]['fct']) - 1)),
+                                         'RTT-error': lambda data, x_value: str(abs(float(data[x_value]['e2ed']) / float(data['default-' + x_value.split('-')[-1]]['e2ed']) - 1)),
+                                         'THR-error': lambda data, x_value: str(abs(float(data[x_value]['throughput']) / float(data['default-' + x_value.split('-')[-1]]['throughput']) - 1))})
 
-    elif argv[1] == '13a':
+    elif argv[1] == '11a':
         i = 2
 
         def counter(line, idx):
@@ -249,7 +259,7 @@ if __name__ == '__main__':
                                  y='ev',
                                  legend='simulator')
 
-    elif argv[1] == '13b':
+    elif argv[1] == '11b':
         i = 2
 
         def counter(line, idx):
@@ -262,20 +272,26 @@ if __name__ == '__main__':
                                  y='e2ed',
                                  legend='simulator')
 
-    elif argv[1] == '14a':
+    elif argv[1] == '12a':
         generate_csv_for_pgfplot(figure_name=argv[1],
                                  exp='partition-cache',
                                  x='system',
                                  y=['miss', 't'])
 
-    elif argv[1] == '14b':
+    elif argv[1] == '12b':
+        generate_csv_for_pgfplot(figure_name=argv[1],
+                                 exp='partition-corner-case',
+                                 x='partition',
+                                 y=['miss', 't'])
+
+    elif argv[1] == '12c':
         generate_csv_for_pgfplot(figure_name=argv[1],
                                  exp='scheduling-metrics',
                                  x='core',
                                  y='slowdown',
                                  legend='sort')
 
-    elif argv[1] == '14c':
+    elif argv[1] == '12d':
         i = -1
 
         def counter(line, idx):
@@ -289,10 +305,10 @@ if __name__ == '__main__':
                                  y_post={'t': lambda data, x_value: str(sum([float(data[x_value]['t-' + str(i)]) for i in range(10)]) / 10)},
                                  legend=counter)
 
-    elif argv[1] == '15a':
+    elif argv[1] == '13a':
         shutil.copy(fullpath('results/mpi-exec.csv'), fullpath('results/15a.csv'))
 
-    elif argv[1] == '15b':
+    elif argv[1] == '13b':
         shutil.copy(fullpath('results/mtp-exec.csv'), fullpath('results/15b.csv'))
 
     else:

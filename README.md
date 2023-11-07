@@ -156,42 +156,39 @@ This TeX file checks whether the CSV file to be plotted exists and plots the fig
 |2| The synchronization time of existing PDES approaches gradually dominates as the traffic inhomogeneity increases | 5a |
 |3| The synchronization time ratio is high in a transient time window for existing PDES approaches, even if the traffic pattern is balanced in macro | 5b |
 |4| The synchronization time is long for low-latency and high-bandwidth networks for existing PDES approaches | 5c, 5d |
-|5| UNISON can significantly reduce the synchronization time to near-zero | 10b |
-|6| UNISON exhibit super-linear speedup and its parallelism is flexible to set | 9 |
-|7*| UNISON is also fast with other topologies and under different traffic patterns | 11b |
-|8| The output of UNISON is deterministic under multiple runs while other PDES approaches are not | 13a, 13b |
-|9| Fine-grained partition of UNISON can reduce cache misses which can further reduce the simulation time | 14a |
-|10*| The default scheduling metric of UNISON performs better than others and without scheduling | 14b |
-
-- For Claim 7, Figure 11a and 11c can also prove the claim, but both of them take over days to complete.
-- For claim 10, the corresponding Figure 14b is the major optimization of the load-adaptive scheduling compared with Figure 14c.
-
-Therefore, we do not add Figure 11a, 11c and 14c into our claims, but you can still evaluate them according to the following section.
+|5| UNISON can significantly reduce the synchronization time to near-zero | 9a, 9b |
+|6| UNISON exhibit super-linear speedup and its parallelism is flexible to set | 8b |
+|7*| UNISON is also fast with other topologies and under different traffic patterns | 10b |
+|8| The output of UNISON is deterministic under multiple runs while other PDES approaches are not | 11a, 11b |
+|9| Fine-grained partition of UNISON can reduce cache misses which can further reduce the simulation time | 12a |
+|10*| The default scheduling metric of UNISON performs better than others and without scheduling | 12c |
 
 ## Mapping Figures to Experiment Names
 
-| Figure ID | Required Experiment Names              |
+| Figure/Table ID | Required Experiment Names              |
 |-----------|----------------------------------------|
 | 1         | fat-tree-distributed, fat-tree-default |
 | 5a        | mpi-sync-incast                        |
 | 5b        | mpi-sync                               |
 | 5c        | mpi-sync-delay                         |
 | 5d        | mpi-sync-bandwidth                     |
-| 8*        | dqn                                    |
-| 9         | flexible, flexible-barrier, flexible-default |
-| 10a       | mtp-sync-incast, mpi-sync-incast       |
-| 10b       | mtp-sync                               |
-| 11a       | tous-disribured, torus                 |
-| 11b       | bcube, bcube-old, bcube-default        |
-| 11c       | wan                                    |
-| 12*       | accuracy                               |
-| 13a       | deterministic                          |
-| 13b       | deterministic                          |
-| 14a       | partition-cache                        |
-| 14b       | scheduling-metrics                     |
-| 14c       | scheduling-period                      |
+| 8a*       | dqn                                    |
+| 8b        | flexible, flexible-barrier, flexible-default |
+| 9a        | mtp-sync-incast, mpi-sync-incast       |
+| 9b        | mtp-sync                               |
+| 10a       | tous-disribured, torus                 |
+| 10b       | bcube, bcube-old, bcube-default        |
+| 10c       | wan                                    |
+| 10d       | rdcn                                   |
+| 2*        | accuracy                               |
+| 11a       | deterministic                          |
+| 11b       | deterministic                          |
+| 12a       | partition-cache                        |
+| 12b       | partition-corner-case                  |
+| 12c       | scheduling-metrics                     |
+| 12d       | scheduling-period                      |
 
-- Figure 8 and 12 are not covered by your artifact, because they require expensive GPUs and modifications to [MimicNet](https://github.com/eniac/MimicNet) and [DeepQeueuNet](https://github.com/HUAWEI-Theory-Lab/deepqueuenet). However, you can still get part of the data by running the according experiments.
+- Figure 8 and Table 2 are not covered by your artifact, because they require expensive GPUs and modifications to [MimicNet](https://github.com/eniac/MimicNet) and [DeepQeueuNet](https://github.com/HUAWEI-Theory-Lab/deepqueuenet). However, you can still get part of the data by running the according experiments.
 
 It is notable that multiple experiments required by the same figure should be performed under the same hardware configuration.
 If different figures require the same experiment, you can perform this experiment just once.
@@ -218,9 +215,11 @@ If different figures require the same experiment, you can perform this experimen
 | bcube-old | 8 | OpenMPI | 2 hours |
 | bcube-default | 1 | | **1 day** |
 | wan | **16** | | **3 days** |
+| rdcn | 4 | | 3 hours |
 | accuracy | **4** | OpenMPI | 30 minutes |
 | deterministic | 8 | OpenMPI | 4 hours |
 | partition-cache | 1 | Linux perf | **1 day** |
+| partition-corner-case | 4 | Linux perf | 20 minutes |
 | scheduling-metrics | **16** | | 4 hours |
 | scheduling-period | **16** | | **1 day** |
 
