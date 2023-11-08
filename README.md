@@ -1,6 +1,9 @@
 
 UNISON for ns-3
 ================================
+
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.10077300.svg)](https://doi.org/10.5281/zenodo.10077300)
+
 A fast and user-transparent parallel simulator implementation for ns-3.
 More information about UNISON can be found in our EuroSys '24 paper (coming soon).
 
@@ -73,7 +76,7 @@ Please see the [README in that branch](https://github.com/NASA-NJU/UNISON-for-ns
 
 ### 1. Overview
 
-UNISON for ns-3 is mainly implemented in the `mtp` module, which stands for multi-threaded parallelization.
+UNISON for ns-3 is mainly implemented in the `mtp` module (located at `src/mtp/*`), which stands for multi-threaded parallelization.
 This module contains three parts: A parallel simulator implementation `multithreaded-simulator-impl`, an interface to users `mtp-interface`, and `logical-process` to represent LPs in terms of parallel simulation.
 
 All LPs and threads are stored in the `mtp-interface`.
@@ -86,7 +89,7 @@ The simulator implementation `multithreaded-simulator-impl` is a derived class f
 It converts calls to the base simulator into calls to logical processes based on the context of the current thread.
 It also provides a partition method for automatic fine-grained topology partition.
 
-For distributed simulation with MPI, we added `hybrid-simulator-impl` in the `mpi` module.
+For distributed simulation with MPI, we added `hybrid-simulator-impl` in the `mpi` module (located at `src/mpi/model/hybrid-simulator-impl*`).
 This simulator uses both `mtp-interface` and `mpi-interface` to coordinate local LPs and global MPI communications.
 We also modified the module to make it locally thread-safe.
 
