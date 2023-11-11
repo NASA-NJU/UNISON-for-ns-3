@@ -293,7 +293,7 @@ MultithreadedSimulatorImpl::Partition()
             {
                 Ptr<NetDevice> localNetDevice = node->GetDevice(i);
                 Ptr<Channel> channel = localNetDevice->GetChannel();
-                if (channel == 0)
+                if (!channel)
                 {
                     continue;
                 }
@@ -344,7 +344,7 @@ MultithreadedSimulatorImpl::Partition()
                 {
                     Ptr<NetDevice> localNetDevice = node->GetDevice(i);
                     Ptr<Channel> channel = localNetDevice->GetChannel();
-                    if (channel == 0)
+                    if (!channel)
                     {
                         continue;
                     }
