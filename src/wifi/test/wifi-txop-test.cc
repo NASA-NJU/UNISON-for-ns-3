@@ -58,7 +58,7 @@ public:
    * \param pifsRecovery whether PIFS recovery is used after failure of a non-initial frame
    */
   WifiTxopTest (bool pifsRecovery);
-  virtual ~WifiTxopTest ();
+  ~WifiTxopTest () override;
 
   /**
    * Function to trace packets received by the server application
@@ -78,10 +78,10 @@ public:
   /**
    * Check correctness of transmitted frames
    */
-  void CheckResults (void);
+  void CheckResults ();
 
 private:
-  void DoRun (void) override;
+  void DoRun () override;
 
   /// Information about transmitted frames
   struct FrameInfo
@@ -147,7 +147,7 @@ WifiTxopTest::Transmit (std::string context, WifiConstPsduMap psduMap, WifiTxVec
 }
 
 void
-WifiTxopTest::DoRun (void)
+WifiTxopTest::DoRun ()
 {
   RngSeedManager::SetSeed (1);
   RngSeedManager::SetRun (40);
@@ -192,14 +192,16 @@ WifiTxopTest::DoRun (void)
 
   m_apDevices = wifi.Install (phy, mac, wifiApNode);
 
-  // schedule association requests at different times
-  Time init = MilliSeconds (100);
-  Ptr<WifiNetDevice> dev;
+  // schedule association requests at different times. One station's SSID is
+  // set to the correct value before initialization, so that such a station
+  // starts the scanning procedure by looking for the correct SSID
+  Ptr<WifiNetDevice> dev = DynamicCast<WifiNetDevice> (m_staDevices.Get (0));
+  dev->GetMac ()->SetSsid (Ssid ("wifi-txop-ssid"));
 
-  for (uint16_t i = 0; i < m_nStations; i++)
+  for (uint16_t i = 1; i < m_nStations; i++)
     {
       dev = DynamicCast<WifiNetDevice> (m_staDevices.Get (i));
-      Simulator::Schedule (init + i * MicroSeconds (102400), &WifiMac::SetSsid,
+      Simulator::Schedule (i * MicroSeconds (102400), &WifiMac::SetSsid,
                            dev->GetMac (), Ssid ("wifi-txop-ssid"));
     }
 
@@ -224,8 +226,8 @@ WifiTxopTest::DoRun (void)
   PointerValue ptr;
   dev->GetMac ()->GetAttribute ("BE_Txop", ptr);
   ptr.Get<QosTxop> ()->SetTxopLimit (m_txopLimit);
-  m_aifsn = ptr.Get<QosTxop> ()->GetAifsn ();
-  m_cwMin = ptr.Get<QosTxop> ()->GetMinCw ();
+  m_aifsn = ptr.Get<QosTxop> ()->Txop::GetAifsn ();
+  m_cwMin = ptr.Get<QosTxop> ()->Txop::GetMinCw ();
 
   PacketSocketHelper packetSocket;
   packetSocket.Install (wifiApNode);
@@ -318,15 +320,15 @@ WifiTxopTest::DoRun (void)
 }
 
 void
-WifiTxopTest::CheckResults (void)
+WifiTxopTest::CheckResults ()
 {
-  Time tEnd,                           // TX end for a frame
-       tStart,                         // TX start fot the next frame
-       txopStart,                      // TXOP start time
-       tolerance = NanoSeconds (50),   // due to propagation delay
-       sifs = DynamicCast<WifiNetDevice> (m_apDevices.Get (0))->GetPhy ()->GetSifs (),
-       slot = DynamicCast<WifiNetDevice> (m_apDevices.Get (0))->GetPhy ()->GetSlot (),
-       navEnd;
+  Time tEnd;                         // TX end for a frame
+  Time tStart;                       // TX start fot the next frame
+  Time txopStart;                    // TXOP start time
+  Time tolerance = NanoSeconds (50); // due to propagation delay
+  Time sifs = DynamicCast<WifiNetDevice> (m_apDevices.Get (0))->GetPhy ()->GetSifs ();
+  Time slot = DynamicCast<WifiNetDevice> (m_apDevices.Get (0))->GetPhy ()->GetSlot ();
+  Time navEnd;
 
   // lambda to round Duration/ID (in microseconds) up to the next higher integer
   auto RoundDurationId = [] (Time t)

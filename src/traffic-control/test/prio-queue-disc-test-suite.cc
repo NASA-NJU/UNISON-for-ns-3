@@ -50,9 +50,8 @@ public:
    * \param priority the packet priority
    */
   PrioQueueDiscTestItem (Ptr<Packet> p, const Address & addr, uint8_t priority);
-  virtual ~PrioQueueDiscTestItem ();
-  virtual void AddHeader (void);
-  virtual bool Mark (void);
+  void AddHeader () override;
+  bool Mark () override;
 };
 
 PrioQueueDiscTestItem::PrioQueueDiscTestItem (Ptr<Packet> p, const Address & addr, uint8_t priority)
@@ -63,17 +62,13 @@ PrioQueueDiscTestItem::PrioQueueDiscTestItem (Ptr<Packet> p, const Address & add
   p->ReplacePacketTag (priorityTag);
 }
 
-PrioQueueDiscTestItem::~PrioQueueDiscTestItem ()
-{
-}
-
 void
-PrioQueueDiscTestItem::AddHeader (void)
+PrioQueueDiscTestItem::AddHeader ()
 {
 }
 
 bool
-PrioQueueDiscTestItem::Mark (void)
+PrioQueueDiscTestItem::Mark ()
 {
   return false;
 }
@@ -94,7 +89,7 @@ public:
    * \param cls whether this filter is able to classify a PrioQueueDiscTestItem
    */
   PrioQueueDiscTestFilter (bool cls);
-  virtual ~PrioQueueDiscTestFilter ();
+  ~PrioQueueDiscTestFilter () override;
   /**
    * \brief Set the value returned by DoClassify
    *
@@ -103,8 +98,8 @@ public:
   void SetReturnValue (int32_t ret);
 
 private:
-  virtual bool CheckProtocol (Ptr<QueueDiscItem> item) const;
-  virtual int32_t DoClassify (Ptr<QueueDiscItem> item) const;
+  bool CheckProtocol (Ptr<QueueDiscItem> item) const override;
+  int32_t DoClassify (Ptr<QueueDiscItem> item) const override;
 
   bool m_cls;     //!< whether this filter is able to classify a PrioQueueDiscTestItem
   int32_t m_ret;  //!< the value that DoClassify returns if m_cls is true
@@ -149,7 +144,7 @@ class PrioQueueDiscTestCase : public TestCase
 {
 public:
   PrioQueueDiscTestCase ();
-  virtual void DoRun (void);
+  void DoRun () override;
 };
 
 PrioQueueDiscTestCase::PrioQueueDiscTestCase ()
@@ -158,7 +153,7 @@ PrioQueueDiscTestCase::PrioQueueDiscTestCase ()
 }
 
 void
-PrioQueueDiscTestCase::DoRun (void)
+PrioQueueDiscTestCase::DoRun ()
 {
   Ptr<PrioQueueDisc> qdisc;
   Ptr<QueueDiscItem> item;
@@ -269,7 +264,7 @@ PrioQueueDiscTestCase::DoRun (void)
     {
       pf2->SetReturnValue (4+i);
       NS_TEST_ASSERT_MSG_EQ (qdisc->GetBandForPriority (0), 0, "The band for priority 0 must be band 0");
-      NS_TEST_ASSERT_MSG_EQ (qdisc->GetQueueDiscClass (0)->GetQueueDisc ()->GetNPackets (), i+3u,
+      NS_TEST_ASSERT_MSG_EQ (qdisc->GetQueueDiscClass (0)->GetQueueDisc ()->GetNPackets (), i+3U,
                              "There should be " << i+3 << " packets in the child queue disc "
                              << qdisc->GetBandForPriority (0));
 
@@ -278,7 +273,7 @@ PrioQueueDiscTestCase::DoRun (void)
       // packet is assigned band 0
       uids[0].push (item->GetPacket ()->GetUid ());
 
-      NS_TEST_ASSERT_MSG_EQ (qdisc->GetQueueDiscClass (0)->GetQueueDisc ()->GetNPackets (), i+4u,
+      NS_TEST_ASSERT_MSG_EQ (qdisc->GetQueueDiscClass (0)->GetQueueDisc ()->GetNPackets (), i+4U,
                              "There should be " << i+4 << " packets in the child queue disc "
                              << qdisc->GetBandForPriority (0));
     }

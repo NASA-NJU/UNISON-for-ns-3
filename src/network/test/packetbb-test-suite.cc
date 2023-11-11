@@ -1,8 +1,8 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /* vim: set ts=2 sw=2 sta expandtab ai si cin: */
-/* 
+/*
  * Copyright (c) 2009 Drexel University
- * 
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
  * published by the Free Software Foundation;
@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- * 
+ *
  * Author: Tom Wambold <tom5760@gmail.com>
  */
 
@@ -47,16 +47,16 @@ public:
    */
   PbbTestCase (std::string name, Ptr<PbbPacket> packet,
                uint8_t * buffer, uint32_t size);
-  virtual ~PbbTestCase (void);
+  ~PbbTestCase () override;
 
 protected:
-  virtual void DoRun (void);
+  void DoRun () override;
 
 private:
   /// Serialization
-  void TestSerialize (void);
+  void TestSerialize ();
   /// Deserialization
-  void TestDeserialize (void);
+  void TestDeserialize ();
 
   Ptr<PbbPacket> m_refPacket; //!< Reference packet
   Buffer m_refBuffer; //!< Reference buffer
@@ -72,20 +72,19 @@ PbbTestCase::PbbTestCase (std::string name, Ptr<PbbPacket> packet,
   m_refBuffer.Begin ().Write (buffer, size);
 }
 
-PbbTestCase::~PbbTestCase (void)
+PbbTestCase::~PbbTestCase ()
 {
-  return;
 }
 
 void
-PbbTestCase::DoRun (void)
+PbbTestCase::DoRun ()
 {
   TestSerialize ();
   TestDeserialize ();
 }
 
 void
-PbbTestCase::TestSerialize (void)
+PbbTestCase::TestSerialize ()
 {
   Buffer newBuffer;
   newBuffer.AddAtStart (m_refPacket->GetSerializedSize ());
@@ -102,7 +101,7 @@ PbbTestCase::TestSerialize (void)
 }
 
 void
-PbbTestCase::TestDeserialize (void)
+PbbTestCase::TestDeserialize ()
 {
   Ptr<PbbPacket> newPacket = Create<PbbPacket> ();
   uint32_t numbytes = newPacket->Deserialize (m_refBuffer.Begin ());

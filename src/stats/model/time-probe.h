@@ -38,8 +38,8 @@ namespace ns3 {
  * \ingroup probes
  *
  * This class is designed to probe an underlying ns3 TraceSource exporting
- * an ns3::Time.  This probe exports a trace source "Output" of type 
- * double, in units of seconds. The Output trace source emits a value when 
+ * an ns3::Time.  This probe exports a trace source "Output" of type
+ * double, in units of seconds. The Output trace source emits a value when
  * either the trace source emits a new value, or when SetValue () is called.
  *
  * The current value of the probe can be polled with the GetValue ()
@@ -54,12 +54,12 @@ public:
    */
   static TypeId GetTypeId ();
   TimeProbe ();
-  virtual ~TimeProbe ();
+  ~TimeProbe () override;
 
   /**
    * \return the most recent value (units of seconds)
    */
-  double GetValue (void) const;
+  double GetValue () const;
 
   /**
    * \param value set the traced Time to a new value
@@ -81,7 +81,7 @@ public:
    * \param obj ns3::Object to connect to
    * \return true if the trace source was successfully connected
    */
-  virtual bool ConnectByObject (std::string traceSource, Ptr<Object> obj);
+  bool ConnectByObject (std::string traceSource, Ptr<Object> obj) override;
 
   /**
    * \brief connect to a trace source provided by a config path
@@ -91,14 +91,14 @@ public:
    * Note, if an invalid path is provided, the probe will not be connected
    * to anything.
    */
-  virtual void ConnectByPath (std::string path);
+  void ConnectByPath (std::string path) override;
 
 private:
   /**
-   * \brief Method to connect to an underlying ns3::TraceSource of type Time 
+   * \brief Method to connect to an underlying ns3::TraceSource of type Time
    *
-   * \param oldData previous value of the Time 
-   * \param newData new value of the Time 
+   * \param oldData previous value of the Time
+   * \param newData new value of the Time
    */
   void TraceSink (Time oldData, Time newData);
 

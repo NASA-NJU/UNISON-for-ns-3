@@ -38,7 +38,7 @@ class Packet;
  *
  * \brief A representation of an internet endpoint/connection
  *
- * This class provides an internet four-tuple (source and destination ports 
+ * This class provides an internet four-tuple (source and destination ports
  * and addresses).  These are used in the ns3::Ipv4EndPointDemux as targets
  * of lookups.  The class also has a callback for notification to higher
  * layers that a packet from a lower layer was received.  In the ns3
@@ -60,7 +60,7 @@ public:
    * \brief Get the local address.
    * \return the local address
    */
-  Ipv4Address GetLocalAddress (void);
+  Ipv4Address GetLocalAddress ();
 
   /**
    * \brief Set the local address.
@@ -72,19 +72,19 @@ public:
    * \brief Get the local port.
    * \return the local port
    */
-  uint16_t GetLocalPort (void);
+  uint16_t GetLocalPort ();
 
   /**
    * \brief Get the peer address.
    * \return the peer address
    */
-  Ipv4Address GetPeerAddress (void);
+  Ipv4Address GetPeerAddress ();
 
   /**
    * \brief Get the peer port.
    * \return the peer port
    */
-  uint16_t GetPeerPort (void);
+  uint16_t GetPeerPort ();
 
   /**
    * \brief Set the peer information (address and port).
@@ -122,7 +122,7 @@ public:
    *
    * \returns Pointer to interface.
    */
-  Ptr<NetDevice> GetBoundNetDevice (void);
+  Ptr<NetDevice> GetBoundNetDevice ();
 
   // Called from socket implementations to get notified about important events.
   /**
@@ -151,7 +151,7 @@ public:
    * \param sport source port
    * \param incomingInterface incoming interface
    */
-  void ForwardUp (Ptr<Packet> p, const Ipv4Header& header, uint16_t sport, 
+  void ForwardUp (Ptr<Packet> p, const Ipv4Header& header, uint16_t sport,
                   Ptr<Ipv4Interface> incomingInterface);
 
   /**
@@ -166,7 +166,7 @@ public:
    * \param icmpCode ICMP code
    * \param icmpInfo ICMP info
    */
-  void ForwardIcmp (Ipv4Address icmpSource, uint8_t icmpTtl, 
+  void ForwardIcmp (Ipv4Address icmpSource, uint8_t icmpTtl,
                     uint8_t icmpType, uint8_t icmpCode,
                     uint32_t icmpInfo);
 
@@ -180,7 +180,7 @@ public:
    * \brief Checks if the endpoint can receive packets.
    * \returns true if the endpoint can receive packets.
    */
-  bool IsRxEnabled (void);
+  bool IsRxEnabled ();
 
 private:
   /**

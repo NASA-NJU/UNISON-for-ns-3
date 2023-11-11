@@ -36,38 +36,38 @@ class SpectrumPhy;
  *
  * Store the last pathloss value for each TX-RX pair. This is an
  * example of how the PathlossTrace (provided by some SpectrumChannel
- * implementations) work. 
- * 
+ * implementations) work.
+ *
  */
 class LteGlobalPathlossDatabase
 {
 public:
 
-  virtual ~LteGlobalPathlossDatabase (void);
+  virtual ~LteGlobalPathlossDatabase ();
 
-  /** 
+  /**
    * update the pathloss value
-   * 
-   * \param context 
+   *
+   * \param context
    * \param txPhy the transmitting PHY
    * \param rxPhy the receiving PHY
    * \param lossDb the loss in dB
    */
   virtual void UpdatePathloss (std::string context, Ptr<const SpectrumPhy> txPhy, Ptr<const SpectrumPhy> rxPhy, double lossDb) = 0;
 
-  /** 
-   * 
-   * 
+  /**
+   *
+   *
    * \param cellId the id of the eNB
    * \param imsi the id of the UE
-   * 
+   *
    * \return the pathloss value between the UE and the eNB
    */
   double GetPathloss (uint16_t cellId, uint64_t imsi);
 
-  /** 
+  /**
    * print the stored pathloss values to standard output
-   * 
+   *
    */
   void Print ();
 
@@ -87,7 +87,7 @@ class DownlinkLteGlobalPathlossDatabase : public LteGlobalPathlossDatabase
 {
 public:
   // inherited from LteGlobalPathlossDatabase
-  virtual void UpdatePathloss (std::string context, Ptr<const SpectrumPhy> txPhy, Ptr<const SpectrumPhy> rxPhy, double lossDb);
+  void UpdatePathloss (std::string context, Ptr<const SpectrumPhy> txPhy, Ptr<const SpectrumPhy> rxPhy, double lossDb) override;
 };
 
 /**
@@ -98,7 +98,7 @@ class UplinkLteGlobalPathlossDatabase : public LteGlobalPathlossDatabase
 {
 public:
   // inherited from LteGlobalPathlossDatabase
-  virtual void UpdatePathloss (std::string context, Ptr<const SpectrumPhy> txPhy, Ptr<const SpectrumPhy> rxPhy, double lossDb);
+  void UpdatePathloss (std::string context, Ptr<const SpectrumPhy> txPhy, Ptr<const SpectrumPhy> rxPhy, double lossDb) override;
 };
 
 

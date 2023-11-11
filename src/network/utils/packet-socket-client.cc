@@ -40,7 +40,7 @@ NS_LOG_COMPONENT_DEFINE ("PacketSocketClient");
 NS_OBJECT_ENSURE_REGISTERED (PacketSocketClient);
 
 TypeId
-PacketSocketClient::GetTypeId (void)
+PacketSocketClient::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::PacketSocketClient")
     .SetParent<Application> ()
@@ -77,7 +77,7 @@ PacketSocketClient::PacketSocketClient ()
 {
   NS_LOG_FUNCTION (this);
   m_sent = 0;
-  m_socket = 0;
+  m_socket = nullptr;
   m_sendEvent = EventId ();
   m_peerAddressSet = false;
 }
@@ -96,7 +96,7 @@ PacketSocketClient::SetRemote (PacketSocketAddress addr)
 }
 
 void
-PacketSocketClient::DoDispose (void)
+PacketSocketClient::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
   Application::DoDispose ();
@@ -113,18 +113,18 @@ PacketSocketClient::SetPriority (uint8_t priority)
 }
 
 uint8_t
-PacketSocketClient::GetPriority (void) const
+PacketSocketClient::GetPriority () const
 {
   return m_priority;
 }
 
 void
-PacketSocketClient::StartApplication (void)
+PacketSocketClient::StartApplication ()
 {
   NS_LOG_FUNCTION (this);
   NS_ASSERT_MSG (m_peerAddressSet, "Peer address not set");
 
-  if (m_socket == 0)
+  if (!m_socket)
     {
       TypeId tid = TypeId::LookupByName ("ns3::PacketSocketFactory");
       m_socket = Socket::CreateSocket (GetNode (), tid);
@@ -143,7 +143,7 @@ PacketSocketClient::StartApplication (void)
 }
 
 void
-PacketSocketClient::StopApplication (void)
+PacketSocketClient::StopApplication ()
 {
   NS_LOG_FUNCTION (this);
   Simulator::Cancel (m_sendEvent);
@@ -151,7 +151,7 @@ PacketSocketClient::StopApplication (void)
 }
 
 void
-PacketSocketClient::Send (void)
+PacketSocketClient::Send ()
 {
   NS_LOG_FUNCTION (this);
   NS_ASSERT (m_sendEvent.IsExpired ());

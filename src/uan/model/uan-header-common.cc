@@ -43,7 +43,7 @@ UanHeaderCommon::UanHeaderCommon (const Mac8Address src, const Mac8Address dest,
 }
 
 TypeId
-UanHeaderCommon::GetTypeId (void)
+UanHeaderCommon::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::UanHeaderCommon")
     .SetParent<Header> ()
@@ -54,7 +54,7 @@ UanHeaderCommon::GetTypeId (void)
 }
 
 TypeId
-UanHeaderCommon::GetInstanceTypeId (void) const
+UanHeaderCommon::GetInstanceTypeId () const
 {
   return GetTypeId ();
 }
@@ -84,49 +84,65 @@ void
 UanHeaderCommon::SetProtocolNumber (uint16_t protocolNumber)
 {
   if (protocolNumber == 0)
-    m_uanProtocolBits.m_protocolNumber = 0;
+    {
+      m_uanProtocolBits.m_protocolNumber = 0;
+    }
   else if (protocolNumber == IPV4_PROT_NUMBER)
-    m_uanProtocolBits.m_protocolNumber = 1;
+    {
+      m_uanProtocolBits.m_protocolNumber = 1;
+    }
   else if (protocolNumber == ARP_PROT_NUMBER)
-    m_uanProtocolBits.m_protocolNumber = 2;
+    {
+      m_uanProtocolBits.m_protocolNumber = 2;
+    }
   else if (protocolNumber == IPV6_PROT_NUMBER)
-    m_uanProtocolBits.m_protocolNumber = 3;
+    {
+      m_uanProtocolBits.m_protocolNumber = 3;
+    }
   else
-    NS_ASSERT_MSG (false, "UanHeaderCommon::SetProtocolNumber(): Protocol not supported");
+    {
+      NS_ASSERT_MSG (false, "UanHeaderCommon::SetProtocolNumber(): Protocol not supported");
+    }
 }
 
 Mac8Address
-UanHeaderCommon::GetDest (void) const
+UanHeaderCommon::GetDest () const
 {
   return m_dest;
 }
 Mac8Address
-UanHeaderCommon::GetSrc (void) const
+UanHeaderCommon::GetSrc () const
 {
   return m_src;
 }
 uint8_t
-UanHeaderCommon::GetType (void) const
+UanHeaderCommon::GetType () const
 {
   return m_uanProtocolBits.m_type;
 }
 
 uint16_t
-UanHeaderCommon::GetProtocolNumber (void) const
+UanHeaderCommon::GetProtocolNumber () const
 {
   if (m_uanProtocolBits.m_protocolNumber == 1)
-    return IPV4_PROT_NUMBER;
+    {
+      return IPV4_PROT_NUMBER;
+    }
   if (m_uanProtocolBits.m_protocolNumber == 2)
-    return ARP_PROT_NUMBER;
+    {
+      return ARP_PROT_NUMBER;
+    }
   if (m_uanProtocolBits.m_protocolNumber == 3)
-    return IPV6_PROT_NUMBER;
+    {
+      return IPV6_PROT_NUMBER;
+    }
   return 0;
 }
 
 // Inherrited methods
 
 uint32_t
-UanHeaderCommon::GetSerializedSize (void) const
+UanHeaderCommon::GetSerializedSize () const
 {
   return 1 + 1 + 1;
 }

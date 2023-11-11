@@ -1,4 +1,4 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
+﻿/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2019 SIGNET Lab, Department of Information Engineering,
  * University of Padova
@@ -39,7 +39,7 @@ static const double M_C = 3.0e8; //!< propagation velocity in free space
 NS_OBJECT_ENSURE_REGISTERED (ThreeGppPropagationLossModel);
 
 TypeId
-ThreeGppPropagationLossModel::GetTypeId (void)
+ThreeGppPropagationLossModel::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::ThreeGppPropagationLossModel")
     .SetParent<PropagationLossModel> ()
@@ -58,6 +58,14 @@ ThreeGppPropagationLossModel::GetTypeId (void)
                    MakePointerAccessor (&ThreeGppPropagationLossModel::SetChannelConditionModel,
                                         &ThreeGppPropagationLossModel::GetChannelConditionModel),
                    MakePointerChecker<ChannelConditionModel> ())
+    .AddAttribute ("EnforceParameterRanges", "Whether to strictly enforce TR38.901 applicability ranges",
+                   BooleanValue (false),
+                   MakeBooleanAccessor (&ThreeGppPropagationLossModel::m_enforceRanges),
+                   MakeBooleanChecker ())
+    .AddAttribute ("BuildingPenetrationLossesEnabled", "Enable/disable Building Penetration Losses.",
+                   BooleanValue (true),
+                   MakeBooleanAccessor (&ThreeGppPropagationLossModel::m_buildingPenLossesEnabled),
+                   MakeBooleanChecker ())
   ;
   return tid;
 }
@@ -67,10 +75,22 @@ ThreeGppPropagationLossModel::ThreeGppPropagationLossModel ()
 {
   NS_LOG_FUNCTION (this);
 
-  // initialize the normal random variable
+  // initialize the normal random variables
   m_normRandomVariable = CreateObject<NormalRandomVariable> ();
   m_normRandomVariable->SetAttribute ("Mean", DoubleValue (0));
   m_normRandomVariable->SetAttribute ("Variance", DoubleValue (1));
+
+
+  m_randomO2iVar1 = CreateObject <UniformRandomVariable> ();
+  m_randomO2iVar2 = CreateObject <UniformRandomVariable> ();
+
+  m_normalO2iLowLossVar = CreateObject <NormalRandomVariable> ();
+  m_normalO2iLowLossVar->SetAttribute ("Mean", DoubleValue (0));
+  m_normalO2iLowLossVar->SetAttribute ("Variance", DoubleValue (4.4));
+
+  m_normalO2iHighLossVar = CreateObject <NormalRandomVariable> ();
+  m_normalO2iHighLossVar->SetAttribute ("Mean", DoubleValue (0));
+  m_normalO2iHighLossVar->SetAttribute ("Variance", DoubleValue (6.5));
 }
 
 ThreeGppPropagationLossModel::~ThreeGppPropagationLossModel ()
@@ -139,11 +159,28 @@ ThreeGppPropagationLossModel::DoCalcRxPower (double txPowerDbm,
   std::pair<double, double> heights = GetUtAndBsHeights (a->GetPosition ().z, b->GetPosition ().z);
 
   double rxPow = txPowerDbm;
-  rxPow -= GetLoss (cond, distance2d, distance3d, heights.first, heights.second); 
-  
+  rxPow -= GetLoss (cond, distance2d, distance3d, heights.first, heights.second);
+
   if (m_shadowingEnabled)
     {
       rxPow -= GetShadowing (a, b, cond->GetLosCondition ());
+    }
+
+  //get o2i losses
+  if (cond->GetO2iCondition () == ChannelCondition::O2iConditionValue::O2I && m_buildingPenLossesEnabled)
+    {
+      if (cond->GetO2iLowHighCondition () == ChannelCondition::O2iLowHighConditionValue::LOW)
+        {
+          rxPow -= GetO2iLowPenetrationLoss (a, b, cond->GetLosCondition ());
+        }
+      else if (cond->GetO2iLowHighCondition () == ChannelCondition::O2iLowHighConditionValue::HIGH)
+        {
+          rxPow -= GetO2iHighPenetrationLoss (a, b, cond->GetLosCondition ());
+        }
+      else
+      {
+        NS_ABORT_MSG ("If we have set the O2I condition, we shouldn't be here");
+      }
     }
 
   return rxPow;
@@ -153,7 +190,7 @@ double
 ThreeGppPropagationLossModel::GetLoss (Ptr<ChannelCondition> cond, double distance2d, double distance3d, double hUt, double hBs) const
 {
   NS_LOG_FUNCTION (this);
-  
+
   double loss = 0;
   if (cond->GetLosCondition () == ChannelCondition::LosConditionValue::LOS)
     {
@@ -171,7 +208,148 @@ ThreeGppPropagationLossModel::GetLoss (Ptr<ChannelCondition> cond, double distan
     {
       NS_FATAL_ERROR ("Unknown channel condition");
     }
+
   return loss;
+}
+
+double
+ThreeGppPropagationLossModel::GetO2iLowPenetrationLoss (Ptr<MobilityModel> a,
+                                                        Ptr<MobilityModel> b,
+                                                        ChannelCondition::LosConditionValue cond) const
+{
+  NS_LOG_FUNCTION (this);
+
+  double o2iLossValue = 0;
+  double lowLossTw = 0;
+  double lossIn = 0;
+  double lowlossNormalVariate = 0;
+  double lGlass = 0;
+  double lConcrete = 0;
+
+  // compute the channel key
+  uint32_t key = GetKey (a, b);
+
+  bool notFound = false; // indicates if the o2iLoss value has not been computed yet
+  bool newCondition = false; // indicates if the channel condition has changed
+
+  auto it = m_o2iLossMap.end (); // the o2iLoss map iterator
+  if (m_o2iLossMap.find (key) != m_o2iLossMap.end ())
+    {
+      // found the o2iLoss value in the map
+      it = m_o2iLossMap.find (key);
+      newCondition = (it->second.m_condition != cond); // true if the condition changed
+    }
+  else
+    {
+      notFound = true;
+      // add a new entry in the map and update the iterator
+      O2iLossMapItem newItem;
+      it = m_o2iLossMap.insert (it, std::make_pair (key, newItem));
+    }
+
+  if (notFound || newCondition)
+    {
+      // distance2dIn is minimum of two independently generated uniformly distributed
+      // variables between 0 and 25 m for UMa and UMi-Street Canyon, and between 0 and
+      // 10 m for RMa. 2D−in d shall be UT-specifically generated.
+      double distance2dIn = GetO2iDistance2dIn ();
+
+      // calculate material penetration losses, see TR 38.901 Table 7.4.3-1
+      lGlass = 2 + 0.2 * m_frequency / 1e9; // m_frequency is operation frequency in Hz
+      lConcrete = 5 + 4 * m_frequency / 1e9;
+
+      lowLossTw = 5 - 10 * log10 (0.3 * std::pow (10, - lGlass / 10) +
+                                  0.7 * std::pow (10, - lConcrete / 10));
+
+      // calculate indoor loss
+      lossIn = 0.5 * distance2dIn;
+
+      // calculate low loss standard deviation
+      lowlossNormalVariate = m_normalO2iLowLossVar->GetValue ();
+
+      o2iLossValue = lowLossTw + lossIn + lowlossNormalVariate;
+    }
+  else
+    {
+      o2iLossValue = it->second.m_o2iLoss;
+    }
+
+  // update the entry in the map
+  it->second.m_o2iLoss = o2iLossValue;
+  it->second.m_condition = cond;
+
+  return o2iLossValue;
+}
+
+double
+ThreeGppPropagationLossModel::GetO2iHighPenetrationLoss (Ptr<MobilityModel> a,
+                                                         Ptr<MobilityModel> b,
+                                                         ChannelCondition::LosConditionValue cond) const
+{
+  NS_LOG_FUNCTION (this);
+
+  double o2iLossValue = 0;
+  double highLossTw = 0;
+  double lossIn = 0;
+  double highlossNormalVariate = 0;
+  double lIIRGlass = 0;
+  double lConcrete = 0;
+
+  // compute the channel key
+  uint32_t key = GetKey (a, b);
+
+  bool notFound = false; // indicates if the o2iLoss value has not been computed yet
+  bool newCondition = false; // indicates if the channel condition has changed
+
+  auto it = m_o2iLossMap.end (); // the o2iLoss map iterator
+  if (m_o2iLossMap.find (key) != m_o2iLossMap.end ())
+    {
+      // found the o2iLoss value in the map
+      it = m_o2iLossMap.find (key);
+      newCondition = (it->second.m_condition != cond); // true if the condition changed
+    }
+  else
+    {
+      notFound = true;
+      // add a new entry in the map and update the iterator
+      O2iLossMapItem newItem;
+      it = m_o2iLossMap.insert (it, std::make_pair (key, newItem));
+    }
+
+  if (notFound || newCondition)
+    {
+      // generate a new independent realization
+
+      // distance2dIn is minimum of two independently generated uniformly distributed
+      // variables between 0 and 25 m for UMa and UMi-Street Canyon, and between 0 and
+      // 10 m for RMa. 2D−in d shall be UT-specifically generated.
+      double distance2dIn = GetO2iDistance2dIn ();
+
+      // calculate material penetration losses, see TR 38.901 Table 7.4.3-1
+      lIIRGlass = 23 + 0.3 * m_frequency / 1e9;
+      lConcrete = 5 + 4 * m_frequency / 1e9;
+
+      highLossTw = 5 - 10 * log10 (0.7 * std::pow (10, - lIIRGlass / 10) +
+                                   0.3 * std::pow (10, - lConcrete / 10));
+
+      // calculate indoor loss
+      lossIn = 0.5 * distance2dIn;
+
+      // calculate low loss standard deviation
+      highlossNormalVariate = m_normalO2iHighLossVar->GetValue ();
+
+      o2iLossValue = highLossTw + lossIn + highlossNormalVariate;
+    }
+  else
+    {
+      o2iLossValue = it->second.m_o2iLoss;
+    }
+
+  // update the entry in the map
+  it->second.m_o2iLoss = o2iLossValue;
+  it->second.m_condition = cond;
+
+  return o2iLossValue;
 }
 
 double
@@ -250,7 +428,12 @@ ThreeGppPropagationLossModel::DoAssignStreams (int64_t stream)
   NS_LOG_FUNCTION (this);
 
   m_normRandomVariable->SetStream (stream);
-  return 1;
+  m_randomO2iVar1->SetStream (stream + 1);
+  m_randomO2iVar2->SetStream (stream + 2);
+  m_normalO2iLowLossVar->SetStream (stream + 3);
+  m_normalO2iHighLossVar->SetStream (stream + 4);
+
+  return 5;
 }
 
 double
@@ -298,7 +481,7 @@ ThreeGppPropagationLossModel::GetVectorDifference (Ptr<MobilityModel> a, Ptr<Mob
 NS_OBJECT_ENSURE_REGISTERED (ThreeGppRmaPropagationLossModel);
 
 TypeId
-ThreeGppRmaPropagationLossModel::GetTypeId (void)
+ThreeGppRmaPropagationLossModel::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::ThreeGppRmaPropagationLossModel")
     .SetParent<ThreeGppPropagationLossModel> ()
@@ -330,6 +513,15 @@ ThreeGppRmaPropagationLossModel::~ThreeGppRmaPropagationLossModel ()
   NS_LOG_FUNCTION (this);
 }
 
+
+double
+ThreeGppRmaPropagationLossModel::GetO2iDistance2dIn () const
+{
+  // distance2dIn is minimum of two independently generated uniformly distributed variables
+  // between 0 and 10 m for RMa. 2D−in d shall be UT-specifically generated.
+  return std::min ( m_randomO2iVar1->GetValue (0, 10), m_randomO2iVar2->GetValue (0, 10));
+}
+
 double
 ThreeGppRmaPropagationLossModel::GetLossLos (double distance2D, double distance3D, double hUt, double hBs) const
 {
@@ -339,11 +531,13 @@ ThreeGppRmaPropagationLossModel::GetLossLos (double distance2D, double distance3
   // check if hBS and hUT are within the specified validity range
   if (hUt < 1.0 || hUt > 10.0)
     {
+      NS_ABORT_MSG_IF (m_enforceRanges, "Rma UT height out of range");
       NS_LOG_WARN ("The height of the UT should be between 1 and 10 m (see TR 38.901, Table 7.4.1-1)");
     }
 
   if (hBs < 10.0 || hBs > 150.0)
     {
+      NS_ABORT_MSG_IF (m_enforceRanges, "Rma BS height out of range");
       NS_LOG_WARN ("The height of the BS should be between 10 and 150 m (see TR 38.901, Table 7.4.1-1)");
     }
 
@@ -356,10 +550,12 @@ ThreeGppRmaPropagationLossModel::GetLossLos (double distance2D, double distance3
 
   double distanceBp = GetBpDistance (m_frequency, hBs, hUt);
   NS_LOG_DEBUG ("breakpoint distance " << distanceBp);
+  NS_ABORT_MSG_UNLESS (distanceBp > 0, "Breakpoint distance is zero (divide-by-zero below); are either hBs or hUt = 0?");
 
   // check if the distance is outside the validity range
   if (distance2D < 10.0 || distance2D > 10.0e3)
     {
+      NS_ABORT_MSG_IF (m_enforceRanges, "Rma distance2D out of range");
       NS_LOG_WARN ("The 2D distance is outside the validity range, the pathloss value may not be accurate");
     }
 
@@ -390,11 +586,13 @@ ThreeGppRmaPropagationLossModel::GetLossNlos (double distance2D, double distance
   // check if hBs and hUt are within the validity range
   if (hUt < 1.0 || hUt > 10.0)
     {
+      NS_ABORT_MSG_IF (m_enforceRanges, "Rma UT height out of range");
       NS_LOG_WARN ("The height of the UT should be between 1 and 10 m (see TR 38.901, Table 7.4.1-1)");
     }
 
   if (hBs < 10.0 || hBs > 150.0)
     {
+      NS_ABORT_MSG_IF (m_enforceRanges, "Rma BS height out of range");
       NS_LOG_WARN ("The height of the BS should be between 10 and 150 m (see TR 38.901, Table 7.4.1-1)");
     }
 
@@ -408,6 +606,7 @@ ThreeGppRmaPropagationLossModel::GetLossNlos (double distance2D, double distance
   // check if the distance is outside the validity range
   if (distance2D < 10.0 || distance2D > 5.0e3)
     {
+      NS_ABORT_MSG_IF (m_enforceRanges, "distance2D out of range");
       NS_LOG_WARN ("The 2D distance is outside the validity range, the pathloss value may not be accurate");
     }
 
@@ -498,7 +697,7 @@ ThreeGppRmaPropagationLossModel::GetBpDistance (double frequency, double hA, dou
 NS_OBJECT_ENSURE_REGISTERED (ThreeGppUmaPropagationLossModel);
 
 TypeId
-ThreeGppUmaPropagationLossModel::GetTypeId (void)
+ThreeGppUmaPropagationLossModel::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::ThreeGppUmaPropagationLossModel")
     .SetParent<ThreeGppPropagationLossModel> ()
@@ -513,7 +712,6 @@ ThreeGppUmaPropagationLossModel::ThreeGppUmaPropagationLossModel ()
 {
   NS_LOG_FUNCTION (this);
   m_uniformVar = CreateObject<UniformRandomVariable> ();
-
   // set a default channel condition model
   m_channelConditionModel = CreateObject<ThreeGppUmaChannelConditionModel> ();
 }
@@ -551,7 +749,7 @@ ThreeGppUmaPropagationLossModel::GetBpDistance (double hUt, double hBs, double d
     }
   else
     {
-      int random = m_uniformVar->GetInteger (12, (int)(hUt - 1.5));
+      int random = m_uniformVar->GetInteger (12, std::max (12, (int)(hUt - 1.5)));
       hE = (double)floor (random / 3.0) * 3.0;
     }
 
@@ -569,11 +767,13 @@ ThreeGppUmaPropagationLossModel::GetLossLos (double distance2D, double distance3
   // check if hBS and hUT are within the validity range
   if (hUt < 1.5 || hUt > 22.5)
     {
+      NS_ABORT_MSG_IF (m_enforceRanges, "Uma UT height out of range");
       NS_LOG_WARN ("The height of the UT should be between 1.5 and 22.5 m (see TR 38.901, Table 7.4.1-1)");
     }
 
   if (hBs != 25.0)
     {
+      NS_ABORT_MSG_IF (m_enforceRanges, "Uma BS height out of range");
       NS_LOG_WARN ("The height of the BS should be equal to 25 m (see TR 38.901, Table 7.4.1-1)");
     }
 
@@ -591,6 +791,7 @@ ThreeGppUmaPropagationLossModel::GetLossLos (double distance2D, double distance3
   // check if the distance is outside the validity range
   if (distance2D < 10.0 || distance2D > 5.0e3)
     {
+      NS_ABORT_MSG_IF (m_enforceRanges, "Uma 2D distance out of range");
       NS_LOG_WARN ("The 2D distance is outside the validity range, the pathloss value may not be accurate");
     }
 
@@ -613,6 +814,14 @@ ThreeGppUmaPropagationLossModel::GetLossLos (double distance2D, double distance3
 }
 
 double
+ThreeGppUmaPropagationLossModel::GetO2iDistance2dIn () const
+{
+  // distance2dIn is minimum of two independently generated uniformly distributed variables
+  // between 0 and 25 m for UMa and UMi-Street Canyon. 2D−in d shall be UT-specifically generated.
+  return std::min ( m_randomO2iVar1->GetValue (0, 25), m_randomO2iVar2->GetValue (0, 25));
+}
+
+double
 ThreeGppUmaPropagationLossModel::GetLossNlos (double distance2D, double distance3D, double hUt, double hBs) const
 {
   NS_LOG_FUNCTION (this);
@@ -620,11 +829,13 @@ ThreeGppUmaPropagationLossModel::GetLossNlos (double distance2D, double distance
   // check if hBS and hUT are within the vaalidity range
   if (hUt < 1.5 || hUt > 22.5)
     {
+      NS_ABORT_MSG_IF (m_enforceRanges, "Uma UT height out of range");
       NS_LOG_WARN ("The height of the UT should be between 1.5 and 22.5 m (see TR 38.901, Table 7.4.1-1)");
     }
 
   if (hBs != 25.0)
     {
+      NS_ABORT_MSG_IF (m_enforceRanges, "Uma BS height out of range");
       NS_LOG_WARN ("The height of the BS should be equal to 25 m (see TR 38.901, Table 7.4.1-1)");
     }
 
@@ -638,6 +849,7 @@ ThreeGppUmaPropagationLossModel::GetLossNlos (double distance2D, double distance
   // check if the distance is outside the validity range
   if (distance2D < 10.0 || distance2D > 5.0e3)
     {
+      NS_ABORT_MSG_IF (m_enforceRanges, "Uma 2D distance out of range");
       NS_LOG_WARN ("The 2D distance is outside the validity range, the pathloss value may not be accurate");
     }
 
@@ -650,8 +862,8 @@ ThreeGppUmaPropagationLossModel::GetLossNlos (double distance2D, double distance
 }
 
 double
-ThreeGppUmaPropagationLossModel::GetShadowingStd ([[maybe_unused]] Ptr<MobilityModel> a, 
-                                                  [[maybe_unused]] Ptr<MobilityModel> b, 
+ThreeGppUmaPropagationLossModel::GetShadowingStd ([[maybe_unused]] Ptr<MobilityModel> a,
+                                                  [[maybe_unused]] Ptr<MobilityModel> b,
                                                   ChannelCondition::LosConditionValue cond) const
 {
   NS_LOG_FUNCTION (this);
@@ -702,7 +914,7 @@ ThreeGppUmaPropagationLossModel::DoAssignStreams (int64_t stream)
   NS_LOG_FUNCTION (this);
 
   m_normRandomVariable->SetStream (stream);
-  m_uniformVar->SetStream (stream);
+  m_uniformVar->SetStream (stream + 1);
   return 2;
 }
 
@@ -711,7 +923,7 @@ ThreeGppUmaPropagationLossModel::DoAssignStreams (int64_t stream)
 NS_OBJECT_ENSURE_REGISTERED (ThreeGppUmiStreetCanyonPropagationLossModel);
 
 TypeId
-ThreeGppUmiStreetCanyonPropagationLossModel::GetTypeId (void)
+ThreeGppUmiStreetCanyonPropagationLossModel::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::ThreeGppUmiStreetCanyonPropagationLossModel")
     .SetParent<ThreeGppPropagationLossModel> ()
@@ -735,7 +947,7 @@ ThreeGppUmiStreetCanyonPropagationLossModel::~ThreeGppUmiStreetCanyonPropagation
 }
 
 double
-ThreeGppUmiStreetCanyonPropagationLossModel::GetBpDistance (double hUt, double hBs, 
+ThreeGppUmiStreetCanyonPropagationLossModel::GetBpDistance (double hUt, double hBs,
                                                             [[maybe_unused]] double distance2D) const
 {
   NS_LOG_FUNCTION (this);
@@ -749,6 +961,16 @@ ThreeGppUmiStreetCanyonPropagationLossModel::GetBpDistance (double hUt, double h
   return distanceBp;
 }
 
+
+double
+ThreeGppUmiStreetCanyonPropagationLossModel::GetO2iDistance2dIn () const
+{
+  // distance2dIn is minimum of two independently generated uniformly distributed variables
+  // between 0 and 25 m for UMa and UMi-Street Canyon. 2D−in d shall be UT-specifically generated.
+  return std::min ( m_randomO2iVar1->GetValue (0, 25), m_randomO2iVar2->GetValue (0, 25));
+}
+
+
 double
 ThreeGppUmiStreetCanyonPropagationLossModel::GetLossLos (double distance2D, double distance3D, double hUt, double hBs) const
 {
@@ -757,11 +979,13 @@ ThreeGppUmiStreetCanyonPropagationLossModel::GetLossLos (double distance2D, doub
   // check if hBS and hUT are within the validity range
   if (hUt < 1.5 || hUt >= 10.0)
     {
+      NS_ABORT_MSG_IF (m_enforceRanges, "UmiStreetCanyon UT height out of range");
       NS_LOG_WARN ("The height of the UT should be between 1.5 and 22.5 m (see TR 38.901, Table 7.4.1-1). We further assume hUT < hBS, then hUT is upper bounded by hBS, which should be 10 m");
     }
 
   if (hBs != 10.0)
     {
+      NS_ABORT_MSG_IF (m_enforceRanges, "UmiStreetCanyon BS height out of range");
       NS_LOG_WARN ("The height of the BS should be equal to 10 m (see TR 38.901, Table 7.4.1-1)");
     }
 
@@ -779,6 +1003,7 @@ ThreeGppUmiStreetCanyonPropagationLossModel::GetLossLos (double distance2D, doub
   // check if the distance is outside the validity range
   if (distance2D < 10.0 || distance2D > 5.0e3)
     {
+      NS_ABORT_MSG_IF (m_enforceRanges, "UmiStreetCanyon 2D distance out of range");
       NS_LOG_WARN ("The 2D distance is outside the validity range, the pathloss value may not be accurate");
     }
 
@@ -808,11 +1033,13 @@ ThreeGppUmiStreetCanyonPropagationLossModel::GetLossNlos (double distance2D, dou
   // check if hBS and hUT are within the validity range
   if (hUt < 1.5 || hUt >= 10.0)
     {
+      NS_ABORT_MSG_IF (m_enforceRanges, "UmiStreetCanyon UT height out of range");
       NS_LOG_WARN ("The height of the UT should be between 1.5 and 22.5 m (see TR 38.901, Table 7.4.1-1). We further assume hUT < hBS, then hUT is upper bounded by hBS, which should be 10 m");
     }
 
   if (hBs != 10.0)
     {
+      NS_ABORT_MSG_IF (m_enforceRanges, "UmiStreetCanyon BS height out of range");
       NS_LOG_WARN ("The height of the BS should be equal to 10 m (see TR 38.901, Table 7.4.1-1)");
     }
 
@@ -826,6 +1053,7 @@ ThreeGppUmiStreetCanyonPropagationLossModel::GetLossNlos (double distance2D, dou
   // check if the distance is outside the validity range
   if (distance2D < 10.0 || distance2D > 5.0e3)
     {
+      NS_ABORT_MSG_IF (m_enforceRanges, "UmiStreetCanyon 2D distance out of range");
       NS_LOG_WARN ("The 2D distance is outside the validity range, the pathloss value may not be accurate");
     }
 
@@ -842,7 +1070,8 @@ ThreeGppUmiStreetCanyonPropagationLossModel::GetUtAndBsHeights (double za, doubl
 {
   NS_LOG_FUNCTION (this);
   // TR 38.901 specifies hBS = 10 m and 1.5 <= hUT <= 22.5
-  double hBs, hUt;
+  double hBs;
+  double hUt;
   if (za == 10.0)
     {
       // node A is the BS and node B is the UT
@@ -867,8 +1096,8 @@ ThreeGppUmiStreetCanyonPropagationLossModel::GetUtAndBsHeights (double za, doubl
 }
 
 double
-ThreeGppUmiStreetCanyonPropagationLossModel::GetShadowingStd ([[maybe_unused]] Ptr<MobilityModel> a, 
-                                                              [[maybe_unused]] Ptr<MobilityModel> b, 
+ThreeGppUmiStreetCanyonPropagationLossModel::GetShadowingStd ([[maybe_unused]] Ptr<MobilityModel> a,
+                                                              [[maybe_unused]] Ptr<MobilityModel> b,
                                                               ChannelCondition::LosConditionValue cond) const
 {
   NS_LOG_FUNCTION (this);
@@ -918,7 +1147,7 @@ ThreeGppUmiStreetCanyonPropagationLossModel::GetShadowingCorrelationDistance (Ch
 NS_OBJECT_ENSURE_REGISTERED (ThreeGppIndoorOfficePropagationLossModel);
 
 TypeId
-ThreeGppIndoorOfficePropagationLossModel::GetTypeId (void)
+ThreeGppIndoorOfficePropagationLossModel::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::ThreeGppIndoorOfficePropagationLossModel")
     .SetParent<ThreeGppPropagationLossModel> ()
@@ -942,9 +1171,15 @@ ThreeGppIndoorOfficePropagationLossModel::~ThreeGppIndoorOfficePropagationLossMo
 }
 
 double
-ThreeGppIndoorOfficePropagationLossModel::GetLossLos ([[maybe_unused]] double distance2D, 
-                                                      [[maybe_unused]] double distance3D, 
-                                                      [[maybe_unused]] double hUt, 
+ThreeGppIndoorOfficePropagationLossModel::GetO2iDistance2dIn () const
+{
+  return 0;
+}
+
+double
+ThreeGppIndoorOfficePropagationLossModel::GetLossLos ([[maybe_unused]] double distance2D,
+                                                      [[maybe_unused]] double distance3D,
+                                                      [[maybe_unused]] double hUt,
                                                       [[maybe_unused]] double hBs) const
 {
   NS_LOG_FUNCTION (this);
@@ -952,6 +1187,7 @@ ThreeGppIndoorOfficePropagationLossModel::GetLossLos ([[maybe_unused]] double di
   // check if the distance is outside the validity range
   if (distance3D < 1.0 || distance3D > 150.0)
     {
+      NS_ABORT_MSG_IF (m_enforceRanges, "IndoorOffice 3D distance out of range");
       NS_LOG_WARN ("The 3D distance is outside the validity range, the pathloss value may not be accurate");
     }
 
@@ -971,6 +1207,7 @@ ThreeGppIndoorOfficePropagationLossModel::GetLossNlos (double distance2D, double
   // check if the distance is outside the validity range
   if (distance3D < 1.0 || distance3D > 150.0)
     {
+      NS_ABORT_MSG_IF (m_enforceRanges, "IndoorOffice 3D distance out of range");
       NS_LOG_WARN ("The 3D distance is outside the validity range, the pathloss value may not be accurate");
     }
 
@@ -984,8 +1221,8 @@ ThreeGppIndoorOfficePropagationLossModel::GetLossNlos (double distance2D, double
 }
 
 double
-ThreeGppIndoorOfficePropagationLossModel::GetShadowingStd ([[maybe_unused]] Ptr<MobilityModel> a, 
-                                                           [[maybe_unused]] Ptr<MobilityModel> b, 
+ThreeGppIndoorOfficePropagationLossModel::GetShadowingStd ([[maybe_unused]] Ptr<MobilityModel> a,
+                                                           [[maybe_unused]] Ptr<MobilityModel> b,
                                                            ChannelCondition::LosConditionValue cond) const
 {
   NS_LOG_FUNCTION (this);

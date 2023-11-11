@@ -40,7 +40,7 @@ NS_LOG_COMPONENT_DEFINE ("PieQueueDisc");
 
 NS_OBJECT_ENSURE_REGISTERED (PieQueueDisc);
 
-TypeId PieQueueDisc::GetTypeId (void)
+TypeId PieQueueDisc::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::PieQueueDisc")
     .SetParent<QueueDisc> ()
@@ -50,7 +50,7 @@ TypeId PieQueueDisc::GetTypeId (void)
                    "Average of packet size",
                    UintegerValue (1000),
                    MakeUintegerAccessor (&PieQueueDisc::m_meanPktSize),
-                   MakeUintegerChecker<uint32_t> ()) 
+                   MakeUintegerChecker<uint32_t> ())
     .AddAttribute ("A",
                    "Value of alpha",
                    DoubleValue (0.125),
@@ -151,16 +151,16 @@ PieQueueDisc::~PieQueueDisc ()
 }
 
 void
-PieQueueDisc::DoDispose (void)
+PieQueueDisc::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
-  m_uv = 0;
+  m_uv = nullptr;
   m_rtrsEvent.Cancel ();
   QueueDisc::DoDispose ();
 }
 
 Time
-PieQueueDisc::GetQueueDelay (void)
+PieQueueDisc::GetQueueDelay ()
 {
   return m_qDelay;
 }
@@ -190,11 +190,11 @@ PieQueueDisc::DoEnqueue (Ptr<QueueDiscItem> item)
             {
               NS_LOG_DEBUG ("Enqueueing ECT1 packet " << static_cast<uint16_t> (tosByte & 0x3));
             }
-          else 
+          else
             {
               NS_LOG_DEBUG ("Enqueueing CE packet " << static_cast<uint16_t> (tosByte & 0x3));
             }
-          isEct1 = true; 
+          isEct1 = true;
         }
     }
 
@@ -253,7 +253,7 @@ PieQueueDisc::DoEnqueue (Ptr<QueueDiscItem> item)
 }
 
 void
-PieQueueDisc::InitializeParams (void)
+PieQueueDisc::InitializeParams ()
 {
   // Initially queue is empty so variables are initialize to zero except m_dqCount
   m_inMeasurement = false;
@@ -475,11 +475,11 @@ PieQueueDisc::DoDequeue ()
   if (GetInternalQueue (0)->IsEmpty ())
     {
       NS_LOG_LOGIC ("Queue empty");
-      return 0;
+      return nullptr;
     }
 
   Ptr<QueueDiscItem> item = GetInternalQueue (0)->Dequeue ();
-  NS_ASSERT_MSG (item != nullptr, "Dequeue null, but internal queue not empty");
+  NS_ASSERT_MSG (item, "Dequeue null, but internal queue not empty");
 
   // If L4S is enabled and packet is ECT1, then check if delay is greater
   // than CE threshold and if it is then mark the packet,
@@ -493,7 +493,7 @@ PieQueueDisc::DoDequeue ()
             {
               NS_LOG_DEBUG ("ECT1 packet " << static_cast<uint16_t> (tosByte & 0x3));
             }
-          else 
+          else
             {
               NS_LOG_DEBUG ("CE packet " << static_cast<uint16_t> (tosByte & 0x3));
             }
@@ -503,7 +503,7 @@ PieQueueDisc::DoDequeue ()
             }
           return item;
         }
-    }  
+    }
 
   // if not in a measurement cycle and the queue has built up to dq_threshold,
   // start the measurement cycle
@@ -565,7 +565,7 @@ PieQueueDisc::DoDequeue ()
 }
 
 bool
-PieQueueDisc::CheckConfig (void)
+PieQueueDisc::CheckConfig ()
 {
   NS_LOG_FUNCTION (this);
   if (GetNQueueDiscClasses () > 0)

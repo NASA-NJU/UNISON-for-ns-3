@@ -40,7 +40,7 @@ NS_LOG_COMPONENT_DEFINE ("ThreeGppV2vChannelConditionModelsTest");
 /**
  * \ingroup building-test
  * \ingroup tests
- * 
+ *
  * Test case for the classes ThreeGppV2vUrbanChannelConditionModel,
  * and ThreeGppV2vHighwayChannelConditionModel to test their code to
  * deterministically determine NLOS state. The test checks if the
@@ -58,13 +58,13 @@ public:
   /**
    * Destructor
    */
-  virtual ~ThreeGppV2vBuildingsChCondModelTestCase ();
+  ~ThreeGppV2vBuildingsChCondModelTestCase () override;
 
 private:
   /**
    * Builds the simulation scenario and perform the tests
    */
-  virtual void DoRun (void);
+  void DoRun () override;
 
   /**
    * Struct containing the parameters for each test
@@ -88,7 +88,7 @@ ThreeGppV2vBuildingsChCondModelTestCase::~ThreeGppV2vBuildingsChCondModelTestCas
 {}
 
 void
-ThreeGppV2vBuildingsChCondModelTestCase::DoRun (void)
+ThreeGppV2vBuildingsChCondModelTestCase::DoRun ()
 {
   RngSeedManager::SetSeed (1);
   RngSeedManager::SetRun (1);
@@ -194,13 +194,13 @@ public:
   /**
    * Destructor
    */
-  virtual ~ThreeGppV2vUrbanLosNlosvChCondModelTestCase ();
+  ~ThreeGppV2vUrbanLosNlosvChCondModelTestCase () override;
 
 private:
   /**
    * Builds the simulation scenario and perform the tests
    */
-  virtual void DoRun (void);
+  void DoRun () override;
 
   /**
    * Evaluates the channel condition between two nodes by calling the method
@@ -248,7 +248,7 @@ ThreeGppV2vUrbanLosNlosvChCondModelTestCase::EvaluateChannelCondition (Ptr<Mobil
 }
 
 void
-ThreeGppV2vUrbanLosNlosvChCondModelTestCase::DoRun (void)
+ThreeGppV2vUrbanLosNlosvChCondModelTestCase::DoRun ()
 {
   RngSeedManager::SetSeed (1);
   RngSeedManager::SetRun (1);
@@ -345,13 +345,13 @@ public:
   /**
    * Destructor
    */
-  virtual ~ThreeGppV2vHighwayLosNlosvChCondModelTestCase ();
+  ~ThreeGppV2vHighwayLosNlosvChCondModelTestCase () override;
 
 private:
   /**
    * Builds the simulation scenario and perform the tests
    */
-  virtual void DoRun (void);
+  void DoRun () override;
 
   /**
    * Evaluates the channel condition between two nodes by calling the method
@@ -399,7 +399,7 @@ ThreeGppV2vHighwayLosNlosvChCondModelTestCase::EvaluateChannelCondition (Ptr<Mob
 }
 
 void
-ThreeGppV2vHighwayLosNlosvChCondModelTestCase::DoRun (void)
+ThreeGppV2vHighwayLosNlosvChCondModelTestCase::DoRun ()
 {
   RngSeedManager::SetSeed (1);
   RngSeedManager::SetRun (1);
@@ -478,7 +478,7 @@ ThreeGppV2vHighwayLosNlosvChCondModelTestCase::DoRun (void)
 /**
  * \ingroup building-test
  * \ingroup tests
- * 
+ *
  * Test suite for the 3GPP V2V channel condition model
  *
  * Note that, in 3GPP V2V scenarios, the channel condition model is

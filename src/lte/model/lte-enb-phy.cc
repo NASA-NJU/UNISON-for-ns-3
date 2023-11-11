@@ -82,9 +82,9 @@ public:
   EnbMemberLteEnbPhySapProvider (LteEnbPhy* phy);
 
   // inherited from LteEnbPhySapProvider
-  virtual void SendMacPdu (Ptr<Packet> p);
-  virtual void SendLteControlMessage (Ptr<LteControlMessage> msg);
-  virtual uint8_t GetMacChTtiDelay ();
+  void SendMacPdu (Ptr<Packet> p) override;
+  void SendLteControlMessage (Ptr<LteControlMessage> msg) override;
+  uint8_t GetMacChTtiDelay () override;
   /**
    * Set bandwidth function
    *
@@ -151,8 +151,8 @@ LteEnbPhy::LteEnbPhy ()
 
 LteEnbPhy::LteEnbPhy (Ptr<LteSpectrumPhy> dlPhy, Ptr<LteSpectrumPhy> ulPhy)
   : LtePhy (dlPhy, ulPhy),
-    m_enbPhySapUser (0),
-    m_enbCphySapUser (0),
+    m_enbPhySapUser (nullptr),
+    m_enbCphySapUser (nullptr),
     m_nrFrames (0),
     m_nrSubFrames (0),
     m_srsPeriodicity (0),
@@ -168,7 +168,7 @@ LteEnbPhy::LteEnbPhy (Ptr<LteSpectrumPhy> dlPhy, Ptr<LteSpectrumPhy> ulPhy)
 }
 
 TypeId
-LteEnbPhy::GetTypeId (void)
+LteEnbPhy::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::LteEnbPhy")
     .SetParent<LtePhy> ()
@@ -262,9 +262,9 @@ LteEnbPhy::DoInitialize ()
 {
   NS_LOG_FUNCTION (this);
 
-  NS_ABORT_MSG_IF (m_netDevice == nullptr, "LteEnbDevice is not available in LteEnbPhy");
+  NS_ABORT_MSG_IF (!m_netDevice, "LteEnbDevice is not available in LteEnbPhy");
   Ptr<Node> node = m_netDevice->GetNode ();
-  NS_ABORT_MSG_IF (node == nullptr, "Node is not available in the LteNetDevice of LteEnbPhy");
+  NS_ABORT_MSG_IF (!node, "Node is not available in the LteNetDevice of LteEnbPhy");
   uint32_t nodeId = node->GetId ();
 
   //ScheduleWithContext() is needed here to set context for logs,
@@ -361,7 +361,7 @@ LteEnbPhy::SetMacChDelay (uint8_t delay)
 }
 
 uint8_t
-LteEnbPhy::GetMacChDelay (void) const
+LteEnbPhy::GetMacChDelay () const
 {
   return (m_macChTtiDelay);
 }
@@ -456,7 +456,7 @@ LteEnbPhy::SetDownlinkSubChannelsWithPowerAllocation (std::vector<int> mask)
 }
 
 std::vector<int>
-LteEnbPhy::GetDownlinkSubChannels (void)
+LteEnbPhy::GetDownlinkSubChannels ()
 {
   NS_LOG_FUNCTION (this);
   return m_listOfDownlinkSubchannel;
@@ -581,7 +581,7 @@ LteEnbPhy::ReceiveLteControlMessageList (std::list<Ptr<LteControlMessage> > msgL
 
 
 void
-LteEnbPhy::StartFrame (void)
+LteEnbPhy::StartFrame ()
 {
   NS_LOG_FUNCTION (this);
 
@@ -593,14 +593,14 @@ LteEnbPhy::StartFrame (void)
   m_mib.systemFrameNumber = m_nrSubFrames;
   Ptr<MibLteControlMessage> mibMsg = Create<MibLteControlMessage> ();
   mibMsg->SetMib (m_mib);
-  m_controlMessagesQueue.at (0).push_back (mibMsg);
+  m_controlMessagesQueue.at (0).emplace_back(mibMsg);
 
   StartSubFrame ();
 }
 
 
 void
-LteEnbPhy::StartSubFrame (void)
+LteEnbPhy::StartSubFrame ()
 {
   NS_LOG_FUNCTION (this);
 
@@ -617,7 +617,7 @@ LteEnbPhy::StartSubFrame (void)
     {
       Ptr<Sib1LteControlMessage> msg = Create<Sib1LteControlMessage> ();
       msg->SetSib1 (m_sib1);
-      m_controlMessagesQueue.at (0).push_back (msg);
+      m_controlMessagesQueue.at (0).emplace_back(msg);
     }
 
   if (m_srsPeriodicity > 0)
@@ -775,7 +775,7 @@ LteEnbPhy::SendControlChannels (std::list<Ptr<LteControlMessage> > ctrlMsgList)
   NS_LOG_FUNCTION (this << " eNB " << m_cellId << " start tx ctrl frame");
   // set the current tx power spectral density (full bandwidth)
   std::vector <int> dlRb;
-  for (uint8_t i = 0; i < m_dlBandwidth; i++)
+  for (uint16_t i = 0; i < m_dlBandwidth; i++)
     {
       dlRb.push_back (i);
     }
@@ -804,7 +804,7 @@ LteEnbPhy::SendDataChannels (Ptr<PacketBurst> pb)
 
 
 void
-LteEnbPhy::EndSubFrame (void)
+LteEnbPhy::EndSubFrame ()
 {
   NS_LOG_FUNCTION (this << Simulator::Now ().As (Time::S));
   if (m_nrSubFrames == 10)
@@ -819,7 +819,7 @@ LteEnbPhy::EndSubFrame (void)
 
 
 void
-LteEnbPhy::EndFrame (void)
+LteEnbPhy::EndFrame ()
 {
   NS_LOG_FUNCTION (this << Simulator::Now ().As (Time::S));
   Simulator::ScheduleNow (&LteEnbPhy::StartFrame, this);
@@ -1089,7 +1089,7 @@ LteEnbPhy::QueueUlDci (UlDciLteControlMessage m)
 }
 
 std::list<UlDciLteControlMessage>
-LteEnbPhy::DequeueUlDci (void)
+LteEnbPhy::DequeueUlDci ()
 {
   NS_LOG_FUNCTION (this);
   if (m_ulDciQueue.at (0).size () > 0)

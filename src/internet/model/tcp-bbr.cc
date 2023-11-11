@@ -33,7 +33,7 @@ NS_OBJECT_ENSURE_REGISTERED (TcpBbr);
 const double TcpBbr::PACING_GAIN_CYCLE [] = {5.0 / 4, 3.0 / 4, 1, 1, 1, 1, 1, 1};
 
 TypeId
-TcpBbr::GetTypeId (void)
+TcpBbr::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::TcpBbr")
     .SetParent<TcpCongestionOps> ()
@@ -116,8 +116,8 @@ TcpBbr::TcpBbr (const TcpBbr &sock)
     m_isInitialized (sock.m_isInitialized),
     m_uv (sock.m_uv),
     m_delivered (sock.m_delivered),
-    m_appLimited (sock.m_appLimited),  
-    m_txItemDelivered (sock.m_txItemDelivered),  
+    m_appLimited (sock.m_appLimited),
+    m_txItemDelivered (sock.m_txItemDelivered),
     m_extraAckedGain (sock.m_extraAckedGain),
     m_extraAckedWinRtt (sock.m_extraAckedWinRtt),
     m_extraAckedWinRttLength (sock.m_extraAckedWinRttLength),
@@ -182,7 +182,7 @@ TcpBbr::InitPacingRate (Ptr<TcpSocketState> tcb)
     {
       rtt = MilliSeconds (1);
     }
-  
+
   DataRate nominalBandwidth (tcb->m_cWnd * 8 / rtt.GetSeconds ());
   tcb->m_pacingRate = DataRate (m_pacingGain * nominalBandwidth.GetBitRate ());
   m_maxBwFilter = MaxBandwidthFilter_t (m_bandwidthWindowLength,
@@ -219,7 +219,7 @@ TcpBbr::SetPacingRate (Ptr<TcpSocketState> tcb, double gain)
   NS_LOG_FUNCTION (this << tcb << gain);
   DataRate rate (gain * m_maxBwFilter.GetBest ().GetBitRate ());
   rate = std::min (rate, tcb->m_maxPacingRate);
-  
+
   if (!m_hasSeenRtt && tcb->m_minRtt != Time::Max ())
     {
       InitPacingRate (tcb);
@@ -485,7 +485,8 @@ TcpBbr::AckAggregationCwnd ()
 void
 TcpBbr::UpdateAckAggregation (Ptr<TcpSocketState> tcb, const TcpRateOps::TcpRateSample &rs)
 {
-  uint32_t expectedAcked, extraAck;
+  uint32_t expectedAcked;
+  uint32_t extraAck;
   uint32_t epochProp;
 
   if (!m_extraAckedGain || rs.m_ackedSacked <= 0 || rs.m_delivered < 0)
@@ -564,7 +565,7 @@ TcpBbr::SetCwnd (Ptr<TcpSocketState> tcb, const TcpRateOps::TcpRateSample &rs)
 
   if (tcb->m_congState == TcpSocketState::CA_RECOVERY)
     {
-      if (ModulateCwndForRecovery (tcb, rs)) 
+      if (ModulateCwndForRecovery (tcb, rs))
         {
           goto done;
         }
@@ -581,7 +582,7 @@ TcpBbr::SetCwnd (Ptr<TcpSocketState> tcb, const TcpRateOps::TcpRateSample &rs)
       tcb->m_cWnd = tcb->m_cWnd.Get () + rs.m_ackedSacked;
     }
   tcb->m_cWnd = std::max (tcb->m_cWnd.Get (), m_minPipeCwnd);
-  
+
 done:
   ModulateCwndForProbeRTT (tcb);
 }
@@ -712,10 +713,10 @@ TcpBbr::CongestionStateSet (Ptr<TcpSocketState> tcb,
       m_targetCWnd = tcb->m_cWnd;
       m_minPipeCwnd = 4 * tcb->m_segmentSize;
       m_sendQuantum = 1 * tcb->m_segmentSize;
-      
+
       InitRoundCounting ();
       InitFullPipe ();
-      EnterStartup ();      
+      EnterStartup ();
       InitPacingRate (tcb);
       m_ackEpochTime = Simulator::Now();
       m_extraAckedWinRtt = 0;
@@ -728,7 +729,7 @@ TcpBbr::CongestionStateSet (Ptr<TcpSocketState> tcb,
   else if (newState == TcpSocketState::CA_LOSS)
     {
       NS_LOG_DEBUG ("CongestionStateSet triggered to CA_LOSS :: " << newState);
-      SaveCwnd (tcb);      
+      SaveCwnd (tcb);
       m_roundStart = true;
     }
   else if (newState == TcpSocketState::CA_RECOVERY)
@@ -782,7 +783,7 @@ TcpBbr::GetSsThresh (Ptr<const TcpSocketState> tcb, uint32_t bytesInFlight)
 }
 
 Ptr<TcpCongestionOps>
-TcpBbr::Fork (void)
+TcpBbr::Fork ()
 {
   return CopyObject<TcpBbr> (this);
 }

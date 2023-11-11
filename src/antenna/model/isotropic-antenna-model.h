@@ -29,9 +29,9 @@ namespace ns3 {
 
 /**
  * \ingroup antenna
- * 
+ *
  * \brief Isotropic antenna model
- * 
+ *
  * This is the simplest antenna model. The gain of this antenna is the same in all directions.
  */
 class IsotropicAntennaModel : public AntennaModel
@@ -39,7 +39,7 @@ class IsotropicAntennaModel : public AntennaModel
 public:
 
   IsotropicAntennaModel ();
-  
+
   /**
    * \brief Get the type ID.
    * \return The object TypeId.
@@ -47,13 +47,13 @@ public:
   static TypeId GetTypeId ();
 
   // inherited from AntennaModel
-  virtual double GetGainDb (Angles a);
+  double GetGainDb (Angles a) override;
 
 protected:
 
   /**
    * gain of the antenna in dB, in all directions
-   * 
+   *
    */
   double m_gainDb;
 };

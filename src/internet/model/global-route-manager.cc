@@ -1,7 +1,7 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright 2007 University of Washington
- * 
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
  * published by the Free Software Foundation;
@@ -43,7 +43,7 @@ GlobalRouteManager::DeleteGlobalRoutes ()
 }
 
 void
-GlobalRouteManager::BuildGlobalRoutingDatabase (void) 
+GlobalRouteManager::BuildGlobalRoutingDatabase ()
 {
   NS_LOG_FUNCTION_NOARGS ();
   SimulationSingleton<GlobalRouteManagerImpl>::Get ()->
@@ -51,7 +51,7 @@ GlobalRouteManager::BuildGlobalRoutingDatabase (void)
 }
 
 void
-GlobalRouteManager::InitializeRoutes (void)
+GlobalRouteManager::InitializeRoutes ()
 {
   NS_LOG_FUNCTION_NOARGS ();
   SimulationSingleton<GlobalRouteManagerImpl>::Get ()->
@@ -59,7 +59,7 @@ GlobalRouteManager::InitializeRoutes (void)
 }
 
 uint32_t
-GlobalRouteManager::AllocateRouterId (void)
+GlobalRouteManager::AllocateRouterId ()
 {
   NS_LOG_FUNCTION_NOARGS ();
   static uint32_t routerId = 0;

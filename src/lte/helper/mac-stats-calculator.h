@@ -17,7 +17,7 @@
  *
  * Author: Jaume Nin <jnin@cttc.es>
  * Modified by: Danilo Abrignani <danilo.abrignani@unibo.it> (Carrier Aggregation - GSoC 2015)
- *              Biljana Bojovic <biljana.bojovic@cttc.es> (Carrier Aggregation) 
+ *              Biljana Bojovic <biljana.bojovic@cttc.es> (Carrier Aggregation)
  */
 
 #ifndef MAC_STATS_CALCULATOR_H_
@@ -56,14 +56,14 @@ public:
   /**
    * Destructor
    */
-  virtual ~MacStatsCalculator ();
+  ~MacStatsCalculator () override;
 
   // Inherited from ns3::Object
   /**
    *  Register this type.
    *  \return The object TypeId.
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   /**
    * Set the name of the file where the uplink statistics will be stored.
@@ -76,7 +76,7 @@ public:
    * Get the name of the file where the uplink statistics will be stored.
    * @return the name of the file where the uplink statistics will be stored
    */
-  std::string GetUlOutputFilename (void);
+  std::string GetUlOutputFilename ();
 
   /**
    * Set the name of the file where the downlink statistics will be stored.
@@ -89,7 +89,7 @@ public:
    * Get the name of the file where the downlink statistics will be stored.
    * @return the name of the file where the downlink statistics will be stored
    */
-  std::string GetDlOutputFilename (void);
+  std::string GetDlOutputFilename ();
 
   /**
    * Notifies the stats calculator that an downlink scheduling has occurred.
@@ -122,26 +122,26 @@ public:
   void UlScheduling (uint16_t cellId, uint64_t imsi,uint32_t frameNo, uint32_t subframeNo,
                      uint16_t rnti, uint8_t mcsTb, uint16_t sizeTb, uint8_t componentCarrierId);
 
-  
-  /** 
+
+  /**
    * Trace sink for the ns3::LteEnbMac::DlScheduling trace source
-   * 
-   * \param macStats 
-   * \param path 
+   *
+   * \param macStats
+   * \param path
    * \param dlSchedulingCallbackInfo DlSchedulingCallbackInfo structure containing all downlink information that is generated what DlScheduling traces is fired
    */
   static void DlSchedulingCallback (Ptr<MacStatsCalculator> macStats, std::string path, DlSchedulingCallbackInfo dlSchedulingCallbackInfo);
 
-  /** 
+  /**
    * Trace sink for the ns3::LteEnbMac::UlScheduling trace source
-   * 
-   * \param macStats 
-   * \param path 
-   * \param frameNo 
-   * \param subframeNo 
-   * \param rnti 
-   * \param mcs 
-   * \param size 
+   *
+   * \param macStats
+   * \param path
+   * \param frameNo
+   * \param subframeNo
+   * \param rnti
+   * \param mcs
+   * \param size
    * \param componentCarrierId
    */
   static void UlSchedulingCallback (Ptr<MacStatsCalculator> macStats, std::string path,

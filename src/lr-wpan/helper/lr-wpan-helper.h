@@ -52,31 +52,35 @@ class LrWpanHelper : public PcapHelperForDevice,
 public:
   /**
    * \brief Create a LrWpan helper in an empty state.  By default, a
-   * SingleModelSpectrumChannel is created, with a 
+   * SingleModelSpectrumChannel is created, with a
    * LogDistancePropagationLossModel and a ConstantSpeedPropagationDelayModel.
    *
    * To change the channel type, loss model, or delay model, the Get/Set
    * Channel methods may be used.
    */
-  LrWpanHelper (void);
+  LrWpanHelper ();
 
   /**
    * \brief Create a LrWpan helper in an empty state with either a
    * SingleModelSpectrumChannel or a MultiModelSpectrumChannel.
    * \param useMultiModelSpectrumChannel use a MultiModelSpectrumChannel if true, a SingleModelSpectrumChannel otherwise
    *
-   * A LogDistancePropagationLossModel and a 
+   * A LogDistancePropagationLossModel and a
    * ConstantSpeedPropagationDelayModel are added to the channel.
    */
   LrWpanHelper (bool useMultiModelSpectrumChannel);
 
-  virtual ~LrWpanHelper (void);
+  ~LrWpanHelper () override;
+
+  // Delete copy constructor and assignment operator to avoid misuse
+  LrWpanHelper (const LrWpanHelper &) = delete;
+  LrWpanHelper &operator= (const LrWpanHelper &) = delete;
 
   /**
    * \brief Get the channel associated to this helper
    * \returns the channel
    */
-  Ptr<SpectrumChannel> GetChannel (void);
+  Ptr<SpectrumChannel> GetChannel ();
 
   /**
    * \brief Set the channel associated to this helper
@@ -128,7 +132,7 @@ public:
   /**
    * Helper to enable all LrWpan log components with one statement
    */
-  void EnableLogComponents (void);
+  void EnableLogComponents ();
 
   /**
    * \brief Transform the LrWpanPhyEnumeration enumeration into a printable string.
@@ -158,16 +162,6 @@ public:
   int64_t AssignStreams (NetDeviceContainer c, int64_t stream);
 
 private:
-  // Disable implicit constructors
-  /**
-   * \brief Copy constructor - defined and not implemented.
-   */
-  LrWpanHelper (LrWpanHelper const &);
-  /**
-   * \brief Copy constructor - defined and not implemented.
-   * \returns
-   */
-  LrWpanHelper& operator= (LrWpanHelper const &);
   /**
    * \brief Enable pcap output on the indicated net device.
    *
@@ -179,7 +173,7 @@ private:
    * \param promiscuous If true capture all possible packets available at the device.
    * \param explicitFilename Treat the prefix as an explicit filename if true
    */
-  virtual void EnablePcapInternal (std::string prefix, Ptr<NetDevice> nd, bool promiscuous, bool explicitFilename);
+  void EnablePcapInternal (std::string prefix, Ptr<NetDevice> nd, bool promiscuous, bool explicitFilename) override;
 
   /**
    * \brief Enable ascii trace output on the indicated net device.
@@ -192,10 +186,10 @@ private:
    * \param nd Net device for which you want to enable tracing.
    * \param explicitFilename Treat the prefix as an explicit filename if true
    */
-  virtual void EnableAsciiInternal (Ptr<OutputStreamWrapper> stream,
+  void EnableAsciiInternal (Ptr<OutputStreamWrapper> stream,
                                     std::string prefix,
                                     Ptr<NetDevice> nd,
-                                    bool explicitFilename);
+                                    bool explicitFilename) override;
 
 private:
   Ptr<SpectrumChannel> m_channel; //!< channel to be used for the devices

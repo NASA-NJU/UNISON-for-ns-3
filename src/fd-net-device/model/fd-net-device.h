@@ -63,7 +63,7 @@ public:
   void SetBufferSize (uint32_t bufferSize);
 
 private:
-  FdReader::Data DoRead (void);
+  FdReader::Data DoRead () override;
 
   uint32_t m_bufferSize; //!< size of the read buffer
 };
@@ -88,7 +88,7 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   /**
    * Enumeration of the types of frames supported in the class.
@@ -113,7 +113,7 @@ public:
   /**
    * Destructor for the FdNetDevice.
    */
-  virtual ~FdNetDevice ();
+  ~FdNetDevice () override;
 
   // Delete assignment operator to avoid misuse
   FdNetDevice (FdNetDevice const &) = delete;
@@ -131,7 +131,7 @@ public:
    *
    * \returns The link layer encapsulation mode of this device.
    */
-  FdNetDevice::EncapsulationMode GetEncapsulationMode (void) const;
+  FdNetDevice::EncapsulationMode GetEncapsulationMode () const;
 
   /**
    * Set the associated file descriptor.
@@ -154,30 +154,30 @@ public:
   void Stop (Time tStop);
 
   // inherited from NetDevice base class.
-  virtual void SetIfIndex (const uint32_t index);
-  virtual uint32_t GetIfIndex (void) const;
-  virtual Ptr<Channel> GetChannel (void) const;
-  virtual void SetAddress (Address address);
-  virtual Address GetAddress (void) const;
-  virtual bool SetMtu (const uint16_t mtu);
-  virtual uint16_t GetMtu (void) const;
-  virtual bool IsLinkUp (void) const;
-  virtual void AddLinkChangeCallback (Callback<void> callback);
-  virtual bool IsBroadcast (void) const;
-  virtual Address GetBroadcast (void) const;
-  virtual bool IsMulticast (void) const;
-  virtual Address GetMulticast (Ipv4Address multicastGroup) const;
-  virtual bool IsPointToPoint (void) const;
-  virtual bool IsBridge (void) const;
-  virtual bool Send (Ptr<Packet> packet, const Address& dest, uint16_t protocolNumber);
-  virtual bool SendFrom (Ptr<Packet> packet, const Address& source, const Address& dest, uint16_t protocolNumber);
-  virtual Ptr<Node> GetNode (void) const;
-  virtual void SetNode (Ptr<Node> node);
-  virtual bool NeedsArp (void) const;
-  virtual void SetReceiveCallback (NetDevice::ReceiveCallback cb);
-  virtual void SetPromiscReceiveCallback (NetDevice::PromiscReceiveCallback cb);
-  virtual bool SupportsSendFrom () const;
-  virtual Address GetMulticast (Ipv6Address addr) const;
+  void SetIfIndex (const uint32_t index) override;
+  uint32_t GetIfIndex () const override;
+  Ptr<Channel> GetChannel () const override;
+  void SetAddress (Address address) override;
+  Address GetAddress () const override;
+  bool SetMtu (const uint16_t mtu) override;
+  uint16_t GetMtu () const override;
+  bool IsLinkUp () const override;
+  void AddLinkChangeCallback (Callback<void> callback) override;
+  bool IsBroadcast () const override;
+  Address GetBroadcast () const override;
+  bool IsMulticast () const override;
+  Address GetMulticast (Ipv4Address multicastGroup) const override;
+  bool IsPointToPoint () const override;
+  bool IsBridge () const override;
+  bool Send (Ptr<Packet> packet, const Address& dest, uint16_t protocolNumber) override;
+  bool SendFrom (Ptr<Packet> packet, const Address& source, const Address& dest, uint16_t protocolNumber) override;
+  Ptr<Node> GetNode () const override;
+  void SetNode (Ptr<Node> node) override;
+  bool NeedsArp () const override;
+  void SetReceiveCallback (NetDevice::ReceiveCallback cb) override;
+  void SetPromiscReceiveCallback (NetDevice::PromiscReceiveCallback cb) override;
+  bool SupportsSendFrom () const override;
+  Address GetMulticast (Ipv6Address addr) const override;
 
   /**
    * Set if the NetDevice is able to send Broadcast messages
@@ -202,15 +202,15 @@ protected:
   /**
    * Method Initialization for start and stop attributes.
    */
-  virtual void DoInitialize (void);
-  
-  virtual void DoDispose (void);
+  void DoInitialize () override;
+
+  void DoDispose () override;
 
   /**
    * Get the associated file descriptor.
    * \return the associated file descriptor
    */
-  int GetFileDescriptor (void) const;
+  int GetFileDescriptor () const;
 
   /**
    * Allocate packet buffer.
@@ -246,33 +246,33 @@ private:
   /**
    * Spin up the device
    */
-  void StartDevice (void);
+  void StartDevice ();
 
   /**
    * Tear down the device
    */
-  void StopDevice (void);
+  void StopDevice ();
 
   /**
    * Create the FdReader object
    * \return the created FdReader object
    */
-  virtual Ptr<FdReader> DoCreateFdReader (void);
+  virtual Ptr<FdReader> DoCreateFdReader ();
 
   /**
    * Complete additional actions, if any, to spin up down the device
    */
-  virtual void DoFinishStartingDevice (void);
+  virtual void DoFinishStartingDevice ();
 
   /**
    * Complete additional actions, if any, to tear down the device
    */
-  virtual void DoFinishStoppingDevice (void);
+  virtual void DoFinishStoppingDevice ();
 
   /**
    * Forward the frame to the appropriate callback for processing
    */
-  void ForwardUp (void);
+  void ForwardUp ();
 
   /**
    * Start Sending a Packet Down the Wire.
@@ -284,7 +284,7 @@ private:
   /**
    * Notify that the link is up and ready
    */
-  void NotifyLinkUp (void);
+  void NotifyLinkUp ();
 
   /**
    * The ns-3 node associated to the net device.

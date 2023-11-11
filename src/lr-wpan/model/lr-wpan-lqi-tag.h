@@ -28,10 +28,10 @@ namespace ns3 {
 /**
  * \ingroup lr-wpan
  * Represent the LQI (Link Quality Estination).
- * 
- * The LQI Tag is added to each received packet, and can be 
+ *
+ * The LQI Tag is added to each received packet, and can be
  * used by upper layers to estimate the channel conditions.
- * 
+ *
  * The LQI is the total packet success rate scaled to 0-255.
  */
 class LrWpanLqiTag : public Tag
@@ -42,14 +42,14 @@ public:
    *
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
-  virtual TypeId GetInstanceTypeId (void) const;
+  TypeId GetInstanceTypeId () const override;
 
   /**
    * Create a LrWpanLqiTag with the default LQI 0.
    */
-  LrWpanLqiTag (void);
+  LrWpanLqiTag ();
 
   /**
    * Create a LrWpanLqiTag with the given LQI value.
@@ -57,10 +57,10 @@ public:
    */
   LrWpanLqiTag (uint8_t lqi);
 
-  virtual uint32_t GetSerializedSize (void) const;
-  virtual void Serialize (TagBuffer i) const;
-  virtual void Deserialize (TagBuffer i);
-  virtual void Print (std::ostream &os) const;
+  uint32_t GetSerializedSize () const override;
+  void Serialize (TagBuffer i) const override;
+  void Deserialize (TagBuffer i) override;
+  void Print (std::ostream &os) const override;
 
   /**
    * Set the LQI to the given value.
@@ -74,7 +74,7 @@ public:
    *
    * \return the LQI value
    */
-  uint8_t Get (void) const;
+  uint8_t Get () const;
 private:
   /**
    * The current LQI value of the tag.

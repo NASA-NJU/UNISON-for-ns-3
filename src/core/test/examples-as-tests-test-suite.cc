@@ -56,21 +56,21 @@ public:
   /**
    * Destructor
    */
-  virtual ~CommandLineExampleTestCase();
+  ~CommandLineExampleTestCase() override;
 
   /**
   * Override this function to filter the version string from
   * the command-line-example output.
   * Since the version changes each time a commit is made it shouldn't
   * be tested as part of the command-line-example output.
-  * 
+  *
   * \returns The string of post-processing commands.
   */
-  virtual std::string GetPostProcessingCommand (void) const;
+  std::string GetPostProcessingCommand () const override;
 };
 
 CommandLineExampleTestCase::CommandLineExampleTestCase ()
-    :   ExampleAsTestCase ("core-example-command-line", 
+    :   ExampleAsTestCase ("core-example-command-line",
                            "command-line-example",
                            NS_TEST_SOURCEDIR)
 {}
@@ -79,9 +79,9 @@ CommandLineExampleTestCase::~CommandLineExampleTestCase ()
 {}
 
 std::string
-CommandLineExampleTestCase::GetPostProcessingCommand (void) const
+CommandLineExampleTestCase::GetPostProcessingCommand () const
 {
-  //Delete the line that starts with Program Version: 
+  //Delete the line that starts with Program Version:
   return std::string(R"__(| sed -e "/^Program Version:.*$/d")__");
 }
 

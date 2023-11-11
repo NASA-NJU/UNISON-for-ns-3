@@ -103,7 +103,7 @@ int main (int argc, char** argv)
   Ping6Helper ping6;
 
   ping6.SetLocal (i1.GetAddress (0, 1));
-  ping6.SetRemote (i2.GetAddress (1, 1)); 
+  ping6.SetRemote (i2.GetAddress (1, 1));
 
   ping6.SetAttribute ("MaxPackets", UintegerValue (maxPacketCount));
   ping6.SetAttribute ("Interval", TimeValue (interPacketInterval));
@@ -120,5 +120,7 @@ int main (int argc, char** argv)
   Simulator::Run ();
   Simulator::Destroy ();
   NS_LOG_INFO ("Done.");
+
+  return 0;
 }
 

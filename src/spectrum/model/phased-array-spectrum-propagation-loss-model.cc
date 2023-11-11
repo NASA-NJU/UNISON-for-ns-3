@@ -21,6 +21,7 @@
 #include "phased-array-spectrum-propagation-loss-model.h"
 #include <ns3/log.h>
 #include <ns3/phased-array-model.h>
+#include "ns3/spectrum-signal-parameters.h"
 
 namespace ns3 {
 
@@ -29,7 +30,7 @@ NS_LOG_COMPONENT_DEFINE ("PhasedArraySpectrumPropagationLossModel");
 NS_OBJECT_ENSURE_REGISTERED (PhasedArraySpectrumPropagationLossModel);
 
 PhasedArraySpectrumPropagationLossModel::PhasedArraySpectrumPropagationLossModel ()
-  : m_next (0)
+  : m_next (nullptr)
 {
 }
 
@@ -40,11 +41,11 @@ PhasedArraySpectrumPropagationLossModel::~PhasedArraySpectrumPropagationLossMode
 void
 PhasedArraySpectrumPropagationLossModel::DoDispose ()
 {
-  m_next = 0;
+  m_next = nullptr;
 }
 
 TypeId
-PhasedArraySpectrumPropagationLossModel::GetTypeId (void)
+PhasedArraySpectrumPropagationLossModel::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::PhasedArraySpectrumPropagationLossModel")
     .SetParent<Object> ()
@@ -60,7 +61,7 @@ void PhasedArraySpectrumPropagationLossModel::SetNext (Ptr<PhasedArraySpectrumPr
 }
 
 Ptr<SpectrumValue>
-PhasedArraySpectrumPropagationLossModel::CalcRxPowerSpectralDensity (Ptr<const SpectrumValue> txPsd,
+PhasedArraySpectrumPropagationLossModel::CalcRxPowerSpectralDensity (Ptr<const SpectrumSignalParameters> params,
                                                                      Ptr<const MobilityModel> a,
                                                                      Ptr<const MobilityModel> b,
                                                                      Ptr<const PhasedArrayModel> aPhasedArrayModel,
@@ -69,10 +70,10 @@ PhasedArraySpectrumPropagationLossModel::CalcRxPowerSpectralDensity (Ptr<const S
   // Here we assume that all the models in the chain of models are of type
   // PhasedArraySpectrumPropagationLossModel that provides the implementation of
   // this function, i.e. has phased array model of TX and RX as parameters
-  Ptr<SpectrumValue> rxPsd = DoCalcRxPowerSpectralDensity (txPsd, a, b, aPhasedArrayModel, bPhasedArrayModel);
-  if (m_next != 0)
+  Ptr<SpectrumValue> rxPsd = DoCalcRxPowerSpectralDensity (params, a, b, aPhasedArrayModel, bPhasedArrayModel);
+  if (m_next)
     {
-      rxPsd = m_next->CalcRxPowerSpectralDensity (rxPsd, a, b, aPhasedArrayModel, bPhasedArrayModel);
+      rxPsd = m_next->CalcRxPowerSpectralDensity (params, a, b, aPhasedArrayModel, bPhasedArrayModel);
     }
   return rxPsd;
 }

@@ -30,7 +30,7 @@ namespace ns3 {
 NS_OBJECT_ENSURE_REGISTERED (TcpCubic);
 
 TypeId
-TcpCubic::GetTypeId (void)
+TcpCubic::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::TcpCubic")
     .SetParent<TcpSocketBase> ()
@@ -216,7 +216,9 @@ TcpCubic::Update (Ptr<TcpSocketState> tcb)
 {
   NS_LOG_FUNCTION (this);
   Time t;
-  uint32_t delta, bicTarget, cnt = 0;
+  uint32_t delta;
+  uint32_t bicTarget;
+  uint32_t cnt = 0;
   double offs;
   uint32_t segCwnd = tcb->GetCwndInSegments ();
 
@@ -445,7 +447,7 @@ TcpCubic::CubicReset (Ptr<const TcpSocketState> tcb)
 }
 
 Ptr<TcpCongestionOps>
-TcpCubic::Fork (void)
+TcpCubic::Fork ()
 {
   NS_LOG_FUNCTION (this);
   return CopyObject<TcpCubic> (this);

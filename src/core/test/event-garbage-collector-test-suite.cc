@@ -56,12 +56,12 @@ public:
   /** Constructor. */
   EventGarbageCollectorTestCase ();
   /** Destructor. */
-  virtual ~EventGarbageCollectorTestCase ();
-  virtual void DoRun (void);
+  ~EventGarbageCollectorTestCase () override;
+  void DoRun () override;
 };
 
 EventGarbageCollectorTestCase::EventGarbageCollectorTestCase ()
-  : TestCase ("EventGarbageCollector"), m_counter (0), m_events (0)
+  : TestCase ("EventGarbageCollector"), m_counter (0), m_events (nullptr)
 {}
 
 EventGarbageCollectorTestCase::~EventGarbageCollectorTestCase ()
@@ -75,11 +75,11 @@ EventGarbageCollectorTestCase::EventGarbageCollectorCallback ()
     {
       // this should cause the remaining (50) events to be cancelled
       delete m_events;
-      m_events = 0;
+      m_events = nullptr;
     }
 }
 
-void EventGarbageCollectorTestCase::DoRun (void)
+void EventGarbageCollectorTestCase::DoRun ()
 {
   m_events = new EventGarbageCollector ();
 

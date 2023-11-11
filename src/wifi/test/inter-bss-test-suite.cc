@@ -79,9 +79,9 @@ class TestInterBssConstantObssPdAlgo : public TestCase
 {
 public:
   TestInterBssConstantObssPdAlgo ();
-  ~TestInterBssConstantObssPdAlgo ();
+  ~TestInterBssConstantObssPdAlgo () override;
 
-  void DoRun (void) override;
+  void DoRun () override;
 
 private:
   /**
@@ -541,12 +541,12 @@ TestInterBssConstantObssPdAlgo::CheckPhyDropReasons (Ptr<WifiNetDevice> device,
 }
 
 void
-TestInterBssConstantObssPdAlgo::RunOne (void)
+TestInterBssConstantObssPdAlgo::RunOne ()
 {
   RngSeedManager::SetSeed (1);
   RngSeedManager::SetRun (3);
   int64_t streamNumber = 50;
-  
+
   Config::Set ("/NodeList/*/DeviceList/*/$ns3::WifiNetDevice/Mac/BE_MaxAmpduSize", UintegerValue (0));
 
   ResetResults ();
@@ -638,7 +638,7 @@ TestInterBssConstantObssPdAlgo::RunOne (void)
 }
 
 void
-TestInterBssConstantObssPdAlgo::DoRun (void)
+TestInterBssConstantObssPdAlgo::DoRun ()
 {
   //Test case 1: CCA CS Threshold = m_obssRxPowerDbm < m_obssPdLevelDbm
   m_obssPdLevelDbm = -72;

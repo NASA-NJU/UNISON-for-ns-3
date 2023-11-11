@@ -35,13 +35,13 @@ NS_LOG_COMPONENT_DEFINE ("LteRrcTest");
  * \ingroup tests
  *
  * \brief Test rrc connection establishment.
- */ 
+ */
 class LteRrcConnectionEstablishmentTestCase : public TestCase
 {
 public:
   /**
    *
-   * 
+   *
    * \param nUes number of UEs in the test
    * \param nBearers number of bearers to be setup in each connection
    * \param tConnBase connection time base value for all UEs in ms
@@ -64,12 +64,12 @@ public:
 
 protected:
 
-  virtual void DoRun (void);
+  void DoRun () override;
   uint32_t m_nUes; ///< number of UEs in the test
 
   /**
    * Build name string function
-   * 
+   *
    * \param nUes number of UEs in the test
    * \param nBearers number of bearers to be setup in each connection
    * \param tConnBase connection time base value for all UEs in ms
@@ -138,7 +138,7 @@ protected:
   Ptr<LteHelper> m_lteHelper; ///< LTE helper
 
   /// key: IMSI
-  std::map<uint64_t, bool> m_isConnectionEstablished; 
+  std::map<uint64_t, bool> m_isConnectionEstablished;
 };
 
 
@@ -415,7 +415,7 @@ LteRrcConnectionEstablishmentTestCase::CheckConnected (Ptr<NetDevice> ueDevice, 
   if (hasContext)
     {
       Ptr<UeManager> ueManager = enbRrc->GetUeManager (rnti);
-      NS_ASSERT (ueManager != 0);
+      NS_ASSERT (ueManager);
       NS_TEST_ASSERT_MSG_EQ (ueManager->GetState (),
                              UeManager::CONNECTED_NORMALLY,
                              "The context of RNTI " << rnti << " is in invalid state");
@@ -456,7 +456,7 @@ LteRrcConnectionEstablishmentTestCase::CheckConnected (Ptr<NetDevice> ueDevice, 
   if (hasContext)
     {
       Ptr<UeManager> ueManager = enbRrc->GetUeManager (rnti);
-      NS_ASSERT (ueManager != 0);
+      NS_ASSERT (ueManager);
       UeManager::State state = ueManager->GetState ();
       uint16_t enbImsi = ueManager->GetImsi ();
       NS_TEST_ASSERT_MSG_EQ (ueImsi, enbImsi, "inconsistent Imsi");
@@ -514,7 +514,7 @@ LteRrcConnectionEstablishmentTestCase::CheckNotConnected (Ptr<NetDevice> ueDevic
   if (hasContext)
     {
       Ptr<UeManager> ueManager = enbRrc->GetUeManager (rnti);
-      NS_ASSERT (ueManager != 0);
+      NS_ASSERT (ueManager);
       contextStateIsConnectedNormally = (UeManager::CONNECTED_NORMALLY == ueManager->GetState ());
     }
   NS_TEST_ASSERT_MSG_EQ ((!m_isConnectionEstablished[imsi]
@@ -549,7 +549,7 @@ LteRrcConnectionEstablishmentTestCase::ConnectionTimeoutCallback (
  * \ingroup tests
  *
  * \brief Lte Rrc Connection Establishment Error Test Case
- */ 
+ */
 class LteRrcConnectionEstablishmentErrorTestCase
   : public LteRrcConnectionEstablishmentTestCase
 {
@@ -564,7 +564,7 @@ public:
   LteRrcConnectionEstablishmentErrorTestCase (Time jumpAwayTime,
                                               std::string description = "");
 protected:
-  virtual void DoRun (void);
+  void DoRun () override;
 
 private:
   /// Jump away function
@@ -734,7 +734,7 @@ LteRrcConnectionEstablishmentErrorTestCase::JumpBack ()
  * \ingroup tests
  *
  * \brief Lte Rrc Test Suite
- */ 
+ */
 class LteRrcTestSuite : public TestSuite
 {
 public:

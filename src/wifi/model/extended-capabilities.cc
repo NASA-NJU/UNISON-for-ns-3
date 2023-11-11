@@ -103,7 +103,7 @@ ExtendedCapabilities::SetVhtSupported (uint8_t vhtSupported)
   m_vhtSupported = vhtSupported;
 }
 
-uint8_t
+uint16_t
 ExtendedCapabilities::GetInformationFieldSize () const
 {
   //we should not be here if it is not supported
@@ -113,26 +113,6 @@ ExtendedCapabilities::GetInformationFieldSize () const
       return 1;
     }
   return 8;
-}
-
-Buffer::Iterator
-ExtendedCapabilities::Serialize (Buffer::Iterator i) const
-{
-  if (m_htSupported < 1 && m_vhtSupported < 1)
-    {
-      return i;
-    }
-  return WifiInformationElement::Serialize (i);
-}
-
-uint16_t
-ExtendedCapabilities::GetSerializedSize () const
-{
-  if (m_htSupported < 1 && m_vhtSupported < 1)
-    {
-      return 0;
-    }
-  return WifiInformationElement::GetSerializedSize ();
 }
 
 void
@@ -146,7 +126,7 @@ ExtendedCapabilities::SetExtendedCapabilitiesByte1 (uint8_t ctrl)
 }
 
 uint8_t
-ExtendedCapabilities::GetExtendedCapabilitiesByte1 (void) const
+ExtendedCapabilities::GetExtendedCapabilitiesByte1 () const
 {
   uint8_t val = 0;
   val |= m_20_40_bssCoexistenceManagementSupport & 0x01;
@@ -171,7 +151,7 @@ ExtendedCapabilities::SetExtendedCapabilitiesByte2 (uint8_t ctrl)
 }
 
 uint8_t
-ExtendedCapabilities::GetExtendedCapabilitiesByte2 (void) const
+ExtendedCapabilities::GetExtendedCapabilitiesByte2 () const
 {
   uint8_t val = 0;
   val |= m_diagnostics & 0x01;
@@ -199,7 +179,7 @@ ExtendedCapabilities::SetExtendedCapabilitiesByte3 (uint8_t ctrl)
 }
 
 uint8_t
-ExtendedCapabilities::GetExtendedCapabilitiesByte3 (void) const
+ExtendedCapabilities::GetExtendedCapabilitiesByte3 () const
 {
   uint8_t val = 0;
   val |= m_tfs & 0x01;
@@ -227,7 +207,7 @@ ExtendedCapabilities::SetExtendedCapabilitiesByte4 (uint8_t ctrl)
 }
 
 uint8_t
-ExtendedCapabilities::GetExtendedCapabilitiesByte4 (void) const
+ExtendedCapabilities::GetExtendedCapabilitiesByte4 () const
 {
   uint8_t val = 0;
   val |= m_channelUsage & 0x01;
@@ -254,7 +234,7 @@ ExtendedCapabilities::SetExtendedCapabilitiesByte5 (uint8_t ctrl)
 }
 
 uint8_t
-ExtendedCapabilities::GetExtendedCapabilitiesByte5 (void) const
+ExtendedCapabilities::GetExtendedCapabilitiesByte5 () const
 {
   uint8_t val = 0;
   val |= m_qosMap & 0x01;
@@ -279,7 +259,7 @@ ExtendedCapabilities::SetExtendedCapabilitiesByte6 (uint8_t ctrl)
 }
 
 uint8_t
-ExtendedCapabilities::GetExtendedCapabilitiesByte6 (void) const
+ExtendedCapabilities::GetExtendedCapabilitiesByte6 () const
 {
   uint8_t val = 0;
   val |= m_rejectUnadmittedFrame & 0x01;
@@ -305,7 +285,7 @@ ExtendedCapabilities::SetExtendedCapabilitiesByte7 (uint8_t ctrl)
 }
 
 uint8_t
-ExtendedCapabilities::GetExtendedCapabilitiesByte7 (void) const
+ExtendedCapabilities::GetExtendedCapabilitiesByte7 () const
 {
   uint8_t val = 0;
   val |= m_utf8Ssid & 0x01;
@@ -332,7 +312,7 @@ ExtendedCapabilities::SetExtendedCapabilitiesByte8 (uint8_t ctrl)
 }
 
 uint8_t
-ExtendedCapabilities::GetExtendedCapabilitiesByte8 (void) const
+ExtendedCapabilities::GetExtendedCapabilitiesByte8 () const
 {
   uint8_t val = 0;
   val |= m_alternateEdca & 0x01;
@@ -367,8 +347,8 @@ ExtendedCapabilities::SerializeInformationField (Buffer::Iterator start) const
     }
 }
 
-uint8_t
-ExtendedCapabilities::DeserializeInformationField (Buffer::Iterator start, uint8_t length)
+uint16_t
+ExtendedCapabilities::DeserializeInformationField (Buffer::Iterator start, uint16_t length)
 {
   Buffer::Iterator i = start;
   uint8_t byte1 = i.ReadU8 ();

@@ -18,7 +18,7 @@
  * Author: Hemanth Narra <hemanth@ittc.ku.com>
  *
  * James P.G. Sterbenz <jpgs@ittc.ku.edu>, director
- * ResiliNets Research Group  http://wiki.ittc.ku.edu/resilinets
+ * ResiliNets Research Group  https://resilinets.org/
  * Information and Telecommunication Technology Center (ITTC)
  * and Department of Electrical Engineering and Computer Science
  * The University of Kansas Lawrence, KS USA.
@@ -187,7 +187,6 @@ PacketQueue::Drop (QueueEntry en, std::string reason)
   NS_LOG_LOGIC (reason << en.GetPacket ()->GetUid () << " " << en.GetIpv4Header ().GetDestination ());
   // en.GetErrorCallback () (en.GetPacket (), en.GetIpv4Header (),
   //   Socket::ERROR_NOROUTETOHOST);
-  return;
 }
 
 }

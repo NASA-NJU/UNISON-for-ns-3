@@ -47,10 +47,10 @@ class Ns3WimaxSimpleOFDMTestCase : public TestCase
 {
 public:
   Ns3WimaxSimpleOFDMTestCase ();
-  virtual ~Ns3WimaxSimpleOFDMTestCase ();
+  ~Ns3WimaxSimpleOFDMTestCase () override;
 
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
   /**
    * Run once function
    * \param FrameDuration the frame duration
@@ -80,7 +80,8 @@ Ns3WimaxSimpleOFDMTestCase::DoRunOnce (double FrameDuration)
 
   WimaxHelper wimax;
 
-  NetDeviceContainer ssDevs, bsDevs;
+  NetDeviceContainer ssDevs;
+  NetDeviceContainer bsDevs;
 
   ssDevs = wimax.Install (ssNodes, WimaxHelper::DEVICE_TYPE_SUBSCRIBER_STATION,
                           WimaxHelper::SIMPLE_PHY_TYPE_OFDM, scheduler, FrameDuration);
@@ -104,7 +105,7 @@ Ns3WimaxSimpleOFDMTestCase::DoRunOnce (double FrameDuration)
 }
 
 void
-Ns3WimaxSimpleOFDMTestCase::DoRun (void)
+Ns3WimaxSimpleOFDMTestCase::DoRun ()
 {
 
   double
@@ -129,10 +130,10 @@ class Ns3WimaxSNRtoBLERTestCase : public TestCase
 {
 public:
   Ns3WimaxSNRtoBLERTestCase ();
-  virtual ~Ns3WimaxSNRtoBLERTestCase ();
+  ~Ns3WimaxSNRtoBLERTestCase () override;
 
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
   /**
    * Run once function
    * \param modulationType the modulation type
@@ -168,7 +169,7 @@ bool Ns3WimaxSNRtoBLERTestCase::DoRunOnce (uint8_t modulationType)
 }
 
 void
-Ns3WimaxSNRtoBLERTestCase::DoRun (void)
+Ns3WimaxSNRtoBLERTestCase::DoRun ()
 {
   for (int i = 0; i < 7; i++)
     {

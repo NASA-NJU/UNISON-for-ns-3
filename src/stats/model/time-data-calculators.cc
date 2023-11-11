@@ -41,7 +41,7 @@ TimeMinMaxAvgTotalCalculator::~TimeMinMaxAvgTotalCalculator()
 }
 /* static */
 TypeId
-TimeMinMaxAvgTotalCalculator::GetTypeId (void)
+TimeMinMaxAvgTotalCalculator::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::TimeMinMaxAvgTotalCalculator")
     .SetParent<DataCalculator> ()
@@ -49,9 +49,9 @@ TimeMinMaxAvgTotalCalculator::GetTypeId (void)
     .AddConstructor<TimeMinMaxAvgTotalCalculator> ();
   return tid;
 }
-  
+
 void
-TimeMinMaxAvgTotalCalculator::DoDispose (void)
+TimeMinMaxAvgTotalCalculator::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
 
@@ -69,11 +69,14 @@ TimeMinMaxAvgTotalCalculator::Update (const Time i)
           m_total += i;
 
           if (i < m_min)
-            m_min = i;
+            {
+              m_min = i;
+            }
 
           if (i > m_max)
-            m_max = i;
-
+            {
+              m_max = i;
+            }
         } else {
           m_min = i;
           m_max = i;

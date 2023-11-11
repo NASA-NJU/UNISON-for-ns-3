@@ -45,24 +45,24 @@ public:
    * \brief Get the type ID.
    * \return The object TypeId.
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
   HistoryHeaderBase ();
   /**
    * Checks if the header has deserialization errors
    * \returns True if no error found.
    */
-  bool IsOk (void) const;
+  bool IsOk () const;
 protected:
   /**
    * Signal that an error has been found in deserialization.
    */
-  void ReportError (void);
+  void ReportError ();
 private:
   bool m_ok; //!< True if no error is signalled.
 };
 
 TypeId
-HistoryHeaderBase::GetTypeId (void)
+HistoryHeaderBase::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::HistoryHeaderBase")
     .SetParent<Header> ()
@@ -76,12 +76,12 @@ HistoryHeaderBase::HistoryHeaderBase ()
 }
 
 bool
-HistoryHeaderBase::IsOk (void) const
+HistoryHeaderBase::IsOk () const
 {
   return m_ok;
 }
 void
-HistoryHeaderBase::ReportError (void)
+HistoryHeaderBase::ReportError ()
 {
   m_ok = false;
 }
@@ -104,12 +104,12 @@ public:
    * \brief Get the type ID.
    * \return The object TypeId.
    */
-  static TypeId GetTypeId (void);
-  virtual TypeId GetInstanceTypeId (void) const;
-  virtual void Print (std::ostream &os) const;
-  virtual uint32_t GetSerializedSize (void) const;
-  virtual void Serialize (Buffer::Iterator start) const;
-  virtual uint32_t Deserialize (Buffer::Iterator start);
+  static TypeId GetTypeId ();
+  TypeId GetInstanceTypeId () const override;
+  void Print (std::ostream &os) const override;
+  uint32_t GetSerializedSize () const override;
+  void Serialize (Buffer::Iterator start) const override;
+  uint32_t Deserialize (Buffer::Iterator start) override;
 };
 
 template <int N>
@@ -120,7 +120,7 @@ HistoryHeader<N>::HistoryHeader ()
 
 template <int N>
 TypeId
-HistoryHeader<N>::GetTypeId (void)
+HistoryHeader<N>::GetTypeId ()
 {
   std::ostringstream oss;
   oss << "ns3::HistoryHeader<"<<N<<">";
@@ -133,7 +133,7 @@ HistoryHeader<N>::GetTypeId (void)
 
 template <int N>
 TypeId
-HistoryHeader<N>::GetInstanceTypeId (void) const
+HistoryHeader<N>::GetInstanceTypeId () const
 {
   return GetTypeId ();
 }
@@ -145,7 +145,7 @@ HistoryHeader<N>::Print (std::ostream &os) const
 }
 template <int N>
 uint32_t
-HistoryHeader<N>::GetSerializedSize (void) const
+HistoryHeader<N>::GetSerializedSize () const
 {
   return N;
 }
@@ -184,24 +184,24 @@ public:
    * \brief Get the type ID.
    * \return The object TypeId.
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
   HistoryTrailerBase ();
   /**
    * Checks if the header has deserialization errors
    * \returns True if no error found.
    */
-  bool IsOk (void) const;
+  bool IsOk () const;
 protected:
   /**
    * Signal that an error has been found in deserialization.
    */
-  void ReportError (void);
+  void ReportError ();
 private:
   bool m_ok; //!< True if no error is signalled.
 };
 
 TypeId
-HistoryTrailerBase::GetTypeId (void)
+HistoryTrailerBase::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::HistoryTrailerBase")
     .SetParent<Trailer> ()
@@ -213,12 +213,12 @@ HistoryTrailerBase::HistoryTrailerBase ()
 {
 }
 bool
-HistoryTrailerBase::IsOk (void) const
+HistoryTrailerBase::IsOk () const
 {
   return m_ok;
 }
 void
-HistoryTrailerBase::ReportError (void)
+HistoryTrailerBase::ReportError ()
 {
   m_ok = false;
 }
@@ -242,12 +242,12 @@ public:
    * \brief Get the type ID.
    * \return The object TypeId.
    */
-  static TypeId GetTypeId (void);
-  virtual TypeId GetInstanceTypeId (void) const;
-  virtual void Print (std::ostream &os) const;
-  virtual uint32_t GetSerializedSize (void) const;
-  virtual void Serialize (Buffer::Iterator start) const;
-  virtual uint32_t Deserialize (Buffer::Iterator start);
+  static TypeId GetTypeId ();
+  TypeId GetInstanceTypeId () const override;
+  void Print (std::ostream &os) const override;
+  uint32_t GetSerializedSize () const override;
+  void Serialize (Buffer::Iterator start) const override;
+  uint32_t Deserialize (Buffer::Iterator start) override;
 };
 
 template <int N>
@@ -257,7 +257,7 @@ HistoryTrailer<N>::HistoryTrailer ()
 
 template <int N>
 TypeId
-HistoryTrailer<N>::GetTypeId (void)
+HistoryTrailer<N>::GetTypeId ()
 {
   std::ostringstream oss;
   oss << "ns3::HistoryTrailer<"<<N<<">";
@@ -270,7 +270,7 @@ HistoryTrailer<N>::GetTypeId (void)
 
 template <int N>
 TypeId
-HistoryTrailer<N>::GetInstanceTypeId (void) const
+HistoryTrailer<N>::GetInstanceTypeId () const
 {
   return GetTypeId ();
 }
@@ -282,7 +282,7 @@ HistoryTrailer<N>::Print (std::ostream &os) const
 }
 template <int N>
 uint32_t
-HistoryTrailer<N>::GetSerializedSize (void) const
+HistoryTrailer<N>::GetSerializedSize () const
 {
   return N;
 }
@@ -319,7 +319,7 @@ HistoryTrailer<N>::Deserialize (Buffer::Iterator start)
 class PacketMetadataTest : public TestCase {
 public:
   PacketMetadataTest ();
-  virtual ~PacketMetadataTest ();
+  ~PacketMetadataTest () override;
   /**
    * Checks the packet header and trailer history
    * \param p The packet
@@ -327,7 +327,7 @@ public:
    * \param ... The variable arguments
    */
   void CheckHistory (Ptr<Packet> p, uint32_t n, ...);
-  virtual void DoRun (void);
+  void DoRun () override;
 private:
   /**
    * Adds an header to the packet
@@ -373,7 +373,7 @@ PacketMetadataTest::CheckHistory (Ptr<Packet> p, uint32_t n, ...)
         {
           Callback<ObjectBase *> constructor = item.tid.GetConstructor ();
           HistoryHeaderBase *header = dynamic_cast<HistoryHeaderBase *> (constructor ());
-          if (header == 0)
+          if (header == nullptr)
             {
               goto error;
             }
@@ -389,7 +389,7 @@ PacketMetadataTest::CheckHistory (Ptr<Packet> p, uint32_t n, ...)
         {
           Callback<ObjectBase *> constructor = item.tid.GetConstructor ();
           HistoryTrailerBase *trailer = dynamic_cast<HistoryTrailerBase *> (constructor ());
-          if (trailer == 0)
+          if (trailer == nullptr)
             {
               goto error;
             }
@@ -473,7 +473,7 @@ PacketMetadataTest::DoAddHeader (Ptr<Packet> p)
 }
 
 void
-PacketMetadataTest::DoRun (void)
+PacketMetadataTest::DoRun ()
 {
   PacketMetadata::Enable ();
 

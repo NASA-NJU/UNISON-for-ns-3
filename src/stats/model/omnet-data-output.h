@@ -39,18 +39,18 @@ namespace ns3 {
 class OmnetDataOutput : public DataOutputInterface {
 public:
   OmnetDataOutput();
-  virtual ~OmnetDataOutput();
+  ~OmnetDataOutput() override;
 
   /**
    * Register this type.
    * \return The TypeId.
    */
-  static TypeId GetTypeId (void);
-  
-  virtual void Output (DataCollector &dc);
+  static TypeId GetTypeId ();
+
+  void Output (DataCollector &dc) override;
 
 protected:
-  virtual void DoDispose ();
+  void DoDispose () override;
 
 private:
   /**
@@ -74,7 +74,7 @@ public:
      */
     void OutputStatistic (std::string context,
                           std::string name,
-                          const StatisticalSummary *statSum);
+                          const StatisticalSummary *statSum) override;
 
     /**
      * \brief Generates a single data output
@@ -84,7 +84,7 @@ public:
      */
     void OutputSingleton (std::string context,
                           std::string name,
-                          int val);
+                          int val) override;
 
     /**
      * \brief Generates a single data output
@@ -94,7 +94,7 @@ public:
      */
     void OutputSingleton (std::string context,
                           std::string name,
-                          uint32_t val);
+                          uint32_t val) override;
 
     /**
      * \brief Generates a single data output
@@ -104,7 +104,7 @@ public:
      */
     void OutputSingleton (std::string context,
                           std::string name,
-                          double val);
+                          double val) override;
 
     /**
      * \brief Generates a single data output
@@ -114,7 +114,7 @@ public:
      */
     void OutputSingleton (std::string context,
                           std::string name,
-                          std::string val);
+                          std::string val) override;
 
     /**
      * \brief Generates a single data output
@@ -124,7 +124,7 @@ public:
      */
     void OutputSingleton (std::string context,
                           std::string name,
-                          Time val);
+                          Time val) override;
 
 private:
     std::ostream *m_scalar; //!< output stream

@@ -43,30 +43,30 @@ namespace ns3 {
  *
  *
  * This PHY model supports a single antenna model instance which is
- * used for reception (this PHY model never transmits). 
+ * used for reception (this PHY model never transmits).
  */
 class SpectrumAnalyzer : public SpectrumPhy
 {
 
 public:
   SpectrumAnalyzer ();
-  virtual ~SpectrumAnalyzer ();
+  ~SpectrumAnalyzer () override;
 
   /**
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   // inherited from SpectrumPhy
-  void SetChannel (Ptr<SpectrumChannel> c);
-  void SetMobility (Ptr<MobilityModel> m);
-  void SetDevice (Ptr<NetDevice> d);
-  Ptr<MobilityModel> GetMobility () const;
-  Ptr<NetDevice> GetDevice () const;
-  Ptr<const SpectrumModel> GetRxSpectrumModel () const;
-  Ptr<Object> GetAntenna () const;
-  void StartRx (Ptr<SpectrumSignalParameters> params);
+  void SetChannel (Ptr<SpectrumChannel> c) override;
+  void SetMobility (Ptr<MobilityModel> m) override;
+  void SetDevice (Ptr<NetDevice> d) override;
+  Ptr<MobilityModel> GetMobility () const override;
+  Ptr<NetDevice> GetDevice () const override;
+  Ptr<const SpectrumModel> GetRxSpectrumModel () const override;
+  Ptr<Object> GetAntenna () const override;
+  void StartRx (Ptr<SpectrumSignalParameters> params) override;
 
 
   /**
@@ -76,9 +76,9 @@ public:
    */
   void SetRxSpectrumModel (Ptr<SpectrumModel> m);
 
-  /** 
+  /**
    * Set the AntennaModel to be used
-   * 
+   *
    * \param a the Antenna Model
    */
   void SetAntenna (Ptr<AntennaModel> a);
@@ -97,7 +97,7 @@ public:
 
 
 protected:
-  void DoDispose ();
+  void DoDispose () override;
 
 private:
   Ptr<MobilityModel> m_mobility;    //!< Pointer to the mobility model

@@ -53,7 +53,10 @@ public:
    */
   RipHelper (const RipHelper &o);
 
-  virtual ~RipHelper ();
+  ~RipHelper () override;
+
+  // Delete assignment operator to avoid misuse
+  RipHelper &operator= (const RipHelper &) = delete;
 
   /**
    * \returns pointer to clone of this RipHelper
@@ -61,7 +64,7 @@ public:
    * This method is mainly for internal use by the other helpers;
    * clients are expected to free the dynamic memory allocated by this method
    */
-  RipHelper* Copy (void) const;
+  RipHelper* Copy () const override;
 
   /**
    * \param node the node on which the routing protocol will run
@@ -69,7 +72,7 @@ public:
    *
    * This method will be called by ns3::InternetStackHelper::Install
    */
-  virtual Ptr<Ipv4RoutingProtocol> Create (Ptr<Node> node) const;
+  Ptr<Ipv4RoutingProtocol> Create (Ptr<Node> node) const override;
 
   /**
    * \param name the name of the attribute to set
@@ -132,15 +135,6 @@ public:
   void SetInterfaceMetric (Ptr<Node> node, uint32_t interface, uint8_t metric);
 
 private:
-  /**
-   * \brief Assignment operator declared private and not implemented to disallow
-   * assignment and prevent the compiler from happily inserting its own.
-   *
-   * \param o The object to copy from.
-   * \returns pointer to clone of this RipNgHelper
-   */
-  RipHelper &operator = (const RipHelper &o);
-
   ObjectFactory m_factory; //!< Object Factory
 
   std::map< Ptr<Node>, std::set<uint32_t> > m_interfaceExclusions; //!< Interface Exclusion set

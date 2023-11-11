@@ -60,9 +60,9 @@ public:
    */
   UeMemberLteUeCmacSapUser (LteUeRrc* rrc);
 
-  virtual void SetTemporaryCellRnti (uint16_t rnti);
-  virtual void NotifyRandomAccessSuccessful ();
-  virtual void NotifyRandomAccessFailed ();
+  void SetTemporaryCellRnti (uint16_t rnti) override;
+  void NotifyRandomAccessSuccessful () override;
+  void NotifyRandomAccessFailed () override;
 
 private:
   LteUeRrc* m_rrc; ///< the RRC class
@@ -124,10 +124,10 @@ NS_OBJECT_ENSURE_REGISTERED (LteUeRrc);
 
 LteUeRrc::LteUeRrc ()
   : m_cmacSapProvider (0),
-    m_rrcSapUser (0),
-    m_macSapProvider (0),
-    m_asSapUser (0),
-    m_ccmRrcSapProvider (0),
+    m_rrcSapUser (nullptr),
+    m_macSapProvider (nullptr),
+    m_asSapUser (nullptr),
+    m_ccmRrcSapProvider (nullptr),
     m_state (IDLE_START),
     m_imsi (0),
     m_rnti (0),
@@ -148,8 +148,8 @@ LteUeRrc::LteUeRrc ()
   NS_LOG_FUNCTION (this);
   m_cphySapUser.push_back (new MemberLteUeCphySapUser<LteUeRrc> (this));
   m_cmacSapUser.push_back (new UeMemberLteUeCmacSapUser (this));
-  m_cphySapProvider.push_back (0);
-  m_cmacSapProvider.push_back (0);
+  m_cphySapProvider.push_back (nullptr);
+  m_cmacSapProvider.push_back (nullptr);
   m_rrcSapProvider = new MemberLteUeRrcSapProvider<LteUeRrc> (this);
   m_drbPdcpSapUser = new LtePdcpSpecificLtePdcpSapUser<LteUeRrc> (this);
   m_asSapProvider = new MemberLteAsSapProvider<LteUeRrc> (this);
@@ -184,7 +184,7 @@ LteUeRrc::DoDispose ()
 }
 
 TypeId
-LteUeRrc::GetTypeId (void)
+LteUeRrc::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::LteUeRrc")
     .SetParent<Object> ()
@@ -444,7 +444,7 @@ LteUeRrc::StorePreviousCellId (uint16_t cellId)
 }
 
 uint64_t
-LteUeRrc::GetImsi (void) const
+LteUeRrc::GetImsi () const
 {
   return m_imsi;
 }
@@ -506,7 +506,7 @@ LteUeRrc::GetUlEarfcn () const
 }
 
 LteUeRrc::State
-LteUeRrc::GetState (void) const
+LteUeRrc::GetState () const
 {
   NS_LOG_FUNCTION (this);
   return m_state;
@@ -528,7 +528,7 @@ LteUeRrc::SetUseRlcSm (bool val)
 
 
 void
-LteUeRrc::DoInitialize (void)
+LteUeRrc::DoInitialize ()
 {
   NS_LOG_FUNCTION (this);
 
@@ -545,7 +545,7 @@ LteUeRrc::DoInitialize (void)
   m_srb0->m_srbIdentity = 0;
   LteUeRrcSapUser::SetupParameters ueParams;
   ueParams.srb0SapProvider = m_srb0->m_rlc->GetLteRlcSapProvider ();
-  ueParams.srb1SapProvider = 0;
+  ueParams.srb1SapProvider = nullptr;
   m_rrcSapUser->Setup (ueParams);
 
   // CCCH (LCID 0) is pre-configured, here is the hardcoded configuration:
@@ -559,7 +559,7 @@ LteUeRrc::DoInitialize (void)
 }
 
 void
-LteUeRrc::InitializeSap (void)
+LteUeRrc::InitializeSap ()
 {
   if (m_numberOfComponentCarriers < MIN_NO_CC || m_numberOfComponentCarriers > MAX_NO_CC)
     {
@@ -575,8 +575,8 @@ LteUeRrc::InitializeSap (void)
         {
           m_cphySapUser.push_back (new MemberLteUeCphySapUser<LteUeRrc> (this));
           m_cmacSapUser.push_back (new UeMemberLteUeCmacSapUser (this));
-          m_cphySapProvider.push_back (0);
-          m_cmacSapProvider.push_back (0);
+          m_cphySapProvider.push_back (nullptr);
+          m_cmacSapProvider.push_back (nullptr);
         }
     }
 }
@@ -731,6 +731,16 @@ LteUeRrc::DoNotifyRandomAccessFailed ()
            *       send an RRC Connection Re-establishment and switch to
            *       CONNECTED_REESTABLISHING state.
            */
+        if (!m_leaveConnectedMode)
+          {
+            m_leaveConnectedMode = true;
+            SwitchToState (CONNECTED_PHY_PROBLEM);
+            m_rrcSapUser->SendIdealUeContextRemoveRequest (m_rnti);
+            //we should have called NotifyConnectionFailed
+            //but that method would immediately ask you UE to
+            //connect rather than doing cell selection again.
+            m_asSapUser->NotifyConnectionReleased ();
+          }
         }
         break;
 
@@ -1099,7 +1109,7 @@ LteUeRrc::DoRecvRrcConnectionReconfiguration (LteRrcSap::RrcConnectionReconfigur
             // if we did so. Hence we schedule it for later disposal
             m_srb1Old = m_srb1;
             Simulator::ScheduleNow (&LteUeRrc::DisposeOldSrb1, this);
-            m_srb1 = 0; // new instance will be be created within ApplyRadioResourceConfigDedicated
+            m_srb1 = nullptr; // new instance will be be created within ApplyRadioResourceConfigDedicated
 
             m_drbMap.clear (); // dispose all DRBs
             ApplyRadioResourceConfigDedicated (msg.radioResourceConfigDedicated);
@@ -1196,6 +1206,16 @@ LteUeRrc::DoRecvRrcConnectionRelease (LteRrcSap::RrcConnectionRelease msg)
 {
   NS_LOG_FUNCTION (this << " RNTI " << m_rnti);
   /// \todo Currently not implemented, see Section 5.3.8 of 3GPP TS 36.331.
+
+  m_lastRrcTransactionIdentifier = msg.rrcTransactionIdentifier;
+  //release resources at UE
+  if (!m_leaveConnectedMode)
+    {
+      m_leaveConnectedMode = true;
+      SwitchToState (CONNECTED_PHY_PROBLEM);
+      m_rrcSapUser->SendIdealUeContextRemoveRequest (m_rnti);
+      m_asSapUser->NotifyConnectionReleased ();
+    }
 }
 
 void
@@ -1415,7 +1435,7 @@ LteUeRrc::ApplyRadioResourceConfigDedicated (LteRrcSap::RadioResourceConfigDedic
   std::list<LteRrcSap::SrbToAddMod>::const_iterator stamIt = rrcd.srbToAddModList.begin ();
   if (stamIt != rrcd.srbToAddModList.end ())
     {
-      if (m_srb1 == 0)
+      if (!m_srb1)
         {
           // SRB1 not setup yet
           NS_ASSERT_MSG ((m_state == IDLE_CONNECTING) || (m_state == CONNECTED_HANDOVER),
@@ -2956,7 +2976,7 @@ LteUeRrc::SendMeasurementReport (uint8_t measId)
                    "RSRQ " << +measResults.measResultPCell.rsrqResult << " (" << servingMeasIt->second.rsrq << " dB)");
 
       measResults.haveMeasResultServFreqList = false;
-      for (uint8_t componentCarrierId = 1; componentCarrierId < m_numberOfComponentCarriers; componentCarrierId++)
+      for (uint16_t componentCarrierId = 1; componentCarrierId < m_numberOfComponentCarriers; componentCarrierId++)
         {
           const uint16_t cellId = m_cphySapProvider.at (componentCarrierId)->GetCellId ();
           auto measValuesIt = m_storedMeasValues.find (cellId);
@@ -3188,7 +3208,7 @@ void
 LteUeRrc::DisposeOldSrb1 ()
 {
   NS_LOG_FUNCTION (this);
-  m_srb1Old = 0;
+  m_srb1Old = nullptr;
 }
 
 uint8_t

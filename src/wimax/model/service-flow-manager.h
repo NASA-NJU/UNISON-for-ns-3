@@ -53,11 +53,11 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   ServiceFlowManager ();
-  ~ServiceFlowManager (void);
-  void DoDispose (void);
+  ~ServiceFlowManager () override;
+  void DoDispose () override;
 
   /**
    * Add service flow function
@@ -68,7 +68,7 @@ public:
    * Get service flow by flow id
    * \param sfid the service flow id
    * \returns pointer to the service flow object corresponding to the flow id
-   */ 
+   */
   ServiceFlow* GetServiceFlow (uint32_t sfid) const;
   /**
    * Get service flow by CID
@@ -105,7 +105,7 @@ public:
   /**
    * \return the number of all service flows
    */
-  uint32_t GetNrServiceFlows (void) const;
+  uint32_t GetNrServiceFlows () const;
 
   /**
    *\param SrcAddress the source ip address

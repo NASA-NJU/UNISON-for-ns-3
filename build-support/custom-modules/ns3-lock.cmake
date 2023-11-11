@@ -54,12 +54,27 @@ function(write_lock)
   endforeach()
   string(APPEND lock_contents "]\n")
 
-  string(REPLACE ":" "', '" PATH_LIST $ENV{PATH})
-  string(
-    APPEND
-    lock_contents
-    "NS3_MODULE_PATH = ['${PATH_LIST}', '${CMAKE_OUTPUT_DIRECTORY}', '${CMAKE_LIBRARY_OUTPUT_DIRECTORY}']\n"
+  # Windows variables are separated with ; which CMake also uses to separate
+  # list items
+  set(PATH_LIST
+      "$ENV{PATH};${CMAKE_OUTPUT_DIRECTORY};${CMAKE_LIBRARY_OUTPUT_DIRECTORY}"
   )
+  if(WIN32)
+    # Windows to unix path conversions can be quite messy, so we replace forward
+    # slash with double backward slash
+    string(REPLACE "/" "\\" PATH_LIST "${PATH_LIST}")
+    # And to print it out, we need to escape these backward slashes with more
+    # backward slashes
+    string(REPLACE "\\" "\\\\" PATH_LIST "${PATH_LIST}")
+  else()
+    # Unix variables are separated with :
+    string(REPLACE ":" ";" PATH_LIST "${PATH_LIST}")
+  endif()
+
+  # After getting all entries with their correct paths we replace the ; item
+  # separator into a Python list of strings written to the lock file
+  string(REPLACE ";" "', '" PATH_LIST "${PATH_LIST}")
+  string(APPEND lock_contents "NS3_MODULE_PATH = ['${PATH_LIST}']\n")
 
   cache_cmake_flag(ENABLE_REALTIME "ENABLE_REAL_TIME" lock_contents)
   cache_cmake_flag(ENABLE_EXAMPLES "ENABLE_EXAMPLES" lock_contents)
@@ -69,9 +84,6 @@ function(write_lock)
   cache_cmake_flag(NS3_BRITE "ENABLE_BRITE" lock_contents)
   cache_cmake_flag(NS3_ENABLE_SUDO "ENABLE_SUDO" lock_contents)
   cache_cmake_flag(NS3_PYTHON_BINDINGS "ENABLE_PYTHON_BINDINGS" lock_contents)
-  cache_cmake_flag(
-    NS3_SCAN_PYTHON_BINDINGS "ENABLE_SCAN_PYTHON_BINDINGS" lock_contents
-  )
 
   string(APPEND lock_contents "EXAMPLE_DIRECTORIES = [")
   foreach(example_folder ${ns3-example-folders})
@@ -82,6 +94,9 @@ function(write_lock)
   string(APPEND lock_contents "APPNAME = 'ns'\n")
   string(APPEND lock_contents "BUILD_PROFILE = '${build_profile}'\n")
   string(APPEND lock_contents "VERSION = '${NS3_VER}' \n")
+  string(APPEND lock_contents
+         "BUILD_VERSION_STRING = '${BUILD_VERSION_STRING}' \n"
+  )
   string(APPEND lock_contents "PYTHON = ['${Python3_EXECUTABLE}']\n")
 
   mark_as_advanced(VALGRIND)

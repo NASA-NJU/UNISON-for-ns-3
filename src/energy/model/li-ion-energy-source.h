@@ -76,16 +76,16 @@ public:
    * \brief Get the type ID.
    * \return The object TypeId.
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
   LiIonEnergySource ();
-  virtual ~LiIonEnergySource ();
+  ~LiIonEnergySource () override;
 
   /**
    * \return Initial energy stored in energy source, in Joules.
    *
    * Implements GetInitialEnergy.
    */
-  virtual double GetInitialEnergy (void) const;
+  double GetInitialEnergy () const override;
 
   /**
    * \param initialEnergyJ Initial energy, in Joules
@@ -100,7 +100,7 @@ public:
    *
    * Implements GetSupplyVoltage.
    */
-  virtual double GetSupplyVoltage (void) const;
+  double GetSupplyVoltage () const override;
 
   /**
    * \param supplyVoltageV Initial Supply voltage at the energy source, in Volts.
@@ -115,14 +115,14 @@ public:
    *
    * Implements GetRemainingEnergy.
    */
-  virtual double GetRemainingEnergy (void);
+  double GetRemainingEnergy () override;
 
   /**
    * \returns Energy fraction.
    *
    * Implements GetEnergyFraction.
    */
-  virtual double GetEnergyFraction (void);
+  double GetEnergyFraction () override;
 
   /**
    * \param energyJ Amount of energy (in Joules) to decrease from energy source.
@@ -141,7 +141,7 @@ public:
   /**
    * Implements UpdateEnergySource.
    */
-  virtual void UpdateEnergySource (void);
+  void UpdateEnergySource () override;
 
   /**
    * \param interval Energy update interval.
@@ -153,17 +153,17 @@ public:
   /**
    * \returns The interval between each energy update.
    */
-  Time GetEnergyUpdateInterval (void) const;
+  Time GetEnergyUpdateInterval () const;
 private:
-  void DoInitialize (void);
-  void DoDispose (void);
+  void DoInitialize () override;
+  void DoDispose () override;
 
   /**
    * Handles the remaining energy going to zero event. This function notifies
    * all the energy models aggregated to the node about the energy being
    * depleted. Each energy model is then responsible for its own handler.
    */
-  void HandleEnergyDrainedEvent (void);
+  void HandleEnergyDrainedEvent ();
 
   /**
    * Calculates remaining energy. This function uses the total current from all
@@ -173,11 +173,11 @@ private:
    * This function subtracts the calculated energy to decrease from remaining
    * energy.
    */
-  void CalculateRemainingEnergy (void);
+  void CalculateRemainingEnergy ();
 
   /**
    *  \param current the actual discharge current value.
-   *  \return the cell voltage 
+   *  \return the cell voltage
    *
    *  Get the cell voltage in function of the discharge current.
    *  It consider different discharge curves for different discharge currents

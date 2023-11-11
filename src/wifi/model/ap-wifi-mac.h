@@ -24,7 +24,9 @@
 #define AP_WIFI_MAC_H
 
 #include "wifi-mac.h"
+#include "wifi-mac-header.h"
 #include <unordered_map>
+#include <variant>
 
 namespace ns3 {
 
@@ -34,11 +36,20 @@ class DsssParameterSet;
 class ErpInformation;
 class EdcaParameterSet;
 class MuEdcaParameterSet;
+class ReducedNeighborReport;
+class MultiLinkElement;
 class HtOperation;
 class VhtOperation;
 class HeOperation;
 class CfParameterSet;
 class UniformRandomVariable;
+class MgtAssocRequestHeader;
+class MgtReassocRequestHeader;
+class MgtAssocResponseHeader;
+
+/// variant holding a  reference to a (Re)Association Request
+using AssocReqRefVariant = std::variant<std::reference_wrapper<MgtAssocRequestHeader>,
+                                        std::reference_wrapper<MgtReassocRequestHeader>>;
 
 /**
  * \brief Wi-Fi AP state machine
@@ -54,18 +65,18 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   ApWifiMac ();
-  virtual ~ApWifiMac ();
+  ~ApWifiMac () override;
 
   void SetLinkUpCallback (Callback<void> linkUp) override;
   bool CanForwardPacketsTo (Mac48Address to) const override;
   void Enqueue (Ptr<Packet> packet, Mac48Address to) override;
   void Enqueue (Ptr<Packet> packet, Mac48Address to, Mac48Address from) override;
-  bool SupportsSendFrom (void) const override;
-  void SetAddress (Mac48Address address) override;
+  bool SupportsSendFrom () const override;
   Ptr<WifiMacQueue> GetTxopQueue (AcIndex ac) const override;
+  void ConfigureStandard (WifiStandard standard) override;
 
   /**
    * \param interval the interval between two beacon transmissions.
@@ -74,7 +85,7 @@ public:
   /**
    * \return the interval between two beacon transmissions.
    */
-  Time GetBeaconInterval (void) const;
+  Time GetBeaconInterval () const;
 
   /**
    * Assign a fixed random variable stream number to the random variables
@@ -88,18 +99,20 @@ public:
   int64_t AssignStreams (int64_t stream);
 
   /**
-   * Get a const reference to the map of associated stations. Each station is
-   * specified by an (association ID, MAC address) pair. Make sure not to use
-   * the returned reference after that this object has been deallocated.
+   * Get a const reference to the map of associated stations on the given link.
+   * Each station is specified by an (association ID, MAC address) pair. Make sure
+   * not to use the returned reference after that this object has been deallocated.
    *
+   * \param linkId the ID of the given link
    * \return a const reference to the map of associated stations
    */
-  const std::map<uint16_t, Mac48Address>& GetStaList (void) const;
+  const std::map<uint16_t, Mac48Address>& GetStaList (uint8_t linkId = SINGLE_LINK_OP_ID) const;
   /**
    * \param addr the address of the associated station
+   * \param linkId the ID of the link on which the station is associated
    * \return the Association ID allocated by the AP to the station, SU_STA_ID if unallocated
    */
-  uint16_t GetAssociationId (Mac48Address addr) const;
+  uint16_t GetAssociationId (Mac48Address addr, uint8_t linkId) const;
 
   /**
    * Return the value of the Queue Size subfield of the last QoS Data or QoS Null
@@ -138,8 +151,65 @@ public:
    */
   uint8_t GetMaxBufferStatus (Mac48Address address) const;
 
+protected:
+  /**
+   * Structure holding information specific to a single link. Here, the meaning of
+   * "link" is that of the 11be amendment which introduced multi-link devices. For
+   * previous amendments, only one link can be created.
+   */
+  struct ApLinkEntity : public WifiMac::LinkEntity
+  {
+    /// Destructor (a virtual method is needed to make this struct polymorphic)
+    ~ApLinkEntity () override;
+
+    EventId beaconEvent;                      //!< Event to generate one beacon
+    std::map<uint16_t, Mac48Address> staList; //!< Map of all stations currently associated
+                                              //!< to the AP with their association ID
+    uint16_t numNonHtStations {0};            //!< Number of non-HT stations currently associated to the AP
+    uint16_t numNonErpStations {0};           //!< Number of non-ERP stations currently associated to the AP
+    bool shortSlotTimeEnabled {false};        //!< Flag whether short slot time is enabled within the BSS
+    bool shortPreambleEnabled {false};        //!< Flag whether short preamble is enabled in the BSS
+  };
+
+  /**
+   * Get a reference to the link associated with the given ID.
+   *
+   * \param linkId the given link ID
+   * \return a reference to the link associated with the given ID
+   */
+  ApLinkEntity& GetLink (uint8_t linkId) const;
+
 private:
-  void Receive (Ptr<WifiMacQueueItem> mpdu)  override;
+  std::unique_ptr<LinkEntity> CreateLinkEntity () const override;
+
+  void Receive (Ptr<const WifiMpdu> mpdu, uint8_t linkId)  override;
+  /**
+   * Check whether the supported rate set included in the received (Re)Association
+   * Request frame is compatible with our Basic Rate Set. If so, record all the station's
+   * supported modes in its associated WifiRemoteStation and return true.
+   * Otherwise, return false.
+   *
+   * \param assoc the frame body of the received (Re)Association Request
+   * \param from the Transmitter Address field of the frame
+   * \param linkId the ID of the link on which the frame was received
+   * \return true if the (Re)Association request can be accepted, false otherwise
+   */
+  bool ReceiveAssocRequest (const AssocReqRefVariant& assoc, const Mac48Address& from,
+                            uint8_t linkId);
+
+  /**
+   * Given a (Re)Association Request frame body containing a Multi-Link Element,
+   * check if a link can be setup with each of the reported stations (STA MAC address
+   * and a (Re)Association Request frame body must be present, the Link ID identifies
+   * a valid link other than the one the frame was received on and the supported
+   * rates are compatible with our basic rate set).
+   *
+   * \param assoc the frame body of the received (Re)Association Request
+   * \param from the Transmitter Address field of the frame
+   * \param linkId the ID of the link on which the frame was received
+   */
+  void ParseReportedStaInfo (const AssocReqRefVariant& assoc, Mac48Address from, uint8_t linkId);
+
   /**
    * The packet we sent was successfully received by the receiver
    * (i.e. we received an Ack from the receiver).  If the packet
@@ -148,7 +218,7 @@ private:
    *
    * \param mpdu the MPDU that we successfully sent
    */
-  void TxOk (Ptr<const WifiMacQueueItem> mpdu);
+  void TxOk (Ptr<const WifiMpdu> mpdu);
   /**
    * The packet we sent was successfully received by the receiver
    * (i.e. we did not receive an Ack from the receiver).  If the packet
@@ -158,7 +228,7 @@ private:
    * \param timeoutReason the reason why the TX timer was started (\see WifiTxTimer::Reason)
    * \param mpdu the MPDU that we failed to sent
    */
-  void TxFailed (WifiMacDropReason timeoutReason, Ptr<const WifiMacQueueItem> mpdu);
+  void TxFailed (WifiMacDropReason timeoutReason, Ptr<const WifiMpdu> mpdu);
 
   /**
    * This method is called to de-aggregate an A-MSDU and forward the
@@ -168,7 +238,7 @@ private:
    *
    * \param mpdu the MPDU containing the A-MSDU.
    */
-  void DeaggregateAmsduAndForward (Ptr<WifiMacQueueItem> mpdu) override;
+  void DeaggregateAmsduAndForward (Ptr<const WifiMpdu> mpdu) override;
   /**
    * Forward the packet down to DCF/EDCAF (enqueue the packet). This method
    * is a wrapper for ForwardDown with traffic id.
@@ -188,82 +258,134 @@ private:
    */
   void ForwardDown (Ptr<Packet> packet, Mac48Address from, Mac48Address to, uint8_t tid);
   /**
-   * Forward a probe response packet to the DCF. The standard is not clear on the correct
-   * queue for management frames if QoS is supported. We always use the DCF.
+   * Send a Probe Response in response to a Probe Request received from the STA with the
+   * given address on the given link.
    *
    * \param to the address of the STA we are sending a probe response to
+   * \param linkId the ID of the given link
    */
-  void SendProbeResp (Mac48Address to);
+  void SendProbeResp (Mac48Address to, uint8_t linkId);
   /**
-   * Forward an association or a reassociation response packet to the DCF.
-   * The standard is not clear on the correct queue for management frames if QoS is supported.
-   * We always use the DCF.
+   * Get the Association Response frame to send on a given link. The returned frame
+   * never includes a Multi-Link Element.
    *
    * \param to the address of the STA we are sending an association response to
-   * \param success indicates whether the association was successful or not
-   * \param isReassoc indicates whether it is a reassociation response
+   * \param linkId the ID of the given link
+   * \return the Association Response frame
    */
-  void SendAssocResp (Mac48Address to, bool success, bool isReassoc);
+  MgtAssocResponseHeader GetAssocResp (Mac48Address to, uint8_t linkId);
   /**
-   * Forward a beacon packet to the beacon special DCF.
+   * Set the AID field of the given Association Response frame, which is going
+   * to be sent to the STA with the given address on the given link. In case of
+   * multi-link setup, the selected AID value must be assigned to all the STAs
+   * corresponding to the setup links. The AID value is selected among the AID
+   * values that are possibly already assigned to the STAs affiliated with the
+   * non-AP MLD we are associating with. If no STA has an assigned AID value,
+   * a new AID value is selected.
+   *
+   * \param assoc the given Association Response frame
+   * \param to the address of the STA receiving the Association Response frame
+   * \param linkId the ID of the given link
    */
-  void SendOneBeacon (void);
+  void SetAid (MgtAssocResponseHeader& assoc, const Mac48Address& to, uint8_t linkId);
+  /**
+   * Forward an association or a reassociation response packet to the DCF/EDCA.
+   *
+   * \param to the address of the STA we are sending an association response to
+   * \param isReassoc indicates whether it is a reassociation response
+   * \param linkId the ID of the link on which the association response must be sent
+   */
+  void SendAssocResp (Mac48Address to, bool isReassoc, uint8_t linkId);
+  /**
+   * Forward a beacon packet to the beacon special DCF for transmission
+   * on the given link.
+   *
+   * \param linkId the ID of the given link
+   */
+  void SendOneBeacon (uint8_t linkId);
 
   /**
-   * Return the Capability information of the current AP.
+   * Return the Capability information of the current AP for the given link.
    *
+   * \param linkId the ID of the given link
    * \return the Capability information that we support
    */
-  CapabilityInformation GetCapabilities (void) const;
+  CapabilityInformation GetCapabilities (uint8_t linkId) const;
   /**
-   * Return the ERP information of the current AP.
+   * Return the ERP information of the current AP for the given link.
    *
-   * \return the ERP information that we support
+   * \param linkId the ID of the given link
+   * \return the ERP information that we support for the given link
    */
-  ErpInformation GetErpInformation (void) const;
+  ErpInformation GetErpInformation (uint8_t linkId) const;
   /**
-   * Return the EDCA Parameter Set of the current AP.
+   * Return the EDCA Parameter Set of the current AP for the given link.
    *
-   * \return the EDCA Parameter Set that we support
+   * \param linkId the ID of the given link
+   * \return the EDCA Parameter Set that we support for the given link
    */
-  EdcaParameterSet GetEdcaParameterSet (void) const;
+  EdcaParameterSet GetEdcaParameterSet (uint8_t linkId) const;
   /**
-   * Return the MU EDCA Parameter Set of the current AP.
+   * Return the MU EDCA Parameter Set of the current AP, if one needs to be advertised
    *
-   * \return the MU EDCA Parameter Set that we support
+   * \return the MU EDCA Parameter Set that needs to be advertised (if any)
    */
-  MuEdcaParameterSet GetMuEdcaParameterSet (void) const;
+  std::optional<MuEdcaParameterSet> GetMuEdcaParameterSet () const;
   /**
-   * Return the HT operation of the current AP.
+   * Return the Reduced Neighbor Report (RNR) element that the current AP sends
+   * on the given link, if one needs to be advertised.
    *
+   * \param linkId the ID of the link to send the RNR element onto
+   * \return the Reduced Neighbor Report element
+   */
+  std::optional<ReducedNeighborReport> GetReducedNeighborReport (uint8_t linkId) const;
+  /**
+   * Return the Multi-Link Element that the current AP includes in the management
+   * frames of the given type it transmits on the given link.
+   *
+   * \param linkId the ID of the link to send the Multi-Link Element onto
+   * \param frameType the type of the frame containing the Multi-Link Element
+   * \param to the Receiver Address of the frame containing the Multi-Link Element
+   * \return the Multi-Link Element
+   */
+  MultiLinkElement GetMultiLinkElement (uint8_t linkId, WifiMacType frameType,
+                                        const Mac48Address& to = Mac48Address::GetBroadcast ());
+  /**
+   * Return the HT operation of the current AP for the given link.
+   *
+   * \param linkId the ID of the given link
    * \return the HT operation that we support
    */
-  HtOperation GetHtOperation (void) const;
+  HtOperation GetHtOperation (uint8_t linkId) const;
   /**
-   * Return the VHT operation of the current AP.
+   * Return the VHT operation of the current AP for the given link.
    *
+   * \param linkId the ID of the given link
    * \return the VHT operation that we support
    */
-  VhtOperation GetVhtOperation (void) const;
+  VhtOperation GetVhtOperation (uint8_t linkId) const;
   /**
-   * Return the HE operation of the current AP.
+   * Return the HE operation of the current AP for the given link.
    *
+   * \param linkId the ID of the given link
    * \return the HE operation that we support
    */
-  HeOperation GetHeOperation (void) const;
+  HeOperation GetHeOperation (uint8_t linkId) const;
   /**
    * Return an instance of SupportedRates that contains all rates that we support
-   * including HT rates.
+   * for the given link (including HT rates).
    *
-   * \return SupportedRates all rates that we support
+   * \param linkId the ID of the given link
+   * \return all rates that we support
    */
-  SupportedRates GetSupportedRates (void) const;
+  SupportedRates GetSupportedRates (uint8_t linkId) const;
   /**
-   * Return the DSSS Parameter Set that we support.
+   * Return the DSSS Parameter Set that we support on the given link
    *
-   * \return the DSSS Parameter Set that we support
+   * \param linkId the ID of the given link
+   * \return the DSSS Parameter Set that we support on the given link
    */
-  DsssParameterSet GetDsssParameterSet (void) const;
+  DsssParameterSet GetDsssParameterSet (uint8_t linkId) const;
   /**
    * Enable or disable beacon generation of the AP.
    *
@@ -272,46 +394,49 @@ private:
   void SetBeaconGeneration (bool enable);
 
   /**
-   * Update whether short slot time should be enabled or not in the BSS.
+   * Update whether short slot time should be enabled or not in the BSS
+   * corresponding to the given link.
    * Typically, short slot time is enabled only when there is no non-ERP station
    * associated  to the AP, and that short slot time is supported by the AP and by all
    * other ERP stations that are associated to the AP. Otherwise, it is disabled.
+   *
+   * \param linkId the ID of the given link
    */
-  void UpdateShortSlotTimeEnabled (void);
+  void UpdateShortSlotTimeEnabled (uint8_t linkId);
   /**
-   * Update whether short preamble should be enabled or not in the BSS.
+   * Update whether short preamble should be enabled or not in the BSS
+   * corresponding to the given link.
    * Typically, short preamble is enabled only when the AP and all associated
    * stations support short PHY preamble. Otherwise, it is disabled.
+   *
+   * \param linkId the ID of the given link
    */
-  void UpdateShortPreambleEnabled (void);
+  void UpdateShortPreambleEnabled (uint8_t linkId);
 
   /**
-   * Return whether protection for non-ERP stations is used in the BSS.
+   * Return whether protection for non-ERP stations is used in the BSS
+   * corresponding to the given link.
    *
+   * \param linkId the ID of the given link
    * \return true if protection for non-ERP stations is used in the BSS,
    *         false otherwise
    */
-  bool GetUseNonErpProtection (void) const;
+  bool GetUseNonErpProtection (uint8_t linkId) const;
 
-  void DoDispose (void) override;
-  void DoInitialize (void) override;
+  void DoDispose () override;
+  void DoInitialize () override;
 
   /**
-   * \return the next Association ID to be allocated by the AP
+   * \param linkIds the IDs of the links for which the next Association ID is requested
+   * \return the next Association ID to be allocated by the AP on the given links
    */
-  uint16_t GetNextAssociationId (void);
+  uint16_t GetNextAssociationId (std::list<uint8_t> linkIds);
 
   Ptr<Txop> m_beaconTxop;                    //!< Dedicated Txop for beacons
   bool m_enableBeaconGeneration;             //!< Flag whether beacons are being generated
   Time m_beaconInterval;                     //!< Beacon interval
-  EventId m_beaconEvent;                     //!< Event to generate one beacon
   Ptr<UniformRandomVariable> m_beaconJitter; //!< UniformRandomVariable used to randomize the time of the first beacon
   bool m_enableBeaconJitter;                 //!< Flag whether the first beacon should be generated at random time
-  std::map<uint16_t, Mac48Address> m_staList; //!< Map of all stations currently associated to the AP with their association ID
-  uint16_t m_numNonErpStations;              //!< Number of non-ERP stations currently associated to the AP
-  uint16_t m_numNonHtStations;               //!< Number of non-HT stations currently associated to the AP
-  bool m_shortSlotTimeEnabled;               //!< Flag whether short slot time is enabled within the BSS
-  bool m_shortPreambleEnabled;               //!< Flag whether short preamble is enabled in the BSS
   bool m_enableNonErpProtection;             //!< Flag whether protection mechanism is used or not when non-ERP STAs are present within the BSS
   Time m_bsrLifetime;                        //!< Lifetime of Buffer Status Reports
   /// store value and timestamp for each Buffer Status Report

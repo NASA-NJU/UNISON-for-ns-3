@@ -23,8 +23,7 @@
 namespace ns3 {
 
 ErpInformation::ErpInformation ()
-  : m_erpInformation (0),
-    m_erpSupported (0)
+  : m_erpInformation (0)
 {
 }
 
@@ -32,12 +31,6 @@ WifiInformationElementId
 ErpInformation::ElementId () const
 {
   return IE_ERP_INFORMATION;
-}
-
-void
-ErpInformation::SetErpSupported (uint8_t erpSupported)
-{
-  m_erpSupported = erpSupported;
 }
 
 void
@@ -59,62 +52,38 @@ ErpInformation::SetNonErpPresent (uint8_t nonErpPresent)
 }
 
 uint8_t
-ErpInformation::GetBarkerPreambleMode (void) const
+ErpInformation::GetBarkerPreambleMode () const
 {
   return ((m_erpInformation >> 2) & 0x01);
 }
 
 uint8_t
-ErpInformation::GetUseProtection (void) const
+ErpInformation::GetUseProtection () const
 {
   return ((m_erpInformation >> 1) & 0x01);
 }
 
 uint8_t
-ErpInformation::GetNonErpPresent (void) const
+ErpInformation::GetNonErpPresent () const
 {
   return (m_erpInformation & 0x01);
 }
 
-uint8_t
+uint16_t
 ErpInformation::GetInformationFieldSize () const
 {
-  NS_ASSERT (m_erpSupported);
   return 1;
-}
-
-Buffer::Iterator
-ErpInformation::Serialize (Buffer::Iterator i) const
-{
-  if (!m_erpSupported)
-    {
-      return i;
-    }
-  return WifiInformationElement::Serialize (i);
-}
-
-uint16_t
-ErpInformation::GetSerializedSize () const
-{
-  if (!m_erpSupported)
-    {
-      return 0;
-    }
-  return WifiInformationElement::GetSerializedSize ();
 }
 
 void
 ErpInformation::SerializeInformationField (Buffer::Iterator start) const
 {
-  if (m_erpSupported)
-    {
-      start.WriteU8 (m_erpInformation);
-    }
+  start.WriteU8 (m_erpInformation);
 }
 
-uint8_t
+uint16_t
 ErpInformation::DeserializeInformationField (Buffer::Iterator start,
-                                             uint8_t length)
+                                             uint16_t length)
 {
   Buffer::Iterator i = start;
   m_erpInformation = i.ReadU8 ();

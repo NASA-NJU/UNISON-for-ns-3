@@ -36,19 +36,19 @@ namespace ns3 {
 NS_LOG_COMPONENT_DEFINE ("RawTextConfig");
 
 RawTextConfigSave::RawTextConfigSave ()
-  : m_os (0)
+  : m_os (nullptr)
 {
   NS_LOG_FUNCTION (this);
 }
 RawTextConfigSave::~RawTextConfigSave ()
 {
   NS_LOG_FUNCTION (this);
-  if (m_os != 0)
+  if (m_os != nullptr)
     {
       m_os->close ();
     }
   delete m_os;
-  m_os = 0;
+  m_os = nullptr;
 }
 void
 RawTextConfigSave::SetFilename (std::string filename)
@@ -58,7 +58,7 @@ RawTextConfigSave::SetFilename (std::string filename)
   m_os->open (filename.c_str (), std::ios::out);
 }
 void
-RawTextConfigSave::Default (void)
+RawTextConfigSave::Default ()
 {
   NS_LOG_FUNCTION (this);
   class RawTextDefaultIterator : public AttributeDefaultIterator
@@ -72,10 +72,10 @@ public:
     }
 
 private:
-    virtual void StartVisitTypeId (std::string name) {
+    void StartVisitTypeId (std::string name) override {
       m_typeId = name;
     }
-    virtual void DoVisitAttribute (std::string name, std::string defaultValue) {
+    void DoVisitAttribute (std::string name, std::string defaultValue) override {
       NS_LOG_DEBUG ("Saving " << m_typeId << "::" << name);
       TypeId tid = TypeId::LookupByName (m_typeId);
       ns3::TypeId::SupportLevel supportLevel = TypeId::SupportLevel::SUPPORTED;
@@ -115,7 +115,7 @@ private:
   iterator.Iterate ();
 }
 void
-RawTextConfigSave::Global (void)
+RawTextConfigSave::Global ()
 {
   NS_LOG_FUNCTION (this);
   for (GlobalValue::Iterator i = GlobalValue::Begin (); i != GlobalValue::End (); ++i)
@@ -127,7 +127,7 @@ RawTextConfigSave::Global (void)
     }
 }
 void
-RawTextConfigSave::Attributes (void)
+RawTextConfigSave::Attributes ()
 {
   NS_LOG_FUNCTION (this);
   class RawTextAttributeIterator : public AttributeIterator
@@ -141,7 +141,7 @@ public:
     }
 
 private:
-    virtual void DoVisitAttribute (Ptr<Object> object, std::string name) {
+    void DoVisitAttribute (Ptr<Object> object, std::string name) override {
       StringValue str;
 
       ns3::TypeId::SupportLevel supportLevel = TypeId::SupportLevel::SUPPORTED;
@@ -183,18 +183,18 @@ private:
 }
 
 RawTextConfigLoad::RawTextConfigLoad ()
-  : m_is (0)
+  : m_is (nullptr)
 {
   NS_LOG_FUNCTION (this);
 }
 RawTextConfigLoad::~RawTextConfigLoad ()
 {
   NS_LOG_FUNCTION (this);
-  if (m_is != 0)
+  if (m_is != nullptr)
     {
       m_is->close ();
       delete m_is;
-      m_is = 0;
+      m_is = nullptr;
     }
 }
 void
@@ -208,23 +208,25 @@ std::string
 RawTextConfigLoad::Strip (std::string value)
 {
   NS_LOG_FUNCTION (this << value);
-  std::string::size_type start = value.find ("\"");
-  std::string::size_type end = value.find ("\"", 1);
+  std::string::size_type start = value.find ('\"');
+  std::string::size_type end = value.find ('\"', 1);
   NS_ABORT_MSG_IF (start != 0, "Ill-formed attribute value: " << value);
   NS_ABORT_MSG_IF (end != value.size () - 1, "Ill-formed attribute value: " << value);
   return value.substr (start+1, end-start-1);
 }
 
 void
-RawTextConfigLoad::Default (void)
+RawTextConfigLoad::Default ()
 {
   NS_LOG_FUNCTION (this);
   m_is->clear ();
   m_is->seekg (0);
-  std::string type, name, value;
+  std::string type;
+  std::string name;
+  std::string value;
   for (std::string line; std::getline (*m_is, line);)
     {
-      if (!ParseLine (line, type, name, value)) 
+      if (!ParseLine (line, type, name, value))
         {
           continue;
         }
@@ -241,15 +243,17 @@ RawTextConfigLoad::Default (void)
     }
 }
 void
-RawTextConfigLoad::Global (void)
+RawTextConfigLoad::Global ()
 {
   NS_LOG_FUNCTION (this);
   m_is->clear ();
   m_is->seekg (0);
-  std::string type, name, value;
+  std::string type;
+  std::string name;
+  std::string value;
   for (std::string line; std::getline (*m_is, line);)
     {
-      if (!ParseLine (line, type, name, value)) 
+      if (!ParseLine (line, type, name, value))
         {
           continue;
         }
@@ -266,15 +270,17 @@ RawTextConfigLoad::Global (void)
     }
 }
 void
-RawTextConfigLoad::Attributes (void)
+RawTextConfigLoad::Attributes ()
 {
   NS_LOG_FUNCTION (this);
   m_is->clear ();
   m_is->seekg (0);
-  std::string type, name, value;
+  std::string type;
+  std::string name;
+  std::string value;
   for (std::string line; std::getline (*m_is, line);)
     {
-      if (!ParseLine (line, type, name, value)) 
+      if (!ParseLine (line, type, name, value))
         {
           continue;
         }

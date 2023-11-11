@@ -19,7 +19,7 @@
  */
 
 #include "wifi-tx-parameters.h"
-#include "wifi-mac-queue-item.h"
+#include "wifi-mpdu.h"
 #include "wifi-mac-trailer.h"
 #include "msdu-aggregator.h"
 #include "mpdu-aggregator.h"
@@ -64,7 +64,7 @@ WifiTxParameters::operator= (const WifiTxParameters& txParams)
 }
 
 void
-WifiTxParameters::Clear (void)
+WifiTxParameters::Clear ()
 {
   NS_LOG_FUNCTION (this);
 
@@ -89,13 +89,13 @@ WifiTxParameters::GetPsduInfo (Mac48Address receiver) const
 }
 
 const WifiTxParameters::PsduInfoMap&
-WifiTxParameters::GetPsduInfoMap (void) const
+WifiTxParameters::GetPsduInfoMap () const
 {
   return m_info;
 }
 
 void
-WifiTxParameters::AddMpdu (Ptr<const WifiMacQueueItem> mpdu)
+WifiTxParameters::AddMpdu (Ptr<const WifiMpdu> mpdu)
 {
   NS_LOG_FUNCTION (this << *mpdu);
 
@@ -134,7 +134,7 @@ WifiTxParameters::AddMpdu (Ptr<const WifiMacQueueItem> mpdu)
     {
       auto ret = infoIt->second.seqNumbers.emplace (hdr.GetQosTid (),
                                                     std::set<uint16_t> {hdr.GetSequenceNumber ()});
-      
+
       if (!ret.second)
         {
           // insertion did not happen because an entry with the same TID already exists
@@ -144,7 +144,7 @@ WifiTxParameters::AddMpdu (Ptr<const WifiMacQueueItem> mpdu)
 }
 
 uint32_t
-WifiTxParameters::GetSizeIfAddMpdu (Ptr<const WifiMacQueueItem> mpdu) const
+WifiTxParameters::GetSizeIfAddMpdu (Ptr<const WifiMpdu> mpdu) const
 {
   NS_LOG_FUNCTION (this << *mpdu);
 
@@ -171,7 +171,7 @@ WifiTxParameters::GetSizeIfAddMpdu (Ptr<const WifiMacQueueItem> mpdu) const
 }
 
 void
-WifiTxParameters::AggregateMsdu (Ptr<const WifiMacQueueItem> msdu)
+WifiTxParameters::AggregateMsdu (Ptr<const WifiMpdu> msdu)
 {
   NS_LOG_FUNCTION (this << *msdu);
 
@@ -184,7 +184,7 @@ WifiTxParameters::AggregateMsdu (Ptr<const WifiMacQueueItem> msdu)
 }
 
 std::pair<uint32_t, uint32_t>
-WifiTxParameters::GetSizeIfAggregateMsdu (Ptr<const WifiMacQueueItem> msdu) const
+WifiTxParameters::GetSizeIfAggregateMsdu (Ptr<const WifiMpdu> msdu) const
 {
   NS_LOG_FUNCTION (this << *msdu);
 
@@ -219,7 +219,7 @@ WifiTxParameters::GetSizeIfAggregateMsdu (Ptr<const WifiMacQueueItem> msdu) cons
     {
       return {newAmsduSize, MpduAggregator::GetSizeIfAggregated (newMpduSize, infoIt->second.ampduSize)};
     }
-  
+
   return {newAmsduSize, newMpduSize};
 }
 
@@ -241,8 +241,8 @@ WifiTxParameters::GetSize (Mac48Address receiver) const
     {
       return MpduAggregator::GetSizeIfAggregated (newMpduSize, infoIt->second.ampduSize);
     }
-  
-  return newMpduSize;  
+
+  return newMpduSize;
 }
 
 void

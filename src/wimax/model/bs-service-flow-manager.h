@@ -56,14 +56,14 @@ public:
    * \param device base station device
    */
   BsServiceFlowManager (Ptr<BaseStationNetDevice> device);
-  ~BsServiceFlowManager (void);
-  void DoDispose (void);
+  ~BsServiceFlowManager () override;
+  void DoDispose () override;
   /**
    * Register this type.
    * \return The TypeId.
    */
-  static TypeId GetTypeId (void);
-  
+  static TypeId GetTypeId ();
+
   /**
    * \brief Add a new service flow
    * \param serviceFlow the service flow to add
@@ -93,7 +93,7 @@ public:
   /**
    * \return the DSA ack timeout event
    */
-  EventId GetDsaAckTimeoutEvent (void) const;
+  EventId GetDsaAckTimeoutEvent () const;
   /**
    * \brief allocate service flows
    * \param dsaReq the DSA request
@@ -117,7 +117,7 @@ public:
    * \brief process a DSA-Req message
    * \param dsaReq the message to process
    * \param cid the identifier of the connection on which the message was received
-   * \return a pointer to the service flow 
+   * \return a pointer to the service flow
    */
   ServiceFlow* ProcessDsaReq (const DsaReq &dsaReq, Cid cid);
 
@@ -132,7 +132,7 @@ private:
   /**
    * \return the maximum DSA response retries
    */
-  uint8_t GetMaxDsaRspRetries (void) const;
+  uint8_t GetMaxDsaRspRetries () const;
   /**
    * Create DSA response function
    * \param serviceFlow service flow

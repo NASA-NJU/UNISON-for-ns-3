@@ -57,25 +57,25 @@ public:
   static TypeId GetTypeId ();
 
   // inherited from AntennaModel
-  virtual double GetGainDb (Angles a);
+  double GetGainDb (Angles a) override;
 
   /**
    * Get the vertical 3 dB beamwidth of the cosine antenna model.
    * \return the vertical beamwidth in degrees
    */
-  double GetVerticalBeamwidth (void) const;
+  double GetVerticalBeamwidth () const;
 
   /**
    * Get the horizontal 3 dB beamwidth of the cosine antenna model.
    * \return the horizontal beamwidth in degrees
    */
-  double GetHorizontalBeamwidth (void) const;
+  double GetHorizontalBeamwidth () const;
 
   /**
    * Get the horizontal orientation of the antenna element.
    * \return the horizontal orientation in degrees
    */
-  double GetOrientation (void) const;
+  double GetOrientation () const;
 
 private:
 
@@ -103,7 +103,7 @@ private:
    * \return the exponent
    */
   static double GetExponentFromBeamwidth (double beamwidthDegrees);
-  
+
   /**
    * Compute the beamwidth of the cosine antenna model from the exponent
    * \param exponent the exponent

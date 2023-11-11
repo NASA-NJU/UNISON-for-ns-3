@@ -39,19 +39,19 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
-  virtual TypeId GetInstanceTypeId (void) const;
+  static TypeId GetTypeId ();
+  TypeId GetInstanceTypeId () const override;
 
-  virtual uint32_t GetSerializedSize (void) const;
-  virtual void Serialize (TagBuffer i) const;
-  virtual void Deserialize (TagBuffer i);
-  virtual void Print (std::ostream &os) const;
+  uint32_t GetSerializedSize () const override;
+  void Serialize (TagBuffer i) const override;
+  void Deserialize (TagBuffer i) override;
+  void Print (std::ostream &os) const override;
 
   /**
    * \brief Get the Transmission time stored in the tag
    * \return the transmission time
    */
-  Time GetTxTime (void) const;
+  Time GetTxTime () const;
 private:
   Time m_creationTime; //!< The time stored in the tag
 };
@@ -62,7 +62,7 @@ DelayJitterEstimationTimestampTag::DelayJitterEstimationTimestampTag ()
 }
 
 TypeId
-DelayJitterEstimationTimestampTag::GetTypeId (void)
+DelayJitterEstimationTimestampTag::GetTypeId ()
 {
   static TypeId tid = TypeId ("anon::DelayJitterEstimationTimestampTag")
     .SetParent<Tag> ()
@@ -77,13 +77,13 @@ DelayJitterEstimationTimestampTag::GetTypeId (void)
   return tid;
 }
 TypeId
-DelayJitterEstimationTimestampTag::GetInstanceTypeId (void) const
+DelayJitterEstimationTimestampTag::GetInstanceTypeId () const
 {
   return GetTypeId ();
 }
 
 uint32_t
-DelayJitterEstimationTimestampTag::GetSerializedSize (void) const
+DelayJitterEstimationTimestampTag::GetSerializedSize () const
 {
   return 8;
 }
@@ -103,7 +103,7 @@ DelayJitterEstimationTimestampTag::Print (std::ostream &os) const
   os << "CreationTime=" << m_creationTime;
 }
 Time
-DelayJitterEstimationTimestampTag::GetTxTime (void) const
+DelayJitterEstimationTimestampTag::GetTxTime () const
 {
   return m_creationTime;
 }
@@ -133,7 +133,7 @@ DelayJitterEstimation::RecordRx (Ptr<const Packet> packet)
   // Variable names from
   // RFC 1889 Appendix A.8 ,p. 71,
   // RFC 3550 Appendix A.8, p. 94
-  
+
   Time r_ts = tag.GetTxTime ();
   Time arrival = Simulator::Now ();
   Time transit = arrival - r_ts;
@@ -142,18 +142,18 @@ DelayJitterEstimation::RecordRx (Ptr<const Packet> packet)
 
   // floating jitter version
   //  m_jitter += (Abs (delta) - m_jitter) / 16;
-  
+
   // int variant
   m_jitter += Abs (delta) - ( (m_jitter + TimeStep (8)) / 16 );
 }
 
-Time 
-DelayJitterEstimation::GetLastDelay (void) const
+Time
+DelayJitterEstimation::GetLastDelay () const
 {
   return m_transit;
 }
 uint64_t
-DelayJitterEstimation::GetLastJitter (void) const
+DelayJitterEstimation::GetLastJitter () const
 {
   // floating jitter version
   // return m_jitter.GetTimeStep ();

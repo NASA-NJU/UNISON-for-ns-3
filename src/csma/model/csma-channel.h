@@ -34,10 +34,10 @@ class CsmaNetDevice;
 
 /**
  * \ingroup csma
- * \brief CsmaNetDevice Record 
+ * \brief CsmaNetDevice Record
  *
  * Stores the information related to each net device that is
- * connected to the channel. 
+ * connected to the channel.
  */
 class CsmaDeviceRec {
 public:
@@ -69,7 +69,7 @@ public:
 
 /**
  * Current state of the channel
- */ 
+ */
 enum WireState
 {
   IDLE,            /**< Channel is IDLE, no packet is being transmitted */
@@ -87,7 +87,7 @@ enum WireState
  * take into account the distances between stations or the speed of
  * light to determine collisions.
  */
-class CsmaChannel : public Channel 
+class CsmaChannel : public Channel
 {
 public:
 
@@ -95,7 +95,7 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   /**
    * \brief Create a CsmaChannel
@@ -104,7 +104,11 @@ public:
   /**
    * \brief Destroy a CsmaChannel
    */
-  virtual ~CsmaChannel ();
+  ~CsmaChannel () override;
+
+  // Delete copy constructor and assignment operator to avoid misuse
+  CsmaChannel (const CsmaChannel &) = delete;
+  CsmaChannel &operator= (const CsmaChannel &) = delete;
 
   /**
    * \brief Attach a given netdevice to this channel
@@ -250,13 +254,13 @@ public:
    * \return Returns the number of net devices that are currently
    * attached to the channel.
    */
-  uint32_t GetNumActDevices (void);
+  uint32_t GetNumActDevices ();
 
   /**
    * \return Returns the total number of devices including devices
    * that have been detached from the channel.
    */
-  virtual std::size_t GetNDevices (void) const;
+  std::size_t GetNDevices () const override;
 
   /**
    * \return Get a NetDevice pointer to a connected network device.
@@ -265,7 +269,7 @@ public:
    * \return Returns the pointer to the net device that is associated
    * with deviceId i.
    */
-  virtual Ptr<NetDevice> GetDevice (std::size_t i) const;
+  Ptr<NetDevice> GetDevice (std::size_t i) const override;
 
   /**
    * \return Get a CsmaNetDevice pointer to a connected network device.
@@ -283,31 +287,16 @@ public:
    * \return Returns the DataRate to be used by device transmitters.
    * with deviceId i.
    */
-  DataRate GetDataRate (void);
+  DataRate GetDataRate ();
 
   /**
    * Get the assigned speed-of-light delay of the channel
    *
    * \return Returns the delay used by the channel.
    */
-  Time GetDelay (void);
+  Time GetDelay ();
 
 private:
-  /**
-   * Copy constructor is declared but not implemented.  This disables the
-   * copy constructor for CsmaChannel objects.
-   * \param o object to copy
-   */
-  CsmaChannel (CsmaChannel const &o);
-
-  /**
-   * Operator = is declared but not implemented.  This disables the assignment
-   * operator for CsmaChannel objects.
-   * \param o object to copy
-   * \returns the copied object
-   */
-  CsmaChannel &operator = (CsmaChannel const &o);
-
   /**
    * The assigned data rate of the channel
    */

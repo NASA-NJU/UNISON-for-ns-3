@@ -47,7 +47,7 @@ TypeId Ipv6StaticRouting::GetTypeId ()
 }
 
 Ipv6StaticRouting::Ipv6StaticRouting ()
-  : m_ipv6 (0)
+  : m_ipv6 (nullptr)
 {
   NS_LOG_FUNCTION (this);
 }
@@ -60,7 +60,7 @@ Ipv6StaticRouting::~Ipv6StaticRouting ()
 void Ipv6StaticRouting::SetIpv6 (Ptr<Ipv6> ipv6)
 {
   NS_LOG_FUNCTION (this << ipv6);
-  NS_ASSERT (m_ipv6 == 0 && ipv6 != 0);
+  NS_ASSERT (!m_ipv6 && ipv6);
   uint32_t i = 0;
   m_ipv6 = ipv6;
 
@@ -99,7 +99,10 @@ Ipv6StaticRouting::PrintRoutingTable (Ptr<OutputStreamWrapper> stream, Time::Uni
       *os << "Destination                    Next Hop                   Flag Met Ref Use If" << std::endl;
       for (uint32_t j = 0; j < GetNRoutes (); j++)
         {
-          std::ostringstream dest, gw, mask, flags;
+          std::ostringstream dest;
+          std::ostringstream gw;
+          std::ostringstream mask;
+          std::ostringstream flags;
           Ipv6RoutingTableEntry route = GetRoute (j);
           dest << route.GetDest () << "/" << int(route.GetDestNetworkPrefix ().GetPrefixLength ());
           *os << std::setw (31) << dest.str ();
@@ -162,7 +165,7 @@ void Ipv6StaticRouting::AddNetworkRouteTo (Ipv6Address network, Ipv6Prefix netwo
   if (!LookupRoute (route, metric))
     {
       Ipv6RoutingTableEntry* routePtr = new Ipv6RoutingTableEntry (route);
-      m_networkRoutes.push_back (std::make_pair (routePtr, metric));
+      m_networkRoutes.emplace_back (routePtr, metric);
     }
 }
 
@@ -178,7 +181,7 @@ void Ipv6StaticRouting::AddNetworkRouteTo (Ipv6Address network, Ipv6Prefix netwo
   if (!LookupRoute (route, metric))
     {
       Ipv6RoutingTableEntry* routePtr = new Ipv6RoutingTableEntry (route);
-      m_networkRoutes.push_back (std::make_pair (routePtr, metric));
+      m_networkRoutes.emplace_back (routePtr, metric);
     }
 }
 
@@ -190,7 +193,7 @@ void Ipv6StaticRouting::AddNetworkRouteTo (Ipv6Address network, Ipv6Prefix netwo
   if (!LookupRoute (route, metric))
     {
       Ipv6RoutingTableEntry* routePtr = new Ipv6RoutingTableEntry (route);
-      m_networkRoutes.push_back (std::make_pair (routePtr, metric));
+      m_networkRoutes.emplace_back (routePtr, metric);
     }
 }
 
@@ -215,7 +218,7 @@ void Ipv6StaticRouting::SetDefaultMulticastRoute (uint32_t outputInterface)
   Ipv6Address network = Ipv6Address ("ff00::"); /* RFC 3513 */
   Ipv6Prefix networkMask = Ipv6Prefix (8);
   *route = Ipv6RoutingTableEntry::CreateNetworkRouteTo (network, networkMask, outputInterface);
-  m_networkRoutes.push_back (std::make_pair (route, 0));
+  m_networkRoutes.emplace_back (route, 0);
 }
 
 uint32_t Ipv6StaticRouting::GetNMulticastRoutes () const
@@ -241,7 +244,7 @@ Ipv6MulticastRoutingTableEntry Ipv6StaticRouting::GetMulticastRoute (uint32_t in
           tmp++;
         }
     }
-  return 0;
+  return nullptr;
 }
 
 bool Ipv6StaticRouting::RemoveMulticastRoute (Ipv6Address origin, Ipv6Address group, uint32_t inputInterface)
@@ -322,7 +325,7 @@ bool Ipv6StaticRouting::LookupRoute (const Ipv6RoutingTableEntry &route, uint32_
 Ptr<Ipv6Route> Ipv6StaticRouting::LookupStatic (Ipv6Address dst, Ptr<NetDevice> interface)
 {
   NS_LOG_FUNCTION (this << dst << interface);
-  Ptr<Ipv6Route> rtentry = 0;
+  Ptr<Ipv6Route> rtentry = nullptr;
   uint16_t longestMask = 0;
   uint32_t shortestMetric = 0xffffffff;
 
@@ -425,14 +428,14 @@ void Ipv6StaticRouting::DoDispose ()
     }
   m_multicastRoutes.clear ();
 
-  m_ipv6 = 0;
+  m_ipv6 = nullptr;
   Ipv6RoutingProtocol::DoDispose ();
 }
 
 Ptr<Ipv6MulticastRoute> Ipv6StaticRouting::LookupStatic (Ipv6Address origin, Ipv6Address group, uint32_t interface)
 {
   NS_LOG_FUNCTION (this << origin << group << interface);
-  Ptr<Ipv6MulticastRoute> mrtentry = 0;
+  Ptr<Ipv6MulticastRoute> mrtentry = nullptr;
 
   for (MulticastRoutesI i = m_multicastRoutes.begin (); i != m_multicastRoutes.end (); i++)
     {
@@ -488,7 +491,7 @@ Ipv6RoutingTableEntry Ipv6StaticRouting::GetDefaultRoute ()
   NS_LOG_FUNCTION (this);
   Ipv6Address dst ("::");
   uint32_t shortestMetric = 0xffffffff;
-  Ipv6RoutingTableEntry* result = 0;
+  Ipv6RoutingTableEntry* result = nullptr;
 
   for (NetworkRoutesI it = m_networkRoutes.begin (); it != m_networkRoutes.end (); it++)
     {
@@ -536,7 +539,7 @@ Ipv6RoutingTableEntry Ipv6StaticRouting::GetRoute (uint32_t index) const
     }
   NS_ASSERT (false);
   // quiet compiler.
-  return 0;
+  return nullptr;
 }
 
 uint32_t Ipv6StaticRouting::GetMetric (uint32_t index) const
@@ -596,7 +599,7 @@ Ptr<Ipv6Route> Ipv6StaticRouting::RouteOutput (Ptr<Packet> p, const Ipv6Header &
 {
   NS_LOG_FUNCTION (this << header << oif);
   Ipv6Address destination = header.GetDestination ();
-  Ptr<Ipv6Route> rtentry = 0;
+  Ptr<Ipv6Route> rtentry = nullptr;
 
   if (destination.IsMulticast ())
     {
@@ -626,7 +629,7 @@ bool Ipv6StaticRouting::RouteInput (Ptr<const Packet> p, const Ipv6Header &heade
                                     LocalDeliverCallback lcb, ErrorCallback ecb)
 {
   NS_LOG_FUNCTION (this << p << header << header.GetSource () << header.GetDestination () << idev);
-  NS_ASSERT (m_ipv6 != 0);
+  NS_ASSERT (m_ipv6);
   // Check if input device supports IP
   NS_ASSERT (m_ipv6->GetInterfaceForDevice (idev) >= 0);
   uint32_t iif = m_ipv6->GetInterfaceForDevice (idev);
@@ -667,7 +670,7 @@ bool Ipv6StaticRouting::RouteInput (Ptr<const Packet> p, const Ipv6Header &heade
   NS_LOG_LOGIC ("Unicast destination");
   Ptr<Ipv6Route> rtentry = LookupStatic (header.GetDestination ());
 
-  if (rtentry != 0)
+  if (rtentry)
     {
       NS_LOG_LOGIC ("Found unicast destination- calling unicast callback");
       ucb (idev, rtentry, p, header);  // unicast forwarding callback

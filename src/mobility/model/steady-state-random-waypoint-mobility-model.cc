@@ -28,7 +28,7 @@ namespace ns3 {
 NS_OBJECT_ENSURE_REGISTERED (SteadyStateRandomWaypointMobilityModel);
 
 TypeId
-SteadyStateRandomWaypointMobilityModel::GetTypeId (void)
+SteadyStateRandomWaypointMobilityModel::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::SteadyStateRandomWaypointMobilityModel")
     .SetParent<MobilityModel> ()
@@ -85,7 +85,7 @@ SteadyStateRandomWaypointMobilityModel::GetTypeId (void)
 
 SteadyStateRandomWaypointMobilityModel::SteadyStateRandomWaypointMobilityModel () :
   alreadyStarted (false)
-{ 
+{
   m_speed = CreateObject<UniformRandomVariable> ();
   m_pause = CreateObject<UniformRandomVariable> ();
   m_x1_r = CreateObject<UniformRandomVariable> ();
@@ -99,14 +99,14 @@ SteadyStateRandomWaypointMobilityModel::SteadyStateRandomWaypointMobilityModel (
 }
 
 void
-SteadyStateRandomWaypointMobilityModel::DoInitialize (void)
+SteadyStateRandomWaypointMobilityModel::DoInitialize ()
 {
   DoInitializePrivate ();
   MobilityModel::DoInitialize ();
 }
 
 void
-SteadyStateRandomWaypointMobilityModel::DoInitializePrivate (void)
+SteadyStateRandomWaypointMobilityModel::DoInitializePrivate ()
 {
   alreadyStarted = true;
   // Configure random variables based on attributes
@@ -183,7 +183,10 @@ SteadyStateRandomWaypointMobilityModel::DoInitializePrivate (void)
     }
   else // node initially moving
     {
-      double x1, x2, y1, y2;
+      double x1;
+      double x2;
+      double y1;
+      double y2;
       x1 = x2 = y1 = y2 = 0;
       double r = 0;
       double u1 = 1;
@@ -200,7 +203,7 @@ SteadyStateRandomWaypointMobilityModel::DoInitializePrivate (void)
       double u2 = m_u_r->GetValue (0, 1);
       m_helper.SetPosition (Vector (m_minX + u2*x1 + (1 - u2)*x2, m_minY + u2*y1 + (1 - u2)*y2, m_z));
       NS_ASSERT (!m_event.IsRunning ());
-      m_event = Simulator::ScheduleNow (&SteadyStateRandomWaypointMobilityModel::SteadyStateBeginWalk, this, 
+      m_event = Simulator::ScheduleNow (&SteadyStateRandomWaypointMobilityModel::SteadyStateBeginWalk, this,
                                         Vector (m_minX + x2, m_minY + y2, m_z));
     }
   NotifyCourseChange ();
@@ -225,13 +228,13 @@ SteadyStateRandomWaypointMobilityModel::SteadyStateBeginWalk (const Vector &dest
   m_helper.SetVelocity (Vector (k*dx, k*dy, k*dz));
   m_helper.Unpause ();
   Time travelDelay = Seconds (CalculateDistance (destination, m_current) / speed);
-  m_event = Simulator::Schedule (travelDelay, 
+  m_event = Simulator::Schedule (travelDelay,
                                  &SteadyStateRandomWaypointMobilityModel::Start, this);
   NotifyCourseChange ();
 }
 
 void
-SteadyStateRandomWaypointMobilityModel::BeginWalk (void)
+SteadyStateRandomWaypointMobilityModel::BeginWalk ()
 {
   m_helper.Update ();
   Vector m_current = m_helper.GetCurrentPosition ();
@@ -253,7 +256,7 @@ SteadyStateRandomWaypointMobilityModel::BeginWalk (void)
 }
 
 void
-SteadyStateRandomWaypointMobilityModel::Start (void)
+SteadyStateRandomWaypointMobilityModel::Start ()
 {
   m_helper.Update ();
   m_helper.Pause ();
@@ -263,12 +266,12 @@ SteadyStateRandomWaypointMobilityModel::Start (void)
 }
 
 Vector
-SteadyStateRandomWaypointMobilityModel::DoGetPosition (void) const
+SteadyStateRandomWaypointMobilityModel::DoGetPosition () const
 {
   m_helper.Update ();
   return m_helper.GetCurrentPosition ();
 }
-void 
+void
 SteadyStateRandomWaypointMobilityModel::DoSetPosition (const Vector &position)
 {
   if (alreadyStarted)
@@ -279,7 +282,7 @@ SteadyStateRandomWaypointMobilityModel::DoSetPosition (const Vector &position)
     }
 }
 Vector
-SteadyStateRandomWaypointMobilityModel::DoGetVelocity (void) const
+SteadyStateRandomWaypointMobilityModel::DoGetVelocity () const
 {
   return m_helper.GetVelocity ();
 }

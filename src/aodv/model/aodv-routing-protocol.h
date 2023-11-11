@@ -20,7 +20,7 @@
  *      tuned by Samir Das and Mahesh Marina, University of Cincinnati;
  *
  *      AODV-UU implementation by Erik Nordström of Uppsala University
- *      http://core.it.uu.se/core/index.php/AODV-UU
+ *      https://web.archive.org/web/20100527072022/http://core.it.uu.se/core/index.php/AODV-UU
  *
  * Authors: Elena Buchatskaia <borovkovaes@iitp.ru>
  *          Pavel Boyko <boyko@iitp.ru>
@@ -43,7 +43,7 @@
 
 namespace ns3 {
 
-class WifiMacQueueItem;
+class WifiMpdu;
 enum WifiMacDropReason : uint8_t;  // opaque enum declaration
 
 namespace aodv {
@@ -59,25 +59,25 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
   static const uint32_t AODV_PORT;
 
   /// constructor
   RoutingProtocol ();
-  virtual ~RoutingProtocol ();
-  virtual void DoDispose ();
+  ~RoutingProtocol () override;
+  void DoDispose () override;
 
   // Inherited from Ipv4RoutingProtocol
-  Ptr<Ipv4Route> RouteOutput (Ptr<Packet> p, const Ipv4Header &header, Ptr<NetDevice> oif, Socket::SocketErrno &sockerr);
+  Ptr<Ipv4Route> RouteOutput (Ptr<Packet> p, const Ipv4Header &header, Ptr<NetDevice> oif, Socket::SocketErrno &sockerr) override;
   bool RouteInput (Ptr<const Packet> p, const Ipv4Header &header, Ptr<const NetDevice> idev,
                    UnicastForwardCallback ucb, MulticastForwardCallback mcb,
-                   LocalDeliverCallback lcb, ErrorCallback ecb);
-  virtual void NotifyInterfaceUp (uint32_t interface);
-  virtual void NotifyInterfaceDown (uint32_t interface);
-  virtual void NotifyAddAddress (uint32_t interface, Ipv4InterfaceAddress address);
-  virtual void NotifyRemoveAddress (uint32_t interface, Ipv4InterfaceAddress address);
-  virtual void SetIpv4 (Ptr<Ipv4> ipv4);
-  virtual void PrintRoutingTable (Ptr<OutputStreamWrapper> stream, Time::Unit unit = Time::S) const;
+                   LocalDeliverCallback lcb, ErrorCallback ecb) override;
+  void NotifyInterfaceUp (uint32_t interface) override;
+  void NotifyInterfaceDown (uint32_t interface) override;
+  void NotifyAddAddress (uint32_t interface, Ipv4InterfaceAddress address) override;
+  void NotifyRemoveAddress (uint32_t interface, Ipv4InterfaceAddress address) override;
+  void SetIpv4 (Ptr<Ipv4> ipv4) override;
+  void PrintRoutingTable (Ptr<OutputStreamWrapper> stream, Time::Unit unit = Time::S) const override;
 
   // Handle protocol parameters
   /**
@@ -182,7 +182,7 @@ public:
   int64_t AssignStreams (int64_t stream);
 
 protected:
-  virtual void DoInitialize (void);
+  void DoInitialize () override;
 private:
   /**
    * Notify that an MPDU was dropped.
@@ -190,7 +190,7 @@ private:
    * \param reason the reason why the MPDU was dropped
    * \param mpdu the dropped MPDU
    */
-  void NotifyTxError (WifiMacDropReason reason, Ptr<const WifiMacQueueItem> mpdu);
+  void NotifyTxError (WifiMacDropReason reason, Ptr<const WifiMpdu> mpdu);
 
   // Protocol parameters.
   uint32_t m_rreqRetries;             ///< Maximum number of retransmissions of RREQ with TTL = NetDiameter to discover a route
@@ -269,7 +269,7 @@ private:
    * \param header the IP header
    * \param ucb the UnicastForwardCallback function
    * \param ecb the ErrorCallback function
-   */ 
+   */
   void DeferredRouteOutput (Ptr<const Packet> p, const Ipv4Header & header, UnicastForwardCallback ucb, ErrorCallback ecb);
   /**
    * If route exists and is valid, forward packet.
@@ -279,7 +279,7 @@ private:
    * \param ucb the UnicastForwardCallback function
    * \param ecb the ErrorCallback function
    * \returns true if forwarded
-   */ 
+   */
   bool Forwarding (Ptr<const Packet> p, const Ipv4Header & header, UnicastForwardCallback ucb, ErrorCallback ecb);
   /**
    * Repeated attempts by a source node at route discovery for a single destination
@@ -322,7 +322,7 @@ private:
   Ptr<Socket> FindSubnetBroadcastSocketWithInterfaceAddress (Ipv4InterfaceAddress iface) const;
   /**
    * Process hello message
-   * 
+   *
    * \param rrepHeader RREP message header
    * \param receiverIfaceAddr receiver interface IP address
    */

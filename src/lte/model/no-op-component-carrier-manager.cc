@@ -29,14 +29,14 @@ namespace ns3 {
 
 NS_LOG_COMPONENT_DEFINE ("NoOpComponentCarrierManager");
 NS_OBJECT_ENSURE_REGISTERED (NoOpComponentCarrierManager);
-  
+
 NoOpComponentCarrierManager::NoOpComponentCarrierManager ()
 {
   NS_LOG_FUNCTION (this);
   m_ccmRrcSapProvider = new MemberLteCcmRrcSapProvider<NoOpComponentCarrierManager> (this);
   m_ccmMacSapUser = new MemberLteCcmMacSapUser<NoOpComponentCarrierManager> (this);
   m_macSapProvider = new EnbMacMemberLteMacSapProvider <NoOpComponentCarrierManager> (this);
-  m_ccmRrcSapUser  = 0;
+  m_ccmRrcSapUser  = nullptr;
 }
 
 NoOpComponentCarrierManager::~NoOpComponentCarrierManager ()
@@ -246,7 +246,7 @@ std::vector<uint8_t>
 NoOpComponentCarrierManager::DoReleaseDataRadioBearer (uint16_t rnti, uint8_t lcid)
 {
   NS_LOG_FUNCTION (this << rnti << +lcid);
-  
+
   // Here we receive directly the RNTI and the LCID, instead of only DRB ID
   // DRB ID are mapped as DRBID = LCID + 2
   auto rntiIt = m_ueInfo.find (rnti);
@@ -400,7 +400,7 @@ RrComponentCarrierManager::DoReportBufferStatus (LteMacSapProvider::ReportBuffer
     {
       params.retxQueueSize /= numberOfCarriersForUe;
       params.txQueueSize /= numberOfCarriersForUe;
-      for ( uint16_t i = 0;  i < numberOfCarriersForUe ; i++)
+      for (uint32_t i = 0; i < numberOfCarriersForUe; i++)
         {
           NS_ASSERT_MSG (m_macSapProvidersMap.find(i)!=m_macSapProvidersMap.end(), "Mac sap provider does not exist.");
           m_macSapProvidersMap.at (i)->ReportBufferStatus(params);
@@ -445,7 +445,7 @@ RrComponentCarrierManager::DoUlReceiveMacCe (MacCeListElement_s bsr, uint8_t com
           newBsr.m_macCeValue.m_bufferStatus.at(i) = BufferSizeLevelBsr::BufferSize2BsrId (bufferSize/numberOfCarriersForUe);
         }
       // notify MAC of each component carrier that is enabled for this UE
-      for ( uint16_t i = 0;  i < numberOfCarriersForUe ; i++)
+      for (uint32_t i = 0; i < numberOfCarriersForUe; i++)
         {
           NS_ASSERT_MSG (m_ccmMacSapProviderMap.find(i)!=m_ccmMacSapProviderMap.end(), "Mac sap provider does not exist.");
           m_ccmMacSapProviderMap.find(i)->second->ReportMacCeToScheduler(newBsr);

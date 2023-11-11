@@ -94,7 +94,7 @@ MultiModelSpectrumChannel::DoDispose ()
 }
 
 TypeId
-MultiModelSpectrumChannel::GetTypeId (void)
+MultiModelSpectrumChannel::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::MultiModelSpectrumChannel")
     .SetParent<SpectrumChannel> ()
@@ -135,7 +135,7 @@ MultiModelSpectrumChannel::AddRx (Ptr<SpectrumPhy> phy)
 
   Ptr<const SpectrumModel> rxSpectrumModel = phy->GetRxSpectrumModel ();
 
-  NS_ASSERT_MSG ((0 != rxSpectrumModel), "phy->GetRxSpectrumModel () returned 0. Please check that the RxSpectrumModel is already set for the phy before calling MultiModelSpectrumChannel::AddRx (phy)");
+  NS_ASSERT_MSG (rxSpectrumModel, "phy->GetRxSpectrumModel () returned 0. Please check that the RxSpectrumModel is already set for the phy before calling MultiModelSpectrumChannel::AddRx (phy)");
 
   SpectrumModelUid_t rxSpectrumModelUid = rxSpectrumModel->GetUid ();
 
@@ -303,7 +303,7 @@ MultiModelSpectrumChannel::StartTx (Ptr<SpectrumSignalParameters> txParams)
                   double rxAntennaGain = 0;
                   double propagationGainDb = 0;
                   double pathLossDb = 0;
-                  if (rxParams->txAntenna != 0)
+                  if (rxParams->txAntenna)
                     {
                       Angles txAngles (receiverMobility->GetPosition (), txMobility->GetPosition ());
                       txAntennaGain = rxParams->txAntenna->GetGainDb (txAngles);
@@ -311,7 +311,7 @@ MultiModelSpectrumChannel::StartTx (Ptr<SpectrumSignalParameters> txParams)
                       pathLossDb -= txAntennaGain;
                     }
                   Ptr<AntennaModel> rxAntenna = DynamicCast<AntennaModel>((*rxPhyIterator)->GetAntenna ());
-                  if (rxAntenna != 0)
+                  if (rxAntenna)
                     {
                       Angles rxAngles (txMobility->GetPosition (), receiverMobility->GetPosition ());
                       rxAntennaGain = rxAntenna->GetGainDb (rxAngles);
@@ -323,7 +323,7 @@ MultiModelSpectrumChannel::StartTx (Ptr<SpectrumSignalParameters> txParams)
                       propagationGainDb = m_propagationLoss->CalcRxPower (0, txMobility, receiverMobility);
                       NS_LOG_LOGIC ("propagationGainDb = " << propagationGainDb << " dB");
                       pathLossDb -= propagationGainDb;
-                    }                    
+                    }
                   NS_LOG_LOGIC ("total pathLoss = " << pathLossDb << " dB");
                   // Gain trace
                   m_gainTrace (txMobility, receiverMobility, txAntennaGain, rxAntennaGain, propagationGainDb, pathLossDb);
@@ -335,21 +335,7 @@ MultiModelSpectrumChannel::StartTx (Ptr<SpectrumSignalParameters> txParams)
                       continue;
                     }
                   double pathGainLinear = std::pow (10.0, (-pathLossDb) / 10.0);
-                  *(rxParams->psd) *= pathGainLinear;              
-
-                  if (m_spectrumPropagationLoss)
-                    {
-                      rxParams->psd = m_spectrumPropagationLoss->CalcRxPowerSpectralDensity (rxParams->psd, txMobility, receiverMobility);
-                    }
-                  else if (m_phasedArraySpectrumPropagationLoss)
-                    {
-                      Ptr<const PhasedArrayModel> txPhasedArrayModel = DynamicCast<PhasedArrayModel> (txParams->txPhy->GetAntenna ());
-                      Ptr<const PhasedArrayModel> rxPhasedArrayModel = DynamicCast<PhasedArrayModel> ((*rxPhyIterator)->GetAntenna ());
-
-                      NS_ASSERT_MSG (txPhasedArrayModel && rxPhasedArrayModel, "PhasedArrayModel instances should be installed at both TX and RX SpectrumPhy in order to use PhasedArraySpectrumPropagationLoss.");
-
-                      rxParams->psd = m_phasedArraySpectrumPropagationLoss->CalcRxPowerSpectralDensity (rxParams->psd, txMobility, receiverMobility, txPhasedArrayModel, rxPhasedArrayModel);
-                     }
+                  *(rxParams->psd) *= pathGainLinear;
 
                   if (m_propagationDelay)
                     {
@@ -381,11 +367,24 @@ void
 MultiModelSpectrumChannel::StartRx (Ptr<SpectrumSignalParameters> params, Ptr<SpectrumPhy> receiver)
 {
   NS_LOG_FUNCTION (this);
+  if (m_spectrumPropagationLoss)
+    {
+      params->psd = m_spectrumPropagationLoss->CalcRxPowerSpectralDensity (params, params->txPhy->GetMobility (), receiver->GetMobility ());
+    }
+  else if (m_phasedArraySpectrumPropagationLoss)
+    {
+      Ptr<const PhasedArrayModel> txPhasedArrayModel = DynamicCast<PhasedArrayModel> (params->txPhy->GetAntenna ());
+      Ptr<const PhasedArrayModel> rxPhasedArrayModel = DynamicCast<PhasedArrayModel> (receiver->GetAntenna ());
+
+      NS_ASSERT_MSG (txPhasedArrayModel && rxPhasedArrayModel, "PhasedArrayModel instances should be installed at both TX and RX SpectrumPhy in order to use PhasedArraySpectrumPropagationLoss.");
+
+      params->psd = m_phasedArraySpectrumPropagationLoss->CalcRxPowerSpectralDensity (params, params->txPhy->GetMobility (), receiver->GetMobility (), txPhasedArrayModel, rxPhasedArrayModel);
+    }
   receiver->StartRx (params);
 }
 
 std::size_t
-MultiModelSpectrumChannel::GetNDevices (void) const
+MultiModelSpectrumChannel::GetNDevices () const
 {
   return m_numDevices;
 }
@@ -396,12 +395,12 @@ MultiModelSpectrumChannel::GetDevice (std::size_t i) const
   NS_ASSERT (i < m_numDevices);
   // this method implementation is computationally intensive. This
   // method would be faster if we actually used a std::vector for
-  // storing devices, which we don't due to the need to have fast 
+  // storing devices, which we don't due to the need to have fast
   // SpectrumModel conversions and to allow PHY devices to change a
   // SpectrumModel at run time. Note that having this method slow is
   // acceptable as it is not used much at run time (often not at all).
   // On the other hand, having slow SpectrumModel conversion would be
-  // less acceptable. 
+  // less acceptable.
   std::size_t j = 0;
   for (RxSpectrumModelInfoMap_t::const_iterator rxInfoIterator = m_rxSpectrumModelInfoMap.begin ();
        rxInfoIterator !=  m_rxSpectrumModelInfoMap.end ();
@@ -417,7 +416,7 @@ MultiModelSpectrumChannel::GetDevice (std::size_t i) const
         }
     }
   NS_FATAL_ERROR ("m_numDevices > actual number of devices");
-  return 0;
+  return nullptr;
 }
 
 } // namespace ns3

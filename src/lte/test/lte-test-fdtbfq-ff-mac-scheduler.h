@@ -34,12 +34,12 @@ using namespace ns3;
  * \ingroup lte-test
  * \ingroup tests
  *
- * \brief This system test program creates different test cases with a single eNB and 
- * several UEs, all having the same Radio Bearer specification. In each test 
- * case, the UEs see the same SINR from the eNB; different test cases are 
- * implemented obtained by using different SINR values and different numbers of 
- * UEs. The test consists on checking that the obtained throughput performance 
- * is equal among users is consistent with the definition of token bank fair  
+ * \brief This system test program creates different test cases with a single eNB and
+ * several UEs, all having the same Radio Bearer specification. In each test
+ * case, the UEs see the same SINR from the eNB; different test cases are
+ * implemented obtained by using different SINR values and different numbers of
+ * UEs. The test consists on checking that the obtained throughput performance
+ * is equal among users is consistent with the definition of token bank fair
  * queue scheduling
  */
 class LenaFdTbfqFfMacSchedulerTestCase1 : public TestCase
@@ -57,7 +57,7 @@ public:
    * \param errorModelEnabled error model enabled?
    */
   LenaFdTbfqFfMacSchedulerTestCase1 (uint16_t nUser, double dist, double thrRefDl, double thrRefUl, uint16_t packetSize, uint16_t interval, bool  errorModelEnabled);
-  virtual ~LenaFdTbfqFfMacSchedulerTestCase1 ();
+  ~LenaFdTbfqFfMacSchedulerTestCase1 () override;
 
 private:
   /**
@@ -68,7 +68,7 @@ private:
    * \returns name string
    */
   static std::string BuildNameString (uint16_t nUser, double dist);
-  virtual void DoRun (void);
+  void DoRun () override;
   uint16_t m_nUser; ///< number of UE nodes
   double m_dist; ///< distance between the nodes
   uint16_t m_packetSize;  ///< packet size in bytes
@@ -83,8 +83,8 @@ private:
  * \ingroup lte-test
  * \ingroup tests
  *
- * \brief Test case is simillar to the one defined in 
- * LenaFdTbfqFfMacSchedulerTestCase1, with the difference that UEs are 
+ * \brief Test case is simillar to the one defined in
+ * LenaFdTbfqFfMacSchedulerTestCase1, with the difference that UEs are
  * placed in such a way to experience different SINRs from eNodeB.
  */
 class LenaFdTbfqFfMacSchedulerTestCase2 : public TestCase
@@ -100,7 +100,7 @@ public:
    * \param errorModelEnabled indicates whether the error model is enabled
    */
   LenaFdTbfqFfMacSchedulerTestCase2 (std::vector<double> dist, std::vector<uint32_t> estThrFdTbfqDl, std::vector<uint16_t> packetSize, uint16_t interval, bool  errorModelEnabled);
-  virtual ~LenaFdTbfqFfMacSchedulerTestCase2 ();
+  ~LenaFdTbfqFfMacSchedulerTestCase2 () override;
 
 private:
   /**
@@ -111,7 +111,7 @@ private:
    * \returns name string
    */
   static std::string BuildNameString (uint16_t nUser, std::vector<double> dist);
-  virtual void DoRun (void);
+  void DoRun () override;
   uint16_t m_nUser; ///< number of UE nodes
   std::vector<double> m_dist; ///< distance between the nodes
   std::vector<uint16_t> m_packetSize;  ///< packet size in bytes

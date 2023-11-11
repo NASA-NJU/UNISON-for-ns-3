@@ -43,9 +43,9 @@ class Socket;
  * zero). Once the lower layer send buffer is
  * filled, it waits until space is free to
  * send more data, essentially keeping a
- * constant flow of data. Only SOCK_STREAM 
- * and SOCK_SEQPACKET sockets are supported. 
- * For example, TCP sockets can be used, but 
+ * constant flow of data. Only SOCK_STREAM
+ * and SOCK_SEQPACKET sockets are supported.
+ * For example, TCP sockets can be used, but
  * UDP sockets can not be used.
  */
 
@@ -67,8 +67,8 @@ class Socket;
  *
  * If the attribute "EnableSeqTsSizeHeader" is enabled, the application will
  * use some bytes of the payload to store an header with a sequence number,
- * a timestamp, and the size of the packet sent. Support for extracting 
- * statistics from this header have been added to \c ns3::PacketSink 
+ * a timestamp, and the size of the packet sent. Support for extracting
+ * statistics from this header have been added to \c ns3::PacketSink
  * (enable its "EnableSeqTsSizeHeader" attribute), or users may extract
  * the header via trace sources.
  */
@@ -79,21 +79,21 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   BulkSendApplication ();
 
-  virtual ~BulkSendApplication ();
+  ~BulkSendApplication () override;
 
   /**
    * \brief Set the upper bound for the total number of bytes to send.
    *
    * Once this bound is reached, no more application bytes are sent. If the
-   * application is stopped during the simulation and restarted, the 
-   * total number of bytes sent is not reset; however, the maxBytes 
-   * bound is still effective and the application will continue sending 
-   * up to maxBytes. The value zero for maxBytes means that 
-   * there is no upper bound; i.e. data is sent until the application 
+   * application is stopped during the simulation and restarted, the
+   * total number of bytes sent is not reset; however, the maxBytes
+   * bound is still effective and the application will continue sending
+   * up to maxBytes. The value zero for maxBytes means that
+   * there is no upper bound; i.e. data is sent until the application
    * or simulation is stopped.
    *
    * \param maxBytes the upper bound of bytes to send
@@ -104,14 +104,14 @@ public:
    * \brief Get the socket this application is attached to.
    * \return pointer to associated socket
    */
-  Ptr<Socket> GetSocket (void) const;
+  Ptr<Socket> GetSocket () const;
 
 protected:
-  virtual void DoDispose (void);
+  void DoDispose () override;
 private:
   // inherited from Application base class.
-  virtual void StartApplication (void);    // Called at time specified by Start
-  virtual void StopApplication (void);     // Called at time specified by Stop
+  void StartApplication () override;    // Called at time specified by Start
+  void StopApplication () override;     // Called at time specified by Stop
 
   /**
    * \brief Send data until the L4 transmission buffer is full.

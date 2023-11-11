@@ -37,7 +37,7 @@ namespace ns3 {
  * \ingroup congestionOps
  *
  * \brief BBR congestion control algorithm
- * 
+ *
  * This class implement the BBR (Bottleneck Bandwidth and Round-trip propagation time)
  * congestion control type.
  */
@@ -58,7 +58,7 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   /**
    * \brief Constructor
@@ -101,18 +101,18 @@ public:
    */
   virtual void SetStream (uint32_t stream);
 
-  virtual std::string GetName () const;
-  virtual bool HasCongControl () const;
-  virtual void CongControl (Ptr<TcpSocketState> tcb,
+  std::string GetName () const override;
+  bool HasCongControl () const override;
+  void CongControl (Ptr<TcpSocketState> tcb,
                             const TcpRateOps::TcpRateConnection &rc,
-                            const TcpRateOps::TcpRateSample &rs);
-  virtual void CongestionStateSet (Ptr<TcpSocketState> tcb,
-                                   const TcpSocketState::TcpCongState_t newState);
-  virtual void CwndEvent (Ptr<TcpSocketState> tcb,
-                          const TcpSocketState::TcpCAEvent_t event);
-  virtual uint32_t GetSsThresh (Ptr<const TcpSocketState> tcb,
-                                uint32_t bytesInFlight);
-  virtual Ptr<TcpCongestionOps> Fork ();
+                            const TcpRateOps::TcpRateSample &rs) override;
+  void CongestionStateSet (Ptr<TcpSocketState> tcb,
+                                   const TcpSocketState::TcpCongState_t newState) override;
+  void CwndEvent (Ptr<TcpSocketState> tcb,
+                          const TcpSocketState::TcpCAEvent_t event) override;
+  uint32_t GetSsThresh (Ptr<const TcpSocketState> tcb,
+                                uint32_t bytesInFlight) override;
+  Ptr<TcpCongestionOps> Fork () override;
 
 protected:
   /**
@@ -385,7 +385,7 @@ private:
   uint32_t    m_extraAcked [2]              {0, 0};              //!< Maximum excess data acked in epoch
   uint32_t    m_extraAckedWinRtt            {0};                 //!< Age of extra acked in rtt
   uint32_t    m_extraAckedWinRttLength      {5};                 //!< Window length of extra acked window
-  uint32_t    m_ackEpochAckedResetThresh    {1 << 17};           //!< Max allowed val for m_ackEpochAcked, after which sampling epoch is reset 
+  uint32_t    m_ackEpochAckedResetThresh    {1 << 17};           //!< Max allowed val for m_ackEpochAcked, after which sampling epoch is reset
   uint32_t    m_extraAckedIdx               {0};                 //!< Current index in extra acked array
   Time        m_ackEpochTime                {Seconds(0)};        //!< Starting of ACK sampling epoch time
   uint32_t    m_ackEpochAcked               {0};                 //!< Bytes ACked in sampling epoch

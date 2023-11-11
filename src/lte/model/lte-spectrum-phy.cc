@@ -155,13 +155,13 @@ LteSpectrumPhy::~LteSpectrumPhy ()
 void LteSpectrumPhy::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
-  m_channel = 0;
-  m_mobility = 0;
-  m_device = 0;
+  m_channel = nullptr;
+  m_mobility = nullptr;
+  m_device = nullptr;
   m_interferenceData->Dispose ();
-  m_interferenceData = 0;
+  m_interferenceData = nullptr;
   m_interferenceCtrl->Dispose ();
-  m_interferenceCtrl = 0;
+  m_interferenceCtrl = nullptr;
   m_ltePhyRxDataEndErrorCallback = MakeNullCallback< void > ();
   m_ltePhyRxDataEndOkCallback    = MakeNullCallback< void, Ptr<Packet> >  ();
   m_ltePhyRxCtrlEndOkCallback = MakeNullCallback< void, std::list<Ptr<LteControlMessage> > > ();
@@ -209,7 +209,7 @@ std::ostream& operator<< (std::ostream& os, LteSpectrumPhy::State s)
 }
 
 TypeId
-LteSpectrumPhy::GetTypeId (void)
+LteSpectrumPhy::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::LteSpectrumPhy")
     .SetParent<SpectrumPhy> ()
@@ -346,8 +346,8 @@ LteSpectrumPhy::Reset ()
   m_expectedTbs.clear ();
   m_txControlMessageList.clear ();
   m_rxPacketBurstList.clear ();
-  m_txPacketBurst = 0;
-  m_rxSpectrumModel = 0;
+  m_txPacketBurst = nullptr;
+  m_rxSpectrumModel = nullptr;
 
   // Detach from the channel, because receiving any signal without
   // spectrum model is an error.
@@ -629,7 +629,7 @@ LteSpectrumPhy::EndTxData ()
 
   NS_ASSERT (m_state == TX_DATA);
   m_phyTxEndTrace (m_txPacketBurst);
-  m_txPacketBurst = 0;
+  m_txPacketBurst = nullptr;
   ChangeState (IDLE);
 }
 
@@ -640,7 +640,7 @@ LteSpectrumPhy::EndTxDlCtrl ()
   NS_LOG_LOGIC (this << " state: " << m_state);
 
   NS_ASSERT (m_state == TX_DL_CTRL);
-  NS_ASSERT (m_txPacketBurst == 0);
+  NS_ASSERT (!m_txPacketBurst);
   ChangeState (IDLE);
 }
 
@@ -651,7 +651,7 @@ LteSpectrumPhy::EndTxUlSrs ()
   NS_LOG_LOGIC (this << " state: " << m_state);
 
   NS_ASSERT (m_state == TX_UL_SRS);
-  NS_ASSERT (m_txPacketBurst == 0);
+  NS_ASSERT (!m_txPacketBurst);
   ChangeState (IDLE);
 }
 
@@ -672,17 +672,17 @@ LteSpectrumPhy::StartRx (Ptr<SpectrumSignalParameters> spectrumRxParams)
   Ptr<LteSpectrumSignalParametersDataFrame> lteDataRxParams = DynamicCast<LteSpectrumSignalParametersDataFrame> (spectrumRxParams);
   Ptr<LteSpectrumSignalParametersDlCtrlFrame> lteDlCtrlRxParams = DynamicCast<LteSpectrumSignalParametersDlCtrlFrame> (spectrumRxParams);
   Ptr<LteSpectrumSignalParametersUlSrsFrame> lteUlSrsRxParams = DynamicCast<LteSpectrumSignalParametersUlSrsFrame> (spectrumRxParams);
-  if (lteDataRxParams != 0)
+  if (lteDataRxParams)
     {
       m_interferenceData->AddSignal (rxPsd, duration);
       StartRxData (lteDataRxParams);
     }
-  else if (lteDlCtrlRxParams != 0)
+  else if (lteDlCtrlRxParams)
     {
       m_interferenceCtrl->AddSignal (rxPsd, duration);
       StartRxDlCtrl (lteDlCtrlRxParams);
     }
-  else if (lteUlSrsRxParams != 0)
+  else if (lteUlSrsRxParams)
     {
       m_interferenceCtrl->AddSignal (rxPsd, duration);
       StartRxUlSrs (lteUlSrsRxParams);
@@ -782,7 +782,7 @@ LteSpectrumPhy::StartRxDlCtrl (Ptr<LteSpectrumSignalParametersDlCtrlFrame> lteDl
   // for the CellId which is reported in the
   // LteSpectrumSignalParametersDlCtrlFrame
   uint16_t cellId;
-  NS_ASSERT (lteDlCtrlRxParams != 0);
+  NS_ASSERT (lteDlCtrlRxParams);
   cellId = lteDlCtrlRxParams->cellId;
 
   switch (m_state)
@@ -1295,25 +1295,15 @@ void
 LteSpectrumPhy::SetTxModeGain (uint8_t txMode, double gain)
 {
   NS_LOG_FUNCTION (this << " txmode " << (uint16_t)txMode << " gain " << gain);
-  // convert to linear
-  gain = std::pow (10.0, (gain / 10.0));
-  if (m_txModeGain.size () < txMode)
+  if (txMode > 0)
     {
-      m_txModeGain.resize (txMode);
-    }
-  std::vector <double> temp;
-  temp = m_txModeGain;
-  m_txModeGain.clear ();
-  for (uint8_t i = 0; i < temp.size (); i++)
-    {
-      if (i == txMode - 1)
+      // convert to linear
+      double gainLin = std::pow (10.0, (gain / 10.0));
+      if (m_txModeGain.size () < txMode)
         {
-          m_txModeGain.push_back (gain);
+          m_txModeGain.resize (txMode);
         }
-      else
-        {
-          m_txModeGain.push_back (temp.at (i));
-        }
+      m_txModeGain.at (txMode - 1) = gainLin;
     }
 }
 

@@ -36,19 +36,19 @@ ObjectPtrContainerValue::ObjectPtrContainerValue ()
 }
 
 ObjectPtrContainerValue::Iterator
-ObjectPtrContainerValue::Begin (void) const
+ObjectPtrContainerValue::Begin () const
 {
   NS_LOG_FUNCTION (this);
   return m_objects.begin ();
 }
 ObjectPtrContainerValue::Iterator
-ObjectPtrContainerValue::End (void) const
+ObjectPtrContainerValue::End () const
 {
   NS_LOG_FUNCTION (this);
   return m_objects.end ();
 }
 std::size_t
-ObjectPtrContainerValue::GetN (void) const
+ObjectPtrContainerValue::GetN () const
 {
   NS_LOG_FUNCTION (this);
   return m_objects.size ();
@@ -58,7 +58,7 @@ ObjectPtrContainerValue::Get (std::size_t i) const
 {
   NS_LOG_FUNCTION (this << i);
   Iterator it = m_objects.find (i);
-  Ptr<Object> value = 0;
+  Ptr<Object> value = nullptr;
   if ( it != m_objects.end () )
     {
       value = m_objects.find (i)->second;
@@ -67,7 +67,7 @@ ObjectPtrContainerValue::Get (std::size_t i) const
 }
 
 Ptr<AttributeValue>
-ObjectPtrContainerValue::Copy (void) const
+ObjectPtrContainerValue::Copy () const
 {
   NS_LOG_FUNCTION (this);
   return ns3::Create<ObjectPtrContainerValue> (*this);
@@ -108,7 +108,7 @@ ObjectPtrContainerAccessor::Get (const ObjectBase * object, AttributeValue &valu
 {
   NS_LOG_FUNCTION (this << object << &value);
   ObjectPtrContainerValue *v = dynamic_cast<ObjectPtrContainerValue *> (&value);
-  if (v == 0)
+  if (v == nullptr)
     {
       return false;
     }
@@ -128,13 +128,13 @@ ObjectPtrContainerAccessor::Get (const ObjectBase * object, AttributeValue &valu
   return true;
 }
 bool
-ObjectPtrContainerAccessor::HasGetter (void) const
+ObjectPtrContainerAccessor::HasGetter () const
 {
   NS_LOG_FUNCTION (this);
   return true;
 }
 bool
-ObjectPtrContainerAccessor::HasSetter (void) const
+ObjectPtrContainerAccessor::HasSetter () const
 {
   NS_LOG_FUNCTION (this);
   return false;

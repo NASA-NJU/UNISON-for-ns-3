@@ -20,7 +20,7 @@
  *      tuned by Samir Das and Mahesh Marina, University of Cincinnati;
  *
  *      AODV-UU implementation by Erik Nordström of Uppsala University
- *      http://core.it.uu.se/core/index.php/AODV-UU
+ *      https://web.archive.org/web/20100527072022/http://core.it.uu.se/core/index.php/AODV-UU
  *
  * Authors: Elena Buchatskaia <borovkovaes@iitp.ru>
  *          Pavel Boyko <boyko@iitp.ru>
@@ -156,7 +156,6 @@ RequestQueue::Drop (QueueEntry en, std::string reason)
   NS_LOG_LOGIC (reason << en.GetPacket ()->GetUid () << " " << en.GetIpv4Header ().GetDestination ());
   en.GetErrorCallback () (en.GetPacket (), en.GetIpv4Header (),
                           Socket::ERROR_NOROUTETOHOST);
-  return;
 }
 
 }  // namespace aodv

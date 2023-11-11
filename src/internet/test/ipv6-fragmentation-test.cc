@@ -83,11 +83,11 @@ public:
     static TypeId tid = TypeId ("ns3::IPv6TestTag").SetParent<Tag> ().AddConstructor<IPv6TestTag> ();
     return tid;
   }
-  virtual TypeId GetInstanceTypeId () const { return GetTypeId (); }
-  virtual uint32_t GetSerializedSize () const { return sizeof (token); }
-  virtual void Serialize (TagBuffer buffer) const { buffer.WriteU64 (token); }
-  virtual void Deserialize (TagBuffer buffer) { token = buffer.ReadU64 (); }
-  virtual void Print (std::ostream &os) const { os << "token=" << token; }
+  TypeId GetInstanceTypeId () const override { return GetTypeId (); }
+  uint32_t GetSerializedSize () const override { return sizeof (token); }
+  void Serialize (TagBuffer buffer) const override { buffer.WriteU64 (token); }
+  void Deserialize (TagBuffer buffer) override { token = buffer.ReadU64 (); }
+  void Print (std::ostream &os) const override { os << "token=" << token; }
   /**
    * \brief Set the token.
    * \param token The token.
@@ -123,9 +123,9 @@ class Ipv6FragmentationTest : public TestCase
   uint8_t m_icmpCode;     //!< ICMP code.
 
 public:
-  virtual void DoRun (void);
+  void DoRun () override;
   Ipv6FragmentationTest ();
-  ~Ipv6FragmentationTest ();
+  ~Ipv6FragmentationTest () override;
 
   // server part
 
@@ -175,7 +175,7 @@ public:
    * \brief Send a packet.
    * \returns The sent packet.
    */
-  Ptr<Packet> SendClient (void);
+  Ptr<Packet> SendClient ();
 
   /**
    * \brief Handle Server's incoming packets.
@@ -202,8 +202,8 @@ public:
 Ipv6FragmentationTest::Ipv6FragmentationTest ()
   : TestCase ("Verify the IPv6 layer 3 protocol fragmentation and reassembly")
 {
-  m_socketServer = 0;
-  m_data = 0;
+  m_socketServer = nullptr;
+  m_data = nullptr;
   m_dataSize = 0;
   m_size = 0;
   m_icmpType = 0;
@@ -216,7 +216,7 @@ Ipv6FragmentationTest::~Ipv6FragmentationTest ()
     {
       delete[] m_data;
     }
-  m_data = 0;
+  m_data = nullptr;
   m_dataSize = 0;
 }
 
@@ -225,7 +225,7 @@ void
 Ipv6FragmentationTest::StartServer (Ptr<Node> ServerNode)
 {
 
-  if (m_socketServer == 0)
+  if (!m_socketServer)
     {
       TypeId tid = TypeId::LookupByName ("ns3::UdpSocketFactory");
       m_socketServer = Socket::CreateSocket (ServerNode, tid);
@@ -255,7 +255,7 @@ void
 Ipv6FragmentationTest::StartClient (Ptr<Node> ClientNode)
 {
 
-  if (m_socketClient == 0)
+  if (!m_socketClient)
     {
       TypeId tid = TypeId::LookupByName ("ns3::UdpSocketFactory");
       m_socketClient = Socket::CreateSocket (ClientNode, tid);
@@ -319,7 +319,7 @@ Ipv6FragmentationTest::SetFill (uint8_t *fill, uint32_t fillSize, uint32_t dataS
   m_size = dataSize;
 }
 
-Ptr<Packet> Ipv6FragmentationTest::SendClient (void)
+Ptr<Packet> Ipv6FragmentationTest::SendClient ()
 {
   Ptr<Packet> p;
   if (m_dataSize)
@@ -351,7 +351,7 @@ void Ipv6FragmentationTest::HandleClientTx (Ptr<const Packet> packet, Ptr<Ipv6> 
 }
 
 void
-Ipv6FragmentationTest::DoRun (void)
+Ipv6FragmentationTest::DoRun ()
 {
   // Create topology
 

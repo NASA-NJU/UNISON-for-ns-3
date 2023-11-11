@@ -39,22 +39,6 @@ public:
 
   // Implementations of pure virtual methods of WifiInformationElement
   WifiInformationElementId ElementId () const override;
-  uint8_t GetInformationFieldSize () const override;
-  void SerializeInformationField (Buffer::Iterator start) const override;
-  uint8_t DeserializeInformationField (Buffer::Iterator start, uint8_t length) override;
-  /* This information element is a bit special in that it is only
-     included if the STA is a VHT STA. To support this we
-     override the Serialize and GetSerializedSize methods of
-     WifiInformationElement. */
-  Buffer::Iterator Serialize (Buffer::Iterator start) const override;
-  uint16_t GetSerializedSize () const override;
-
-  /**
-   * Set the VHT supported information element.
-   *
-   * \param vhtSupported the VHT supported information element
-   */
-  void SetVhtSupported (uint8_t vhtSupported);
 
   /**
    * Set the Channel Width field in the VHT Operation information element.
@@ -94,28 +78,32 @@ public:
    *
    * \return the Channel Width field in the VHT Operation information element
    */
-  uint8_t GetChannelWidth (void) const;
+  uint8_t GetChannelWidth () const;
   /**
    * Return the Channel Center Frequency Segment 0 field in the VHT Operation information element.
    *
    * \return the Channel Center Frequency Segment 0 field in the VHT Operation information element
    */
-  uint8_t GetChannelCenterFrequencySegment0 (void) const;
+  uint8_t GetChannelCenterFrequencySegment0 () const;
   /**
    * Return the Channel Center Frequency Segment 1 field in the VHT Operation information element.
    *
    * \return the Channel Center Frequency Segment 1 field in the VHT Operation information element
    */
-  uint8_t GetChannelCenterFrequencySegment1 (void) const;
+  uint8_t GetChannelCenterFrequencySegment1 () const;
   /**
    * Return the Basic VHT-MCS And Nss field in the VHT Operation information element.
    *
    * \return the Basic VHT-MCS And Nss field in the VHT Operation information element
    */
-  uint16_t GetBasicVhtMcsAndNssSet (void) const;
+  uint16_t GetBasicVhtMcsAndNssSet () const;
 
 
 private:
+  uint16_t GetInformationFieldSize () const override;
+  void SerializeInformationField (Buffer::Iterator start) const override;
+  uint16_t DeserializeInformationField (Buffer::Iterator start, uint16_t length) override;
+
   //VHT Operation Information
   uint8_t m_channelWidth; ///< channel width
   uint8_t m_channelCenterFrequencySegment0; ///< channel center frequency segment 0
@@ -123,9 +111,6 @@ private:
 
   //Basic VHT-MCS and NSS Set
   uint16_t m_basicVhtMcsAndNssSet; ///< basic VHT MCS NSS set
-
-  /// This is used to decide whether this element should be added to the frame or not
-  uint8_t m_vhtSupported;
 };
 
 /**

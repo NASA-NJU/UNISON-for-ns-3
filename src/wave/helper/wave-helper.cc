@@ -120,7 +120,7 @@ AsciiPhyReceiveSinkWithoutContext (
 
 /****************************** YansWavePhyHelper ***********************************/
 YansWavePhyHelper
-YansWavePhyHelper::Default (void)
+YansWavePhyHelper::Default ()
 {
   YansWavePhyHelper helper;
   helper.SetErrorRateModel ("ns3::NistErrorRateModel");
@@ -136,7 +136,7 @@ YansWavePhyHelper::EnablePcapInternal (std::string prefix, Ptr<NetDevice> nd, bo
   // the system.  We can only deal with devices of type WaveNetDevice.
   //
   Ptr<WaveNetDevice> device = nd->GetObject<WaveNetDevice> ();
-  if (device == 0)
+  if (!device)
     {
       NS_LOG_INFO ("YansWavePhyHelper::EnablePcapInternal(): Device " << &device << " not of type ns3::WaveNetDevice");
       return;
@@ -181,7 +181,7 @@ YansWavePhyHelper::EnableAsciiInternal (
   // the system.  We can only deal with devices of type WaveNetDevice.
   //
   Ptr<WaveNetDevice> device = nd->GetObject<WaveNetDevice> ();
-  if (device == 0)
+  if (!device)
     {
       NS_LOG_INFO ("EnableAsciiInternal(): Device " << device << " not of type ns3::WaveNetDevice");
       return;
@@ -203,7 +203,7 @@ YansWavePhyHelper::EnableAsciiInternal (
   // without a context since there will be one file per context and therefore
   // the context would be redundant.
   //
-  if (stream == 0)
+  if (!stream)
     {
       //
       // Set up an output stream object to deal with private ofstream copy
@@ -266,7 +266,7 @@ WaveHelper::~WaveHelper ()
 }
 
 WaveHelper
-WaveHelper::Default (void)
+WaveHelper::Default ()
 {
   WaveHelper helper;
   // default 7 MAC entities and single PHY device.
@@ -311,52 +311,6 @@ WaveHelper::CreatePhys (uint32_t phys)
   m_physNumber = phys;
 }
 
-void
-WaveHelper::SetRemoteStationManager (std::string type,
-                                     std::string n0, const AttributeValue &v0,
-                                     std::string n1, const AttributeValue &v1,
-                                     std::string n2, const AttributeValue &v2,
-                                     std::string n3, const AttributeValue &v3,
-                                     std::string n4, const AttributeValue &v4,
-                                     std::string n5, const AttributeValue &v5,
-                                     std::string n6, const AttributeValue &v6,
-                                     std::string n7, const AttributeValue &v7)
-{
-  m_stationManager = ObjectFactory ();
-  m_stationManager.SetTypeId (type);
-  m_stationManager.Set (n0, v0);
-  m_stationManager.Set (n1, v1);
-  m_stationManager.Set (n2, v2);
-  m_stationManager.Set (n3, v3);
-  m_stationManager.Set (n4, v4);
-  m_stationManager.Set (n5, v5);
-  m_stationManager.Set (n6, v6);
-  m_stationManager.Set (n7, v7);
-}
-
-void
-WaveHelper::SetChannelScheduler (std::string type,
-                                 std::string n0, const AttributeValue &v0,
-                                 std::string n1, const AttributeValue &v1,
-                                 std::string n2, const AttributeValue &v2,
-                                 std::string n3, const AttributeValue &v3,
-                                 std::string n4, const AttributeValue &v4,
-                                 std::string n5, const AttributeValue &v5,
-                                 std::string n6, const AttributeValue &v6,
-                                 std::string n7, const AttributeValue &v7)
-{
-  m_channelScheduler = ObjectFactory ();
-  m_channelScheduler.SetTypeId (type);
-  m_channelScheduler.Set (n0, v0);
-  m_channelScheduler.Set (n1, v1);
-  m_channelScheduler.Set (n2, v2);
-  m_channelScheduler.Set (n3, v3);
-  m_channelScheduler.Set (n4, v4);
-  m_channelScheduler.Set (n5, v5);
-  m_channelScheduler.Set (n6, v6);
-  m_channelScheduler.Set (n7, v7);
-}
-
 NetDeviceContainer
 WaveHelper::Install (const WifiPhyHelper &phyHelper,  const WifiMacHelper &macHelper, NodeContainer c) const
 {
@@ -382,11 +336,12 @@ WaveHelper::Install (const WifiPhyHelper &phyHelper,  const WifiMacHelper &macHe
 
       for (uint32_t j = 0; j != m_physNumber; ++j)
         {
-          Ptr<WifiPhy> phy = phyHelper.Create (node, device);
-          phy->ConfigureStandard (WIFI_STANDARD_80211p);
-          phy->SetOperatingChannel (WifiPhy::ChannelTuple {ChannelManager::GetCch (), 0,
-                                                           WIFI_PHY_BAND_5GHZ, 0});
-          device->AddPhy (phy);
+          std::vector<Ptr<WifiPhy>> phys = phyHelper.Create (node, device);
+          NS_ABORT_IF (phys.size () != 1);
+          phys[0]->ConfigureStandard (WIFI_STANDARD_80211p);
+          phys[0]->SetOperatingChannel (WifiPhy::ChannelTuple {ChannelManager::GetCch (), 0,
+                                                               WIFI_PHY_BAND_5GHZ, 0});
+          device->AddPhy (phys[0]);
         }
 
       for (std::vector<uint32_t>::const_iterator k = m_macsForChannelNumber.begin ();
@@ -421,7 +376,7 @@ WaveHelper::Install (const WifiPhyHelper &phy, const WifiMacHelper &mac, std::st
 }
 
 void
-WaveHelper::EnableLogComponents (void)
+WaveHelper::EnableLogComponents ()
 {
   WifiHelper::EnableLogComponents ();
 

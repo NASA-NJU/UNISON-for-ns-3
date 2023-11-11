@@ -40,7 +40,7 @@ class Packet;
  *
  * Sends UDP packets based on a trace file of an MPEG4 stream
  * trace files could be downloaded form:
- * http://www2.tkn.tu-berlin.de/research/trace/ltvt.html (the 2 first lines of
+ * https://web.archive.org/web/20200729203634/https://earth-info.nga.mil/GandG/publications/tr8350.2/wgs84fin.pdf (the 2 first lines of
  * the file should be removed)
  * A valid trace file is a file with 4 columns:
  * \li -1- the first one represents the frame index
@@ -64,7 +64,7 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   UdpTraceClient ();
 
@@ -80,7 +80,7 @@ public:
    *
    */
   UdpTraceClient (Ipv4Address ip, uint16_t port, char *traceFile);
-  ~UdpTraceClient ();
+  ~UdpTraceClient () override;
 
   /**
    * \brief set the remote address and port
@@ -107,7 +107,7 @@ public:
    * \brief Return the maximum packet size
    * \return the maximum packet size
    */
-  uint16_t GetMaxPacketSize (void);
+  uint16_t GetMaxPacketSize ();
 
   /**
    * \brief Set the maximum packet size
@@ -122,7 +122,7 @@ public:
   void SetTraceLoop (bool traceLoop);
 
 protected:
-  virtual void DoDispose (void);
+  void DoDispose () override;
 
 private:
   /**
@@ -133,14 +133,14 @@ private:
   /**
    * \brief Load the default trace
    */
-  void LoadDefaultTrace (void);
-  virtual void StartApplication (void);
-  virtual void StopApplication (void);
+  void LoadDefaultTrace ();
+  void StartApplication () override;
+  void StopApplication () override;
 
   /**
    * \brief Send a packet
    */
-  void Send (void);
+  void Send ();
   /**
    * \brief Send a packet of a given size
    * \param size the packet size

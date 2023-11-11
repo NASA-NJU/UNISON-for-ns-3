@@ -86,7 +86,7 @@ public:
    *                      instance is to be associated with
    */
   LteAnr (uint16_t servingCellId);
-  virtual ~LteAnr ();
+  ~LteAnr () override;
 
   /**
    * \brief Get the type ID.
@@ -140,8 +140,8 @@ public:
 
 protected:
   // inherited from Object
-  virtual void DoInitialize ();
-  virtual void DoDispose ();
+  void DoInitialize () override;
+  void DoDispose () override;
 
 private:
 
@@ -218,7 +218,7 @@ private:
   typedef std::map<uint16_t, NeighbourRelation_t> NeighbourRelationTable_t;
 
   /// neighbor relation table
-  NeighbourRelationTable_t m_neighbourRelationTable; 
+  NeighbourRelationTable_t m_neighbourRelationTable;
 
   /**
    * \internal methods

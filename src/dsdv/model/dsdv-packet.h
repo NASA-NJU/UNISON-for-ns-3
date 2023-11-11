@@ -18,7 +18,7 @@
  * Author: Hemanth Narra <hemanth@ittc.ku.com>
  *
  * James P.G. Sterbenz <jpgs@ittc.ku.edu>, director
- * ResiliNets Research Group  http://wiki.ittc.ku.edu/resilinets
+ * ResiliNets Research Group  https://resilinets.org/
  * Information and Telecommunication Technology Center (ITTC)
  * and Department of Electrical Engineering and Computer Science
  * The University of Kansas Lawrence, KS USA.
@@ -66,17 +66,17 @@ public:
    * \param dstSeqNo destination sequence number
    */
   DsdvHeader (Ipv4Address dst = Ipv4Address (), uint32_t hopcount = 0, uint32_t dstSeqNo = 0);
-  virtual ~DsdvHeader ();
+  ~DsdvHeader () override;
   /**
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
-  virtual TypeId GetInstanceTypeId (void) const;
-  virtual uint32_t GetSerializedSize () const;
-  virtual void Serialize (Buffer::Iterator start) const;
-  virtual uint32_t Deserialize (Buffer::Iterator start);
-  virtual void Print (std::ostream &os) const;
+  static TypeId GetTypeId ();
+  TypeId GetInstanceTypeId () const override;
+  uint32_t GetSerializedSize () const override;
+  void Serialize (Buffer::Iterator start) const override;
+  uint32_t Deserialize (Buffer::Iterator start) override;
+  void Print (std::ostream &os) const override;
 
   /**
    * Set destination address

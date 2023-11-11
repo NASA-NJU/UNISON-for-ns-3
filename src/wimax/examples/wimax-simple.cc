@@ -62,7 +62,8 @@ int main (int argc, char *argv[])
 {
   bool verbose = false;
 
-  int duration = 7, schedType = 0;
+  int duration = 7;
+  int schedType = 0;
   WimaxHelper::SchedulerType scheduler = WimaxHelper::SCHED_TYPE_SIMPLE;
 
   CommandLine cmd (__FILE__);
@@ -95,7 +96,8 @@ int main (int argc, char *argv[])
 
   WimaxHelper wimax;
 
-  NetDeviceContainer ssDevs, bsDevs;
+  NetDeviceContainer ssDevs;
+  NetDeviceContainer bsDevs;
 
   ssDevs = wimax.Install (ssNodes,
                           WimaxHelper::DEVICE_TYPE_SUBSCRIBER_STATION,
@@ -192,9 +194,9 @@ int main (int argc, char *argv[])
   NS_LOG_INFO ("Starting simulation.....");
   Simulator::Run ();
 
-  ss[0] = 0;
-  ss[1] = 0;
-  bs = 0;
+  ss[0] = nullptr;
+  ss[1] = nullptr;
+  bs = nullptr;
 
   Simulator::Destroy ();
   NS_LOG_INFO ("Done.");

@@ -40,10 +40,10 @@ class Ns3WimaxFragmentationTestCase : public TestCase
 {
 public:
   Ns3WimaxFragmentationTestCase ();
-  virtual ~Ns3WimaxFragmentationTestCase ();
+  ~Ns3WimaxFragmentationTestCase () override;
 
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
 
 };
 
@@ -57,7 +57,7 @@ Ns3WimaxFragmentationTestCase::~Ns3WimaxFragmentationTestCase ()
 }
 
 void
-Ns3WimaxFragmentationTestCase::DoRun (void)
+Ns3WimaxFragmentationTestCase::DoRun ()
 {
   GenericMacHeader gnrcMacHdr;
   ManagementMessageType msgType;

@@ -20,7 +20,7 @@
  *      tuned by Samir Das and Mahesh Marina, University of Cincinnati;
  *
  *      AODV-UU implementation by Erik Nordström of Uppsala University
- *      http://core.it.uu.se/core/index.php/AODV-UU
+ *      https://web.archive.org/web/20100527072022/http://core.it.uu.se/core/index.php/AODV-UU
  *
  * Authors: Elena Buchatskaia <borovkovaes@iitp.ru>
  *          Pavel Boyko <boyko@iitp.ru>
@@ -180,7 +180,10 @@ RoutingTableEntry::Print (Ptr<OutputStreamWrapper> stream, Time::Unit unit /* = 
 
   *os << std::resetiosflags (std::ios::adjustfield) << std::setiosflags (std::ios::left);
 
-  std::ostringstream dest, gw, iface, expire;
+  std::ostringstream dest;
+  std::ostringstream gw;
+  std::ostringstream iface;
+  std::ostringstream expire;
   dest << m_ipv4Route->GetDestination ();
   gw << m_ipv4Route->GetGateway ();
   iface << m_iface.GetLocal ();

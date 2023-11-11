@@ -40,21 +40,21 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   TcpSocketHalfAck () : TcpSocketMsgBase ()
   {
   }
 
 protected:
-  virtual Ptr<TcpSocketBase> Fork ();
-  virtual void ReceivedData (Ptr<Packet> packet, const TcpHeader& tcpHeader);
+  Ptr<TcpSocketBase> Fork () override;
+  void ReceivedData (Ptr<Packet> packet, const TcpHeader& tcpHeader) override;
 };
 
 NS_OBJECT_ENSURE_REGISTERED (TcpSocketHalfAck);
 
 TypeId
-TcpSocketHalfAck::GetTypeId (void)
+TcpSocketHalfAck::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::TcpSocketHalfAck")
     .SetParent<TcpSocketMsgBase> ()
@@ -65,7 +65,7 @@ TcpSocketHalfAck::GetTypeId (void)
 }
 
 Ptr<TcpSocketBase>
-TcpSocketHalfAck::Fork (void)
+TcpSocketHalfAck::Fork ()
 {
   return CopyObject<TcpSocketHalfAck> (this);
 }
@@ -79,7 +79,9 @@ TcpSocketHalfAck::ReceivedData (Ptr<Packet> packet, const TcpHeader &tcpHeader)
   Ptr<Packet> halved = packet->Copy ();
 
   if (times % 2 == 0)
-    halved->RemoveAtEnd (packet->GetSize () / 2);
+    {
+      halved->RemoveAtEnd (packet->GetSize () / 2);
+    }
 
   times++;
 
@@ -117,11 +119,11 @@ public:
   { }
 
 protected:
-  virtual Ptr<TcpSocketMsgBase> CreateReceiverSocket (Ptr<Node> node);
+  Ptr<TcpSocketMsgBase> CreateReceiverSocket (Ptr<Node> node) override;
 
-  virtual void DataSent (uint32_t size, SocketWho who);
-  virtual void ConfigureEnvironment ();
-  virtual void FinalChecks ();
+  void DataSent (uint32_t size, SocketWho who) override;
+  void ConfigureEnvironment () override;
+  void FinalChecks () override;
 
 private:
   uint32_t m_pktSize;      //!< Packet size.

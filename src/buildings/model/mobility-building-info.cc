@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  * Author: Marco Miozzo  <marco.miozzo@cttc.es>
- * 
+ *
  */
 
 #include <ns3/simulator.h>
@@ -34,7 +34,7 @@ NS_LOG_COMPONENT_DEFINE ("MobilityBuildingInfo");
 NS_OBJECT_ENSURE_REGISTERED (MobilityBuildingInfo);
 
 TypeId
-MobilityBuildingInfo::GetTypeId (void)
+MobilityBuildingInfo::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::MobilityBuildingInfo")
     .SetParent<Object> ()
@@ -75,7 +75,7 @@ MobilityBuildingInfo::MobilityBuildingInfo (Ptr<Building> building)
 }
 
 bool
-MobilityBuildingInfo::IsIndoor (void)
+MobilityBuildingInfo::IsIndoor ()
 {
   NS_LOG_FUNCTION (this);
   Ptr<MobilityModel> mm = this->GetObject<MobilityModel> ();
@@ -98,7 +98,7 @@ MobilityBuildingInfo::SetIndoor (Ptr<Building> building, uint8_t nfloor, uint8_t
   m_nFloor = nfloor;
   m_roomX = nroomx;
   m_roomY = nroomy;
-  
+
 
   NS_ASSERT (m_roomX > 0);
   NS_ASSERT (m_roomX <= building->GetNRoomsX ());
@@ -131,28 +131,28 @@ MobilityBuildingInfo::SetIndoor (uint8_t nfloor, uint8_t nroomx, uint8_t nroomy)
 
 
 void
-MobilityBuildingInfo::SetOutdoor (void)
+MobilityBuildingInfo::SetOutdoor ()
 {
   NS_LOG_FUNCTION (this);
   m_indoor = false;
 }
 
 uint8_t
-MobilityBuildingInfo::GetFloorNumber (void)
+MobilityBuildingInfo::GetFloorNumber ()
 {
   NS_LOG_FUNCTION (this);
   return (m_nFloor);
 }
 
 uint8_t
-MobilityBuildingInfo::GetRoomNumberX (void)
+MobilityBuildingInfo::GetRoomNumberX ()
 {
   NS_LOG_FUNCTION (this);
   return (m_roomX);
 }
 
 uint8_t
-MobilityBuildingInfo::GetRoomNumberY (void)
+MobilityBuildingInfo::GetRoomNumberY ()
 {
   NS_LOG_FUNCTION (this);
   return (m_roomY);
@@ -195,5 +195,5 @@ MobilityBuildingInfo::MakeConsistent (Ptr<MobilityModel> mm)
 
 }
 
-  
+
 } // namespace

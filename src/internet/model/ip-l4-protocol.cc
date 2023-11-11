@@ -31,8 +31,8 @@ NS_LOG_COMPONENT_DEFINE ("IpL4Protocol");
 
 NS_OBJECT_ENSURE_REGISTERED (IpL4Protocol);
 
-TypeId 
-IpL4Protocol::GetTypeId (void)
+TypeId
+IpL4Protocol::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::IpL4Protocol")
     .SetParent<Object> ()

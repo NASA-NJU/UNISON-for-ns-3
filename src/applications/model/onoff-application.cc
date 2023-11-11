@@ -50,7 +50,7 @@ NS_LOG_COMPONENT_DEFINE ("OnOffApplication");
 NS_OBJECT_ENSURE_REGISTERED (OnOffApplication);
 
 TypeId
-OnOffApplication::GetTypeId (void)
+OnOffApplication::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::OnOffApplication")
     .SetParent<Application> ()
@@ -81,7 +81,7 @@ OnOffApplication::GetTypeId (void)
                    StringValue ("ns3::ConstantRandomVariable[Constant=1.0]"),
                    MakePointerAccessor (&OnOffApplication::m_offTime),
                    MakePointerChecker <RandomVariableStream>())
-    .AddAttribute ("MaxBytes", 
+    .AddAttribute ("MaxBytes",
                    "The total number of bytes to send. Once these bytes are sent, "
                    "no packet is sent again, even in on state. The value zero means "
                    "that there is no limit.",
@@ -114,12 +114,12 @@ OnOffApplication::GetTypeId (void)
 
 
 OnOffApplication::OnOffApplication ()
-  : m_socket (0),
+  : m_socket (nullptr),
     m_connected (false),
     m_residualBits (0),
     m_lastStartTime (Seconds (0)),
     m_totBytes (0),
-    m_unsentPacket (0)
+    m_unsentPacket (nullptr)
 {
   NS_LOG_FUNCTION (this);
 }
@@ -129,7 +129,7 @@ OnOffApplication::~OnOffApplication()
   NS_LOG_FUNCTION (this);
 }
 
-void 
+void
 OnOffApplication::SetMaxBytes (uint64_t maxBytes)
 {
   NS_LOG_FUNCTION (this << maxBytes);
@@ -137,13 +137,13 @@ OnOffApplication::SetMaxBytes (uint64_t maxBytes)
 }
 
 Ptr<Socket>
-OnOffApplication::GetSocket (void) const
+OnOffApplication::GetSocket () const
 {
   NS_LOG_FUNCTION (this);
   return m_socket;
 }
 
-int64_t 
+int64_t
 OnOffApplication::AssignStreams (int64_t stream)
 {
   NS_LOG_FUNCTION (this << stream);
@@ -153,13 +153,13 @@ OnOffApplication::AssignStreams (int64_t stream)
 }
 
 void
-OnOffApplication::DoDispose (void)
+OnOffApplication::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
 
   CancelEvents ();
-  m_socket = 0;
-  m_unsentPacket = 0;
+  m_socket = nullptr;
+  m_unsentPacket = nullptr;
   // chain up
   Application::DoDispose ();
 }
@@ -200,22 +200,27 @@ void OnOffApplication::StartApplication () // Called at time specified by Start
           NS_FATAL_ERROR ("Failed to bind socket");
         }
 
-      m_socket->Connect (m_peer);
-      m_socket->SetAllowBroadcast (true);
-      m_socket->ShutdownRecv ();
-
       m_socket->SetConnectCallback (
         MakeCallback (&OnOffApplication::ConnectionSucceeded, this),
         MakeCallback (&OnOffApplication::ConnectionFailed, this));
+
+      m_socket->Connect (m_peer);
+      m_socket->SetAllowBroadcast (true);
+      m_socket->ShutdownRecv ();
     }
   m_cbrRateFailSafe = m_cbrRate;
 
-  // Insure no pending event
+  // Ensure no pending event
   CancelEvents ();
-  // If we are not yet connected, there is nothing to do here
-  // The ConnectionComplete upcall will start timers at that time
-  //if (!m_connected) return;
-  ScheduleStartEvent ();
+
+  // If we are not yet connected, there is nothing to do here,
+  // the ConnectionComplete upcall will start timers at that time.
+  // If we are already connected, CancelEvents did remove the events,
+  // so we have to start them again.
+  if (m_connected)
+    {
+      ScheduleStartEvent ();
+    }
 }
 
 void OnOffApplication::StopApplication () // Called at time specified by Stop
@@ -223,7 +228,7 @@ void OnOffApplication::StopApplication () // Called at time specified by Stop
   NS_LOG_FUNCTION (this);
 
   CancelEvents ();
-  if(m_socket != 0)
+  if(m_socket)
     {
       m_socket->Close ();
     }
@@ -253,7 +258,7 @@ void OnOffApplication::CancelEvents ()
     {
       NS_LOG_DEBUG ("Discarding cached packet upon CancelEvents ()");
     }
-  m_unsentPacket = 0;
+  m_unsentPacket = nullptr;
 }
 
 // Event handlers
@@ -327,7 +332,8 @@ void OnOffApplication::SendPacket ()
     }
   else if (m_enableSeqTsSizeHeader)
     {
-      Address from, to;
+      Address from;
+      Address to;
       m_socket->GetSockName (from);
       m_socket->GetPeerName (to);
       SeqTsSizeHeader header;
@@ -349,7 +355,7 @@ void OnOffApplication::SendPacket ()
     {
       m_txTrace (packet);
       m_totBytes += m_pktSize;
-      m_unsentPacket = 0;
+      m_unsentPacket = nullptr;
       Address localAddress;
       m_socket->GetSockName (localAddress);
       if (InetSocketAddress::IsMatchingType (m_peer))
@@ -387,6 +393,8 @@ void OnOffApplication::SendPacket ()
 void OnOffApplication::ConnectionSucceeded (Ptr<Socket> socket)
 {
   NS_LOG_FUNCTION (this << socket);
+
+  ScheduleStartEvent ();
   m_connected = true;
 }
 

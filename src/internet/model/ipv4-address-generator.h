@@ -48,7 +48,7 @@ public:
    * \param mask The network mask of the base Ipv4Address
    * \param addr The base address used for initialization
    */
-  static void Init (const Ipv4Address net, const Ipv4Mask mask, 
+  static void Init (const Ipv4Address net, const Ipv4Mask mask,
                     const Ipv4Address addr = "0.0.0.1");
 
   /**
@@ -109,7 +109,7 @@ public:
   /**
    * \brief Reset the networks and Ipv4Address to zero
    */
-  static void Reset (void);
+  static void Reset ();
 
   /**
    * \brief Add the Ipv4Address to the list of IPv4 entries
@@ -143,7 +143,7 @@ public:
   /**
    * \brief Used to turn off fatal errors and assertions, for testing
    */
-  static void TestMode (void);
+  static void TestMode ();
 };
 
 } // namespace ns3

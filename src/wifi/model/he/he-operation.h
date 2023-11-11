@@ -40,22 +40,6 @@ public:
   // Implementations of pure virtual methods of WifiInformationElement
   WifiInformationElementId ElementId () const override;
   WifiInformationElementId ElementIdExt () const override;
-  uint8_t GetInformationFieldSize () const override;
-  void SerializeInformationField (Buffer::Iterator start) const override;
-  uint8_t DeserializeInformationField (Buffer::Iterator start, uint8_t length) override;
-  /* This information element is a bit special in that it is only
-     included if the STA is a HE STA. To support this we
-     override the Serialize and GetSerializedSize methods of
-     WifiInformationElement. */
-  Buffer::Iterator Serialize (Buffer::Iterator start) const override;
-  uint16_t GetSerializedSize () const override;
-
-  /**
-   * Set the HE supported information element.
-   *
-   * \param heSupported the HE supported information element
-   */
-  void SetHeSupported (uint8_t heSupported);
 
   /**
    * Set the HE Operation Parameters field in the HE Operation information element.
@@ -77,13 +61,13 @@ public:
    *
    * \return the HE Operation Parameters field in the HE Operation information element
    */
-  uint32_t GetHeOperationParameters (void) const;
+  uint32_t GetHeOperationParameters () const;
   /**
    * Return the Basic HE-MCS And Nss field in the HE Operation information element.
    *
    * \return the Basic HE-MCS And Nss field in the HE Operation information element
    */
-  uint16_t GetBasicHeMcsAndNssSet (void) const;
+  uint16_t GetBasicHeMcsAndNssSet () const;
   /**
    * Set the BSS color
    * \param bssColor the BSS color value
@@ -93,10 +77,14 @@ public:
    * Get the BSS color
    * \return the BSS color value
    */
-  uint8_t GetBssColor (void) const;
+  uint8_t GetBssColor () const;
 
 
 private:
+  uint16_t GetInformationFieldSize () const override;
+  void SerializeInformationField (Buffer::Iterator start) const override;
+  uint16_t DeserializeInformationField (Buffer::Iterator start, uint16_t length) override;
+
   //HE Operation Parameters fields
   uint8_t m_bssColor;                     //!< BSS color
   uint8_t m_defaultPEDuration;            //!< default PE duration
@@ -112,9 +100,6 @@ private:
   uint16_t m_basicHeMcsAndNssSet; ///< basic HE MCS NSS set
 
   //TODO: VHT Operation Information subfields not defined in the standard yet.
-
-  /// This is used to decide whether this element should be added to the frame or not
-  uint8_t m_heSupported;
 };
 
 /**

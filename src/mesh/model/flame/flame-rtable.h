@@ -84,9 +84,15 @@ public:
    * \return the object TypeId
    */
   static TypeId GetTypeId ();
+
   FlameRtable ();
-  ~FlameRtable ();
-  void DoDispose ();
+  ~FlameRtable () override;
+
+  // Delete copy constructor and assignment operator to avoid misuse
+  FlameRtable (const FlameRtable &) = delete;
+  FlameRtable &operator= (const FlameRtable &) = delete;
+
+  void DoDispose () override;
 
   /**
    * Add path
@@ -111,16 +117,6 @@ public:
    */
   LookupResult Lookup (Mac48Address destination);
 private:
-  /**
-   * assignment operator
-   *
-   * \param table the flame table to assign
-   * \returns the assigned value
-   */
-  FlameRtable& operator= (const FlameRtable & table);
-  /// type conversion operator
-  FlameRtable (const FlameRtable &);
-
   /// Routing table entry
   struct Route
   {

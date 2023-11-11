@@ -48,6 +48,9 @@ NS_LOG_COMPONENT_DEFINE ("PrintIntrospectedDoxygen");
 
 namespace
 {
+  /** Are we generating text or Doxygen? */
+  bool outputText = false;
+
   /**
    * Markup tokens.
    * @{
@@ -66,14 +69,14 @@ namespace
   std::string commentStart;        ///< start of code comment
   std::string commentStop;         ///< end of code comment
   std::string copyDoc;             ///< copy (or refer) to docs elsewhere
-  std::string file;                ///< file 
+  std::string file;                ///< file
   std::string flagSpanStart;       ///< start of Attribute flag value
   std::string flagSpanStop;        ///< end of Attribute flag value
   std::string functionStart;       ///< start of a method/function
   std::string functionStop;        ///< end of a method/function
   std::string headingStart;        ///< start of section heading (h3)
   std::string headingStop;         ///< end of section heading (h3)
-  // Linking:  [The link text displayed](\ref TheTarget) 
+  // Linking:  [The link text displayed](\ref TheTarget)
   std::string hrefStart;           ///< start of a link
   std::string hrefMid;             ///< middle part of a link
   std::string hrefStop;            ///< end of a link
@@ -105,7 +108,7 @@ namespace
  * \param [in] outputText true for text output, false for doxygen output.
  */
 void
-SetMarkup (bool outputText)
+SetMarkup ()
 {
   NS_LOG_FUNCTION (outputText);
   if (outputText)
@@ -124,14 +127,14 @@ SetMarkup (bool outputText)
       commentStart                 = "===============================================================\n";
       commentStop                  = "";
       copyDoc                      = "  See: ";
-      file                         = "File: ";
+      file                         = "File: introspected-doxygen.txt";
       flagSpanStart                = "";
       flagSpanStop                 = "";
       functionStart                = "";
       functionStop                 = "\n\n";
       headingStart                 = "";
       headingStop                  = "";
-      // Linking:  The link text displayed (see TheTarget) 
+      // Linking:  The link text displayed (see TheTarget)
       hrefStart                    = "";
       hrefMid                      = "(see ";
       hrefStop                     = ")";
@@ -145,7 +148,7 @@ SetMarkup (bool outputText)
       reference                    = " ";
       referenceNo                  = " ";
       returns                      = "  Returns: ";
-      sectionStart                 = "Section ";
+      sectionStart                 = "Section:  ";
       seeAlso                      = "  See: ";
       subSectionStart              = "Subsection ";
       templArgDeduced              = "[deduced]  ";
@@ -169,14 +172,14 @@ SetMarkup (bool outputText)
       commentStart                 = "/*!\n";
       commentStop                  = "*/\n";
       copyDoc                      = "\\copydoc ";
-      file                         = "\\file ";
+      file                         = "\\file";
       flagSpanStart                = "<span class=\"mlabel\">";
       flagSpanStop                 = "</span>";
       functionStart                = "\\fn ";
       functionStop                 = "";
       headingStart                 = "<h3>";
       headingStop                  = "</h3>";
-      // Linking:  [The link text displayed](\ref TheTarget) 
+      // Linking:  [The link text displayed](\ref TheTarget)
       hrefStart                    = "[";
       hrefMid                      = "](\\ref ";
       hrefStop                     = ")";
@@ -227,7 +230,7 @@ public:
   /**
    * Print output in "a -> b" form on std::cout
    */
-  void Print (void) const;
+  void Print () const;
 
   /**
    * \return the configuration paths for tid
@@ -239,13 +242,13 @@ public:
   /**
    * \return the type names we couldn't aggregate.
    */
-  std::vector<std::string> GetNoTypeIds (void) const;
+  std::vector<std::string> GetNoTypeIds () const;
 
 private:
   /**
    * \return the current configuration path
    */
-  std::string GetCurrentPath (void) const;
+  std::string GetCurrentPath () const;
   /**
    * Gather attribute, configuration path information for tid
    *
@@ -287,11 +290,11 @@ private:
    * before returning it.
    */
   mutable std::vector<std::string> m_noTids;
-  
+
 };  // class StaticInformation
 
 
-void 
+void
 StaticInformation::RecordAggregationInfo (std::string a, std::string b)
 {
   NS_LOG_FUNCTION (this << a << b);
@@ -310,15 +313,15 @@ StaticInformation::RecordAggregationInfo (std::string a, std::string b)
       return;
     }
 
-  m_aggregates.push_back (std::make_pair (aTid, bTid));
+  m_aggregates.emplace_back (aTid, bTid);
 }
 
 
-void 
-StaticInformation::Print (void) const
+void
+StaticInformation::Print () const
 {
   NS_LOG_FUNCTION (this);
-  for (auto item : m_output)
+  for (const auto& item : m_output)
     {
       std::cout << item.first.GetName () << " -> " << item.second << std::endl;
     }
@@ -326,11 +329,11 @@ StaticInformation::Print (void) const
 
 
 std::string
-StaticInformation::GetCurrentPath (void) const
+StaticInformation::GetCurrentPath () const
 {
   NS_LOG_FUNCTION (this);
   std::ostringstream oss;
-  for (auto item : m_currentPath)
+  for (const auto& item : m_currentPath)
     {
       oss << "/" << item;
     }
@@ -342,7 +345,7 @@ void
 StaticInformation::RecordOutput (TypeId tid)
 {
   NS_LOG_FUNCTION (this << tid);
-  m_output.push_back (std::make_pair (tid, GetCurrentPath ()));
+  m_output.emplace_back (tid, GetCurrentPath ());
 }
 
 
@@ -350,7 +353,7 @@ bool
 StaticInformation::HasAlreadyBeenProcessed (TypeId tid) const
 {
   NS_LOG_FUNCTION (this << tid);
-  for (auto it : m_alreadyProcessed)
+  for (const auto& it : m_alreadyProcessed)
     {
       if (it == tid)
 	{
@@ -361,12 +364,12 @@ StaticInformation::HasAlreadyBeenProcessed (TypeId tid) const
 }
 
 
-std::vector<std::string> 
+std::vector<std::string>
 StaticInformation::Get (TypeId tid) const
 {
   NS_LOG_FUNCTION (this << tid);
   std::vector<std::string> paths;
-  for (auto item : m_output)
+  for (const auto& item : m_output)
     {
       if (item.first == tid)
 	{
@@ -400,7 +403,7 @@ Uniquefy (T t)
 }
 
 std::vector<std::string>
-StaticInformation::GetNoTypeIds (void) const
+StaticInformation::GetNoTypeIds () const
 {
   NS_LOG_FUNCTION (this);
   Uniquefy (m_noTids);
@@ -417,7 +420,7 @@ StaticInformation::Gather (TypeId tid)
 }
 
 
-void 
+void
 StaticInformation::DoGather (TypeId tid)
 {
   NS_LOG_FUNCTION (this << tid);
@@ -430,7 +433,7 @@ StaticInformation::DoGather (TypeId tid)
     {
       struct TypeId::AttributeInformation info = tid.GetAttribute(i);
       const PointerChecker *ptrChecker = dynamic_cast<const PointerChecker *> (PeekPointer (info.checker));
-      if (ptrChecker != 0)
+      if (ptrChecker != nullptr)
         {
           TypeId pointee = ptrChecker->GetPointeeTypeId ();
 
@@ -455,7 +458,7 @@ StaticInformation::DoGather (TypeId tid)
         }
       // attempt to cast to an object vector.
       const ObjectPtrContainerChecker *vectorChecker = dynamic_cast<const ObjectPtrContainerChecker *> (PeekPointer (info.checker));
-      if (vectorChecker != 0)
+      if (vectorChecker != nullptr)
         {
           TypeId item = vectorChecker->GetItemTypeId ();
           m_currentPath.push_back (info.name + "/[i]");
@@ -479,7 +482,7 @@ StaticInformation::DoGather (TypeId tid)
           m_currentPath.pop_back ();
         }
     }
-  for (auto item : m_aggregates)
+  for (const auto& item : m_aggregates)
     {
       if (item.first == tid || item.second == tid)
         {
@@ -497,7 +500,7 @@ StaticInformation::DoGather (TypeId tid)
           m_alreadyProcessed.push_back (tid);
           DoGather (other);
           m_alreadyProcessed.pop_back ();
-          m_currentPath.pop_back ();	  
+          m_currentPath.pop_back ();
         }
     }
 }  // StaticInformation::DoGather ()
@@ -578,7 +581,7 @@ typedef NameMap::const_iterator         NameMapIterator; ///< NameMap iterator
  * \returns NameMap
  */
 NameMap
-GetNameMap (void)
+GetNameMap ()
 {
   NS_LOG_FUNCTION_NOARGS ();
 
@@ -592,7 +595,7 @@ GetNameMap (void)
 
   // Short circuit next call
   mapped = true;
-  
+
   // Get typical aggregation relationships.
   StaticInformation info = GetTypicalAggregations ();
 
@@ -604,23 +607,23 @@ GetNameMap (void)
 	{
 	  continue;
 	}
-      
+
       // Capitalize all of letters in the name so that it sorts
       // correctly in the map.
       std::string name = tid.GetName ();
       std::transform (name.begin (), name.end (), name.begin (), ::toupper);
-      
+
       // Save this name's index.
       nameMap[name] = i;
     }
 
   // Type names without TypeIds
   std::vector<std::string> noTids = info.GetNoTypeIds ();
-  for (auto item : noTids)
+  for (const auto& item : noTids)
     {
       nameMap[item] = -1;
     }
-       
+
   return nameMap;
 }  // GetNameMap ()
 
@@ -659,18 +662,18 @@ PrintConfigPaths (std::ostream & os, const TypeId tid)
 	 << " with Config::Set and Config::Connect:"
 	 << std::endl;
       os << listStart << std::endl;
-      for (auto path : paths)
+      for (const auto& path : paths)
 	{
 	  os << listLineStart
              <<   "\"" << path << "\""
-	     <<  listLineStop 
+	     <<  listLineStop
 	     << breakTextOnly
 	     << std::endl;
 	}
       os << listStop << std::endl;
     }
 }  // PrintConfigPaths ()
-      
+
 
 /**
  * Print direct Attributes for this TypeId.
@@ -692,7 +695,7 @@ PrintAttributesTid (std::ostream &os, const TypeId tid)
 	 <<   boldStart << info.name << boldStop << ": "
 	 <<   info.help
 	 <<   std::endl;
-      os <<   "  "
+      os <<   indentHtmlOnly
 	 <<   listStart << std::endl;
       os <<     "    "
 	 <<     listLineStart
@@ -700,24 +703,25 @@ PrintAttributesTid (std::ostream &os, const TypeId tid)
 	 <<       info.checker->GetValueTypeName ()
 	 <<     listLineStop
 	 << std::endl;
+
+      std::string underType;
       if (info.checker->HasUnderlyingTypeInformation ())
 	{
 	  os << "    "
 	     << listLineStart
 	     <<   "Underlying type: ";
-          
+
           std::string valType = info.checker->GetValueTypeName ();
-          std::string underType = info.checker->GetUnderlyingTypeInformation ();
+          underType = info.checker->GetUnderlyingTypeInformation ();
+          bool handled = false;
 	  if ((valType   != "ns3::EnumValue") && (underType != "std::string"))
 	    {
 	      // Indirect cases to handle
-	      bool handled = false;
-              
 	      if (valType == "ns3::PointerValue")
 		{
 		  const PointerChecker *ptrChecker =
 		    dynamic_cast<const PointerChecker *> (PeekPointer (info.checker));
-		  if (ptrChecker != 0)
+		  if (ptrChecker != nullptr)
 		    {
 		      os << reference << "ns3::Ptr" << "< "
 			 << reference << ptrChecker->GetPointeeTypeId ().GetName ()
@@ -729,7 +733,7 @@ PrintAttributesTid (std::ostream &os, const TypeId tid)
 		{
 		  const ObjectPtrContainerChecker * ptrChecker =
 		    dynamic_cast<const ObjectPtrContainerChecker *> (PeekPointer (info.checker));
-		  if (ptrChecker != 0)
+		  if (ptrChecker != nullptr)
 		    {
 		      os << reference << "ns3::Ptr" << "< "
 			 << reference << ptrChecker->GetItemTypeId ().GetName ()
@@ -752,7 +756,7 @@ PrintAttributesTid (std::ostream &os, const TypeId tid)
                 std::string m_string;
               };
               StringBeginMatcher match (underType);
-                  
+
               if ( match ("bool")     || match ("double")   ||
                    match ("int8_t")   || match ("uint8_t")  ||
                    match ("int16_t")  || match ("uint16_t") ||
@@ -763,40 +767,51 @@ PrintAttributesTid (std::ostream &os, const TypeId tid)
                   os << underType;
                   handled = true;
                 }
-	      if (! handled)
-		{
-		  os << reference << underType;
-		}
-	    }
+            }
+          if (! handled)
+            {
+              os << codeWord << underType;
+            }
 	  os << listLineStop << std::endl;
 	}
       if (info.flags & TypeId::ATTR_CONSTRUCT && info.accessor->HasSetter ())
 	{
+          std::string value = info.initialValue->SerializeToString (info.checker);
+          if (underType == "std::string" && value == "")
+            {
+              value = "\"\"";
+            }
 	  os << "    "
 	     << listLineStart
 	     <<   "Initial value: "
-	     <<   info.initialValue->SerializeToString (info.checker)
+	     <<   value
 	     << listLineStop
 	     << std::endl;
 	}
+      bool moreFlags {false};
       os << "    " << listLineStart << "Flags: ";
       if (info.flags & TypeId::ATTR_CONSTRUCT && info.accessor->HasSetter ())
 	{
-	  os << flagSpanStart << "construct " << flagSpanStop;
+	  os << flagSpanStart << "construct" << flagSpanStop;
+          moreFlags = true;
 	}
       if (info.flags & TypeId::ATTR_SET && info.accessor->HasSetter ())
 	{
-	  os << flagSpanStart << "write " << flagSpanStop;
+	  os << (outputText && moreFlags ? ", " : "")
+             << flagSpanStart << "write" << flagSpanStop;
+          moreFlags = true;
 	}
       if (info.flags & TypeId::ATTR_GET && info.accessor->HasGetter ())
 	{
-	  os << flagSpanStart << "read " << flagSpanStop;
+	  os << (outputText && moreFlags ? ", " : "")
+             << flagSpanStart << "read" << flagSpanStop;
+          moreFlags = true;
 	}
       os << listLineStop << std::endl;
-      os << "  "
+      os << indentHtmlOnly
 	 << listStop
-	 << " " << std::endl;
-      
+	 << std::endl;
+
     }
   os << listStop << std::endl;
 }  // PrintAttributesTid ()
@@ -868,9 +883,13 @@ PrintTraceSourcesTid (std::ostream & os, const TypeId tid)
       struct TypeId::TraceSourceInformation info = tid.GetTraceSource (i);
       os << listLineStart
 	 <<   boldStart << info.name << boldStop << ": "
-	 <<   info.help << breakBoth
-	//    '%' prevents doxygen from linking to the Callback class...
-	 <<   "%Callback signature: " 
+	 <<   info.help << breakBoth;
+      if (!outputText)
+        {
+          //    '%' prevents doxygen from linking to the Callback class...
+          os <<   "%";
+        }
+      os << "Callback signature: "
 	 <<   info.callback
 	 <<   std::endl;
       os << listLineStop << std::endl;
@@ -934,9 +953,9 @@ void PrintSize (std::ostream & os, const TypeId tid)
 {
   NS_LOG_FUNCTION (tid);
   NS_ASSERT_MSG (CHAR_BIT != 0, "CHAR_BIT is zero");
-  
+
   std::size_t arch = (sizeof (void *) * CHAR_BIT);
-  
+
   os << boldStart << "Size" << boldStop
      << " of this type is " << tid.GetSize ()
      << " bytes (on a " << arch << "-bit architecture)."
@@ -958,7 +977,7 @@ PrintTypeIdBlocks (std::ostream & os)
 
   // Iterate over the map, which will print the class names in
   // alphabetical order.
-  for (auto item : nameMap)
+  for (const auto& item : nameMap)
     {
       // Handle only real TypeIds
       if (item.second < 0)
@@ -968,9 +987,9 @@ PrintTypeIdBlocks (std::ostream & os)
       // Get the class's index out of the map;
       TypeId tid = TypeId::GetRegistered (item.second);
       std::string name = tid.GetName ();
-      
+
       std::cout << commentStart << std::endl;
-      
+
       std::cout << classStart << name << std::endl;
       std::cout << std::endl;
 
@@ -978,7 +997,7 @@ PrintTypeIdBlocks (std::ostream & os)
       PrintAttributes (std::cout, tid);
       PrintTraceSources (std::cout, tid);
       PrintSize (std::cout, tid);
-      
+
       std::cout << commentStop << std::endl;
     }  // for class documentation
 
@@ -1009,11 +1028,11 @@ PrintAllTypeIds (std::ostream & os)
      << std::endl;
 
   os << listStart << std::endl;
-  
+
   NameMap nameMap = GetNameMap ();
   // Iterate over the map, which will print the class names in
   // alphabetical order.
-  for (auto item : nameMap)
+  for (const auto& item : nameMap)
     {
       // Handle only real TypeIds
       if (item.second < 0)
@@ -1022,7 +1041,7 @@ PrintAllTypeIds (std::ostream & os)
         }
       // Get the class's index out of the map;
       TypeId tid = TypeId::GetRegistered (item.second);
-      
+
       os << indentHtmlOnly
 	 <<   listLineStart
          <<     boldStart
@@ -1030,7 +1049,7 @@ PrintAllTypeIds (std::ostream & os)
          <<     boldStop
 	 <<   listLineStop
 	 << std::endl;
-      
+
     }
   os << listStop << std::endl;
   os << commentStop << std::endl;
@@ -1061,7 +1080,7 @@ PrintAllAttributes (std::ostream & os)
   NameMap nameMap = GetNameMap ();
   // Iterate over the map, which will print the class names in
   // alphabetical order.
-  for (auto item: nameMap)
+  for (const auto& item: nameMap)
     {
       // Handle only real TypeIds
       if (item.second < 0)
@@ -1070,14 +1089,14 @@ PrintAllAttributes (std::ostream & os)
         }
       // Get the class's index out of the map;
       TypeId tid = TypeId::GetRegistered (item.second);
-      
+
       if (tid.GetAttributeN () == 0 )
 	{
 	  continue;
 	}
       os << boldStart << tid.GetName () << boldStop << breakHtmlOnly
 	 << std::endl;
-      
+
       os << listStart << std::endl;
       for (uint32_t j = 0; j < tid.GetAttributeN (); ++j)
 	{
@@ -1109,7 +1128,7 @@ PrintAllGlobals (std::ostream & os)
   os << "This is a list of all" << reference << "ns3::GlobalValue instances.\n"
      << "See ns3::GlobalValue for how to set these."
      << std::endl;
-  
+
   os << listStart << std::endl;
   for (GlobalValue::Iterator i = GlobalValue::Begin ();
        i != GlobalValue::End ();
@@ -1125,7 +1144,7 @@ PrintAllGlobals (std::ostream & os)
          <<       hrefStop
 	 <<     boldStop
 	 <<     ": " << (*i)->GetHelp ()
-	 <<     ".  Default value: " << val.Get () << ". "
+	 <<     ".  Default value: " << val.Get () << "."
 	 <<   listLineStop
 	 << std::endl;
     }
@@ -1151,13 +1170,13 @@ PrintAllLogComponents (std::ostream & os)
 
   /**
    * \todo Switch to a border-less table, so the file links align
-   * See http://www.stack.nl/~dimitri/doxygen/manual/htmlcmds.html
+   * See https://www.doxygen.nl/manual/htmlcmds.html
    */
   LogComponent::ComponentList * logs = LogComponent::GetComponentList ();
   // Find longest log name
   std::size_t widthL = std::string ("Log Component").size ();
   std::size_t widthR = std::string ("file").size ();
-  for (auto it : (*logs))
+  for (const auto& it : (*logs))
     {
       widthL = std::max (widthL, it.first.size ());
       std::string file = it.second->File ();
@@ -1169,16 +1188,20 @@ PrintAllLogComponents (std::ostream & os)
         }
       widthR  = std::max (widthR, file.size ());
     }
-  const std::string sep (" | ");
+  const std::string tLeft ("| ");
+  const std::string tMid (" | ");
+  const std::string tRight (" |");
 
-  os << std::setw (widthL) << std::left << "Log Component" << sep
-    // Header line has to be padded to same length as separator line
-     << std::setw (widthR) << std::left << "File " << std::endl;
-  os << ":" << std::string (widthL - 1, '-') << sep
-     << ":" << std::string (widthR - 1, '-') << std::endl;
-  
+  // Header line has to be padded to same length as separator line
+  os << tLeft << std::setw (widthL) << std::left << "Log Component"
+     << tMid  << std::setw (widthR) << std::left << "File" << tRight
+     << std::endl;
+  os << tLeft << ":" << std::string (widthL - 1, '-')
+     << tMid  << ":" << std::string (widthR - 1, '-') << tRight
+     << std::endl;
+
   LogComponent::ComponentList::const_iterator it;
-  for (auto it : (*logs))
+  for (const auto& it : (*logs))
     {
       std::string file = it.second->File ();
       // Strip leading "../" related to depth in build directory
@@ -1187,8 +1210,10 @@ PrintAllLogComponents (std::ostream & os)
         {
           file = file.substr (3);
         }
-      
-      os << std::setw (widthL) << std::left << it.first << sep << file << std::endl;
+
+      os << tLeft << std::setw (widthL) << std::left << it.first
+         << tMid << std::setw (widthR) << file << tRight
+         << std::endl;
     }
   os << std::right << std::endl;
   os << commentStop << std::endl;
@@ -1219,7 +1244,7 @@ PrintAllTraceSources (std::ostream & os)
 
   // Iterate over the map, which will print the class names in
   // alphabetical order.
-  for (auto item : nameMap)
+  for (const auto& item : nameMap)
     {
       // Handle only real TypeIds
       if (item.second < 0)
@@ -1235,12 +1260,12 @@ PrintAllTraceSources (std::ostream & os)
 	}
       os << boldStart << tid.GetName () << boldStop  << breakHtmlOnly
 	 << std::endl;
-      
+
       os << listStart << std::endl;
       for (uint32_t j = 0; j < tid.GetTraceSourceN (); ++j)
 	{
 	  struct TypeId::TraceSourceInformation info = tid.GetTraceSource(j);
-	  os << listLineStart 
+	  os << listLineStart
 	     <<   boldStart << info.name << boldStop
 	     <<   ": "      << info.help
 	     << listLineStop
@@ -1320,12 +1345,12 @@ PrintAttributeValueWithName (std::ostream & os,
 {
   NS_LOG_FUNCTION (name << type << header);
   std::string sectAttr = sectionStart + "attribute_" + name;
-  
+
   // \ingroup attribute_<name>Value
   // \class ns3::<name>Value "header"
   std::string valClass  = name + "Value";
   std::string qualClass = " ns3::" + valClass;
-  
+
   os << commentStart << sectAttr << std::endl;
   os <<   classStart << qualClass << " \"" << header << "\"" << std::endl;
   os <<   "AttributeValue implementation for " << name << "." << std::endl;
@@ -1383,11 +1408,11 @@ PrintAttributeValueWithName (std::ostream & os,
   // <name>Value::m_value
   os << commentStart
      <<   variable << type
-     <<     qualClass << "::m_value\n" 
+     <<     qualClass << "::m_value\n"
      <<   "The stored " << name << " instance.\n"
      << commentStop
      << std::endl;
-  
+
 }  // PrintAttributeValueWithName ()
 
 
@@ -1405,7 +1430,7 @@ PrintMakeAccessors (std::ostream & os, const std::string & name)
   NS_LOG_FUNCTION (name);
   std::string sectAttr = sectionStart + "attribute_" + name + "\n";
   std::string make = "ns3::Make" + name + "Accessor ";
-  
+
   // \ingroup attribute_<name>Value
   // Make<name>Accessor (T1 a1)
   os << commentStart << sectAttr
@@ -1452,7 +1477,7 @@ PrintMakeChecker (std::ostream & os,
   os <<   "AttributeChecker implementation for " << name << "Value." << std::endl;
   os <<   seeAlso << "AttributeChecker" << std::endl;
   os << commentStop;
-    
+
   // \ingroup attribute_<name>Value
   // Make<name>Checker (void)
   os << commentStart << sectAttr
@@ -1503,6 +1528,7 @@ PrintAttributeImplementations (std::ostream & os)
 {
   NS_LOG_FUNCTION_NOARGS ();
 
+  // clang-format off
   const AttributeDescriptor attributes [] =
     {
       // Name             Type             see Base  header-file
@@ -1536,7 +1562,7 @@ PrintAttributeImplementations (std::ostream & os)
       { "Vector3D",       "Vector3D",       true,  "vector.h"           },
       { "Waypoint",       "Waypoint",       true,  "waypoint.h"         },
       { "WifiMode",       "WifiMode",       true,  "wifi-mode.h"        },
-      
+
       // All three (Value, Access and Checkers) defined, but custom
       { "Boolean",        "bool",           false, "boolean.h"          },
       { "Callback",       "Callback",       true,  "callback.h"         },
@@ -1549,6 +1575,7 @@ PrintAttributeImplementations (std::ostream & os)
       { "Uinteger",       "uint64_t",       false, "uinteger.h"         },
       { "",               "",               false, "last placeholder"   }
     };
+  // clang-format on
 
   int i = 0;
   while (attributes[i].m_name != "")
@@ -1577,7 +1604,7 @@ PrintAttributeImplementations (std::ostream & os)
   PrintAttributeValueSection  (os, "Pair", false);
   PrintAttributeValueWithName (os, "Pair", "std::pair<A, B>", "pair.h");
   PrintMakeChecker            (os, "Pair",  "pair.h");
-  
+
   PrintAttributeValueSection  (os, "Tuple", false);
   PrintAttributeValueWithName (os, "Tuple", "std::tuple<Args...>", "tuple.h");
   PrintMakeChecker            (os, "Tuple", "tuple.h");
@@ -1596,15 +1623,14 @@ PrintAttributeImplementations (std::ostream & os)
 int main (int argc, char *argv[])
 {
   NS_LOG_FUNCTION_NOARGS ();
-  bool outputText = false;
 
   CommandLine cmd (__FILE__);
   cmd.Usage ("Generate documentation for all ns-3 registered types, "
 	     "trace sources, attributes and global variables.");
   cmd.AddValue ("output-text", "format output as plain text", outputText);
   cmd.Parse (argc, argv);
-    
-  SetMarkup (outputText);
+
+  SetMarkup ();
 
 
   // Create a Node, to force linking and instantiation of our TypeIds
@@ -1619,7 +1645,6 @@ int main (int argc, char *argv[])
 		<< std::endl;
     }
 
-  // Doxygen file header
   std::cout << std::endl;
   std::cout << commentStart
             << file << "\n"
@@ -1632,7 +1657,7 @@ int main (int argc, char *argv[])
             << std::endl;
 
   PrintTypeIdBlocks (std::cout);
-  
+
   PrintAllTypeIds (std::cout);
   PrintAllAttributes (std::cout);
   PrintAllGlobals (std::cout);

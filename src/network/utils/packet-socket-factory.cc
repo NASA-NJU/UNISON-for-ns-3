@@ -28,8 +28,8 @@ NS_LOG_COMPONENT_DEFINE ("PacketSocketFactory");
 
 NS_OBJECT_ENSURE_REGISTERED (PacketSocketFactory);
 
-TypeId 
-PacketSocketFactory::GetTypeId (void)
+TypeId
+PacketSocketFactory::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::PacketSocketFactory")
     .SetParent<SocketFactory> ()
@@ -42,12 +42,12 @@ PacketSocketFactory::PacketSocketFactory ()
   NS_LOG_FUNCTION (this);
 }
 
-Ptr<Socket> PacketSocketFactory::CreateSocket (void)
+Ptr<Socket> PacketSocketFactory::CreateSocket ()
 {
   NS_LOG_FUNCTION (this);
   Ptr<Node> node = GetObject<Node> ();
   Ptr<PacketSocket> socket = CreateObject<PacketSocket> ();
   socket->SetNode (node);
   return socket;
-} 
+}
 } // namespace ns3

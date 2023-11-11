@@ -36,7 +36,7 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
   /**
    * \brief DropTailQueue Constructor
    *
@@ -44,16 +44,15 @@ public:
    */
   DropTailQueue ();
 
-  virtual ~DropTailQueue ();
+  ~DropTailQueue () override;
 
-  virtual bool Enqueue (Ptr<Item> item);
-  virtual Ptr<Item> Dequeue (void);
-  virtual Ptr<Item> Remove (void);
-  virtual Ptr<const Item> Peek (void) const;
+  bool Enqueue (Ptr<Item> item) override;
+  Ptr<Item> Dequeue () override;
+  Ptr<Item> Remove () override;
+  Ptr<const Item> Peek () const override;
 
 private:
-  using Queue<Item>::begin;
-  using Queue<Item>::end;
+  using Queue<Item>::GetContainer;
   using Queue<Item>::DoEnqueue;
   using Queue<Item>::DoDequeue;
   using Queue<Item>::DoRemove;
@@ -69,9 +68,9 @@ private:
 
 template <typename Item>
 TypeId
-DropTailQueue<Item>::GetTypeId (void)
+DropTailQueue<Item>::GetTypeId ()
 {
-  static TypeId tid = TypeId ("ns3::DropTailQueue<" + GetTypeParamName<DropTailQueue<Item> > () + ">")
+  static TypeId tid = TypeId (GetTemplateClassName<DropTailQueue<Item>> ())
     .SetParent<Queue<Item> > ()
     .SetGroupName ("Network")
     .template AddConstructor<DropTailQueue<Item> > ()
@@ -105,16 +104,16 @@ DropTailQueue<Item>::Enqueue (Ptr<Item> item)
 {
   NS_LOG_FUNCTION (this << item);
 
-  return DoEnqueue (end (), item);
+  return DoEnqueue (GetContainer ().end (), item);
 }
 
 template <typename Item>
 Ptr<Item>
-DropTailQueue<Item>::Dequeue (void)
+DropTailQueue<Item>::Dequeue ()
 {
   NS_LOG_FUNCTION (this);
 
-  Ptr<Item> item = DoDequeue (begin ());
+  Ptr<Item> item = DoDequeue (GetContainer ().begin ());
 
   NS_LOG_LOGIC ("Popped " << item);
 
@@ -123,11 +122,11 @@ DropTailQueue<Item>::Dequeue (void)
 
 template <typename Item>
 Ptr<Item>
-DropTailQueue<Item>::Remove (void)
+DropTailQueue<Item>::Remove ()
 {
   NS_LOG_FUNCTION (this);
 
-  Ptr<Item> item = DoRemove (begin ());
+  Ptr<Item> item = DoRemove (GetContainer ().begin ());
 
   NS_LOG_LOGIC ("Removed " << item);
 
@@ -136,11 +135,11 @@ DropTailQueue<Item>::Remove (void)
 
 template <typename Item>
 Ptr<const Item>
-DropTailQueue<Item>::Peek (void) const
+DropTailQueue<Item>::Peek () const
 {
   NS_LOG_FUNCTION (this);
 
-  return DoPeek (begin ());
+  return DoPeek (GetContainer ().begin ());
 }
 
 // The following explicit template instantiation declarations prevent all the

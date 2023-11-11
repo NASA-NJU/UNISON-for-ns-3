@@ -18,20 +18,22 @@
  * Authors: Mathew Bielejeski <bielejeski1@llnl.gov>
  */
 
+// clang-format off
+
 #ifndef NS3_VERSION_DEFINES_H_
 #define NS3_VERSION_DEFINES_H_
 
 /**
-  * \file
-  * \ingroup buildversion
-  * Defines the macro values for printing the build version.
-  * These will be populated by the build system.
-  */
+ * \file
+ * \ingroup buildversion
+ * Defines the macro values for printing the build version.
+ * These will be populated by the build system.
+ */
 
 /**
-  * \ingroup buildversion
-  * @{
-  */
+ * \ingroup buildversion
+ * @{
+ */
 
 /**
  * The first tag found which matches the pattern ns-3*.
@@ -66,7 +68,7 @@
  *
  * Type: integer
  */
-#cmakedefine NS3_VERSION_MAJOR @NS3_VERSION_MAJOR@
+#define NS3_VERSION_MAJOR @NS3_VERSION_MAJOR@
 
 /**
  * The minor version extracted from #NS3_VERSION_TAG
@@ -76,7 +78,7 @@
  *
  * Type: integer
  */
-#cmakedefine NS3_VERSION_MINOR @NS3_VERSION_MINOR@
+#define NS3_VERSION_MINOR @NS3_VERSION_MINOR@
 
 /**
  * The patch number extracted from #NS3_VERSION_TAG
@@ -89,7 +91,7 @@
  *
  * Type: integer
  */
-#cmakedefine NS3_VERSION_PATCH @NS3_VERSION_PATCH@
+#define NS3_VERSION_PATCH @NS3_VERSION_PATCH@
 
 /**
  * The portion of the #NS3_VERSION_TAG indicating the version
@@ -110,7 +112,7 @@
  *
  * Type: integer
  */
-#cmakedefine NS3_VERSION_TAG_DISTANCE @NS3_VERSION_TAG_DISTANCE@
+#define NS3_VERSION_TAG_DISTANCE @NS3_VERSION_TAG_DISTANCE@
 
 /**
  * Hash value which uniquely identifies the commit of the
@@ -143,3 +145,5 @@
 /** @} */
 
 #endif
+
+// clang-format on

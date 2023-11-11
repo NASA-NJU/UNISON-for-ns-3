@@ -44,9 +44,9 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
-  WimaxChannel (void);
-  virtual ~WimaxChannel (void);
+  static TypeId GetTypeId ();
+  WimaxChannel ();
+  ~WimaxChannel () override;
   /**
    * \brief attach the channel to a physical layer of a device
    * \param phy the physical layer to which the channel will be attached
@@ -55,12 +55,12 @@ public:
   /**
    * \return the number of attached devices
    */
-  std::size_t GetNDevices (void) const;
+  std::size_t GetNDevices () const override;
   /**
    * \param i the ith device
    * \return the ith attached device
    */
-  Ptr<NetDevice> GetDevice (std::size_t i) const;
+  Ptr<NetDevice> GetDevice (std::size_t i) const override;
 
  /**
   * Assign a fixed random variable stream number to the random variables
@@ -83,7 +83,7 @@ private:
    * Get number of devices on the channel
    * \returns the number of devices
    */
-  virtual std::size_t DoGetNDevices (void) const = 0;
+  virtual std::size_t DoGetNDevices () const = 0;
   /**
    * Get device corresponding to index
    * \param i the device index

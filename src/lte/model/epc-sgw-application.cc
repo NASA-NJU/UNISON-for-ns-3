@@ -54,15 +54,15 @@ EpcSgwApplication::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
   m_s1uSocket->SetRecvCallback (MakeNullCallback<void, Ptr<Socket> > ());
-  m_s1uSocket = 0;
+  m_s1uSocket = nullptr;
   m_s5uSocket->SetRecvCallback (MakeNullCallback<void, Ptr<Socket> > ());
-  m_s5uSocket = 0;
+  m_s5uSocket = nullptr;
   m_s5cSocket->SetRecvCallback (MakeNullCallback<void, Ptr<Socket> > ());
-  m_s5cSocket = 0;
+  m_s5cSocket = nullptr;
 }
 
 TypeId
-EpcSgwApplication::GetTypeId (void)
+EpcSgwApplication::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::EpcSgwApplication")
     .SetParent<Object> ()
@@ -236,7 +236,7 @@ EpcSgwApplication::DoRecvCreateSessionRequest (Ptr<Packet> packet)
   NS_LOG_DEBUG ("cellId " << cellId << " IMSI " << imsi);
 
   std::map<uint16_t, EnbInfo>::iterator enbit = m_enbInfoByCellId.find (cellId);
-  NS_ASSERT_MSG (enbit != m_enbInfoByCellId.end (), "unknown CellId " << cellId); 
+  NS_ASSERT_MSG (enbit != m_enbInfoByCellId.end (), "unknown CellId " << cellId);
   Ipv4Address enbAddr = enbit->second.enbAddr;
   NS_LOG_DEBUG ("eNB " << enbAddr);
 
@@ -303,7 +303,7 @@ EpcSgwApplication::DoRecvModifyBearerRequest (Ptr<Packet> packet)
   NS_LOG_DEBUG ("cellId " << cellId << " IMSI " << imsi);
 
   std::map<uint16_t, EnbInfo>::iterator enbit = m_enbInfoByCellId.find (cellId);
-  NS_ASSERT_MSG (enbit != m_enbInfoByCellId.end (), "unknown CellId " << cellId); 
+  NS_ASSERT_MSG (enbit != m_enbInfoByCellId.end (), "unknown CellId " << cellId);
   Ipv4Address enbAddr = enbit->second.enbAddr;
   NS_LOG_DEBUG ("eNB " << enbAddr);
 

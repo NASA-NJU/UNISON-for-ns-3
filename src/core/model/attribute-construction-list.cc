@@ -70,17 +70,17 @@ AttributeConstructionList::Find (Ptr<const AttributeChecker> checker) const
           return k->value;
         }
     }
-  return 0;
+  return nullptr;
 }
 
 AttributeConstructionList::CIterator
-AttributeConstructionList::Begin (void) const
+AttributeConstructionList::Begin () const
 {
   NS_LOG_FUNCTION (this);
   return m_list.begin ();
 }
 AttributeConstructionList::CIterator
-AttributeConstructionList::End (void) const
+AttributeConstructionList::End () const
 {
   NS_LOG_FUNCTION (this);
   return m_list.end ();

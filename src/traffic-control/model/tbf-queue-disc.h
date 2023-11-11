@@ -53,7 +53,7 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   /**
    * \brief TbfQueueDisc Constructor
@@ -67,7 +67,7 @@ public:
    *
    * Destructor
    */
-  virtual ~TbfQueueDisc ();
+  ~TbfQueueDisc () override;
 
   /**
     * \brief Set the size of the first bucket in bytes.
@@ -81,7 +81,7 @@ public:
     *
     * \returns The size of the first bucket in bytes.
     */
-  uint32_t GetBurst (void) const;
+  uint32_t GetBurst () const;
 
   /**
     * \brief Set the size of the second bucket in bytes.
@@ -95,7 +95,7 @@ public:
     *
     * \returns The size of the second bucket in bytes.
     */
-  uint32_t GetMtu (void) const;
+  uint32_t GetMtu () const;
 
   /**
     * \brief Set the rate of the tokens entering the first bucket.
@@ -109,7 +109,7 @@ public:
     *
     * \returns The rate of first bucket tokens.
     */
-  DataRate GetRate (void) const;
+  DataRate GetRate () const;
 
   /**
     * \brief Set the rate of the tokens entering the second bucket.
@@ -123,34 +123,34 @@ public:
     *
     * \returns The rate of second bucket tokens.
     */
-  DataRate GetPeakRate (void) const;
+  DataRate GetPeakRate () const;
 
   /**
     * \brief Get the current number of tokens inside the first bucket in bytes.
     *
     * \returns The number of first bucket tokens in bytes.
     */
-  uint32_t GetFirstBucketTokens (void) const;
+  uint32_t GetFirstBucketTokens () const;
 
   /**
     * \brief Get the current number of tokens inside the second bucket in bytes.
     *
     * \returns The number of second bucket tokens in bytes.
     */
-  uint32_t GetSecondBucketTokens (void) const;
+  uint32_t GetSecondBucketTokens () const;
 
 protected:
   /**
    * \brief Dispose of the object
    */
-  virtual void DoDispose (void);
+  void DoDispose () override;
 
 private:
 
-  virtual bool DoEnqueue (Ptr<QueueDiscItem> item);
-  virtual Ptr<QueueDiscItem> DoDequeue (void);
-  virtual bool CheckConfig (void);
-  virtual void InitializeParams (void);
+  bool DoEnqueue (Ptr<QueueDiscItem> item) override;
+  Ptr<QueueDiscItem> DoDequeue () override;
+  bool CheckConfig () override;
+  void InitializeParams () override;
 
   /* parameters for the TBF Queue Disc */
   uint32_t m_burst;      //!< Size of first bucket in bytes

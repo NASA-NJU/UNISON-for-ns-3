@@ -31,7 +31,7 @@ class UdpL4Protocol;
  * \ingroup socket
  * \ingroup udp
  *
- * \brief Object to create UDP socket instances 
+ * \brief Object to create UDP socket instances
  *
  * This class implements the API for creating UDP sockets.
  * It is a socket factory (deriving from class SocketFactory).
@@ -40,7 +40,7 @@ class UdpSocketFactoryImpl : public UdpSocketFactory
 {
 public:
   UdpSocketFactoryImpl ();
-  virtual ~UdpSocketFactoryImpl ();
+  ~UdpSocketFactoryImpl () override;
 
   /**
    * \brief Set the associated UDP L4 protocol.
@@ -54,10 +54,10 @@ public:
    *
    * \return smart pointer to Socket
    */
-  virtual Ptr<Socket> CreateSocket (void);
+  Ptr<Socket> CreateSocket () override;
 
 protected:
-  virtual void DoDispose (void);
+  void DoDispose () override;
 private:
   Ptr<UdpL4Protocol> m_udp; //!< the associated UDP L4 protocol
 };

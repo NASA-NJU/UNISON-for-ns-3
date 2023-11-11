@@ -39,7 +39,7 @@ struct FlameHeaderTest : public TestCase
     TestCase ("FlameHeader roundtrip serialization")
   {
   }
-  void DoRun ();
+  void DoRun () override;
 };
 
 void
@@ -70,12 +70,12 @@ class FlameRtableTest : public TestCase
 {
 public:
   FlameRtableTest ();
-  void DoRun ();
+  void DoRun () override;
 
 private:
   /// Test Add apth and lookup path;
   void TestLookup ();
-  
+
   /// Test add path and try to lookup after entry has expired
   void TestAddPath ();
   /// Test add path and try to lookup after entry has expired
@@ -94,11 +94,11 @@ private:
 static FlameRtableTest g_FlameRtableTest;
 
 FlameRtableTest::FlameRtableTest () :
-  TestCase ("FlameRtable"), 
-  dst ("01:00:00:01:00:01"), 
+  TestCase ("FlameRtable"),
+  dst ("01:00:00:01:00:01"),
   hop ("01:00:00:01:00:03"),
-  iface (8010), 
-  cost (10), 
+  iface (8010),
+  cost (10),
   seqnum (1)
 {
 }

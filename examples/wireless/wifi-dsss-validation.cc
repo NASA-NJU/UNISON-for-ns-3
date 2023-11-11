@@ -36,12 +36,13 @@ int main (int argc, char *argv[])
 {
   uint32_t FrameSize = 1500; //bytes
   std::ofstream file ("frame-success-rate-dsss.plt");
-  std::vector <std::string> modes;
 
-  modes.push_back ("DsssRate1Mbps");
-  modes.push_back ("DsssRate2Mbps");
-  modes.push_back ("DsssRate5_5Mbps");
-  modes.push_back ("DsssRate11Mbps");
+  const std::vector <std::string> modes {
+    "DsssRate1Mbps",
+    "DsssRate2Mbps",
+    "DsssRate5_5Mbps",
+    "DsssRate11Mbps",
+  };
 
   CommandLine cmd (__FILE__);
   cmd.AddValue ("FrameSize", "The frame size in bytes", FrameSize);
@@ -111,4 +112,6 @@ set style line 8 linewidth 5\n\
 set style increment user"                                                                                                                                                                                                                                                                                                                                   );
   plot.GenerateOutput (file);
   file.close ();
+
+  return 0;
 }

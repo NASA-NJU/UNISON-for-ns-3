@@ -40,10 +40,10 @@ class DsaRequestTestCase : public TestCase
 {
 public:
   DsaRequestTestCase ();
-  virtual ~DsaRequestTestCase ();
+  ~DsaRequestTestCase () override;
 
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
 
 };
 
@@ -57,7 +57,7 @@ DsaRequestTestCase::~DsaRequestTestCase ()
 }
 
 void
-DsaRequestTestCase::DoRun (void)
+DsaRequestTestCase::DoRun ()
 {
   IpcsClassifierRecord classifier = IpcsClassifierRecord ();
   CsParameters csParam (CsParameters::ADD, classifier);

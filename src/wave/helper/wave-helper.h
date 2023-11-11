@@ -44,7 +44,7 @@ public:
    * Create a phy helper in a default working state.
    * \return A phy helper
    */
-  static YansWavePhyHelper Default (void);
+  static YansWavePhyHelper Default ();
 
 private:
   /**
@@ -58,10 +58,10 @@ private:
    * @param promiscuous If true capture all possible packets available at the device.
    * @param explicitFilename Treat the prefix as an explicit filename if true
    */
-  virtual void EnablePcapInternal (std::string prefix,
+  void EnablePcapInternal (std::string prefix,
                                    Ptr<NetDevice> nd,
                                    bool promiscuous,
-                                   bool explicitFilename);
+                                   bool explicitFilename) override;
 
   /**
    * \brief Enable ascii trace output on the indicated net device.
@@ -75,10 +75,10 @@ private:
    * \param nd Net device for which you want to enable tracing.
    * \param explicitFilename Treat the prefix as an explicit filename if true
    */
-  virtual void EnableAsciiInternal (Ptr<OutputStreamWrapper> stream,
+  void EnableAsciiInternal (Ptr<OutputStreamWrapper> stream,
                                     std::string prefix,
                                     Ptr<NetDevice> nd,
-                                    bool explicitFilename);
+                                    bool explicitFilename) override;
 };
 
 /**
@@ -124,7 +124,7 @@ public:
    * a default multiple-channel scheduler DefaultChannelScheduler for
    * assigning channel access with these created entities.
    */
-  static WaveHelper Default (void);
+  static WaveHelper Default ();
 
   /**
    * \param channelNumbers the MAC entities will be created to support these channels for multiple channel operation.
@@ -136,67 +136,25 @@ public:
   void CreatePhys (uint32_t phys);
 
   /**
+   * \tparam Ts \deduced Argument types
    * \param type the type of ns3::WifiRemoteStationManager to create.
-   * \param n0 the name of the attribute to set
-   * \param v0 the value of the attribute to set
-   * \param n1 the name of the attribute to set
-   * \param v1 the value of the attribute to set
-   * \param n2 the name of the attribute to set
-   * \param v2 the value of the attribute to set
-   * \param n3 the name of the attribute to set
-   * \param v3 the value of the attribute to set
-   * \param n4 the name of the attribute to set
-   * \param v4 the value of the attribute to set
-   * \param n5 the name of the attribute to set
-   * \param v5 the value of the attribute to set
-   * \param n6 the name of the attribute to set
-   * \param v6 the value of the attribute to set
-   * \param n7 the name of the attribute to set
-   * \param v7 the value of the attribute to set
+   * \param [in] args Name and AttributeValue pairs to set.
    *
    * All the attributes specified in this method should exist
    * in the requested station manager.
    */
-  void SetRemoteStationManager (std::string type,
-                                std::string n0 = "", const AttributeValue &v0 = EmptyAttributeValue (),
-                                std::string n1 = "", const AttributeValue &v1 = EmptyAttributeValue (),
-                                std::string n2 = "", const AttributeValue &v2 = EmptyAttributeValue (),
-                                std::string n3 = "", const AttributeValue &v3 = EmptyAttributeValue (),
-                                std::string n4 = "", const AttributeValue &v4 = EmptyAttributeValue (),
-                                std::string n5 = "", const AttributeValue &v5 = EmptyAttributeValue (),
-                                std::string n6 = "", const AttributeValue &v6 = EmptyAttributeValue (),
-                                std::string n7 = "", const AttributeValue &v7 = EmptyAttributeValue ());
+  template <typename... Ts>
+  void SetRemoteStationManager (std::string type, Ts&&... args);
   /**
+   * \tparam Ts \deduced Argument types
    * \param type the type of ns3::ChannelScheduler to create.
-   * \param n0 the name of the attribute to set
-   * \param v0 the value of the attribute to set
-   * \param n1 the name of the attribute to set
-   * \param v1 the value of the attribute to set
-   * \param n2 the name of the attribute to set
-   * \param v2 the value of the attribute to set
-   * \param n3 the name of the attribute to set
-   * \param v3 the value of the attribute to set
-   * \param n4 the name of the attribute to set
-   * \param v4 the value of the attribute to set
-   * \param n5 the name of the attribute to set
-   * \param v5 the value of the attribute to set
-   * \param n6 the name of the attribute to set
-   * \param v6 the value of the attribute to set
-   * \param n7 the name of the attribute to set
-   * \param v7 the value of the attribute to set
+   * \param [in] args Name and AttributeValue pairs to set.
    *
    * All the attributes specified in this method should exist
    * in the requested channel scheduler.
    */
-  void SetChannelScheduler (std::string type,
-                            std::string n0 = "", const AttributeValue &v0 = EmptyAttributeValue (),
-                            std::string n1 = "", const AttributeValue &v1 = EmptyAttributeValue (),
-                            std::string n2 = "", const AttributeValue &v2 = EmptyAttributeValue (),
-                            std::string n3 = "", const AttributeValue &v3 = EmptyAttributeValue (),
-                            std::string n4 = "", const AttributeValue &v4 = EmptyAttributeValue (),
-                            std::string n5 = "", const AttributeValue &v5 = EmptyAttributeValue (),
-                            std::string n6 = "", const AttributeValue &v6 = EmptyAttributeValue (),
-                            std::string n7 = "", const AttributeValue &v7 = EmptyAttributeValue ());
+  template <typename... Ts>
+  void SetChannelScheduler (std::string type, Ts&&... args);
 
   /**
    * \param phy the PHY helper to create PHY objects
@@ -226,7 +184,7 @@ public:
   /**
    * Helper to enable all WaveNetDevice log components with one statement
    */
-  static void EnableLogComponents (void);
+  static void EnableLogComponents ();
 
   /**
   * Assign a fixed random variable stream number to the random variables
@@ -250,5 +208,24 @@ protected:
   std::vector<uint32_t> m_macsForChannelNumber; ///< MACs for channel number
   uint32_t m_physNumber; ///< Phy number
 };
+
+
+/***************************************************************
+ *  Implementation of the templates declared above.
+ ***************************************************************/
+
+template <typename... Ts>
+void WaveHelper::SetRemoteStationManager (std::string type, Ts&&... args)
+{
+  m_stationManager = ObjectFactory (type, std::forward<Ts> (args)...);
+}
+
+template <typename... Ts>
+void WaveHelper::SetChannelScheduler (std::string type, Ts&&... args)
+{
+  m_channelScheduler = ObjectFactory (type, std::forward<Ts> (args)...);
+}
+
+
 }
 #endif /* WAVE_HELPER_H */

@@ -40,7 +40,7 @@ public:
    * \param name test name
    */
   DataRateTestCase (std::string name);
-  virtual ~DataRateTestCase ();
+  ~DataRateTestCase () override;
 
   /**
    * Checks if two time values are equal
@@ -58,7 +58,7 @@ public:
   void CheckDataRateEqual (DataRate d1, DataRate d2, const std::string msg);
 
 protected:
-  virtual void DoRun (void) = 0;
+  void DoRun () override = 0;
 };
 
 DataRateTestCase::DataRateTestCase (std::string name) : TestCase (name)
@@ -105,7 +105,7 @@ public:
   void SingleTest (std::string rate, size_t nBits, Time correctTime);
 
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
 };
 
 DataRateTestCase1::DataRateTestCase1 ()
@@ -163,7 +163,7 @@ DataRateTestCase1::DoRun ()
 class DataRateTestCase2 : public DataRateTestCase
 {
 public:
-  DataRateTestCase2 (); 
+  DataRateTestCase2 ();
   /**
    * Checks data rate addition
    * \param rate1 first data rate
@@ -194,7 +194,7 @@ public:
   void MultiplicationDoubleTest (std::string rate1, double factor, std::string rate2);
 
 private:
-  virtual void DoRun (void); 
+  void DoRun () override;
 };
 
 DataRateTestCase2::DataRateTestCase2 ()
@@ -210,7 +210,7 @@ DataRateTestCase2::AdditionTest (std::string rate1, std::string rate2, std::stri
   DataRate dr3 (rate3);
 
   CheckDataRateEqual(dr1 + dr2, dr3, "DataRate Addition returned incorrect value");
-  
+
   dr1 += dr2;
   CheckDataRateEqual(dr1, dr3, "DataRate Addition returned incorrect value");
 }

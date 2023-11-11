@@ -18,7 +18,7 @@
  * Author: Yufei Cheng   <yfcheng@ittc.ku.edu>
  *
  * James P.G. Sterbenz <jpgs@ittc.ku.edu>, director
- * ResiliNets Research Group  http://wiki.ittc.ku.edu/resilinets
+ * ResiliNets Research Group  https://resilinets.org/
  * Information and Telecommunication Technology Center (ITTC)
  * and Department of Electrical Engineering and Computer Science
  * The University of Kansas Lawrence, KS USA.
@@ -206,7 +206,7 @@ public:
   static TypeId GetTypeId ();
 
   DsrRreqTable ();
-  virtual ~DsrRreqTable ();
+  ~DsrRreqTable () override;
 
   /**
    * Set the initial discovert hop limit

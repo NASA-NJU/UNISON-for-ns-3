@@ -35,7 +35,7 @@ namespace ns3 {
 /**
  * \ingroup lte
  *
- * Takes care of storing the information generated at PHY layer regarding 
+ * Takes care of storing the information generated at PHY layer regarding
  * reception. Metrics saved are:
  *
  *   - Timestamp (in seconds)
@@ -58,14 +58,14 @@ public:
   /**
    * Destructor
    */
-  virtual ~PhyRxStatsCalculator ();
+  ~PhyRxStatsCalculator () override;
 
   // Inherited from ns3::Object
   /**
    *  Register this type.
    *  \return The object TypeId.
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   /**
    * Set the name of the file where the UL Rx PHY statistics will be stored.
@@ -78,7 +78,7 @@ public:
    * Get the name of the file where the UL RX PHY statistics will be stored.
    * @return the name of the file where the UL RX PHY statistics will be stored
    */
-  std::string GetUlRxOutputFilename (void);
+  std::string GetUlRxOutputFilename ();
 
   /**
    * Set the name of the file where the DL RX PHY statistics will be stored.
@@ -91,7 +91,7 @@ public:
    * Get the name of the file where the DL RX PHY statistics will be stored.
    * @return the name of the file where the DL RX PHY statistics will be stored
    */
-  std::string GetDlRxOutputFilename (void);
+  std::string GetDlRxOutputFilename ();
 
   /**
    * Notifies the stats calculator that an downlink reception has occurred.
@@ -105,22 +105,22 @@ public:
    */
   void UlPhyReception (PhyReceptionStatParameters params);
 
-  /** 
+  /**
    * trace sink
-   * 
-   * \param phyRxStats 
-   * \param path 
-   * \param params 
+   *
+   * \param phyRxStats
+   * \param path
+   * \param params
    */
   static void DlPhyReceptionCallback (Ptr<PhyRxStatsCalculator> phyRxStats,
                                std::string path, PhyReceptionStatParameters params);
 
-  /** 
+  /**
    * trace sink
-   * 
-   * \param phyRxStats 
-   * \param path 
-   * \param params 
+   *
+   * \param phyRxStats
+   * \param path
+   * \param params
    */
   static void UlPhyReceptionCallback (Ptr<PhyRxStatsCalculator> phyRxStats,
                                std::string path, PhyReceptionStatParameters params);

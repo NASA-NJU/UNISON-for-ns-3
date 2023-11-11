@@ -54,30 +54,30 @@ public:
    * \brief Get the type ID.
    * \return The object TypeId.
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
   RvBatteryModel ();
-  virtual ~RvBatteryModel ();
+  ~RvBatteryModel () override;
 
   /**
    * \return Initial energy stored (theoretical capacity) in the battery, in Joules.
    *
    * Implements GetInitialEnergy.
    */
-  virtual double GetInitialEnergy (void) const;
+  double GetInitialEnergy () const override;
 
   /**
    * \returns Supply voltage at the energy source.
    *
    * Implements GetSupplyVoltage.
    */
-  virtual double GetSupplyVoltage (void) const;
+  double GetSupplyVoltage () const override;
 
   /**
    * \return Remaining energy in energy source, in Joules
    *
    * Implements GetRemainingEnergy.
    */
-  virtual double GetRemainingEnergy (void);
+  double GetRemainingEnergy () override;
 
   /**
    * \returns Energy fraction.
@@ -85,13 +85,13 @@ public:
    * Implements GetEnergyFraction. For the RV battery model, energy fraction is
    * equivalent to battery level.
    */
-  virtual double GetEnergyFraction (void);
+  double GetEnergyFraction () override;
 
   /**
    * Implements UpdateEnergySource. This function samples the total load (total
    * current) from all devices to discharge the battery.
    */
-  virtual void UpdateEnergySource (void);
+  void UpdateEnergySource () override;
 
   /**
    * \param interval Energy update interval.
@@ -103,7 +103,7 @@ public:
   /**
    * \returns The interval between each energy update.
    */
-  Time GetSamplingInterval (void) const;
+  Time GetSamplingInterval () const;
 
   /**
    * \brief Sets open circuit voltage of battery.
@@ -115,7 +115,7 @@ public:
   /**
    * \return Open circuit voltage of battery.
    */
-  double GetOpenCircuitVoltage (void) const;
+  double GetOpenCircuitVoltage () const;
 
   /**
    * \brief Sets cutoff voltage of battery.
@@ -127,7 +127,7 @@ public:
   /**
    * \returns Cutoff voltage of battery.
    */
-  double GetCutoffVoltage (void) const;
+  double GetCutoffVoltage () const;
 
   /**
    * \brief Sets the alpha value for the battery model.
@@ -139,7 +139,7 @@ public:
   /**
    * \returns The alpha value used by the battery model.
    */
-  double GetAlpha (void) const;
+  double GetAlpha () const;
 
   /**
    * \brief Sets the beta value for the battery model.
@@ -151,17 +151,17 @@ public:
   /**
    * \returns The beta value used by the battery model.
    */
-  double GetBeta (void) const;
+  double GetBeta () const;
 
   /**
    * \returns Battery level [0, 1].
    */
-  double GetBatteryLevel (void);
+  double GetBatteryLevel ();
 
   /**
    * \returns Lifetime of the battery.
    */
-  Time GetLifetime (void) const;
+  Time GetLifetime () const;
 
   /**
    * \brief Sets the number of terms of the infinite sum for estimating battery
@@ -175,21 +175,21 @@ public:
    * \returns The number of terms of the infinite sum for estimating battery
    * level.
    */
-  int GetNumOfTerms (void) const;
+  int GetNumOfTerms () const;
 
 private:
   /// Defined in ns3::Object
-  virtual void DoInitialize (void);
+  void DoInitialize () override;
 
   /// Defined in ns3::Object
-  virtual void DoDispose (void);
+  void DoDispose () override;
 
   /**
    * Handles the remaining energy going to zero event. This function notifies
    * all the energy models aggregated to the node about the energy being
    * depleted. Each energy model is then responsible for its own handler.
    */
-  void HandleEnergyDrainedEvent (void);
+  void HandleEnergyDrainedEvent ();
 
   /**
    * \brief Discharges the battery.
@@ -256,7 +256,7 @@ private:
    * Sampling interval.
    * (1 / sampling interval) = sampling frequency
    */
-  Time m_samplingInterval; 
+  Time m_samplingInterval;
   EventId m_currentSampleEvent; //!< Current sample event
 
   TracedValue<Time> m_lifetime;   //!< time of death of the battery

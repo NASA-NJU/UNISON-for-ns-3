@@ -31,16 +31,16 @@ namespace ns3 {
 
 NS_OBJECT_ENSURE_REGISTERED (LteRadioBearerInfo);
 
-LteRadioBearerInfo::LteRadioBearerInfo (void)
+LteRadioBearerInfo::LteRadioBearerInfo ()
 {
 }
 
-LteRadioBearerInfo::~LteRadioBearerInfo (void)
+LteRadioBearerInfo::~LteRadioBearerInfo ()
 {
 }
-  
-TypeId 
-LteRadioBearerInfo::GetTypeId (void)
+
+TypeId
+LteRadioBearerInfo::GetTypeId ()
 {
   static TypeId
     tid =
@@ -50,10 +50,10 @@ LteRadioBearerInfo::GetTypeId (void)
     ;
   return tid;
 }
-  
-  
-TypeId 
-LteDataRadioBearerInfo::GetTypeId (void)
+
+
+TypeId
+LteDataRadioBearerInfo::GetTypeId ()
 {
   static TypeId
     tid =
@@ -88,8 +88,8 @@ LteDataRadioBearerInfo::GetTypeId (void)
 }
 
 
-TypeId 
-LteSignalingRadioBearerInfo::GetTypeId (void)
+TypeId
+LteSignalingRadioBearerInfo::GetTypeId ()
 {
   static TypeId
     tid =

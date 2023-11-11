@@ -22,6 +22,7 @@
 #ifndef LTE_TEST_CQI_GENERATION_H
 #define LTE_TEST_CQI_GENERATION_H
 
+#include "ns3/lte-common.h"
 #include "ns3/test.h"
 
 using namespace ns3;
@@ -45,8 +46,8 @@ public:
  *
  * \brief This is the test case for testing different configuration of CQI generation.
  *  The topology consists of the two UEs and two eNbs. UEs have the same position,
- *  while eNodeBs are at the same distance from both UEs. The checking whether CQI is 
- *  generated properly for two different cases: when PDCCH is used for the CQI 
+ *  while eNodeBs are at the same distance from both UEs. The checking whether CQI is
+ *  generated properly for two different cases: when PDCCH is used for the CQI
  *  estimation and when PDSCH is used for CQI estimation.
  */
 
@@ -63,7 +64,7 @@ public:
    */
   LteCqiGenerationTestCase (std::string name, bool usePdcchForCqiGeneration,
                             uint16_t dlMcs, uint16_t ulMcs);
-  virtual ~LteCqiGenerationTestCase ();
+  ~LteCqiGenerationTestCase () override;
 
   /**
    * \brief DL Scheduling function
@@ -83,7 +84,7 @@ public:
                      uint8_t mcs, uint16_t sizeTb);
 
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
 
   bool m_usePdschForCqiGeneration; ///< use PDCCH for CQI generation
   uint16_t m_dlMcs; ///< the DL MCS
@@ -113,7 +114,7 @@ public:
    */
   LteCqiGenerationDlPowerControlTestCase (std::string name, uint8_t cell0Pa, uint8_t cell1Pa,
                                           uint16_t dlMcs, uint16_t ulMcs);
-  virtual ~LteCqiGenerationDlPowerControlTestCase ();
+  ~LteCqiGenerationDlPowerControlTestCase () override;
 
   /**
    * \brief DL Scheduling function
@@ -133,7 +134,7 @@ public:
                      uint8_t mcs, uint16_t sizeTb);
 
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
 
   uint8_t m_cell0Pa; ///< cell #0 PA
   uint8_t m_cell1Pa; ///< cell #1 PA

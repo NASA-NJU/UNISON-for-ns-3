@@ -21,6 +21,7 @@
 #ifndef WIFI_PHY_STATE_HELPER_H
 #define WIFI_PHY_STATE_HELPER_H
 
+#include <vector>
 #include "ns3/object.h"
 #include "ns3/callback.h"
 #include "ns3/traced-callback.h"
@@ -48,14 +49,14 @@ struct RxSignalInfo;
  * arg3: TXVECTOR of PSDU
  * arg4: vector of per-MPDU status of reception.
  */
-typedef Callback<void, Ptr<WifiPsdu>, RxSignalInfo,
+typedef Callback<void, Ptr<const WifiPsdu>, RxSignalInfo,
                        WifiTxVector, std::vector<bool>> RxOkCallback;
 /**
  * Callback if PSDU unsuccessfully received
  *
  * arg1: PSDU received unsuccessfully
  */
-typedef Callback<void, Ptr<WifiPsdu>> RxErrorCallback;
+typedef Callback<void, Ptr<const WifiPsdu>> RxErrorCallback;
 
 /**
  * \ingroup wifi
@@ -69,7 +70,7 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   WifiPhyStateHelper ();
 
@@ -102,67 +103,67 @@ public:
    *
    * \return the current state of WifiPhy
    */
-  WifiPhyState GetState (void) const;
+  WifiPhyState GetState () const;
   /**
    * Check whether the current state is CCA busy.
    *
    * \return true if the current state is CCA busy, false otherwise
    */
-  bool IsStateCcaBusy (void) const;
+  bool IsStateCcaBusy () const;
   /**
    * Check whether the current state is IDLE.
    *
    * \return true if the current state is IDLE, false otherwise
    */
-  bool IsStateIdle (void) const;
+  bool IsStateIdle () const;
   /**
    * Check whether the current state is RX.
    *
    * \return true if the current state is RX, false otherwise
    */
-  bool IsStateRx (void) const;
+  bool IsStateRx () const;
   /**
    * Check whether the current state is TX.
    *
    * \return true if the current state is TX, false otherwise
    */
-  bool IsStateTx (void) const;
+  bool IsStateTx () const;
   /**
    * Check whether the current state is SWITCHING.
    *
    * \return true if the current state is SWITCHING, false otherwise
    */
-  bool IsStateSwitching (void) const;
+  bool IsStateSwitching () const;
   /**
    * Check whether the current state is SLEEP.
    *
    * \return true if the current state is SLEEP, false otherwise
    */
-  bool IsStateSleep (void) const;
+  bool IsStateSleep () const;
   /**
    * Check whether the current state is OFF.
    *
    * \return true if the current state is OFF, false otherwise
    */
-  bool IsStateOff (void) const;
+  bool IsStateOff () const;
   /**
    * Return the time before the state is back to IDLE.
    *
    * \return the delay before the state is back to IDLE
    */
-  Time GetDelayUntilIdle (void) const;
+  Time GetDelayUntilIdle () const;
   /**
    * Return the time the last RX start.
    *
    * \return the time the last RX start.
    */
-  Time GetLastRxStartTime (void) const;
+  Time GetLastRxStartTime () const;
   /**
    * Return the time the last RX end.
    *
    * \return the time the last RX end.
    */
-  Time GetLastRxEndTime (void) const;
+  Time GetLastRxEndTime () const;
 
   /**
    * Switch state to TX for the given duration.
@@ -172,7 +173,7 @@ public:
    * \param txPowerDbm the nominal TX power in dBm
    * \param txVector the TX vector for the transmission
    */
-  void SwitchToTx (Time txDuration, WifiConstPsduMap psdus, double txPowerDbm, WifiTxVector txVector);
+  void SwitchToTx (Time txDuration, WifiConstPsduMap psdus, double txPowerDbm, const WifiTxVector& txVector);
   /**
    * Switch state to RX for the given duration.
    *
@@ -186,15 +187,15 @@ public:
    */
   void SwitchToChannelSwitching (Time switchingDuration);
   /**
-   * Continue RX after the reception of an MPDU in an A-MPDU was successful.
+   * Notify the reception of an MPDU included in an A-MPDU.
    *
    * \param psdu the successfully received PSDU
    * \param rxSignalInfo the info on the received signal (\see RxSignalInfo)
    * \param txVector TXVECTOR of the PSDU
    */
-  void ContinueRxNextMpdu (Ptr<WifiPsdu> psdu, RxSignalInfo rxSignalInfo, WifiTxVector txVector);
+  void NotifyRxMpdu (Ptr<const WifiPsdu> psdu, RxSignalInfo rxSignalInfo, const WifiTxVector& txVector);
   /**
-   * Switch from RX after the reception was successful.
+   * Handle the successful reception of a PSDU.
    *
    * \param psdu the successfully received PSDU
    * \param rxSignalInfo the info on the received signal (\see RxSignalInfo)
@@ -202,41 +203,57 @@ public:
    * \param staId the station ID of the PSDU (only used for MU)
    * \param statusPerMpdu reception status per MPDU
    */
-  void SwitchFromRxEndOk (Ptr<WifiPsdu> psdu, RxSignalInfo rxSignalInfo, WifiTxVector txVector,
-                          uint16_t staId, std::vector<bool> statusPerMpdu);
+  void NotifyRxPsduSucceeded (Ptr<const WifiPsdu> psdu, RxSignalInfo rxSignalInfo,
+                              const WifiTxVector& txVector, uint16_t staId,
+                              const std::vector<bool>& statusPerMpdu);
   /**
-   * Switch from RX after the reception failed.
+   * Handle the unsuccessful reception of a PSDU.
    *
    * \param psdu the PSDU that we failed to received
    * \param snr the SNR of the received PSDU in linear scale
    */
-  void SwitchFromRxEndError (Ptr<WifiPsdu> psdu, double snr);
+  void NotifyRxPsduFailed (Ptr<const WifiPsdu> psdu, double snr);
+  /**
+   * Switch from RX after the reception was successful.
+   */
+  void SwitchFromRxEndOk ();
+  /**
+   * Switch from RX after the reception failed.
+   */
+  void SwitchFromRxEndError ();
+  /**
+   * Abort current reception following a CCA reset request.
+   * \param operatingWidth the channel width the PHY is operating on (in MHz)
+   */
+  void SwitchFromRxAbort (uint16_t operatingWidth);
   /**
    * Switch to CCA busy.
    *
-   * \param duration the duration of CCA busy state
+   * \param duration the duration of the CCA state
+   * \param channelType the channel type for which the CCA busy state is reported.
+   * \param per20MhzDurations vector that indicates for how long each 20 MHz subchannel
+   *        (corresponding to the index of the element in the vector) is busy and where a zero duration
+   *        indicates that the subchannel is idle. The vector is non-empty if the PHY supports 802.11ax
+   *        or later and if the operational channel width is larger than 20 MHz.
    */
-  void SwitchMaybeToCcaBusy (Time duration);
+  void SwitchMaybeToCcaBusy (Time duration, WifiChannelListType channelType,
+                             const std::vector<Time>& per20MhzDurations);
   /**
    * Switch to sleep mode.
    */
-  void SwitchToSleep (void);
+  void SwitchToSleep ();
   /**
    * Switch from sleep mode.
    */
-  void SwitchFromSleep (void);
-  /**
-   * Abort current reception
-   */
-  void SwitchFromRxAbort (void);
+  void SwitchFromSleep ();
   /**
    * Switch to off mode.
    */
-  void SwitchToOff (void);
+  void SwitchToOff ();
   /**
    * Switch from off mode.
    */
-  void SwitchFromOff (void);
+  void SwitchFromOff ();
 
   /**
    * TracedCallback signature for state changes.
@@ -287,7 +304,7 @@ private:
   /**
    * Log the idle and CCA busy states.
    */
-  void LogPreviousIdleAndCcaBusyStates (void);
+  void LogPreviousIdleAndCcaBusyStates ();
 
   /**
    * Notify all WifiPhyListener that the transmission has started for the given duration.
@@ -305,17 +322,24 @@ private:
   /**
    * Notify all WifiPhyListener that the reception was successful.
    */
-  void NotifyRxEndOk (void);
+  void NotifyRxEndOk ();
   /**
    * Notify all WifiPhyListener that the reception was not successful.
    */
-  void NotifyRxEndError (void);
+  void NotifyRxEndError ();
   /**
    * Notify all WifiPhyListener that the CCA has started for the given duration.
    *
    * \param duration the duration of the CCA state
+   * \param channelType the channel type for which the CCA busy state is reported.
+   * \param per20MhzDurations vector that indicates for how long each 20 MHz subchannel
+   *        (corresponding to the index of the element in the vector) is busy and where a zero duration
+   *        indicates that the subchannel is idle. The vector is non-empty if  the PHY supports 802.11ax
+   *        or later and if the operational channel width is larger than 20 MHz.
    */
-  void NotifyMaybeCcaBusyStart (Time duration);
+  void NotifyCcaBusyStart (Time duration,
+                           WifiChannelListType channelType,
+                           const std::vector<Time>& per20MhzDurations);
   /**
    * Notify all WifiPhyListener that we are switching channel with the given channel
    * switching delay.
@@ -326,23 +350,23 @@ private:
   /**
    * Notify all WifiPhyListener that we are going to sleep
    */
-  void NotifySleep (void);
+  void NotifySleep ();
   /**
    * Notify all WifiPhyListener that we are going to switch off
    */
-  void NotifyOff (void);
+  void NotifyOff ();
   /**
    * Notify all WifiPhyListener that we woke up
    */
-  void NotifyWakeup (void);
+  void NotifyWakeup ();
   /**
    * Switch the state from RX.
    */
-  void DoSwitchFromRx (void);
+  void DoSwitchFromRx ();
   /**
    * Notify all WifiPhyListener that we are going to switch on
    */
-  void NotifyOn (void);
+  void NotifyOn ();
 
   /**
    * The trace source fired when state is changed.

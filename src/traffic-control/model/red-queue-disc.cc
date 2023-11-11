@@ -20,8 +20,8 @@
  * Thanks to: Duy Nguyen<duy@soe.ucsc.edu> by RED efforts in NS3
  *
  *
- * This file incorporates work covered by the following copyright and  
- * permission notice:  
+ * This file incorporates work covered by the following copyright and
+ * permission notice:
  *
  * Copyright (c) 1990-1997 Regents of the University of California.
  * All rights reserved.
@@ -52,7 +52,7 @@
  */
 
 /*
- * PORT NOTE: This code was ported from ns-2 (queue/red.cc).  Almost all 
+ * PORT NOTE: This code was ported from ns-2 (queue/red.cc).  Almost all
  * comments have also been ported from NS-2
  */
 
@@ -71,7 +71,7 @@ NS_LOG_COMPONENT_DEFINE ("RedQueueDisc");
 
 NS_OBJECT_ENSURE_REGISTERED (RedQueueDisc);
 
-TypeId RedQueueDisc::GetTypeId (void)
+TypeId RedQueueDisc::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::RedQueueDisc")
     .SetParent<QueueDisc> ()
@@ -198,12 +198,12 @@ TypeId RedQueueDisc::GetTypeId (void)
                    BooleanValue (false),
                    MakeBooleanAccessor (&RedQueueDisc::m_isNs1Compat),
                    MakeBooleanChecker ())
-    .AddAttribute ("LinkBandwidth", 
+    .AddAttribute ("LinkBandwidth",
                    "The RED link bandwidth",
                    DataRateValue (DataRate ("1.5Mbps")),
                    MakeDataRateAccessor (&RedQueueDisc::m_linkBandwidth),
                    MakeDataRateChecker ())
-    .AddAttribute ("LinkDelay", 
+    .AddAttribute ("LinkDelay",
                    "The RED link delay",
                    TimeValue (MilliSeconds (20)),
                    MakeTimeAccessor (&RedQueueDisc::m_linkDelay),
@@ -236,10 +236,10 @@ RedQueueDisc::~RedQueueDisc ()
 }
 
 void
-RedQueueDisc::DoDispose (void)
+RedQueueDisc::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
-  m_uv = 0;
+  m_uv = nullptr;
   QueueDisc::DoDispose ();
 }
 
@@ -256,7 +256,7 @@ RedQueueDisc::SetAredAlpha (double alpha)
 }
 
 double
-RedQueueDisc::GetAredAlpha (void)
+RedQueueDisc::GetAredAlpha ()
 {
   NS_LOG_FUNCTION (this);
   return m_alpha;
@@ -275,7 +275,7 @@ RedQueueDisc::SetAredBeta (double beta)
 }
 
 double
-RedQueueDisc::GetAredBeta (void)
+RedQueueDisc::GetAredBeta ()
 {
   NS_LOG_FUNCTION (this);
   return m_beta;
@@ -294,7 +294,7 @@ RedQueueDisc::SetFengAdaptiveA (double a)
 }
 
 double
-RedQueueDisc::GetFengAdaptiveA (void)
+RedQueueDisc::GetFengAdaptiveA ()
 {
   NS_LOG_FUNCTION (this);
   return m_a;
@@ -313,7 +313,7 @@ RedQueueDisc::SetFengAdaptiveB (double b)
 }
 
 double
-RedQueueDisc::GetFengAdaptiveB (void)
+RedQueueDisc::GetFengAdaptiveB ()
 {
   NS_LOG_FUNCTION (this);
   return m_b;
@@ -328,7 +328,7 @@ RedQueueDisc::SetTh (double minTh, double maxTh)
   m_maxTh = maxTh;
 }
 
-int64_t 
+int64_t
 RedQueueDisc::AssignStreams (int64_t stream)
 {
   NS_LOG_FUNCTION (this << stream);
@@ -383,7 +383,7 @@ RedQueueDisc::DoEnqueue (Ptr<QueueDiscItem> item)
         }
       else if (m_old == 0)
         {
-          /* 
+          /*
            * The average queue size has just crossed the
            * threshold from below to above m_minTh, or
            * from above m_minTh with an empty queue to
@@ -399,7 +399,7 @@ RedQueueDisc::DoEnqueue (Ptr<QueueDiscItem> item)
           dropType = DTYPE_UNFORCED;
         }
     }
-  else 
+  else
     {
       // No packets are being dropped
       m_vProb = 0.0;
@@ -450,7 +450,7 @@ RedQueueDisc::DoEnqueue (Ptr<QueueDiscItem> item)
  * and didn't seem worth the trouble...
  */
 void
-RedQueueDisc::InitializeParams (void)
+RedQueueDisc::InitializeParams ()
 {
   NS_LOG_FUNCTION (this);
   NS_LOG_INFO ("Initializing RED params.");
@@ -506,7 +506,7 @@ RedQueueDisc::InitializeParams (void)
   double th_diff = (m_maxTh - m_minTh);
   if (th_diff == 0)
     {
-      th_diff = 1.0; 
+      th_diff = 1.0;
     }
   m_vA = 1.0 / th_diff;
   m_curMaxP = 1.0 / m_lInterm;
@@ -522,13 +522,13 @@ RedQueueDisc::InitializeParams (void)
 /*
  * If m_qW=0, set it to a reasonable value of 1-exp(-1/C)
  * This corresponds to choosing m_qW to be of that value for
- * which the packet time constant -1/ln(1-m)qW) per default RTT 
+ * which the packet time constant -1/ln(1-m)qW) per default RTT
  * of 100ms is an order of magnitude more than the link capacity, C.
  *
  * If m_qW=-1, then the queue weight is set to be a function of
- * the bandwidth and the link propagation delay.  In particular, 
- * the default RTT is assumed to be three times the link delay and 
- * transmission delay, if this gives a default RTT greater than 100 ms. 
+ * the bandwidth and the link propagation delay.  In particular,
+ * the default RTT is assumed to be three times the link delay and
+ * transmission delay, if this gives a default RTT greater than 100 ms.
  *
  * If m_qW=-2, set it to a reasonable value of 1-exp(-10/C).
  */
@@ -564,7 +564,7 @@ RedQueueDisc::InitializeParams (void)
         }
     }
 
-  NS_LOG_DEBUG ("\tm_delay " << m_linkDelay.GetSeconds () << "; m_isWait " 
+  NS_LOG_DEBUG ("\tm_delay " << m_linkDelay.GetSeconds () << "; m_isWait "
                              << m_isWait << "; m_qW " << m_qW << "; m_ptc " << m_ptc
                              << "; m_minTh " << m_minTh << "; m_maxTh " << m_maxTh
                              << "; m_isGentle " << m_isGentle << "; th_diff " << th_diff
@@ -711,7 +711,7 @@ RedQueueDisc::DropEarly (Ptr<QueueDiscItem> item, uint32_t qSize)
 
 // Returns a probability using these function parameters for the DropEarly function
 double
-RedQueueDisc::CalculatePNew (void)
+RedQueueDisc::CalculatePNew ()
 {
   NS_LOG_FUNCTION (this);
   double p;
@@ -724,7 +724,7 @@ RedQueueDisc::CalculatePNew (void)
     }
   else if (!m_isGentle && m_qAvg >= m_maxTh)
     {
-      /* 
+      /*
        * OLD: p continues to range linearly above m_curMaxP as
        * the average queue size ranges above m_maxTh.
        * NEW: p is set to 1.0
@@ -756,7 +756,7 @@ RedQueueDisc::CalculatePNew (void)
 }
 
 // Returns a probability using these function parameters for the DropEarly function
-double 
+double
 RedQueueDisc::ModifyP (double p, uint32_t size)
 {
   NS_LOG_FUNCTION (this << p << size);
@@ -808,7 +808,7 @@ RedQueueDisc::ModifyP (double p, uint32_t size)
 }
 
 Ptr<QueueDiscItem>
-RedQueueDisc::DoDequeue (void)
+RedQueueDisc::DoDequeue ()
 {
   NS_LOG_FUNCTION (this);
 
@@ -818,7 +818,7 @@ RedQueueDisc::DoDequeue (void)
       m_idle = 1;
       m_idleTime = Simulator::Now ();
 
-      return 0;
+      return nullptr;
     }
   else
     {
@@ -835,13 +835,13 @@ RedQueueDisc::DoDequeue (void)
 }
 
 Ptr<const QueueDiscItem>
-RedQueueDisc::DoPeek (void)
+RedQueueDisc::DoPeek ()
 {
   NS_LOG_FUNCTION (this);
   if (GetInternalQueue (0)->IsEmpty ())
     {
       NS_LOG_LOGIC ("Queue empty");
-      return 0;
+      return nullptr;
     }
 
   Ptr<const QueueDiscItem> item = GetInternalQueue (0)->Peek ();
@@ -853,7 +853,7 @@ RedQueueDisc::DoPeek (void)
 }
 
 bool
-RedQueueDisc::CheckConfig (void)
+RedQueueDisc::CheckConfig ()
 {
   NS_LOG_FUNCTION (this);
   if (GetNQueueDiscClasses () > 0)

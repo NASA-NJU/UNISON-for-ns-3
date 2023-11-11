@@ -20,9 +20,10 @@ on the IEEE 802.11 standard [ieee80211]_. We will go into more detail below but 
 |ns3| provides models for these aspects of 802.11:
 
 * basic 802.11 DCF with **infrastructure** and **adhoc** modes
-* **802.11a**, **802.11b**, **802.11g**, **802.11n** (both 2.4 and 5 GHz bands), **802.11ac** and **802.11ax** (2.4, 5 and 6 GHz bands) physical layers
+* **802.11a**, **802.11b**, **802.11g**, **802.11n** (both 2.4 and 5 GHz bands), **802.11ac**, **802.11ax** (2.4, 5 and 6 GHz bands) and **802.11be** physical layers
 * **MSDU aggregation** and **MPDU aggregation** extensions of 802.11n, and both can be combined together (two-level aggregation)
 * 802.11ax **DL OFDMA** and **UL OFDMA** (including support for the MU EDCA Parameter Set)
+* 802.11be **Multi-link** discovery and setup
 * QoS-based EDCA and queueing extensions of **802.11e**
 * the ability to use different propagation loss models and propagation delay models,
   please see the chapter on :ref:`Propagation` for more detail
@@ -36,7 +37,7 @@ on the IEEE 802.11 standard [ieee80211]_. We will go into more detail below but 
 The set of 802.11 models provided in |ns3| attempts to provide an accurate
 MAC-level implementation of the 802.11 specification and to provide a
 packet-level abstraction of the PHY-level for different PHYs, corresponding to
-802.11a/b/e/g/n/ac/ax specifications.
+802.11a/b/e/g/n/ac/ax/be specifications.
 
 In |ns3|, nodes can have multiple WifiNetDevices on separate channels, and the
 WifiNetDevice can coexist with other device types.
@@ -61,8 +62,10 @@ The implementation is modular and provides roughly three sublayers of models:
   this sublayer is sometimes called the **upper MAC** and consists of more
   software-oriented implementations vs. time-critical hardware implementations.
 
-Next, we provide an design overview of each layer, shown in
-Figure :ref:`wifi-architecture`.
+Next, we provide a design overview of each layer, shown in
+Figure :ref:`wifi-architecture`. For 802.11be Multi-Link Devices (MLDs),
+there as many instances of WifiPhy, FrameExchangeManager and ChannelAccessManager
+as the number of links.
 
 .. _wifi-architecture:
 
@@ -164,18 +167,18 @@ packets.  Interference from other wireless technologies is only modeled
 when the SpectrumWifiPhy is used.
 The following details pertain to the physical layer and channel models:
 
-* 802.11ax MU-RTS/CTS is not yet supported
-* 802.11ac/ax MU-MIMO is not supported, and no more than 4 antennas can be configured
-* 802.11n/ac/ax beamforming is not supported
+* 802.11ax/be MU-RTS/CTS is not yet supported
+* 802.11ac/ax/be MU-MIMO is not supported, and no more than 4 antennas can be configured
+* 802.11n/ac/ax/be beamforming is not supported
 * 802.11n RIFS is not supported
 * 802.11 PCF/HCF/HCCA are not implemented
 * Channel Switch Announcement is not supported
 * Authentication and encryption are missing
 * Processing delays are not modeled
-* Channel bonding implementation only supports the use of the configured channel width
-  and does not perform CCA on secondary channels
-* Cases where RTS/CTS and ACK are transmitted using HT/VHT/HE formats are not supported
+* Cases where RTS/CTS and ACK are transmitted using HT/VHT/HE/EHT formats are not supported
 * Energy consumption model does not consider MIMO
+* 802.11ax preamble puncturing is supported by the PHY but is currently not exploited by the MAC
+* Only minimal 802.11be PHY is supported (no MAC layer yet)
 
 At the MAC layer, most of the main functions found in deployed Wi-Fi
 equipment for 802.11a/b/e/g/n/ac/ax are implemented, but there are scattered instances
@@ -268,7 +271,7 @@ considering the size and complexity of the corresponding files.
 In addition, adding and maintaining new PHY amendments had become a complex
 task (especially those implemented inside other modules, e.g. DMG).
 The adopted solution was to have ``PhyEntity`` classes that contain the "clause"
-specific (i.e. HT/VHT/HE etc) parts of the PHY process.
+specific (i.e. HT/VHT/HE/EHT etc) parts of the PHY process.
 
 The notion of "PHY entity" is in the standard at the beginning of each PHY
 layer description clause, e.g. section 21.1.1 of IEEE 802.11-2016:
@@ -295,6 +298,7 @@ the IEEE 802.11 standard. The currently implemented PHY entities are:
 * ``ns3::HtPhy``: PHY entity for HT (11n)
 * ``ns3::VhtPhy``: PHY entity for VHT (11ac)
 * ``ns3::HePhy``: PHY entity for HE (11ax)
+* ``ns3::EhtPhy``: PHY entity for EHT (11be)
 
 Their inheritance diagram is given in Figure :ref:`phyentity-hierarchy` and
 closely follows the standard's logic, e.g. section 21.1.1 of IEEE 802.11-2016:
@@ -328,6 +332,7 @@ specialized into the following amendment-specific PPDUs:
 * ``ns3::HtPpdu``: PPDU for HT (11n)
 * ``ns3::VhtPpdu``: PPDU for VHT (11ac)
 * ``ns3::HePpdu``: PPDU for HE (11ax)
+* ``ns3::EhtPpdu``: PPDU for EHT (11be)
 
 Their inheritance diagram is given in Figure :ref:`wifippdu-hierarchy` and
 closely follows the standard's logic, e.g. section 21.3.8.1 of IEEE 802.11-2016:
@@ -361,14 +366,14 @@ layer, and allows other objects to hook as *listeners* to monitor PHY
 state.  The main use of listeners is for the MAC layer to know when
 the PHY is busy or not (for transmission and collision avoidance).
 
-The PHY layer can be in one of seven states:
+The PHY layer can be in one of these states:
 
 #. TX: the PHY is currently transmitting a signal on behalf of its associated
    MAC
 #. RX: the PHY is synchronized on a signal and is waiting until it has received
    its last bit to forward it to the MAC.
+#. CCA_BUSY: the PHY is issuing a PHY-CCA.indication(BUSY) indication for the primary channel.
 #. IDLE: the PHY is not in the TX, RX, or CCA_BUSY states.
-#. CCA_BUSY: the PHY is not in TX or RX state but the measured energy is higher than the energy detection threshold.
 #. SWITCHING: the PHY is switching channels.
 #. SLEEP: the PHY is in a power save mode and cannot send nor receive frames.
 #. OFF: the PHY is powered off and cannot send nor receive frames.
@@ -426,7 +431,8 @@ The ``PhyEntity::EndReceiveField ()`` method will check the correct reception
 of the current preamble and header field and, if so, calls ``PhyEntity::StartReceiveField ()``
 for the next field,
 otherwise the reception is aborted and PHY is put either in IDLE state or in CCA_BUSY state,
-depending on whether the measured energy is higher than the energy detection threshold.
+depending on whether a PHY-CCA.indication(BUSY) is being issued on not for the primary channel
+.
 
 The next event at ``PhyEntity::StartReceiveField ()`` checks, using the interference
 helper and error model, whether the header was successfully decoded, and if so,
@@ -451,17 +457,19 @@ the PHY being in a state in which it cannot receive a packet, the packet
 is added to the interference helper, and the aggregate of the energy of
 all such signals is compared against an energy detection threshold to
 determine whether the PHY should enter a CCA_BUSY state.
-The ``WifiPhy::CcaEdThreshold`` attribute
-corresponds to what the standard calls the "ED threshold" for CCA Mode 1.
-In section 16.4.8.5 in the 802.11-2012 standard: "CCA Mode 1: Energy above
-threshold. CCA shall report a busy medium upon detection of any energy above
-the ED threshold." By default, this value is set to the -62 dBm level specified
-in the standard for 20 MHz channels. When using ``YansWifiPhy``, there are no
-non-Wi-Fi signals, so it is unlikely that this attribute would play much of a
-role in Yans wifi models if left at the default value, but if there is a strong
-Wi-Fi signal that is not otherwise being received by the model, it has
-the possibility to raise the CCA_BUSY while the overall energy exceeds
-this threshold.
+
+A PHY-CCA.indication(BUSY) is issued if a signal occupying the primary channel with a received
+power above ``WifiPhy::CcaSensitivity`` (defaulted to -82 dBm) has been received by the PHY or if the
+measured energy on the primary channel is higher than the energy detection threshold ``WifiPhy::CcaEdThreshold``
+(defaulted to -62 dBm).
+
+When channel bonding is used, CCA indication for signals not occupying the primary channel is also reported.
+Since 802.11ac and above needs to sense CCA sensitivity for secondary channels larger than 20 MHz, CCA sensitivity thresholds
+can be adjusted per secondary channel width using ``VhtConfiguration::SecondaryCcaSensitivityThresholds`` attribute.
+
+For 802.11ax and above, and if the operational bandwidth is equal or larger than 40 MHz, each 20 MHz subchannel of the operational bandwidth
+is being sensed and PHY-CCA.indication also reports a CCA_BUSY duration indication for each of these 20 MHz subchannel. A zero duration for
+a given 20 MHz subchannel indicates the 20 MHz subchannel is IDLE.
 
 The above describes the case in which the packet is a single MPDU.  For
 more recent Wi-Fi standards using MPDU aggregation, ``StartReceivePayload``
@@ -475,8 +483,8 @@ InterferenceHelper
 
 The InterferenceHelper is an object that tracks all incoming packets and
 calculates probability of error values for packets being received, and
-also evaluates whether energy on the channel rises above the CCA
-threshold.
+also evaluates whether and for how long energy on the channel rises above
+a given threshold.
 
 The basic operation of probability of error calculations is shown in Figure
 :ref:`snir`.  Packets are represented as bits (not symbols) in the |ns3|
@@ -722,14 +730,35 @@ The MAC model
 Infrastructure association
 ##########################
 
-Association in infrastructure mode is a high-level MAC function.
-Either active probing or passive scanning is used (default is passive scan).
-At the start of the simulation, Wi-Fi network devices configured as
-STA will attempt to scan the channel. Depends on whether passive or active
-scanning is selected, STA will attempt to gather beacons, or send a probe
-request and gather probe responses until the respective timeout occurs. The
-end result will be a list of candidate AP to associate to. STA will then try
-to associate to the best AP (i.e., best SNR).
+Association in infrastructure mode is a high-level MAC function performed by
+the Association Manager, which is implemented through a base class (``WifiAssocManager``)
+and a default subclass (``WifiDefaultAssocManager``). The interaction between
+the station MAC, the Association Manager base class and subclass is illustrated
+in Figure :ref:`fig-assoc-manager`.
+
+.. _fig-assoc-manager:
+
+.. figure:: figures/assoc-manager.*
+   :align: center
+
+   Scanning procedure
+
+The STA wifi MAC requests the Association Manager to start a scanning procedure
+with specified parameters, including the type of scanning (active or passive),
+the desired SSID, the list of channels to scan, etc. The STA wifi MAC then expects
+to be notified of the best AP to associate with at the end of the scanning procedure.
+Every Beacon or Probe Response frame received during scanning is forwarded to the
+Association Manager, which keeps a list of candidate APs that match the scanning
+parameters. The sorting criterium for such a list is defined by the Association
+Manager subclass. The default Association Manager sorts APs in decreasing order
+of the SNR of the received Beacon/Probe Response frame.
+
+When notified of the start of a scanning procedure, the default Association Manager
+schedules a call to a method that processes the information included in the frames
+received up to the time such a method is called. When both the AP and the STA have
+multiple links (i.e., they are 802.11be MLDs), the default Association Manager attempts
+to setup as many links as possible. This involves switching operating channel on some of
+the STA's links to match those on which the APs affiliated with the AP MLD are operating.
 
 If association is rejected by the AP for some reason, the STA will try to
 associate to the next best AP until the candidate list is exhausted which
@@ -834,6 +863,14 @@ a result, the backoff timer has a zero value, the EDCAF cannot immediately
 transmit, but it has to wait for another slotTime of idle medium before transmission
 can start.
 
+When the Channel Access Manager determines that channel access can be granted, it
+determines the largest primary channel that is considered idle based on the CCA-BUSY
+indication provided by the PHY. Such an information is passed to the Frame Exchange
+Manager, which in turn informs the Multi-User Scheduler (if any) and the Wifi Remote
+Station Manager. As a result, PPDUs are transmitted on the largest idle primary channel.
+For example, if a STA is operating on a 40 MHz channel and the secondary20 channel
+is indicated to be busy, transmissions will occur on the primary20 channel.
+
 The higher-level MAC functions are implemented in a set of other C++ classes and
 deal with:
 
@@ -878,6 +915,37 @@ The features supported by every FrameExchangeManager class are as follows:
 
 .. _wifi-mu-ack-sequences:
 
+MAC queues
+##########
+Each EDCA function (on QoS stations) and the DCF (on non-QoS stations) have their own
+MAC queue (an instance of the ``WifiMacQueue`` class) to store packets received from
+the upper layer and waiting for transmission. On QoS stations, each received packet is
+assigned a User Priority based on the socket priority (see, e.g., the wifi-multi-tos or
+the wifi-mac-ofdma examples), which determines the Access Category that handles the
+packet. By default, wifi MAC queues support flow control, hence upper layers do not
+forward a packet down if there is no room for it in the corresponding MAC queue.
+Packets stay in the wifi MAC queue until they are acknowledged or discarded. A packet
+may be discarded because, e.g., its lifetime expired (i.e., it stayed in the queue for too
+long) or the maximum number of retries was reached. The maximum lifetime for a packet can
+be configured via the ``MaxDelay`` attribute of ``WifiMacQueue``. There are a number of
+traces that can be used to track the outcome of a packet transmission (see the corresponding
+doxygen documentation):
+
+* ``WifiMac`` trace sources: ``AckedMpdu``, ``NAckedMpdu``, ``DroppedMpdu``,
+  ``MpduResponseTimeout``, ``PsduResponseTimeout``, ``PsduMapResponseTimeout``
+* ``WifiMacQueue`` trace source: ``Expired``
+
+Internally, a wifi MAC queue is made of multiple sub-queues, each storing frames of
+a given type (i.e., data or management) and having a given receiver address and TID.
+For single-user transmissions, the next station to serve is determined by a wifi MAC
+queue scheduler (held by the ``WifiMac`` instance). A wifi MAC queue scheduler is
+implemented through a base class (``WifiMacQueueScheduler``) and subclasses defining
+specific scheduling policies. The default scheduler (``FcfsWifiQueueScheduler``)
+gives management frames higher priority than data frames and serves data frames in a
+first come first serve fashion. For multi-user transmissions (see below), scheduling
+is performed by a Multi-User scheduler, which may or may not consult the wifi MAC queue
+scheduler to identify the stations to serve with a Multi-User DL or UL transmission.
+
 Multi-user transmissions
 ########################
 
@@ -921,14 +989,18 @@ For UL OFDMA, both BSRP Trigger Frames and Basic Trigger Frames are supported, a
 Figure :ref:`fig-ul-ofdma-80211ax`. A BSRP Trigger Frame is sent by an AP to solicit stations
 to send QoS Null frames containing Buffer Status Reports. A Basic Trigger Frame is sent by an AP
 to solicit stations to send data frames in TB PPDUs, which are acknowledged by the AP via a
-Multi-STA BlockAck frame.
+Multi-STA BlockAck frame. Note that, in order for the two frame exchange sequences to be separated
+by a SIFS (as shown in Figure :ref:`fig-ul-ofdma-80211ax`), it is necessary that the transmitting
+Access Category has a non-zero TXOP Limit, there is enough remaining time in the TXOP to perform
+the frame exchange sequence initiated by the Basic Trigger Frame and the Multi-User scheduler
+(described next) chooses to send a Basic Trigger Frame after a BSRP Trigger Frame.
 
 .. _fig-ul-ofdma-80211ax:
 
 .. figure:: figures/ul-ofdma.*
    :align: center
 
-   Acknowledgment of DL MU frames via aggregated MU-BAR Trigger Frames
+   Frame exchange sequences using UL OFDMA
 
 Multi-User Scheduler
 ####################
@@ -936,9 +1008,20 @@ Multi-User Scheduler
 A new component, named **MultiUserScheduler**, is in charge of determining what frame exchange
 sequence the aggregated AP has to perform when gaining a TXOP (DL OFDMA, UL OFDMA or BSRP Trigger
 Frame), along with the information needed to perform the selected frame exchange sequence (e.g.,
-the set of PSDUs to send in case of DL OFDMA). ``MultiUserScheduler`` is an abstract base class.
-Currently, the only available subclass is **RrMultiUserScheduler**. By default, no multi-user
-scheduler is aggregated to an AP (hence, OFDMA is not enabled).
+the set of PSDUs to send in case of DL OFDMA). A TXOP is gained (some time) after requesting
+channel access, which is normally done by DCF/EDCA (Txop/QosTxop) if the device has frames to transmit. In order for an AP to coordinate UL MU transmissions even without DL traffic, the
+duration of the access request interval can be set to a non-zero value through the
+``AccessReqInterval`` attribute. The access request interval is the interval between two
+consecutive requests for channel access made by the MultiUserScheduler; such requests are made
+independently of the presence of frames in the queues of the AP. It is also possible to set the
+Access Category for which the MultiUserScheduler makes requests for channel access (via the
+``AccessReqAc`` attribute) and to choose whether the access request interval is measured starting
+from the last time the MultiUserScheduler made a request for channel access or from the last time
+channel access was obtained by DCF/EDCA (via the ``DelayAccessReqUponAccess`` attribute).
+
+``MultiUserScheduler`` is an abstract base class. Currently, the only available subclass is
+**RrMultiUserScheduler**. By default, no multi-user scheduler is aggregated to an AP (hence,
+OFDMA is not enabled).
 
 Round-robin Multi-User Scheduler
 ################################

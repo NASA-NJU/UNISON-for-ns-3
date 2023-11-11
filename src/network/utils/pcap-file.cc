@@ -65,19 +65,19 @@ PcapFile::~PcapFile ()
 
 
 bool
-PcapFile::Fail (void) const
+PcapFile::Fail () const
 {
   NS_LOG_FUNCTION (this);
   return m_file.fail ();
 }
 bool
-PcapFile::Eof (void) const
+PcapFile::Eof () const
 {
   NS_LOG_FUNCTION (this);
   return m_file.eof ();
 }
 void
-PcapFile::Clear (void)
+PcapFile::Clear ()
 {
   NS_LOG_FUNCTION (this);
   m_file.clear ();
@@ -85,70 +85,70 @@ PcapFile::Clear (void)
 
 
 void
-PcapFile::Close (void)
+PcapFile::Close ()
 {
   NS_LOG_FUNCTION (this);
   m_file.close ();
 }
 
 uint32_t
-PcapFile::GetMagic (void)
+PcapFile::GetMagic ()
 {
   NS_LOG_FUNCTION (this);
   return m_fileHeader.m_magicNumber;
 }
 
 uint16_t
-PcapFile::GetVersionMajor (void)
+PcapFile::GetVersionMajor ()
 {
   NS_LOG_FUNCTION (this);
   return m_fileHeader.m_versionMajor;
 }
 
 uint16_t
-PcapFile::GetVersionMinor (void)
+PcapFile::GetVersionMinor ()
 {
   NS_LOG_FUNCTION (this);
   return m_fileHeader.m_versionMinor;
 }
 
 int32_t
-PcapFile::GetTimeZoneOffset (void)
+PcapFile::GetTimeZoneOffset ()
 {
   NS_LOG_FUNCTION (this);
   return m_fileHeader.m_zone;
 }
 
 uint32_t
-PcapFile::GetSigFigs (void)
+PcapFile::GetSigFigs ()
 {
   NS_LOG_FUNCTION (this);
   return m_fileHeader.m_sigFigs;
 }
 
 uint32_t
-PcapFile::GetSnapLen (void)
+PcapFile::GetSnapLen ()
 {
   NS_LOG_FUNCTION (this);
   return m_fileHeader.m_snapLen;
 }
 
 uint32_t
-PcapFile::GetDataLinkType (void)
+PcapFile::GetDataLinkType ()
 {
   NS_LOG_FUNCTION (this);
   return m_fileHeader.m_type;
 }
 
 bool
-PcapFile::GetSwapMode (void)
+PcapFile::GetSwapMode ()
 {
   NS_LOG_FUNCTION (this);
   return m_swapMode;
 }
 
 bool
-PcapFile::IsNanoSecMode (void)
+PcapFile::IsNanoSecMode ()
 {
   NS_LOG_FUNCTION (this);
   return m_nanosecMode;
@@ -199,7 +199,7 @@ PcapFile::Swap (PcapRecordHeader *from, PcapRecordHeader *to)
 }
 
 void
-PcapFile::WriteFileHeader (void)
+PcapFile::WriteFileHeader ()
 {
   NS_LOG_FUNCTION (this);
   //
@@ -218,7 +218,7 @@ PcapFile::WriteFileHeader (void)
   // the pointer headerOut selects either the swapped or non-swapped version of
   // the pcap file header.
   //
-  PcapFileHeader *headerOut = 0;
+  PcapFileHeader *headerOut = nullptr;
 
   if (m_swapMode == false)
     {
@@ -244,7 +244,7 @@ PcapFile::WriteFileHeader (void)
 }
 
 void
-PcapFile::ReadAndVerifyFileHeader (void)
+PcapFile::ReadAndVerifyFileHeader ()
 {
   NS_LOG_FUNCTION (this);
   //
@@ -530,7 +530,8 @@ PcapFile::Diff (std::string const & f1, std::string const & f2,
                 uint32_t snapLen)
 {
   NS_LOG_FUNCTION (f1 << f2 << sec << usec << snapLen);
-  PcapFile pcap1, pcap2;
+  PcapFile pcap1;
+  PcapFile pcap2;
   pcap1.Open (f1, std::ios::in);
   pcap2.Open (f2, std::ios::in);
   bool bad = pcap1.Fail () || pcap2.Fail ();

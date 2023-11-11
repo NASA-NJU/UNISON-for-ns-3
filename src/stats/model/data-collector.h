@@ -44,19 +44,19 @@ typedef std::list<std::pair<std::string, std::string> > MetadataList;
 /**
  * \ingroup dataoutput
  * \class DataCollector
- * \brief Collects data 
+ * \brief Collects data
  */
 class DataCollector : public Object {
 public:
   DataCollector();
-  virtual ~DataCollector();
+  ~DataCollector() override;
 
   /**
    * Register this type.
    * \return The TypeId.
    */
-  static TypeId GetTypeId (void);
-  
+  static TypeId GetTypeId ();
+
   /**
    * Provide specific parameters to the DataCollector
    * \param experiment Label for the experiment
@@ -143,7 +143,7 @@ public:
   DataCalculatorList::iterator DataCalculatorEnd ();
 
 protected:
-  virtual void DoDispose ();
+  void DoDispose () override;
 
 private:
   std::string m_experimentLabel; //!< Experiment label

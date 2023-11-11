@@ -38,7 +38,7 @@ PppHeader::~PppHeader ()
 }
 
 TypeId
-PppHeader::GetTypeId (void)
+PppHeader::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::PppHeader")
     .SetParent<Header> ()
@@ -49,12 +49,12 @@ PppHeader::GetTypeId (void)
 }
 
 TypeId
-PppHeader::GetInstanceTypeId (void) const
+PppHeader::GetInstanceTypeId () const
 {
   return GetTypeId ();
 }
 
-void 
+void
 PppHeader::Print (std::ostream &os) const
 {
   std::string proto;
@@ -70,11 +70,11 @@ PppHeader::Print (std::ostream &os) const
     default:
       NS_ASSERT_MSG (false, "PPP Protocol number not defined!");
     }
-  os << "Point-to-Point Protocol: " << proto; 
+  os << "Point-to-Point Protocol: " << proto;
 }
 
 uint32_t
-PppHeader::GetSerializedSize (void) const
+PppHeader::GetSerializedSize () const
 {
   return 2;
 }
@@ -99,7 +99,7 @@ PppHeader::SetProtocol (uint16_t protocol)
 }
 
 uint16_t
-PppHeader::GetProtocol (void)
+PppHeader::GetProtocol ()
 {
   return m_protocol;
 }

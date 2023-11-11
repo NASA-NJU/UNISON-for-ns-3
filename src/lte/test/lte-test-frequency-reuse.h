@@ -28,6 +28,12 @@
 
 #include "ns3/spectrum-test.h"
 #include "ns3/lte-spectrum-value-helper.h"
+#include "ns3/node.h"
+
+namespace ns3
+{
+class MobilityModel;
+}
 
 using namespace ns3;
 
@@ -47,7 +53,7 @@ public:
  * \ingroup lte-test
  * \ingroup tests
  *
- * \brief Test frequency reuse algorithm. Test fails if the muted frequencies 
+ * \brief Test frequency reuse algorithm. Test fails if the muted frequencies
  *  are being used.
  */
 class LteFrTestCase : public TestCase
@@ -66,7 +72,7 @@ public:
   LteFrTestCase (std::string name,
                  uint32_t userNum,uint16_t dlBandwidth,uint16_t ulBandwidth,
                  std::vector<bool> availableDlRb, std::vector<bool> availableUlRb);
-  virtual ~LteFrTestCase ();
+  ~LteFrTestCase () override;
 
   /**
    * DL data receive start function
@@ -80,7 +86,7 @@ public:
   void UlDataRxStart (Ptr<const SpectrumValue> spectrumValue);
 
 protected:
-  virtual void DoRun (void);
+  void DoRun () override;
 
   uint32_t m_userNum; ///< the number of UE nodes
   uint16_t m_dlBandwidth; ///< the DL bandwidth
@@ -98,7 +104,7 @@ protected:
  * \ingroup lte-test
  * \ingroup tests
  *
- * \brief Test hard frequency reuse algorithm. Test fails if the muted 
+ * \brief Test hard frequency reuse algorithm. Test fails if the muted
  *  frequencies are being used.
  */
 class LteHardFrTestCase : public LteFrTestCase
@@ -125,10 +131,10 @@ public:
                      uint8_t dlSubBandOffset, uint16_t dlSubBandwidth,
                      uint8_t ulSubBandOffset, uint16_t ulSubBandwidth,
                      std::vector<bool> availableDlRb, std::vector<bool> availableUlRb);
-  virtual ~LteHardFrTestCase ();
+  ~LteHardFrTestCase () override;
 
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
 
   std::string m_schedulerType; ///< the scheduler type
 
@@ -143,7 +149,7 @@ private:
  * \ingroup lte-test
  * \ingroup tests
  *
- * \brief Test stric frequency reuse algorithm. Test fails if the muted frequencies 
+ * \brief Test stric frequency reuse algorithm. Test fails if the muted frequencies
  *  are being used.
  */
 class LteStrictFrTestCase : public LteFrTestCase
@@ -172,10 +178,10 @@ public:
                        uint16_t dlCommonSubBandwidth, uint8_t dlEdgeSubBandOffset, uint16_t dlEdgeSubBandwidth,
                        uint16_t ulCommonSubBandwidth, uint8_t ulEdgeSubBandOffset, uint16_t ulEdgeSubBandwidth,
                        std::vector<bool> availableDlRb, std::vector<bool> availableUlRb);
-  virtual ~LteStrictFrTestCase ();
+  ~LteStrictFrTestCase () override;
 
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
 
   std::string m_schedulerType; ///< scheduler type
 
@@ -192,9 +198,9 @@ private:
  * \ingroup lte-test
  * \ingroup tests
  *
- * \brief Test frequency reuse algorithm by teleporing UEs to different 
- * parts of area and checking if the frequency is used according to the 
- * frequency pattern for different parts of area. Test fails if the muted 
+ * \brief Test frequency reuse algorithm by teleporing UEs to different
+ * parts of area and checking if the frequency is used according to the
+ * frequency pattern for different parts of area. Test fails if the muted
  * frequencies for a given part of area are being used by UE.
  */
 class LteFrAreaTestCase : public TestCase
@@ -207,7 +213,7 @@ public:
    * \param schedulerType the scheduler type
    */
   LteFrAreaTestCase (std::string name, std::string schedulerType);
-  virtual ~LteFrAreaTestCase ();
+  ~LteFrAreaTestCase () override;
 
   /**
    * DL data receive start function
@@ -259,10 +265,10 @@ public:
   void SetUlExpectedValues (double expectedPower, std::vector<bool> expectedDlRb);
 
 protected:
-  virtual void DoRun (void);
+  void DoRun () override;
 
   std::string m_schedulerType; ///< the scheduler type
- 
+
   uint16_t m_dlBandwidth; ///< the DL bandwidth
   uint16_t m_ulBandwidth; ///< the UL bandwidth
 
@@ -297,10 +303,10 @@ public:
    * \param schedulerType the scheduler type
    */
   LteStrictFrAreaTestCase (std::string name, std::string schedulerType);
-  virtual ~LteStrictFrAreaTestCase ();
+  ~LteStrictFrAreaTestCase () override;
 
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
 };
 
 /**
@@ -319,10 +325,10 @@ public:
    * \param schedulerType the scheduler type
    */
   LteSoftFrAreaTestCase (std::string name, std::string schedulerType);
-  virtual ~LteSoftFrAreaTestCase ();
+  ~LteSoftFrAreaTestCase () override;
 
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
 
 };
 
@@ -342,10 +348,10 @@ public:
    * \param schedulerType the scheduler type
    */
   LteSoftFfrAreaTestCase (std::string name, std::string schedulerType);
-  virtual ~LteSoftFfrAreaTestCase ();
+  ~LteSoftFfrAreaTestCase () override;
 
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
 
 };
 
@@ -365,10 +371,10 @@ public:
    * \param schedulerType the scheduler type
    */
   LteEnhancedFfrAreaTestCase (std::string name, std::string schedulerType);
-  virtual ~LteEnhancedFfrAreaTestCase ();
+  ~LteEnhancedFfrAreaTestCase () override;
 
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
 
 };
 
@@ -388,10 +394,10 @@ public:
    * \param schedulerType the scheduler type
    */
   LteDistributedFfrAreaTestCase (std::string name, std::string schedulerType);
-  virtual ~LteDistributedFfrAreaTestCase ();
+  ~LteDistributedFfrAreaTestCase () override;
 
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
 
 };
 

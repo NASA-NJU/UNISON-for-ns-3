@@ -241,7 +241,7 @@ public:
 
   /**
    * Truncate to an integer.
-   * Truncation is always toward zero, 
+   * Truncation is always toward zero,
    * \return The value truncated toward zero.
    */
   int64_t GetInt (void) const
@@ -289,7 +289,7 @@ public:
   }
 
 private:
-  
+
   /**
    * \name Arithmetic Operators
    * Arithmetic operators for int64x64_t.
@@ -301,10 +301,10 @@ private:
    *  \param [in] rhs Right hand argument
    *  \return The result of the operator.
    */
-  // *NS_CHECK_STYLE_OFF*
-  friend inline bool operator == (const int64x64_t & lhs, const int64x64_t & rhs) { return lhs._v == rhs._v; };
-  friend inline bool operator <  (const int64x64_t & lhs, const int64x64_t & rhs) { return lhs._v < rhs._v; };
-  friend inline bool operator >  (const int64x64_t & lhs, const int64x64_t & rhs) { return lhs._v > rhs._v; };
+
+  friend inline bool operator == (const int64x64_t & lhs, const int64x64_t & rhs) { return lhs._v == rhs._v; }
+  friend inline bool operator <  (const int64x64_t & lhs, const int64x64_t & rhs) { return lhs._v < rhs._v; }
+  friend inline bool operator >  (const int64x64_t & lhs, const int64x64_t & rhs) { return lhs._v > rhs._v; }
 
   friend inline int64x64_t & operator += ( int64x64_t & lhs, const int64x64_t & rhs)
     {
@@ -326,7 +326,7 @@ private:
       lhs._v /= rhs._v;
       return lhs;
     };
-  // *NS_CHECK_STYLE_ON*
+
   /**@}*/
 
   /**

@@ -53,8 +53,8 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
-  virtual void DoDispose ();
+  static TypeId GetTypeId ();
+  void DoDispose () override;
 
   /**
    * Constructor that binds callback methods of sockets.
@@ -68,7 +68,7 @@ public:
                      const Ptr<Socket> s5uSocket, const Ptr<Socket> s5cSocket);
 
   /** Destructor */
-  virtual ~EpcSgwApplication (void);
+  ~EpcSgwApplication () override;
 
 
   /**
@@ -87,7 +87,7 @@ public:
   void AddPgw (Ipv4Address pgwAddr);
 
   /**
-   * Let the SGW be aware of a new eNB 
+   * Let the SGW be aware of a new eNB
    *
    * \param cellId the cell identifier
    * \param enbAddr the address of the eNB

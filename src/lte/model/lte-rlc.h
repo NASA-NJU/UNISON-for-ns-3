@@ -38,7 +38,7 @@ namespace ns3 {
 
 // class LteRlcSapProvider;
 // class LteRlcSapUser;
-// 
+//
 // class LteMacSapProvider;
 // class LteMacSapUser;
 
@@ -55,13 +55,13 @@ class LteRlc : public Object // SimpleRefCount<LteRlc>
   friend class LteRlcSpecificLteRlcSapProvider<LteRlc>;
 public:
   LteRlc ();
-  virtual ~LteRlc ();
+  ~LteRlc () override;
   /**
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
-  virtual void DoDispose ();
+  static TypeId GetTypeId ();
+  void DoDispose () override;
 
   /**
    *
@@ -131,12 +131,12 @@ public:
 
   /// \todo MRE What is the sense to duplicate all the interfaces here???
   // NB to avoid the use of multiple inheritance
-  
+
 protected:
   // Interface forwarded by LteRlcSapProvider
   /**
    * Transmit PDCP PDU
-   * 
+   *
    * \param p packet
    */
   virtual void DoTransmitPdcpPdu (Ptr<Packet> p) = 0;
@@ -149,17 +149,17 @@ protected:
    * Notify transmit opportunity
    *
    * \param params LteMacSapUser::TxOpportunityParameters
-   */ 
+   */
   virtual void DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters params) = 0;
   /**
    * Notify HARQ delivery failure
-   */ 
+   */
   virtual void DoNotifyHarqDeliveryFailure () = 0;
   /**
    * Receive PDU function
    *
    * \param params the LteMacSapUser::ReceivePduParameters
-   */ 
+   */
   virtual void DoReceivePdu (LteMacSapUser::ReceivePduParameters params) = 0;
 
   LteMacSapUser* m_macSapUser; ///< MAC SAP user
@@ -198,19 +198,19 @@ class LteRlcSm : public LteRlc
 {
 public:
   LteRlcSm ();
-  virtual ~LteRlcSm ();
+  ~LteRlcSm () override;
   /**
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
-  virtual void DoInitialize ();
-  virtual void DoDispose ();
+  static TypeId GetTypeId ();
+  void DoInitialize () override;
+  void DoDispose () override;
 
-  virtual void DoTransmitPdcpPdu (Ptr<Packet> p);
-  virtual void DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txOpParams);
-  virtual void DoNotifyHarqDeliveryFailure ();
-  virtual void DoReceivePdu (LteMacSapUser::ReceivePduParameters rxPduParams);
+  void DoTransmitPdcpPdu (Ptr<Packet> p) override;
+  void DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txOpParams) override;
+  void DoNotifyHarqDeliveryFailure () override;
+  void DoReceivePdu (LteMacSapUser::ReceivePduParameters rxPduParams) override;
 
 
 

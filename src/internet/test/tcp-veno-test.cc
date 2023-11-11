@@ -18,7 +18,7 @@
  * Author: Truc Anh N. Nguyen <annguyen@ittc.ku.edu>
  *
  * James P.G. Sterbenz <jpgs@ittc.ku.edu>, director
- * ResiliNets Research Group  http://wiki.ittc.ku.edu/resilinets
+ * ResiliNets Research Group  https://resilinets.org/
  * Information and Telecommunication Technology Center (ITTC)
  * and Department of Electrical Engineering and Computer Science
  * The University of Kansas Lawrence, KS USA.
@@ -62,7 +62,7 @@ public:
                const std::string &name);
 
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
 
   /**
    * \brief TCP Veno additive increase formula.

@@ -91,7 +91,7 @@ public:
    * \brief Register this type.
    * \return The Object TypeId.
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   /**
    * \brief Iterate over the Objects aggregated to an ns3::Object.
@@ -113,14 +113,14 @@ public:
      * \returns \c true if Next() can be called and return a non-null
      *          pointer, \c false otherwise.
      */
-    bool HasNext (void) const;
+    bool HasNext () const;
 
     /**
      * Get the next Aggregated Object.
      *
      * \returns The next aggregated Object.
      */
-    Ptr<const Object> Next (void);
+    Ptr<const Object> Next ();
 
   private:
     /** Object needs access. */
@@ -141,9 +141,9 @@ public:
   /** Constructor. */
   Object ();
   /** Destructor. */
-  virtual ~Object ();
+  ~Object () override;
 
-  virtual TypeId GetInstanceTypeId (void) const;
+  TypeId GetInstanceTypeId () const override;
 
   /**
    * Get a pointer to the requested aggregated Object.  If the type of object
@@ -154,7 +154,7 @@ public:
    *          if it could not be found.
    */
   template <typename T>
-  inline Ptr<T> GetObject (void) const;
+  inline Ptr<T> GetObject () const;
   /**
    * Get a pointer to the requested aggregated Object by TypeId.  If the
    * TypeId argument is ns3::Object, a Ptr to the calling object is returned.
@@ -180,7 +180,7 @@ public:
    *
    * This method is typically used to break reference cycles.
    */
-  void Dispose (void);
+  void Dispose ();
   /**
    * Aggregate two Objects together.
    *
@@ -208,7 +208,7 @@ public:
    * iterator will be empty and AggregateIterator::HasNext() will
    * always return \c false.
    */
-  AggregateIterator GetAggregateIterator (void) const;
+  AggregateIterator GetAggregateIterator () const;
 
   /**
    * Invoke DoInitialize on all Objects aggregated to this one.
@@ -220,7 +220,7 @@ public:
    *
    * \sa DoInitialize()
    */
-  void Initialize (void);
+  void Initialize ();
 
   /**
    * Check if the object has been initialized.
@@ -228,7 +228,7 @@ public:
    * \brief Check if the object has been initialized.
    * \returns \c true if the object has been initialized.
    */
-  bool IsInitialized (void) const;
+  bool IsInitialized () const;
 
 protected:
   /**
@@ -244,7 +244,7 @@ protected:
    * It is safe to call GetObject() and AggregateObject() from within
    * this method.
    */
-  virtual void NotifyNewAggregate (void);
+  virtual void NotifyNewAggregate ();
   /**
    * Initialize() implementation.
    *
@@ -256,7 +256,7 @@ protected:
    * to their parent's implementation once they are done. It is
    * safe to call GetObject() and AggregateObject() from within this method.
    */
-  virtual void DoInitialize (void);
+  virtual void DoInitialize ();
   /**
    * Destructor implementation.
    *
@@ -272,7 +272,7 @@ protected:
    *
    * It is safe to call GetObject() from within this method.
    */
-  virtual void DoDispose (void);
+  virtual void DoDispose ();
   /**
    * Copy an Object.
    *
@@ -361,7 +361,7 @@ private:
    * Verify that this Object is still live, by checking it's reference count.
    * \return \c true if the reference count is non zero.
    */
-  bool Check (void) const;
+  bool Check () const;
   /**
    * Check if any aggregated Objects have non-zero reference counts.
    *
@@ -374,7 +374,7 @@ private:
    * manipulating an Object with a refcount of zero.  So, instead we
    * check the aggregate reference count.
    */
-  bool CheckLoose (void) const;
+  bool CheckLoose () const;
   /**
    * Set the TypeId of this Object.
 
@@ -411,7 +411,7 @@ private:
    * have a zero refcount. If yes, the Object and all
    * its aggregates are deleted. If not, nothing is done.
    */
-  void DoDelete (void);
+  void DoDelete ();
 
   /**
    * Identifies the type of this Object instance.
@@ -472,17 +472,17 @@ Object::GetObject () const
   // This is an optimization: if the cast works (which is likely),
   // things will be pretty fast.
   T *result = dynamic_cast<T *> (m_aggregates->buffer[0]);
-  if (result != 0)
+  if (result != nullptr)
     {
       return Ptr<T> (result);
     }
   // if the cast does not work, we try to do a full type check.
   Ptr<Object> found = DoGetObject (T::GetTypeId ());
-  if (found != 0)
+  if (found)
     {
       return Ptr<T> (static_cast<T *> (PeekPointer (found)));
     }
-  return 0;
+  return nullptr;
 }
 
 /**
@@ -504,11 +504,11 @@ Ptr<T>
 Object::GetObject (TypeId tid) const
 {
   Ptr<Object> found = DoGetObject (tid);
-  if (found != 0)
+  if (found)
     {
       return Ptr<T> (static_cast<T *> (PeekPointer (found)));
     }
-  return 0;
+  return nullptr;
 }
 
 /**

@@ -35,7 +35,7 @@ class ConstantVelocityMobilityModel;
 /**
  * \ingroup mobility
  * \brief Helper class which can read ns-2 movement files and configure nodes mobility.
- * 
+ *
  * This implementation is based on the ns2 movement documentation of ns2
  * as described in http://www.isi.edu/nsnam/ns/doc/node172.html
  *
@@ -65,7 +65,7 @@ class ConstantVelocityMobilityModel;
  * The following tools are known to support this format:
  *  - BonnMotion http://net.cs.uni-bonn.de/wg/cs/applications/bonnmotion/
  *  - SUMO http://sourceforge.net/apps/mediawiki/sumo/index.php?title=Main_Page
- *  - TraNS http://trans.epfl.ch/ 
+ *  - TraNS http://trans.epfl.ch/
  *
  *  See usage example in examples/mobility/ns2-mobility-trace.cc
  *
@@ -88,7 +88,7 @@ public:
    * whose nodeId is matches the nodeId of the nodes in the trace
    * file.
    */
-  void Install (void) const;
+  void Install () const;
 
   /**
    * \param begin an iterator which points to the start of the input
@@ -130,7 +130,7 @@ public:
    * \return pointer to a ConstantVelocityMobilityModel
    */
   Ptr<ConstantVelocityMobilityModel> GetMobilityModel (std::string idString, const ObjectStore &store) const;
-  std::string m_filename; //!< filename of file containing ns-2 mobility trace 
+  std::string m_filename; //!< filename of file containing ns-2 mobility trace
 };
 
 } // namespace ns3
@@ -138,7 +138,7 @@ public:
 namespace ns3 {
 
 template <typename T>
-void 
+void
 Ns2MobilityHelper::Install (T begin, T end) const
 {
   class MyObjectStore : public ObjectStore
@@ -148,12 +148,12 @@ public:
       : m_begin (begin),
         m_end (end)
     {}
-    virtual Ptr<Object> Get (uint32_t i) const {
+    Ptr<Object> Get (uint32_t i) const override {
       T iterator = m_begin;
       iterator += i;
       if (iterator >= m_end)
         {
-          return 0;
+          return nullptr;
         }
       return *iterator;
     }

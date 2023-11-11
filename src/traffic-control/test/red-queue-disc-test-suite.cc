@@ -47,18 +47,16 @@ public:
    * \param ecnCapable ECN capable flag
    */
   RedQueueDiscTestItem (Ptr<Packet> p, const Address & addr, bool ecnCapable);
-  virtual ~RedQueueDiscTestItem ();
 
-  // Delete copy constructor and assignment operator to avoid misuse
+  // Delete default constructor, copy constructor and assignment operator to avoid misuse
+  RedQueueDiscTestItem () = delete;
   RedQueueDiscTestItem (const RedQueueDiscTestItem &) = delete;
   RedQueueDiscTestItem & operator = (const RedQueueDiscTestItem &) = delete;
 
-  virtual void AddHeader (void);
-  virtual bool Mark(void);
+  void AddHeader () override;
+  bool Mark() override;
 
 private:
-  RedQueueDiscTestItem ();
-
   bool m_ecnCapablePacket; ///< ECN capable packet?
 };
 
@@ -68,17 +66,13 @@ RedQueueDiscTestItem::RedQueueDiscTestItem (Ptr<Packet> p, const Address & addr,
 {
 }
 
-RedQueueDiscTestItem::~RedQueueDiscTestItem ()
-{
-}
-
 void
-RedQueueDiscTestItem::AddHeader (void)
+RedQueueDiscTestItem::AddHeader ()
 {
 }
 
 bool
-RedQueueDiscTestItem::Mark (void)
+RedQueueDiscTestItem::Mark ()
 {
   if (m_ecnCapablePacket)
     {
@@ -97,7 +91,7 @@ class RedQueueDiscTestCase : public TestCase
 {
 public:
   RedQueueDiscTestCase ();
-  virtual void DoRun (void);
+  void DoRun () override;
 private:
   /**
    * Enqueue function
@@ -141,7 +135,7 @@ RedQueueDiscTestCase::RunRedTest (QueueSizeUnit mode)
                          "Verify that we can actually set the attribute QW");
 
   Address dest;
-  
+
   if (mode == QueueSizeUnit::BYTES)
     {
       // pktSize should be same as MeanPktSize to avoid performance gap between byte and packet mode
@@ -151,7 +145,14 @@ RedQueueDiscTestCase::RunRedTest (QueueSizeUnit mode)
       queue->SetMaxSize (QueueSize (mode, qSize * modeSize));
     }
 
-  Ptr<Packet> p1, p2, p3, p4, p5, p6, p7, p8;
+  Ptr<Packet> p1;
+  Ptr<Packet> p2;
+  Ptr<Packet> p3;
+  Ptr<Packet> p4;
+  Ptr<Packet> p5;
+  Ptr<Packet> p6;
+  Ptr<Packet> p7;
+  Ptr<Packet> p8;
   p1 = Create<Packet> (pktSize);
   p2 = Create<Packet> (pktSize);
   p3 = Create<Packet> (pktSize);
@@ -178,17 +179,17 @@ RedQueueDiscTestCase::RunRedTest (QueueSizeUnit mode)
   Ptr<QueueDiscItem> item;
 
   item = queue->Dequeue ();
-  NS_TEST_ASSERT_MSG_EQ ((item != 0), true, "I want to remove the first packet");
+  NS_TEST_ASSERT_MSG_NE (item, nullptr, "I want to remove the first packet");
   NS_TEST_ASSERT_MSG_EQ (queue->GetCurrentSize ().GetValue (), 7 * modeSize, "There should be seven packets in there");
   NS_TEST_ASSERT_MSG_EQ (item->GetPacket ()->GetUid (), p1->GetUid (), "was this the first packet ?");
 
   item = queue->Dequeue ();
-  NS_TEST_ASSERT_MSG_EQ ((item != 0), true, "I want to remove the second packet");
+  NS_TEST_ASSERT_MSG_NE (item, nullptr, "I want to remove the second packet");
   NS_TEST_ASSERT_MSG_EQ (queue->GetCurrentSize ().GetValue (), 6 * modeSize, "There should be six packet in there");
   NS_TEST_ASSERT_MSG_EQ (item->GetPacket ()->GetUid (), p2->GetUid (), "Was this the second packet ?");
 
   item = queue->Dequeue ();
-  NS_TEST_ASSERT_MSG_EQ ((item != 0), true, "I want to remove the third packet");
+  NS_TEST_ASSERT_MSG_NE (item, nullptr, "I want to remove the third packet");
   NS_TEST_ASSERT_MSG_EQ (queue->GetCurrentSize ().GetValue (), 5 * modeSize, "There should be five packets in there");
   NS_TEST_ASSERT_MSG_EQ (item->GetPacket ()->GetUid (), p3->GetUid (), "Was this the third packet ?");
 
@@ -199,7 +200,7 @@ RedQueueDiscTestCase::RunRedTest (QueueSizeUnit mode)
   item = queue->Dequeue ();
 
   item = queue->Dequeue ();
-  NS_TEST_ASSERT_MSG_EQ ((item == 0), true, "There are really no packets in there");
+  NS_TEST_ASSERT_MSG_EQ (item, nullptr, "There are really no packets in there");
 
 
   // test 2: more data, but with no drops
@@ -491,7 +492,7 @@ RedQueueDiscTestCase::RunRedTest (QueueSizeUnit mode)
 
 }
 
-void 
+void
 RedQueueDiscTestCase::Enqueue (Ptr<RedQueueDisc> queue, uint32_t size, uint32_t nPkt, bool ecnCapable)
 {
   Address dest;
@@ -502,7 +503,7 @@ RedQueueDiscTestCase::Enqueue (Ptr<RedQueueDisc> queue, uint32_t size, uint32_t 
 }
 
 void
-RedQueueDiscTestCase::DoRun (void)
+RedQueueDiscTestCase::DoRun ()
 {
   RunRedTest (QueueSizeUnit::PACKETS);
   RunRedTest (QueueSizeUnit::BYTES);

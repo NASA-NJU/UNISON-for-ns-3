@@ -19,21 +19,13 @@ trim_trailing_whitespace = true # No trailing whitespaces
 indent_style = tab
 tab_width = 4
 
-[*.py]
-indent_style = space
-indent_size = 4
-
-[ns3]
-indent_style = space
-indent_size = 4
-
-[wscript]
+[{*.py,ns3}]
 indent_style = space
 indent_size = 4
 
 [*.{cc,h}]
 indent_style = space
-indent_size = 2
+indent_size = 4
 
 [{CMakeLists.txt,*.cmake}]
 indent_style = space

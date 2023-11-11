@@ -81,7 +81,7 @@ private:
    * \returns the name string
    */
   static std::string BuildNameString (uint32_t nUes, uint32_t nDedicatedBearers, std::string handoverEventListName, std::string schedulerType, bool admitHo, bool useIdealRrc);
-  virtual void DoRun (void);
+  void DoRun () override;
   /**
    * Check connected function
    * \param ueDevice the UE device
@@ -202,7 +202,12 @@ LteX2HandoverTestCase::DoRun ()
 {
   NS_LOG_FUNCTION (this << BuildNameString (m_nUes, m_nDedicatedBearers, m_handoverEventListName, m_schedulerType, m_admitHo, m_useIdealRrc));
 
+  uint32_t previousSeed = RngSeedManager::GetSeed ();
+  uint64_t previousRun = RngSeedManager::GetRun ();
   Config::Reset ();
+  // This test is sensitive to random variable stream assigments
+  RngSeedManager::SetSeed (1);
+  RngSeedManager::SetRun (2);
   Config::SetDefault ("ns3::UdpClient::Interval",  TimeValue (m_udpClientInterval));
   Config::SetDefault ("ns3::UdpClient::MaxPackets", UintegerValue (1000000));
   Config::SetDefault ("ns3::UdpClient::PacketSize", UintegerValue (m_udpClientPktSize));
@@ -233,7 +238,7 @@ LteX2HandoverTestCase::DoRun ()
   Ptr<ListPositionAllocator> positionAlloc = CreateObject<ListPositionAllocator> ();
   positionAlloc->Add (Vector (-3000, 0, 0)); // enb0
   positionAlloc->Add (Vector ( 3000, 0, 0)); // enb1
-  for (uint16_t i = 0; i < m_nUes; i++)
+  for (uint32_t i = 0; i < m_nUes; i++)
     {
       positionAlloc->Add (Vector (-3000, 100, 0));
     }
@@ -377,7 +382,8 @@ LteX2HandoverTestCase::DoRun ()
                 EpsBearer bearer (EpsBearer::NGBR_VIDEO_TCP_DEFAULT);
                 m_lteHelper->ActivateDedicatedEpsBearer (ueDevices.Get (u), bearer, tft);
               }
-              Time startTime = Seconds (startTimeSeconds->GetValue ());
+              double d = startTimeSeconds->GetValue ();
+              Time startTime = Seconds (d);
               serverApps.Start (startTime);
               clientApps.Start (startTime);
 
@@ -476,6 +482,11 @@ LteX2HandoverTestCase::DoRun ()
 
   Simulator::Destroy ();
 
+  // Undo changes to default settings
+  Config::Reset ();
+  // Restore the previous settings of RngSeed and RngRun
+  RngSeedManager::SetSeed (previousSeed);
+  RngSeedManager::SetRun (previousRun);
 }
 
 void
@@ -490,7 +501,7 @@ LteX2HandoverTestCase::CheckConnected (Ptr<NetDevice> ueDevice, Ptr<NetDevice> e
   Ptr<LteEnbRrc> enbRrc = enbLteDevice->GetRrc ();
   uint16_t rnti = ueRrc->GetRnti ();
   Ptr<UeManager> ueManager = enbRrc->GetUeManager (rnti);
-  NS_TEST_ASSERT_MSG_NE (ueManager, 0, "RNTI " << rnti << " not found in eNB");
+  NS_TEST_ASSERT_MSG_NE (ueManager, nullptr, "RNTI " << rnti << " not found in eNB");
 
   UeManager::State ueManagerState = ueManager->GetState ();
   NS_TEST_ASSERT_MSG_EQ (ueManagerState, UeManager::CONNECTED_NORMALLY, "Wrong UeManager state!");
@@ -585,7 +596,7 @@ LteX2HandoverTestCase::CheckStatsAWhileAfterHandover (uint32_t ueIndex)
       uint32_t dlRx = it->dlSink->GetTotalRx () - it->dlOldTotalRx;
       uint32_t ulRx = it->ulSink->GetTotalRx () - it->ulOldTotalRx;
       uint32_t expectedBytes = m_udpClientPktSize * (m_statsDuration / m_udpClientInterval).GetDouble ();
-      
+
       NS_TEST_ASSERT_MSG_EQ (dlRx, expectedBytes, "too few RX bytes in DL, ue=" << ueIndex << ", b=" << b);
       NS_TEST_ASSERT_MSG_EQ (ulRx, expectedBytes, "too few RX bytes in UL, ue=" << ueIndex << ", b=" << b);
       ++b;
@@ -656,44 +667,53 @@ LteX2HandoverTestSuite::LteX2HandoverTestSuite ()
   std::list<HandoverEvent> hel0;
 
   std::string hel1name ("1 fwd");
-  std::list<HandoverEvent> hel1;
-  hel1.push_back (ue1fwd);
+  const std::list<HandoverEvent> hel1 {
+    ue1fwd,
+  };
 
   std::string hel2name ("1 fwd & bwd");
-  std::list<HandoverEvent> hel2;
-  hel2.push_back (ue1fwd);
-  hel2.push_back (ue1bwd);
+  const std::list<HandoverEvent> hel2 {
+    ue1fwd,
+    ue1bwd,
+  };
 
   std::string hel3name ("1 fwd & bwd & fwd");
-  std::list<HandoverEvent> hel3;
-  hel3.push_back (ue1fwd);
-  hel3.push_back (ue1bwd);
-  hel3.push_back (ue1fwdagain);
+  const std::list<HandoverEvent> hel3 {
+    ue1fwd,
+    ue1bwd,
+    ue1fwdagain,
+  };
 
   std::string hel4name ("1+2 fwd");
-  std::list<HandoverEvent> hel4;
-  hel4.push_back (ue1fwd);
-  hel4.push_back (ue2fwd);
+  const std::list<HandoverEvent> hel4 {
+    ue1fwd,
+    ue2fwd,
+  };
 
   std::string hel5name ("1+2 fwd & bwd");
-  std::list<HandoverEvent> hel5;
-  hel5.push_back (ue1fwd);
-  hel5.push_back (ue1bwd);
-  hel5.push_back (ue2fwd);
-  hel5.push_back (ue2bwd);
+  const std::list<HandoverEvent> hel5 {
+    ue1fwd,
+    ue1bwd,
+    ue2fwd,
+    ue2bwd,
+  };
 
   std::string hel6name ("2 fwd");
-  std::list<HandoverEvent> hel6;
-  hel6.push_back (ue2fwd);
+  const std::list<HandoverEvent> hel6 {
+    ue2fwd,
+  };
 
   std::string hel7name ("2 fwd & bwd");
-  std::list<HandoverEvent> hel7;
-  hel7.push_back (ue2fwd);
-  hel7.push_back (ue2bwd);
+  const std::list<HandoverEvent> hel7 {
+    ue2fwd,
+    ue2bwd,
+  };
 
-  std::vector<std::string> schedulers;
-  schedulers.push_back ("ns3::RrFfMacScheduler");
-  schedulers.push_back ("ns3::PfFfMacScheduler");
+  std::vector<std::string> schedulers {
+    "ns3::RrFfMacScheduler",
+    "ns3::PfFfMacScheduler",
+  };
+
   for (std::vector<std::string>::iterator schedIt = schedulers.begin (); schedIt != schedulers.end (); ++schedIt)
     {
       for (int32_t useIdealRrc = 1; useIdealRrc >= 0; --useIdealRrc)

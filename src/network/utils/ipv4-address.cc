@@ -36,7 +36,7 @@ NS_LOG_COMPONENT_DEFINE ("Ipv4Address");
  * \param address the address string
  * \returns the address
  */
-static uint32_t 
+static uint32_t
 AsciiToIpv4Host (char const *address)
 {
   NS_LOG_FUNCTION (&address);
@@ -45,7 +45,7 @@ AsciiToIpv4Host (char const *address)
   char const *ptr = address;
 
   NS_ASSERT_MSG (*ptr != ASCII_DOT, "Error, can not build an IPv4 address from an invalid string: " << address);
-  while (true) 
+  while (true)
     {
       uint8_t byte = 0;
       while (*ptr != ASCII_DOT && *ptr != 0)
@@ -109,7 +109,7 @@ Ipv4Mask::Ipv4Mask (char const *mask)
     }
 }
 
-bool 
+bool
 Ipv4Mask::IsMatch (Ipv4Address a, Ipv4Address b) const
 {
   NS_LOG_FUNCTION (this << a << b);
@@ -120,26 +120,26 @@ Ipv4Mask::IsMatch (Ipv4Address a, Ipv4Address b) const
     }
 }
 
-uint32_t 
-Ipv4Mask::Get (void) const
+uint32_t
+Ipv4Mask::Get () const
 {
   NS_LOG_FUNCTION (this);
   return m_mask;
 }
-void 
+void
 Ipv4Mask::Set (uint32_t mask)
 {
   NS_LOG_FUNCTION (this << mask);
   m_mask = mask;
 }
-uint32_t 
-Ipv4Mask::GetInverse (void) const
+uint32_t
+Ipv4Mask::GetInverse () const
 {
   NS_LOG_FUNCTION (this);
   return ~m_mask;
 }
 
-void 
+void
 Ipv4Mask::Print (std::ostream &os) const
 {
   NS_LOG_FUNCTION (this << &os);
@@ -151,21 +151,21 @@ Ipv4Mask::Print (std::ostream &os) const
 
 
 Ipv4Mask
-Ipv4Mask::GetLoopback (void)
+Ipv4Mask::GetLoopback ()
 {
   NS_LOG_FUNCTION_NOARGS ();
   static Ipv4Mask loopback = Ipv4Mask ("255.0.0.0");
   return loopback;
 }
 Ipv4Mask
-Ipv4Mask::GetZero (void)
+Ipv4Mask::GetZero ()
 {
   NS_LOG_FUNCTION_NOARGS ();
   static Ipv4Mask zero = Ipv4Mask ("0.0.0.0");
   return zero;
 }
 Ipv4Mask
-Ipv4Mask::GetOnes (void)
+Ipv4Mask::GetOnes ()
 {
   NS_LOG_FUNCTION_NOARGS ();
   static Ipv4Mask ones = Ipv4Mask ("255.255.255.255");
@@ -173,17 +173,17 @@ Ipv4Mask::GetOnes (void)
 }
 
 uint16_t
-Ipv4Mask::GetPrefixLength (void) const
+Ipv4Mask::GetPrefixLength () const
 {
   NS_LOG_FUNCTION (this);
   uint16_t tmp = 0;
   uint32_t mask = m_mask;
-  while (mask != 0 ) 
+  while (mask != 0 )
     {
       mask = mask << 1;
       tmp++;
     }
-  return tmp; 
+  return tmp;
 }
 
 /**
@@ -211,7 +211,7 @@ Ipv4Address::Ipv4Address (char const *address)
 }
 
 uint32_t
-Ipv4Address::Get (void) const
+Ipv4Address::Get () const
 {
   NS_LOG_FUNCTION (this);
   return m_address;
@@ -238,7 +238,7 @@ Ipv4Address::CombineMask (Ipv4Mask const &mask) const
   return Ipv4Address (Get () & mask.Get ());
 }
 
-Ipv4Address 
+Ipv4Address
 Ipv4Address::GetSubnetDirectedBroadcast (Ipv4Mask const &mask) const
 {
   NS_LOG_FUNCTION (this << mask);
@@ -263,46 +263,46 @@ Ipv4Address::IsSubnetDirectedBroadcast (Ipv4Mask const &mask) const
 }
 
 bool
-Ipv4Address::IsInitialized (void) const
+Ipv4Address::IsInitialized () const
 {
   NS_LOG_FUNCTION (this);
   return (m_initialized);
 }
 
 bool
-Ipv4Address::IsAny (void) const
+Ipv4Address::IsAny () const
 {
   NS_LOG_FUNCTION (this);
   return (m_address == 0x00000000U);
 }
 
 bool
-Ipv4Address::IsLocalhost (void) const
+Ipv4Address::IsLocalhost () const
 {
   NS_LOG_FUNCTION (this);
   return (m_address == 0x7f000001U);
 }
 
 bool
-Ipv4Address::IsBroadcast (void) const
+Ipv4Address::IsBroadcast () const
 {
   NS_LOG_FUNCTION (this);
   return (m_address == 0xffffffffU);
 }
 
-bool 
-Ipv4Address::IsMulticast (void) const
+bool
+Ipv4Address::IsMulticast () const
 {
 //
-// Multicast addresses are defined as ranging from 224.0.0.0 through 
+// Multicast addresses are defined as ranging from 224.0.0.0 through
 // 239.255.255.255 (which is E0000000 through EFFFFFFF in hex).
 //
   NS_LOG_FUNCTION (this);
   return (m_address >= 0xe0000000 && m_address <= 0xefffffff);
 }
 
-bool 
-Ipv4Address::IsLocalMulticast (void) const
+bool
+Ipv4Address::IsLocalMulticast () const
 {
   NS_LOG_FUNCTION (this);
   // Link-Local multicast address is 224.0.0.0/24
@@ -318,7 +318,7 @@ Ipv4Address::Serialize (uint8_t buf[4]) const
   buf[2] = (m_address >> 8) & 0xff;
   buf[3] = (m_address >> 0) & 0xff;
 }
-Ipv4Address 
+Ipv4Address
 Ipv4Address::Deserialize (const uint8_t buf[4])
 {
   NS_LOG_FUNCTION (&buf);
@@ -336,7 +336,7 @@ Ipv4Address::Deserialize (const uint8_t buf[4])
   return ipv4;
 }
 
-void 
+void
 Ipv4Address::Print (std::ostream &os) const
 {
   NS_LOG_FUNCTION (this);
@@ -346,7 +346,7 @@ Ipv4Address::Print (std::ostream &os) const
      << ((m_address >> 0) & 0xff);
 }
 
-bool 
+bool
 Ipv4Address::IsMatchingType (const Address &address)
 {
   NS_LOG_FUNCTION (&address);
@@ -357,8 +357,8 @@ Ipv4Address::operator Address () const
   return ConvertTo ();
 }
 
-Address 
-Ipv4Address::ConvertTo (void) const
+Address
+Ipv4Address::ConvertTo () const
 {
   NS_LOG_FUNCTION (this);
   uint8_t buf[4];
@@ -376,37 +376,37 @@ Ipv4Address::ConvertFrom (const Address &address)
   return Deserialize (buf);
 }
 
-uint8_t 
-Ipv4Address::GetType (void)
+uint8_t
+Ipv4Address::GetType ()
 {
   NS_LOG_FUNCTION_NOARGS ();
   static uint8_t type = Address::Register ();
   return type;
 }
 
-Ipv4Address 
-Ipv4Address::GetZero (void)
+Ipv4Address
+Ipv4Address::GetZero ()
 {
   NS_LOG_FUNCTION_NOARGS ();
   static Ipv4Address zero ("0.0.0.0");
   return zero;
 }
-Ipv4Address 
-Ipv4Address::GetAny (void)
+Ipv4Address
+Ipv4Address::GetAny ()
 {
   NS_LOG_FUNCTION_NOARGS ();
   static Ipv4Address any ("0.0.0.0");
   return any;
 }
-Ipv4Address 
-Ipv4Address::GetBroadcast (void)
+Ipv4Address
+Ipv4Address::GetBroadcast ()
 {
   NS_LOG_FUNCTION_NOARGS ();
   static Ipv4Address broadcast ("255.255.255.255");
   return broadcast;
 }
-Ipv4Address 
-Ipv4Address::GetLoopback (void)
+Ipv4Address
+Ipv4Address::GetLoopback ()
 {
   NS_LOG_FUNCTION_NOARGS ();
   Ipv4Address loopback ("127.0.0.1");
@@ -414,7 +414,7 @@ Ipv4Address::GetLoopback (void)
 }
 
 size_t Ipv4AddressHash::operator() (Ipv4Address const &x) const
-{ 
+{
   return std::hash<uint32_t>()(x.Get ());
 }
 

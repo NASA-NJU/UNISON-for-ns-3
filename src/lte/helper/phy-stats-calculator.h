@@ -65,14 +65,14 @@ public:
   /**
    * Destructor
    */
-  virtual ~PhyStatsCalculator ();
+  ~PhyStatsCalculator () override;
 
   // Inherited from ns3::Object
   /**
    *  Register this type.
    *  @return The object TypeId.
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   /**
    * Set the name of the file where the RSRP/SINR statistics will be stored.
@@ -85,7 +85,7 @@ public:
    * Get the name of the file where the RSRP/SINR statistics will be stored.
    * @return the name of the file where the RSRP/SINR statistics will be stored
    */
-  std::string GetCurrentCellRsrpSinrFilename  (void);
+  std::string GetCurrentCellRsrpSinrFilename  ();
 
   /**
    * Set the name of the file where the UE SINR statistics will be stored.
@@ -98,7 +98,7 @@ public:
    * Get the name of the file where the UE SINR statistics will be stored.
    * @return the name of the file where the UE SINR statistics will be stored
    */
-  std::string GetUeSinrFilename (void);
+  std::string GetUeSinrFilename ();
 
   /**
    * Set the name of the file where the interference statistics will be stored.
@@ -111,7 +111,7 @@ public:
    * Get the name of the file where the interference statistics will be stored.
    * @return the name of the file where the interference statistics will be stored
    */
-  std::string GetInterferenceFilename (void);
+  std::string GetInterferenceFilename ();
 
   /**
    * Notifies the stats calculator that an RSRP and SINR report has occurred.
@@ -141,41 +141,41 @@ public:
    */
   void ReportInterference (uint16_t cellId, Ptr<SpectrumValue> interference);
 
-  /** 
+  /**
    * trace sink
-   * 
-   * \param phyStats 
-   * \param path 
-   * \param cellId 
-   * \param rnti 
-   * \param rsrp 
-   * \param sinr 
+   *
+   * \param phyStats
+   * \param path
+   * \param cellId
+   * \param rnti
+   * \param rsrp
+   * \param sinr
    * \param componentCarrierId
    */
   static void ReportCurrentCellRsrpSinrCallback (Ptr<PhyStatsCalculator> phyStats,
                                           std::string path, uint16_t cellId, uint16_t rnti,
                                           double rsrp, double sinr, uint8_t componentCarrierId);
-  
-  /** 
+
+  /**
    * trace sink
-   * 
-   * \param phyStats 
-   * \param path 
-   * \param cellId 
-   * \param rnti 
+   *
+   * \param phyStats
+   * \param path
+   * \param cellId
+   * \param rnti
    * \param sinrLinear
    * \param componentCarrierId
    */
   static void ReportUeSinr (Ptr<PhyStatsCalculator> phyStats, std::string path,
                      uint16_t cellId, uint16_t rnti, double sinrLinear, uint8_t componentCarrierId);
 
-  /** 
+  /**
    * trace sink
-   * 
-   * \param phyStats 
-   * \param path 
-   * \param cellId 
-   * \param interference 
+   *
+   * \param phyStats
+   * \param path
+   * \param cellId
+   * \param interference
    */
   static void ReportInterference (Ptr<PhyStatsCalculator> phyStats, std::string path,
                            uint16_t cellId, Ptr<SpectrumValue> interference);

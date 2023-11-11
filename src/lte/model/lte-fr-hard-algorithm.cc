@@ -84,8 +84,8 @@ const uint16_t NUM_DOWNLINK_CONFS (sizeof (g_frHardDownlinkDefaultConfiguration)
 const uint16_t NUM_UPLINK_CONFS (sizeof (g_frHardUplinkDefaultConfiguration) / sizeof (FrHardUplinkDefaultConfiguration));
 
 LteFrHardAlgorithm::LteFrHardAlgorithm ()
-  : m_ffrSapUser (0),
-    m_ffrRrcSapUser (0),
+  : m_ffrSapUser (nullptr),
+    m_ffrRrcSapUser (nullptr),
     m_dlOffset (0),
     m_dlSubBand (0),
     m_ulOffset (0),
@@ -249,7 +249,7 @@ LteFrHardAlgorithm::InitializeDownlinkRbgMaps ()
   NS_ASSERT_MSG ((m_dlOffset + m_dlSubBand) <= m_dlBandwidth,
                  "(DlOffset+DlSubBand) higher than DlBandwidth");
 
-  for (uint8_t i = m_dlOffset / rbgSize; i < (m_dlOffset / rbgSize + m_dlSubBand / rbgSize); i++)
+  for (int i = m_dlOffset / rbgSize; i < (m_dlOffset / rbgSize + m_dlSubBand / rbgSize); i++)
     {
       m_dlRbgMap[i] = false;
 

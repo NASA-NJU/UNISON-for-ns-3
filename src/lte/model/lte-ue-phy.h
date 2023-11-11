@@ -26,17 +26,16 @@
 #define LTE_UE_PHY_H
 
 
-#include <ns3/lte-phy.h>
 #include <ns3/ff-mac-common.h>
-
+#include <ns3/lte-amc.h>
 #include <ns3/lte-control-messages.h>
-#include <ns3/lte-amc.h>
-#include <ns3/lte-ue-phy-sap.h>
+#include <ns3/lte-phy.h>
 #include <ns3/lte-ue-cphy-sap.h>
-#include <ns3/ptr.h>
-#include <ns3/lte-amc.h>
-#include <set>
+#include <ns3/lte-ue-phy-sap.h>
 #include <ns3/lte-ue-power-control.h>
+#include <ns3/ptr.h>
+
+#include <set>
 
 
 namespace ns3 {
@@ -82,21 +81,21 @@ public:
    */
   LteUePhy (Ptr<LteSpectrumPhy> dlPhy, Ptr<LteSpectrumPhy> ulPhy);
 
-  virtual ~LteUePhy ();
+  ~LteUePhy () override;
 
   /**
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
   // inherited from Object
-  virtual void DoInitialize (void);
-  virtual void DoDispose (void);
+  void DoInitialize () override;
+  void DoDispose () override;
 
   /**
    * \brief Get the PHY SAP provider
    *
-   * \return a pointer to the SAP Provider 
+   * \return a pointer to the SAP Provider
    */
   LteUePhySapProvider* GetLteUePhySapProvider ();
 
@@ -162,7 +161,7 @@ public:
    *
    * \returns the TTI delay between MAC and channel
    */
-  uint8_t GetMacChDelay (void) const;
+  uint8_t GetMacChDelay () const;
 
   /**
    * \brief Get Downlink spectrum phy
@@ -183,7 +182,7 @@ public:
    *
    * \return the pointer to the PSD
    */
-  virtual Ptr<SpectrumValue> CreateTxPowerSpectralDensity ();
+  Ptr<SpectrumValue> CreateTxPowerSpectralDensity () override;
 
   /**
    * \brief Set a list of sub channels to use in TX
@@ -196,7 +195,7 @@ public:
    *
    * \return a list of sub channels
    */
-  std::vector <int> GetSubChannelsForTransmission (void);
+  std::vector <int> GetSubChannelsForTransmission ();
 
   /**
    * \brief Get a list of sub channels to use in RX
@@ -209,7 +208,7 @@ public:
    *
    * \return a list of sub channels
    */
-  std::vector <int> GetSubChannelsForReception (void);
+  std::vector <int> GetSubChannelsForReception ();
 
   /**
    * \brief Create the DL CQI feedback from SINR values perceived at
@@ -223,22 +222,22 @@ public:
 
 
   // inherited from LtePhy
-  virtual void GenerateCtrlCqiReport (const SpectrumValue& sinr);
-  virtual void GenerateDataCqiReport (const SpectrumValue& sinr);
+  void GenerateCtrlCqiReport (const SpectrumValue& sinr) override;
+  void GenerateDataCqiReport (const SpectrumValue& sinr) override;
   /**
    * \brief Create the mixed CQI report
    *
    * \param sinr SINR values vector
    */
   virtual void GenerateMixedCqiReport (const SpectrumValue& sinr);
-  virtual void ReportInterference (const SpectrumValue& interf);
+  void ReportInterference (const SpectrumValue& interf) override;
   /**
    * \brief Create the mixed CQI report
    *
    * \param interf interference values vector
    */
   virtual void ReportDataInterference (const SpectrumValue& interf);
-  virtual void ReportRsReceivedPower (const SpectrumValue& power);
+  void ReportRsReceivedPower (const SpectrumValue& power) override;
 
   // callbacks for LteSpectrumPhy
   /**
@@ -412,13 +411,13 @@ private:
    * \param [in] rbMap
    */
   void QueueSubChannelsForTransmission (std::vector <int> rbMap);
-  /** 
+  /**
    * \brief Get CQI, RSRP, and RSRQ
    *
    * internal method that takes care of generating CQI reports,
    * calculating the RSRP and RSRQ metrics, and generating RSRP+SINR traces
-   * 
-   * \param sinr 
+   *
+   * \param sinr
    */
   void GenerateCqiRsrpRsrq (const SpectrumValue& sinr);
   /**
@@ -640,8 +639,8 @@ private:
    */
   double ComputeAvgSinr (const SpectrumValue& sinr);
 
-  // UE PHY SAP methods 
-  virtual void DoSendMacPdu (Ptr<Packet> p);
+  // UE PHY SAP methods
+  void DoSendMacPdu (Ptr<Packet> p) override;
   /**
    * \brief Send LTE control message function
    *
@@ -698,7 +697,7 @@ private:
   LteUeCphySapUser* m_ueCphySapUser; ///< UE CPhy SAP user
 
   uint16_t  m_rnti; ///< the RNTI
- 
+
   uint8_t m_transmissionMode; ///< the transmission mode
   std::vector <double> m_txModeGain; ///< the transmit mode gain
 
@@ -734,7 +733,7 @@ private:
 
   bool m_pssReceived; ///< PSS received?
   /// PssElement structure
-  struct PssElement 
+  struct PssElement
   {
     uint16_t cellId; ///< cell ID
     double pssPsdSum; ///< PSS PSD sum
@@ -823,7 +822,7 @@ private:
    */
   TracedCallback< uint16_t, Ptr<SpectrumValue> > m_reportPowerSpectralDensity;
 
-  
+
   Ptr<SpectrumValue> m_noisePsd; ///< Noise power spectral density for
                                  ///the configured bandwidth
 

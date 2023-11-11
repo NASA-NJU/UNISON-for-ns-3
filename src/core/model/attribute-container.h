@@ -39,11 +39,11 @@ class AttributeChecker;
 // A = attribute value type, C = container type to return
 /**
  * A container for one type of attribute.
- * 
+ *
  * The container uses \p A to parse items into elements.
  * Internally the container is always a list but an instance
  * can return the items in a container specified by \p C.
- * 
+ *
  * @tparam A AttributeValue type to be contained.
  * @tparam C Possibly templated container class returned by Get.
  */
@@ -96,22 +96,22 @@ public:
   AttributeContainerValue (const ITER begin, const ITER end);
 
   /** Destructor. */
-  ~AttributeContainerValue ();
+  ~AttributeContainerValue () override;
 
   // Inherited
-  Ptr<AttributeValue> Copy (void) const;
-  bool DeserializeFromString (std::string value, Ptr<const AttributeChecker> checker);
-  std::string SerializeToString (Ptr<const AttributeChecker> checker) const;
+  Ptr<AttributeValue> Copy () const override;
+  bool DeserializeFromString (std::string value, Ptr<const AttributeChecker> checker) override;
+  std::string SerializeToString (Ptr<const AttributeChecker> checker) const override;
 
   // defacto pure virtuals to integrate with built-in accessor code
   /**
    * Return a container of items.
    * \return Container of items.
    */
-  result_type Get (void) const;
+  result_type Get () const;
   /**
    * Copy items from container c.
-   * 
+   *
    * This method assumes \p c has stl-style begin and end methods.
    * The AttributeContainerValue value is cleared before copying from \p c.
    * @tparam T type of container.
@@ -119,55 +119,66 @@ public:
    */
   template <class T>
   void Set (const T &c);
+  /**
+   * Set the given variable to the values stored by this TupleValue object.
+   *
+   * \tparam T \deduced the type of the given variable (normally, the argument type
+   *           of a set method or the type of a data member)
+   * \param value the given variable
+   * \return true if the given variable was set
+   */
+  template <typename T>
+  bool GetAccessor (T &value) const;
+
 
   // NS3 interface
   /**
    * NS3-style Number of items.
    * \return Number of items in container.
    */
-  size_type GetN (void) const;
+  size_type GetN () const;
   /**
    * NS3-style beginning of container.
    * \return Iterator pointing to first time in container.
    */
-  Iterator Begin (void);
+  Iterator Begin ();
   /**
    * NS3-style ending of container.
    * \return Iterator pointing one past last item of container.
    */
-  Iterator End (void);
+  Iterator End ();
 
   // STL-interface
   /**
    * STL-style number of items in container
    * \return number of items in container.
    */
-  size_type size (void) const;
+  size_type size () const;
   /**
    * STL-style beginning of container.
    * \return Iterator pointing to first item in container.
    */
-  iterator begin (void);
+  iterator begin ();
   /**
    * STL-style end of container.
    * \return Iterator pointing to one past last item in container.
    */
-  iterator end (void);
+  iterator end ();
   /**
    * STL-style const beginning of container.
    * \return Const iterator pointing to first item in container.
    */
-  const_iterator begin (void) const;
+  const_iterator begin () const;
   /**
    * STL-style const end of container.
    * \return Const iterator pointing to one past last item in container.
    */
-  const_iterator end (void) const;
+  const_iterator end () const;
 
 private:
   /**
-   * Copy items from \ref begin to \ref end. 
-   * 
+   * Copy items from \ref begin to \ref end.
+   *
    * The internal container is cleared before values are copied
    * using the push_back method.
    * @tparam ITER \deduced iterator type
@@ -194,7 +205,7 @@ public:
    * Get the item checker
    * \return The item checker
    */
-  virtual Ptr<const AttributeChecker> GetItemChecker (void) const = 0;
+  virtual Ptr<const AttributeChecker> GetItemChecker () const = 0;
 };
 
 /**
@@ -226,17 +237,36 @@ MakeAttributeContainerChecker (Ptr<const AttributeChecker> itemchecker);
  * \return AttributeContainerChecker.
  */
 template <class A, template <class...> class C=std::list>
-Ptr<AttributeChecker> MakeAttributeContainerChecker (void);
+Ptr<AttributeChecker> MakeAttributeContainerChecker ();
 
 /**
  * Make AttributeContainerAccessor  using explicit types.
  * @tparam A AttributeValue type in container.
  * @tparam C Container type returned by Get.
- * \param[in] a1 AttributeContainer to be used.
+ * \tparam T1 \deduced The type of the class data member,
+ *            or the type of the class get functor or set method.
+ * \param [in] a1 The address of the data member,
+ *            or the get or set method.
  * \return AttributeContainerAccessor.
  */
 template <typename A, template <typename...> class C=std::list, typename T1>
 Ptr<const AttributeAccessor> MakeAttributeContainerAccessor (T1 a1);
+
+/**
+ * Make AttributeContainerAccessor  using explicit types.
+ * @tparam A AttributeValue type in container.
+ * @tparam C Container type returned by Get.
+ * \tparam T1 \deduced The type of the class data member,
+ *            or the type of the class get functor or set method.
+ *
+ * \tparam T2 \deduced The type of the getter class functor method.
+ * \param [in] a2 The address of the class method to set the attribute.
+ * \param [in] a1 The address of the data member,
+ *            or the get or set method.
+ * \return AttributeContainerAccessor.
+ */
+template <typename A, template <typename...> class C=std::list, typename T1, typename T2>
+Ptr<const AttributeAccessor> MakeAttributeContainerAccessor (T1 a1, T2 a2);
 
 } // namespace ns3
 
@@ -258,22 +288,22 @@ template <class A, template <class...> class C>
 class AttributeContainerChecker : public ns3::AttributeContainerChecker
 {
 public:
-  AttributeContainerChecker (void);
+  AttributeContainerChecker ();
   /**
    * Explicit constructor
    * \param itemchecker The AttributeChecker.
    */
   explicit AttributeContainerChecker (Ptr<const AttributeChecker> itemchecker);
-  void SetItemChecker (Ptr<const AttributeChecker> itemchecker);
-  Ptr<const AttributeChecker> GetItemChecker (void) const;
+  void SetItemChecker (Ptr<const AttributeChecker> itemchecker) override;
+  Ptr<const AttributeChecker> GetItemChecker () const override;
 
 private:
   Ptr<const AttributeChecker> m_itemchecker; //!< The AttributeChecker
 };
 
 template <class A, template <class...> class C>
-AttributeContainerChecker<A, C>::AttributeContainerChecker (void)
-  : m_itemchecker (0)
+AttributeContainerChecker<A, C>::AttributeContainerChecker ()
+  : m_itemchecker (nullptr)
 {}
 
 template <class A, template <class...> class C>
@@ -290,7 +320,7 @@ AttributeContainerChecker<A, C>::SetItemChecker (Ptr<const AttributeChecker> ite
 
 template <class A, template <class...> class C>
 Ptr<const AttributeChecker>
-AttributeContainerChecker<A, C>::GetItemChecker (void) const
+AttributeContainerChecker<A, C>::GetItemChecker () const
 {
   return m_itemchecker;
 }
@@ -316,7 +346,7 @@ MakeAttributeContainerChecker (Ptr<const AttributeChecker> itemchecker)
 
 template <class A, template <class...> class C>
 Ptr<AttributeChecker>
-MakeAttributeContainerChecker (void)
+MakeAttributeContainerChecker ()
 {
   std::string containerType;
   std::string underlyingType;
@@ -368,7 +398,7 @@ AttributeContainerValue<A, C>::~AttributeContainerValue ()
 
 template <class A, template <class...> class C>
 Ptr<AttributeValue>
-AttributeContainerValue<A, C>::Copy (void) const
+AttributeContainerValue<A, C>::Copy () const
 {
   auto c = Create<AttributeContainerValue<A, C> > ();
   c->m_sep = m_sep;
@@ -381,16 +411,25 @@ bool
 AttributeContainerValue<A, C>::DeserializeFromString (std::string value, Ptr<const AttributeChecker> checker)
 {
   auto acchecker = DynamicCast<const AttributeContainerChecker> (checker);
-  if (!acchecker) return false;
+  if (!acchecker)
+    {
+      return false;
+    }
 
   std::istringstream iss (value); // copies value
   while (std::getline (iss, value, m_sep))
     {
       auto avalue = acchecker->GetItemChecker ()->CreateValidValue (StringValue (value));
-      if (!avalue) return false;
+      if (!avalue)
+        {
+          return false;
+        }
 
       auto attr = DynamicCast <A> (avalue);
-      if (!attr) return false;
+      if (!attr)
+        {
+          return false;
+        }
 
       // TODO(jared): make insertion more generic?
       m_container.push_back (attr);
@@ -406,7 +445,10 @@ AttributeContainerValue<A, C>::SerializeToString (Ptr<const AttributeChecker> ch
   bool first = true;
   for (auto attr: *this)
     {
-      if (!first) oss << m_sep;
+      if (!first)
+        {
+          oss << m_sep;
+        }
       oss << attr->SerializeToString (checker);
       first = false;
     }
@@ -415,12 +457,25 @@ AttributeContainerValue<A, C>::SerializeToString (Ptr<const AttributeChecker> ch
 
 template <class A, template <class...> class C>
 typename AttributeContainerValue<A, C>::result_type
-AttributeContainerValue<A, C>::Get (void) const
+AttributeContainerValue<A, C>::Get () const
 {
   result_type c;
-  for (const value_type& a: *this)
-    c.insert (c.end (), a->Get ());
+  for (const value_type& a : *this)
+    {
+      c.insert (c.end (), a->Get ());
+    }
   return c;
+}
+
+template <class A, template <class...> class C>
+template <typename T>
+bool
+AttributeContainerValue<A, C>::GetAccessor (T &value) const
+{
+  result_type src = Get ();
+  value.clear ();
+  std::copy (src.begin (), src.end (), std::inserter (value, value.end ()));
+  return true;
 }
 
 template <class A, template <class...> class C>
@@ -434,56 +489,56 @@ AttributeContainerValue<A, C>::Set (const T &c)
 
 template <class A, template <class...> class C>
 typename AttributeContainerValue<A, C>::size_type
-AttributeContainerValue<A, C>::GetN (void) const
+AttributeContainerValue<A, C>::GetN () const
 {
   return size ();
 }
 
 template <class A, template <class...> class C>
 typename AttributeContainerValue<A, C>::Iterator
-AttributeContainerValue<A, C>::Begin (void)
+AttributeContainerValue<A, C>::Begin ()
 {
   return begin ();
 }
 
 template <class A, template <class...> class C>
 typename AttributeContainerValue<A, C>::Iterator
-AttributeContainerValue<A, C>::End (void)
+AttributeContainerValue<A, C>::End ()
 {
   return end ();
 }
 
 template <class A, template <class...> class C>
 typename AttributeContainerValue<A, C>::size_type
-AttributeContainerValue<A, C>::size (void) const
+AttributeContainerValue<A, C>::size () const
 {
   return m_container.size ();
 }
 
 template <class A, template <class...> class C>
 typename AttributeContainerValue<A, C>::iterator
-AttributeContainerValue<A, C>::begin (void)
+AttributeContainerValue<A, C>::begin ()
 {
   return m_container.begin ();
 }
 
 template <class A, template <class...> class C>
 typename AttributeContainerValue<A, C>::iterator
-AttributeContainerValue<A, C>::end (void)
+AttributeContainerValue<A, C>::end ()
 {
   return m_container.end ();
 }
 
 template <class A, template <class...> class C>
 typename AttributeContainerValue<A, C>::const_iterator
-AttributeContainerValue<A, C>::begin (void) const
+AttributeContainerValue<A, C>::begin () const
 {
   return m_container.cbegin ();
 }
 
 template <class A, template <class...> class C>
 typename AttributeContainerValue<A, C>::const_iterator
-AttributeContainerValue<A, C>::end (void) const
+AttributeContainerValue<A, C>::end () const
 {
   return m_container.cend ();
 }
@@ -504,6 +559,12 @@ template <typename A, template <typename...> class C, typename T1>
 Ptr<const AttributeAccessor> MakeAttributeContainerAccessor (T1 a1)
 {
   return MakeAccessorHelper<AttributeContainerValue<A, C> > (a1);
+}
+
+template <typename A, template <typename...> class C, typename T1, typename T2>
+Ptr<const AttributeAccessor> MakeAttributeContainerAccessor (T1 a1, T2 a2)
+{
+  return MakeAccessorHelper<AttributeContainerValue<A, C> > (a1, a2);
 }
 
 } // namespace ns3

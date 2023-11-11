@@ -32,20 +32,20 @@ namespace ns3 {
  *
  * \brief Mobility model for which the current speed does not change once it has been set and until it is set again explicitly to a new value.
  */
-class ConstantVelocityMobilityModel : public MobilityModel 
+class ConstantVelocityMobilityModel : public MobilityModel
 {
 public:
   /**
    * Register this type with the TypeId system.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
   /**
    * Create position located at coordinates (0,0,0) with
    * speed (0,0,0).
    */
   ConstantVelocityMobilityModel ();
-  virtual ~ConstantVelocityMobilityModel ();
+  ~ConstantVelocityMobilityModel () override;
 
   /**
    * \param speed the new speed to set.
@@ -55,9 +55,9 @@ public:
    */
   void SetVelocity (const Vector &speed);
 private:
-  virtual Vector DoGetPosition (void) const;
-  virtual void DoSetPosition (const Vector &position);
-  virtual Vector DoGetVelocity (void) const;
+  Vector DoGetPosition () const override;
+  void DoSetPosition (const Vector &position) override;
+  Vector DoGetVelocity () const override;
   ConstantVelocityHelper m_helper;  //!< helper object for this model
 };
 

@@ -65,14 +65,14 @@ Address::operator = (const Address &address)
 }
 
 bool
-Address::IsInvalid (void) const
+Address::IsInvalid () const
 {
   NS_LOG_FUNCTION (this);
   return m_len == 0 && m_type == 0;
 }
 
-uint8_t 
-Address::GetLength (void) const
+uint8_t
+Address::GetLength () const
 {
   NS_LOG_FUNCTION (this);
   NS_ASSERT (m_len <= MAX_SIZE);
@@ -118,7 +118,7 @@ Address::CopyAllFrom (const uint8_t *buffer, uint8_t len)
   std::memcpy (m_data, buffer + 2, m_len);
   return m_len + 2;
 }
-bool 
+bool
 Address::CheckCompatible (uint8_t type, uint8_t len) const
 {
   NS_LOG_FUNCTION (this << static_cast<uint32_t> (type) << static_cast<uint32_t> (len));
@@ -127,15 +127,15 @@ Address::CheckCompatible (uint8_t type, uint8_t len) const
   /// Mac address type/length detection is discussed in \bugid{1568}
   return (m_len == len && m_type == type) || (m_len >= len && m_type == 0);
 }
-bool 
+bool
 Address::IsMatchingType (uint8_t type) const
 {
   NS_LOG_FUNCTION (this << static_cast<uint32_t> (type));
   return m_type == type;
 }
 
-uint8_t 
-Address::Register (void)
+uint8_t
+Address::Register ()
 {
   NS_LOG_FUNCTION_NOARGS ();
   static uint8_t type = 1;
@@ -144,7 +144,7 @@ Address::Register (void)
 }
 
 uint32_t
-Address::GetSerializedSize (void) const
+Address::GetSerializedSize () const
 {
   NS_LOG_FUNCTION (this);
   return 1 + 1 + m_len;
@@ -174,9 +174,9 @@ ATTRIBUTE_HELPER_CPP (Address);
 
 bool operator == (const Address &a, const Address &b)
 {
-  /* Two addresses can be equal even if their types are 
-   * different if one of the two types is zero. a type of 
-   * zero identifies an Address which might contain meaningful 
+  /* Two addresses can be equal even if their types are
+   * different if one of the two types is zero. a type of
+   * zero identifies an Address which might contain meaningful
    * payload but for which the type field could not be set because
    * we did not know it. This can typically happen in the ARP
    * layer where we receive an address from an ArpHeader but
@@ -184,7 +184,7 @@ bool operator == (const Address &a, const Address &b)
    * compare addresses without knowing their real type.
    */
   if (a.m_type != b.m_type &&
-      a.m_type != 0 && 
+      a.m_type != 0 &&
       b.m_type != 0)
     {
       return false;
@@ -220,11 +220,11 @@ bool operator < (const Address &a, const Address &b)
   NS_ASSERT (a.GetLength () == b.GetLength ());
   for (uint8_t i = 0; i < a.GetLength (); i++)
     {
-      if (a.m_data[i] < b.m_data[i]) 
+      if (a.m_data[i] < b.m_data[i])
         {
           return true;
         }
-      else if (a.m_data[i] > b.m_data[i]) 
+      else if (a.m_data[i] > b.m_data[i])
         {
           return false;
         }
@@ -252,14 +252,15 @@ std::istream& operator>> (std::istream& is, Address & address)
 {
   std::string v;
   is >> v;
-  std::string::size_type firstDash, secondDash;
-  firstDash = v.find ("-");
-  secondDash = v.find ("-", firstDash+1);
+  std::string::size_type firstDash;
+  std::string::size_type secondDash;
+  firstDash = v.find ('-');
+  secondDash = v.find ('-', firstDash+1);
   std::string type = v.substr (0, firstDash-0);
   std::string len = v.substr (firstDash+1, secondDash-(firstDash+1));
 
-  address.m_type = strtoul (type.c_str(), 0, 16);
-  address.m_len = strtoul (len.c_str(), 0, 16);
+  address.m_type = strtoul (type.c_str(), nullptr, 16);
+  address.m_len = strtoul (len.c_str(), nullptr, 16);
   NS_ASSERT (address.m_len <= Address::MAX_SIZE);
 
   std::string::size_type col = secondDash + 1;
@@ -267,17 +268,17 @@ std::istream& operator>> (std::istream& is, Address & address)
     {
       std::string tmp;
       std::string::size_type next;
-      next = v.find (":", col);
+      next = v.find (':', col);
       if (next == std::string::npos)
         {
           tmp = v.substr (col, v.size ()-col);
-          address.m_data[i] = strtoul (tmp.c_str(), 0, 16);
+          address.m_data[i] = strtoul (tmp.c_str(), nullptr, 16);
           break;
         }
       else
         {
           tmp = v.substr (col, next-col);
-          address.m_data[i] = strtoul (tmp.c_str(), 0, 16);
+          address.m_data[i] = strtoul (tmp.c_str(), nullptr, 16);
           col = next + 1;
         }
     }

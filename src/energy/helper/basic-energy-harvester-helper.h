@@ -27,7 +27,7 @@
 #include "ns3/node.h"
 
 namespace ns3 {
-  
+
 /**
  * \ingroup energy
  * \brief Creates a BasicEnergyHarvester object.
@@ -36,18 +36,18 @@ class BasicEnergyHarvesterHelper : public EnergyHarvesterHelper
 {
 public:
   BasicEnergyHarvesterHelper ();
-  ~BasicEnergyHarvesterHelper ();
+  ~BasicEnergyHarvesterHelper () override;
 
-  void Set (std::string name, const AttributeValue &v);
+  void Set (std::string name, const AttributeValue &v) override;
 
 private:
-  virtual Ptr<EnergyHarvester> DoInstall (Ptr<EnergySource> source) const;
+  Ptr<EnergyHarvester> DoInstall (Ptr<EnergySource> source) const override;
 
 private:
   ObjectFactory m_basicEnergyHarvester; //!< Energy source factory
 
 };
-  
+
 } // namespace ns3
 
 #endif /* defined(BASIC_ENERGY_HARVESTER_HELPER_H) */

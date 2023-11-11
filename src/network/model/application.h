@@ -37,12 +37,12 @@ class Node;
  * Class ns3::Application can be used as a base class for ns3 applications.
  * Applications are associated with individual nodes.  Each node
  * holds a list of references (smart pointers) to its applications.
- * 
+ *
  * Conceptually, an application has zero or more ns3::Socket
  * objects associated with it, that are created using the Socket
  * creation API of the Kernel capability.  The Socket object
  * API is modeled after the
- * well-known BSD sockets interface, although it is somewhat 
+ * well-known BSD sockets interface, although it is somewhat
  * simplified for use with ns3.  Further, any socket call that
  * would normally "block" in normal sockets will return immediately
  * in ns3.  A set of "upcalls" are defined that will be called when
@@ -64,9 +64,9 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
   Application ();
-  virtual ~Application ();
+  ~Application () override;
 
   /**
    * \brief Specify application start time
@@ -131,7 +131,7 @@ private:
    * This method should be overridden by all or most application
    * subclasses.
    */
-  virtual void StartApplication (void);
+  virtual void StartApplication ();
 
   /**
    * \brief Application specific shutdown code
@@ -140,10 +140,10 @@ private:
    * This method should be overridden by all or most application
    * subclasses.
    */
-  virtual void StopApplication (void);
+  virtual void StopApplication ();
 protected:
-  virtual void DoDispose (void);
-  virtual void DoInitialize (void);
+  void DoDispose () override;
+  void DoInitialize () override;
 
   Ptr<Node>       m_node;   //!< The node that this application is installed on
   Time m_startTime;         //!< The simulation time that the application will start

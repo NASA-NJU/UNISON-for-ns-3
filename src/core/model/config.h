@@ -53,7 +53,7 @@ namespace Config {
  * Reset the initial value of every attribute as well as the value of every
  * global to what they were before any call to SetDefault and SetGlobal.
  */
-void Reset (void);
+void Reset ();
 
 /**
  * \ingroup config
@@ -121,7 +121,7 @@ bool SetGlobalFailSafe (std::string name, const AttributeValue &value);
  *
  * This function will attempt to find all trace sources which
  * match the input path and will then connect the input callback
- * to them.  If no matching trace sources are found, this method will 
+ * to them.  If no matching trace sources are found, this method will
  * throw a fatal error.  Use ConnectWithoutContextFailSafe if the absence
  * of matching trace sources should not be fatal.
  */
@@ -133,7 +133,7 @@ void ConnectWithoutContext (std::string path, const CallbackBase &cb);
  *
  * This function will attempt to find all trace sources which
  * match the input path and will then connect the input callback
- * to them.  If no matching trace sources are found, this method will 
+ * to them.  If no matching trace sources are found, this method will
  * return false; otherwise true.
  * \returns \c true if any trace sources could be connected.
  */
@@ -155,7 +155,7 @@ void DisconnectWithoutContext (std::string path, const CallbackBase &cb);
  * match the input path and will then connect the input callback
  * to them in such a way that the callback will receive an extra
  * context string upon trace event notification.
- * If no matching trace sources are found, this method will 
+ * If no matching trace sources are found, this method will
  * throw a fatal error.  Use ConnectFailSafe if the absence
  * of matching trace sources should not be fatal.
  */
@@ -210,22 +210,22 @@ public:
    * \returns An iterator which points to the first item in the container
    * @{
    */
-  MatchContainer::Iterator Begin (void) const;
-  MatchContainer::Iterator begin (void) const { return Begin (); }
+  MatchContainer::Iterator Begin () const;
+  MatchContainer::Iterator begin () const { return Begin (); }
   /** @} */
   /**
    * \returns An iterator which points to the last item in the container
    * @{
    */
-  MatchContainer::Iterator End (void) const;
-  MatchContainer::Iterator end (void) const { return End (); }
+  MatchContainer::Iterator End () const;
+  MatchContainer::Iterator end () const { return End (); }
   /** @} */
   /**
    * \returns The number of items in the container
    * @{
    */
-  std::size_t GetN (void) const;
-  std::size_t size (void) const { return GetN (); }
+  std::size_t GetN () const;
+  std::size_t size () const { return GetN (); }
   /** @} */
   /**
    * \param [in] i Index of item to lookup ([0,n[)
@@ -243,7 +243,7 @@ public:
   /**
    * \returns The path used to perform the object matching.
    */
-  std::string GetPath (void) const;
+  std::string GetPath () const;
 
   /**
    * \param [in] name Name of attribute to set
@@ -252,7 +252,7 @@ public:
    * Set the specified attribute value to all the objects stored in this
    * container.  This method will raise a fatal error if no such attribute
    * exists; use SetFailSafe if the absence of the attribute is to be
-   * permitted.  
+   * permitted.
    * \sa ns3::Config::Set
    */
   void Set (std::string name, const AttributeValue &value);
@@ -364,7 +364,7 @@ void UnregisterRootNamespaceObject (Ptr<Object> obj);
  * \ingroup config
  * \returns The number of registered root namespace objects.
  */
-std::size_t GetRootNamespaceObjectN (void);
+std::size_t GetRootNamespaceObjectN ();
 
 /**
  * \ingroup config

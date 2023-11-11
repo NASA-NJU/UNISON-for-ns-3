@@ -52,58 +52,54 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
-  LteNetDevice (void);
-  virtual ~LteNetDevice (void);
+  LteNetDevice ();
+  ~LteNetDevice () override;
 
-  virtual void DoDispose (void);
+  // Delete copy constructor and assignment operator to avoid misuse
+  LteNetDevice (const LteNetDevice &) = delete;
+  LteNetDevice &operator= (const LteNetDevice &) = delete;
+
+  void DoDispose () override;
 
   // inherited from NetDevice
-  virtual void SetIfIndex (const uint32_t index);
-  virtual uint32_t GetIfIndex (void) const;
-  virtual Ptr<Channel> GetChannel (void) const;
-  virtual bool SetMtu (const uint16_t mtu);
-  virtual uint16_t GetMtu (void) const;
-  virtual void SetAddress (Address address);
-  virtual Address GetAddress (void) const;
-  virtual bool IsLinkUp (void) const;
-  virtual void AddLinkChangeCallback (Callback<void> callback);
-  virtual bool IsBroadcast (void) const;
-  virtual Address GetBroadcast (void) const;
-  virtual bool IsMulticast (void) const;
-  virtual bool IsPointToPoint (void) const;
-  virtual bool IsBridge (void) const;
-  virtual Ptr<Node> GetNode (void) const;
-  virtual void SetNode (Ptr<Node> node);
-  virtual bool NeedsArp (void) const;
-  virtual void SetReceiveCallback (NetDevice::ReceiveCallback cb);
-  virtual Address GetMulticast (Ipv4Address addr) const;
-  virtual Address GetMulticast (Ipv6Address addr) const;
-  virtual void SetPromiscReceiveCallback (PromiscReceiveCallback cb); 
-  virtual bool SendFrom (Ptr<Packet> packet, const Address& source, const Address& dest, uint16_t protocolNumber);
-  virtual bool SupportsSendFrom (void) const;
+  void SetIfIndex (const uint32_t index) override;
+  uint32_t GetIfIndex () const override;
+  Ptr<Channel> GetChannel () const override;
+  bool SetMtu (const uint16_t mtu) override;
+  uint16_t GetMtu () const override;
+  void SetAddress (Address address) override;
+  Address GetAddress () const override;
+  bool IsLinkUp () const override;
+  void AddLinkChangeCallback (Callback<void> callback) override;
+  bool IsBroadcast () const override;
+  Address GetBroadcast () const override;
+  bool IsMulticast () const override;
+  bool IsPointToPoint () const override;
+  bool IsBridge () const override;
+  Ptr<Node> GetNode () const override;
+  void SetNode (Ptr<Node> node) override;
+  bool NeedsArp () const override;
+  void SetReceiveCallback (NetDevice::ReceiveCallback cb) override;
+  Address GetMulticast (Ipv4Address addr) const override;
+  Address GetMulticast (Ipv6Address addr) const override;
+  void SetPromiscReceiveCallback (PromiscReceiveCallback cb) override;
+  bool SendFrom (Ptr<Packet> packet, const Address& source, const Address& dest, uint16_t protocolNumber) override;
+  bool SupportsSendFrom () const override;
 
-  /** 
+  /**
    * receive a packet from the lower layers in order to forward it to the upper layers
-   * 
+   *
    * \param p the packet
    */
   void Receive (Ptr<Packet> p);
-  
-protected:
-  
-  NetDevice::ReceiveCallback m_rxCallback; ///< receive callback
-  
-private:
-  /// type conversion operator
-  LteNetDevice (const LteNetDevice &);
-  /**
-   * assignment operator
-   * \returns LteNetDevice
-   */
-  LteNetDevice & operator= (const LteNetDevice &);
 
+protected:
+
+  NetDevice::ReceiveCallback m_rxCallback; ///< receive callback
+
+private:
   Ptr<Node> m_node; ///< the node
 
   TracedCallback<> m_linkChangeCallbacks; ///< link change callback

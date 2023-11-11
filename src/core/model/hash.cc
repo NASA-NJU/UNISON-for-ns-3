@@ -32,7 +32,7 @@ namespace ns3 {
 
 NS_LOG_COMPONENT_DEFINE ("Hash");
 
-Hasher& GetStaticHash (void)
+Hasher& GetStaticHash ()
 {
   static Hasher g_hasher = Hasher ();
   g_hasher.clear();
@@ -42,17 +42,17 @@ Hasher& GetStaticHash (void)
 Hasher::Hasher ()
 {
   m_impl = Create <Hash::Function::Murmur3> ();
-  NS_ASSERT (m_impl != 0);
+  NS_ASSERT (m_impl);
 }
 
 Hasher::Hasher (Ptr<Hash::Implementation> hp)
   : m_impl (hp)
 {
-  NS_ASSERT (m_impl != 0);
+  NS_ASSERT (m_impl);
 }
 
 Hasher &
-Hasher::clear (void)
+Hasher::clear ()
 {
   m_impl->clear ();
   return *this;

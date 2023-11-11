@@ -36,7 +36,7 @@ namespace ns3 {
  * if PPP is transmitted over a serial link, it will typically be framed in
  * some way derivative of IBM SDLC (HDLC) with all that that entails.
  * Thankfully, we don't have to deal with all of that -- we can use our own
- * protocol for getting bits across the serial link which we call an ns3 
+ * protocol for getting bits across the serial link which we call an ns3
  * Packet.  What we do have to worry about is being able to capture PPP frames
  * which are understandable by Wireshark.  All this means is that we need to
  * teach the PcapWriter about the appropriate data link type (DLT_PPP = 9),
@@ -57,27 +57,27 @@ public:
   /**
    * \brief Destroy a PPP header.
    */
-  virtual ~PppHeader ();
+  ~PppHeader () override;
 
   /**
    * \brief Get the TypeId
    *
    * \return The TypeId for this class
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   /**
    * \brief Get the TypeId of the instance
    *
    * \return The TypeId for this instance
    */
-  virtual TypeId GetInstanceTypeId (void) const;
+  TypeId GetInstanceTypeId () const override;
 
 
-  virtual void Print (std::ostream &os) const;
-  virtual void Serialize (Buffer::Iterator start) const;
-  virtual uint32_t Deserialize (Buffer::Iterator start);
-  virtual uint32_t GetSerializedSize (void) const;
+  void Print (std::ostream &os) const override;
+  void Serialize (Buffer::Iterator start) const override;
+  uint32_t Deserialize (Buffer::Iterator start) override;
+  uint32_t GetSerializedSize () const override;
 
   /**
    * \brief Set the protocol type carried by this PPP packet
@@ -95,7 +95,7 @@ public:
    *
    * \return the protocol type being carried
    */
-  uint16_t GetProtocol (void);
+  uint16_t GetProtocol ();
 
 private:
 

@@ -27,7 +27,8 @@ NS_LOG_COMPONENT_DEFINE ("SupportedRates");
 
 #define BSS_MEMBERSHIP_SELECTOR_HT_PHY 127
 #define BSS_MEMBERSHIP_SELECTOR_VHT_PHY 126
-#define BSS_MEMBERSHIP_SELECTOR_HE_PHY 125
+#define BSS_MEMBERSHIP_SELECTOR_HE_PHY 122
+#define BSS_MEMBERSHIP_SELECTOR_EHT_PHY 121  // TODO not defined yet as of 802.11be D1.4
 
 SupportedRates::SupportedRates ()
   : extended (this),
@@ -42,7 +43,7 @@ SupportedRates::SupportedRates (const SupportedRates &rates)
   m_nRates = rates.m_nRates;
   memcpy (m_rates, rates.m_rates, MAX_SUPPORTED_RATES);
   //reset the back pointer to this object
-  extended.SetSupportedRates (this);
+  extended = ExtendedSupportedRatesIE (this);
 }
 
 SupportedRates&
@@ -51,7 +52,7 @@ SupportedRates::operator= (const SupportedRates& rates)
   this->m_nRates = rates.m_nRates;
   memcpy (this->m_rates, rates.m_rates, MAX_SUPPORTED_RATES);
   //reset the back pointer to this object
-  this->extended.SetSupportedRates (this);
+  this->extended = ExtendedSupportedRatesIE(this);
   return (*this);
 }
 
@@ -98,8 +99,9 @@ SupportedRates::AddBssMembershipSelectorRate (uint64_t bs)
 {
   NS_LOG_FUNCTION (this << bs);
   NS_ASSERT_MSG (bs == BSS_MEMBERSHIP_SELECTOR_HT_PHY ||
- 	         bs == BSS_MEMBERSHIP_SELECTOR_VHT_PHY ||
- 	         bs == BSS_MEMBERSHIP_SELECTOR_HE_PHY,
+ 	               bs == BSS_MEMBERSHIP_SELECTOR_VHT_PHY ||
+                 bs == BSS_MEMBERSHIP_SELECTOR_HE_PHY ||
+                 bs == BSS_MEMBERSHIP_SELECTOR_EHT_PHY,
                  "Value " << bs << " not a BSS Membership Selector");
   uint8_t rate = static_cast<uint8_t> (bs / 500000);
   for (uint8_t i = 0; i < m_nRates; i++)
@@ -151,7 +153,8 @@ SupportedRates::IsBssMembershipSelectorRate (uint64_t bs) const
   NS_LOG_FUNCTION (this << bs);
   if ((bs & 0x7f) == BSS_MEMBERSHIP_SELECTOR_HT_PHY
       || (bs & 0x7f) == BSS_MEMBERSHIP_SELECTOR_VHT_PHY
-      || (bs & 0x7f) == BSS_MEMBERSHIP_SELECTOR_HE_PHY)
+      || (bs & 0x7f) == BSS_MEMBERSHIP_SELECTOR_HE_PHY
+      || (bs & 0x7f) == BSS_MEMBERSHIP_SELECTOR_EHT_PHY)
     {
       return true;
     }
@@ -159,7 +162,7 @@ SupportedRates::IsBssMembershipSelectorRate (uint64_t bs) const
 }
 
 uint8_t
-SupportedRates::GetNRates (void) const
+SupportedRates::GetNRates () const
 {
   return m_nRates;
 }
@@ -176,7 +179,7 @@ SupportedRates::ElementId () const
   return IE_SUPPORTED_RATES;
 }
 
-uint8_t
+uint16_t
 SupportedRates::GetInformationFieldSize () const
 {
   //The Supported Rates Information Element contains only the first 8
@@ -194,9 +197,9 @@ SupportedRates::SerializeInformationField (Buffer::Iterator start) const
   start.Write (m_rates, m_nRates > 8 ? 8 : m_nRates);
 }
 
-uint8_t
+uint16_t
 SupportedRates::DeserializeInformationField (Buffer::Iterator start,
-                                             uint8_t length)
+                                             uint16_t length)
 {
   NS_ASSERT (length <= 8);
   m_nRates = length;
@@ -225,14 +228,12 @@ ExtendedSupportedRatesIE::SetSupportedRates (SupportedRates *sr)
   m_supportedRates = sr;
 }
 
-uint8_t
+uint16_t
 ExtendedSupportedRatesIE::GetInformationFieldSize () const
 {
-  //If there are 8 or fewer rates then we don't need an Extended
-  //Supported Rates IE and so could return zero here, but we're
-  //overriding the GetSerializedSize() method, so if this function is
-  //invoked in that case then it indicates a programming error. Hence
-  //we have an assertion on that condition.
+  // If there are 8 or fewer rates then we don't need an Extended Supported
+  // Rates, so if this function is invoked in that case then it indicates a
+  // programming error. Hence we have an assertion on that condition.
   NS_ASSERT (m_supportedRates->m_nRates > 8);
 
   //The number of rates we have beyond the initial 8 is the size of
@@ -246,46 +247,13 @@ ExtendedSupportedRatesIE::SerializeInformationField (Buffer::Iterator start) con
   //If there are 8 or fewer rates then there should be no Extended
   //Supported Rates Information Element at all so being here would
   //seemingly indicate a programming error.
-  //
-  //Our overridden version of the Serialize() method should ensure
-  //that this routine is never invoked in that case (by ensuring that
-  //WifiInformationElement::Serialize() is not invoked).
   NS_ASSERT (m_supportedRates->m_nRates > 8);
   start.Write (m_supportedRates->m_rates + 8, m_supportedRates->m_nRates - 8);
 }
 
-Buffer::Iterator
-ExtendedSupportedRatesIE::Serialize (Buffer::Iterator start) const
-{
-  //If there are 8 or fewer rates then we don't need an Extended
-  //Supported Rates IE, so we don't serialise anything.
-  if (m_supportedRates->m_nRates <= 8)
-    {
-      return start;
-    }
-
-  //If there are more than 8 rates then we serialise as per normal.
-  return WifiInformationElement::Serialize (start);
-}
-
 uint16_t
-ExtendedSupportedRatesIE::GetSerializedSize () const
-{
-  //If there are 8 or fewer rates then we don't need an Extended
-  //Supported Rates IE, so it's serialised length will be zero.
-  if (m_supportedRates->m_nRates <= 8)
-    {
-      return 0;
-    }
-
-  //Otherwise, the size of it will be the number of supported rates
-  //beyond 8, plus 2 for the Element ID and Length.
-  return WifiInformationElement::GetSerializedSize ();
-}
-
-uint8_t
 ExtendedSupportedRatesIE::DeserializeInformationField (Buffer::Iterator start,
-                                                       uint8_t length)
+                                                       uint16_t length)
 {
   NS_ASSERT (length > 0);
   NS_ASSERT (m_supportedRates->m_nRates + length <= SupportedRates::MAX_SUPPORTED_RATES);

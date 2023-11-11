@@ -80,7 +80,7 @@ public:
 };
 
 NameNode::NameNode ()
-  : m_parent (0), m_name (""), m_object (0)
+  : m_parent (nullptr), m_name (""), m_object (nullptr)
 {}
 
 NameNode::NameNode (const NameNode &nameNode)
@@ -122,7 +122,7 @@ public:
   /** Constructor. */
   NamesPriv ();
   /** Destructor. */
-  ~NamesPriv ();
+  ~NamesPriv () override;
 
   // Doxygen \copydoc bug: won't copy these docs, so we repeat them.
 
@@ -215,7 +215,7 @@ public:
   /**
    * Internal implementation for Names::Clear()
    */
-  void Clear (void);
+  void Clear ();
 
   /**
    * Internal implementation for ns3::Names::Find(std::string)
@@ -249,7 +249,7 @@ public:
   Ptr<Object> Find (Ptr<Object> context, std::string name);
 
 private:
-  
+
   /**
    * Check if an object has a name.
    *
@@ -277,9 +277,9 @@ NamesPriv::NamesPriv ()
 {
   NS_LOG_FUNCTION (this);
 
-  m_root.m_parent = 0;
+  m_root.m_parent = nullptr;
   m_root.m_name = "Names";
-  m_root.m_object = 0;
+  m_root.m_object = nullptr;
 }
 
 NamesPriv::~NamesPriv ()
@@ -290,7 +290,7 @@ NamesPriv::~NamesPriv ()
 }
 
 void
-NamesPriv::Clear (void)
+NamesPriv::Clear ()
 {
   NS_LOG_FUNCTION (this);
   //
@@ -305,9 +305,9 @@ NamesPriv::Clear (void)
 
   m_objectMap.clear ();
 
-  m_root.m_parent = 0;
+  m_root.m_parent = nullptr;
   m_root.m_name = "Names";
-  m_root.m_object = 0;
+  m_root.m_object = nullptr;
   m_root.m_nameMap.clear ();
 }
 
@@ -338,7 +338,7 @@ NamesPriv::Add (std::string name, Ptr<Object> object)
       // This must be a name that has the "/Names" namespace prefix omitted.
       // Do some reasonableness checking on the rest of the name.
       //
-      offset = name.find ("/");
+      offset = name.find ('/');
       if (offset == 0)
         {
           NS_ASSERT_MSG (false, "NamesPriv::Add(): Name begins with '/' but not \"/Names\"");
@@ -355,7 +355,7 @@ NamesPriv::Add (std::string name, Ptr<Object> object)
   // separates the path from the final segment had better be there since
   // we just made sure that at least the namespace name was there.
   //
-  std::string::size_type i = name.rfind ("/");
+  std::string::size_type i = name.rfind ('/');
   NS_ASSERT_MSG (i != std::string::npos, "NamesPriv::Add(): Internal error.  Can't find '/' in name");
 
   //
@@ -379,7 +379,7 @@ NamesPriv::Add (std::string path, std::string name, Ptr<Object> object)
   NS_LOG_FUNCTION (this << path << name << object);
   if (path == "/Names")
     {
-      return Add (Ptr<Object> (0, false), name, object);
+      return Add (Ptr<Object> (nullptr, false), name, object);
     }
   return Add (Find (path), name, object);
 }
@@ -395,7 +395,7 @@ NamesPriv::Add (Ptr<Object> context, std::string name, Ptr<Object> object)
       return false;
     }
 
-  NameNode *node = 0;
+  NameNode *node = nullptr;
   if (context)
     {
       node = IsNamed (context);
@@ -448,7 +448,7 @@ NamesPriv::Rename (std::string oldpath, std::string newname)
       // This must be a name that has the "/Names" namespace prefix omitted.
       // Do some reasonableness checking on the rest of the name.
       //
-      offset = oldpath.find ("/");
+      offset = oldpath.find ('/');
       if (offset == 0)
         {
           NS_ASSERT_MSG (false, "NamesPriv::Add(): Name begins with '/' but not \"/Names\"");
@@ -465,7 +465,7 @@ NamesPriv::Rename (std::string oldpath, std::string newname)
   // separates the path from the final segment (name) had better be there since
   // we just made sure that at least the namespace name was there.
   //
-  std::string::size_type i = oldpath.rfind ("/");
+  std::string::size_type i = oldpath.rfind ('/');
   NS_ASSERT_MSG (i != std::string::npos, "NamesPriv::Add(): Internal error.  Can't find '/' in name");
 
   //
@@ -489,7 +489,7 @@ NamesPriv::Rename (std::string path, std::string oldname, std::string newname)
   NS_LOG_FUNCTION (this << path << oldname << newname);
   if (path == "/Names")
     {
-      return Rename (Ptr<Object> (0, false), oldname, newname);
+      return Rename (Ptr<Object> (nullptr, false), oldname, newname);
     }
   return Rename (Find (path), oldname, newname);
 }
@@ -499,7 +499,7 @@ NamesPriv::Rename (Ptr<Object> context, std::string oldname, std::string newname
 {
   NS_LOG_FUNCTION (this << context << oldname << newname);
 
-  NameNode *node = 0;
+  NameNode *node = nullptr;
   if (context)
     {
       node = IsNamed (context);
@@ -581,7 +581,7 @@ NamesPriv::FindPath (Ptr<Object> object)
       path = "/" + p->m_name + path;
       NS_LOG_LOGIC ("path is " << path);
     }
-  while ((p = p->m_parent) != 0);
+  while ((p = p->m_parent) != nullptr);
 
   return path;
 }
@@ -633,7 +633,7 @@ NamesPriv::Find (std::string path)
   for (;;)
     {
       NS_LOG_LOGIC ("Looking for the object of name " << remaining);
-      offset = remaining.find ("/");
+      offset = remaining.find ('/');
       if (offset == std::string::npos)
         {
           //
@@ -644,7 +644,7 @@ NamesPriv::Find (std::string path)
           if (i == node->m_nameMap.end ())
             {
               NS_LOG_LOGIC ("Name does not exist in name map");
-              return 0;
+              return nullptr;
             }
           else
             {
@@ -658,14 +658,14 @@ NamesPriv::Find (std::string path)
           // There are more slashes so this is an intermediate segment of the
           // specified name.  We need to "recurse" when we find this segment.
           //
-          offset = remaining.find ("/");
+          offset = remaining.find ('/');
           std::string segment = remaining.substr (0, offset);
 
           std::map<std::string, NameNode *>::iterator i = node->m_nameMap.find (segment);
           if (i == node->m_nameMap.end ())
             {
               NS_LOG_LOGIC ("Name does not exist in name map");
-              return 0;
+              return nullptr;
             }
           else
             {
@@ -678,7 +678,7 @@ NamesPriv::Find (std::string path)
     }
 
   NS_ASSERT_MSG (node, "NamesPriv::Find(): Internal error:  this can't happen");
-  return 0;
+  return nullptr;
 }
 
 Ptr<Object>
@@ -688,7 +688,7 @@ NamesPriv::Find (std::string path, std::string name)
 
   if (path == "/Names")
     {
-      return Find (Ptr<Object> (0, false), name);
+      return Find (Ptr<Object> (nullptr, false), name);
     }
   return Find (Find (path), name);
 }
@@ -698,9 +698,9 @@ NamesPriv::Find (Ptr<Object> context, std::string name)
 {
   NS_LOG_FUNCTION (this << context << name);
 
-  NameNode *node = 0;
+  NameNode *node = nullptr;
 
-  if (context == 0)
+  if (!context)
     {
       NS_LOG_LOGIC ("Zero context implies root NameNode");
       node = &m_root;
@@ -708,10 +708,10 @@ NamesPriv::Find (Ptr<Object> context, std::string name)
   else
     {
       node = IsNamed (context);
-      if (node == 0)
+      if (node == nullptr)
         {
           NS_LOG_LOGIC ("Context does not point to a previously named node");
-          return 0;
+          return nullptr;
         }
     }
 
@@ -719,7 +719,7 @@ NamesPriv::Find (Ptr<Object> context, std::string name)
   if (i == node->m_nameMap.end ())
     {
       NS_LOG_LOGIC ("Name does not exist in name map");
-      return 0;
+      return nullptr;
     }
   else
     {
@@ -737,7 +737,7 @@ NamesPriv::IsNamed (Ptr<Object> object)
   if (i == m_objectMap.end ())
     {
       NS_LOG_LOGIC ("Object does not exist in object map, returning NameNode 0");
-      return 0;
+      return nullptr;
     }
   else
     {
@@ -828,7 +828,7 @@ Names::FindPath (Ptr<Object> object)
 }
 
 void
-Names::Clear (void)
+Names::Clear ()
 {
   NS_LOG_FUNCTION_NOARGS ();
   return NamesPriv::Get ()->Clear ();

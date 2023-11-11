@@ -6,27 +6,27 @@ option(
 
 set(module_enabled_features) # modulegen_customizations consumes this list
 
-check_include_file_cxx(
+check_include_file(
   net/ethernet.h
   HAVE_NET_ETHERNET_H
 )
-check_include_file_cxx(
+check_include_file(
   netpacket/packet.h
   HAVE_PACKET_H
 )
-check_include_file_cxx(
+check_include_file(
   net/if.h
   HAVE_IF_NETS_H
 )
-check_include_file_cxx(
+check_include_file(
   linux/if_tun.h
   HAVE_IF_TUN_H
 )
-check_include_file_cxx(
+check_include_file(
   net/netmap_user.h
   HAVE_NETMAP_USER_H
 )
-check_include_file_cxx(
+check_include_file(
   sys/ioctl.h
   HAVE_SYS_IOCTL_H
 )
@@ -100,7 +100,6 @@ if(HAVE_NET_ETHERNET_H)
      AND HAVE_IF_TUN_H
      AND HAVE_SYS_IOCTL_H
      AND ${ENABLE_TAP}
-     AND ${ENABLE_REALTIME}
      AND ${ENABLE_EMU}
   )
     set(ENABLE_TAPNETDEV
@@ -152,19 +151,19 @@ if(${ENABLE_FDNETDEV})
         helper/emu-fd-net-device-helper.h
     )
 
-    add_executable(
-      raw-sock-creator
-      helper/creator-utils.cc
-      helper/encode-decode.cc
-      helper/raw-sock-creator.cc
-    )
     add_definitions(
       -DRAW_SOCK_CREATOR="${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/src/fd-net-device/ns${NS3_VER}-raw-sock-creator${build_profile_suffix}"
     )
-    set_runtime_outputdirectory(
-      raw-sock-creator
-      ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/src/fd-net-device/
-      ""
+    build_exec(
+      EXECNAME raw-sock-creator
+      SOURCE_FILES
+        helper/creator-utils.cc
+        helper/encode-decode.cc
+        helper/raw-sock-creator.cc
+      EXECUTABLE_DIRECTORY_PATH
+        ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/src/fd-net-device/
+      INSTALL_DIRECTORY_PATH ${CMAKE_INSTALL_LIBEXECDIR}/ns3
+      STANDALONE
     )
 
     list(
@@ -187,19 +186,20 @@ if(${ENABLE_FDNETDEV})
         helper/tap-fd-net-device-helper.h
     )
 
-    add_executable(
-      tap-device-creator
-      helper/creator-utils.cc
-      helper/encode-decode.cc
-      helper/tap-device-creator.cc
-    )
     add_definitions(
       -DTAP_DEV_CREATOR="${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/src/fd-net-device/ns${NS3_VER}-tap-device-creator${build_profile_suffix}"
     )
-    set_runtime_outputdirectory(
-      tap-device-creator
-      ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/src/fd-net-device/
-      ""
+
+    build_exec(
+      EXECNAME tap-device-creator
+      SOURCE_FILES
+        helper/creator-utils.cc
+        helper/encode-decode.cc
+        helper/tap-device-creator.cc
+      EXECUTABLE_DIRECTORY_PATH
+        ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/src/fd-net-device/
+      INSTALL_DIRECTORY_PATH ${CMAKE_INSTALL_LIBEXECDIR}/ns3
+      STANDALONE
     )
 
     list(
@@ -224,19 +224,20 @@ if(${ENABLE_FDNETDEV})
         model/netmap-net-device.h
     )
 
-    add_executable(
-      netmap-device-creator
-      helper/creator-utils.cc
-      helper/encode-decode.cc
-      helper/netmap-device-creator.cc
-    )
     add_definitions(
       -DNETMAP_DEV_CREATOR="${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/src/fd-net-device/ns${NS3_VER}-netmap-device-creator${build_profile_suffix}"
     )
-    set_runtime_outputdirectory(
-      netmap-device-creator
-      ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/src/fd-net-device/
-      ""
+
+    build_exec(
+      EXECNAME netmap-device-creator
+      SOURCE_FILES
+        helper/creator-utils.cc
+        helper/encode-decode.cc
+        helper/netmap-device-creator.cc
+      EXECUTABLE_DIRECTORY_PATH
+        ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/src/fd-net-device/
+      INSTALL_DIRECTORY_PATH ${CMAKE_INSTALL_LIBEXECDIR}/ns3
+      STANDALONE
     )
 
     list(

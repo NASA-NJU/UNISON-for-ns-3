@@ -47,7 +47,7 @@ struct MeshHeaderTest : public TestCase
     TestCase ("Dot11sMeshHeader roundtrip serialization")
   {
   }
-  void DoRun ();
+  void DoRun () override;
 };
 
 void
@@ -104,7 +104,7 @@ class HwmpRtableTest : public TestCase
 {
 public:
   HwmpRtableTest ();
-  virtual void DoRun ();
+  void DoRun () override;
 
 private:
   /// Test Add apth and lookup path;
@@ -132,17 +132,17 @@ private:
 };
 
 HwmpRtableTest::HwmpRtableTest () :
-  TestCase ("HWMP routing table"), 
-  dst ("01:00:00:01:00:01"), 
+  TestCase ("HWMP routing table"),
+  dst ("01:00:00:01:00:01"),
   hop ("01:00:00:01:00:03"),
-  iface (8010), 
-  metric (10), 
-  seqnum (1), 
+  iface (8010),
+  metric (10),
+  seqnum (1),
   expire (Seconds (10))
 {
-  precursors.push_back (Mac48Address ("00:10:20:30:40:50"));
-  precursors.push_back (Mac48Address ("00:11:22:33:44:55"));
-  precursors.push_back (Mac48Address ("00:01:02:03:04:05"));
+  precursors.emplace_back("00:10:20:30:40:50");
+  precursors.emplace_back("00:11:22:33:44:55");
+  precursors.emplace_back("00:01:02:03:04:05");
 }
 
 void
@@ -227,7 +227,7 @@ struct PeerLinkFrameStartTest : public TestCase
     TestCase ("PeerLinkFrames (open, confirm, close) unit tests")
   {
   }
-  virtual void DoRun ();
+  void DoRun () override;
 };
 
 void

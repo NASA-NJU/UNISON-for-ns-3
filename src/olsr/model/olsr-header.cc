@@ -48,7 +48,8 @@ namespace olsr {
 uint8_t
 SecondsToEmf (double seconds)
 {
-  int a, b = 0;
+  int a;
+  int b = 0;
 
   NS_ASSERT_MSG (seconds >= OLSR_C, "SecondsToEmf - Can not convert a value less than OLSR_C");
 
@@ -111,7 +112,7 @@ PacketHeader::~PacketHeader ()
 }
 
 TypeId
-PacketHeader::GetTypeId (void)
+PacketHeader::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::olsr::PacketHeader")
     .SetParent<Header> ()
@@ -121,13 +122,13 @@ PacketHeader::GetTypeId (void)
   return tid;
 }
 TypeId
-PacketHeader::GetInstanceTypeId (void) const
+PacketHeader::GetInstanceTypeId () const
 {
   return GetTypeId ();
 }
 
 uint32_t
-PacketHeader::GetSerializedSize (void) const
+PacketHeader::GetSerializedSize () const
 {
   return OLSR_PKT_HEADER_SIZE;
 }
@@ -170,7 +171,7 @@ MessageHeader::~MessageHeader ()
 }
 
 TypeId
-MessageHeader::GetTypeId (void)
+MessageHeader::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::olsr::MessageHeader")
     .SetParent<Header> ()
@@ -180,13 +181,13 @@ MessageHeader::GetTypeId (void)
   return tid;
 }
 TypeId
-MessageHeader::GetInstanceTypeId (void) const
+MessageHeader::GetInstanceTypeId () const
 {
   return GetTypeId ();
 }
 
 uint32_t
-MessageHeader::GetSerializedSize (void) const
+MessageHeader::GetSerializedSize () const
 {
   uint32_t size = OLSR_MSG_HEADER_SIZE;
   switch (m_messageType)
@@ -325,7 +326,7 @@ MessageHeader::Deserialize (Buffer::Iterator start)
 // ---------------- OLSR MID Message -------------------------------
 
 uint32_t
-MessageHeader::Mid::GetSerializedSize (void) const
+MessageHeader::Mid::GetSerializedSize () const
 {
   return this->interfaceAddresses.size () * IPV4_ADDRESS_SIZE;
 }
@@ -375,7 +376,7 @@ MessageHeader::Mid::Deserialize (Buffer::Iterator start, uint32_t messageSize)
                                   this->interfaceAddresses.end ());
   for (int n = 0; n < numAddresses; ++n)
     {
-      this->interfaceAddresses.push_back (Ipv4Address (i.ReadNtohU32 ()));
+      this->interfaceAddresses.emplace_back(i.ReadNtohU32 ());
     }
   return GetSerializedSize ();
 }
@@ -385,7 +386,7 @@ MessageHeader::Mid::Deserialize (Buffer::Iterator start, uint32_t messageSize)
 // ---------------- OLSR HELLO Message -------------------------------
 
 uint32_t
-MessageHeader::Hello::GetSerializedSize (void) const
+MessageHeader::Hello::GetSerializedSize () const
 {
   uint32_t size = 4;
   for (std::vector<LinkMessage>::const_iterator iter = this->linkMessages.begin ();
@@ -485,7 +486,7 @@ MessageHeader::Hello::Deserialize (Buffer::Iterator start, uint32_t messageSize)
       NS_ASSERT ((lmSize - 4) % IPV4_ADDRESS_SIZE == 0);
       for (int n = (lmSize - 4) / IPV4_ADDRESS_SIZE; n; --n)
         {
-          lm.neighborInterfaceAddresses.push_back (Ipv4Address (i.ReadNtohU32 ()));
+          lm.neighborInterfaceAddresses.emplace_back(i.ReadNtohU32 ());
         }
       helloSizeLeft -= lmSize;
       this->linkMessages.push_back (lm);
@@ -499,7 +500,7 @@ MessageHeader::Hello::Deserialize (Buffer::Iterator start, uint32_t messageSize)
 // ---------------- OLSR TC Message -------------------------------
 
 uint32_t
-MessageHeader::Tc::GetSerializedSize (void) const
+MessageHeader::Tc::GetSerializedSize () const
 {
   return 4 + this->neighborAddresses.size () * IPV4_ADDRESS_SIZE;
 }
@@ -556,7 +557,7 @@ MessageHeader::Tc::Deserialize (Buffer::Iterator start, uint32_t messageSize)
   this->neighborAddresses.clear ();
   for (int n = 0; n < numAddresses; ++n)
     {
-      this->neighborAddresses.push_back (Ipv4Address (i.ReadNtohU32 ()));
+      this->neighborAddresses.emplace_back(i.ReadNtohU32 ());
     }
 
   return messageSize;
@@ -566,7 +567,7 @@ MessageHeader::Tc::Deserialize (Buffer::Iterator start, uint32_t messageSize)
 // ---------------- OLSR HNA Message -------------------------------
 
 uint32_t
-MessageHeader::Hna::GetSerializedSize (void) const
+MessageHeader::Hna::GetSerializedSize () const
 {
   return 2 * this->associations.size () * IPV4_ADDRESS_SIZE;
 }

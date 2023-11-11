@@ -28,8 +28,8 @@ NS_LOG_COMPONENT_DEFINE ("HierarchicalMobilityModel");
 
 NS_OBJECT_ENSURE_REGISTERED (HierarchicalMobilityModel);
 
-TypeId 
-HierarchicalMobilityModel::GetTypeId (void)
+TypeId
+HierarchicalMobilityModel::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::HierarchicalMobilityModel")
     .SetParent<MobilityModel> ()
@@ -50,8 +50,8 @@ HierarchicalMobilityModel::GetTypeId (void)
 }
 
 HierarchicalMobilityModel::HierarchicalMobilityModel ()
-  : m_child (0),
-    m_parent (0)
+  : m_child (nullptr),
+    m_parent (nullptr)
 {
   NS_LOG_FUNCTION (this);
 }
@@ -80,7 +80,7 @@ HierarchicalMobilityModel::SetChild (Ptr<MobilityModel> model)
     }
 }
 
-void 
+void
 HierarchicalMobilityModel::SetParent (Ptr<MobilityModel> model)
 {
   NS_LOG_FUNCTION (this << model);
@@ -108,20 +108,20 @@ HierarchicalMobilityModel::SetParent (Ptr<MobilityModel> model)
 }
 
 
-Ptr<MobilityModel> 
-HierarchicalMobilityModel::GetChild (void) const
+Ptr<MobilityModel>
+HierarchicalMobilityModel::GetChild () const
 {
   return m_child;
 }
 
-Ptr<MobilityModel> 
-HierarchicalMobilityModel::GetParent (void) const
+Ptr<MobilityModel>
+HierarchicalMobilityModel::GetParent () const
 {
   return m_parent;
 }
 
 Vector
-HierarchicalMobilityModel::DoGetPosition (void) const
+HierarchicalMobilityModel::DoGetPosition () const
 {
   if (!m_parent)
     {
@@ -133,11 +133,11 @@ HierarchicalMobilityModel::DoGetPosition (void) const
                  parentPosition.y + childPosition.y,
                  parentPosition.z + childPosition.z);
 }
-void 
+void
 HierarchicalMobilityModel::DoSetPosition (const Vector &position)
 {
   NS_LOG_FUNCTION (this << position);
-  if (m_child == 0)
+  if (!m_child)
     {
       return;
     }
@@ -157,7 +157,7 @@ HierarchicalMobilityModel::DoSetPosition (const Vector &position)
     }
 }
 Vector
-HierarchicalMobilityModel::DoGetVelocity (void) const
+HierarchicalMobilityModel::DoGetVelocity () const
 {
   if (m_parent)
     {
@@ -174,20 +174,20 @@ HierarchicalMobilityModel::DoGetVelocity (void) const
     }
 }
 
-void 
+void
 HierarchicalMobilityModel::ParentChanged (Ptr<const MobilityModel> model)
 {
   MobilityModel::NotifyCourseChange ();
 }
 
-void 
+void
 HierarchicalMobilityModel::ChildChanged (Ptr<const MobilityModel> model)
 {
   MobilityModel::NotifyCourseChange ();
 }
 
 void
-HierarchicalMobilityModel::DoInitialize (void)
+HierarchicalMobilityModel::DoInitialize ()
 {
   NS_LOG_FUNCTION (this);
   if (m_parent && !m_parent->IsInitialized ())

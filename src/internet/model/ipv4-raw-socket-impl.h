@@ -31,7 +31,7 @@ public:
    * \brief Get the type ID of this class.
    * \return type ID
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   Ipv4RawSocketImpl ();
 
@@ -41,33 +41,33 @@ public:
    */
   void SetNode (Ptr<Node> node);
 
-  virtual enum Socket::SocketErrno GetErrno () const;
+  enum Socket::SocketErrno GetErrno () const override;
 
   /**
    * \brief Get socket type (NS3_SOCK_RAW)
    * \return socket type
    */
-  virtual enum Socket::SocketType GetSocketType (void) const;
+  enum Socket::SocketType GetSocketType () const override;
 
-  virtual Ptr<Node> GetNode (void) const;
-  virtual int Bind (const Address &address);
-  virtual int Bind ();
-  virtual int Bind6 ();
-  virtual int GetSockName (Address &address) const; 
-  virtual int GetPeerName (Address &address) const;
-  virtual int Close (void);
-  virtual int ShutdownSend (void);
-  virtual int ShutdownRecv (void);
-  virtual int Connect (const Address &address);
-  virtual int Listen (void);
-  virtual uint32_t GetTxAvailable (void) const;
-  virtual int Send (Ptr<Packet> p, uint32_t flags);
-  virtual int SendTo (Ptr<Packet> p, uint32_t flags, 
-                      const Address &toAddress);
-  virtual uint32_t GetRxAvailable (void) const;
-  virtual Ptr<Packet> Recv (uint32_t maxSize, uint32_t flags);
-  virtual Ptr<Packet> RecvFrom (uint32_t maxSize, uint32_t flags,
-                                Address &fromAddress);
+  Ptr<Node> GetNode () const override;
+  int Bind (const Address &address) override;
+  int Bind () override;
+  int Bind6 () override;
+  int GetSockName (Address &address) const override;
+  int GetPeerName (Address &address) const override;
+  int Close () override;
+  int ShutdownSend () override;
+  int ShutdownRecv () override;
+  int Connect (const Address &address) override;
+  int Listen () override;
+  uint32_t GetTxAvailable () const override;
+  int Send (Ptr<Packet> p, uint32_t flags) override;
+  int SendTo (Ptr<Packet> p, uint32_t flags,
+                      const Address &toAddress) override;
+  uint32_t GetRxAvailable () const override;
+  Ptr<Packet> Recv (uint32_t maxSize, uint32_t flags) override;
+  Ptr<Packet> RecvFrom (uint32_t maxSize, uint32_t flags,
+                                Address &fromAddress) override;
 
 
   /**
@@ -84,11 +84,11 @@ public:
    * \return true if forwarded, false otherwise
    */
   bool ForwardUp (Ptr<const Packet> p, Ipv4Header ipHeader, Ptr<Ipv4Interface> incomingInterface);
-  virtual bool SetAllowBroadcast (bool allowBroadcast);
-  virtual bool GetAllowBroadcast () const;
+  bool SetAllowBroadcast (bool allowBroadcast) override;
+  bool GetAllowBroadcast () const override;
 
 private:
-  virtual void DoDispose (void);
+  void DoDispose () override;
 
   /**
    * \struct Data

@@ -95,42 +95,42 @@ public:
    * Get the Superframe Specification Beacon Order field.
    * \return the Superframe Specification Beacon Order field.
    */
-  uint8_t GetBeaconOrder (void) const;
+  uint8_t GetBeaconOrder () const;
   /**
    * Get the Superframe Specification Frame Order field.
    * \return The Superframe Specification Frame Order field.
    */
-  uint8_t GetFrameOrder (void) const;
+  uint8_t GetFrameOrder () const;
   /**
    * Get the the Final CAP Slot.
    * \returns The Final CAP Slot
    */
-  uint8_t GetFinalCapSlot (void) const;
+  uint8_t GetFinalCapSlot () const;
   /**
    * Check if the Battery Life Extension bit is enabled.
    * \returns true if the Battery Life Extension bit is enabled
    */
-  bool IsBattLifeExt (void) const;
+  bool IsBattLifeExt () const;
   /**
    * Check if the PAN Coordinator bit is enabled.
    * \returns true if the PAN Coordinator bit is enabled
    */
-  bool IsPanCoor (void) const;
+  bool IsPanCoor () const;
   /**
    * Check if the Association Permit bit is enabled.
    * \returns true if the Association Permit bit is enabled
    */
-  bool IsAssocPermit (void) const;
+  bool IsAssocPermit () const;
   /**
    * Get the Superframe specification information field.
    * \return the Superframe Specification Information field bits.
    */
-  uint16_t GetSuperframe (void) const;
+  uint16_t GetSuperframe () const;
   /**
    * Get the size of the serialized Superframe specification information field.
    * \return the size of the serialized field.
    */
-  uint32_t GetSerializedSize (void) const;
+  uint32_t GetSerializedSize () const;
   /**
    * Serialize the entire superframe specification field.
    * \param i an iterator which points to where the superframe specification field should be written.
@@ -143,7 +143,6 @@ public:
    * \return an iterator.
    */
   Buffer::Iterator Deserialize (Buffer::Iterator i);
-
 
 private:
   // Superframe Specification field
@@ -181,12 +180,12 @@ public:
    * Get the GTS Specification Field from the GTS Fields
    * \return The GTS Spcecification Field
    */
-  uint8_t GetGtsSpecField (void) const;
+  uint8_t GetGtsSpecField () const;
   /**
    * Get the GTS Direction Field from the GTS Fields
    * \return The GTS Direction Field
    */
-  uint8_t GetGtsDirectionField (void) const;
+  uint8_t GetGtsDirectionField () const;
   /**
    * Set the GTS Specification Field to the GTS Fields
    * \param gtsSpec The GTS Specification Field to set.
@@ -198,10 +197,15 @@ public:
    */
   void SetGtsDirectionField (uint8_t gtsDir);
   /**
+   *  Get the GTS Specification Permit. TRUE if coordinator is accepting GTS requests.
+   *  \return True if the coordinator is accepting GTS request.
+   */
+  bool GetGtsPermit () const;
+  /**
    * Get the size of the serialized GTS fields.
    * \return the size of the serialized fields.
    */
-  uint32_t GetSerializedSize (void) const;
+  uint32_t GetSerializedSize () const;
   /**
    * Serialize the entire GTS fields.
    * \param i an iterator which points to where the superframe specification field should be written.
@@ -228,11 +232,11 @@ private:
 
   //GTS specification field
   uint8_t m_gtsSpecDescCount;            //!< GTS specification field Descriptor Count (Bit 0-2)
-                                         // GTS specification field Reserved (Not necessary) (Bit 3-6)
+  // GTS specification field Reserved (Not necessary) (Bit 3-6)
   uint8_t m_gtsSpecPermit;               //!< GTS specification field GTS Permit (Bit 7)
   //GTS Direction field
   uint8_t m_gtsDirMask;                  //!< GTS Direction field Directions Mask (Bit 0-6)
-                                         // GTS Direction field Reserved (Not Necessary) (Bit 7)
+  // GTS Direction field Reserved (Not Necessary) (Bit 7)
   //GTS List
   gtsDescriptor m_gtsList[7];            //!< GTS List field (maximum descriptors stored == 7)
 };
@@ -285,17 +289,17 @@ public:
    * Get the whole Pending Address Specification Field from the Pending Address Fields.
    * \return The Pending Address Specification Field.
    */
-  uint8_t GetPndAddrSpecField (void) const;
+  uint8_t GetPndAddrSpecField () const;
   /**
    * Get the number of Short Pending Address indicated in the Pending Address Specification Field.
    * \return The number Short Pending Address.
    */
-  uint8_t GetNumShortAddr (void) const;
+  uint8_t GetNumShortAddr () const;
   /**
    * Get the number of Extended Pending Address indicated in the Pending Address Specification Field.
    * \return The number Short Pending Address.
    */
-  uint8_t GetNumExtAddr (void) const;
+  uint8_t GetNumExtAddr () const;
 
   /**
     * Set the whole Pending Address Specification field. This field is part of the
@@ -307,7 +311,7 @@ public:
    * Get the size of the serialized Pending Address Fields.
    * \return the size of the serialized fields.
    */
-  uint32_t GetSerializedSize (void) const;
+  uint32_t GetSerializedSize () const;
   /**
    * Serialize the entire Pending Address Fields.
    * \param i an iterator which points to where the Pending Address Fields should be written.
@@ -341,6 +345,99 @@ private:
  * \returns The reference to the output stream.
  */
 std::ostream &operator << (std::ostream &os, const PendingAddrFields &pendingAddrFields);
+
+
+/**
+ * \ingroup lr-wpan
+ *
+ * Represent the Capability Information Field.
+ * See IEEE 802.15.4-2011   Section 5.3.1.2 Figure 50
+ */
+class CapabilityField
+{
+
+public:
+  CapabilityField ();
+  /**
+   * Get the size of the serialized Capability Information Field.
+   * \return the size of the serialized field.
+   */
+  uint32_t GetSerializedSize () const;
+  /**
+   * Serialize the entire Capability Information Field.
+   * \param i an iterator which points to where the Capability information field should be written.
+   * \return an iterator.
+   */
+  Buffer::Iterator Serialize (Buffer::Iterator i) const;
+  /**
+   * Deserialize the entire Capability Information Field.
+   * \param i an iterator which points to where the Capability information field should be read.
+   * \return an iterator.
+   */
+  Buffer::Iterator Deserialize (Buffer::Iterator i);
+  /**
+   * True if the device type is a Full Functional Device (FFD) false if is a Reduced Functional Device (RFD).
+   * \return True if the device type is a Full Functional Device (FFD) false if is a Reduced Functional Device (RFD).
+   */
+  bool IsDeviceTypeFfd () const;
+  /**
+   * True if the device is receiving power from alternating current mains.
+   * \return True if the device is receiving power from alternating current mains.
+   */
+  bool IsPowSrcAvailable () const;
+  /**
+   * True if the device does not disable its receiver to conserve power during idle periods.
+   * \return True if the device does not disable its receiver to conserve power during idle periods.
+   */
+  bool IsReceiverOnWhenIdle () const;
+  /**
+   * True if the device is capable of sending and receiving cryptographically protected MAC frames.
+   * \return True if the device is capable of sending and receiving cryptographically protected MAC frames.
+   */
+  bool IsSecurityCapability () const;
+  /**
+   * True if the device wishes the coordinator to allocate a short address as result of the association procedure.
+   * \return True if the device wishes the coordinator to allocate a short address as result of the association procedure.
+   */
+  bool IsShortAddrAllocOn () const;
+  /**
+   * Set the Device type in the Capability Information Field.
+   * True = full functional device (FFD)  False = reduced functional device (RFD).
+   * \param devType The device type described in the Capability Information Field.
+   */
+  void SetFfdDevice (bool devType);
+  /**
+   * Set the Power Source available flag in the Capability Information Field.
+   * \param pow Set true if a Power Source is available in the Capability Information Field.
+   */
+  void SetPowSrcAvailable (bool pow);
+  /**
+   * Indicate if the receiver is On on Idle
+   * \param rxIdle Set true if the receiver is on when Idle
+   */
+  void SetRxOnWhenIdle (bool rxIdle);
+  /**
+   * Set the Security Capability flag in the Capability Information Field.
+   * \param sec Set true if the device have Security Capabilities.
+   */
+  void SetSecurityCap (bool sec);
+  /**
+   * Set the Short Address Flag in the Capability Information Field.
+   * \param addrAlloc Describes whether or not the coordinator should allocate a short
+   *                  address in the association process.
+   */
+  void SetShortAddrAllocOn (bool addrAlloc);
+
+private:
+
+  bool m_deviceType;          //!< Capability Information Field, Device Type  (bit 1)
+  bool m_powerSource;         //!< Capability Information Field, Power Source (bit 2)
+  bool m_receiverOnWhenIdle;  //!< Capability Information Field, Receiver On When Idle (bit 3)
+  bool m_securityCap;         //!< Capability Information Field, Security Capability (bit 6)
+  bool m_allocAddr;           //!< Capability Information Field, Allocate Address (bit 7)
+
+};
+std::ostream &operator << (std::ostream &os, const CapabilityField &capabilityField);
 
 
 }  //end namespace ns3

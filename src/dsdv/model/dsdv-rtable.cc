@@ -18,7 +18,7 @@
  * Author: Hemanth Narra <hemanth@ittc.ku.com>
  *
  * James P.G. Sterbenz <jpgs@ittc.ku.edu>, director
- * ResiliNets Research Group  http://wiki.ittc.ku.edu/resilinets
+ * ResiliNets Research Group  https://resilinets.org/
  * Information and Telecommunication Technology Center (ITTC)
  * and Department of Electrical Engineering and Computer Science
  * The University of Kansas Lawrence, KS USA.
@@ -45,14 +45,14 @@ RoutingTableEntry::RoutingTableEntry (Ptr<NetDevice> dev,
                                       uint32_t hops,
                                       Ipv4Address nextHop,
                                       Time lifetime,
-                                      Time SettlingTime,
+                                      Time settlingTime,
                                       bool areChanged)
   : m_seqNo (seqNo),
     m_hops (hops),
     m_lifeTime (lifetime),
     m_iface (iface),
     m_flag (VALID),
-    m_settlingTime (SettlingTime),
+    m_settlingTime (settlingTime),
     m_entriesChanged (areChanged)
 {
   m_ipv4Route = Create<Ipv4Route> ();
@@ -204,7 +204,11 @@ RoutingTableEntry::Print (Ptr<OutputStreamWrapper> stream, Time::Unit unit /*= T
 
   *os << std::resetiosflags (std::ios::adjustfield) << std::setiosflags (std::ios::left);
 
-  std::ostringstream dest, gw, iface, ltime, stime;
+  std::ostringstream dest;
+  std::ostringstream gw;
+  std::ostringstream iface;
+  std::ostringstream ltime;
+  std::ostringstream stime;
   dest << m_ipv4Route->GetDestination ();
   gw << m_ipv4Route->GetGateway ();
   iface << m_iface.GetLocal ();
@@ -263,7 +267,6 @@ RoutingTable::Purge (std::map<Ipv4Address, RoutingTableEntry> & removedAddresses
           ++i;
         }
     }
-  return;
 }
 
 void

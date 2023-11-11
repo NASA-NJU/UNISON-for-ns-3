@@ -25,7 +25,7 @@
 
 namespace ns3 {
 class MeshWifiInterfaceMac;
-class WifiMacQueueItem;
+class WifiMpdu;
 enum WifiMacDropReason : uint8_t;  // opaque enum declaration
 namespace dot11s {
 class PeerManagementProtocol;
@@ -51,21 +51,21 @@ public:
    * \param protocol peer management protocol
    */
   PeerManagementProtocolMac (uint32_t interface, Ptr<PeerManagementProtocol> protocol);
-  ~PeerManagementProtocolMac ();
-  
+  ~PeerManagementProtocolMac () override;
+
   // Inherited from plugin abstract class
   /**
    * Set pointer to parent
    * \param parent Ptr<MeshWifiInterfaceMac>
-   */ 
-  void SetParent (Ptr<MeshWifiInterfaceMac> parent);
+   */
+  void SetParent (Ptr<MeshWifiInterfaceMac> parent) override;
   /**
    * Receive and process a packet
    * \param packet the packet received
    * \param header the header
    * \returns true if received
    */
-  bool Receive (Ptr<Packet> packet, const WifiMacHeader & header);
+  bool Receive (Ptr<Packet> packet, const WifiMacHeader & header) override;
   /**
    * This method appears to test a few conditions.  If an action frame,
    * it returns true if SELF_PROTECTED.  It then checks if it is either
@@ -77,18 +77,18 @@ public:
    * \param to the MAC address of the receiver
    * \returns true if successful, false if to be dropped
    */
-  bool UpdateOutcomingFrame (Ptr<Packet> packet, WifiMacHeader & header, Mac48Address from, Mac48Address to);
+  bool UpdateOutcomingFrame (Ptr<Packet> packet, WifiMacHeader & header, Mac48Address from, Mac48Address to) override;
   /**
    * Add beacon timing and mesh ID information elements, and notify beacon sent
    * \param beacon the beacon
    */
-  void UpdateBeacon (MeshWifiBeacon & beacon) const;
+  void UpdateBeacon (MeshWifiBeacon & beacon) const override;
   /**
    * Assign the streams
    * \param stream the stream to assign
    * \return the assigned stream
    */
-  int64_t AssignStreams (int64_t stream);
+  int64_t AssignStreams (int64_t stream) override;
 
   /// \name Statistics
   ///@{
@@ -162,12 +162,12 @@ private:
    * \param reason the reason why the MPDU was dropped
    * \param mpdu the dropped MPDU
    */
-  void TxError (WifiMacDropReason reason, Ptr<const WifiMacQueueItem> mpdu);
+  void TxError (WifiMacDropReason reason, Ptr<const WifiMpdu> mpdu);
   /**
    * Transmit OK function
    * \param mpdu the MPDU
    */
-  void TxOk (Ptr <const WifiMacQueueItem> mpdu);
+  void TxOk (Ptr <const WifiMpdu> mpdu);
   // BCA functionality
   /**
    * Set beacon shift function

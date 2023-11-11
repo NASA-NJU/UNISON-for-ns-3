@@ -32,13 +32,13 @@ using namespace ns3;
  * \ingroup lte-test
  * \ingroup tests
  *
- * \brief This system test program creates different test cases with a single eNB and 
- * This system test program creates different test cases with a single eNB and 
- * several UEs, all having the same Radio Bearer specification. In each test 
- * case, the UEs see the same SINR from the eNB; different test cases are 
- * implemented obtained by using different SINR values and different numbers of 
- * UEs. The test consists on checking that the obtained throughput performance 
- * is equal among users and matches a reference throughput value within a given 
+ * \brief This system test program creates different test cases with a single eNB and
+ * This system test program creates different test cases with a single eNB and
+ * several UEs, all having the same Radio Bearer specification. In each test
+ * case, the UEs see the same SINR from the eNB; different test cases are
+ * implemented obtained by using different SINR values and different numbers of
+ * UEs. The test consists on checking that the obtained throughput performance
+ * is equal among users and matches a reference throughput value within a given
  * tolerance.
  */
 class LenaRrFfMacSchedulerTestCase : public TestCase
@@ -54,10 +54,10 @@ public:
    * \param errorModelEnabled if true the error model is enabled
    */
   LenaRrFfMacSchedulerTestCase (uint16_t nUser, double dist, double thrRefDl, double thrRefUl, bool errorModelEnabled);
-  virtual ~LenaRrFfMacSchedulerTestCase ();
+  ~LenaRrFfMacSchedulerTestCase () override;
 
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
   /**
    * Builds the test name string based on provided parameter values
    * \param nUser the number of UE nodes

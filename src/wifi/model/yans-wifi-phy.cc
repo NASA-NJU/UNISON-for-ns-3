@@ -32,7 +32,7 @@ NS_LOG_COMPONENT_DEFINE ("YansWifiPhy");
 NS_OBJECT_ENSURE_REGISTERED (YansWifiPhy);
 
 TypeId
-YansWifiPhy::GetTypeId (void)
+YansWifiPhy::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::YansWifiPhy")
     .SetParent<WifiPhy> ()
@@ -64,15 +64,15 @@ YansWifiPhy::~YansWifiPhy ()
 }
 
 void
-YansWifiPhy::DoDispose (void)
+YansWifiPhy::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
-  m_channel = 0;
+  m_channel = nullptr;
   WifiPhy::DoDispose ();
 }
 
 Ptr<Channel>
-YansWifiPhy::GetChannel (void) const
+YansWifiPhy::GetChannel () const
 {
   return m_channel;
 }
@@ -86,10 +86,10 @@ YansWifiPhy::SetChannel (const Ptr<YansWifiChannel> channel)
 }
 
 void
-YansWifiPhy::StartTx (Ptr<WifiPpdu> ppdu)
+YansWifiPhy::StartTx (Ptr<const WifiPpdu> ppdu, const WifiTxVector& txVector)
 {
   NS_LOG_FUNCTION (this << ppdu);
-  NS_LOG_DEBUG ("Start transmission: signal power before antenna gain=" << GetPowerDbm (ppdu->GetTxVector ().GetTxPowerLevel ()) << "dBm");
+  NS_LOG_DEBUG ("Start transmission: signal power before antenna gain=" << GetPowerDbm (txVector.GetTxPowerLevel ()) << "dBm");
   m_channel->Send (this, ppdu, GetTxPowerForTransmission (ppdu) + GetTxGain ());
 }
 
@@ -101,7 +101,7 @@ YansWifiPhy::GetGuardBandwidth (uint16_t currentChannelWidth) const
 }
 
 std::tuple<double, double, double>
-YansWifiPhy::GetTxMaskRejectionParams (void) const
+YansWifiPhy::GetTxMaskRejectionParams () const
 {
   NS_ABORT_MSG ("Tx mask rejection params not relevant for Yans");
   return std::make_tuple (0.0, 0.0, 0.0);

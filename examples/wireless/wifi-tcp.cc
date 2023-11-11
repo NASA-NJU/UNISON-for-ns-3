@@ -53,9 +53,12 @@ NS_LOG_COMPONENT_DEFINE ("wifi-tcp");
 
 using namespace ns3;
 
-Ptr<PacketSink> sink;                         /* Pointer to the packet sink application */
-uint64_t lastTotalRx = 0;                     /* The value of the last total received bytes */
+Ptr<PacketSink> sink;     //!< Pointer to the packet sink application
+uint64_t lastTotalRx = 0; //!< The value of the last total received bytes
 
+/**
+ * Calulate the throughput
+ */
 void
 CalculateThroughput ()
 {
@@ -90,7 +93,7 @@ main (int argc, char *argv[])
 
   tcpVariant = std::string ("ns3::") + tcpVariant;
   // Select TCP variant
-  if (tcpVariant.compare ("ns3::TcpWestwoodPlus") == 0)
+  if (tcpVariant == "ns3::TcpWestwoodPlus")
     {
       // TcpWestwoodPlus is not an actual TypeId name; we need TcpWestwood here
       Config::SetDefault ("ns3::TcpL4Protocol::SocketType", TypeIdValue (TcpWestwood::GetTypeId ()));

@@ -25,6 +25,7 @@
 #include "ns3/event-id.h"
 #include "ns3/ptr.h"
 #include "ns3/packet-socket-address.h"
+#include "ns3/traced-callback.h"
 
 namespace ns3 {
 
@@ -50,11 +51,11 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   PacketSocketServer ();
 
-  virtual ~PacketSocketServer ();
+  ~PacketSocketServer () override;
 
   /**
    * \brief set the local address and protocol to be used
@@ -63,12 +64,12 @@ public:
   void SetLocal (PacketSocketAddress addr);
 
 protected:
-  virtual void DoDispose (void);
+  void DoDispose () override;
 
 private:
 
-  virtual void StartApplication (void);
-  virtual void StopApplication (void);
+  void StartApplication () override;
+  void StopApplication () override;
 
   /**
    * \brief Handle a packet received by the application

@@ -53,9 +53,9 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
-  OcbWifiMac (void);
-  virtual ~OcbWifiMac (void);
+  static TypeId GetTypeId ();
+  OcbWifiMac ();
+  ~OcbWifiMac () override;
   /**
    * \param vsc management packet to send.
    * \param peer the address to which the packet should be sent.
@@ -84,7 +84,7 @@ public:
    * This method shall not be used in WAVE environment and
    * here it will overloaded to log warn message
    */
-  virtual Ssid GetSsid (void) const;
+  virtual Ssid GetSsid () const;
   /**
    * \param ssid the current ssid of this MAC layer.
    *
@@ -103,7 +103,7 @@ public:
    * here it will overloaded to log warn message
    * \return An invalid BSSID.
    */
-  virtual Mac48Address GetBssid (void) const;
+  virtual Mac48Address GetBssid (uint8_t /* linkId */) const;
   /**
    * SetLinkUpCallback and SetLinkDownCallback will be overloaded
    * In OCB mode, stations can send packets directly whenever they want
@@ -112,7 +112,7 @@ public:
   /**
    * \param linkUp the callback to invoke when the link becomes up.
    */
-  virtual void SetLinkUpCallback (Callback<void> linkUp);
+  void SetLinkUpCallback (Callback<void> linkUp) override;
   /**
    * \param linkDown the callback to invoke when the link becomes down.
    */
@@ -125,8 +125,8 @@ public:
    * dequeued as soon as the channel access function determines that
    * access is granted to this MAC.
    */
-  virtual void Enqueue (Ptr<Packet> packet, Mac48Address to);
-  virtual bool CanForwardPacketsTo (Mac48Address to) const;
+  void Enqueue (Ptr<Packet> packet, Mac48Address to) override;
+  bool CanForwardPacketsTo (Mac48Address to) const override;
   /**
     * \param cwmin the min contention window
     * \param cwmax the max contention window
@@ -149,12 +149,12 @@ public:
    * To support MAC extension for multiple channel operation,
    * Suspend the activity in current MAC entity
    */
-  void Suspend (void);
+  void Suspend ();
   /**
    * To support MAC extension for multiple channel operation,
    * Resume the activity of suspended MAC entity
    */
-  void Resume (void);
+  void Resume ();
   /**
    * \param duration the virtual busy time for MAC entity
    *
@@ -173,14 +173,21 @@ public:
    * To support MAC extension for multiple channel operation,
    * Reset current MAC entity and flush its internal queues.
    */
-  void Reset (void);
+  void Reset ();
+  /**
+   * Set the PHY.
+   *
+   * \param phy the PHY object
+   */
+  void SetWifiPhy (Ptr<WifiPhy> phy);
 
   // Inherited from base class
-  virtual void ConfigureStandard (enum WifiStandard standard);
+  void ConfigureStandard (enum WifiStandard standard) override;
 protected:
-  virtual void DoDispose (void);
+  void DoDispose () override;
 private:
-  virtual void Receive (Ptr<WifiMacQueueItem> mpdu);
+  void Receive (Ptr<const WifiMpdu> mpdu, uint8_t linkId) override;
+  std::optional<uint8_t> GetLinkIdByAddress (const Mac48Address& address) const override;
 
   VendorSpecificContentManager m_vscManager; ///< VSC manager
 };

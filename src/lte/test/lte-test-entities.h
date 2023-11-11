@@ -54,11 +54,11 @@ class LteTestRrc : public Object
    * \brief Get the type ID.
    * \return the object TypeId
    */
-    static TypeId GetTypeId (void);
+    static TypeId GetTypeId ();
 
-    LteTestRrc (void);
-    virtual ~LteTestRrc (void);
-    virtual void DoDispose (void);
+    LteTestRrc ();
+    ~LteTestRrc () override;
+    void DoDispose () override;
 
 
     /**
@@ -70,7 +70,7 @@ class LteTestRrc : public Object
     * \brief Get the PDCP SAP user
     * \return a pointer to the SAP user of the RLC
     */
-    LtePdcpSapUser* GetLtePdcpSapUser (void);
+    LtePdcpSapUser* GetLtePdcpSapUser ();
 
     /// Start function
     void Start ();
@@ -87,40 +87,40 @@ class LteTestRrc : public Object
     * \brief Get data received function
     * \returns the received data string
     */
-    std::string GetDataReceived (void);
+    std::string GetDataReceived ();
 
     // Stats
     /**
     * \brief Get the transmit PDUs
     * \return the number of transmit PDUS
     */
-    uint32_t GetTxPdus (void);
+    uint32_t GetTxPdus ();
     /**
     * \brief Get the transmit bytes
     * \return the number of bytes transmitted
     */
-    uint32_t GetTxBytes (void);
+    uint32_t GetTxBytes ();
     /**
     * \brief Get the receive PDUs
     * \return the number of receive PDUS
     */
-    uint32_t GetRxPdus (void);
+    uint32_t GetRxPdus ();
     /**
     * \brief Get the receive bytes
     * \return the number of bytes received
     */
-    uint32_t GetRxBytes (void);
+    uint32_t GetRxBytes ();
 
     /**
     * \brief Get the last transmit time
     * \return the time of the last transmit
     */
-    Time GetTxLastTime (void);
+    Time GetTxLastTime ();
     /**
     * \brief Get the last receive time
     * \return the time of the last receive
     */
-    Time GetRxLastTime (void);
+    Time GetRxLastTime ();
 
     /**
     * \brief Set the arrival time
@@ -177,17 +177,17 @@ class LteTestPdcp : public Object
 {
   /// allow LteRlcSpecificLteRlcSapUser<LteTestPdcp> class friend access
   friend class LteRlcSpecificLteRlcSapUser<LteTestPdcp>;
-  
+
   public:
   /**
    * \brief Get the type ID.
    * \return the object TypeId
    */
-    static TypeId GetTypeId (void);
+    static TypeId GetTypeId ();
 
-    LteTestPdcp (void);
-    virtual ~LteTestPdcp (void);
-    virtual void DoDispose (void);
+    LteTestPdcp ();
+    ~LteTestPdcp () override;
+    void DoDispose () override;
 
 
     /**
@@ -199,7 +199,7 @@ class LteTestPdcp : public Object
     * \brief Get the RLC SAP user
     * \return a pointer to the SAP user of the RLC
     */
-    LteRlcSapUser* GetLteRlcSapUser (void);
+    LteRlcSapUser* GetLteRlcSapUser ();
 
     /// Start function
     void Start ();
@@ -214,7 +214,7 @@ class LteTestPdcp : public Object
     * \brief Get data received function
     * \returns the received data string
     */
-    std::string GetDataReceived (void);
+    std::string GetDataReceived ();
 
   private:
     /**
@@ -226,7 +226,7 @@ class LteTestPdcp : public Object
     LteRlcSapUser* m_rlcSapUser; ///< RLC SAP user
     LteRlcSapProvider* m_rlcSapProvider; ///< RLC SAP provider
 
-    std::string m_receivedData; ///< the received data 
+    std::string m_receivedData; ///< the received data
 };
 
 /////////////////////////////////////////////////////////////////////
@@ -251,11 +251,11 @@ class LteTestMac : public Object
    * \brief Get the type ID.
    * \return the object TypeId
    */
-    static TypeId GetTypeId (void);
+    static TypeId GetTypeId ();
 
-    LteTestMac (void);
-    virtual ~LteTestMac (void);
-    virtual void DoDispose (void);
+    LteTestMac ();
+    ~LteTestMac () override;
+    void DoDispose () override;
 
     /**
     * \brief Set the device function
@@ -273,7 +273,7 @@ class LteTestMac : public Object
     * \brief Get data received function
     * \returns the received data string
     */
-    std::string GetDataReceived (void);
+    std::string GetDataReceived ();
 
     /**
     * \brief the Receive function
@@ -294,7 +294,7 @@ class LteTestMac : public Object
      * \brief Get the MAC SAP provider
      * \return a pointer to the SAP provider of the MAC
      */
-    LteMacSapProvider* GetLteMacSapProvider (void);
+    LteMacSapProvider* GetLteMacSapProvider ();
 
     /**
      * \brief Set the other side of the MAC Loopback
@@ -349,22 +349,22 @@ class LteTestMac : public Object
     * \brief Get the transmit PDUs
     * \return the number of transmit PDUS
     */
-    uint32_t GetTxPdus (void);
+    uint32_t GetTxPdus ();
     /**
     * \brief Get the transmit bytes
     * \return the number of bytes transmitted
     */
-    uint32_t GetTxBytes (void);
+    uint32_t GetTxBytes ();
     /**
     * \brief Get the receive PDUs
     * \return the number of receive PDUS
     */
-    uint32_t GetRxPdus (void);
+    uint32_t GetRxPdus ();
     /**
     * \brief Get the receive bytes
     * \return the number of bytes received
     */
-    uint32_t GetRxBytes (void);
+    uint32_t GetRxBytes ();
 
   private:
     // forwarded from LteMacSapProvider
@@ -420,25 +420,25 @@ class EpcTestRrc : public Object
 
 public:
   EpcTestRrc ();
-  virtual ~EpcTestRrc ();
+  ~EpcTestRrc () override;
 
   // inherited from Object
-  virtual void DoDispose (void);
+  void DoDispose () override;
   /**
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
-  /** 
+  /**
    * Set the S1 SAP Provider
-   * 
+   *
    * \param s the S1 SAP Provider
    */
   void SetS1SapProvider (EpcEnbS1SapProvider* s);
 
-  /** 
-   * 
+  /**
+   *
    * \return the S1 SAP user
    */
   EpcEnbS1SapUser* GetS1SapUser ();
@@ -460,11 +460,11 @@ private:
    * Path switch request acknowledge function
    * \param params EpcEnbS1SapUser::PathSwitchRequestAcknowledgeParameters
    */
-  void DoPathSwitchRequestAcknowledge (EpcEnbS1SapUser::PathSwitchRequestAcknowledgeParameters params);  
-  
+  void DoPathSwitchRequestAcknowledge (EpcEnbS1SapUser::PathSwitchRequestAcknowledgeParameters params);
+
   EpcEnbS1SapProvider* m_s1SapProvider; ///< S1 SAP provider
   EpcEnbS1SapUser* m_s1SapUser; ///< S1 SAP user
-  
+
 
 };
 

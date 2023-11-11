@@ -138,7 +138,8 @@ WrapToPi (double a)
 std::ostream&
 operator<< (std::ostream& os, const Angles& a)
 {
-  double azim, incl;
+  double azim;
+  double incl;
   std::string unit;
 
   if (a.m_printDeg)
@@ -221,21 +222,21 @@ Angles::SetInclination (double inclination)
 
 
 double
-Angles::GetAzimuth (void) const
+Angles::GetAzimuth () const
 {
   return m_azimuth;
 }
 
 
 double
-Angles::GetInclination (void) const
+Angles::GetInclination () const
 {
   return m_inclination;
 }
 
 
 void
-Angles::NormalizeAngles (void)
+Angles::NormalizeAngles ()
 {
   CheckIfValid ();
 
@@ -250,7 +251,7 @@ Angles::NormalizeAngles (void)
 
 
 void
-Angles::CheckIfValid (void) const
+Angles::CheckIfValid () const
 {
   if (std::isfinite (m_inclination) || std::isfinite (m_azimuth))
     {

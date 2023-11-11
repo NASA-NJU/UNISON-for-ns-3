@@ -41,18 +41,22 @@ public:
   TcpCloseWithLossTestCase (bool sackEnabled);
 
 protected:
-  Ptr<ErrorModel> CreateReceiverErrorModel ();
-  virtual void ConfigureProperties ();
-  void Tx (const Ptr<const Packet> p, const TcpHeader&h, SocketWho who);
-  void Rx (const Ptr<const Packet> p, const TcpHeader&h, SocketWho who);
-  void FinalChecks ();
+  Ptr<ErrorModel> CreateReceiverErrorModel () override;
+  void ConfigureProperties () override;
+  void Tx (const Ptr<const Packet> p, const TcpHeader&h, SocketWho who) override;
+  void Rx (const Ptr<const Packet> p, const TcpHeader&h, SocketWho who) override;
+  void FinalChecks () override;
 
-  virtual void NormalClose (SocketWho who)
+  void NormalClose (SocketWho who) override
   {
     if (who == SENDER)
-      m_sendClose = true;
+      {
+        m_sendClose = true;
+      }
     else
-      m_recvClose = true;
+      {
+        m_recvClose = true;
+      }
   }
 
   /**
@@ -62,7 +66,7 @@ protected:
    * \param pkt packet
    */
   void PktDropped (const Ipv4Header &ipH, const TcpHeader& tcpH, Ptr<const Packet> pkt);
-  
+
 private:
   Ptr<TcpSeqErrorModel> m_errorModel; //!< The error model
   bool m_sendClose;                   //!< true when the sender has closed

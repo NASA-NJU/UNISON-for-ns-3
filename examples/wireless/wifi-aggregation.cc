@@ -107,7 +107,14 @@ int main (int argc, char *argv[])
   wifi.SetRemoteStationManager ("ns3::ConstantRateWifiManager", "DataMode", StringValue ("HtMcs7"), "ControlMode", StringValue ("HtMcs0"));
   WifiMacHelper mac;
 
-  NetDeviceContainer staDeviceA, staDeviceB, staDeviceC, staDeviceD, apDeviceA, apDeviceB, apDeviceC, apDeviceD;
+  NetDeviceContainer staDeviceA;
+  NetDeviceContainer staDeviceB;
+  NetDeviceContainer staDeviceC;
+  NetDeviceContainer staDeviceD;
+  NetDeviceContainer apDeviceA;
+  NetDeviceContainer apDeviceB;
+  NetDeviceContainer apDeviceC;
+  NetDeviceContainer apDeviceD;
   Ssid ssid;
 
   // Network A
@@ -129,7 +136,7 @@ int main (int argc, char *argv[])
                "Ssid", SsidValue (ssid));
 
   staDeviceB = wifi.Install (phy, mac, wifiStaNodes.Get (1));
-  
+
   // Disable A-MPDU
   Ptr<NetDevice> dev = wifiStaNodes.Get (1)->GetDevice (0);
   Ptr<WifiNetDevice> wifi_dev = DynamicCast<WifiNetDevice> (dev);
@@ -139,7 +146,7 @@ int main (int argc, char *argv[])
                "Ssid", SsidValue (ssid),
                "EnableBeaconJitter", BooleanValue (false));
   apDeviceB = wifi.Install (phy, mac, wifiApNodes.Get (1));
-  
+
   // Disable A-MPDU
   dev = wifiApNodes.Get (1)->GetDevice (0);
   wifi_dev = DynamicCast<WifiNetDevice> (dev);
@@ -255,7 +262,7 @@ int main (int argc, char *argv[])
   serverAppA.Stop (Seconds (simulationTime + 1));
 
   UdpClientHelper clientA (StaInterfaceA.GetAddress (0), port);
-  clientA.SetAttribute ("MaxPackets", UintegerValue (4294967295u));
+  clientA.SetAttribute ("MaxPackets", UintegerValue (4294967295U));
   clientA.SetAttribute ("Interval", TimeValue (Time ("0.0001"))); //packets/s
   clientA.SetAttribute ("PacketSize", UintegerValue (payloadSize));
 
@@ -269,7 +276,7 @@ int main (int argc, char *argv[])
   serverAppB.Stop (Seconds (simulationTime + 1));
 
   UdpClientHelper clientB (StaInterfaceB.GetAddress (0), port);
-  clientB.SetAttribute ("MaxPackets", UintegerValue (4294967295u));
+  clientB.SetAttribute ("MaxPackets", UintegerValue (4294967295U));
   clientB.SetAttribute ("Interval", TimeValue (Time ("0.0001"))); //packets/s
   clientB.SetAttribute ("PacketSize", UintegerValue (payloadSize));
 
@@ -283,7 +290,7 @@ int main (int argc, char *argv[])
   serverAppC.Stop (Seconds (simulationTime + 1));
 
   UdpClientHelper clientC (StaInterfaceC.GetAddress (0), port);
-  clientC.SetAttribute ("MaxPackets", UintegerValue (4294967295u));
+  clientC.SetAttribute ("MaxPackets", UintegerValue (4294967295U));
   clientC.SetAttribute ("Interval", TimeValue (Time ("0.0001"))); //packets/s
   clientC.SetAttribute ("PacketSize", UintegerValue (payloadSize));
 
@@ -297,7 +304,7 @@ int main (int argc, char *argv[])
   serverAppD.Stop (Seconds (simulationTime + 1));
 
   UdpClientHelper clientD (StaInterfaceD.GetAddress (0), port);
-  clientD.SetAttribute ("MaxPackets", UintegerValue (4294967295u));
+  clientD.SetAttribute ("MaxPackets", UintegerValue (4294967295U));
   clientD.SetAttribute ("Interval", TimeValue (Time ("0.0001"))); //packets/s
   clientD.SetAttribute ("PacketSize", UintegerValue (payloadSize));
 
@@ -330,7 +337,7 @@ int main (int argc, char *argv[])
 
   double throughput = totalPacketsThroughA * payloadSize * 8 / (simulationTime * 1000000.0);
   std::cout << "Throughput with default configuration (A-MPDU aggregation enabled, 65kB): " << throughput << " Mbit/s" << '\n';
-  if (verifyResults && (throughput < 58.5 || throughput > 59.5))
+  if (verifyResults && (throughput < 59.0 || throughput > 60.0))
     {
       NS_LOG_ERROR ("Obtained throughput " << throughput << " is not in the expected boundaries!");
       exit (1);

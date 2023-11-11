@@ -45,7 +45,7 @@ EpcX2Header::~EpcX2Header ()
 }
 
 TypeId
-EpcX2Header::GetTypeId (void)
+EpcX2Header::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::EpcX2Header")
     .SetParent<Header> ()
@@ -56,13 +56,13 @@ EpcX2Header::GetTypeId (void)
 }
 
 TypeId
-EpcX2Header::GetInstanceTypeId (void) const
+EpcX2Header::GetInstanceTypeId () const
 {
   return GetTypeId ();
 }
 
 uint32_t
-EpcX2Header::GetSerializedSize (void) const
+EpcX2Header::GetSerializedSize () const
 {
   return 7;
 }
@@ -93,7 +93,7 @@ EpcX2Header::Deserialize (Buffer::Iterator start)
   m_lengthOfIes = i.ReadU8 () - 3;
   i.ReadNtohU16 ();
   m_numberOfIes = i.ReadU8 ();
-  
+
   return GetSerializedSize ();
 }
 
@@ -170,7 +170,7 @@ EpcX2HandoverRequestHeader::~EpcX2HandoverRequestHeader ()
 }
 
 TypeId
-EpcX2HandoverRequestHeader::GetTypeId (void)
+EpcX2HandoverRequestHeader::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::EpcX2HandoverRequestHeader")
     .SetParent<Header> ()
@@ -181,13 +181,13 @@ EpcX2HandoverRequestHeader::GetTypeId (void)
 }
 
 TypeId
-EpcX2HandoverRequestHeader::GetInstanceTypeId (void) const
+EpcX2HandoverRequestHeader::GetInstanceTypeId () const
 {
   return GetTypeId ();
 }
 
 uint32_t
-EpcX2HandoverRequestHeader::GetSerializedSize (void) const
+EpcX2HandoverRequestHeader::GetSerializedSize () const
 {
   return m_headerLength;
 }
@@ -220,7 +220,7 @@ EpcX2HandoverRequestHeader::Serialize (Buffer::Iterator start) const
   i.WriteHtonU64 (m_ueAggregateMaxBitRateDownlink);
   i.WriteHtonU64 (m_ueAggregateMaxBitRateUplink);
 
-  std::vector <EpcX2Sap::ErabToBeSetupItem>::size_type sz = m_erabsToBeSetupList.size (); 
+  std::vector <EpcX2Sap::ErabToBeSetupItem>::size_type sz = m_erabsToBeSetupList.size ();
   i.WriteHtonU32 (sz);              // number of bearers
   for (int j = 0; j < (int) sz; j++)
     {
@@ -261,7 +261,7 @@ EpcX2HandoverRequestHeader::Deserialize (Buffer::Iterator start)
   m_cause = i.ReadU8 ();
   m_headerLength += 5;
   m_numberOfIes++;
-  
+
   i.ReadNtohU16 ();
   i.ReadU8 ();
   i.ReadU8 ();
@@ -284,7 +284,7 @@ EpcX2HandoverRequestHeader::Deserialize (Buffer::Iterator start)
       EpcX2Sap::ErabToBeSetupItem erabItem;
 
       erabItem.erabId = i.ReadNtohU16 ();
- 
+
       erabItem.erabLevelQosParameters = EpsBearer ((EpsBearer::Qci) i.ReadNtohU16 ());
       erabItem.erabLevelQosParameters.gbrQosInfo.gbrDl = i.ReadNtohU64 ();
       erabItem.erabLevelQosParameters.gbrQosInfo.gbrUl = i.ReadNtohU64 ();
@@ -455,7 +455,7 @@ EpcX2HandoverRequestAckHeader::~EpcX2HandoverRequestAckHeader ()
 }
 
 TypeId
-EpcX2HandoverRequestAckHeader::GetTypeId (void)
+EpcX2HandoverRequestAckHeader::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::EpcX2HandoverRequestAckHeader")
     .SetParent<Header> ()
@@ -466,13 +466,13 @@ EpcX2HandoverRequestAckHeader::GetTypeId (void)
 }
 
 TypeId
-EpcX2HandoverRequestAckHeader::GetInstanceTypeId (void) const
+EpcX2HandoverRequestAckHeader::GetInstanceTypeId () const
 {
   return GetTypeId ();
 }
 
 uint32_t
-EpcX2HandoverRequestAckHeader::GetSerializedSize (void) const
+EpcX2HandoverRequestAckHeader::GetSerializedSize () const
 {
   return m_headerLength;
 }
@@ -485,7 +485,7 @@ EpcX2HandoverRequestAckHeader::Serialize (Buffer::Iterator start) const
   i.WriteHtonU16 (m_oldEnbUeX2apId);
   i.WriteHtonU16 (m_newEnbUeX2apId);
 
-  std::vector <EpcX2Sap::ErabAdmittedItem>::size_type sz = m_erabsAdmittedList.size (); 
+  std::vector <EpcX2Sap::ErabAdmittedItem>::size_type sz = m_erabsAdmittedList.size ();
   i.WriteHtonU32 (sz);
   for (int j = 0; j < (int) sz; j++)
     {
@@ -494,7 +494,7 @@ EpcX2HandoverRequestAckHeader::Serialize (Buffer::Iterator start) const
       i.WriteHtonU32 (m_erabsAdmittedList [j].dlGtpTeid);
     }
 
-  std::vector <EpcX2Sap::ErabNotAdmittedItem>::size_type sz2 = m_erabsNotAdmittedList.size (); 
+  std::vector <EpcX2Sap::ErabNotAdmittedItem>::size_type sz2 = m_erabsNotAdmittedList.size ();
   i.WriteHtonU32 (sz2);
   for (int j = 0; j < (int) sz2; j++)
     {
@@ -574,7 +574,7 @@ EpcX2HandoverRequestAckHeader::Print (std::ostream &os) const
           os << "]";
         }
     }
-  
+
   os << " NotAdmittedBearers=" << m_erabsNotAdmittedList.size ();
   std::vector <EpcX2Sap::ErabNotAdmittedItem>::size_type sz2 = m_erabsNotAdmittedList.size ();
   if (sz2 > 0)
@@ -620,7 +620,7 @@ EpcX2HandoverRequestAckHeader::SetNewEnbUeX2apId (uint16_t x2apId)
   m_newEnbUeX2apId = x2apId;
 }
 
-std::vector <EpcX2Sap::ErabAdmittedItem> 
+std::vector <EpcX2Sap::ErabAdmittedItem>
 EpcX2HandoverRequestAckHeader::GetAdmittedBearers () const
 {
   return m_erabsAdmittedList;
@@ -681,7 +681,7 @@ EpcX2HandoverPreparationFailureHeader::~EpcX2HandoverPreparationFailureHeader ()
 }
 
 TypeId
-EpcX2HandoverPreparationFailureHeader::GetTypeId (void)
+EpcX2HandoverPreparationFailureHeader::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::EpcX2HandoverPreparationFailureHeader")
     .SetParent<Header> ()
@@ -692,13 +692,13 @@ EpcX2HandoverPreparationFailureHeader::GetTypeId (void)
 }
 
 TypeId
-EpcX2HandoverPreparationFailureHeader::GetInstanceTypeId (void) const
+EpcX2HandoverPreparationFailureHeader::GetInstanceTypeId () const
 {
   return GetTypeId ();
 }
 
 uint32_t
-EpcX2HandoverPreparationFailureHeader::GetSerializedSize (void) const
+EpcX2HandoverPreparationFailureHeader::GetSerializedSize () const
 {
   return m_headerLength;
 }
@@ -794,7 +794,7 @@ EpcX2SnStatusTransferHeader::EpcX2SnStatusTransferHeader ()
     m_oldEnbUeX2apId (0xfffa),
     m_newEnbUeX2apId (0xfffa)
 {
-  m_erabsSubjectToStatusTransferList.clear (); 
+  m_erabsSubjectToStatusTransferList.clear ();
 }
 
 EpcX2SnStatusTransferHeader::~EpcX2SnStatusTransferHeader ()
@@ -803,11 +803,11 @@ EpcX2SnStatusTransferHeader::~EpcX2SnStatusTransferHeader ()
   m_headerLength = 0;
   m_oldEnbUeX2apId = 0xfffb;
   m_newEnbUeX2apId = 0xfffb;
-  m_erabsSubjectToStatusTransferList.clear (); 
+  m_erabsSubjectToStatusTransferList.clear ();
 }
 
 TypeId
-EpcX2SnStatusTransferHeader::GetTypeId (void)
+EpcX2SnStatusTransferHeader::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::EpcX2SnStatusTransferHeader")
     .SetParent<Header> ()
@@ -818,13 +818,13 @@ EpcX2SnStatusTransferHeader::GetTypeId (void)
 }
 
 TypeId
-EpcX2SnStatusTransferHeader::GetInstanceTypeId (void) const
+EpcX2SnStatusTransferHeader::GetInstanceTypeId () const
 {
   return GetTypeId ();
 }
 
 uint32_t
-EpcX2SnStatusTransferHeader::GetSerializedSize (void) const
+EpcX2SnStatusTransferHeader::GetSerializedSize () const
 {
   return m_headerLength;
 }
@@ -998,7 +998,7 @@ EpcX2UeContextReleaseHeader::~EpcX2UeContextReleaseHeader ()
 }
 
 TypeId
-EpcX2UeContextReleaseHeader::GetTypeId (void)
+EpcX2UeContextReleaseHeader::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::EpcX2UeContextReleaseHeader")
     .SetParent<Header> ()
@@ -1009,13 +1009,13 @@ EpcX2UeContextReleaseHeader::GetTypeId (void)
 }
 
 TypeId
-EpcX2UeContextReleaseHeader::GetInstanceTypeId (void) const
+EpcX2UeContextReleaseHeader::GetInstanceTypeId () const
 {
   return GetTypeId ();
 }
 
 uint32_t
-EpcX2UeContextReleaseHeader::GetSerializedSize (void) const
+EpcX2UeContextReleaseHeader::GetSerializedSize () const
 {
   return m_headerLength;
 }
@@ -1104,7 +1104,7 @@ EpcX2LoadInformationHeader::~EpcX2LoadInformationHeader ()
 }
 
 TypeId
-EpcX2LoadInformationHeader::GetTypeId (void)
+EpcX2LoadInformationHeader::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::EpcX2LoadInformationHeader")
     .SetParent<Header> ()
@@ -1115,13 +1115,13 @@ EpcX2LoadInformationHeader::GetTypeId (void)
 }
 
 TypeId
-EpcX2LoadInformationHeader::GetInstanceTypeId (void) const
+EpcX2LoadInformationHeader::GetInstanceTypeId () const
 {
   return GetTypeId ();
 }
 
 uint32_t
-EpcX2LoadInformationHeader::GetSerializedSize (void) const
+EpcX2LoadInformationHeader::GetSerializedSize () const
 {
   return m_headerLength;
 }
@@ -1333,7 +1333,7 @@ EpcX2ResourceStatusUpdateHeader::~EpcX2ResourceStatusUpdateHeader ()
 }
 
 TypeId
-EpcX2ResourceStatusUpdateHeader::GetTypeId (void)
+EpcX2ResourceStatusUpdateHeader::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::EpcX2ResourceStatusUpdateHeader")
     .SetParent<Header> ()
@@ -1344,13 +1344,13 @@ EpcX2ResourceStatusUpdateHeader::GetTypeId (void)
 }
 
 TypeId
-EpcX2ResourceStatusUpdateHeader::GetInstanceTypeId (void) const
+EpcX2ResourceStatusUpdateHeader::GetInstanceTypeId () const
 {
   return GetTypeId ();
 }
 
 uint32_t
-EpcX2ResourceStatusUpdateHeader::GetSerializedSize (void) const
+EpcX2ResourceStatusUpdateHeader::GetSerializedSize () const
 {
   return m_headerLength;
 }
@@ -1488,5 +1488,131 @@ EpcX2ResourceStatusUpdateHeader::GetNumberOfIes () const
 {
   return m_numberOfIes;
 }
+
+///////////////////////////////////////////////////////////////////////////////
+
+NS_OBJECT_ENSURE_REGISTERED (EpcX2HandoverCancelHeader);
+
+EpcX2HandoverCancelHeader::EpcX2HandoverCancelHeader ()
+  : m_numberOfIes (3),
+    m_headerLength (6),
+    m_oldEnbUeX2apId (0xfffa),
+    m_newEnbUeX2apId (0xfffa),
+    m_cause (0xfffa)
+{
+}
+
+EpcX2HandoverCancelHeader::~EpcX2HandoverCancelHeader ()
+{
+  m_numberOfIes = 0;
+  m_headerLength = 0;
+  m_oldEnbUeX2apId = 0xfffb;
+  m_newEnbUeX2apId = 0xfffb;
+  m_cause = 0xfffb;
+}
+
+TypeId
+EpcX2HandoverCancelHeader::GetTypeId ()
+{
+  static TypeId tid = TypeId ("ns3::EpcX2HandoverCancelHeader")
+    .SetParent<Header> ()
+    .SetGroupName("Lte")
+    .AddConstructor<EpcX2HandoverCancelHeader> ()
+  ;
+  return tid;
+}
+
+TypeId
+EpcX2HandoverCancelHeader::GetInstanceTypeId () const
+{
+  return GetTypeId ();
+}
+
+uint32_t
+EpcX2HandoverCancelHeader::GetSerializedSize () const
+{
+  return m_headerLength;
+}
+
+void
+EpcX2HandoverCancelHeader::Serialize (Buffer::Iterator start) const
+{
+  Buffer::Iterator i = start;
+
+  i.WriteHtonU16 (m_oldEnbUeX2apId);
+  i.WriteHtonU16 (m_newEnbUeX2apId);
+  i.WriteHtonU16 (m_cause);
+}
+
+uint32_t
+EpcX2HandoverCancelHeader::Deserialize (Buffer::Iterator start)
+{
+  Buffer::Iterator i = start;
+
+  m_oldEnbUeX2apId = i.ReadNtohU16 ();
+  m_newEnbUeX2apId = i.ReadNtohU16 ();
+  m_cause = i.ReadNtohU16 ();
+  m_numberOfIes = 3;
+  m_headerLength = 6;
+
+  return GetSerializedSize ();
+}
+
+void
+EpcX2HandoverCancelHeader::Print (std::ostream &os) const
+{
+  os << "OldEnbUeX2apId=" << m_oldEnbUeX2apId;
+  os << " NewEnbUeX2apId=" << m_newEnbUeX2apId;
+  os << " Cause = " << m_cause;
+}
+
+uint16_t
+EpcX2HandoverCancelHeader::GetOldEnbUeX2apId () const
+{
+  return m_oldEnbUeX2apId;
+}
+
+void
+EpcX2HandoverCancelHeader::SetOldEnbUeX2apId (uint16_t x2apId)
+{
+  m_oldEnbUeX2apId = x2apId;
+}
+
+uint16_t
+EpcX2HandoverCancelHeader::GetNewEnbUeX2apId () const
+{
+  return m_newEnbUeX2apId;
+}
+
+void
+EpcX2HandoverCancelHeader::SetNewEnbUeX2apId (uint16_t x2apId)
+{
+  m_newEnbUeX2apId = x2apId;
+}
+
+uint16_t
+EpcX2HandoverCancelHeader::GetCause () const
+{
+  return m_cause;
+}
+
+void
+EpcX2HandoverCancelHeader::SetCause (uint16_t cause)
+{
+  m_cause = cause;
+}
+
+uint32_t
+EpcX2HandoverCancelHeader::GetLengthOfIes () const
+{
+  return m_headerLength;
+}
+
+uint32_t
+EpcX2HandoverCancelHeader::GetNumberOfIes () const
+{
+  return m_numberOfIes;
+}
+
 
 } // namespace ns3

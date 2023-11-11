@@ -54,10 +54,10 @@ Ipv6Interface::Ipv6Interface ()
   : m_ifup (false),
     m_forwarding (true),
     m_metric (1),
-    m_node (0),
-    m_device (0),
-    m_tc (0),
-    m_ndCache (0),
+    m_node (nullptr),
+    m_device (nullptr),
+    m_tc (nullptr),
+    m_ndCache (nullptr),
     m_curHopLimit (0),
     m_baseReachableTime (0),
     m_reachableTime (0),
@@ -73,10 +73,10 @@ Ipv6Interface::~Ipv6Interface ()
 void Ipv6Interface::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
-  m_node = 0;
-  m_device = 0;
-  m_tc = 0;
-  m_ndCache = 0;
+  m_node = nullptr;
+  m_device = nullptr;
+  m_tc = nullptr;
+  m_ndCache = nullptr;
   Object::DoDispose ();
 }
 
@@ -84,7 +84,7 @@ void Ipv6Interface::DoSetup ()
 {
   NS_LOG_FUNCTION (this);
 
-  if (m_node == 0 || m_device == 0)
+  if (!m_node || !m_device)
     {
       return;
     }
@@ -208,7 +208,11 @@ bool Ipv6Interface::AddAddress (Ipv6InterfaceAddress iface)
         }
 
       Ipv6Address solicited = Ipv6Address::MakeSolicitedAddress (iface.GetAddress ());
-      m_addresses.push_back (std::make_pair (iface, solicited));
+      m_addresses.emplace_back (iface, solicited);
+      if (!m_addAddressCallback.IsNull ())
+        {
+          m_addAddressCallback(this, addr);
+        }
 
       if (!addr.IsAny () || !addr.IsLocalhost ())
         {
@@ -222,7 +226,7 @@ bool Ipv6Interface::AddAddress (Ipv6InterfaceAddress iface)
               if (icmpv6->IsAlwaysDad ())
                 {
                   Simulator::Schedule (Seconds (0.), &Icmpv6L4Protocol::DoDAD, icmpv6, addr, this);
-                  Simulator::Schedule (Seconds (1.), &Icmpv6L4Protocol::FunctionDadTimeout, icmpv6, this, addr);
+                  Simulator::Schedule (icmpv6->GetDadTimeout (), &Icmpv6L4Protocol::FunctionDadTimeout, icmpv6, this, addr);
                 }
               else
                 {
@@ -307,6 +311,10 @@ Ipv6InterfaceAddress Ipv6Interface::RemoveAddress (uint32_t index)
         {
           Ipv6InterfaceAddress iface = it->first;
           m_addresses.erase (it);
+          if (!m_removeAddressCallback.IsNull ())
+            {
+              m_removeAddressCallback(this, iface);
+            }
           return iface;
         }
 
@@ -317,7 +325,7 @@ Ipv6InterfaceAddress Ipv6Interface::RemoveAddress (uint32_t index)
   return addr;  /* quiet compiler */
 }
 
-Ipv6InterfaceAddress 
+Ipv6InterfaceAddress
 Ipv6Interface::RemoveAddress(Ipv6Address address)
 {
   NS_LOG_FUNCTION(this << address);
@@ -334,6 +342,10 @@ Ipv6Interface::RemoveAddress(Ipv6Address address)
         {
           Ipv6InterfaceAddress iface = it->first;
           m_addresses.erase(it);
+          if (!m_removeAddressCallback.IsNull ())
+            {
+              m_removeAddressCallback(this, iface);
+            }
           return iface;
         }
     }
@@ -382,7 +394,7 @@ void Ipv6Interface::Send (Ptr<Packet> p, const Ipv6Header & hdr, Ipv6Address des
       return;
     }
 
-  NS_ASSERT (m_tc != 0);
+  NS_ASSERT (m_tc);
 
   /* check if destination is for one of our interface */
   for (Ipv6InterfaceAddressListCI it = m_addresses.begin (); it != m_addresses.end (); ++it)
@@ -476,7 +488,7 @@ uint16_t Ipv6Interface::GetReachableTime () const
 
 void Ipv6Interface::SetRetransTimer (uint16_t retransTimer)
 {
-  NS_LOG_FUNCTION (this << retransTimer); 
+  NS_LOG_FUNCTION (this << retransTimer);
   m_retransTimer = retransTimer;
 }
 
@@ -521,6 +533,21 @@ Ptr<NdiscCache> Ipv6Interface::GetNdiscCache () const
   NS_LOG_FUNCTION (this);
   return m_ndCache;
 }
+
+void
+Ipv6Interface::RemoveAddressCallback (Callback<void, Ptr<Ipv6Interface>, Ipv6InterfaceAddress> removeAddressCallback)
+{
+  NS_LOG_FUNCTION (this << &removeAddressCallback);
+  m_removeAddressCallback = removeAddressCallback;
+}
+
+void
+Ipv6Interface::AddAddressCallback (Callback<void, Ptr<Ipv6Interface>, Ipv6InterfaceAddress> addAddressCallback)
+{
+  NS_LOG_FUNCTION (this << &addAddressCallback);
+  m_addAddressCallback = addAddressCallback;
+}
+
 
 } /* namespace ns3 */
 

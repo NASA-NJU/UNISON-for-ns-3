@@ -1,7 +1,7 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2014 Universita' di Firenze
- * 
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
  * published by the Free Software Foundation;
@@ -44,7 +44,7 @@ class PacketSocketAppsTest : public TestCase
   uint32_t m_receivedPacketNumber;  //!< Number of received packets
 
 public:
-  virtual void DoRun (void);
+  void DoRun () override;
   PacketSocketAppsTest ();
 
   /**
@@ -73,7 +73,7 @@ void PacketSocketAppsTest::ReceivePkt (Ptr<const Packet> packet, const Address &
 
 
 void
-PacketSocketAppsTest::DoRun (void)
+PacketSocketAppsTest::DoRun ()
 {
   // Create topology
 

@@ -80,7 +80,7 @@ class LteEnbComponentCarrierManager : public Object
 public:
 
   LteEnbComponentCarrierManager ();
-  virtual ~LteEnbComponentCarrierManager ();
+  ~LteEnbComponentCarrierManager () override;
   /**
    * \brief Get the type ID.
    * \return the object TypeId
@@ -108,7 +108,7 @@ public:
    * received, or to notify CCM about PRB occupancy, and similar. Functions that are
    * specific for the communication between MAC and CCM.
    *
-   * \returns LteCcmMacSapUser* 
+   * \returns LteCcmMacSapUser*
    */
   virtual LteCcmMacSapUser* GetLteCcmMacSapUser ();
 
@@ -120,7 +120,7 @@ public:
    * component carriers based on the logic implemented in the
    * specific component carrier manager.
    *
-   * \returns LteMacSapProvider* 
+   * \returns LteMacSapProvider*
    */
   virtual LteMacSapProvider* GetLteMacSapProvider ();
 
@@ -155,7 +155,7 @@ public:
 protected:
 
   // inherited from Object
-  virtual void DoDispose ();
+  void DoDispose () override;
 
   /**
    * \brief Implementation of ReportUeMeas.

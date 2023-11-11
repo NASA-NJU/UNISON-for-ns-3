@@ -18,7 +18,7 @@
  * Author: Yufei Cheng   <yfcheng@ittc.ku.edu>
  *
  * James P.G. Sterbenz <jpgs@ittc.ku.edu>, director
- * ResiliNets Research Group  http://wiki.ittc.ku.edu/resilinets
+ * ResiliNets Research Group  https://resilinets.org/
  * Information and Telecommunication Technology Center (ITTC)
  * and Department of Electrical Engineering and Computer Science
  * The University of Kansas Lawrence, KS USA.
@@ -70,9 +70,9 @@ class DsrFsHeaderTest : public TestCase
 {
 public:
   DsrFsHeaderTest ();
-  ~DsrFsHeaderTest ();
-  virtual void
-  DoRun (void);
+  ~DsrFsHeaderTest () override;
+  void
+  DoRun () override;
 };
 DsrFsHeaderTest::DsrFsHeaderTest ()
   : TestCase ("DSR Fixed size Header")
@@ -108,9 +108,9 @@ class DsrRreqHeaderTest : public TestCase
 {
 public:
   DsrRreqHeaderTest ();
-  ~DsrRreqHeaderTest ();
-  virtual void
-  DoRun (void);
+  ~DsrRreqHeaderTest () override;
+  void
+  DoRun () override;
 };
 DsrRreqHeaderTest::DsrRreqHeaderTest ()
   : TestCase ("DSR RREQ")
@@ -123,10 +123,12 @@ void
 DsrRreqHeaderTest::DoRun ()
 {
   dsr::DsrOptionRreqHeader h;
-  std::vector<Ipv4Address> nodeList;
-  nodeList.push_back (Ipv4Address ("1.1.1.0"));
-  nodeList.push_back (Ipv4Address ("1.1.1.1"));
-  nodeList.push_back (Ipv4Address ("1.1.1.2"));
+
+  const std::vector<Ipv4Address> nodeList {
+    Ipv4Address ("1.1.1.0"),
+    Ipv4Address ("1.1.1.1"),
+    Ipv4Address ("1.1.1.2"),
+  };
 
   h.SetTarget (Ipv4Address ("1.1.1.3"));
   NS_TEST_EXPECT_MSG_EQ (h.GetTarget (), Ipv4Address ("1.1.1.3"), "trivial");
@@ -159,9 +161,9 @@ class DsrRrepHeaderTest : public TestCase
 {
 public:
   DsrRrepHeaderTest ();
-  ~DsrRrepHeaderTest ();
-  virtual void
-  DoRun (void);
+  ~DsrRrepHeaderTest () override;
+  void
+  DoRun () override;
 };
 DsrRrepHeaderTest::DsrRrepHeaderTest ()
   : TestCase ("DSR RREP")
@@ -175,10 +177,12 @@ DsrRrepHeaderTest::DoRun ()
 {
   dsr::DsrOptionRrepHeader h;
 
-  std::vector<Ipv4Address> nodeList;
-  nodeList.push_back (Ipv4Address ("1.1.1.0"));
-  nodeList.push_back (Ipv4Address ("1.1.1.1"));
-  nodeList.push_back (Ipv4Address ("1.1.1.2"));
+  const std::vector<Ipv4Address> nodeList {
+    Ipv4Address ("1.1.1.0"),
+    Ipv4Address ("1.1.1.1"),
+    Ipv4Address ("1.1.1.2"),
+  };
+
   h.SetNodesAddress (nodeList);
   NS_TEST_EXPECT_MSG_EQ (h.GetNodeAddress (0), Ipv4Address ("1.1.1.0"), "trivial");
   NS_TEST_EXPECT_MSG_EQ (h.GetNodeAddress (1), Ipv4Address ("1.1.1.1"), "trivial");
@@ -206,9 +210,9 @@ class DsrSRHeaderTest : public TestCase
 {
 public:
   DsrSRHeaderTest ();
-  ~DsrSRHeaderTest ();
-  virtual void
-  DoRun (void);
+  ~DsrSRHeaderTest () override;
+  void
+  DoRun () override;
 };
 DsrSRHeaderTest::DsrSRHeaderTest ()
   : TestCase ("DSR Source Route")
@@ -221,10 +225,13 @@ void
 DsrSRHeaderTest::DoRun ()
 {
   dsr::DsrOptionSRHeader h;
-  std::vector<Ipv4Address> nodeList;
-  nodeList.push_back (Ipv4Address ("1.1.1.0"));
-  nodeList.push_back (Ipv4Address ("1.1.1.1"));
-  nodeList.push_back (Ipv4Address ("1.1.1.2"));
+
+  const std::vector<Ipv4Address> nodeList {
+    Ipv4Address ("1.1.1.0"),
+    Ipv4Address ("1.1.1.1"),
+    Ipv4Address ("1.1.1.2"),
+  };
+
   h.SetNodesAddress (nodeList);
   NS_TEST_EXPECT_MSG_EQ (h.GetNodeAddress (0), Ipv4Address ("1.1.1.0"), "trivial");
   NS_TEST_EXPECT_MSG_EQ (h.GetNodeAddress (1), Ipv4Address ("1.1.1.1"), "trivial");
@@ -257,9 +264,9 @@ class DsrRerrHeaderTest : public TestCase
 {
 public:
   DsrRerrHeaderTest ();
-  ~DsrRerrHeaderTest ();
-  virtual void
-  DoRun (void);
+  ~DsrRerrHeaderTest () override;
+  void
+  DoRun () override;
 };
 DsrRerrHeaderTest::DsrRerrHeaderTest ()
   : TestCase ("DSR RERR")
@@ -302,9 +309,9 @@ class DsrAckReqHeaderTest : public TestCase
 {
 public:
   DsrAckReqHeaderTest ();
-  ~DsrAckReqHeaderTest ();
-  virtual void
-  DoRun (void);
+  ~DsrAckReqHeaderTest () override;
+  void
+  DoRun () override;
 };
 DsrAckReqHeaderTest::DsrAckReqHeaderTest ()
   : TestCase ("DSR Ack Req")
@@ -344,9 +351,9 @@ class DsrAckHeaderTest : public TestCase
 {
 public:
   DsrAckHeaderTest ();
-  ~DsrAckHeaderTest ();
-  virtual void
-  DoRun (void);
+  ~DsrAckHeaderTest () override;
+  void
+  DoRun () override;
 };
 DsrAckHeaderTest::DsrAckHeaderTest ()
   : TestCase ("DSR ACK")
@@ -390,9 +397,9 @@ class DsrCacheEntryTest : public TestCase
 {
 public:
   DsrCacheEntryTest ();
-  ~DsrCacheEntryTest ();
-  virtual void
-  DoRun (void);
+  ~DsrCacheEntryTest () override;
+  void
+  DoRun () override;
 };
 DsrCacheEntryTest::DsrCacheEntryTest ()
   : TestCase ("DSR ACK")
@@ -405,9 +412,12 @@ void
 DsrCacheEntryTest::DoRun ()
 {
   Ptr<dsr::DsrRouteCache> rcache = CreateObject<dsr::DsrRouteCache> ();
-  std::vector<Ipv4Address> ip;
-  ip.push_back (Ipv4Address ("0.0.0.0"));
-  ip.push_back (Ipv4Address ("0.0.0.1"));
+
+  std::vector<Ipv4Address> ip {
+    Ipv4Address ("0.0.0.0"),
+    Ipv4Address ("0.0.0.1"),
+  };
+
   Ipv4Address dst = Ipv4Address ("0.0.0.1");
   dsr::DsrRouteCacheEntry entry (ip, dst, Seconds (1));
   NS_TEST_EXPECT_MSG_EQ (entry.GetVector ().size (), 2, "trivial");
@@ -418,15 +428,17 @@ DsrCacheEntryTest::DoRun ()
   NS_TEST_EXPECT_MSG_EQ (entry.GetExpireTime (), Seconds (3), "trivial");
   entry.SetDestination (Ipv4Address ("1.1.1.1"));
   NS_TEST_EXPECT_MSG_EQ (entry.GetDestination (), Ipv4Address ("1.1.1.1"), "trivial");
-  ip.push_back (Ipv4Address ("0.0.0.2"));
+  ip.emplace_back("0.0.0.2");
   entry.SetVector (ip);
   NS_TEST_EXPECT_MSG_EQ (entry.GetVector ().size (), 3, "trivial");
 
   NS_TEST_EXPECT_MSG_EQ (rcache->AddRoute (entry), true, "trivial");
 
-  std::vector<Ipv4Address> ip2;
-  ip2.push_back (Ipv4Address ("1.1.1.0"));
-  ip2.push_back (Ipv4Address ("1.1.1.1"));
+  std::vector<Ipv4Address> ip2 {
+    Ipv4Address ("1.1.1.0"),
+    Ipv4Address ("1.1.1.1"),
+  };
+
   Ipv4Address dst2 = Ipv4Address ("1.1.1.1");
   dsr::DsrRouteCacheEntry entry2 (ip2, dst2, Seconds (2));
   dsr::DsrRouteCacheEntry newEntry;
@@ -449,9 +461,9 @@ class DsrSendBuffTest : public TestCase
 {
 public:
   DsrSendBuffTest ();
-  ~DsrSendBuffTest ();
-  virtual void
-  DoRun (void);
+  ~DsrSendBuffTest () override;
+  void
+  DoRun () override;
   /// Check size limit function
   void CheckSizeLimit ();
   /// Check timeout function
@@ -551,9 +563,9 @@ class DsrRreqTableTest : public TestCase
 {
 public:
   DsrRreqTableTest ();
-  ~DsrRreqTableTest ();
-  virtual void
-  DoRun (void);
+  ~DsrRreqTableTest () override;
+  void
+  DoRun () override;
 };
 DsrRreqTableTest::DsrRreqTableTest ()
   : TestCase ("DSR RreqTable")

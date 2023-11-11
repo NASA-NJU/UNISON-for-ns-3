@@ -43,13 +43,13 @@ FlowMonitorHelper::~FlowMonitorHelper ()
   if (m_flowMonitor)
     {
       m_flowMonitor->Dispose ();
-      m_flowMonitor = 0;
-      m_flowClassifier4 = 0;
-      m_flowClassifier6 = 0;
+      m_flowMonitor = nullptr;
+      m_flowClassifier4 = nullptr;
+      m_flowClassifier6 = nullptr;
     }
 }
 
-void 
+void
 FlowMonitorHelper::SetMonitorAttribute (std::string n1, const AttributeValue &v1)
 {
   m_monitorFactory.Set (n1, v1);

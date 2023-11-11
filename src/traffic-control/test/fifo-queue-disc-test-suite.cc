@@ -49,17 +49,15 @@ public:
    * \param addr the address
    */
   FifoQueueDiscTestItem (Ptr<Packet> p, const Address & addr);
-  virtual ~FifoQueueDiscTestItem ();
+  ~FifoQueueDiscTestItem () override;
 
-  // Delete copy constructor and assignment operator to avoid misuse
+  // Delete default constructor, copy constructor and assignment operator to avoid misuse
+  FifoQueueDiscTestItem () = delete;
   FifoQueueDiscTestItem (const FifoQueueDiscTestItem &) = delete;
   FifoQueueDiscTestItem & operator = (const FifoQueueDiscTestItem &) = delete;
 
-  virtual void AddHeader (void);
-  virtual bool Mark (void);
-
-private:
-  FifoQueueDiscTestItem ();
+  void AddHeader () override;
+  bool Mark () override;
 };
 
 FifoQueueDiscTestItem::FifoQueueDiscTestItem (Ptr<Packet> p, const Address & addr)
@@ -72,12 +70,12 @@ FifoQueueDiscTestItem::~FifoQueueDiscTestItem ()
 }
 
 void
-FifoQueueDiscTestItem::AddHeader (void)
+FifoQueueDiscTestItem::AddHeader ()
 {
 }
 
 bool
-FifoQueueDiscTestItem::Mark (void)
+FifoQueueDiscTestItem::Mark ()
 {
   return false;
 }
@@ -92,7 +90,7 @@ class FifoQueueDiscTestCase : public TestCase
 {
 public:
   FifoQueueDiscTestCase ();
-  virtual void DoRun (void);
+  void DoRun () override;
 private:
   /**
    * Run test function
@@ -135,20 +133,20 @@ FifoQueueDiscTestCase::DoRunFifoTest (Ptr<FifoQueueDisc> q, uint32_t qSize, uint
     }
 
   // no room for another packet
-  NS_TEST_ASSERT_MSG_EQ (q->Enqueue (Create<FifoQueueDiscTestItem> (p, dest)), 
+  NS_TEST_ASSERT_MSG_EQ (q->Enqueue (Create<FifoQueueDiscTestItem> (p, dest)),
                          false, "There should be no room for another packet");
 
   // dequeue and check packet order
   for (uint32_t i = 1; i <= numPackets; i++)
     {
       item = q->Dequeue ();
-      NS_TEST_ASSERT_MSG_EQ ((item != 0), true, "A packet should have been dequeued");
+      NS_TEST_ASSERT_MSG_NE (item, nullptr, "A packet should have been dequeued");
       NS_TEST_ASSERT_MSG_EQ (q->GetCurrentSize ().GetValue (), (numPackets-i) * modeSize, "There should be " << numPackets-i << " packet(s) in there");
       NS_TEST_ASSERT_MSG_EQ (item->GetPacket ()->GetUid (), uids[i-1], "was this the right packet?");
     }
 
   item = q->Dequeue ();
-  NS_TEST_ASSERT_MSG_EQ ((item == 0), true, "There are really no packets in there");
+  NS_TEST_ASSERT_MSG_EQ (item, nullptr, "There are really no packets in there");
 }
 
 void
@@ -237,7 +235,7 @@ FifoQueueDiscTestCase::RunFifoTest (QueueSizeUnit mode)
 }
 
 void
-FifoQueueDiscTestCase::DoRun (void)
+FifoQueueDiscTestCase::DoRun ()
 {
   RunFifoTest (QueueSizeUnit::PACKETS);
   RunFifoTest (QueueSizeUnit::BYTES);

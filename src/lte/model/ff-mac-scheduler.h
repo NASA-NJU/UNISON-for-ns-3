@@ -40,7 +40,7 @@ class LteFfrSapUser;
  * \ingroup lte
  * \defgroup ff-api FF MAC Schedulers
  */
-     
+
 /**
  * \ingroup ff-api
  *
@@ -72,15 +72,15 @@ public:
    * destructor
    *
    */
-  virtual ~FfMacScheduler ();
+  ~FfMacScheduler () override;
 
   // inherited from Object
-  virtual void DoDispose (void);
+  void DoDispose () override;
   /**
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   /**
    * set the user part of the FfMacCschedSap that this Scheduler will
@@ -126,9 +126,9 @@ public:
    * \return the User part of the LteFfrSap provided by the FfrAlgorithm
    */
   virtual LteFfrSapUser* GetLteFfrSapUser () = 0;
-  
+
 protected:
-    
+
   UlCqiFilter_t m_ulCqiFilter; ///< UL CQI filter
 
 };

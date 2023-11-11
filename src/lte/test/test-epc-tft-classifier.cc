@@ -43,8 +43,8 @@ NS_LOG_COMPONENT_DEFINE ("TestEpcTftClassifier");
  * \ingroup lte-test
  * \ingroup tests
  *
- * \brief Test case to check the functionality of the Tft Classifier. Test 
- * consist of defining different TFT configurations, i.e. direction, ports, 
+ * \brief Test case to check the functionality of the Tft Classifier. Test
+ * consist of defining different TFT configurations, i.e. direction, ports,
  * address, and it is checking if the clasiffication of UDP packets is
  * done correctly.
  */
@@ -74,7 +74,7 @@ public:
                             uint32_t tftId,
                             bool useIpv6);
 
-  virtual ~EpcTftClassifierTestCase ();
+  ~EpcTftClassifierTestCase () override;
 
 private:
 
@@ -110,7 +110,7 @@ private:
                                       uint32_t tftId,
                                       bool useIpv6);
 
-  virtual void DoRun (void);
+  void DoRun () override;
 };
 
 
@@ -189,7 +189,7 @@ EpcTftClassifierTestCase::BuildNameString (Ptr<EpcTftClassifier> c,
 
 
 void
-EpcTftClassifierTestCase::DoRun (void)
+EpcTftClassifierTestCase::DoRun ()
 {
   ns3::PacketMetadata::Enable ();
 

@@ -54,7 +54,7 @@
  *
  * Scenario 2 plays back vehicular trace files in
  * ns-2 movement format, and are taken from:
- * http://www.lst.inf.ethz.ch/research/ad-hoc/car-traces/
+ * https://web.archive.org/web/20150218095728/http://www.lst.inf.ethz.ch/research/ad-hoc/car-traces
  * This scenario is 300 simulation seconds of 99
  * vehicles respectively within the Unterstrass
  * section of Zurich Switzerland that travel based on
@@ -375,7 +375,7 @@ public:
    * \brief Get class TypeId
    * \return the TypeId for the class
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   /**
    * \brief Constructor
@@ -385,7 +385,7 @@ public:
   /**
    * \brief Destructor
    */
-  virtual ~RoutingHelper ();
+  ~RoutingHelper () override;
 
   /**
    * \brief Installs routing functionality on nodes and their
@@ -476,7 +476,7 @@ private:
 NS_OBJECT_ENSURE_REGISTERED (RoutingHelper);
 
 TypeId
-RoutingHelper::GetTypeId (void)
+RoutingHelper::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::RoutingHelper")
     .SetParent<Object> ()
@@ -715,7 +715,7 @@ public:
    * \brief Gets the class TypeId
    * \return the class TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   /**
    * \brief Constructor
@@ -725,7 +725,7 @@ public:
   /**
    * \brief Destructor
    */
-  virtual ~WifiPhyStats ();
+  ~WifiPhyStats () override;
 
   /**
    * \brief Returns the number of bytes that have been transmitted
@@ -767,7 +767,7 @@ private:
 NS_OBJECT_ENSURE_REGISTERED (WifiPhyStats);
 
 TypeId
-WifiPhyStats::GetTypeId (void)
+WifiPhyStats::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::WifiPhyStats")
     .SetParent<Object> ()
@@ -1028,7 +1028,7 @@ void
 ConfigStoreHelper::SaveConfig (std::string configFilename)
 {
   // only save if a non-empty filename has been specified
-  if (configFilename.compare ("") != 0)
+  if (configFilename != "")
     {
       // Output config store to txt format
       Config::SetDefault ("ns3::ConfigStore::Filename", StringValue (configFilename));
@@ -1057,54 +1057,54 @@ protected:
   /**
    * \brief Sets default attribute values
    */
-  virtual void SetDefaultAttributeValues ();
+  void SetDefaultAttributeValues () override;
 
   /**
    * \brief Process command line arguments
    * \param argc program arguments count
    * \param argv program arguments
    */
-  virtual void ParseCommandLineArguments (int argc, char **argv);
+  void ParseCommandLineArguments (int argc, char **argv) override;
 
   /**
    * \brief Configure nodes
    */
-  virtual void ConfigureNodes ();
+  void ConfigureNodes () override;
 
   /**
    * \brief Configure channels
    */
-  virtual void ConfigureChannels ();
+  void ConfigureChannels () override;
 
   /**
    * \brief Configure devices
    */
-  virtual void ConfigureDevices ();
+  void ConfigureDevices () override;
 
   /**
    * \brief Configure mobility
    */
-  virtual void ConfigureMobility ();
+  void ConfigureMobility () override;
 
   /**
    * \brief Configure applications
    */
-  virtual void ConfigureApplications ();
+  void ConfigureApplications () override;
 
   /**
    * \brief Configure tracing
    */
-  virtual void ConfigureTracing ();
+  void ConfigureTracing () override;
 
   /**
    * \brief Run the simulation
    */
-  virtual void RunSimulation ();
+  void RunSimulation () override;
 
   /**
    * \brief Process outputs
    */
-  virtual void ProcessOutputs ();
+  void ProcessOutputs () override;
 
 private:
   /**
@@ -1209,7 +1209,7 @@ private:
   std::string m_phyMode; ///< phy mode
   uint32_t m_80211mode; ///< 80211 mode
 
-  std::string m_traceFile; ///< trace file 
+  std::string m_traceFile; ///< trace file
   std::string m_logFile; ///< log file
   uint32_t m_mobility; ///< mobility
   uint32_t m_nNodes; ///< number of nodes
@@ -1635,13 +1635,13 @@ VanetRoutingExperiment::ConfigureDevices ()
       // WAVE
       Config::Connect ("/NodeList/*/DeviceList/*/$ns3::WaveNetDevice/PhyEntities/*/State/Tx", MakeCallback (&WifiPhyStats::PhyTxTrace, m_wifiPhyStats));
       Config::Connect ("/NodeList/*/DeviceList/*/$ns3::WaveNetDevice/PhyEntities/*/PhyTxDrop", MakeCallback (&WifiPhyStats::PhyTxDrop, m_wifiPhyStats));
-      Config::Connect ("/NodeList/*/DeviceList/*/$ns3::WaveNetDevice/PhyEntities/*/PhyRxDrop", MakeCallback (&WifiPhyStats::PhyRxDrop, m_wifiPhyStats)); 
+      Config::Connect ("/NodeList/*/DeviceList/*/$ns3::WaveNetDevice/PhyEntities/*/PhyRxDrop", MakeCallback (&WifiPhyStats::PhyRxDrop, m_wifiPhyStats));
     }
   else
     {
       Config::Connect ("/NodeList/*/DeviceList/*/Phy/State/Tx", MakeCallback (&WifiPhyStats::PhyTxTrace, m_wifiPhyStats));
       Config::Connect ("/NodeList/*/DeviceList/*/$ns3::WifiNetDevice/Phy/PhyTxDrop", MakeCallback (&WifiPhyStats::PhyTxDrop, m_wifiPhyStats));
-      Config::Connect ("/NodeList/*/DeviceList/*/$ns3::WifiNetDevice/Phy/PhyRxDrop", MakeCallback (&WifiPhyStats::PhyRxDrop, m_wifiPhyStats)); 
+      Config::Connect ("/NodeList/*/DeviceList/*/$ns3::WifiNetDevice/Phy/PhyRxDrop", MakeCallback (&WifiPhyStats::PhyRxDrop, m_wifiPhyStats));
 }
     }
 
@@ -2339,7 +2339,7 @@ VanetRoutingExperiment::SetupAdhocDevices ()
   if (m_asciiTrace != 0)
     {
       AsciiTraceHelper ascii;
-      Ptr<OutputStreamWrapper> osw = ascii.CreateFileStream ( (m_trName + ".tr").c_str ());
+      Ptr<OutputStreamWrapper> osw = ascii.CreateFileStream ( m_trName + ".tr");
       wifiPhy.EnableAsciiAll (osw);
       wavePhy.EnableAsciiAll (osw);
     }

@@ -72,11 +72,11 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
-  LteEnbMac (void);
-  virtual ~LteEnbMac (void);
-  virtual void DoDispose (void);
+  LteEnbMac ();
+  ~LteEnbMac () override;
+  void DoDispose () override;
 
   /**
    * \brief Set the component carrier ID
@@ -92,7 +92,7 @@ public:
    * \brief Get the scheduler SAP user
    * \return a pointer to the SAP user of the scheduler
    */
-  FfMacSchedSapUser* GetFfMacSchedSapUser (void);
+  FfMacSchedSapUser* GetFfMacSchedSapUser ();
   /**
    * \brief Set the control scheduler SAP provider
    * \param s a pointer to the control scheduler SAP provider
@@ -102,7 +102,7 @@ public:
    * \brief Get the control scheduler SAP user
    * \return a pointer to the control scheduler SAP user
    */
-  FfMacCschedSapUser* GetFfMacCschedSapUser (void);
+  FfMacCschedSapUser* GetFfMacCschedSapUser ();
 
 
 
@@ -115,7 +115,7 @@ public:
    * \brief Get the MAC SAP provider
    * \return a pointer to the SAP provider of the MAC
    */
-  LteMacSapProvider* GetLteMacSapProvider (void);
+  LteMacSapProvider* GetLteMacSapProvider ();
   /**
    * \brief Set the control MAC SAP user
    * \param s a pointer to the control MAC SAP user
@@ -125,7 +125,7 @@ public:
    * \brief Get the control MAC SAP provider
    * \return a pointer to the control MAC SAP provider
    */
-  LteEnbCmacSapProvider* GetLteEnbCmacSapProvider (void);
+  LteEnbCmacSapProvider* GetLteEnbCmacSapProvider ();
 
 
   /**
@@ -151,7 +151,7 @@ public:
   * \param s a pointer to the ComponentCarrierManager provider
   */
   void SetLteCcmMacSapUser (LteCcmMacSapUser* s);
-  
+
 
   /**
    * TracedCallback signature for DL scheduling events.
@@ -159,7 +159,7 @@ public:
    * \param [in] frame Frame number.
    * \param [in] subframe Subframe number.
    * \param [in] rnti The C-RNTI identifying the UE.
-   * \param [in] mcs0 The MCS for transport block.. 
+   * \param [in] mcs0 The MCS for transport block..
    * \param [in] tbs0Size
    * \param [in] mcs1 The MCS for transport block.
    * \param [in] tbs1Size
@@ -182,7 +182,7 @@ public:
   typedef void (* UlSchedulingTracedCallback)
     (const uint32_t frame, const uint32_t subframe, const uint16_t rnti,
      const uint8_t mcs, const uint16_t tbsSize);
-  
+
 private:
 
   /**
@@ -353,7 +353,7 @@ private:
   void DoReportSrToScheduler ([[maybe_unused]] uint16_t rnti)
   {
   }
-  
+
 public:
   /**
    * legacy public for use the Phy callback
@@ -388,7 +388,7 @@ private:
   /*
   * Map of UE's info element (see 4.3.12 of FF MAC Scheduler API)
   */
-  //std::map <uint16_t,UlInfoListElement_s> m_ulInfoListElements; 
+  //std::map <uint16_t,UlInfoListElement_s> m_ulInfoListElements;
 
 
 
@@ -431,12 +431,12 @@ private:
    */
   TracedCallback<uint32_t, uint32_t, uint16_t,
                  uint8_t, uint16_t, uint8_t> m_ulScheduling;
-  
+
   uint8_t m_macChTtiDelay; ///< delay of MAC, PHY and channel in terms of TTIs
 
 
   std::map <uint16_t, DlHarqProcessesBuffer_t> m_miDlHarqProcessesPackets; ///< Packet under transmission of the DL HARQ process
-  
+
   uint8_t m_numberOfRaPreambles; ///< number of RA preambles
   uint8_t m_preambleTransMax; ///< preamble transmit maximum
   uint8_t m_raResponseWindowSize; ///< RA response window size
@@ -444,10 +444,10 @@ private:
 
   /**
    * info associated with a preamble allocated for non-contention based RA
-   * 
+   *
    */
   struct NcRaPreambleInfo
-  {   
+  {
     uint16_t rnti; ///< rnti previously allocated for this non-contention based RA procedure
     Time expiryTime; ///< value the expiration time of this allocation (so that stale preambles can be reused)
   };
@@ -455,17 +455,17 @@ private:
   /**
    * map storing as key the random access preamble IDs allocated for
    * non-contention based access, and as value the associated info
-   * 
+   *
    */
   std::map<uint8_t, NcRaPreambleInfo> m_allocatedNcRaPreambleMap;
- 
+
   std::map<uint8_t, uint32_t> m_receivedRachPreambleCount; ///< received RACH preamble count
 
   std::map<uint16_t, uint32_t> m_rapIdRntiMap; ///< RAPID RNTI map
 
   /// component carrier Id used to address sap
   uint8_t m_componentCarrierId;
- 
+
 };
 
 } // end namespace ns3

@@ -37,15 +37,15 @@ class TcpOption : public Object
 {
 public:
   TcpOption ();
-  virtual ~TcpOption ();
+  ~TcpOption () override;
 
   /**
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
-  virtual TypeId GetInstanceTypeId (void) const;
+  TypeId GetInstanceTypeId () const override;
 
   /**
    * The option Kind, as defined in the respective RFCs.
@@ -86,7 +86,7 @@ public:
    * \brief Get the `kind' (as in \RFC{793}) of this option
    * \return the Option Kind
    */
-  virtual uint8_t GetKind (void) const = 0;
+  virtual uint8_t GetKind () const = 0;
   /**
    * \brief Returns number of bytes required for Option
    * serialization.
@@ -94,7 +94,7 @@ public:
    * \returns number of bytes required for Option
    * serialization
    */
-  virtual uint32_t GetSerializedSize (void) const = 0;
+  virtual uint32_t GetSerializedSize () const = 0;
 
   /**
    * \brief Creates an option
@@ -123,21 +123,21 @@ class TcpOptionUnknown : public TcpOption
 {
 public:
   TcpOptionUnknown ();
-  virtual ~TcpOptionUnknown ();
+  ~TcpOptionUnknown () override;
 
   /**
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
-  virtual TypeId GetInstanceTypeId (void) const;
+  static TypeId GetTypeId ();
+  TypeId GetInstanceTypeId () const override;
 
-  virtual void Print (std::ostream &os) const;
-  virtual void Serialize (Buffer::Iterator start) const;
-  virtual uint32_t Deserialize (Buffer::Iterator start);
+  void Print (std::ostream &os) const override;
+  void Serialize (Buffer::Iterator start) const override;
+  uint32_t Deserialize (Buffer::Iterator start) override;
 
-  virtual uint8_t GetKind (void) const;
-  virtual uint32_t GetSerializedSize (void) const;
+  uint8_t GetKind () const override;
+  uint32_t GetSerializedSize () const override;
 
 private:
   uint8_t m_kind; //!< The unknown option kind

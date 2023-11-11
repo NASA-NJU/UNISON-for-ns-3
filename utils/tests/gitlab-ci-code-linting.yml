@@ -1,0 +1,26 @@
+# ns-3 CI/CD script with the code-linting stage
+#
+# Contains jobs to check the ns-3 coding style and perform lint checking.
+
+check-style-clang-format:
+  stage: code-linting
+  image: ubuntu:latest
+  before_script:
+    - apt update
+    - DEBIAN_FRONTEND=noninteractive apt install -y
+      python3
+      clang-format-14
+  script:
+    - python3 utils/check-style-clang-format.py .
+
+clang-tidy:
+  stage: code-linting
+  image: ubuntu:latest
+  before_script:
+    - apt update
+    - DEBIAN_FRONTEND=noninteractive apt install -y
+      clang cmake
+      clang-tidy-14
+  script:
+    - ./ns3 configure --enable-examples --enable-tests --enable-clang-tidy
+    - run-clang-tidy-14 -p cmake-cache/ -quiet

@@ -42,7 +42,7 @@ class SimpleOfdmWimaxChannel;
 
 /**
  * \ingroup wimax
- * \brief SimpleOfdmWimaxPhy class 
+ * \brief SimpleOfdmWimaxPhy class
  */
 class SimpleOfdmWimaxPhy : public WimaxPhy
 {
@@ -63,15 +63,15 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
-  SimpleOfdmWimaxPhy (void);
+  static TypeId GetTypeId ();
+  SimpleOfdmWimaxPhy ();
   /**
    * Constructor
    *
    * \param tracesPath trace path
    */
   SimpleOfdmWimaxPhy (char * tracesPath);
-  ~SimpleOfdmWimaxPhy (void);
+  ~SimpleOfdmWimaxPhy () override;
   /**
    * \brief if called with true it will enable the loss model
    * \param loss set to true to enable the loss model
@@ -87,7 +87,7 @@ public:
     * Attach the physical layer to a channel.
     * \param channel the channel to which the physical layer will be attached
     */
-  void DoAttach (Ptr<WimaxChannel> channel);
+  void DoAttach (Ptr<WimaxChannel> channel) override;
   /**
    * \brief set the callback function to call when a burst is received
    * \param callback the receive callback function
@@ -105,12 +105,12 @@ public:
    * \param params parameters
    * \see SendParams
    */
-  void Send (SendParams *params);
+  void Send (SendParams *params) override;
   /**
    * \brief returns the type this physical layer
    * \return always  WimaxPhy::simpleOfdmWimaxPhy;
    */
-  WimaxPhy::PhyType GetPhyType (void) const;
+  WimaxPhy::PhyType GetPhyType () const override;
   /**
    * \brief start the reception of a fec block
    * \param burstSize the burst size
@@ -133,7 +133,7 @@ public:
   /**
    * \return the bandwidth
    */
-  uint32_t GetBandwidth (void) const;
+  uint32_t GetBandwidth () const;
   /**
    * \brief Set the bandwidth
    * \param BW the bandwidth
@@ -142,7 +142,7 @@ public:
   /**
    * \return the transmission power
    */
-  double GetTxPower (void) const;
+  double GetTxPower () const;
   /**
    * \brief set the transmission power
    * \param txPower the transmission power
@@ -151,7 +151,7 @@ public:
   /**
    * \return the noise figure
    */
-  double GetNoiseFigure (void) const;
+  double GetNoiseFigure () const;
   /**
    * \brief set the noise figure of the device
    * \param nf the noise figure
@@ -208,7 +208,7 @@ public:
   * \param stream first stream index to use
   * \return the number of stream indices assigned by this model
   */
-  int64_t AssignStreams (int64_t stream);
+  int64_t AssignStreams (int64_t stream) override;
 
 private:
   /**
@@ -217,21 +217,21 @@ private:
    * \param modulationType the modulation type
    * \returns the transmission time
    */
-  Time DoGetTransmissionTime (uint32_t size, WimaxPhy::ModulationType modulationType) const;
+  Time DoGetTransmissionTime (uint32_t size, WimaxPhy::ModulationType modulationType) const override;
   /**
    * Get number of symbols
    * \param size the size
    * \param modulationType the modulation type
    * \returns the number of symbols
    */
-  uint64_t DoGetNrSymbols (uint32_t size, WimaxPhy::ModulationType modulationType) const;
+  uint64_t DoGetNrSymbols (uint32_t size, WimaxPhy::ModulationType modulationType) const override;
   /**
    * Get number of bytes
    * \param symbols the symbols
    * \param modulationType the modulation type
    * \returns the number of bytes
    */
-  uint64_t DoGetNrBytes (uint32_t symbols, WimaxPhy::ModulationType modulationType) const;
+  uint64_t DoGetNrBytes (uint32_t symbols, WimaxPhy::ModulationType modulationType) const override;
   /**
    * Convert burst to bits
    * \param burst the packet burst
@@ -280,9 +280,9 @@ private:
    * \returns the number of blocks
    */
   uint16_t GetNrBlocks (uint32_t burstSize, WimaxPhy::ModulationType modulationType) const;
-  void DoDispose (void);
+  void DoDispose () override;
   /// End send
-  void EndSend (void);
+  void EndSend ();
   /**
    * End send FEC block
    * \param modulationType the modulation type
@@ -323,9 +323,9 @@ private:
    */
   Time GetBlockTransmissionTime (WimaxPhy::ModulationType modulationType) const;
   /// Set data rates
-  void DoSetDataRates (void);
+  void DoSetDataRates () override;
   /// Initialize simple OFDM WIMAX Phy
-  void InitSimpleOfdmWimaxPhy (void);
+  void InitSimpleOfdmWimaxPhy ();
 
   /**
    * Get moduleation FEC parameters
@@ -345,35 +345,35 @@ private:
    * \param modulationType the modulation type
    * \returns the data rate
    */
-  uint32_t DoGetDataRate (WimaxPhy::ModulationType modulationType) const;
+  uint32_t DoGetDataRate (WimaxPhy::ModulationType modulationType) const override;
   /**
    * Get TTG
    * \returns the TTG
    */
-  uint16_t DoGetTtg (void) const;
+  uint16_t DoGetTtg () const override;
   /**
    * Get RTG
    * \returns the RTG
    */
-  uint16_t DoGetRtg (void) const;
+  uint16_t DoGetRtg () const override;
   /**
    * Get frame duration code
    * \returns the frame duration code
    */
-  uint8_t DoGetFrameDurationCode (void) const;
+  uint8_t DoGetFrameDurationCode () const override;
   /**
    * Get frame duration
    * \param frameDurationCode the frame duration code
    * \returns the frame duration
    */
-  Time DoGetFrameDuration (uint8_t frameDurationCode) const;
+  Time DoGetFrameDuration (uint8_t frameDurationCode) const override;
   /// Set Phy parameters
-  void DoSetPhyParameters (void);
+  void DoSetPhyParameters () override;
   /**
    * Get NFFT
    * \returns the NFFT
    */
-  uint16_t DoGetNfft (void) const;
+  uint16_t DoGetNfft () const override;
   /**
    * Set NFFT
    * \param nfft the NFFT
@@ -383,17 +383,17 @@ private:
    * Get sampling factor
    * \returns the sampling factor
    */
-  double DoGetSamplingFactor (void) const;
+  double DoGetSamplingFactor () const override;
   /**
    * Get sampling frequency
    * \returns the sampling frequency
    */
-  double DoGetSamplingFrequency (void) const;
+  double DoGetSamplingFrequency () const override;
   /**
    * Get G value
    * \returns the G value
    */
-  double DoGetGValue (void) const;
+  double DoGetGValue () const override;
   /**
    * Set G value
    * \param g the G value
@@ -404,7 +404,7 @@ private:
    * Get receive gain
    * \returns the receive gain
    */
-  double GetRxGain (void) const;
+  double GetRxGain () const;
   /**
    * Set receive gsain
    * \param rxgain the receive gain
@@ -415,7 +415,7 @@ private:
    * Get transmit gain
    * \returns the transmit gain
    */
-  double GetTxGain (void) const;
+  double GetTxGain () const;
   /**
    * Set transmit gain
    * \param txgain the transmit gain
@@ -426,7 +426,7 @@ private:
    * Get trace file path
    * \returns the trace file path name
    */
-  std::string GetTraceFilePath (void) const;
+  std::string GetTraceFilePath () const;
   /**
    * Set trace file path
    * \param path the trace file path
@@ -455,7 +455,7 @@ private:
 
   // parameters to store for a per burst life-time
   uint16_t m_nrBlocks; ///< number of blocks
-  uint16_t m_nrRemainingBlocksToSend; ///< number of remaining blocks to send 
+  uint16_t m_nrRemainingBlocksToSend; ///< number of remaining blocks to send
   Ptr<PacketBurst> m_currentBurst; ///< current burst
   uint16_t m_blockSize; ///< block size
   uint32_t m_paddingBits; ///< padding bits

@@ -18,7 +18,7 @@
  * Author: Hemanth Narra <hemanth@ittc.ku.com>
  *
  * James P.G. Sterbenz <jpgs@ittc.ku.edu>, director
- * ResiliNets Research Group  http://wiki.ittc.ku.edu/resilinets
+ * ResiliNets Research Group  https://resilinets.org/
  * Information and Telecommunication Technology Center (ITTC)
  * and Department of Electrical Engineering and Computer Science
  * The University of Kansas Lawrence, KS USA.
@@ -57,7 +57,7 @@ public:
    * \param ucb the UnicastForwardCallback function
    * \param ecb the ErrorCallback function
    */
-  QueueEntry (Ptr<const Packet> pa = 0, Ipv4Header const & h = Ipv4Header (),
+  QueueEntry (Ptr<const Packet> pa = nullptr, Ipv4Header const & h = Ipv4Header (),
               UnicastForwardCallback ucb = UnicastForwardCallback (),
               ErrorCallback ecb = ErrorCallback ())
     : m_packet (pa),
@@ -195,7 +195,7 @@ public:
   bool Enqueue (QueueEntry & entry);
   /**
    * Return first found (the earliest) entry for given destination
-   * 
+   *
    * \param dst the destination IP address
    * \param entry the queue entry
    * \returns true if successful

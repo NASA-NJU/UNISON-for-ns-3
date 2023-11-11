@@ -41,10 +41,10 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   SimpleFrameCaptureModel ();
-  ~SimpleFrameCaptureModel ();
+  ~SimpleFrameCaptureModel () override;
 
   /**
    * Sets the frame capture margin (dB).
@@ -57,7 +57,7 @@ public:
    *
    * \return the frame capture margin in dB
    */
-  double GetMargin (void) const;
+  double GetMargin () const;
 
   /**
    * This method returns whether the reception should be switched to a

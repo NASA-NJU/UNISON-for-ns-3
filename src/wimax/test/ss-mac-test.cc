@@ -40,10 +40,10 @@ class Ns3WimaxNetworkEntryTestCase : public TestCase
 {
 public:
   Ns3WimaxNetworkEntryTestCase ();
-  virtual ~Ns3WimaxNetworkEntryTestCase ();
+  ~Ns3WimaxNetworkEntryTestCase () override;
 
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
 
 };
 
@@ -57,7 +57,7 @@ Ns3WimaxNetworkEntryTestCase::~Ns3WimaxNetworkEntryTestCase ()
 }
 
 void
-Ns3WimaxNetworkEntryTestCase::DoRun (void)
+Ns3WimaxNetworkEntryTestCase::DoRun ()
 {
   WimaxHelper::SchedulerType scheduler = WimaxHelper::SCHED_TYPE_SIMPLE;
   NodeContainer ssNodes;
@@ -68,7 +68,8 @@ Ns3WimaxNetworkEntryTestCase::DoRun (void)
 
   WimaxHelper wimax;
 
-  NetDeviceContainer ssDevs, bsDevs;
+  NetDeviceContainer ssDevs;
+  NetDeviceContainer bsDevs;
 
   ssDevs = wimax.Install (ssNodes,
                           WimaxHelper::DEVICE_TYPE_SUBSCRIBER_STATION,
@@ -101,10 +102,10 @@ class Ns3WimaxManagementConnectionsTestCase : public TestCase
 {
 public:
   Ns3WimaxManagementConnectionsTestCase ();
-  virtual ~Ns3WimaxManagementConnectionsTestCase ();
+  ~Ns3WimaxManagementConnectionsTestCase () override;
 
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
 
 };
 
@@ -118,7 +119,7 @@ Ns3WimaxManagementConnectionsTestCase::~Ns3WimaxManagementConnectionsTestCase ()
 }
 
 void
-Ns3WimaxManagementConnectionsTestCase::DoRun (void)
+Ns3WimaxManagementConnectionsTestCase::DoRun ()
 {
   WimaxHelper::SchedulerType scheduler = WimaxHelper::SCHED_TYPE_SIMPLE;
   NodeContainer ssNodes;
@@ -129,7 +130,8 @@ Ns3WimaxManagementConnectionsTestCase::DoRun (void)
 
   WimaxHelper wimax;
 
-  NetDeviceContainer ssDevs, bsDevs;
+  NetDeviceContainer ssDevs;
+  NetDeviceContainer bsDevs;
 
   ssDevs = wimax.Install (ssNodes,
                           WimaxHelper::DEVICE_TYPE_SUBSCRIBER_STATION,

@@ -43,7 +43,7 @@ public:
   /// Creates a No-op CCS algorithm instance.
   SimpleUeComponentCarrierManager ();
 
-  virtual ~SimpleUeComponentCarrierManager ();
+  ~SimpleUeComponentCarrierManager () override;
 
   /**
    * \brief Get the type ID.
@@ -52,14 +52,14 @@ public:
   static TypeId GetTypeId ();
 
   // inherited from LteComponentCarrierManager
-  virtual LteMacSapProvider* GetLteMacSapProvider ();
+  LteMacSapProvider* GetLteMacSapProvider () override;
 
 
 
   /// let the forwarder class access the protected and private members
   friend class MemberLteUeCcmRrcSapProvider<SimpleUeComponentCarrierManager>;
   //friend class MemberLteUeCcmRrcSapUser<SimpleUeComponentCarrierManager>;
-  
+
   /// allow SimpleUeCcmMacSapProvider class friend access
   friend class SimpleUeCcmMacSapProvider;
   /// allow SimpleUeCcmMacSapUser class friend access
@@ -68,8 +68,8 @@ public:
 protected:
 
   // inherited from Object
-  virtual void DoInitialize ();
-  virtual void DoDispose ();
+  void DoInitialize () override;
+  void DoDispose () override;
   // inherited from LteCcsAlgorithm as a Component Carrier Management SAP implementation
   /**
    * \brief Report Ue Measure function
@@ -131,9 +131,9 @@ protected:
    *
    */
   void DoReset ();
-  
+
 protected:
-  
+
   LteMacSapUser* m_ccmMacSapUser;//!< Interface to the UE RLC instance.
   LteMacSapProvider* m_ccmMacSapProvider; //!< Receive API calls from the UE RLC instance
 

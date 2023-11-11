@@ -60,7 +60,7 @@ UanPhyCalcSinrDefault::~UanPhyCalcSinrDefault ()
 }
 
 TypeId
-UanPhyCalcSinrDefault::GetTypeId (void)
+UanPhyCalcSinrDefault::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::UanPhyCalcSinrDefault")
     .SetParent<UanPhyCalcSinr> ()
@@ -108,7 +108,7 @@ UanPhyCalcSinrFhFsk::~UanPhyCalcSinrFhFsk ()
 }
 
 TypeId
-UanPhyCalcSinrFhFsk::GetTypeId (void)
+UanPhyCalcSinrFhFsk::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::UanPhyCalcSinrFhFsk")
     .SetParent<UanPhyCalcSinr> ()
@@ -218,7 +218,7 @@ UanPhyPerGenDefault::~UanPhyPerGenDefault ()
 
 }
 TypeId
-UanPhyPerGenDefault::GetTypeId (void)
+UanPhyPerGenDefault::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::UanPhyPerGenDefault")
     .SetParent<UanPhyPer> ()
@@ -260,7 +260,7 @@ UanPhyPerCommonModes::~UanPhyPerCommonModes ()
 }
 
 TypeId
-UanPhyPerCommonModes::GetTypeId (void)
+UanPhyPerCommonModes::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::UanPhyPerCommonModes")
     .SetParent<UanPhyPer> ()
@@ -394,7 +394,7 @@ UanPhyPerUmodem::~UanPhyPerUmodem ()
 
 }
 
-TypeId UanPhyPerUmodem::GetTypeId (void)
+TypeId UanPhyPerUmodem::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::UanPhyPerUmodem")
     .SetParent<UanPhyPer> ()
@@ -494,15 +494,15 @@ UanPhyPerUmodem::CalcPer (Ptr<Packet> pkt, double sinr, UanTxMode mode)
 UanPhyGen::UanPhyGen ()
   : UanPhy (),
   m_state (IDLE),
-  m_channel (0),
-  m_transducer (0),
-  m_device (0),
-  m_mac (0),
+  m_channel (nullptr),
+  m_transducer (nullptr),
+  m_device (nullptr),
+  m_mac (nullptr),
   m_txPwrDb (0),
   m_rxThreshDb (0),
   m_ccaThreshDb (0),
-  m_pktRx (0),
-  m_pktTx (0),
+  m_pktRx (nullptr),
+  m_pktTx (nullptr),
   m_cleared (false)
 {
   m_pg = CreateObject<UniformRandomVariable> ();
@@ -527,34 +527,34 @@ UanPhyGen::Clear ()
   if (m_channel)
     {
       m_channel->Clear ();
-      m_channel = 0;
+      m_channel = nullptr;
     }
   if (m_transducer)
     {
       m_transducer->Clear ();
-      m_transducer = 0;
+      m_transducer = nullptr;
     }
   if (m_device)
     {
       m_device->Clear ();
-      m_device = 0;
+      m_device = nullptr;
     }
   if (m_mac)
     {
       m_mac->Clear ();
-      m_mac = 0;
+      m_mac = nullptr;
     }
   if (m_per)
     {
       m_per->Clear ();
-      m_per = 0;
+      m_per = nullptr;
     }
   if (m_sinr)
     {
       m_sinr->Clear ();
-      m_sinr = 0;
+      m_sinr = nullptr;
     }
-  m_pktRx = 0;
+  m_pktRx = nullptr;
 }
 
 void
@@ -566,18 +566,21 @@ UanPhyGen::DoDispose ()
 }
 
 UanModesList
-UanPhyGen::GetDefaultModes (void)
+UanPhyGen::GetDefaultModes ()
 {
   UanModesList l;
-  l.AppendMode (UanTxModeFactory::CreateMode (UanTxMode::FSK, 80,  80,  22000, 4000, 13, "FH-FSK")); // micromodem only
-  l.AppendMode (UanTxModeFactory::CreateMode (UanTxMode::PSK, 200, 200, 22000, 4000, 4,  "QPSK"));
-  l.AppendMode (UanTxModeFactory::CreateMode (UanTxMode::PSK, 5000, 5000, 25000, 5000, 4,  "QPSK")); // micromodem2
+
+  // micromodem only
+  l.AppendMode (UanTxModeFactory::CreateMode (UanTxMode::FSK, 80, 80, 22000, 4000, 13, "FH-FSK"));
+  l.AppendMode (UanTxModeFactory::CreateMode (UanTxMode::PSK, 200, 200, 22000, 4000, 4, "QPSK"));
+  // micromodem2
+  l.AppendMode (UanTxModeFactory::CreateMode (UanTxMode::PSK, 5000, 5000, 25000, 5000, 4, "QPSK"));
 
   return l;
 }
 
 TypeId
-UanPhyGen::GetTypeId (void)
+UanPhyGen::GetTypeId ()
 {
 
   static TypeId tid = TypeId ("ns3::UanPhyGen")
@@ -661,13 +664,13 @@ UanPhyGen::EnergyDepletionHandler ()
     {
       Simulator::Cancel (m_txEndEvent);
       NotifyTxDrop (m_pktTx);
-      m_pktTx = 0;
+      m_pktTx = nullptr;
     }
   if (m_rxEndEvent.IsRunning ())
     {
       Simulator::Cancel (m_rxEndEvent);
       NotifyRxDrop (m_pktRx);
-      m_pktRx = 0;
+      m_pktRx = nullptr;
     }
 }
 
@@ -704,10 +707,10 @@ UanPhyGen::SendPacket (Ptr<Packet> pkt, uint32_t modeNum)
 
   UanTxMode txMode = GetMode (modeNum);
 
-  if (m_pktRx != 0)
+  if (m_pktRx)
     {
       m_minRxSinrDb = -1e30;
-      m_pktRx = 0;
+      m_pktRx = nullptr;
     }
 
   m_transducer->Transmit (Ptr<UanPhy> (this), pkt, m_txPwrDb, txMode);
@@ -731,7 +734,7 @@ UanPhyGen::TxEndEvent ()
     }
 
   NS_ASSERT (m_state == TX);
-  if (GetInterferenceDb ( (Ptr<Packet>) 0) > m_ccaThreshDb)
+  if (GetInterferenceDb ( (Ptr<Packet>) nullptr) > m_ccaThreshDb)
     {
       m_state = CCABUSY;
       NotifyListenersCcaStart ();
@@ -822,7 +825,7 @@ UanPhyGen::StartRxPacket (Ptr<Packet> pkt, double rxPowerDb, UanTxMode txMode, U
       break;
     }
 
-  if (m_state == IDLE && GetInterferenceDb ( (Ptr<Packet>) 0) > m_ccaThreshDb)
+  if (m_state == IDLE && GetInterferenceDb ( (Ptr<Packet>) nullptr) > m_ccaThreshDb)
     {
       m_state = CCABUSY;
       NotifyListenersCcaStart ();
@@ -841,13 +844,13 @@ UanPhyGen::RxEndEvent (Ptr<Packet> pkt, [[maybe_unused]] double rxPowerDb, UanTx
   if (m_state == DISABLED || m_state == SLEEP)
     {
       NS_LOG_DEBUG ("Sleep mode or dead. Dropping packet");
-      m_pktRx = 0;
+      m_pktRx = nullptr;
       NotifyRxDrop (pkt); // traced source netanim
       return;
     }
 
   NotifyRxEnd (pkt); // traced source netanim
-  if (GetInterferenceDb ( (Ptr<Packet>) 0) > m_ccaThreshDb)
+  if (GetInterferenceDb ( (Ptr<Packet>) nullptr) > m_ccaThreshDb)
     {
       m_state = CCABUSY;
       NotifyListenersCcaStart ();
@@ -878,7 +881,7 @@ UanPhyGen::RxEndEvent (Ptr<Packet> pkt, [[maybe_unused]] double rxPowerDb, UanTx
         }
     }
 
-  m_pktRx = 0;
+  m_pktRx = nullptr;
 }
 
 void
@@ -893,33 +896,33 @@ UanPhyGen::SetReceiveErrorCallback (RxErrCallback cb)
   m_recErrCb = cb;
 }
 bool
-UanPhyGen::IsStateSleep (void)
+UanPhyGen::IsStateSleep ()
 {
   return m_state == SLEEP;
 }
 bool
-UanPhyGen::IsStateIdle (void)
+UanPhyGen::IsStateIdle ()
 {
   return m_state == IDLE;
 }
 bool
-UanPhyGen::IsStateBusy (void)
+UanPhyGen::IsStateBusy ()
 {
   return !IsStateIdle () && !IsStateSleep ();
 }
 bool
-UanPhyGen::IsStateRx (void)
+UanPhyGen::IsStateRx ()
 {
   return m_state == RX;
 }
 bool
-UanPhyGen::IsStateTx (void)
+UanPhyGen::IsStateTx ()
 {
   return m_state == TX;
 }
 
 bool
-UanPhyGen::IsStateCcaBusy (void)
+UanPhyGen::IsStateCcaBusy ()
 {
   return m_state == CCABUSY;
 }
@@ -942,37 +945,37 @@ UanPhyGen::SetCcaThresholdDb (double thresh)
 }
 
 double
-UanPhyGen::GetTxPowerDb (void)
+UanPhyGen::GetTxPowerDb ()
 {
   return m_txPwrDb;
 
 }
 
 double
-UanPhyGen::GetRxThresholdDb (void)
+UanPhyGen::GetRxThresholdDb ()
 {
   return m_rxThreshDb;
 }
 double
-UanPhyGen::GetCcaThresholdDb (void)
+UanPhyGen::GetCcaThresholdDb ()
 {
   return m_ccaThreshDb;
 }
 
 Ptr<UanChannel>
-UanPhyGen::GetChannel (void) const
+UanPhyGen::GetChannel () const
 {
   return m_channel;
 }
 
 Ptr<UanNetDevice>
-UanPhyGen::GetDevice (void) const
+UanPhyGen::GetDevice () const
 {
   return m_device;
 }
 
 Ptr<UanTransducer>
-UanPhyGen::GetTransducer (void)
+UanPhyGen::GetTransducer ()
 {
   return m_transducer;
 }
@@ -1014,7 +1017,7 @@ UanPhyGen::SetSleepMode (bool sleep )
     }
   else if (m_state == SLEEP)
     {
-      if (GetInterferenceDb ((Ptr<Packet>) 0) > m_ccaThreshDb)
+      if (GetInterferenceDb ((Ptr<Packet>) nullptr) > m_ccaThreshDb)
         {
           m_state = CCABUSY;
           NotifyListenersCcaStart ();
@@ -1049,7 +1052,7 @@ UanPhyGen::NotifyTransStartTx (Ptr<Packet> packet, [[maybe_unused]] double txPow
 }
 
 void
-UanPhyGen::NotifyIntChange (void)
+UanPhyGen::NotifyIntChange ()
 {
   if (m_state == CCABUSY && GetInterferenceDb (Ptr<Packet> ()) < m_ccaThreshDb)
     {
@@ -1099,7 +1102,7 @@ UanPhyGen::KpToDb (double kp)
 }
 
 void
-UanPhyGen::NotifyListenersRxStart (void)
+UanPhyGen::NotifyListenersRxStart ()
 {
   ListenerList::const_iterator it = m_listeners.begin ();
   for (; it != m_listeners.end (); it++)
@@ -1109,7 +1112,7 @@ UanPhyGen::NotifyListenersRxStart (void)
 
 }
 void
-UanPhyGen::NotifyListenersRxGood (void)
+UanPhyGen::NotifyListenersRxGood ()
 {
   ListenerList::const_iterator it = m_listeners.begin ();
   for (; it != m_listeners.end (); it++)
@@ -1118,7 +1121,7 @@ UanPhyGen::NotifyListenersRxGood (void)
     }
 }
 void
-UanPhyGen::NotifyListenersRxBad (void)
+UanPhyGen::NotifyListenersRxBad ()
 {
   ListenerList::const_iterator it = m_listeners.begin ();
   for (; it != m_listeners.end (); it++)
@@ -1127,7 +1130,7 @@ UanPhyGen::NotifyListenersRxBad (void)
     }
 }
 void
-UanPhyGen::NotifyListenersCcaStart (void)
+UanPhyGen::NotifyListenersCcaStart ()
 {
   ListenerList::const_iterator it = m_listeners.begin ();
   for (; it != m_listeners.end (); it++)
@@ -1136,7 +1139,7 @@ UanPhyGen::NotifyListenersCcaStart (void)
     }
 }
 void
-UanPhyGen::NotifyListenersCcaEnd (void)
+UanPhyGen::NotifyListenersCcaEnd ()
 {
   ListenerList::const_iterator it = m_listeners.begin ();
   for (; it != m_listeners.end (); it++)
@@ -1156,7 +1159,7 @@ UanPhyGen::NotifyListenersTxStart (Time duration)
 }
 
 void
-UanPhyGen::NotifyListenersTxEnd (void)
+UanPhyGen::NotifyListenersTxEnd ()
 {
   ListenerList::const_iterator it = m_listeners.begin ();
   for (; it != m_listeners.end (); it++)
@@ -1166,7 +1169,7 @@ UanPhyGen::NotifyListenersTxEnd (void)
 }
 
 uint32_t
-UanPhyGen::GetNModes (void)
+UanPhyGen::GetNModes ()
 {
   return m_modes.GetNModes ();
 }
@@ -1180,7 +1183,7 @@ UanPhyGen::GetMode (uint32_t n)
 }
 
 Ptr<Packet>
-UanPhyGen::GetPacketRx (void) const
+UanPhyGen::GetPacketRx () const
 {
   return m_pktRx;
 }

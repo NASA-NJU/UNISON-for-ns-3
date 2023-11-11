@@ -47,15 +47,15 @@ public:
   /** Constructor */
   UanPhyPerGenDefault ();
   /** Destructor */
-  virtual ~UanPhyPerGenDefault ();
+  ~UanPhyPerGenDefault () override;
 
   /**
    * Register this type.
    * \return The TypeId.
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
-  virtual double CalcPer (Ptr<Packet> pkt, double sinrDb, UanTxMode mode);
+  double CalcPer (Ptr<Packet> pkt, double sinrDb, UanTxMode mode) override;
 private:
   double m_thresh;  //!< SINR threshold.
 
@@ -77,13 +77,13 @@ public:
   /** Constructor */
   UanPhyPerUmodem ();
   /** Destructor */
-  virtual ~UanPhyPerUmodem ();
+  ~UanPhyPerUmodem () override;
 
   /**
    * Register this type.
    * \return The TypeId.
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   /**
    * Calculate the packet error probability based on
@@ -100,7 +100,7 @@ public:
    * \param mode TX mode used to transmit packet.
    * \return Probability of packet error.
    */
-  virtual double CalcPer (Ptr<Packet> pkt, double sinrDb, UanTxMode mode);
+  double CalcPer (Ptr<Packet> pkt, double sinrDb, UanTxMode mode) override;
 
 private:
   /**
@@ -129,13 +129,13 @@ public:
   /** Constructor */
   UanPhyPerCommonModes ();
   /** Destructor */
-  virtual ~UanPhyPerCommonModes ();
+  ~UanPhyPerCommonModes () override;
 
   /**
    * Register this type.
    * \return The TypeId.
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   /**
    * Calculate the Packet ERror probability based on
@@ -149,7 +149,7 @@ public:
    * \param mode TX mode used to transmit packet.
    * \return Probability of packet error.
    */
-  virtual double CalcPer (Ptr<Packet> pkt, double sinrDb, UanTxMode mode);
+  double CalcPer (Ptr<Packet> pkt, double sinrDb, UanTxMode mode) override;
 
 };  // class UanPhyPerCommonModes
 
@@ -170,13 +170,13 @@ public:
   /** Constructor */
   UanPhyCalcSinrDefault ();
   /** Destructor */
-  virtual ~UanPhyCalcSinrDefault ();
+  ~UanPhyCalcSinrDefault () override;
 
   /**
    * Register this type.
    * \return The TypeId.
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   /**
    * Calculate the SINR value for a packet.
@@ -193,14 +193,14 @@ public:
    * \param arrivalList  List of interfering arrivals given from Transducer.
    * \return The SINR in dB re 1 uPa.
    */
-  virtual double CalcSinrDb (Ptr<Packet> pkt,
+  double CalcSinrDb (Ptr<Packet> pkt,
                              Time arrTime,
                              double rxPowerDb,
                              double ambNoiseDb,
                              UanTxMode mode,
                              UanPdp pdp,
                              const UanTransducer::ArrivalList &arrivalList
-                             ) const;
+                             ) const override;
 
 };  // class UanPhyCalcSinrDefault
 
@@ -231,22 +231,22 @@ public:
   /** Constructor */
   UanPhyCalcSinrFhFsk ();
   /** Destructor */
-  virtual ~UanPhyCalcSinrFhFsk ();
+  ~UanPhyCalcSinrFhFsk () override;
 
   /**
    * Register this type.
    * \return The TypeId.
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
-  virtual double CalcSinrDb (Ptr<Packet> pkt,
+  double CalcSinrDb (Ptr<Packet> pkt,
                              Time arrTime,
                              double rxPowerDb,
                              double ambNoiseDb,
                              UanTxMode mode,
                              UanPdp pdp,
                              const UanTransducer::ArrivalList &arrivalList
-                             ) const;
+                             ) const override;
 private:
   uint32_t m_hops;  //!< Number of hops.
 
@@ -269,56 +269,56 @@ public:
   /** Constructor */
   UanPhyGen ();
   /** Dummy destructor, see DoDispose */
-  virtual ~UanPhyGen ();
+  ~UanPhyGen () override;
   /**
    * Get the default transmission modes.
    *
    * \return The default mode list.
    */
-  static UanModesList GetDefaultModes (void);
+  static UanModesList GetDefaultModes ();
 
   /**
    * Register this type.
    * \return The TypeId.
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   // Inherited methods
-  virtual void SetEnergyModelCallback (DeviceEnergyModel::ChangeStateCallback cb);
-  virtual void EnergyDepletionHandler (void);
-  virtual void EnergyRechargeHandler (void);
-  virtual void SendPacket (Ptr<Packet> pkt, uint32_t modeNum);
-  virtual void RegisterListener (UanPhyListener *listener);
-  virtual void StartRxPacket (Ptr<Packet> pkt, double rxPowerDb, UanTxMode txMode, UanPdp pdp);
-  virtual void SetReceiveOkCallback (RxOkCallback cb);
-  virtual void SetReceiveErrorCallback (RxErrCallback cb);
-  virtual bool IsStateSleep (void);
-  virtual bool IsStateIdle (void);
-  virtual bool IsStateBusy (void);
-  virtual bool IsStateRx (void);
-  virtual bool IsStateTx (void);
-  virtual bool IsStateCcaBusy (void);
-  virtual void SetTxPowerDb (double txpwr);
-  virtual void SetRxThresholdDb (double thresh);
-  virtual void SetCcaThresholdDb (double thresh);
-  virtual double GetTxPowerDb (void);
-  virtual double GetRxThresholdDb (void);
-  virtual double GetCcaThresholdDb (void);
-  virtual Ptr<UanChannel> GetChannel (void) const;
-  virtual Ptr<UanNetDevice> GetDevice (void) const;
-  virtual Ptr<UanTransducer> GetTransducer (void);
-  virtual void SetChannel (Ptr<UanChannel> channel);
-  virtual void SetDevice (Ptr<UanNetDevice> device);
-  virtual void SetMac (Ptr<UanMac> mac);
-  virtual void SetTransducer (Ptr<UanTransducer> trans);
-  virtual void NotifyTransStartTx (Ptr<Packet> packet, double txPowerDb, UanTxMode txMode);
-  virtual void NotifyIntChange (void);
-  virtual uint32_t GetNModes (void);
-  virtual UanTxMode GetMode (uint32_t n);
-  virtual Ptr<Packet> GetPacketRx (void) const;
-  virtual void Clear (void);
-  virtual void SetSleepMode (bool sleep);
-  int64_t AssignStreams (int64_t stream);
+  void SetEnergyModelCallback (DeviceEnergyModel::ChangeStateCallback cb) override;
+  void EnergyDepletionHandler () override;
+  void EnergyRechargeHandler () override;
+  void SendPacket (Ptr<Packet> pkt, uint32_t modeNum) override;
+  void RegisterListener (UanPhyListener *listener) override;
+  void StartRxPacket (Ptr<Packet> pkt, double rxPowerDb, UanTxMode txMode, UanPdp pdp) override;
+  void SetReceiveOkCallback (RxOkCallback cb) override;
+  void SetReceiveErrorCallback (RxErrCallback cb) override;
+  bool IsStateSleep () override;
+  bool IsStateIdle () override;
+  bool IsStateBusy () override;
+  bool IsStateRx () override;
+  bool IsStateTx () override;
+  bool IsStateCcaBusy () override;
+  void SetTxPowerDb (double txpwr) override;
+  void SetRxThresholdDb (double thresh) override;
+  void SetCcaThresholdDb (double thresh) override;
+  double GetTxPowerDb () override;
+  double GetRxThresholdDb () override;
+  double GetCcaThresholdDb () override;
+  Ptr<UanChannel> GetChannel () const override;
+  Ptr<UanNetDevice> GetDevice () const override;
+  Ptr<UanTransducer> GetTransducer () override;
+  void SetChannel (Ptr<UanChannel> channel) override;
+  void SetDevice (Ptr<UanNetDevice> device) override;
+  void SetMac (Ptr<UanMac> mac) override;
+  void SetTransducer (Ptr<UanTransducer> trans) override;
+  void NotifyTransStartTx (Ptr<Packet> packet, double txPowerDb, UanTxMode txMode) override;
+  void NotifyIntChange () override;
+  uint32_t GetNModes () override;
+  UanTxMode GetMode (uint32_t n) override;
+  Ptr<Packet> GetPacketRx () const override;
+  void Clear () override;
+  void SetSleepMode (bool sleep) override;
+  int64_t AssignStreams (int64_t stream) override;
 
 private:
   /** List of Phy Listeners. */
@@ -427,15 +427,15 @@ private:
 
 
   /** Call UanListener::NotifyRxStart on all listeners. */
-  void NotifyListenersRxStart (void);
+  void NotifyListenersRxStart ();
   /** Call UanListener::NotifyRxEndOk on all listeners. */
-  void NotifyListenersRxGood (void);
+  void NotifyListenersRxGood ();
   /** Call UanListener::NotifyRxEndError on all listeners. */
-  void NotifyListenersRxBad (void);
+  void NotifyListenersRxBad ();
   /** Call UanListener::NotifyCcaStart on all listeners. */
-  void NotifyListenersCcaStart (void);
+  void NotifyListenersCcaStart ();
   /** Call UanListener::NotifyCcaEnd on all listeners. */
-  void NotifyListenersCcaEnd (void);
+  void NotifyListenersCcaEnd ();
   /**
    * Call UanListener::NotifyTxStart on all listeners.
    *
@@ -445,10 +445,10 @@ private:
   /**
    * Call UanListener::NotifyTxEnd on all listeners.
    */
-  void NotifyListenersTxEnd (void);
+  void NotifyListenersTxEnd ();
 
 protected:
-  virtual void DoDispose ();
+  void DoDispose () override;
 
 };  // class UanPhyGen
 

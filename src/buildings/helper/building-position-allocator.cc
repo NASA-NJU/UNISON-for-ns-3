@@ -49,7 +49,7 @@ RandomBuildingPositionAllocator::RandomBuildingPositionAllocator ()
 }
 
 TypeId
-RandomBuildingPositionAllocator::GetTypeId (void)
+RandomBuildingPositionAllocator::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::RandomBuildingPositionAllocator")
     .SetParent<PositionAllocator> ()
@@ -66,7 +66,7 @@ RandomBuildingPositionAllocator::GetTypeId (void)
   return tid;
 }
 
-Vector 
+Vector
 RandomBuildingPositionAllocator::GetNext () const
 {
   NS_ASSERT_MSG (BuildingList::GetNBuildings () > 0, "no building found");
@@ -114,7 +114,7 @@ OutdoorPositionAllocator::OutdoorPositionAllocator ()
 }
 
 TypeId
-OutdoorPositionAllocator::GetTypeId (void)
+OutdoorPositionAllocator::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::OutdoorPositionAllocator")
     .SetParent<PositionAllocator> ()
@@ -231,7 +231,7 @@ RandomRoomPositionAllocator::RandomRoomPositionAllocator ()
 }
 
 TypeId
-RandomRoomPositionAllocator::GetTypeId (void)
+RandomRoomPositionAllocator::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::RandomRoomPositionAllocator")
     .SetParent<PositionAllocator> ()
@@ -240,12 +240,12 @@ RandomRoomPositionAllocator::GetTypeId (void)
   return tid;
 }
 
-Vector 
+Vector
 RandomRoomPositionAllocator::GetNext () const
 {
   NS_LOG_FUNCTION (this);
   NS_ASSERT_MSG (BuildingList::GetNBuildings () > 0, "no building found");
- 
+
   if (m_roomListWithoutReplacement.empty ())
     {
       for (BuildingList::Iterator bit = BuildingList::Begin (); bit != BuildingList::End (); ++bit)
@@ -260,7 +260,7 @@ RandomRoomPositionAllocator::GetNext () const
                       RoomInfo i;
                       i.roomx = rx;
                       i.roomy = ry;
-                      i.floor = f; 
+                      i.floor = f;
                       i.b = *bit;
                       NS_LOG_LOGIC ("adding room (" << rx << ", " << ry << ", " << f << ")");
                       m_roomListWithoutReplacement.push_back (i);
@@ -335,7 +335,7 @@ SameRoomPositionAllocator::SameRoomPositionAllocator (NodeContainer c)
 }
 
 TypeId
-SameRoomPositionAllocator::GetTypeId (void)
+SameRoomPositionAllocator::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::SameRoomPositionAllocator")
     .SetParent<PositionAllocator> ()
@@ -344,7 +344,7 @@ SameRoomPositionAllocator::GetTypeId (void)
   return tid;
 }
 
-Vector 
+Vector
 SameRoomPositionAllocator::GetNext () const
 {
   NS_LOG_FUNCTION (this);
@@ -417,7 +417,7 @@ FixedRoomPositionAllocator::FixedRoomPositionAllocator (
 }
 
 TypeId
-FixedRoomPositionAllocator::GetTypeId (void)
+FixedRoomPositionAllocator::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::FixedRoomPositionAllocator")
     .SetParent<PositionAllocator> ()

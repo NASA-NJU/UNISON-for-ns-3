@@ -18,63 +18,37 @@
  * Author: Kirill Andreev <andreev@iitp.ru>
  *         Pavel Boyko <boyko@iitp.ru>
  */
- 
+
 #include "mesh-helper.h"
-#include "ns3/simulator.h"
-#include "ns3/pointer.h"
-#include "ns3/mesh-point-device.h"
-#include "ns3/wifi-net-device.h"
-#include "ns3/minstrel-wifi-manager.h"
-#include "ns3/mesh-wifi-interface-mac.h"
-#include "ns3/wifi-helper.h"
+#include "ns3/fcfs-wifi-queue-scheduler.h"
 #include "ns3/frame-exchange-manager.h"
-#include "ns3/wifi-default-protection-manager.h"
+#include "ns3/mesh-point-device.h"
+#include "ns3/mesh-wifi-interface-mac.h"
+#include "ns3/minstrel-wifi-manager.h"
+#include "ns3/pointer.h"
+#include "ns3/simulator.h"
 #include "ns3/wifi-default-ack-manager.h"
+#include "ns3/wifi-default-protection-manager.h"
+#include "ns3/wifi-helper.h"
+#include "ns3/wifi-net-device.h"
 
 namespace ns3
 {
 MeshHelper::MeshHelper () :
   m_nInterfaces (1),
   m_spreadChannelPolicy (ZERO_CHANNEL),
-  m_stack (0),
+  m_stack (nullptr),
   m_standard (WIFI_STANDARD_80211a)
 {
 }
 MeshHelper::~MeshHelper ()
 {
-  m_stack = 0;
+  m_stack = nullptr;
 }
 void
 MeshHelper::SetSpreadInterfaceChannels (enum ChannelPolicy policy)
 {
   m_spreadChannelPolicy = policy;
-}
-void
-MeshHelper::SetStackInstaller (std::string type,
-                               std::string n0, const AttributeValue &v0,
-                               std::string n1, const AttributeValue &v1,
-                               std::string n2, const AttributeValue &v2,
-                               std::string n3, const AttributeValue &v3,
-                               std::string n4, const AttributeValue &v4,
-                               std::string n5, const AttributeValue &v5,
-                               std::string n6, const AttributeValue &v6,
-                               std::string n7, const AttributeValue &v7)
-{
-  m_stackFactory.SetTypeId (type);
-  m_stackFactory.Set (n0, v0);
-  m_stackFactory.Set (n1, v1);
-  m_stackFactory.Set (n2, v2);
-  m_stackFactory.Set (n3, v3);
-  m_stackFactory.Set (n4, v4);
-  m_stackFactory.Set (n5, v5);
-  m_stackFactory.Set (n6, v6);
-  m_stackFactory.Set (n7, v7);
-
-  m_stack = m_stackFactory.Create<MeshStack> ();
-  if (m_stack == 0)
-    {
-      NS_FATAL_ERROR ("Stack has not been created: " << type);
-    }
 }
 
 void
@@ -86,7 +60,7 @@ NetDeviceContainer
 MeshHelper::Install (const WifiPhyHelper &phyHelper, NodeContainer c) const
 {
   NetDeviceContainer devices;
-  NS_ASSERT (m_stack != 0);
+  NS_ASSERT (m_stack);
   for (NodeContainer::Iterator i = c.Begin (); i != c.End (); ++i)
     {
       Ptr<Node> node = *i;
@@ -117,7 +91,7 @@ MeshHelper::Install (const WifiPhyHelper &phyHelper, NodeContainer c) const
   return devices;
 }
 MeshHelper
-MeshHelper::Default (void)
+MeshHelper::Default ()
 {
   MeshHelper helper;
   helper.SetMacType ();
@@ -127,48 +101,6 @@ MeshHelper::Default (void)
 }
 
 void
-MeshHelper::SetMacType (std::string n0, const AttributeValue &v0,
-                        std::string n1, const AttributeValue &v1,
-                        std::string n2, const AttributeValue &v2,
-                        std::string n3, const AttributeValue &v3,
-                        std::string n4, const AttributeValue &v4,
-                        std::string n5, const AttributeValue &v5,
-                        std::string n6, const AttributeValue &v6,
-                        std::string n7, const AttributeValue &v7)
-{
-  m_mac.SetTypeId ("ns3::MeshWifiInterfaceMac");
-  m_mac.Set (n0, v0);
-  m_mac.Set (n1, v1);
-  m_mac.Set (n2, v2);
-  m_mac.Set (n3, v3);
-  m_mac.Set (n4, v4);
-  m_mac.Set (n5, v5);
-  m_mac.Set (n6, v6);
-  m_mac.Set (n7, v7);
-}
-void
-MeshHelper::SetRemoteStationManager (std::string type,
-                                     std::string n0, const AttributeValue &v0,
-                                     std::string n1, const AttributeValue &v1,
-                                     std::string n2, const AttributeValue &v2,
-                                     std::string n3, const AttributeValue &v3,
-                                     std::string n4, const AttributeValue &v4,
-                                     std::string n5, const AttributeValue &v5,
-                                     std::string n6, const AttributeValue &v6,
-                                     std::string n7, const AttributeValue &v7)
-{
-  m_stationManager = ObjectFactory ();
-  m_stationManager.SetTypeId (type);
-  m_stationManager.Set (n0, v0);
-  m_stationManager.Set (n1, v1);
-  m_stationManager.Set (n2, v2);
-  m_stationManager.Set (n3, v3);
-  m_stationManager.Set (n4, v4);
-  m_stationManager.Set (n5, v5);
-  m_stationManager.Set (n6, v6);
-  m_stationManager.Set (n7, v7);
-}
-void 
 MeshHelper::SetStandard (enum WifiStandard standard)
 {
   m_standard = standard;
@@ -182,17 +114,24 @@ MeshHelper::CreateInterface (const WifiPhyHelper &phyHelper, Ptr<Node> node, uin
   // this is a const method, but we need to force the correct QoS setting
   ObjectFactory macObjectFactory = m_mac;
   macObjectFactory.Set ("QosSupported", BooleanValue (true));  // a mesh station is a QoS station
+  std::vector<Ptr<WifiPhy>> phys = phyHelper.Create (node, device);
+  NS_ABORT_IF (phys.size () != 1);
+  node->AddDevice (device);
+  phys[0]->ConfigureStandard (m_standard);
+  device->SetPhy (phys[0]);
   Ptr<MeshWifiInterfaceMac> mac = macObjectFactory.Create<MeshWifiInterfaceMac> ();
-  NS_ASSERT (mac != 0);
+  NS_ASSERT (mac);
   mac->SetSsid (Ssid ());
   mac->SetDevice (device);
   Ptr<WifiRemoteStationManager> manager = m_stationManager.Create<WifiRemoteStationManager> ();
-  NS_ASSERT (manager != 0);
-  Ptr<WifiPhy> phy = phyHelper.Create (node, device);
+  NS_ASSERT (manager);
+  device->SetRemoteStationManager (manager);
   mac->SetAddress (Mac48Address::Allocate ());
+  device->SetMac (mac);
+  mac->SetMacQueueScheduler (CreateObject<FcfsWifiQueueScheduler> ());
   mac->ConfigureStandard (m_standard);
   Ptr<FrameExchangeManager> fem = mac->GetFrameExchangeManager ();
-  if (fem != nullptr)
+  if (fem)
     {
       Ptr<WifiProtectionManager> protectionManager = CreateObject<WifiDefaultProtectionManager> ();
       protectionManager->SetWifiMac (mac);
@@ -202,11 +141,6 @@ MeshHelper::CreateInterface (const WifiPhyHelper &phyHelper, Ptr<Node> node, uin
       ackManager->SetWifiMac (mac);
       fem->SetAckManager (ackManager);
     }
-  phy->ConfigureStandard (m_standard);
-  device->SetMac (mac);
-  device->SetPhy (phy);
-  device->SetRemoteStationManager (manager);
-  node->AddDevice (device);
   mac->SwitchFrequencyChannel (channelId);
 
   return device;
@@ -214,9 +148,9 @@ MeshHelper::CreateInterface (const WifiPhyHelper &phyHelper, Ptr<Node> node, uin
 void
 MeshHelper::Report (const ns3::Ptr<ns3::NetDevice>& device, std::ostream& os)
 {
-  NS_ASSERT (m_stack != 0);
+  NS_ASSERT (m_stack);
   Ptr<MeshPointDevice> mp = device->GetObject<MeshPointDevice> ();
-  NS_ASSERT (mp != 0);
+  NS_ASSERT (mp);
   std::vector<Ptr<NetDevice> > ifaces = mp->GetInterfaces ();
   os << "<MeshPointDevice time=\"" << Simulator::Now ().GetSeconds () << "\" address=\""
      << Mac48Address::ConvertFrom (mp->GetAddress ()) << "\">\n";
@@ -226,9 +160,9 @@ MeshHelper::Report (const ns3::Ptr<ns3::NetDevice>& device, std::ostream& os)
 void
 MeshHelper::ResetStats (const ns3::Ptr<ns3::NetDevice>& device)
 {
-  NS_ASSERT (m_stack != 0);
+  NS_ASSERT (m_stack);
   Ptr<MeshPointDevice> mp = device->GetObject<MeshPointDevice> ();
-  NS_ASSERT (mp != 0);
+  NS_ASSERT (mp);
   m_stack->ResetStats (mp);
 }
 int64_t
@@ -250,7 +184,7 @@ MeshHelper::AssignStreams (NetDeviceContainer c, int64_t stream)
           for (std::vector<Ptr<NetDevice> >::iterator i = ifaces.begin (); i != ifaces.end (); i++)
             {
               wifi = DynamicCast<WifiNetDevice> (*i);
-           
+
               // Handle any random numbers in the PHY objects.
               currentStream += wifi->GetPhy ()->AssignStreams (currentStream);
 
@@ -292,7 +226,7 @@ MeshHelper::AssignStreams (NetDeviceContainer c, int64_t stream)
 }
 
 void
-MeshHelper::EnableLogComponents (void)
+MeshHelper::EnableLogComponents ()
 {
   WifiHelper::EnableLogComponents ();
 

@@ -43,7 +43,7 @@ class LteMacSapProvider;
 
 
 /**
- * \brief The abstract base class of a Component Carrier Manager* for UE 
+ * \brief The abstract base class of a Component Carrier Manager* for UE
   that operates using the component carrier manager SAP interface.
  *
  */
@@ -52,7 +52,7 @@ class LteUeComponentCarrierManager : public Object
 
 public:
   LteUeComponentCarrierManager ();
-  virtual ~LteUeComponentCarrierManager ();
+  ~LteUeComponentCarrierManager () override;
 
   /**
    * \brief Get the type ID.
@@ -74,7 +74,7 @@ public:
    *         be kept by an LteUeRrc instance
    */
   virtual LteUeCcmRrcSapProvider* GetLteCcmRrcSapProvider ();
-  
+
   /**
    * \brief Returns the MAC sap provider interface that if forwarding calls to the
    * instance of the LteUeComponentCarrierManager.
@@ -99,7 +99,7 @@ public:
 protected:
 
   // inherited from Object
-  virtual void DoDispose ();
+  void DoDispose () override;
 
   LteUeCcmRrcSapUser* m_ccmRrcSapUser;//!< Interface to the UE RRC instance.
   LteUeCcmRrcSapProvider* m_ccmRrcSapProvider; //!< Receive API calls from the UE RRC instance.

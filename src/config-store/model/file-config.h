@@ -47,15 +47,15 @@ public:
   /**
    * Load or save the default values
    */
-  virtual void Default (void) = 0;
+  virtual void Default () = 0;
   /**
    * Load or save the global values
    */
-  virtual void Global (void) = 0;
+  virtual void Global () = 0;
   /**
    * Load or save the attributes values
    */
-  virtual void Attributes (void) = 0;
+  virtual void Attributes () = 0;
 
 protected:
   bool m_saveDeprecated; ///< save deprecated attributes
@@ -69,11 +69,11 @@ class NoneFileConfig : public FileConfig
 {
 public:
   NoneFileConfig ();
-  virtual ~NoneFileConfig ();
-  virtual void SetFilename (std::string filename);
-  virtual void Default (void);
-  virtual void Global (void);
-  virtual void Attributes (void);
+  ~NoneFileConfig () override;
+  void SetFilename (std::string filename) override;
+  void Default () override;
+  void Global () override;
+  void Attributes () override;
 };
 
 } // namespace ns3

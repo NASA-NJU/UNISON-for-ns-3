@@ -38,19 +38,19 @@ Ipv4InterfaceContainer::Add (const Ipv4InterfaceContainer& other)
 }
 
 Ipv4InterfaceContainer::Iterator
-Ipv4InterfaceContainer::Begin (void) const
+Ipv4InterfaceContainer::Begin () const
 {
   return m_interfaces.begin ();
 }
 
 Ipv4InterfaceContainer::Iterator
-Ipv4InterfaceContainer::End (void) const
+Ipv4InterfaceContainer::End () const
 {
   return m_interfaces.end ();
 }
 
 uint32_t
-Ipv4InterfaceContainer::GetN (void) const
+Ipv4InterfaceContainer::GetN () const
 {
   return m_interfaces.size ();
 }
@@ -63,27 +63,27 @@ Ipv4InterfaceContainer::GetAddress (uint32_t i, uint32_t j) const
   return ipv4->GetAddress (interface, j).GetLocal ();
 }
 
-void 
+void
 Ipv4InterfaceContainer::SetMetric (uint32_t i, uint16_t metric)
 {
   Ptr<Ipv4> ipv4 = m_interfaces[i].first;
   uint32_t interface = m_interfaces[i].second;
   ipv4->SetMetric (interface, metric);
 }
-void 
+void
 Ipv4InterfaceContainer::Add (Ptr<Ipv4> ipv4, uint32_t interface)
 {
-  m_interfaces.push_back (std::make_pair (ipv4, interface));
+  m_interfaces.emplace_back (ipv4, interface);
 }
 void Ipv4InterfaceContainer::Add (std::pair<Ptr<Ipv4>, uint32_t> a)
 {
   Add (a.first, a.second);
 }
-void 
+void
 Ipv4InterfaceContainer::Add (std::string ipv4Name, uint32_t interface)
 {
   Ptr<Ipv4> ipv4 = Names::Find<Ipv4> (ipv4Name);
-  m_interfaces.push_back (std::make_pair (ipv4, interface));
+  m_interfaces.emplace_back (ipv4, interface);
 }
 
 std::pair<Ptr<Ipv4>, uint32_t>

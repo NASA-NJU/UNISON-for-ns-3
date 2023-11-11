@@ -51,7 +51,7 @@ struct OnoeWifiRemoteStation : public WifiRemoteStation
 NS_OBJECT_ENSURE_REGISTERED (OnoeWifiManager);
 
 TypeId
-OnoeWifiManager::GetTypeId (void)
+OnoeWifiManager::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::OnoeWifiManager")
     .SetParent<WifiRemoteStationManager> ()
@@ -109,7 +109,7 @@ OnoeWifiManager::DoInitialize ()
 }
 
 WifiRemoteStation *
-OnoeWifiManager::DoCreateStation (void) const
+OnoeWifiManager::DoCreateStation () const
 {
   NS_LOG_FUNCTION (this);
   OnoeWifiRemoteStation *station = new OnoeWifiRemoteStation ();
@@ -211,7 +211,8 @@ OnoeWifiManager::UpdateMode (OnoeWifiRemoteStation *station)
    * rate control kernel module used in the madwifi driver.
    */
 
-  int dir = 0, enough;
+  int dir = 0;
+  int enough;
   uint8_t nrate;
   enough = (station->m_tx_ok + station->m_tx_err >= 10);
 
@@ -281,9 +282,9 @@ OnoeWifiManager::UpdateMode (OnoeWifiRemoteStation *station)
 }
 
 WifiTxVector
-OnoeWifiManager::DoGetDataTxVector (WifiRemoteStation *st)
+OnoeWifiManager::DoGetDataTxVector (WifiRemoteStation *st, uint16_t allowedWidth)
 {
-  NS_LOG_FUNCTION (this << st);
+  NS_LOG_FUNCTION (this << st << allowedWidth);
   OnoeWifiRemoteStation *station = static_cast<OnoeWifiRemoteStation*> (st);
   UpdateMode (station);
   NS_ASSERT (station->m_txrate < GetNSupported (station));

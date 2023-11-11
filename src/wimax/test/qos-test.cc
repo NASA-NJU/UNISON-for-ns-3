@@ -43,10 +43,10 @@ class Ns3WimaxSchedulingTestCase : public TestCase
 {
 public:
   Ns3WimaxSchedulingTestCase ();
-  virtual ~Ns3WimaxSchedulingTestCase ();
+  ~Ns3WimaxSchedulingTestCase () override;
 
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
   /**
    * Run once function
    * \param scheduler the wimax scheduler type
@@ -73,7 +73,8 @@ Ns3WimaxSchedulingTestCase::DoRunOnce (WimaxHelper::SchedulerType scheduler)
   ssNodes.Create (2);
   bsNodes.Create (1);
   WimaxHelper wimax;
-  NetDeviceContainer ssDevs, bsDevs;
+  NetDeviceContainer ssDevs;
+  NetDeviceContainer bsDevs;
   ssDevs = wimax.Install (ssNodes,
                           WimaxHelper::DEVICE_TYPE_SUBSCRIBER_STATION,
                           WimaxHelper::SIMPLE_PHY_TYPE_OFDM,
@@ -172,10 +173,10 @@ class Ns3WimaxSFTypeTestCase : public TestCase
 {
 public:
   Ns3WimaxSFTypeTestCase ();
-  virtual ~Ns3WimaxSFTypeTestCase ();
+  ~Ns3WimaxSFTypeTestCase () override;
 
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
   /**
    * Run once function
    * \param schedulingType the scheduling type
@@ -202,7 +203,8 @@ Ns3WimaxSFTypeTestCase::DoRunOnce (ServiceFlow::SchedulingType schedulingType)
   ssNodes.Create (2);
   bsNodes.Create (1);
   WimaxHelper wimax;
-  NetDeviceContainer ssDevs, bsDevs;
+  NetDeviceContainer ssDevs;
+  NetDeviceContainer bsDevs;
   ssDevs = wimax.Install (ssNodes,
                           WimaxHelper::DEVICE_TYPE_SUBSCRIBER_STATION,
                           WimaxHelper::SIMPLE_PHY_TYPE_OFDM,

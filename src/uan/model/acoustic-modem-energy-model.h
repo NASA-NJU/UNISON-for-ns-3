@@ -57,20 +57,20 @@ class AcousticModemEnergyModel : public DeviceEnergyModel
 public:
   /** Callback type for energy depletion handling. */
   typedef Callback<void> AcousticModemEnergyDepletionCallback;
-  
+
   /** Callback type for energy recharge handling. */
   typedef Callback<void> AcousticModemEnergyRechargeCallback;
 
-public:  
+public:
   /**
    * Register this type.
    * \return The object TypeId.
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
   /** Constructor. */
   AcousticModemEnergyModel ();
   /** Dummy destructor, see DoDispose */
-  virtual ~AcousticModemEnergyModel ();
+  ~AcousticModemEnergyModel () override;
 
   /**
    * Sets pointer to node.
@@ -84,18 +84,18 @@ public:
    *
    * \return Pointer to node.
    */
-  virtual Ptr<Node> GetNode (void) const;
+  virtual Ptr<Node> GetNode () const;
 
   // Inherited methods.
-  virtual void SetEnergySource (Ptr<EnergySource> source);
-  virtual double GetTotalEnergyConsumption (void) const;
+  void SetEnergySource (Ptr<EnergySource> source) override;
+  double GetTotalEnergyConsumption () const override;
 
   /**
    * Get the transmission power of the modem.
    *
    * \return The transmission power in Watts.
    */
-  double GetTxPowerW (void) const;
+  double GetTxPowerW () const;
 
   /**
    * Set the transmission power of the modem.
@@ -109,7 +109,7 @@ public:
    *
    * \return The receiving power in Watts
    */
-  double GetRxPowerW (void) const;
+  double GetRxPowerW () const;
 
   /**
    * Set the receiving power of the modem.
@@ -123,7 +123,7 @@ public:
    *
    * \return The idle power in Watts
    */
-  double GetIdlePowerW (void) const;
+  double GetIdlePowerW () const;
 
   /**
    * Set the idle state power of the modem.
@@ -137,7 +137,7 @@ public:
    *
    * \return Sleep power of the modem in Watts
    */
-  double GetSleepPowerW (void) const;
+  double GetSleepPowerW () const;
 
   /**
    * Set the sleep power of the modem.
@@ -151,7 +151,7 @@ public:
    *
    * \return Current state.
    */
-  int GetCurrentState (void) const;
+  int GetCurrentState () const;
 
   /**
    * \param callback Callback function.
@@ -159,7 +159,7 @@ public:
    * Sets callback for energy depletion handling.
    */
   void SetEnergyDepletionCallback (AcousticModemEnergyDepletionCallback callback);
-  
+
   /**
    * \param callback Callback function.
    *
@@ -172,33 +172,33 @@ public:
    *
    * \param newState New state the modem is in.
    */
-  virtual void ChangeState (int newState);
+  void ChangeState (int newState) override;
 
   /**
    * \brief Handles energy depletion.
    */
-  virtual void HandleEnergyDepletion (void);
+  void HandleEnergyDepletion () override;
 
   /**
    * \brief Handles energy recharged.
    */
-  virtual void HandleEnergyRecharged (void);
-  
+  void HandleEnergyRecharged () override;
+
   /**
    * \brief Handles energy changed.
    *
    * Not implemented
    */
-  virtual void HandleEnergyChanged (void);
+  void HandleEnergyChanged () override;
 
 
 private:
-  void DoDispose (void);
+  void DoDispose () override;
 
   /**
    * \return Current draw of device, at current state.
    */
-  virtual double DoGetCurrentA (void) const;
+  double DoGetCurrentA () const override;
 
   /**
    * \param destState Modem state to switch to.
@@ -235,7 +235,7 @@ private:
 
   /** Energy depletion callback. */
   AcousticModemEnergyDepletionCallback m_energyDepletionCallback;
-  
+
   /** Energy recharge callback. */
   AcousticModemEnergyRechargeCallback m_energyRechargeCallback;
 

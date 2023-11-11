@@ -57,21 +57,21 @@ public:
   BuildingContainer (Ptr<Building> building);
 
   /**
-   * Create a BuildingContainer with exactly one building which has been previously 
-   * instantiated and assigned a name using the Object Name Service.  This 
-   * Building is then specified by its assigned name. 
+   * Create a BuildingContainer with exactly one building which has been previously
+   * instantiated and assigned a name using the Object Name Service.  This
+   * Building is then specified by its assigned name.
    *
    * \param buildingName The name of the Building Object to add to the container.
    */
   BuildingContainer (std::string buildingName);
 
   /**
-   * \brief Get an iterator which refers to the first Building in the 
+   * \brief Get an iterator which refers to the first Building in the
    * container.
    *
    * Buildings can be retrieved from the container in two ways.  First,
    * directly by an index into the container, and second, using an iterator.
-   * This method is used in the iterator method and is typically used in a 
+   * This method is used in the iterator method and is typically used in a
    * for-loop to run through the Buildings
    *
    * \code
@@ -84,15 +84,15 @@ public:
    *
    * \returns an iterator which refers to the first Building in the container.
    */
-  Iterator Begin (void) const;
+  Iterator Begin () const;
 
   /**
-   * \brief Get an iterator which indicates past-the-last Building in the 
+   * \brief Get an iterator which indicates past-the-last Building in the
    * container.
    *
    * Buildings can be retrieved from the container in two ways.  First,
    * directly by an index into the container, and second, using an iterator.
-   * This method is used in the iterator method and is typically used in a 
+   * This method is used in the iterator method and is typically used in a
    * for-loop to run through the Buildings
    *
    * \code
@@ -105,7 +105,7 @@ public:
    *
    * \returns an iterator which indicates an ending condition for a loop.
    */
-  Iterator End (void) const;
+  Iterator End () const;
 
   /**
    * \brief Get the number of Ptr<Building> stored in this container.
@@ -127,7 +127,7 @@ public:
    *
    * \returns the number of Ptr<Building> stored in this container.
    */
-  uint32_t GetN (void) const;
+  uint32_t GetN () const;
 
   /**
    * \brief Get the Ptr<Building> stored in this container at a given
@@ -153,7 +153,7 @@ public:
   Ptr<Building> Get (uint32_t i) const;
 
   /**
-   * \brief Create n buildings and append pointers to them to the end of this 
+   * \brief Create n buildings and append pointers to them to the end of this
    * BuildingContainer.
    *
    * Buildings are at the heart of any ns-3 simulation.  One of the first tasks that
@@ -193,12 +193,12 @@ public:
    *
    * Whenever a Building is created, a Ptr<Building> is added to a global list of all
    * buildings in the system.  It is sometimes useful to be able to get to all
-   * buildings in one place.  This method creates a BuildingContainer that is 
+   * buildings in one place.  This method creates a BuildingContainer that is
    * initialized to contain all of the simulation buildings,
    *
    * \returns a BuildingContainer which contains a list of all Buildings.
    */
-  static BuildingContainer GetGlobal (void);
+  static BuildingContainer GetGlobal ();
 
 private:
   std::vector<Ptr<Building> > m_buildings; //!< Building container

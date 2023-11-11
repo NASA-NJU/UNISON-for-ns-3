@@ -37,11 +37,9 @@ class MuEdcaParameterSet : public WifiInformationElement
 {
 public:
   MuEdcaParameterSet ();
-  /**
-   * Return true if a valid MU EDCA Parameter Set is present in this object
-   * \return true if a valid MU EDCA Parameter Set is present in this object
-   */
-  bool IsPresent (void) const;
+
+  WifiInformationElementId ElementId () const override;
+  WifiInformationElementId ElementIdExt () const override;
 
   /**
    * Set the QoS Info field in the MuEdcaParameterSet information element.
@@ -94,7 +92,7 @@ public:
    *
    * \return the QoS Info field in the MuEdcaParameterSet information element
    */
-  uint8_t GetQosInfo (void) const;
+  uint8_t GetQosInfo () const;
   /**
    * Get the AIFSN subfield of the ACI/AIFSN field in the MU AC Parameter Record
    * field corresponding to the given AC Index (<i>aci</i>).
@@ -128,54 +126,11 @@ public:
    */
   Time GetMuEdcaTimer (uint8_t aci) const;
 
-  /**
-   * Get the wifi information element ID
-   * \return the wifi information element ID
-   */
-  WifiInformationElementId ElementId () const;
-  /**
-   * Get the wifi information element ID extension
-   * \return the wifi information element ID extension
-   */
-  WifiInformationElementId ElementIdExt () const;
-  /**
-   * Get information field size function
-   * \return the information field size
-   */
-  uint8_t GetInformationFieldSize () const;
-  /**
-   * Serialize information field function
-   * \param start the iterator
-   */
-  void SerializeInformationField (Buffer::Iterator start) const;
-  /**
-   * Deserialize information field function
-   * \param start the iterator
-   * \param length the length
-   * \return the size
-   */
-  uint8_t DeserializeInformationField (Buffer::Iterator start, uint8_t length);
-
-  /**
-   * This information element is a bit special in that it is only
-   * included if the STA is an HE STA. To support this we
-   * override the Serialize and GetSerializedSize methods of
-   * WifiInformationElement.
-   *
-   * \param start iterator start
-   *
-   * \return an iterator
-   */
-  Buffer::Iterator Serialize (Buffer::Iterator start) const;
-  /**
-   * Return the serialized size of this EDCA Parameter Set.
-   *
-   * \return the serialized size of this EDCA Parameter Set
-   */
-  uint16_t GetSerializedSize () const;
-
-
 private:
+  uint16_t GetInformationFieldSize () const override;
+  void SerializeInformationField (Buffer::Iterator start) const override;
+  uint16_t DeserializeInformationField (Buffer::Iterator start, uint16_t length) override;
+
   /**
    * MU AC Parameter Record type
    */

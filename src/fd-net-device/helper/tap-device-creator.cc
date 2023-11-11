@@ -128,7 +128,7 @@ SetIpv4 (const char *deviceName, const char *ip, const char *netmask)
   inet_pton(AF_INET, ip, &sin->sin_addr);
   ifr.ifr_addr.sa_family = AF_INET;
 
-  ABORT_IF (ioctl (sock, SIOCSIFADDR, &ifr) == -1, 
+  ABORT_IF (ioctl (sock, SIOCSIFADDR, &ifr) == -1,
           "Could not set IP address", true);
 
   LOG ("Set device IP address to " << ip);
@@ -143,14 +143,14 @@ SetIpv4 (const char *deviceName, const char *ip, const char *netmask)
   inet_pton(AF_INET, netmask, &sin->sin_addr);
   ifr.ifr_addr.sa_family = AF_INET;
 
-  ABORT_IF (ioctl (sock, SIOCSIFNETMASK, &ifr) == -1, 
+  ABORT_IF (ioctl (sock, SIOCSIFNETMASK, &ifr) == -1,
           "Could not set net mask", true);
 
   LOG ("Set device Net Mask to " << netmask);
   close(sock);
 }
 
-void 
+void
 SetIpv6 (const char* deviceName, const char *ip, int netprefix)
 {
   struct ifreq ifr;
@@ -161,7 +161,7 @@ SetIpv6 (const char* deviceName, const char *ip, int netprefix)
   memset(&ifr,  0, sizeof(struct ifreq));
   strncpy(ifr.ifr_name, deviceName, IFNAMSIZ - 1);
 
-  ABORT_IF (ioctl (sock, SIOGIFINDEX, &ifr) == -1, 
+  ABORT_IF (ioctl (sock, SIOGIFINDEX, &ifr) == -1,
           "Could not get interface index", true);
 
   LOG ("Set device IP v6 address to " << ip);
@@ -169,7 +169,7 @@ SetIpv6 (const char* deviceName, const char *ip, int netprefix)
   memset(&sin, 0, sizeof(struct sockaddr_in6));
   sin.sin6_family = AF_INET6;
   inet_pton(AF_INET6, ip, (void *) &sin.sin6_addr);
-  
+
   memset(&ifr6, 0, sizeof(in6_ifreq));
   memcpy((char *) &ifr6.ifr6_addr, (char *) &sin.sin6_addr, sizeof(struct in6_addr));
 
@@ -179,7 +179,7 @@ SetIpv6 (const char* deviceName, const char *ip, int netprefix)
   //
   // Set the IP address of the new interface/device.
   //
-  ABORT_IF (ioctl (sock, SIOCSIFADDR, &ifr6) == -1, 
+  ABORT_IF (ioctl (sock, SIOCSIFADDR, &ifr6) == -1,
           "Could not set IP v6 address", true);
 
   LOG ("Set device IP v6 address to " << ip);
@@ -187,7 +187,7 @@ SetIpv6 (const char* deviceName, const char *ip, int netprefix)
 
 }
 
-void 
+void
 SetMacAddress (int fd, const char* mac)
 {
   struct ifreq ifr;
@@ -209,11 +209,11 @@ SetUp (char *deviceName)
   memset(&ifr,  0, sizeof(struct ifreq));
   strncpy(ifr.ifr_name, deviceName, IFNAMSIZ - 1);
 
-  ABORT_IF (ioctl (sock, SIOCGIFFLAGS, &ifr) == -1, 
+  ABORT_IF (ioctl (sock, SIOCGIFFLAGS, &ifr) == -1,
           "Could not get flags for interface", true);
   ifr.ifr_flags |= IFF_UP | IFF_RUNNING;
 
-  ABORT_IF (ioctl (sock, SIOCSIFFLAGS, &ifr) == -1, 
+  ABORT_IF (ioctl (sock, SIOCSIFFLAGS, &ifr) == -1,
           "Could not bring interface up", true);
 
   LOG ("Device is up");
@@ -247,13 +247,13 @@ CreateTap (char *deviceName, const char *mac, const int ifftap, const int iffpi,
   //
   // If device name is not specified, the kernel chooses one.
   //
-  if (*deviceName) 
+  if (*deviceName)
     {
        strncpy(ifr.ifr_name, deviceName, IFNAMSIZ - 1);
     }
 
-  
-  ABORT_IF (ioctl (fd, TUNSETIFF, (void *) &ifr) == -1, 
+
+  ABORT_IF (ioctl (fd, TUNSETIFF, (void *) &ifr) == -1,
           "Could not allocate tap device", true);
 
   LOG ("Allocated TAP device " << deviceName);
@@ -292,12 +292,12 @@ int
 main (int argc, char *argv[])
 {
   int c;
-  char *dev = NULL;
-  char *ip4 = NULL;
-  char *ip6 = NULL;
-  char *mac = NULL;
-  char *netmask = NULL;
-  char *path = NULL;
+  char *dev = nullptr;
+  char *ip4 = nullptr;
+  char *ip6 = nullptr;
+  char *mac = nullptr;
+  char *netmask = nullptr;
+  char *path = nullptr;
   int tap = false;
   int pi = false;
   int prefix = -1;
@@ -352,10 +352,10 @@ main (int argc, char *argv[])
   // allocating.  This address is allocated in the simulation and assigned to
   // the tap bridge.  This address is given in ip.
   //
-  ABORT_IF (ip4 == NULL && ip6 == NULL, "IP Address is a required argument", 0);
+  ABORT_IF (ip4 == nullptr && ip6 == nullptr, "IP Address is a required argument", 0);
   if (ip4)
     {
-      ABORT_IF (netmask == NULL, "Net mask is a required argument", 0);
+      ABORT_IF (netmask == nullptr, "Net mask is a required argument", 0);
       LOG ("Provided IP v4 Address is \"" << ip4 << "\"");
       LOG ("Provided IP v4 Net Mask is \"" << netmask << "\"");
     }
@@ -372,7 +372,7 @@ main (int argc, char *argv[])
   // the bridged device.  This allows packets addressed to the bridged device
   // to appear in the Linux host as if they were received there.
   //
-  ABORT_IF (mac == NULL, "MAC Address is a required argument", 0);
+  ABORT_IF (mac == nullptr, "MAC Address is a required argument", 0);
   LOG ("Provided MAC Address is \"" << mac << "\"");
 
   //
@@ -406,7 +406,7 @@ main (int argc, char *argv[])
   // us.  We see it here as the "path" string.  We can't do anything useful
   // unless we have that string.
   //
-  ABORT_IF (path == NULL, "path is a required argument", 0);
+  ABORT_IF (path == nullptr, "path is a required argument", 0);
   LOG ("Provided path is \"" << path << "\"");
 
   //

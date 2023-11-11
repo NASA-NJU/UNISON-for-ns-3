@@ -12,7 +12,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- * 
+ *
  * Author:  Craig Dowell (craigdo@ee.washington.edu)
  */
 
@@ -40,7 +40,7 @@ Swap (uint16_t val)
   return ((val >> 8) & 0x00ff) | ((val << 8) & 0xff00);
 }
 
-static uint32_t 
+static uint32_t
 Swap (uint32_t val)
 {
   return ((val >> 24) & 0x000000ff) | ((val >> 8) & 0x0000ff00) | ((val << 8) & 0x00ff0000) | ((val << 24) & 0xff000000);
@@ -50,7 +50,7 @@ static bool
 CheckFileExists (std::string filename)
 {
   FILE * p = std::fopen (filename.c_str (), "rb");
-  if (p == 0)
+  if (p == nullptr)
     {
       return false;
     }
@@ -64,7 +64,7 @@ static bool
 CheckFileLength (std::string filename, uint64_t sizeExpected)
 {
   FILE * p = std::fopen (filename.c_str (), "rb");
-  if (p == 0)
+  if (p == nullptr)
     {
       return false;
     }
@@ -88,12 +88,12 @@ class WriteModeCreateTestCase : public TestCase
 {
 public:
   WriteModeCreateTestCase ();
-  virtual ~WriteModeCreateTestCase ();
+  ~WriteModeCreateTestCase () override;
 
 private:
-  virtual void DoSetup (void);
-  virtual void DoRun (void);
-  virtual void DoTeardown (void);
+  void DoSetup () override;
+  void DoRun () override;
+  void DoTeardown () override;
 
   std::string m_testFilename; //!< File name
 };
@@ -108,7 +108,7 @@ WriteModeCreateTestCase::~WriteModeCreateTestCase ()
 }
 
 void
-WriteModeCreateTestCase::DoSetup (void)
+WriteModeCreateTestCase::DoSetup ()
 {
   std::stringstream filename;
   uint32_t n = rand ();
@@ -117,7 +117,7 @@ WriteModeCreateTestCase::DoSetup (void)
 }
 
 void
-WriteModeCreateTestCase::DoTeardown (void)
+WriteModeCreateTestCase::DoTeardown ()
 {
   if (remove (m_testFilename.c_str ()))
     {
@@ -126,7 +126,7 @@ WriteModeCreateTestCase::DoTeardown (void)
 }
 
 void
-WriteModeCreateTestCase::DoRun (void)
+WriteModeCreateTestCase::DoRun ()
 {
   PcapFile f;
 
@@ -139,17 +139,17 @@ WriteModeCreateTestCase::DoRun (void)
   NS_TEST_ASSERT_MSG_EQ (f.Fail (), false, "Open (" << m_testFilename << ", \"w\") returns error");
   f.Close ();
 
-  NS_TEST_ASSERT_MSG_EQ (CheckFileExists (m_testFilename), true, 
+  NS_TEST_ASSERT_MSG_EQ (CheckFileExists (m_testFilename), true,
                          "Open (" << m_testFilename << ", \"std::ios::out\") does not create file");
   NS_TEST_ASSERT_MSG_EQ (CheckFileLength (m_testFilename, 0), true,
                          "Open (" << m_testFilename << ", \"std::ios::out\") does not result in an empty file");
 
   //
-  // Calling Init() on a file created with "std::ios::out" should result in a file just 
+  // Calling Init() on a file created with "std::ios::out" should result in a file just
   // long enough to contain the pcap file header.
   //
   f.Open (m_testFilename, std::ios::out);
-  NS_TEST_ASSERT_MSG_EQ (f.Fail (), false, "Open (" << m_testFilename << 
+  NS_TEST_ASSERT_MSG_EQ (f.Fail (), false, "Open (" << m_testFilename <<
                          ", \"std::ios::out\") returns error");
 
   f.Init (1234, 5678, 7);
@@ -157,7 +157,7 @@ WriteModeCreateTestCase::DoRun (void)
 
   f.Close ();
 
-  NS_TEST_ASSERT_MSG_EQ (CheckFileLength (m_testFilename, 24), true, 
+  NS_TEST_ASSERT_MSG_EQ (CheckFileLength (m_testFilename, 24), true,
                          "Init () does not result in a file with a pcap file header");
 
   //
@@ -165,19 +165,19 @@ WriteModeCreateTestCase::DoRun (void)
   // emptied.
   //
   f.Open (m_testFilename, std::ios::out);
-  NS_TEST_ASSERT_MSG_EQ (f.Fail (), false, "Open (" << m_testFilename << 
+  NS_TEST_ASSERT_MSG_EQ (f.Fail (), false, "Open (" << m_testFilename <<
                          ", \"std::ios::out\") returns error");
 
   f.Close ();
 
-  NS_TEST_ASSERT_MSG_EQ (CheckFileLength (m_testFilename, 0), true, 
+  NS_TEST_ASSERT_MSG_EQ (CheckFileLength (m_testFilename, 0), true,
                          "Open (" << m_testFilename << ", \"w\") does not result in an empty file");
 
   //
   // Initialize the file again.
   //
   f.Open (m_testFilename, std::ios::out);
-  NS_TEST_ASSERT_MSG_EQ (f.Fail (), false, 
+  NS_TEST_ASSERT_MSG_EQ (f.Fail (), false,
                          "Open (" << m_testFilename << ", \"w\") returns error");
 
   f.Init (1234, 5678, 7);
@@ -185,13 +185,13 @@ WriteModeCreateTestCase::DoRun (void)
 
   //
   // Now we should be able to write to it since it was opened in std::ios::out mode.
-  // This is just a permissions check so we don't actually look at the 
+  // This is just a permissions check so we don't actually look at the
   // data.
   //
   uint8_t buffer[128];
   memset (buffer, 0, sizeof(buffer));
   f.Write (0, 0, buffer, 128);
-  NS_TEST_ASSERT_MSG_EQ (f.Fail (), false, "Write (write-only-file " << m_testFilename << 
+  NS_TEST_ASSERT_MSG_EQ (f.Fail (), false, "Write (write-only-file " << m_testFilename <<
                          ") returns error");
 }
 
@@ -206,12 +206,12 @@ class ReadModeCreateTestCase : public TestCase
 {
 public:
   ReadModeCreateTestCase ();
-  virtual ~ReadModeCreateTestCase ();
+  ~ReadModeCreateTestCase () override;
 
 private:
-  virtual void DoSetup (void);
-  virtual void DoRun (void);
-  virtual void DoTeardown (void);
+  void DoSetup () override;
+  void DoRun () override;
+  void DoTeardown () override;
 
   std::string m_testFilename; //!< File name
 };
@@ -226,7 +226,7 @@ ReadModeCreateTestCase::~ReadModeCreateTestCase ()
 }
 
 void
-ReadModeCreateTestCase::DoSetup (void)
+ReadModeCreateTestCase::DoSetup ()
 {
   std::stringstream filename;
   uint32_t n = rand ();
@@ -235,7 +235,7 @@ ReadModeCreateTestCase::DoSetup (void)
 }
 
 void
-ReadModeCreateTestCase::DoTeardown (void)
+ReadModeCreateTestCase::DoTeardown ()
 {
   if (remove (m_testFilename.c_str ()))
     {
@@ -244,7 +244,7 @@ ReadModeCreateTestCase::DoTeardown (void)
 }
 
 void
-ReadModeCreateTestCase::DoRun (void)
+ReadModeCreateTestCase::DoRun ()
 {
   PcapFile f;
 
@@ -252,11 +252,11 @@ ReadModeCreateTestCase::DoRun (void)
   // Opening a non-existing file in read mode should result in an error.
   //
   f.Open (m_testFilename, std::ios::in);
-  NS_TEST_ASSERT_MSG_EQ (f.Fail (), true, "Open (non-existing-filename " << m_testFilename << 
+  NS_TEST_ASSERT_MSG_EQ (f.Fail (), true, "Open (non-existing-filename " << m_testFilename <<
                          ", \"std::ios::in\") does not return error");
   f.Close ();
   f.Clear ();
-  NS_TEST_ASSERT_MSG_EQ (CheckFileExists (m_testFilename), false, "Open (" << m_testFilename << 
+  NS_TEST_ASSERT_MSG_EQ (CheckFileExists (m_testFilename), false, "Open (" << m_testFilename <<
                          ", \"std::ios::in\") unexpectedly created a file");
 
   //
@@ -270,7 +270,7 @@ ReadModeCreateTestCase::DoRun (void)
   // Opening this file should result in an error since it has no pcap file header.
   //
   f.Open (m_testFilename, std::ios::in);
-  NS_TEST_ASSERT_MSG_EQ (f.Fail (), true, "Open (non-initialized-filename " << m_testFilename << 
+  NS_TEST_ASSERT_MSG_EQ (f.Fail (), true, "Open (non-initialized-filename " << m_testFilename <<
                          ", \"std::ios::in\") does not return error");
   f.Close ();
   f.Clear ();
@@ -280,7 +280,7 @@ ReadModeCreateTestCase::DoRun (void)
   // Note that we open it in write mode to initialize it.
   //
   f.Open (m_testFilename, std::ios::out);
-  NS_TEST_ASSERT_MSG_EQ (f.Fail (), false, "Open (" << m_testFilename << 
+  NS_TEST_ASSERT_MSG_EQ (f.Fail (), false, "Open (" << m_testFilename <<
                          ", \"std::ios::out\") returns error");
 
   f.Init (1234, 5678, 7);
@@ -291,7 +291,7 @@ ReadModeCreateTestCase::DoRun (void)
   // Opening this file should now work since it has a pcap file header.
   //
   f.Open (m_testFilename, std::ios::in);
-  NS_TEST_ASSERT_MSG_EQ (f.Fail (), false, "Open (initialized-filename " << m_testFilename << 
+  NS_TEST_ASSERT_MSG_EQ (f.Fail (), false, "Open (initialized-filename " << m_testFilename <<
                          ", \"std::ios::in\") returns error");
 
   //
@@ -300,7 +300,7 @@ ReadModeCreateTestCase::DoRun (void)
   //
   uint8_t buffer[128];
   f.Write (0, 0, buffer, 128);
-  NS_TEST_ASSERT_MSG_EQ (f.Fail (), true, "Write (read-only-file " << m_testFilename << 
+  NS_TEST_ASSERT_MSG_EQ (f.Fail (), true, "Write (read-only-file " << m_testFilename <<
                          ") does not return error");
   f.Close ();
   f.Clear ();
@@ -361,19 +361,19 @@ AppendModeCreateTestCase::DoRun (void)
   // Opening a non-existing file in append mode should result in an error.
   //
   f.Open (m_testFilename, std::ios::out | std::ios::app);
-  NS_TEST_ASSERT_MSG_EQ (f.Fail (), true, "Open (non-existing-filename " << m_testFilename << 
+  NS_TEST_ASSERT_MSG_EQ (f.Fail (), true, "Open (non-existing-filename " << m_testFilename <<
                          ", \"std::ios::app\") does not return error");
   f.Close ();
   f.Clear ();
 
-  NS_TEST_ASSERT_MSG_EQ (CheckFileExists (m_testFilename), false, 
+  NS_TEST_ASSERT_MSG_EQ (CheckFileExists (m_testFilename), false,
                          "Open (" << m_testFilename << ", \"std::ios::app\") unexpectedly created a file");
 
   //
   // Okay, now create an uninitialized file using previously tested operations
   //
   f.Open (m_testFilename, std::ios::out);
-  NS_TEST_ASSERT_MSG_EQ (f.Fail (), false, "Open (" << m_testFilename << 
+  NS_TEST_ASSERT_MSG_EQ (f.Fail (), false, "Open (" << m_testFilename <<
                          ", \"std::ios::out\") returns error");
   f.Close ();
 
@@ -381,7 +381,7 @@ AppendModeCreateTestCase::DoRun (void)
   // Opening this file should result in an error since it has no pcap file header.
   //
   f.Open (m_testFilename, std::ios::out | std::ios::app);
-  NS_TEST_ASSERT_MSG_EQ (f.Fail (), true, "Open (non-initialized-filename " << m_testFilename << 
+  NS_TEST_ASSERT_MSG_EQ (f.Fail (), true, "Open (non-initialized-filename " << m_testFilename <<
                          ", \"std::ios::app\") does not return error");
   f.Close ();
   f.Clear ();
@@ -390,7 +390,7 @@ AppendModeCreateTestCase::DoRun (void)
   // Okay, now open that non-initialized file in write mode and initialize it.
   //
   f.Open (m_testFilename, std::ios::out);
-  NS_TEST_ASSERT_MSG_EQ (f.Fail (), false, "Open (non-initialized-filename " << m_testFilename << 
+  NS_TEST_ASSERT_MSG_EQ (f.Fail (), false, "Open (non-initialized-filename " << m_testFilename <<
                          ", \"std::ios::out\") returns error");
 
   f.Init (1234, 5678, 7);
@@ -401,7 +401,7 @@ AppendModeCreateTestCase::DoRun (void)
   // Opening this file should now work since it has a pcap file header.
   //
   f.Open (m_testFilename, std::ios::out | std::ios::app);
-  NS_TEST_ASSERT_MSG_EQ (f.Fail (), false, "Open (initialized-filename " << m_testFilename << 
+  NS_TEST_ASSERT_MSG_EQ (f.Fail (), false, "Open (initialized-filename " << m_testFilename <<
                          ", \"std::ios::app\") returns error");
 
   //
@@ -428,12 +428,12 @@ class FileHeaderTestCase : public TestCase
 {
 public:
   FileHeaderTestCase ();
-  virtual ~FileHeaderTestCase ();
+  ~FileHeaderTestCase () override;
 
 private:
-  virtual void DoSetup (void);
-  virtual void DoRun (void);
-  virtual void DoTeardown (void);
+  void DoSetup () override;
+  void DoRun () override;
+  void DoTeardown () override;
 
   std::string m_testFilename; //!< File name
 };
@@ -448,7 +448,7 @@ FileHeaderTestCase::~FileHeaderTestCase ()
 }
 
 void
-FileHeaderTestCase::DoSetup (void)
+FileHeaderTestCase::DoSetup ()
 {
   std::stringstream filename;
   uint32_t n = rand ();
@@ -457,7 +457,7 @@ FileHeaderTestCase::DoSetup (void)
 }
 
 void
-FileHeaderTestCase::DoTeardown (void)
+FileHeaderTestCase::DoTeardown ()
 {
   if (remove (m_testFilename.c_str ()))
     {
@@ -466,7 +466,7 @@ FileHeaderTestCase::DoTeardown (void)
 }
 
 void
-FileHeaderTestCase::DoRun (void)
+FileHeaderTestCase::DoRun ()
 {
   PcapFile f;
 
@@ -474,14 +474,14 @@ FileHeaderTestCase::DoRun (void)
   // Create an uninitialized file using previously tested operations
   //
   f.Open (m_testFilename, std::ios::out);
-  NS_TEST_ASSERT_MSG_EQ (f.Fail (), false, "Open (" << m_testFilename << 
+  NS_TEST_ASSERT_MSG_EQ (f.Fail (), false, "Open (" << m_testFilename <<
                          ", \"std::ios::out\") returns error");
 
   //
   // Initialize the pcap file header.
   //
   f.Init (1234, 5678, 7);
-  NS_TEST_ASSERT_MSG_EQ (f.Fail (), false, 
+  NS_TEST_ASSERT_MSG_EQ (f.Fail (), false,
                          "Init (1234, 5678, 7) returns error");
   f.Close ();
 
@@ -495,7 +495,7 @@ FileHeaderTestCase::DoRun (void)
   uint16_t val16;
 
   //
-  // Because the regression tests require that pcap file output be compared 
+  // Because the regression tests require that pcap file output be compared
   // byte-by-byte, we had to decide on a single format for written pcap files.
   // This was little endian.  So we have to do something special with big-
   // endian machines here.
@@ -521,53 +521,74 @@ FileHeaderTestCase::DoRun (void)
 
   size_t result = std::fread (&val32, sizeof(val32), 1, p);
   NS_TEST_ASSERT_MSG_EQ (result, 1, "Unable to fread() magic number");
-  if (bigEndian) val32 = Swap (val32);
+  if (bigEndian)
+    {
+      val32 = Swap (val32);
+    }
   NS_TEST_ASSERT_MSG_EQ (val32, 0xa1b2c3d4, "Magic number written incorrectly");
 
   result = std::fread (&val16, sizeof(val16), 1, p);
   NS_TEST_ASSERT_MSG_EQ (result, 1, "Unable to fread() version major");
-  if (bigEndian) val16 = Swap (val16);
+  if (bigEndian)
+    {
+      val16 = Swap (val16);
+    }
   NS_TEST_ASSERT_MSG_EQ (val16, 2, "Version major written incorrectly");
 
   result = std::fread (&val16, sizeof(val16), 1, p);
   NS_TEST_ASSERT_MSG_EQ (result, 1, "Unable to fread() version minor");
-  if (bigEndian) val16 = Swap (val16);
+  if (bigEndian)
+    {
+      val16 = Swap (val16);
+    }
   NS_TEST_ASSERT_MSG_EQ (val16, 4, "Version minor written incorrectly");
 
   result = std::fread (&val32, sizeof(val32), 1, p);
   NS_TEST_ASSERT_MSG_EQ (result, 1, "Unable to fread() time zone correction");
-  if (bigEndian) val32 = Swap (val32);
+  if (bigEndian)
+    {
+      val32 = Swap (val32);
+    }
   NS_TEST_ASSERT_MSG_EQ (val32, 7, "Version minor written incorrectly");
 
   result = std::fread (&val32, sizeof(val32), 1, p);
   NS_TEST_ASSERT_MSG_EQ (result, 1, "Unable to fread() sig figs");
-  if (bigEndian) val32 = Swap (val32);
+  if (bigEndian)
+    {
+      val32 = Swap (val32);
+    }
   NS_TEST_ASSERT_MSG_EQ (val32, 0, "Sig figs written incorrectly");
 
   result = std::fread (&val32, sizeof(val32), 1, p);
   NS_TEST_ASSERT_MSG_EQ (result, 1, "Unable to fread() snap length");
-  if (bigEndian) val32 = Swap (val32);
+  if (bigEndian)
+    {
+      val32 = Swap (val32);
+    }
   NS_TEST_ASSERT_MSG_EQ (val32, 5678, "Snap length written incorrectly");
 
   result = std::fread (&val32, sizeof(val32), 1, p);
   NS_TEST_ASSERT_MSG_EQ (result, 1, "Unable to fread() data link type");
-  if (bigEndian) val32 = Swap (val32);
+  if (bigEndian)
+    {
+      val32 = Swap (val32);
+    }
   NS_TEST_ASSERT_MSG_EQ (val32, 1234, "Data length type written incorrectly");
 
   std::fclose (p);
-  p = 0;
+  p = nullptr;
 
   //
   // We wrote a little-endian file out correctly, now let's see if we can read
   // it back in correctly.
   //
-  // As mentioned above, when a big endian machine writes a pcap file, it is 
-  // forced into swap mode and actually writes little endian files.  This is 
-  // automagically fixed up when using a PcapFile to read the values, so we 
+  // As mentioned above, when a big endian machine writes a pcap file, it is
+  // forced into swap mode and actually writes little endian files.  This is
+  // automagically fixed up when using a PcapFile to read the values, so we
   // don't have to do anything special here.
   //
   f.Open (m_testFilename, std::ios::in);
-  NS_TEST_ASSERT_MSG_EQ (f.Fail (), false, "Open (existing-initialized-file " << m_testFilename << 
+  NS_TEST_ASSERT_MSG_EQ (f.Fail (), false, "Open (existing-initialized-file " << m_testFilename <<
                          ", \"std::ios::in\") returns error");
 
   NS_TEST_ASSERT_MSG_EQ (f.GetMagic (), 0xa1b2c3d4, "Read back magic number incorrectly");
@@ -583,15 +604,15 @@ FileHeaderTestCase::DoRun (void)
   // Re-open the file to erase its contents.
   //
   f.Open (m_testFilename, std::ios::out);
-  NS_TEST_ASSERT_MSG_EQ (f.Fail (), false, "Open (" << m_testFilename << 
+  NS_TEST_ASSERT_MSG_EQ (f.Fail (), false, "Open (" << m_testFilename <<
                          ", \"std::ios::out\") returns error");
 
   //
   // Initialize the pcap file header, turning on swap mode manually to force
   // the pcap file header to be written out in foreign-endian form, whichever
-  // endian-ness that might be.  Since big-endian machines are automatically 
+  // endian-ness that might be.  Since big-endian machines are automatically
   // forced into swap mode, the <true> parameter to f.Init() below is actually
-  // a no-op and we're always writing foreign-endian files.  In that case, 
+  // a no-op and we're always writing foreign-endian files.  In that case,
   // this test case is really just a duplicate of the previous.
   //
   f.Init (1234, 5678, 7, true);
@@ -634,17 +655,17 @@ FileHeaderTestCase::DoRun (void)
   NS_TEST_ASSERT_MSG_EQ (val32, Swap (uint32_t (1234)), "Data length type written incorrectly");
 
   std::fclose (p);
-  p = 0;
+  p = nullptr;
 
   //
   // We wrote an opposite-endian file out correctly, now let's see if we can read
   // it back in correctly.  Again, in the case of a big-endian machine, we already
   // did this test and it is just a duplicate.  What we don't test on a big endian
-  // machine is writing out a big-endian file by default, but we can't do that 
+  // machine is writing out a big-endian file by default, but we can't do that
   // since it breaks regression testing.
   //
   f.Open (m_testFilename, std::ios::in);
-  NS_TEST_ASSERT_MSG_EQ (f.Fail (), false, "Open (existing-initialized-file " << m_testFilename << 
+  NS_TEST_ASSERT_MSG_EQ (f.Fail (), false, "Open (existing-initialized-file " << m_testFilename <<
                          ", \"std::ios::in\") returns error");
 
   NS_TEST_ASSERT_MSG_EQ (f.GetSwapMode (), true, "Byte-swapped file not correctly indicated");
@@ -672,12 +693,12 @@ class RecordHeaderTestCase : public TestCase
 {
 public:
   RecordHeaderTestCase ();
-  virtual ~RecordHeaderTestCase ();
+  ~RecordHeaderTestCase () override;
 
 private:
-  virtual void DoSetup (void);
-  virtual void DoRun (void);
-  virtual void DoTeardown (void);
+  void DoSetup () override;
+  void DoRun () override;
+  void DoTeardown () override;
 
   std::string m_testFilename; //!< File name
 };
@@ -692,7 +713,7 @@ RecordHeaderTestCase::~RecordHeaderTestCase ()
 }
 
 void
-RecordHeaderTestCase::DoSetup (void)
+RecordHeaderTestCase::DoSetup ()
 {
   std::stringstream filename;
   uint32_t n = rand ();
@@ -701,7 +722,7 @@ RecordHeaderTestCase::DoSetup (void)
 }
 
 void
-RecordHeaderTestCase::DoTeardown (void)
+RecordHeaderTestCase::DoTeardown ()
 {
   if (remove (m_testFilename.c_str ()))
     {
@@ -710,7 +731,7 @@ RecordHeaderTestCase::DoTeardown (void)
 }
 
 void
-RecordHeaderTestCase::DoRun (void)
+RecordHeaderTestCase::DoRun ()
 {
   PcapFile f;
 
@@ -718,7 +739,7 @@ RecordHeaderTestCase::DoRun (void)
   // Create an uninitialized file using previously tested operations
   //
   f.Open (m_testFilename, std::ios::out);
-  NS_TEST_ASSERT_MSG_EQ (f.Fail (), false, "Open (" << m_testFilename << 
+  NS_TEST_ASSERT_MSG_EQ (f.Fail (), false, "Open (" << m_testFilename <<
                          ", \"std::ios::out\") returns error");
 
   //
@@ -737,8 +758,8 @@ RecordHeaderTestCase::DoRun (void)
     }
 
   //
-  // Now we should be able to write a packet to it since it was opened in "w" 
-  // mode.  The packet data written should be limited to 43 bytes in length 
+  // Now we should be able to write a packet to it since it was opened in "w"
+  // mode.  The packet data written should be limited to 43 bytes in length
   // by the Init() call above.
   //
   f.Write (1234, 5678, bufferOut, 128);
@@ -771,7 +792,7 @@ RecordHeaderTestCase::DoRun (void)
   uint32_t val32;
 
   //
-  // Because the regression tests require that pcap file output be compared 
+  // Because the regression tests require that pcap file output be compared
   // byte-by-byte, we had to decide on a single format for written pcap files.
   // This was little endian.  So we have to do something special with big-
   // endian machines here.
@@ -797,22 +818,34 @@ RecordHeaderTestCase::DoRun (void)
 
   size_t result = std::fread (&val32, sizeof(val32), 1, p);
   NS_TEST_ASSERT_MSG_EQ (result, 1, "Unable to fread() seconds timestamp");
-  if (bigEndian) val32 = Swap (val32);
+  if (bigEndian)
+    {
+      val32 = Swap (val32);
+    }
   NS_TEST_ASSERT_MSG_EQ (val32, 1234, "Seconds timestamp written incorrectly");
 
   result = std::fread (&val32, sizeof(val32), 1, p);
   NS_TEST_ASSERT_MSG_EQ (result, 1, "Unable to fread() microseconds timestamp");
-  if (bigEndian) val32 = Swap (val32);
+  if (bigEndian)
+    {
+      val32 = Swap (val32);
+    }
   NS_TEST_ASSERT_MSG_EQ (val32, 5678, "Microseconds timestamp written incorrectly");
 
   result = std::fread (&val32, sizeof(val32), 1, p);
   NS_TEST_ASSERT_MSG_EQ (result, 1, "Unable to fread() included length");
-  if (bigEndian) val32 = Swap (val32);
+  if (bigEndian)
+    {
+      val32 = Swap (val32);
+    }
   NS_TEST_ASSERT_MSG_EQ (val32, 43, "Included length written incorrectly");
 
   result = std::fread (&val32, sizeof(val32), 1, p);
   NS_TEST_ASSERT_MSG_EQ (result, 1, "Unable to fread() actual length");
-  if (bigEndian) val32 = Swap (val32);
+  if (bigEndian)
+    {
+      val32 = Swap (val32);
+    }
   NS_TEST_ASSERT_MSG_EQ (val32, 128, "Actual length written incorrectly");
 
   //
@@ -830,17 +863,21 @@ RecordHeaderTestCase::DoRun (void)
     }
 
   std::fclose (p);
-  p = 0;
+  p = nullptr;
 
   //
   // Let's see if the PcapFile object can figure out how to do the same thing and
   // correctly read in a packet.
   //
   f.Open (m_testFilename, std::ios::in);
-  NS_TEST_ASSERT_MSG_EQ (f.Fail (), false, "Open (" << m_testFilename << 
+  NS_TEST_ASSERT_MSG_EQ (f.Fail (), false, "Open (" << m_testFilename <<
                          ", \"std::ios::in\") of existing good file returns error");
 
-  uint32_t tsSec, tsUsec, inclLen, origLen, readLen;
+  uint32_t tsSec;
+  uint32_t tsUsec;
+  uint32_t inclLen;
+  uint32_t origLen;
+  uint32_t readLen;
 
   f.Read (bufferIn, sizeof(bufferIn), tsSec, tsUsec, inclLen, origLen, readLen);
   NS_TEST_ASSERT_MSG_EQ (f.Fail (), false, "Read() of known good packet returns error");
@@ -860,16 +897,16 @@ RecordHeaderTestCase::DoRun (void)
     }
 
   //
-  // We have to check to make sure that the pcap record header is swapped 
-  // correctly.  Since big-endian machines are automatically forced into 
+  // We have to check to make sure that the pcap record header is swapped
+  // correctly.  Since big-endian machines are automatically forced into
   // swap mode, the <true> parameter to f.Init() below is actually
-  // a no-op and we're always writing foreign-endian files.  In that case, 
+  // a no-op and we're always writing foreign-endian files.  In that case,
   // this test case is really just a duplicate of the previous.
   //
   // Open the file in write mode to clear the data.
   //
   f.Open (m_testFilename, std::ios::out);
-  NS_TEST_ASSERT_MSG_EQ (f.Fail (), false, "Open (" << m_testFilename << 
+  NS_TEST_ASSERT_MSG_EQ (f.Fail (), false, "Open (" << m_testFilename <<
                          ", \"std::ios::out\") returns error");
 
   //
@@ -879,8 +916,8 @@ RecordHeaderTestCase::DoRun (void)
   NS_TEST_ASSERT_MSG_EQ (f.Fail (), false, "Init (37, 43, -7) returns error");
 
   //
-  // Now we should be able to write a packet to it since it was opened in "w" 
-  // mode.  The packet data written should be limited to 43 bytes in length 
+  // Now we should be able to write a packet to it since it was opened in "w"
+  // mode.  The packet data written should be limited to 43 bytes in length
   // by the Init() call above.
   //
   f.Write (1234, 5678, bufferOut, 128);
@@ -940,7 +977,7 @@ RecordHeaderTestCase::DoRun (void)
     }
 
   std::fclose (p);
-  p = 0;
+  p = nullptr;
 
   //
   // Let's see if the PcapFile object can figure out how to do the same thing and
@@ -948,7 +985,7 @@ RecordHeaderTestCase::DoRun (void)
   // swapped back into correct form.
   //
   f.Open (m_testFilename, std::ios::in);
-  NS_TEST_ASSERT_MSG_EQ (f.Fail (), false, "Open (" << m_testFilename << 
+  NS_TEST_ASSERT_MSG_EQ (f.Fail (), false, "Open (" << m_testFilename <<
                          ", \"std::ios::in\") of existing good file returns error");
 
   f.Read (bufferIn, sizeof(bufferIn), tsSec, tsUsec, inclLen, origLen, readLen);
@@ -981,12 +1018,12 @@ class ReadFileTestCase : public TestCase
 {
 public:
   ReadFileTestCase ();
-  virtual ~ReadFileTestCase ();
+  ~ReadFileTestCase () override;
 
 private:
-  virtual void DoSetup (void);
-  virtual void DoRun (void);
-  virtual void DoTeardown (void);
+  void DoSetup () override;
+  void DoRun () override;
+  void DoTeardown () override;
 
   std::string m_testFilename; //!< File name
 };
@@ -1001,12 +1038,12 @@ ReadFileTestCase::~ReadFileTestCase ()
 }
 
 void
-ReadFileTestCase::DoSetup (void)
+ReadFileTestCase::DoSetup ()
 {
 }
 
 void
-ReadFileTestCase::DoTeardown (void)
+ReadFileTestCase::DoTeardown ()
 {
 }
 
@@ -1041,7 +1078,7 @@ static const PacketEntry knownPackets[] = {
 
 
 void
-ReadFileTestCase::DoRun (void)
+ReadFileTestCase::DoRun ()
 {
   PcapFile f;
 
@@ -1049,23 +1086,27 @@ ReadFileTestCase::DoRun (void)
   //
   std::string filename = CreateDataDirFilename ("known.pcap");
   f.Open (filename, std::ios::in);
-  NS_TEST_ASSERT_MSG_EQ (f.Fail (), false, "Open (" << filename << 
+  NS_TEST_ASSERT_MSG_EQ (f.Fail (), false, "Open (" << filename <<
                          ", \"std::ios::in\") returns error");
- 
+
   //
-  // We are going to read out the file header and all of the packets to make 
+  // We are going to read out the file header and all of the packets to make
   // sure that we read what we know, a priori, to be there.
   //
   // The packet data was gotten using "tcpdump -nn -tt -r known.pcap -x"
-  // and the timestamp and first 32 bytes of the resulting dump were 
+  // and the timestamp and first 32 bytes of the resulting dump were
   // duplicated in the structure above.
   //
   uint8_t data[N_PACKET_BYTES];
-  uint32_t tsSec, tsUsec, inclLen, origLen, readLen;
+  uint32_t tsSec;
+  uint32_t tsUsec;
+  uint32_t inclLen;
+  uint32_t origLen;
+  uint32_t readLen;
 
   for (uint32_t i = 0; i < N_KNOWN_PACKETS; ++i)
     {
-      PacketEntry const & p = knownPackets[i];
+      const PacketEntry& p = knownPackets[i];
 
       f.Read (data, sizeof(data), tsSec, tsUsec, inclLen, origLen, readLen);
       NS_TEST_ASSERT_MSG_EQ (f.Fail (), false, "Read() of known good pcap file returns error");
@@ -1098,7 +1139,7 @@ public:
   DiffTestCase ();
 
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
 };
 
 DiffTestCase::DiffTestCase ()
@@ -1107,18 +1148,20 @@ DiffTestCase::DiffTestCase ()
 }
 
 void
-DiffTestCase::DoRun (void)
+DiffTestCase::DoRun ()
 {
   //
   // Check that PcapDiff(file, file) is false
   //
   std::string filename = CreateDataDirFilename ("known.pcap");
-  uint32_t sec (0), usec (0), packets (0);
+  uint32_t sec (0);
+  uint32_t usec (0);
+  uint32_t packets (0);
   bool diff = PcapFile::Diff (filename, filename, sec, usec, packets);
   NS_TEST_EXPECT_MSG_EQ (diff, false, "PcapDiff(file, file) must always be false");
 
   //
-  // Create different PCAP file (with the same timestamps, but different packets) and check that it is indeed different 
+  // Create different PCAP file (with the same timestamps, but different packets) and check that it is indeed different
   //
   std::string filename2 = CreateTempDirFilename ("different.pcap");
   PcapFile f;
@@ -1130,9 +1173,9 @@ DiffTestCase::DoRun (void)
 
   for (uint32_t i = 0; i < N_KNOWN_PACKETS; ++i)
     {
-      PacketEntry const & p = knownPackets[i];
+      const PacketEntry& p = knownPackets[i];
 
-      f.Write (p.tsSec, p.tsUsec, (uint8_t const *)p.data, p.origLen);
+      f.Write (p.tsSec, p.tsUsec, (const uint8_t*)p.data, p.origLen);
       NS_TEST_EXPECT_MSG_EQ (f.Fail (), false, "Write must not fail");
     }
   f.Close ();

@@ -37,7 +37,7 @@ Ipv4EndPointDemux::Ipv4EndPointDemux ()
 Ipv4EndPointDemux::~Ipv4EndPointDemux ()
 {
   NS_LOG_FUNCTION (this);
-  for (EndPointsI i = m_endPoints.begin (); i != m_endPoints.end (); i++) 
+  for (EndPointsI i = m_endPoints.begin (); i != m_endPoints.end (); i++)
     {
       Ipv4EndPoint *endPoint = *i;
       delete endPoint;
@@ -49,9 +49,9 @@ bool
 Ipv4EndPointDemux::LookupPortLocal (uint16_t port)
 {
   NS_LOG_FUNCTION (this << port);
-  for (EndPointsI i = m_endPoints.begin (); i != m_endPoints.end (); i++) 
+  for (EndPointsI i = m_endPoints.begin (); i != m_endPoints.end (); i++)
     {
-      if ((*i)->GetLocalPort  () == port) 
+      if ((*i)->GetLocalPort  () == port)
         {
           return true;
         }
@@ -63,7 +63,7 @@ bool
 Ipv4EndPointDemux::LookupLocal (Ptr<NetDevice> boundNetDevice, Ipv4Address addr, uint16_t port)
 {
   NS_LOG_FUNCTION (this << addr << port);
-  for (EndPointsI i = m_endPoints.begin (); i != m_endPoints.end (); i++) 
+  for (EndPointsI i = m_endPoints.begin (); i != m_endPoints.end (); i++)
     {
       if ((*i)->GetLocalPort () == port &&
           (*i)->GetLocalAddress () == addr &&
@@ -76,14 +76,14 @@ Ipv4EndPointDemux::LookupLocal (Ptr<NetDevice> boundNetDevice, Ipv4Address addr,
 }
 
 Ipv4EndPoint *
-Ipv4EndPointDemux::Allocate (void)
+Ipv4EndPointDemux::Allocate ()
 {
   NS_LOG_FUNCTION (this);
   uint16_t port = AllocateEphemeralPort ();
-  if (port == 0) 
+  if (port == 0)
     {
       NS_LOG_WARN ("Ephemeral port allocation failed.");
-      return 0;
+      return nullptr;
     }
   Ipv4EndPoint *endPoint = new Ipv4EndPoint (Ipv4Address::GetAny (), port);
   m_endPoints.push_back (endPoint);
@@ -96,10 +96,10 @@ Ipv4EndPointDemux::Allocate (Ipv4Address address)
 {
   NS_LOG_FUNCTION (this << address);
   uint16_t port = AllocateEphemeralPort ();
-  if (port == 0) 
+  if (port == 0)
     {
       NS_LOG_WARN ("Ephemeral port allocation failed.");
-      return 0;
+      return nullptr;
     }
   Ipv4EndPoint *endPoint = new Ipv4EndPoint (address, port);
   m_endPoints.push_back (endPoint);
@@ -119,10 +119,10 @@ Ipv4EndPoint *
 Ipv4EndPointDemux::Allocate (Ptr<NetDevice> boundNetDevice, Ipv4Address address, uint16_t port)
 {
   NS_LOG_FUNCTION (this << address << port << boundNetDevice);
-  if (LookupLocal (boundNetDevice, address, port) || LookupLocal (0, address, port))
+  if (LookupLocal (boundNetDevice, address, port) || LookupLocal (nullptr, address, port))
     {
       NS_LOG_WARN ("Duplicated endpoint.");
-      return 0;
+      return nullptr;
     }
   Ipv4EndPoint *endPoint = new Ipv4EndPoint (address, port);
   m_endPoints.push_back (endPoint);
@@ -136,16 +136,16 @@ Ipv4EndPointDemux::Allocate (Ptr<NetDevice> boundNetDevice,
                              Ipv4Address peerAddress, uint16_t peerPort)
 {
   NS_LOG_FUNCTION (this << localAddress << localPort << peerAddress << peerPort << boundNetDevice);
-  for (EndPointsI i = m_endPoints.begin (); i != m_endPoints.end (); i++) 
+  for (EndPointsI i = m_endPoints.begin (); i != m_endPoints.end (); i++)
     {
       if ((*i)->GetLocalPort () == localPort &&
           (*i)->GetLocalAddress () == localAddress &&
           (*i)->GetPeerPort () == peerPort &&
           (*i)->GetPeerAddress () == peerAddress &&
-          ((*i)->GetBoundNetDevice () == boundNetDevice || (*i)->GetBoundNetDevice () == 0))
+          ((*i)->GetBoundNetDevice () == boundNetDevice || !(*i)->GetBoundNetDevice ()))
         {
           NS_LOG_WARN ("Duplicated endpoint.");
-          return 0;
+          return nullptr;
         }
     }
   Ipv4EndPoint *endPoint = new Ipv4EndPoint (localAddress, localPort);
@@ -157,11 +157,11 @@ Ipv4EndPointDemux::Allocate (Ptr<NetDevice> boundNetDevice,
   return endPoint;
 }
 
-void 
+void
 Ipv4EndPointDemux::DeAllocate (Ipv4EndPoint *endPoint)
 {
   NS_LOG_FUNCTION (this << endPoint);
-  for (EndPointsI i = m_endPoints.begin (); i != m_endPoints.end (); i++) 
+  for (EndPointsI i = m_endPoints.begin (); i != m_endPoints.end (); i++)
     {
       if (*i == endPoint)
         {
@@ -176,7 +176,7 @@ Ipv4EndPointDemux::DeAllocate (Ipv4EndPoint *endPoint)
  * return list of all available Endpoints
  */
 Ipv4EndPointDemux::EndPoints
-Ipv4EndPointDemux::GetAllEndPoints (void)
+Ipv4EndPointDemux::GetAllEndPoints ()
 {
   NS_LOG_FUNCTION (this);
   EndPoints ret;
@@ -196,19 +196,19 @@ Ipv4EndPointDemux::GetAllEndPoints (void)
  * Otherwise, we return 0.
  */
 Ipv4EndPointDemux::EndPoints
-Ipv4EndPointDemux::Lookup (Ipv4Address daddr, uint16_t dport, 
+Ipv4EndPointDemux::Lookup (Ipv4Address daddr, uint16_t dport,
                            Ipv4Address saddr, uint16_t sport,
                            Ptr<Ipv4Interface> incomingInterface)
 {
   NS_LOG_FUNCTION (this << daddr << dport << saddr << sport << incomingInterface);
-  
+
   EndPoints retval1; // Matches exact on local port, wildcards on others
   EndPoints retval2; // Matches exact on local port/adder, wildcards on others
   EndPoints retval3; // Matches all but local address
   EndPoints retval4; // Exact match on all 4
 
   NS_LOG_DEBUG ("Looking up endpoint for destination address " << daddr << ":" << dport);
-  for (EndPointsI i = m_endPoints.begin (); i != m_endPoints.end (); i++) 
+  for (EndPointsI i = m_endPoints.begin (); i != m_endPoints.end (); i++)
     {
       Ipv4EndPoint* endP = *i;
 
@@ -224,7 +224,7 @@ Ipv4EndPointDemux::Lookup (Ipv4Address daddr, uint16_t dport,
           continue;
         }
 
-      if (endP->GetLocalPort () != dport) 
+      if (endP->GetLocalPort () != dport)
         {
           NS_LOG_LOGIC ("Skipping endpoint " << &endP
                                              << " because endpoint dport "
@@ -285,7 +285,9 @@ Ipv4EndPointDemux::Lookup (Ipv4Address daddr, uint16_t dport,
 
           // if no match here, keep looking
           if (!localAddressIsSubnetAny)
-            continue;
+            {
+              continue;
+            }
         }
 
       bool remotePortMatchesExact = endP->GetPeerPort () == sport;
@@ -296,9 +298,13 @@ Ipv4EndPointDemux::Lookup (Ipv4Address daddr, uint16_t dport,
       // If remote does not match either with exact or wildcard,
       // skip this one
       if (!(remotePortMatchesExact || remotePortMatchesWildCard))
-        continue;
+        {
+          continue;
+        }
       if (!(remoteAddressMatchesExact || remoteAddressMatchesWildCard))
-        continue;
+        {
+          continue;
+        }
 
       bool localAddressMatchesWildCard = localAddressIsAny || localAddressIsSubnetAny;
 
@@ -326,19 +332,31 @@ Ipv4EndPointDemux::Lookup (Ipv4Address daddr, uint16_t dport,
 
   // Here we find the most exact match
   EndPoints retval;
-  if (!retval4.empty ()) retval = retval4;
-  else if (!retval3.empty ()) retval = retval3;
-  else if (!retval2.empty ()) retval = retval2;
-  else retval = retval1;
+  if (!retval4.empty ())
+    {
+      retval = retval4;
+    }
+  else if (!retval3.empty ())
+    {
+      retval = retval3;
+    }
+  else if (!retval2.empty ())
+    {
+      retval = retval2;
+    }
+  else
+    {
+      retval = retval1;
+    }
 
   NS_ABORT_MSG_IF (retval.size () > 1, "Too many endpoints - perhaps you created too many sockets without binding them to different NetDevices.");
   return retval;  // might be empty if no matches
 }
 
 Ipv4EndPoint *
-Ipv4EndPointDemux::SimpleLookup (Ipv4Address daddr, 
-                                 uint16_t dport, 
-                                 Ipv4Address saddr, 
+Ipv4EndPointDemux::SimpleLookup (Ipv4Address daddr,
+                                 uint16_t dport,
+                                 Ipv4Address saddr,
                                  uint16_t sport)
 {
   NS_LOG_FUNCTION (this << daddr << dport << saddr << sport);
@@ -346,30 +364,30 @@ Ipv4EndPointDemux::SimpleLookup (Ipv4Address daddr,
   // this code is a copy/paste version of an old BSD ip stack lookup
   // function.
   uint32_t genericity = 3;
-  Ipv4EndPoint *generic = 0;
-  for (EndPointsI i = m_endPoints.begin (); i != m_endPoints.end (); i++) 
+  Ipv4EndPoint *generic = nullptr;
+  for (EndPointsI i = m_endPoints.begin (); i != m_endPoints.end (); i++)
     {
-      if ((*i)->GetLocalPort () != dport) 
+      if ((*i)->GetLocalPort () != dport)
         {
           continue;
         }
       if ((*i)->GetLocalAddress () == daddr &&
           (*i)->GetPeerPort () == sport &&
-          (*i)->GetPeerAddress () == saddr) 
+          (*i)->GetPeerAddress () == saddr)
         {
           /* this is an exact match. */
           return *i;
         }
       uint32_t tmp = 0;
-      if ((*i)->GetLocalAddress () == Ipv4Address::GetAny ()) 
+      if ((*i)->GetLocalAddress () == Ipv4Address::GetAny ())
         {
           tmp++;
         }
-      if ((*i)->GetPeerAddress () == Ipv4Address::GetAny ()) 
+      if ((*i)->GetPeerAddress () == Ipv4Address::GetAny ())
         {
           tmp++;
         }
-      if (tmp < genericity) 
+      if (tmp < genericity)
         {
           generic = (*i);
           genericity = tmp;
@@ -378,13 +396,13 @@ Ipv4EndPointDemux::SimpleLookup (Ipv4Address daddr,
   return generic;
 }
 uint16_t
-Ipv4EndPointDemux::AllocateEphemeralPort (void)
+Ipv4EndPointDemux::AllocateEphemeralPort ()
 {
   // Similar to counting up logic in netinet/in_pcb.c
   NS_LOG_FUNCTION (this);
   uint16_t port = m_ephemeral;
   int count = m_portLast - m_portFirst;
-  do 
+  do
     {
       if (count-- < 0)
         {

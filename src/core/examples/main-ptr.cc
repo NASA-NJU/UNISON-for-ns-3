@@ -40,9 +40,9 @@ public:
   /** Constructor. */
   PtrExample ();
   /** Destructor. */
-  ~PtrExample ();
+  ~PtrExample () override;
   /** Example class method. */
-  void Method (void);
+  void Method ();
 };
 PtrExample::PtrExample ()
 {
@@ -53,7 +53,7 @@ PtrExample::~PtrExample ()
   std::cout << "PtrExample destructor" << std::endl;
 }
 void
-PtrExample::Method (void)
+PtrExample::Method ()
 {
   std::cout << "PtrExample method" << std::endl;
 }
@@ -62,7 +62,7 @@ PtrExample::Method (void)
 /**
  *  Example Ptr global variable.
  */
-static Ptr<PtrExample> g_ptr = 0;
+static Ptr<PtrExample> g_ptr = nullptr;
 
 /**
  * Example Ptr manipulations.
@@ -84,9 +84,9 @@ StorePtr (Ptr<PtrExample> p)
  *  Set \c g_ptr to NULL.
  */
 static void
-ClearPtr (void)
+ClearPtr ()
 {
-  g_ptr = 0;
+  g_ptr = nullptr;
 }
 
 
@@ -102,7 +102,7 @@ int main (int argc, char *argv[])
     Ptr<PtrExample> p = CreateObject<PtrExample> ();
     p->Method ();
     Ptr<PtrExample> prev = StorePtr (p);
-    NS_ASSERT (prev == 0);
+    NS_ASSERT (!prev);
   }
 
   {
@@ -116,7 +116,7 @@ int main (int argc, char *argv[])
     ClearPtr ();
     // get the raw pointer and release it.
     PtrExample *raw = GetPointer (prev);
-    prev = 0;
+    prev = nullptr;
     raw->Method ();
     raw->Unref ();
   }

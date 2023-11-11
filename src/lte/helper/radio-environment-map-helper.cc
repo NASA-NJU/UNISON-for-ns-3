@@ -66,7 +66,7 @@ RadioEnvironmentMapHelper::DoDispose ()
 }
 
 TypeId
-RadioEnvironmentMapHelper::GetTypeId (void)
+RadioEnvironmentMapHelper::GetTypeId ()
 {
   NS_LOG_FUNCTION ("RadioEnvironmentMapHelper::GetTypeId");
   static TypeId tid = TypeId ("ns3::RadioEnvironmentMapHelper")
@@ -114,12 +114,14 @@ RadioEnvironmentMapHelper::GetTypeId (void)
                    UintegerValue (100),
                    MakeUintegerAccessor (&RadioEnvironmentMapHelper::m_yRes),
                    MakeUintegerChecker<uint16_t> (2,std::numeric_limits<uint16_t>::max ()))
-    .AddAttribute ("Z", "The value of the z coordinate for which the map is to be generated",
-		   DoubleValue (0.0),
+    .AddAttribute ("Z",
+                   "The value of the z coordinate for which the map is to be generated",
+                   DoubleValue (0.0),
                    MakeDoubleAccessor (&RadioEnvironmentMapHelper::m_z),
                    MakeDoubleChecker<double> ())
-    .AddAttribute ("StopWhenDone", "If true, Simulator::Stop () will be called as soon as the REM has been generated",
-		   BooleanValue (true),
+    .AddAttribute ("StopWhenDone",
+                   "If true, Simulator::Stop () will be called as soon as the REM has been generated",
+                   BooleanValue (true),
                    MakeBooleanAccessor (&RadioEnvironmentMapHelper::m_stopWhenDone),
                    MakeBooleanChecker ())
     .AddAttribute ("NoisePower",
@@ -133,23 +135,23 @@ RadioEnvironmentMapHelper::GetTypeId (void)
                    MakeUintegerChecker<uint32_t> (1,std::numeric_limits<uint32_t>::max ()))
     .AddAttribute ("Earfcn",
                    "E-UTRA Absolute Radio Frequency Channel Number (EARFCN) "
-                   "as per 3GPP 36.101 Section 5.7.3. ",
+                   "as per 3GPP 36.101 Section 5.7.3.",
                    UintegerValue (100),
                    MakeUintegerAccessor (&RadioEnvironmentMapHelper::m_earfcn),
                    MakeUintegerChecker<uint16_t> ())
     .AddAttribute ("Bandwidth",
                    "Transmission Bandwidth Configuration (in number of RBs) over which the SINR will be calculated",
                    UintegerValue (25),
-                   MakeUintegerAccessor (&RadioEnvironmentMapHelper::SetBandwidth, 
+                   MakeUintegerAccessor (&RadioEnvironmentMapHelper::SetBandwidth,
                                          &RadioEnvironmentMapHelper::GetBandwidth),
                    MakeUintegerChecker<uint16_t> ())
     .AddAttribute ("UseDataChannel",
-                   "If true, REM will be generated for PDSCH and for PDCCH otherwise ",
+                   "If true, REM will be generated for PDSCH and for PDCCH otherwise",
                    BooleanValue (false),
                    MakeBooleanAccessor (&RadioEnvironmentMapHelper::m_useDataChannel),
                    MakeBooleanChecker ())
     .AddAttribute ("RbId",
-                   "Resource block Id, for which REM will be generated,"
+                   "Resource block Id, for which REM will be generated, "
                    "default value is -1, what means REM will be averaged from all RBs",
                    IntegerValue (-1),
                    MakeIntegerAccessor (&RadioEnvironmentMapHelper::m_rbId),
@@ -165,11 +167,11 @@ RadioEnvironmentMapHelper::GetBandwidth () const
   return m_bandwidth;
 }
 
-void 
+void
 RadioEnvironmentMapHelper::SetBandwidth (uint16_t bw)
 {
   switch (bw)
-    { 
+    {
     case 6:
     case 15:
     case 25:
@@ -187,7 +189,7 @@ RadioEnvironmentMapHelper::SetBandwidth (uint16_t bw)
 
 
 
-void 
+void
 RadioEnvironmentMapHelper::Install ()
 {
   NS_LOG_FUNCTION (this);
@@ -196,7 +198,7 @@ RadioEnvironmentMapHelper::Install ()
       NS_FATAL_ERROR ("only one REM supported per instance of RadioEnvironmentMapHelper");
     }
 
-  if (m_channel == nullptr) // if Channel attribute is not set, then use the ChannelPath attribute
+  if (!m_channel) // if Channel attribute is not set, then use the ChannelPath attribute
     {
       Config::MatchContainer match = Config::LookupMatches (m_channelPath);
       if (match.GetN () != 1)
@@ -204,7 +206,7 @@ RadioEnvironmentMapHelper::Install ()
           NS_FATAL_ERROR ("Lookup " << m_channelPath << " should have exactly one match");
         }
       m_channel = match.Get (0)->GetObject<SpectrumChannel> ();
-      NS_ABORT_MSG_IF (m_channel == 0, "object at " << m_channelPath << " is not of type SpectrumChannel");
+      NS_ABORT_MSG_IF (!m_channel, "object at " << m_channelPath << " is not of type SpectrumChannel");
     }
 
   m_outFile.open (m_outputFile.c_str ());
@@ -213,7 +215,7 @@ RadioEnvironmentMapHelper::Install ()
       NS_FATAL_ERROR ("Can't open file " << (m_outputFile));
       return;
     }
-  
+
   double startDelay = 0.0026;
 
   if (m_useDataChannel)
@@ -228,18 +230,18 @@ RadioEnvironmentMapHelper::Install ()
 }
 
 
-void 
+void
 RadioEnvironmentMapHelper::DelayedInstall ()
 {
   NS_LOG_FUNCTION (this);
   m_xStep = (m_xMax - m_xMin)/(m_xRes-1);
   m_yStep = (m_yMax - m_yMin)/(m_yRes-1);
-  
+
   if ((double)m_xRes * (double) m_yRes < (double) m_maxPointsPerIteration)
     {
       m_maxPointsPerIteration = m_xRes * m_yRes;
     }
-  
+
   for (uint32_t i = 0; i < m_maxPointsPerIteration; ++i)
     {
       RemPoint p;
@@ -270,28 +272,28 @@ RadioEnvironmentMapHelper::DelayedInstall ()
               yMinNext = y;
               justScheduled = false;
             }
-          
+
           ++numPointsCurrentIteration;
           if ((numPointsCurrentIteration == m_maxPointsPerIteration)
               || ((x > m_xMax - 0.5*m_xStep) && (y > m_yMax - 0.5*m_yStep)) )
             {
-              Simulator::Schedule (Seconds (remIterationStartTime), 
+              Simulator::Schedule (Seconds (remIterationStartTime),
                                    &RadioEnvironmentMapHelper::RunOneIteration,
                                    this, xMinNext, x, yMinNext, y);
               remIterationStartTime += 0.001;
               justScheduled = true;
               numPointsCurrentIteration = 0;
             }
-        }      
+        }
     }
 
-  Simulator::Schedule (Seconds (remIterationStartTime), 
+  Simulator::Schedule (Seconds (remIterationStartTime),
                        &RadioEnvironmentMapHelper::Finalize,
                        this);
 }
 
-  
-void 
+
+void
 RadioEnvironmentMapHelper::RunOneIteration (double xMin, double xMax, double yMin, double yMax)
 {
   NS_LOG_FUNCTION (this << xMin << xMax << yMin << yMax);
@@ -309,7 +311,7 @@ RadioEnvironmentMapHelper::RunOneIteration (double xMin, double xMax, double yMi
           Ptr <MobilityBuildingInfo> buildingInfo = (remIt->bmm)->GetObject <MobilityBuildingInfo> ();
           buildingInfo->MakeConsistent (remIt->bmm);
           ++remIt;
-        }      
+        }
     }
 
   if (remIt != m_rem.end ())
@@ -323,14 +325,14 @@ RadioEnvironmentMapHelper::RunOneIteration (double xMin, double xMax, double yMi
         }
     }
 
-  Simulator::Schedule (Seconds (0.0005), &RadioEnvironmentMapHelper::PrintAndReset, this);  
+  Simulator::Schedule (Seconds (0.0005), &RadioEnvironmentMapHelper::PrintAndReset, this);
 }
 
-void 
+void
 RadioEnvironmentMapHelper::PrintAndReset ()
 {
   NS_LOG_FUNCTION (this);
-  
+
   for (std::list<RemPoint>::iterator it = m_rem.begin ();
        it != m_rem.end ();
        ++it)
@@ -342,20 +344,20 @@ RadioEnvironmentMapHelper::PrintAndReset ()
           break;
         }
       Vector pos = it->bmm->GetPosition ();
-      NS_LOG_LOGIC ("output: " << pos.x << "\t" 
-                    << pos.y << "\t" 
-                    << pos.z << "\t" 
+      NS_LOG_LOGIC ("output: " << pos.x << "\t"
+                    << pos.y << "\t"
+                    << pos.z << "\t"
                     << it->phy->GetSinr (m_noisePower));
-      m_outFile << pos.x << "\t" 
-                << pos.y << "\t" 
-                << pos.z << "\t" 
+      m_outFile << pos.x << "\t"
+                << pos.y << "\t"
+                << pos.z << "\t"
                 << it->phy->GetSinr (m_noisePower)
                 << std::endl;
       it->phy->Reset ();
     }
 }
 
-void 
+void
 RadioEnvironmentMapHelper::Finalize ()
 {
   NS_LOG_FUNCTION (this);

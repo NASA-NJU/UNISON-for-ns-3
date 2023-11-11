@@ -38,7 +38,7 @@ ATTRIBUTE_HELPER_CPP (Vector3D);
 ATTRIBUTE_HELPER_CPP (Vector2D);
 
 // compatibility for mobility code
-Ptr<const AttributeChecker> MakeVectorChecker (void)
+Ptr<const AttributeChecker> MakeVectorChecker ()
 {
   NS_LOG_FUNCTION_NOARGS ();
   return MakeVector3DChecker ();
@@ -134,7 +134,8 @@ std::ostream &operator << (std::ostream &os, const Vector3D &vector)
 }
 std::istream &operator >> (std::istream &is, Vector3D &vector)
 {
-  char c1, c2;
+  char c1;
+  char c2;
   is >> vector.x >> c1 >> vector.y >> c2 >> vector.z;
   if (c1 != ':'
       || c2 != ':')

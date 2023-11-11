@@ -78,7 +78,8 @@ int main (int argc, char *argv[])
 
   NodeContainer bsNodes;
   Ptr<BaseStationNetDevice> bs;
-  NetDeviceContainer bsDevs, bsDevsOne;
+  NetDeviceContainer bsDevs;
+  NetDeviceContainer bsDevsOne;
   Ipv4InterfaceContainer BSinterfaces;
 
   UdpTraceClientHelper udpClient;
@@ -93,7 +94,9 @@ int main (int argc, char *argv[])
   std::vector<Ptr<RandomRectanglePositionAllocator> > SSPosAllocator;
 
   // default values
-  int nbSS = 10, duration = 7, schedType = 0;
+  int nbSS = 10;
+  int duration = 7;
+  int schedType = 0;
   WimaxHelper::SchedulerType scheduler = WimaxHelper::SCHED_TYPE_SIMPLE;
 
   CommandLine cmd (__FILE__);
@@ -302,12 +305,12 @@ int main (int argc, char *argv[])
 
   for (int i = 0; i < nbSS; i++)
     {
-      ss[i] = 0;
-      SSPosition[i] = 0;
-      SSPosAllocator[i] = 0;
+      ss[i] = nullptr;
+      SSPosition[i] = nullptr;
+      SSPosAllocator[i] = nullptr;
     }
 
-  bs = 0;
+  bs = nullptr;
 
   Simulator::Destroy ();
   NS_LOG_INFO ("Done.");

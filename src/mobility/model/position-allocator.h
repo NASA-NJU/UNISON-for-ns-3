@@ -39,15 +39,15 @@ public:
    * Register this type with the TypeId system.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
   PositionAllocator ();
-  virtual ~PositionAllocator ();
+  ~PositionAllocator () override;
   /**
    * \return the next chosen position.
    *
    * This method _must_ be implement in subclasses.
    */
-  virtual Vector GetNext (void) const = 0;
+  virtual Vector GetNext () const = 0;
   /**
    * Assign a fixed random variable stream number to the random variables
    * used by this model. Return the number of streams (possibly zero) that
@@ -75,7 +75,7 @@ public:
    * Register this type with the TypeId system.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
   ListPositionAllocator ();
 
   /**
@@ -109,9 +109,9 @@ public:
    *
    * \return the number of positions stored
    */
-  uint32_t GetSize (void) const;
-  virtual Vector GetNext (void) const;
-  virtual int64_t AssignStreams (int64_t stream);
+  uint32_t GetSize () const;
+  Vector GetNext () const override;
+  int64_t AssignStreams (int64_t stream) override;
 
 private:
   std::vector<Vector> m_positions;  //!< vector of positions
@@ -129,7 +129,7 @@ public:
    * Register this type with the TypeId system.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   /**
    * Determine whether positions are allocated row first or column first.
@@ -185,31 +185,31 @@ public:
   /**
    * \return the x coordinate of the first allocated position.
    */
-  double GetMinX (void) const;
+  double GetMinX () const;
   /**
    * \return the y coordinate of the first allocated position.
    */
-  double GetMinY (void) const;
+  double GetMinY () const;
   /**
    * \return the x interval between two consecutive x-positions.
    */
-  double GetDeltaX (void) const;
+  double GetDeltaX () const;
   /**
    * \return the y interval between two consecutive y-positions.
    */
-  double GetDeltaY (void) const;
+  double GetDeltaY () const;
   /**
    * \return the number of positions to allocate on each row or each column.
    */
-  uint32_t GetN (void) const;
+  uint32_t GetN () const;
   /**
    * \return the currently-selected layout type.
    */
-  enum LayoutType GetLayoutType (void) const;
+  enum LayoutType GetLayoutType () const;
 
 
-  virtual Vector GetNext (void) const;
-  virtual int64_t AssignStreams (int64_t stream);
+  Vector GetNext () const override;
+  int64_t AssignStreams (int64_t stream) override;
 
 private:
   mutable uint32_t m_current; //!< currently position
@@ -233,9 +233,9 @@ public:
    * Register this type with the TypeId system.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
   RandomRectanglePositionAllocator ();
-  virtual ~RandomRectanglePositionAllocator ();
+  ~RandomRectanglePositionAllocator () override;
 
   /**
    * \brief Set the random variable stream object that generates x-positions
@@ -252,8 +252,8 @@ public:
    */
   void SetZ (double z);
 
-  virtual Vector GetNext (void) const;
-  virtual int64_t AssignStreams (int64_t stream);
+  Vector GetNext () const override;
+  int64_t AssignStreams (int64_t stream) override;
 
 private:
   Ptr<RandomVariableStream> m_x; //!< pointer to x's random variable stream
@@ -272,9 +272,9 @@ public:
    * Register this type with the TypeId system.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
   RandomBoxPositionAllocator ();
-  virtual ~RandomBoxPositionAllocator ();
+  ~RandomBoxPositionAllocator () override;
 
   /**
    * \brief Set the random variable stream object that generates x-positions
@@ -292,8 +292,8 @@ public:
    */
   void SetZ (Ptr<RandomVariableStream> z);
 
-  virtual Vector GetNext (void) const;
-  virtual int64_t AssignStreams (int64_t stream);
+  Vector GetNext () const override;
+  int64_t AssignStreams (int64_t stream) override;
 
 private:
   Ptr<RandomVariableStream> m_x; //!< pointer to x's random variable stream
@@ -321,9 +321,9 @@ public:
    * Register this type with the TypeId system.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
   RandomDiscPositionAllocator ();
-  virtual ~RandomDiscPositionAllocator ();
+  ~RandomDiscPositionAllocator () override;
 
   /**
    * \brief Set the random variable that generates position angle, in radians.
@@ -348,8 +348,8 @@ public:
    */
   void SetZ (double z);
 
-  virtual Vector GetNext (void) const;
-  virtual int64_t AssignStreams (int64_t stream);
+  Vector GetNext () const override;
+  int64_t AssignStreams (int64_t stream) override;
 
 private:
   Ptr<RandomVariableStream> m_theta; //!< pointer to theta's random variable stream
@@ -384,9 +384,9 @@ public:
    * Register this type with the TypeId system.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
   UniformDiscPositionAllocator ();
-  virtual ~UniformDiscPositionAllocator ();
+  ~UniformDiscPositionAllocator () override;
 
   /**
    * \param rho the value of the radius of the disc
@@ -408,8 +408,8 @@ public:
    */
   void SetZ (double z);
 
-  virtual Vector GetNext (void) const;
-  virtual int64_t AssignStreams (int64_t stream);
+  Vector GetNext () const override;
+  int64_t AssignStreams (int64_t stream) override;
 
 private:
   Ptr<UniformRandomVariable> m_rv;  //!< pointer to uniform random variable

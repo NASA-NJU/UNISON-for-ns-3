@@ -40,7 +40,7 @@ NS_LOG_COMPONENT_DEFINE ("UdpClient");
 NS_OBJECT_ENSURE_REGISTERED (UdpClient);
 
 TypeId
-UdpClient::GetTypeId (void)
+UdpClient::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::UdpClient")
     .SetParent<Application> ()
@@ -78,7 +78,7 @@ UdpClient::UdpClient ()
   NS_LOG_FUNCTION (this);
   m_sent = 0;
   m_totalTx = 0;
-  m_socket = 0;
+  m_socket = nullptr;
   m_sendEvent = EventId ();
 }
 
@@ -103,18 +103,18 @@ UdpClient::SetRemote (Address addr)
 }
 
 void
-UdpClient::DoDispose (void)
+UdpClient::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
   Application::DoDispose ();
 }
 
 void
-UdpClient::StartApplication (void)
+UdpClient::StartApplication ()
 {
   NS_LOG_FUNCTION (this);
 
-  if (m_socket == 0)
+  if (!m_socket)
     {
       TypeId tid = TypeId::LookupByName ("ns3::UdpSocketFactory");
       m_socket = Socket::CreateSocket (GetNode (), tid);
@@ -183,14 +183,14 @@ UdpClient::StartApplication (void)
 }
 
 void
-UdpClient::StopApplication (void)
+UdpClient::StopApplication ()
 {
   NS_LOG_FUNCTION (this);
   Simulator::Cancel (m_sendEvent);
 }
 
 void
-UdpClient::Send (void)
+UdpClient::Send ()
 {
   NS_LOG_FUNCTION (this);
   NS_ASSERT (m_sendEvent.IsExpired ());

@@ -82,18 +82,20 @@ typedef  struct
 /**
  * \ingroup lr-wpan
  *
- * This Phy option will be used to index various Tables in IEEE802.15.4-2006
+ * This Phy option will be used to index various Tables in IEEE802.15.4-2011
  */
 typedef enum
 {
-  IEEE_802_15_4_868MHZ_BPSK         = 0,
-  IEEE_802_15_4_915MHZ_BPSK         = 1,
-  IEEE_802_15_4_868MHZ_ASK          = 2,
-  IEEE_802_15_4_915MHZ_ASK          = 3,
-  IEEE_802_15_4_868MHZ_OQPSK        = 4,
-  IEEE_802_15_4_915MHZ_OQPSK        = 5,
-  IEEE_802_15_4_2_4GHZ_OQPSK        = 6,
-  IEEE_802_15_4_INVALID_PHY_OPTION  = 7
+  IEEE_802_15_4_868MHZ_BPSK,
+  IEEE_802_15_4_915MHZ_BPSK,
+  IEEE_802_15_4_950MHZ_BPSK,
+  IEEE_802_15_4_868MHZ_ASK,
+  IEEE_802_15_4_915MHZ_ASK,
+  IEEE_802_15_4_780MHZ_OQPSK,
+  IEEE_802_15_4_868MHZ_OQPSK,
+  IEEE_802_15_4_915MHZ_OQPSK,
+  IEEE_802_15_4_2_4GHZ_OQPSK,
+  IEEE_802_15_4_INVALID_PHY_OPTION
 } LrWpanPhyOption;
 
 /**
@@ -160,7 +162,7 @@ typedef struct
   uint32_t phyChannelsSupported[32]; //!< BitField representing the available channels supported by a channel page.
   uint8_t phyTransmitPower;          //!< 2 MSB: tolerance on the transmit power, 6 LSB: Tx power in dBm relative to 1mW (signed int in 2-complement format)
   uint8_t phyCCAMode;                //!< CCA mode
-  uint32_t phyCurrentPage;           //!< Current channel page
+  uint8_t phyCurrentPage;           //!< Current channel page
   uint32_t phyMaxFrameDuration;      //!< The maximum number of symbols in a frame
   uint32_t phySHRDuration;           //!< The duration of the synchronization header (SHR) in symbols
   double phySymbolsPerOctet;         //!< The number of symbols per octet
@@ -253,7 +255,7 @@ public:
    *
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   /**
    * The maximum packet size accepted by the PHY.
@@ -271,22 +273,22 @@ public:
   /**
    * Default constructor.
    */
-  LrWpanPhy (void);
-  virtual ~LrWpanPhy (void);
+  LrWpanPhy ();
+  ~LrWpanPhy () override;
 
   // inherited from SpectrumPhy
-  void SetMobility (Ptr<MobilityModel> m);
-  Ptr<MobilityModel> GetMobility (void) const;
-  void SetChannel (Ptr<SpectrumChannel> c);
+  void SetMobility (Ptr<MobilityModel> m) override;
+  Ptr<MobilityModel> GetMobility () const override;
+  void SetChannel (Ptr<SpectrumChannel> c) override;
 
   /**
    * Get the currently attached channel.
    *
    * \return the channel
    */
-  Ptr<SpectrumChannel> GetChannel (void);
-  void SetDevice (Ptr<NetDevice> d);
-  Ptr<NetDevice> GetDevice (void) const;
+  Ptr<SpectrumChannel> GetChannel ();
+  void SetDevice (Ptr<NetDevice> d) override;
+  Ptr<NetDevice> GetDevice () const override;
 
   /**
    * Set the attached antenna.
@@ -294,8 +296,8 @@ public:
    * \param a the antenna
    */
   void SetAntenna (Ptr<AntennaModel> a);
-  Ptr<Object> GetAntenna (void) const;
-  virtual Ptr<const SpectrumModel> GetRxSpectrumModel (void) const;
+  Ptr<Object> GetAntenna () const override;
+  Ptr<const SpectrumModel> GetRxSpectrumModel () const override;
 
   /**
    * Set the Power Spectral Density of outgoing signals in W/Hz.
@@ -317,14 +319,22 @@ public:
    *
    * @return the Noise Power Spectral Density
    */
-  Ptr<const SpectrumValue> GetNoisePowerSpectralDensity (void);
+  Ptr<const SpectrumValue> GetNoisePowerSpectralDensity ();
+
+  /**
+   * Set the modulation option used by this PHY.
+   * See IEEE 802.15.4-2011, section 8, Table 66.
+   *
+   * @param phyOption The phy modulation option used by the model.
+   */
+  void SetPhyOption (LrWpanPhyOption phyOption);
 
   /**
     * Notify the SpectrumPhy instance of an incoming waveform.
     *
     * @param params the SpectrumSignalParameters associated with the incoming waveform
     */
-  virtual void StartRx (Ptr<SpectrumSignalParameters> params);
+  void StartRx (Ptr<SpectrumSignalParameters> params) override;
 
   /**
    *  IEEE 802.15.4-2006 section 6.2.1.1
@@ -340,14 +350,19 @@ public:
    *  PLME-CCA.request
    *  Perform a CCA per section 6.9.9
    */
-  void PlmeCcaRequest (void);
+  void PlmeCcaRequest ();
+
+  /**
+   *  Cancel an ongoing CCA request.
+   */
+  void CcaCancel ();
 
   /**
    *  IEEE 802.15.4-2006 section 6.2.2.3
    *  PLME-ED.request
    *  Perform an ED per section 6.9.7
    */
-  void PlmeEdRequest (void);
+  void PlmeEdRequest ();
 
   /**
    *  IEEE 802.15.4-2006 section 6.2.2.5
@@ -431,8 +446,22 @@ public:
   void SetPlmeSetAttributeConfirmCallback (PlmeSetAttributeConfirmCallback c);
 
   /**
+   * Get The current channel page number in use in this PHY from the PIB attributes.
+   *
+   * @return The current page number
+   */
+  uint8_t GetCurrentPage () const;
+
+  /**
+   * Get The current channel number in use in this PHY from the PIB attributes.
+   *
+   * @return The current channel number
+   */
+  uint8_t GetCurrentChannelNum () const;
+
+  /**
    * implement PLME SetAttribute confirm SAP
-   * bit rate is in kbit/s.  Symbol rate is in ksymbol/s.
+   * bit rate is in bit/s.  Symbol rate is in symbol/s.
    * @param isData is true for data rate or false for symbol rate
    * @return the rate value of this PHY
    */
@@ -450,7 +479,7 @@ public:
    *
    * @return pointer to LrWpanErrorModel in use
    */
-  Ptr<LrWpanErrorModel> GetErrorModel (void) const;
+  Ptr<LrWpanErrorModel> GetErrorModel () const;
 
   /**
    * Get the duration of the SHR (preamble and SFD) in symbols, depending on
@@ -458,7 +487,7 @@ public:
    *
    * \return the SHR duration in symbols
    */
-  uint64_t GetPhySHRDuration (void) const;
+  uint64_t GetPhySHRDuration () const;
 
   /**
    * Get the number of symbols per octet, depending on the currently selected
@@ -466,7 +495,15 @@ public:
    *
    * \return the number of symbols per octet
    */
-  double GetPhySymbolsPerOctet (void) const;
+  double GetPhySymbolsPerOctet () const;
+
+  /**
+   * Get the current accumulated sum of signals in the transceiver including
+   * signals considered as interference.
+   *
+   * \return the accumulated signal power spectral density value in Dbm.
+   */
+  double GetCurrentSignalPsd ();
 
   /**
    * Assign a fixed random variable stream number to the random variables
@@ -493,15 +530,15 @@ public:
 protected:
   /**
    * The data and symbol rates for the different PHY options.
-   * See Table 2 in section 6.1.2 IEEE 802.15.4-2006.
+   * See Table 1 in section 6.1.1 IEEE 802.15.4-2006, IEEE 802.15.4c-2009, IEEE 802.15.4d-2009.
    * Bit rate is in kbit/s.  Symbol rate is in ksymbol/s.
    */
-  static const LrWpanPhyDataAndSymbolRates dataSymbolRates[7];
+  static const LrWpanPhyDataAndSymbolRates dataSymbolRates[IEEE_802_15_4_INVALID_PHY_OPTION];
   /**
    * The preamble, SFD, and PHR lengths in symbols for the different PHY options.
-   * See Table 19 and Table 20 in section 6.3 IEEE 802.15.4-2006
+   * See Table 19 and Table 20 in section 6.3 IEEE 802.15.4-2006, IEEE 802.15.4c-2009, IEEE 802.15.4d-2009.
    */
-  static const LrWpanPhyPpduHeaderSymbolNumber ppduHeaderSymbolNumbers[7];
+  static const LrWpanPhyPpduHeaderSymbolNumber ppduHeaderSymbolNumbers[IEEE_802_15_4_INVALID_PHY_OPTION];
 
 private:
   /**
@@ -510,7 +547,8 @@ private:
   typedef std::pair<Ptr<Packet>, bool>  PacketAndStatus;
 
   // Inherited from Object.
-  virtual void DoDispose (void);
+  void DoInitialize () override;
+  void DoDispose () override;
 
   /**
    * Change the PHY state to the given new state, firing the state change trace.
@@ -520,31 +558,25 @@ private:
   void ChangeTrxState (LrWpanPhyEnumeration newState);
 
   /**
-   * Configure the PHY option according to the current channel and channel page.
-   * See IEEE 802.15.4-2006, section 6.1.2, Table 2.
-   */
-  void SetMyPhyOption (void);
-
-  /**
    * Get the currently configured PHY option.
    * See IEEE 802.15.4-2006, section 6.1.2, Table 2.
    *
    * \return the PHY option
    */
-  LrWpanPhyOption GetMyPhyOption (void);
+  LrWpanPhyOption GetMyPhyOption ();
 
   /**
    * Finish the transmission of a frame. This is called at the end of a frame
    * transmission, applying possibly pending PHY state changes and fireing the
    * appropriate trace sources and confirm callbacks to the MAC.
    */
-  void EndTx (void);
+  void EndTx ();
 
   /**
    * Check if the interference destroys a frame currently received. Called
    * whenever a change in interference is detected.
    */
-  void CheckInterference (void);
+  void CheckInterference ();
 
   /**
    * Finish the reception of a frame. This is called at the end of a frame
@@ -571,19 +603,19 @@ private:
    * Called at the end of the ED procedure. The average energy detected is
    * reported to the MAC.
    */
-  void EndEd (void);
+  void EndEd ();
 
   /**
    * Called at the end of the CCA. The channel condition (busy or idle) is
    * reported to the MAC or CSMA/CA.
    */
-  void EndCca (void);
+  void EndCca ();
 
   /**
    * Called after applying a deferred transceiver state switch. The result of
    * the state switch is reported to the MAC.
    */
-  void EndSetTRXState (void);
+  void EndSetTRXState ();
 
   /**
    * Calculate the time required for sending the given packet, including
@@ -599,7 +631,7 @@ private:
    * preamble, SFD and PHR.
    * \returns The time required for sending the PPDU header.
    */
-  Time GetPpduHeaderTxTime (void);
+  Time GetPpduHeaderTxTime ();
 
   /**
    * Check if the given channel is supported by the PHY.
@@ -610,12 +642,20 @@ private:
   bool ChannelSupported (uint8_t channel);
 
   /**
+   * Check if the given page is supported by the PHY.
+   *
+   * \param page the page to check
+   * \return true, if the page is supported, false otherwise
+   */
+  bool PageSupported (uint8_t page);
+
+  /**
    * Check if the PHY is busy, which is the case if the PHY is currently sending
    * or receiving a frame.
    *
    * \return true, if the PHY is busy, false otherwise
    */
-  bool PhyIsBusy (void) const;
+  bool PhyIsBusy () const;
 
   // Trace sources
   /**
@@ -692,6 +732,22 @@ private:
    * \return The nominal transmit power in dBm.
    */
   int8_t GetNominalTxPowerFromPib (uint8_t phyTransmitPower);
+
+  /**
+   * Transform watts (W) to decibels milliwatts (DBm).
+   *
+   * \param watt The Watts that will be converted to DBm.
+   * \return The value of Watts in DBm.
+   */
+  double WToDbm (double watt);
+
+  /**
+   * Transforms decibels milliwatts (dBm) to watts (W).
+   *
+   * \param dbm The DBm that will be converted to Watts.
+   * \return The value of DBm in Watts.
+   */
+  double DbmToW (double dbm);
 
   /**
    * The mobility model used by the PHY.
@@ -807,6 +863,12 @@ private:
    * The receiver sensitivity.
    */
   double m_rxSensitivity;
+
+  /**
+   * Indicates if the reception of frame has been canceled.
+   */
+  bool m_isRxCanceled;
+
 
   /**
    * The accumulated signals currently received by the transceiver, including

@@ -30,7 +30,7 @@
 
 namespace ns3 {
 
-class WifiMacQueueItem;
+class WifiMpdu;
 class WifiPsdu;
 class WifiTxVector;
 class Mac48Address;
@@ -100,7 +100,7 @@ public:
    *
    * \return the reason why the timer was started
    */
-  Reason GetReason (void) const;
+  Reason GetReason () const;
 
   /**
    * Get a string associated with the given reason
@@ -115,12 +115,12 @@ public:
    *
    * \return true if the timer is running
    */
-  bool IsRunning (void) const;
+  bool IsRunning () const;
 
   /**
    * Cancel the timer.
    */
-  void Cancel (void);
+  void Cancel ();
 
   /**
    * Get the remaining time until the timer will expire.
@@ -128,12 +128,12 @@ public:
    * \return the remaining time until the timer will expire.
    *         If the timer is not running, this method returns zero.
    */
-  Time GetDelayLeft (void) const;
+  Time GetDelayLeft () const;
 
   /**
    * MPDU response timeout callback typedef
    */
-  typedef Callback<void, uint8_t, Ptr<const WifiMacQueueItem>, const WifiTxVector&> MpduResponseTimeout;
+  typedef Callback<void, uint8_t, Ptr<const WifiMpdu>, const WifiTxVector&> MpduResponseTimeout;
 
   /**
    * PSDU response timeout callback typedef
@@ -187,7 +187,7 @@ private:
   /**
    * Internal callback invoked when the timer expires.
    */
-  void Expire (void);
+  void Expire ();
 
   /**
    * This method is called when the timer expires to feed the MPDU response
@@ -196,7 +196,7 @@ private:
    * \param item the MPDU followed by no response
    * \param txVector the TXVECTOR used to transmit the MPDU
    */
-  void FeedTraceSource (Ptr<WifiMacQueueItem> item, WifiTxVector txVector);
+  void FeedTraceSource (Ptr<WifiMpdu> item, WifiTxVector txVector);
 
   /**
    * This method is called when the timer expires to feed the PSDU response

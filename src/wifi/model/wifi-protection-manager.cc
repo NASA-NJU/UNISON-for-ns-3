@@ -30,7 +30,7 @@ NS_LOG_COMPONENT_DEFINE ("WifiProtectionManager");
 NS_OBJECT_ENSURE_REGISTERED (WifiProtectionManager);
 
 TypeId
-WifiProtectionManager::GetTypeId (void)
+WifiProtectionManager::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::WifiProtectionManager")
     .SetParent<Object> ()
@@ -39,16 +39,22 @@ WifiProtectionManager::GetTypeId (void)
   return tid;
 }
 
+WifiProtectionManager::WifiProtectionManager ()
+  : m_linkId (0)
+{
+  NS_LOG_FUNCTION (this);
+}
+
 WifiProtectionManager::~WifiProtectionManager ()
 {
   NS_LOG_FUNCTION_NOARGS ();
 }
 
 void
-WifiProtectionManager::DoDispose (void)
+WifiProtectionManager::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
-  m_mac = 0;
+  m_mac = nullptr;
   Object::DoDispose ();
 }
 
@@ -57,6 +63,19 @@ WifiProtectionManager::SetWifiMac (Ptr<WifiMac> mac)
 {
   NS_LOG_FUNCTION (this << mac);
   m_mac = mac;
+}
+
+Ptr<WifiRemoteStationManager>
+WifiProtectionManager::GetWifiRemoteStationManager () const
+{
+  return m_mac->GetWifiRemoteStationManager (m_linkId);
+}
+
+void
+WifiProtectionManager::SetLinkId (uint8_t linkId)
+{
+  NS_LOG_FUNCTION (this << +linkId);
+  m_linkId = linkId;
 }
 
 } //namespace ns3

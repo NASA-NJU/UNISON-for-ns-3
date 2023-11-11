@@ -43,7 +43,7 @@ public:
    * \brief The interface ID.
    * \return type ID
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   /**
    * \brief Constructor.
@@ -53,7 +53,7 @@ public:
   /**
    * \brief Destructor.
    */
-  virtual ~Ipv6ExtensionDemux ();
+  ~Ipv6ExtensionDemux () override;
 
   /**
    * \brief Set the node.
@@ -84,7 +84,7 @@ protected:
   /**
    * \brief Dispose object.
    */
-  virtual void DoDispose ();
+  void DoDispose () override;
 
 private:
 

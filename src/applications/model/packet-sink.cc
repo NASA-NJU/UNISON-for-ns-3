@@ -1,7 +1,7 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright 2007 University of Washington
- * 
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
  * published by the Free Software Foundation;
@@ -41,8 +41,8 @@ NS_LOG_COMPONENT_DEFINE ("PacketSink");
 
 NS_OBJECT_ENSURE_REGISTERED (PacketSink);
 
-TypeId 
-PacketSink::GetTypeId (void)
+TypeId
+PacketSink::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::PacketSink")
     .SetParent<Application> ()
@@ -81,7 +81,7 @@ PacketSink::GetTypeId (void)
 PacketSink::PacketSink ()
 {
   NS_LOG_FUNCTION (this);
-  m_socket = 0;
+  m_socket = nullptr;
   m_totalRx = 0;
 }
 
@@ -97,23 +97,23 @@ uint64_t PacketSink::GetTotalRx () const
 }
 
 Ptr<Socket>
-PacketSink::GetListeningSocket (void) const
+PacketSink::GetListeningSocket () const
 {
   NS_LOG_FUNCTION (this);
   return m_socket;
 }
 
 std::list<Ptr<Socket> >
-PacketSink::GetAcceptedSockets (void) const
+PacketSink::GetAcceptedSockets () const
 {
   NS_LOG_FUNCTION (this);
   return m_socketList;
 }
 
-void PacketSink::DoDispose (void)
+void PacketSink::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
-  m_socket = 0;
+  m_socket = nullptr;
   m_socketList.clear ();
 
   // chain up
@@ -181,7 +181,7 @@ void PacketSink::StopApplication ()     // Called at time specified by Stop
       m_socketList.pop_front ();
       acceptedSocket->Close ();
     }
-  if (m_socket) 
+  if (m_socket)
     {
       m_socket->Close ();
       m_socket->SetRecvCallback (MakeNullCallback<void, Ptr<Socket> > ());
@@ -292,7 +292,7 @@ void PacketSink::HandlePeerClose (Ptr<Socket> socket)
 {
   NS_LOG_FUNCTION (this << socket);
 }
- 
+
 void PacketSink::HandlePeerError (Ptr<Socket> socket)
 {
   NS_LOG_FUNCTION (this << socket);

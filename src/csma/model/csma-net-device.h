@@ -33,14 +33,14 @@
 #include "ns3/data-rate.h"
 #include "ns3/ptr.h"
 #include "ns3/mac48-address.h"
+#include "ns3/queue-fwd.h"
 
 namespace ns3 {
 
-template <typename Item> class Queue;
 class CsmaChannel;
 class ErrorModel;
 
-/** 
+/**
  * \defgroup csma CSMA Network Device
  *
  * This section documents the API of the ns-3 csma module. For a generic functional description, please refer to the ns-3 manual.
@@ -53,9 +53,9 @@ class ErrorModel;
  *
  * The Csma net device class is analogous to layer 1 and 2 of the
  * TCP stack. The NetDevice takes a raw packet of bytes and creates a
- * protocol specific packet from them. 
+ * protocol specific packet from them.
  */
-class CsmaNetDevice : public NetDevice 
+class CsmaNetDevice : public NetDevice
 {
 public:
 
@@ -63,7 +63,7 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   /**
    * Enumeration of the types of packets supported in the class.
@@ -86,7 +86,7 @@ public:
    *
    * This is the destructor for a CsmaNetDevice.
    */
-  virtual ~CsmaNetDevice ();
+  ~CsmaNetDevice () override;
 
   /**
    * Set the interframe gap used to separate packets.  The interframe gap
@@ -108,7 +108,7 @@ public:
    * \param maxRetries Maximum number of retries before packet is discard
    * \param ceiling Cap on the exponential function when calculating max slots
    */
-  void SetBackoffParams (Time slotTime, uint32_t minSlots, uint32_t maxSlots, 
+  void SetBackoffParams (Time slotTime, uint32_t minSlots, uint32_t maxSlots,
                          uint32_t maxRetries, uint32_t ceiling);
 
   /**
@@ -141,7 +141,7 @@ public:
    *
    * \return a pointer to the queue.
    */
-  Ptr<Queue<Packet> > GetQueue (void) const;
+  Ptr<Queue<Packet> > GetQueue () const;
 
   /**
    * Attach a receive ErrorModel to the CsmaNetDevice.
@@ -150,7 +150,7 @@ public:
    * the packet receive chain to simulate data errors in during transmission.
    *
    * \see ErrorModel
-   * \param em a pointer to the ErrorModel 
+   * \param em a pointer to the ErrorModel
    */
   void SetReceiveErrorModel (Ptr<ErrorModel> em);
 
@@ -159,7 +159,7 @@ public:
    *
    * The CsmaNetDevice receives packets from its connected channel
    * and forwards them up the protocol stack.  This is the public method
-   * used by the channel to indicate that the last bit of a packet has 
+   * used by the channel to indicate that the last bit of a packet has
    * arrived at the device.
    *
    * \see CsmaChannel
@@ -173,7 +173,7 @@ public:
    *
    * \returns True if the send side is enabled, otherwise false.
    */
-  bool IsSendEnabled (void);
+  bool IsSendEnabled ();
 
   /**
    * Enable or disable the send side of the network device.
@@ -187,7 +187,7 @@ public:
    *
    * \returns True if the receiver side is enabled, otherwise false.
    */
-  bool IsReceiveEnabled (void);
+  bool IsReceiveEnabled ();
 
   /**
    * Enable or disable the receive side of the network device.
@@ -209,31 +209,31 @@ public:
    *
    * \returns The encapsulation mode of this device.
    */
-  CsmaNetDevice::EncapsulationMode  GetEncapsulationMode (void);
+  CsmaNetDevice::EncapsulationMode  GetEncapsulationMode ();
 
   //
   // The following methods are inherited from NetDevice base class.
   //
-  virtual void SetIfIndex (const uint32_t index);
-  virtual uint32_t GetIfIndex (void) const;
-  virtual Ptr<Channel> GetChannel (void) const;
-  virtual bool SetMtu (const uint16_t mtu);
-  virtual uint16_t GetMtu (void) const;
-  virtual void SetAddress (Address address);
-  virtual Address GetAddress (void) const;
-  virtual bool IsLinkUp (void) const;
-  virtual void AddLinkChangeCallback (Callback<void> callback);
-  virtual bool IsBroadcast (void) const;
-  virtual Address GetBroadcast (void) const;
-  virtual bool IsMulticast (void) const;
+  void SetIfIndex (const uint32_t index) override;
+  uint32_t GetIfIndex () const override;
+  Ptr<Channel> GetChannel () const override;
+  bool SetMtu (const uint16_t mtu) override;
+  uint16_t GetMtu () const override;
+  void SetAddress (Address address) override;
+  Address GetAddress () const override;
+  bool IsLinkUp () const override;
+  void AddLinkChangeCallback (Callback<void> callback) override;
+  bool IsBroadcast () const override;
+  Address GetBroadcast () const override;
+  bool IsMulticast () const override;
 
   /**
    * \brief Make and return a MAC multicast address using the provided
    *        multicast group
    *
-   * \RFC{1112} says that an Ipv4 host group address is mapped to an Ethernet 
-   * multicast address by placing the low-order 23-bits of the IP address into 
-   * the low-order 23 bits of the Ethernet multicast address 
+   * \RFC{1112} says that an Ipv4 host group address is mapped to an Ethernet
+   * multicast address by placing the low-order 23-bits of the IP address into
+   * the low-order 23 bits of the Ethernet multicast address
    * 01-00-5E-00-00-00 (hex).
    *
    * This method performs the multicast address creation function appropriate
@@ -249,19 +249,19 @@ public:
    * \see Mac48Address
    * \see Address
    */
-  virtual Address GetMulticast (Ipv4Address multicastGroup) const;
+  Address GetMulticast (Ipv4Address multicastGroup) const override;
 
   /**
    * Is this a point to point link?
    * \returns false.
    */
-  virtual bool IsPointToPoint (void) const;
+  bool IsPointToPoint () const override;
 
   /**
    * Is this a bridge?
    * \returns false.
    */
-  virtual bool IsBridge (void) const;
+  bool IsBridge () const override;
 
   /**
    * Start sending a packet down the channel.
@@ -270,8 +270,8 @@ public:
    * \param protocolNumber protocol number
    * \return true if successful, false otherwise (drop, ...)
    */
-  virtual bool Send (Ptr<Packet> packet, const Address& dest, 
-                     uint16_t protocolNumber);
+  bool Send (Ptr<Packet> packet, const Address& dest,
+                     uint16_t protocolNumber) override;
 
   /**
    * Start sending a packet down the channel, with MAC spoofing
@@ -281,22 +281,22 @@ public:
    * \param protocolNumber protocol number
    * \return true if successful, false otherwise (drop, ...)
    */
-  virtual bool SendFrom (Ptr<Packet> packet, const Address& source, const Address& dest, 
-                         uint16_t protocolNumber);
+  bool SendFrom (Ptr<Packet> packet, const Address& source, const Address& dest,
+                         uint16_t protocolNumber) override;
 
   /**
    * Get the node to which this device is attached.
    *
    * \returns Ptr to the Node to which the device is attached.
    */
-  virtual Ptr<Node> GetNode (void) const;
+  Ptr<Node> GetNode () const override;
 
   /**
    * Set the node to which this device is being attached.
    *
    * \param node Ptr to the Node to which the device is being attached.
    */
-  virtual void SetNode (Ptr<Node> node);
+  void SetNode (Ptr<Node> node) override;
 
   /**
    * Does this device need to use the address resolution protocol?
@@ -304,7 +304,7 @@ public:
    * \returns True if the encapsulation mode is set to a value that requires
    * ARP (IP_ARP or LLC).
    */
-  virtual bool NeedsArp (void) const;
+  bool NeedsArp () const override;
 
   /**
    * Set the callback to be used to notify higher layers when a packet has been
@@ -312,7 +312,7 @@ public:
    *
    * \param cb The callback.
    */
-  virtual void SetReceiveCallback (NetDevice::ReceiveCallback cb);
+  void SetReceiveCallback (NetDevice::ReceiveCallback cb) override;
 
   /**
    * \brief Get the MAC multicast address corresponding
@@ -321,11 +321,11 @@ public:
    * \return the MAC multicast address
    * \warning Calling this method is invalid if IsMulticast returns not true.
    */
-  virtual Address GetMulticast (Ipv6Address addr) const;
+  Address GetMulticast (Ipv6Address addr) const override;
 
 
-  virtual void SetPromiscReceiveCallback (PromiscReceiveCallback cb);
-  virtual bool SupportsSendFrom (void) const;
+  void SetPromiscReceiveCallback (PromiscReceiveCallback cb) override;
+  bool SupportsSendFrom () const override;
 
  /**
   * Assign a fixed random variable stream number to the random variables
@@ -339,10 +339,10 @@ public:
 
 protected:
   /**
-   * Perform any object release functionality required to break reference 
+   * Perform any object release functionality required to break reference
    * cycles in reference counted objects held by the device.
    */
-  virtual void DoDispose (void);
+  void DoDispose () override;
 
   /**
    * Adds the necessary headers and trailers to a packet of data in order to
@@ -389,7 +389,7 @@ private:
    * channel to let it know that the physical device this class
    * represents has actually started sending signals, this causes the
    * channel to enter the BUSY state.  An event is scheduled for the time at
-   * which the bits have been completely transmitted. 
+   * which the bits have been completely transmitted.
    *
    * If the channel is found to be BUSY, this method reschedules itself for
    * execution at a later time (within the backoff period).
@@ -407,20 +407,20 @@ private:
    * the TransmitEnd method is called on the channel to let it know that the
    * physical device this class represents has finished sending simulated
    * signals.  The channel uses this event to begin its speed of light delay
-   * timer after which it notifies the Net Device(s) at the other end of the 
-   * link that new bits have arrived (it delivers the Packet).  During this 
+   * timer after which it notifies the Net Device(s) at the other end of the
+   * link that new bits have arrived (it delivers the Packet).  During this
    * method, the net device also schedules the TransmitReadyEvent at which
    * time the transmitter becomes ready to send the next packet.
    *
    * \see CsmaChannel::TransmitEnd ()
    * \see TransmitReadyEvent ()
    */
-  void TransmitCompleteEvent (void);
+  void TransmitCompleteEvent ();
 
   /**
    * Cause the Transmitter to Become Ready to Send Another Packet.
    *
-   * The TransmitReadyEvent method is used internally to re-enable the 
+   * The TransmitReadyEvent method is used internally to re-enable the
    * transmit machine of the net device.  It is scheduled after a suitable
    * interframe gap after the completion of the previous transmission.
    * The queue is checked at this time, and if there is a packet waiting on
@@ -431,7 +431,7 @@ private:
    *
    * \see TransmitStart ()
    */
-  void TransmitReadyEvent (void);
+  void TransmitReadyEvent ();
 
   /**
    * Aborts the transmission of the current packet
@@ -440,19 +440,19 @@ private:
    * than the maximum allowed number of retries (channel always busy)
    * then the packet is dropped.
    */
-  void TransmitAbort (void);
+  void TransmitAbort ();
 
   /**
    * Notify any interested parties that the link has come up.
    */
-  void NotifyLinkUp (void);
+  void NotifyLinkUp ();
 
-  /** 
+  /**
    * Device ID returned by the attached functions. It is used by the
    * mp-channel to identify each net device to make sure that only
    * active net devices are writing to the channel
    */
-  uint32_t m_deviceId; 
+  uint32_t m_deviceId;
 
   /**
    * Enable net device to send packets. True by default
@@ -534,7 +534,7 @@ private:
 
   /**
    * Error model for receive packet events.  When active this model will be
-   * used to model transmission errors by marking some of the packets 
+   * used to model transmission errors by marking some of the packets
    * received as corrupt.
    */
   Ptr<ErrorModel> m_receiveErrorModel;
@@ -557,7 +557,7 @@ private:
 
   /**
    * The trace source fired for packets successfully received by the device
-   * immediately before being forwarded up to higher layers (at the L2/L3 
+   * immediately before being forwarded up to higher layers (at the L2/L3
    * transition).  This is a promiscuous trace.
    *
    * \see class CallBackTraceSource
@@ -566,7 +566,7 @@ private:
 
   /**
    * The trace source fired for packets successfully received by the device
-   * immediately before being forwarded up to higher layers (at the L2/L3 
+   * immediately before being forwarded up to higher layers (at the L2/L3
    * transition).  This is a non-promiscuous trace.
    *
    * \see class CallBackTraceSource
@@ -575,7 +575,7 @@ private:
 
   /**
    * The trace source fired for packets successfully received by the device
-   * but dropped before being forwarded up to higher layers (at the L2/L3 
+   * but dropped before being forwarded up to higher layers (at the L2/L3
    * transition).
    *
    * \see class CallBackTraceSource
@@ -639,19 +639,19 @@ private:
   TracedCallback<Ptr<const Packet> > m_phyRxDropTrace;
 
   /**
-   * A trace source that emulates a non-promiscuous protocol sniffer connected 
-   * to the device.  Unlike your average everyday sniffer, this trace source 
+   * A trace source that emulates a non-promiscuous protocol sniffer connected
+   * to the device.  Unlike your average everyday sniffer, this trace source
    * will not fire on PACKET_OTHERHOST events.
    *
    * On the transmit size, this trace hook will fire after a packet is dequeued
    * from the device queue for transmission.  In Linux, for example, this would
-   * correspond to the point just before a device hard_start_xmit where 
-   * dev_queue_xmit_nit is called to dispatch the packet to the PF_PACKET 
+   * correspond to the point just before a device hard_start_xmit where
+   * dev_queue_xmit_nit is called to dispatch the packet to the PF_PACKET
    * ETH_P_ALL handlers.
    *
    * On the receive side, this trace hook will fire when a packet is received,
-   * just before the receive callback is executed.  In Linux, for example, 
-   * this would correspond to the point at which the packet is dispatched to 
+   * just before the receive callback is executed.  In Linux, for example,
+   * this would correspond to the point at which the packet is dispatched to
    * packet sniffers in netif_receive_skb.
    *
    * \see class CallBackTraceSource
@@ -665,13 +665,13 @@ private:
    *
    * On the transmit size, this trace hook will fire after a packet is dequeued
    * from the device queue for transmission.  In Linux, for example, this would
-   * correspond to the point just before a device hard_start_xmit where 
-   * dev_queue_xmit_nit is called to dispatch the packet to the PF_PACKET 
+   * correspond to the point just before a device hard_start_xmit where
+   * dev_queue_xmit_nit is called to dispatch the packet to the PF_PACKET
    * ETH_P_ALL handlers.
    *
    * On the receive side, this trace hook will fire when a packet is received,
-   * just before the receive callback is executed.  In Linux, for example, 
-   * this would correspond to the point at which the packet is dispatched to 
+   * just before the receive callback is executed.  In Linux, for example,
+   * this would correspond to the point at which the packet is dispatched to
    * packet sniffers in netif_receive_skb.
    *
    * \see class CallBackTraceSource
@@ -699,7 +699,7 @@ private:
   NetDevice::PromiscReceiveCallback m_promiscRxCallback;
 
   /**
-   * The interface index (really net evice index) that has been assigned to 
+   * The interface index (really net evice index) that has been assigned to
    * this network device.
    */
   uint32_t m_ifIndex;
@@ -721,9 +721,9 @@ private:
   static const uint16_t DEFAULT_MTU = 1500;
 
   /**
-   * The Maximum Transmission Unit.  This corresponds to the maximum 
+   * The Maximum Transmission Unit.  This corresponds to the maximum
    * number of bytes that can be transmitted as seen from higher layers.
-   * This corresponds to the 1500 byte MTU size often seen on IP over 
+   * This corresponds to the 1500 byte MTU size often seen on IP over
    * Ethernet.
    */
   uint32_t m_mtu;

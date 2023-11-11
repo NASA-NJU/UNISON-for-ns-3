@@ -83,25 +83,25 @@ public:
   /**
    * Destructor
    */
-  virtual ~FdBetFfMacScheduler ();
+  ~FdBetFfMacScheduler () override;
 
   // inherited from Object
-  virtual void DoDispose (void);
+  void DoDispose () override;
   /**
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   // inherited from FfMacScheduler
-  virtual void SetFfMacCschedSapUser (FfMacCschedSapUser* s);
-  virtual void SetFfMacSchedSapUser (FfMacSchedSapUser* s);
-  virtual FfMacCschedSapProvider* GetFfMacCschedSapProvider ();
-  virtual FfMacSchedSapProvider* GetFfMacSchedSapProvider ();
+  void SetFfMacCschedSapUser (FfMacCschedSapUser* s) override;
+  void SetFfMacSchedSapUser (FfMacSchedSapUser* s) override;
+  FfMacCschedSapProvider* GetFfMacCschedSapProvider () override;
+  FfMacSchedSapProvider* GetFfMacSchedSapProvider () override;
 
   // FFR SAPs
-  virtual void SetLteFfrSapProvider (LteFfrSapProvider* s);
-  virtual LteFfrSapUser* GetLteFfrSapUser ();
+  void SetLteFfrSapProvider (LteFfrSapProvider* s) override;
+  LteFfrSapUser* GetLteFfrSapUser () override;
 
   /// allow MemberCschedSapProvider<FdBetFfMacScheduler> class friend access
   friend class MemberCschedSapProvider<FdBetFfMacScheduler>;
@@ -247,9 +247,9 @@ private:
   double EstimateUlSinr (uint16_t rnti, uint16_t rb);
 
   /// Refresh DL CQI maps
-  void RefreshDlCqiMaps (void);
+  void RefreshDlCqiMaps ();
   /// Refresh UL CQI maps
-  void RefreshUlCqiMaps (void);
+  void RefreshUlCqiMaps ();
 
   /**
    * Update DL RLC buffer info
@@ -370,14 +370,14 @@ private:
 
   // HARQ attributes
   bool m_harqOn; ///< m_harqOn when false inhibit the HARQ mechanisms (by default active)
-  std::map <uint16_t, uint8_t> m_dlHarqCurrentProcessId; ///< DL HARQ current process ID 
+  std::map <uint16_t, uint8_t> m_dlHarqCurrentProcessId; ///< DL HARQ current process ID
   //HARQ status
   // 0: process Id available
   // x>0: process Id equal to `x` transmission count
   std::map <uint16_t, DlHarqProcessesStatus_t> m_dlHarqProcessesStatus; ///< DL HARQ process status
   std::map <uint16_t, DlHarqProcessesTimer_t> m_dlHarqProcessesTimer; ///< DL HARQ process timer
   std::map <uint16_t, DlHarqProcessesDciBuffer_t> m_dlHarqProcessesDciBuffer; ///< DL HARQ process DCI buffer
-  std::map <uint16_t, DlHarqRlcPduListBuffer_t> m_dlHarqProcessesRlcPduListBuffer; ///< DL HARQ process RLC PDU List 
+  std::map <uint16_t, DlHarqRlcPduListBuffer_t> m_dlHarqProcessesRlcPduListBuffer; ///< DL HARQ process RLC PDU List
   std::vector <DlInfoListElement_s> m_dlInfoListBuffered; ///< DL HARQ retx buffered
 
   std::map <uint16_t, uint8_t> m_ulHarqCurrentProcessId; ///< UL HARQ current process ID

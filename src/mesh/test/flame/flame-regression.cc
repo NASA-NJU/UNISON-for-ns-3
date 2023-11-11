@@ -42,7 +42,7 @@ const char * const PREFIX = "flame-regression-test";
 
 
 FlameRegressionTest::FlameRegressionTest () : TestCase ("FLAME regression test"),
-                                              m_nodes (0),
+                                              m_nodes (nullptr),
                                               m_time (Seconds (10)),
                                               m_sentPktsCounter (0)
 {
@@ -68,7 +68,7 @@ FlameRegressionTest::DoRun ()
 
   CheckResults ();
 
-  delete m_nodes, m_nodes = 0;
+  delete m_nodes, m_nodes = nullptr;
 }
 
 void
@@ -95,7 +95,7 @@ FlameRegressionTest::CreateDevices ()
   // 1. setup WiFi
   YansWifiPhyHelper wifiPhy;
   // This test suite output was originally based on YansErrorRateModel
-  wifiPhy.SetErrorRateModel ("ns3::YansErrorRateModel"); 
+  wifiPhy.SetErrorRateModel ("ns3::YansErrorRateModel");
   YansWifiChannelHelper wifiChannel = YansWifiChannelHelper::Default ();
   Ptr<YansWifiChannel> chan = wifiChannel.Create ();
   wifiPhy.SetChannel (chan);

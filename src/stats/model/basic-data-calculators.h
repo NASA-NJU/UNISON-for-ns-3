@@ -40,14 +40,14 @@ class MinMaxAvgTotalCalculator : public DataCalculator,
                                  public StatisticalSummary {
 public:
   MinMaxAvgTotalCalculator();
-  virtual ~MinMaxAvgTotalCalculator();
+  ~MinMaxAvgTotalCalculator() override;
 
   /**
    * Register this type.
    * \return The TypeId.
    */
-  static TypeId GetTypeId (void);
-  
+  static TypeId GetTypeId ();
+
   /**
    * Updates all variables of MinMaxAvgTotalCalculator
    * \param i value of type T to use for updating the calculator
@@ -62,54 +62,54 @@ public:
    * Outputs the data based on the provided callback
    * \param callback
    */
-  virtual void Output (DataOutputCallback &callback) const;
+  void Output (DataOutputCallback &callback) const override;
 
   /**
    * Returns the count
    * \return Count
    */
-  long getCount () const { return m_count; }
+  long getCount () const override { return m_count; }
   /**
    * Returns the sum
    * \return Total
    */
-  double getSum () const { return m_total; }
+  double getSum () const override { return m_total; }
   /**
    * Returns the minimum value
    * \return Min
    */
-  double getMin () const { return m_min; }
+  double getMin () const override { return m_min; }
   /**
    * Returns the maximum value
    * \return Max
    */
-  double getMax () const { return m_max; }
+  double getMax () const override { return m_max; }
   /**
    * Returns the mean value
    * \return Mean
    */
-  double getMean () const { return m_meanCurr; }
+  double getMean () const override { return m_meanCurr; }
   /**
    * Returns the standard deviation
    * \return Standard deviation
    */
-  double getStddev () const { return std::sqrt (m_varianceCurr); }
+  double getStddev () const override { return std::sqrt (m_varianceCurr); }
   /**
    * Returns the current variance
    * \return Variance
    */
-  double getVariance () const { return m_varianceCurr; }
+  double getVariance () const override { return m_varianceCurr; }
   /**
    * Returns the sum of squares
    * \return Sum of squares
    */
-  double getSqrSum () const { return m_squareTotal; }
+  double getSqrSum () const override { return m_squareTotal; }
 
 protected:
   /**
    * Dispose of this Object.
    */
-  virtual void DoDispose (void);
+  void DoDispose () override;
 
   uint32_t m_count;      //!< Count value of MinMaxAvgTotalCalculator
 
@@ -149,10 +149,10 @@ template <typename T>
 MinMaxAvgTotalCalculator<T>::~MinMaxAvgTotalCalculator()
 {
 }
-  
+
 template <typename T>
 void
-MinMaxAvgTotalCalculator<T>::DoDispose (void)
+MinMaxAvgTotalCalculator<T>::DoDispose ()
 {
   DataCalculator::DoDispose ();
   // MinMaxAvgTotalCalculator::DoDispose
@@ -161,7 +161,7 @@ MinMaxAvgTotalCalculator<T>::DoDispose (void)
 /* static */
 template <typename T>
 TypeId
-MinMaxAvgTotalCalculator<T>::GetTypeId (void)
+MinMaxAvgTotalCalculator<T>::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::MinMaxAvgTotalCalculator<"
                               + TypeNameGet<T> ()
@@ -172,7 +172,7 @@ MinMaxAvgTotalCalculator<T>::GetTypeId (void)
     ;
   return tid;
 }
-  
+
 template <typename T>
 void
 MinMaxAvgTotalCalculator<T>::Update (const T i)
@@ -271,14 +271,14 @@ template <typename T  = uint32_t>
 class CounterCalculator : public DataCalculator {
 public:
   CounterCalculator();
-  virtual ~CounterCalculator();
+  ~CounterCalculator() override;
 
   /**
    * Register this type.
    * \return The TypeId.
    */
-  static TypeId GetTypeId (void);
-  
+  static TypeId GetTypeId ();
+
   /**
    * Increments count by 1
    */
@@ -299,13 +299,13 @@ public:
    * Outputs the data based on the provided callback
    * \param callback
    */
-  virtual void Output (DataOutputCallback &callback) const;
+  void Output (DataOutputCallback &callback) const override;
 
 protected:
   /**
    * Dispose of this Object.
    */
-  virtual void DoDispose (void);
+  void DoDispose () override;
 
   T m_count; //!< Count value of CounterCalculator
 
@@ -327,7 +327,7 @@ CounterCalculator<T>::~CounterCalculator()
 /* static */
 template <typename T>
 TypeId
-CounterCalculator<T>::GetTypeId (void)
+CounterCalculator<T>::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::CounterCalculator<"
                               + TypeNameGet<T> ()
@@ -341,7 +341,7 @@ CounterCalculator<T>::GetTypeId (void)
 
 template <typename T>
 void
-CounterCalculator<T>::DoDispose (void)
+CounterCalculator<T>::DoDispose ()
 {
   DataCalculator::DoDispose ();
   // CounterCalculator::DoDispose
@@ -382,6 +382,13 @@ CounterCalculator<T>::Output (DataOutputCallback &callback) const
   callback.OutputSingleton (m_context, m_key, m_count);
   // end CounterCalculator::Output
 }
+
+// The following explicit template instantiation declaration prevents modules
+// including this header file from implicitly instantiating CounterCalculator<uint32_t>.
+// This would cause some examples on Windows to crash at runtime with the
+// following error message: "Trying to allocate twice the same UID:
+// ns3::CounterCalculator<uint32_t>"
+extern template class CounterCalculator<uint32_t>;
 
 // end namespace ns3
 };

@@ -33,8 +33,8 @@ Ptr<SpectrumModel> SpectrumModelIsm2400MhzRes1Mhz;
 
 /**
  * \ingroup spectrum
- * 
- * Static initializer class for Spectrum model logger for 
+ *
+ * Static initializer class for Spectrum model logger for
  * frequencies in the 2.4 GHz ISM band with 1 MHz resolution.
  */
 class static_SpectrumModelIsm2400MhzRes1Mhz_initializer
@@ -44,7 +44,8 @@ public:
   {
 
     std::vector<double> freqs;
-    for (int i = 0; i < 100; ++i)
+    freqs.reserve(100);
+for (int i = 0; i < 100; ++i)
       {
         freqs.push_back ((i + 2400) * 1e6);
       }

@@ -48,7 +48,7 @@ class SpectrumPhy  : public Object
 
 public:
   SpectrumPhy ();
-  virtual ~SpectrumPhy ();
+  ~SpectrumPhy () override;
 
   // Delete copy constructor and assignment operator to avoid misuse
   SpectrumPhy (SpectrumPhy const &) = delete;
@@ -58,7 +58,7 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   /**
    * Set the associated NetDevice instance

@@ -20,18 +20,18 @@
 
 /* taken from src/node/ipv4.h and adapted to IPv6 */
 
-#include "ns3/assert.h" 
-#include "ns3/node.h" 
+#include "ns3/assert.h"
+#include "ns3/node.h"
 #include "ns3/boolean.h"
 
 #include "ipv6.h"
 
-namespace ns3 
+namespace ns3
 {
 
 NS_OBJECT_ENSURE_REGISTERED (Ipv6);
 
-TypeId Ipv6::GetTypeId (void)
+TypeId Ipv6::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::Ipv6")
     .SetParent<Object> ()

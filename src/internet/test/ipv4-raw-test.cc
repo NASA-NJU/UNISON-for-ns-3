@@ -1,7 +1,7 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2010 Hajime Tazaki
- * 
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
  * published by the Free Software Foundation;
@@ -88,7 +88,7 @@ class Ipv4RawSocketImplTest : public TestCase
   void SendData_IpHdr (Ptr<Socket> socket, std::string to);
 
 public:
-  virtual void DoRun (void);
+  void DoRun () override;
   Ipv4RawSocketImplTest ();
 
   /**
@@ -119,7 +119,7 @@ public:
 
 
 Ipv4RawSocketImplTest::Ipv4RawSocketImplTest ()
-  : TestCase ("IPv4 Raw socket implementation") 
+  : TestCase ("IPv4 Raw socket implementation")
 {
 }
 
@@ -201,7 +201,7 @@ Ipv4RawSocketImplTest::SendData_IpHdr (Ptr<Socket> socket, std::string to)
 }
 
 void
-Ipv4RawSocketImplTest::DoRun (void)
+Ipv4RawSocketImplTest::DoRun ()
 {
   // Create topology
 
@@ -319,8 +319,8 @@ Ipv4RawSocketImplTest::DoRun (void)
   NS_TEST_EXPECT_MSG_EQ (m_receivedPacket2->GetSize (), 143, "recv: 255.255.255.255");
 #endif
 
-  m_receivedPacket = 0;
-  m_receivedPacket2 = 0;
+  m_receivedPacket = nullptr;
+  m_receivedPacket2 = nullptr;
 
   // Simple getpeername tests
 

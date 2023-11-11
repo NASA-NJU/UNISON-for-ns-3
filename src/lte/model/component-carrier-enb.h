@@ -29,7 +29,6 @@
 #include "ns3/lte-phy.h"
 #include <ns3/lte-enb-phy.h>
 #include <ns3/pointer.h>
-//#include <ns3/lte-enb-mac.h>
 
 
 namespace ns3 {
@@ -52,22 +51,22 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   ComponentCarrierEnb ();
 
-  virtual ~ComponentCarrierEnb (void);
-  virtual void DoDispose (void);
+  ~ComponentCarrierEnb () override;
+  void DoDispose () override;
 
   /**
    * \return a pointer to the physical layer.
    */
-  Ptr<LteEnbPhy> GetPhy (void);
+  Ptr<LteEnbPhy> GetPhy ();
 
   /**
    * \return a pointer to the MAC layer.
    */
-  Ptr<LteEnbMac> GetMac (void);
+  Ptr<LteEnbMac> GetMac ();
 
   /**
    * \return a pointer to the Ffr Algorithm.
@@ -101,10 +100,10 @@ public:
    * \param s a pointer to the LteFfrAlgorithm
    */
   void SetFfrAlgorithm (Ptr<LteFfrAlgorithm> s);
-  
+
 protected:
 
-  virtual void DoInitialize (void);
+  void DoInitialize () override;
 
 private:
   Ptr<LteEnbPhy> m_phy; ///< the Phy instance of this eNodeB component carrier

@@ -52,10 +52,10 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   TimeSeriesAdaptor ();
-  virtual ~TimeSeriesAdaptor ();
+  ~TimeSeriesAdaptor () override;
 
   /**
    * \brief Trace sink for receiving data from double valued trace
@@ -119,7 +119,7 @@ public:
    * \param [in] data The new data value.
    */
   typedef void (* OutputTracedCallback) (const double now, const double data);
-  
+
 private:
   TracedCallback<double, double> m_output; //!< output trace
 };

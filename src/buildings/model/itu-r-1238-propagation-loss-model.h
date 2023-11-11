@@ -17,7 +17,7 @@
  *
  * Author: Marco Miozzo  <marco.miozzo@cttc.es>
  *         Nicola Baldo <nbaldo@cttc.es>
- * 
+ *
  */
 
 #ifndef ITU_R_1238_PROPAGATION_LOSS_MODEL_H
@@ -30,7 +30,7 @@ namespace ns3 {
 
 /**
  * This class implements the ITU-R 1238 propagation loss model.
- * 
+ *
  */
 class ItuR1238PropagationLossModel : public PropagationLossModel
 {
@@ -41,14 +41,14 @@ public:
    * \brief Get the type ID.
    * \return The object TypeId.
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
-  /** 
-   * 
-   * 
+  /**
+   *
+   *
    * \param a the first mobility model
    * \param b the second mobility model
-   * 
+   *
    * \return the loss in dBm for the propagation between
    * the two given mobility models
    */
@@ -57,11 +57,11 @@ public:
 private:
 
   // inherited from PropagationLossModel
-  virtual double DoCalcRxPower (double txPowerDbm,
+  double DoCalcRxPower (double txPowerDbm,
                                 Ptr<MobilityModel> a,
-                                Ptr<MobilityModel> b) const;
-  virtual int64_t DoAssignStreams (int64_t stream);
-  
+                                Ptr<MobilityModel> b) const override;
+  int64_t DoAssignStreams (int64_t stream) override;
+
   double m_frequency; ///< frequency in MHz
 
 };

@@ -47,7 +47,7 @@
 // dominates the reception performance.  By default, the
 // ThresholdPreambleDetectionModel is added to all WifiPhy objects, and this
 // model prevents reception unless the incoming signal has a RSS above its
-// 'MinimumRssi' value (default of -82 dBm) and has a SNR above the 
+// 'MinimumRssi' value (default of -82 dBm) and has a SNR above the
 // 'Threshold' value (default of 4).
 //
 // If we relax these values, we can instead observe that signal reception
@@ -92,6 +92,11 @@ using namespace ns3;
 
 NS_LOG_COMPONENT_DEFINE ("WifiSimpleInfra");
 
+/**
+ * Function called when a packet is received.
+ *
+ * \param socket The receiving socket.
+ */
 void ReceivePacket (Ptr<Socket> socket)
 {
   while (socket->Recv ())
@@ -100,6 +105,14 @@ void ReceivePacket (Ptr<Socket> socket)
     }
 }
 
+/**
+ * Generate traffic.
+ *
+ * \param socket The sending socket.
+ * \param pktSize The packet size.
+ * \param pktCount The packet count.
+ * \param pktInterval The interval between two packets.
+ */
 static void GenerateTraffic (Ptr<Socket> socket, uint32_t pktSize,
                              uint32_t pktCount, Time pktInterval )
 {
@@ -171,7 +184,7 @@ int main (int argc, char *argv[])
 
   // Setup the rest of the MAC
   Ssid ssid = Ssid ("wifi-default");
-  // setup STA 
+  // setup STA
   wifiMac.SetType ("ns3::StaWifiMac",
                    "Ssid", SsidValue (ssid));
   NetDeviceContainer staDevice = wifi.Install (wifiPhy, wifiMac, c.Get (0));

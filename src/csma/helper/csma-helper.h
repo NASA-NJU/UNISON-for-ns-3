@@ -26,6 +26,7 @@
 #include "ns3/object-factory.h"
 #include "ns3/net-device-container.h"
 #include "ns3/node-container.h"
+#include "ns3/queue.h"
 #include "ns3/csma-channel.h"
 #include "ns3/trace-helper.h"
 
@@ -37,7 +38,7 @@ class Packet;
  * \ingroup csma
  * \brief build a set of CsmaNetDevice objects
  *
- * Normally we eschew multiple inheritance, however, the classes 
+ * Normally we eschew multiple inheritance, however, the classes
  * PcapUserHelperForDevice and AsciiTraceUserHelperForDevice are
  * treated as "mixins".  A mixin is a self-contained class that
  * encapsulates a general attribute or a set of functionality that
@@ -50,27 +51,18 @@ public:
    * Construct a CsmaHelper.
    */
   CsmaHelper ();
-  virtual ~CsmaHelper () {}
+  ~CsmaHelper () override {}
 
   /**
+   * \tparam Ts \deduced Argument types
    * \param type the type of queue
-   * \param n1 the name of the attribute to set on the queue
-   * \param v1 the value of the attribute to set on the queue
-   * \param n2 the name of the attribute to set on the queue
-   * \param v2 the value of the attribute to set on the queue
-   * \param n3 the name of the attribute to set on the queue
-   * \param v3 the value of the attribute to set on the queue
-   * \param n4 the name of the attribute to set on the queue
-   * \param v4 the value of the attribute to set on the queue
+   * \param [in] args Name and AttributeValue pairs to set.
    *
    * Set the type of queue to create and associated to each
    * CsmaNetDevice created through CsmaHelper::Install.
    */
-  void SetQueue (std::string type,
-                 std::string n1 = "", const AttributeValue &v1 = EmptyAttributeValue (),
-                 std::string n2 = "", const AttributeValue &v2 = EmptyAttributeValue (),
-                 std::string n3 = "", const AttributeValue &v3 = EmptyAttributeValue (),
-                 std::string n4 = "", const AttributeValue &v4 = EmptyAttributeValue ());
+  template <typename... Ts>
+  void SetQueue (std::string type, Ts&&... args);
 
   /**
    * \param n1 the name of the attribute to set
@@ -98,7 +90,7 @@ public:
    * as every packet enqueued to the traffic control layer queue disc will
    * be immediately dequeued.
    */
-  void DisableFlowControl (void);
+  void DisableFlowControl ();
 
   /**
    * This method creates an ns3::CsmaChannel with the attributes configured by
@@ -124,7 +116,7 @@ public:
 
   /**
    * This method creates an ns3::CsmaNetDevice with the attributes configured by
-   * CsmaHelper::SetDeviceAttribute and then adds the device to the node and 
+   * CsmaHelper::SetDeviceAttribute and then adds the device to the node and
    * attaches the provided channel to the device.
    *
    * \param node The node to install the device in
@@ -135,7 +127,7 @@ public:
 
   /**
    * This method creates an ns3::CsmaNetDevice with the attributes configured by
-   * CsmaHelper::SetDeviceAttribute and then adds the device to the node and 
+   * CsmaHelper::SetDeviceAttribute and then adds the device to the node and
    * attaches the provided channel to the device.
    *
    * \param node The node to install the device in
@@ -146,7 +138,7 @@ public:
 
   /**
    * This method creates an ns3::CsmaNetDevice with the attributes configured by
-   * CsmaHelper::SetDeviceAttribute and then adds the device to the node and 
+   * CsmaHelper::SetDeviceAttribute and then adds the device to the node and
    * attaches the provided channel to the device.
    *
    * \param nodeName The name of the node to install the device in
@@ -157,7 +149,7 @@ public:
 
   /**
    * This method creates an ns3::CsmaNetDevice with the attributes configured by
-   * CsmaHelper::SetDeviceAttribute and then adds the device to the node and 
+   * CsmaHelper::SetDeviceAttribute and then adds the device to the node and
    * attaches the provided channel to the device.
    *
    * \param nodeName The name of the node to install the device in
@@ -169,8 +161,8 @@ public:
   /**
    * This method creates an ns3::CsmaChannel with the attributes configured by
    * CsmaHelper::SetChannelAttribute.  For each Ptr<node> in the provided
-   * container: it creates an ns3::CsmaNetDevice (with the attributes 
-   * configured by CsmaHelper::SetDeviceAttribute); adds the device to the 
+   * container: it creates an ns3::CsmaNetDevice (with the attributes
+   * configured by CsmaHelper::SetDeviceAttribute); adds the device to the
    * node; and attaches the channel to the device.
    *
    * \param c The NodeContainer holding the nodes to be changed.
@@ -179,9 +171,9 @@ public:
   NetDeviceContainer Install (const NodeContainer &c) const;
 
   /**
-   * For each Ptr<node> in the provided container, this method creates an 
-   * ns3::CsmaNetDevice (with the attributes configured by 
-   * CsmaHelper::SetDeviceAttribute); adds the device to the node; and attaches 
+   * For each Ptr<node> in the provided container, this method creates an
+   * ns3::CsmaNetDevice (with the attributes configured by
+   * CsmaHelper::SetDeviceAttribute); adds the device to the node; and attaches
    * the provided channel to the device.
    *
    * \param c The NodeContainer holding the nodes to be changed.
@@ -191,9 +183,9 @@ public:
   NetDeviceContainer Install (const NodeContainer &c, Ptr<CsmaChannel> channel) const;
 
   /**
-   * For each Ptr<node> in the provided container, this method creates an 
-   * ns3::CsmaNetDevice (with the attributes configured by 
-   * CsmaHelper::SetDeviceAttribute); adds the device to the node; and attaches 
+   * For each Ptr<node> in the provided container, this method creates an
+   * ns3::CsmaNetDevice (with the attributes configured by
+   * CsmaHelper::SetDeviceAttribute); adds the device to the node; and attaches
    * the provided channel to the device.
    *
    * \param c The NodeContainer holding the nodes to be changed.
@@ -208,7 +200,7 @@ public:
   * have been assigned. The Install() method should have previously been
   * called by the user.
   *
-  * \param c NetDeviceContainer of the set of net devices for which the 
+  * \param c NetDeviceContainer of the set of net devices for which the
   *          CsmaNetDevice should be modified to use a fixed stream
   * \param stream first stream index to use
   * \return the number of stream indices assigned by this helper
@@ -239,7 +231,7 @@ private:
    * \param promiscuous If true capture all possible packets available at the device.
    * \param explicitFilename Treat the prefix as an explicit filename if true
    */
-  virtual void EnablePcapInternal (std::string prefix, Ptr<NetDevice> nd, bool promiscuous, bool explicitFilename);
+  void EnablePcapInternal (std::string prefix, Ptr<NetDevice> nd, bool promiscuous, bool explicitFilename) override;
 
   /**
    * \brief Enable ascii trace output on the indicated net device.
@@ -252,16 +244,31 @@ private:
    * \param nd Net device for which you want to enable tracing.
    * \param explicitFilename Treat the prefix as an explicit filename if true
    */
-  virtual void EnableAsciiInternal (Ptr<OutputStreamWrapper> stream, 
-                                    std::string prefix, 
+  void EnableAsciiInternal (Ptr<OutputStreamWrapper> stream,
+                                    std::string prefix,
                                     Ptr<NetDevice> nd,
-                                    bool explicitFilename);
+                                    bool explicitFilename) override;
 
   ObjectFactory m_queueFactory;   //!< factory for the queues
   ObjectFactory m_deviceFactory;  //!< factory for the NetDevices
   ObjectFactory m_channelFactory; //!< factory for the channel
   bool m_enableFlowControl;       //!< whether to enable flow control
 };
+
+
+
+/***************************************************************
+ *  Implementation of the templates declared above.
+ ***************************************************************/
+
+template <typename... Ts>
+void CsmaHelper::SetQueue (std::string type, Ts&&... args)
+{
+  QueueBase::AppendItemTypeIfNotPresent (type, "Packet");
+
+  m_queueFactory.SetTypeId (type);
+  m_queueFactory.Set (std::forward<Ts> (args)...);
+}
 
 } // namespace ns3
 

@@ -50,7 +50,7 @@ PeerLinkOpenStart::GetFields () const
   retval.rates = m_rates;
   retval.meshId = m_meshId;
   retval.config = m_config;
-  
+
   return retval;
 }
 TypeId
@@ -83,7 +83,10 @@ PeerLinkOpenStart::GetSerializedSize () const
   uint32_t size =0; //Peering protocol
   size += 2; //capability
   size += m_rates.GetSerializedSize ();
-  size += m_rates.extended.GetSerializedSize ();
+  if (m_rates.GetNRates () > 8)
+    {
+      size += m_rates.extended->GetSerializedSize ();
+    }
   size += m_meshId.GetInformationFieldSize () + 2;
   size += m_config.GetInformationFieldSize () + 2;
   return size;
@@ -92,10 +95,13 @@ void
 PeerLinkOpenStart::Serialize (Buffer::Iterator start) const
 {
   Buffer::Iterator i = start;
-  
+
   i.WriteHtolsbU16 (m_capability);
   i = m_rates.Serialize (i);
-  i = m_rates.extended.Serialize (i);
+  if (m_rates.GetNRates () > 8)
+    {
+      i = m_rates.extended->Serialize (i);
+    }
   i = m_meshId.Serialize (i);
   i = m_config.Serialize (i);
 }
@@ -103,10 +109,10 @@ uint32_t
 PeerLinkOpenStart::Deserialize (Buffer::Iterator start)
 {
   Buffer::Iterator i = start;
-  
+
   m_capability = i.ReadLsbtohU16 ();
   i = m_rates.Deserialize (i);
-  i = m_rates.extended.DeserializeIfPresent (i);
+  i = WifiInformationElement::DeserializeIfPresent (m_rates.extended, i);
   uint8_t id = i.ReadU8 ();
   uint8_t length = i.ReadU8 ();
   m_meshId.DeserializeInformationField (i, length);
@@ -123,7 +129,7 @@ PeerLinkOpenStart::Deserialize (Buffer::Iterator start)
       NS_FATAL_ERROR ("Broken frame: Element ID does not match IE itself!");
     }
   i.Next (m_config.GetInformationFieldSize ());
- 
+
   return i.GetDistanceFrom (start);
 }
 bool
@@ -131,7 +137,7 @@ operator== (const PeerLinkOpenStart & a, const PeerLinkOpenStart & b)
 {
   return ((a.m_capability == b.m_capability)
           && (a.m_meshId.IsEqual (b.m_meshId)) && (a.m_config == b.m_config));
-  
+
 }
 NS_OBJECT_ENSURE_REGISTERED (PeerLinkCloseStart);
 
@@ -150,7 +156,7 @@ PeerLinkCloseStart::GetFields () const
   PlinkCloseStartFields retval;
   /// \todo protocol version:
   retval.meshId = m_meshId;
-  
+
   return retval;
 }
 TypeId
@@ -190,7 +196,7 @@ uint32_t
 PeerLinkCloseStart::Deserialize (Buffer::Iterator start)
 {
   Buffer::Iterator i = start;
-  
+
   uint8_t id = i.ReadU8 ();
   uint8_t length = i.ReadU8 ();
   m_meshId.DeserializeInformationField (i, length);
@@ -230,7 +236,7 @@ PeerLinkConfirmStart::GetFields () const
   retval.aid = m_aid;
   retval.rates = m_rates;
   retval.config = m_config;
-  
+
   return retval;
 }
 TypeId
@@ -262,7 +268,10 @@ PeerLinkConfirmStart::GetSerializedSize () const
   size += 2; //capability
   size += 2; //AID of remote peer
   size += m_rates.GetSerializedSize ();
-  size += m_rates.extended.GetSerializedSize ();
+  if (m_rates.GetNRates () > 8)
+    {
+      size += m_rates.extended->GetSerializedSize ();
+    }
   size += m_config.GetInformationFieldSize () + 2;
   return size;
 }
@@ -270,22 +279,25 @@ void
 PeerLinkConfirmStart::Serialize (Buffer::Iterator start) const
 {
   Buffer::Iterator i = start;
-  
+
   i.WriteHtolsbU16 (m_capability);
   i.WriteHtolsbU16 (m_aid);
   i = m_rates.Serialize (i);
-  i = m_rates.extended.Serialize (i);
+  if (m_rates.GetNRates () > 8)
+    {
+      i = m_rates.extended->Serialize (i);
+    }
   i = m_config.Serialize (i);
 }
 uint32_t
 PeerLinkConfirmStart::Deserialize (Buffer::Iterator start)
 {
   Buffer::Iterator i = start;
-  
+
   m_capability = i.ReadLsbtohU16 ();
   m_aid = i.ReadLsbtohU16 ();
   i = m_rates.Deserialize (i);
-  i = m_rates.extended.DeserializeIfPresent (i);
+  i = WifiInformationElement::DeserializeIfPresent (m_rates.extended, i);
   uint8_t id = i.ReadU8 ();
   uint8_t length = i.ReadU8 ();
   m_config.DeserializeInformationField (i, length);

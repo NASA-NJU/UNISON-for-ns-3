@@ -18,7 +18,7 @@
  * by: Amir Modarresi <amodarresi@ittc.ku.edu>
  *
  * James P.G. Sterbenz <jpgs@ittc.ku.edu>, director
- * ResiliNets Research Group  http://wiki.ittc.ku.edu/resilinets
+ * ResiliNets Research Group  https://resilinets.org/
  * Information and Telecommunication Technology Center (ITTC)
  * and Department of Electrical Engineering and Computer Science
  * The University of Kansas Lawrence, KS USA.
@@ -42,8 +42,8 @@ class TcpSocketState;
  * Internet-Draft draft-leith-tcp-htcp-03 and its related paper,
  * "H-TCP: TCP for high-speed and long-distance networks"
  * H-TCP is a congestion control protocol suitable for high bandwidth-delay
- * product networks. It is fair to similar flows present in the network and 
- * also friendly with conventional TCP. It also makes use of free 
+ * product networks. It is fair to similar flows present in the network and
+ * also friendly with conventional TCP. It also makes use of free
  * bandwidth when it is available.
  */
 class TcpHtcp : public TcpNewReno
@@ -53,39 +53,39 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
   /**
    * Create an unbound tcp socket.
    */
-  TcpHtcp (void);
+  TcpHtcp ();
   /**
    * \brief Copy constructor
    * \param sock the object to copy
    */
   TcpHtcp (const TcpHtcp& sock);
-  virtual ~TcpHtcp (void);
-  virtual std::string GetName () const;
-  virtual Ptr<TcpCongestionOps> Fork ();
-  virtual uint32_t GetSsThresh (Ptr<const TcpSocketState> tcb,
-                                uint32_t bytesInFlight);
+  ~TcpHtcp () override;
+  std::string GetName () const override;
+  Ptr<TcpCongestionOps> Fork () override;
+  uint32_t GetSsThresh (Ptr<const TcpSocketState> tcb,
+                                uint32_t bytesInFlight) override;
 
-  virtual void PktsAcked (Ptr<TcpSocketState> tcb, uint32_t segmentsAcked,
-                          const Time &rtt);
+  void PktsAcked (Ptr<TcpSocketState> tcb, uint32_t segmentsAcked,
+                          const Time &rtt) override;
 
 protected:
-  virtual void CongestionAvoidance (Ptr<TcpSocketState> tcb,
-                                    uint32_t segmentsAcked);
+  void CongestionAvoidance (Ptr<TcpSocketState> tcb,
+                                    uint32_t segmentsAcked) override;
 
 private:
   /**
    * \brief Updates the additive increase parameter for H-TCP
    */
-  void UpdateAlpha (void);
+  void UpdateAlpha ();
 
   /**
    * \brief Updates the multiplicative decrease factor beta for H-TCP
    */
-  void UpdateBeta (void);
+  void UpdateBeta ();
 
   // h-tcp variables
   double m_alpha;                    //!< AIMD additive increase parameter

@@ -34,8 +34,8 @@ class NetworkAllocatorHelperTestCase : public TestCase
 public:
   NetworkAllocatorHelperTestCase ();
 private:
-  virtual void DoRun (void);
-  virtual void DoTeardown (void);
+  void DoRun () override;
+  void DoTeardown () override;
 };
 
 NetworkAllocatorHelperTestCase::NetworkAllocatorHelperTestCase ()
@@ -44,13 +44,13 @@ NetworkAllocatorHelperTestCase::NetworkAllocatorHelperTestCase ()
 }
 
 void
-NetworkAllocatorHelperTestCase::DoTeardown (void)
+NetworkAllocatorHelperTestCase::DoTeardown ()
 {
   Ipv4AddressGenerator::Reset ();
   Simulator::Destroy ();
 }
 void
-NetworkAllocatorHelperTestCase::DoRun (void)
+NetworkAllocatorHelperTestCase::DoRun ()
 {
   Ipv4Address address;
   Ipv4Address network;
@@ -86,8 +86,8 @@ class AddressAllocatorHelperTestCase : public TestCase
 public:
   AddressAllocatorHelperTestCase ();
 private:
-  virtual void DoRun (void);
-  virtual void DoTeardown (void);
+  void DoRun () override;
+  void DoTeardown () override;
 };
 
 AddressAllocatorHelperTestCase::AddressAllocatorHelperTestCase ()
@@ -96,14 +96,14 @@ AddressAllocatorHelperTestCase::AddressAllocatorHelperTestCase ()
 }
 
 void
-AddressAllocatorHelperTestCase::DoTeardown (void)
+AddressAllocatorHelperTestCase::DoTeardown ()
 {
   Ipv4AddressGenerator::Reset ();
   Simulator::Destroy ();
 }
 
 void
-AddressAllocatorHelperTestCase::DoRun (void)
+AddressAllocatorHelperTestCase::DoRun ()
 {
   Ipv4Address network;
   Ipv4Address address;
@@ -138,8 +138,8 @@ class ResetAllocatorHelperTestCase : public TestCase
 {
 public:
   ResetAllocatorHelperTestCase ();
-  virtual void DoRun (void);
-  virtual void DoTeardown (void);
+  void DoRun () override;
+  void DoTeardown () override;
 };
 
 ResetAllocatorHelperTestCase::ResetAllocatorHelperTestCase ()
@@ -148,14 +148,14 @@ ResetAllocatorHelperTestCase::ResetAllocatorHelperTestCase ()
 }
 
 void
-ResetAllocatorHelperTestCase::DoRun (void)
+ResetAllocatorHelperTestCase::DoRun ()
 {
   Ipv4Address network;
   Ipv4Address address;
   Ipv4AddressHelper h;
 
   //
-  // We're going to use some of the same addresses allocated above, 
+  // We're going to use some of the same addresses allocated above,
   // so reset the Ipv4AddressGenerator to make it forget we did.
   //
 
@@ -191,7 +191,7 @@ ResetAllocatorHelperTestCase::DoRun (void)
 }
 
 void
-ResetAllocatorHelperTestCase::DoTeardown (void)
+ResetAllocatorHelperTestCase::DoTeardown ()
 {
   Ipv4AddressGenerator::Reset ();
   Simulator::Destroy ();
@@ -207,11 +207,11 @@ class IpAddressHelperTestCasev4 : public TestCase
 {
 public:
   IpAddressHelperTestCasev4 ();
-  virtual ~IpAddressHelperTestCasev4 ();
+  ~IpAddressHelperTestCasev4 () override;
 
 private:
-  virtual void DoRun (void);
-  virtual void DoTeardown (void);
+  void DoRun () override;
+  void DoTeardown () override;
 };
 
 IpAddressHelperTestCasev4::IpAddressHelperTestCasev4 ()
@@ -224,7 +224,7 @@ IpAddressHelperTestCasev4::~IpAddressHelperTestCasev4 ()
 }
 
 void
-IpAddressHelperTestCasev4::DoRun (void)
+IpAddressHelperTestCasev4::DoRun ()
 {
   Ipv4AddressHelper ip1;
   Ipv4Address ipAddr1;
@@ -252,7 +252,7 @@ IpAddressHelperTestCasev4::DoRun (void)
   ip1.SetBase ("192.168.0.0", "255.255.255.0", "0.0.0.100");
   ipAddr1 = ip1.NewAddress ();
   NS_TEST_ASSERT_MSG_EQ (ipAddr1, Ipv4Address ("192.168.0.100"), "Ipv4AddressHelper failure");
-  
+
   // rollover
   ip1.SetBase ("192.168.0.0", "255.255.255.0", "0.0.0.254");
   ipAddr1 = ip1.NewAddress (); // .254
@@ -272,7 +272,7 @@ IpAddressHelperTestCasev4::DoRun (void)
 }
 
 void
-IpAddressHelperTestCasev4::DoTeardown (void)
+IpAddressHelperTestCasev4::DoTeardown ()
 {
   Ipv4AddressGenerator::Reset ();
   Simulator::Destroy ();

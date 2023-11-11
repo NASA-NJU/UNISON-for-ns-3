@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2013 ResiliNets, ITTC, University of Kansas 
+ * Copyright (c) 2013 ResiliNets, ITTC, University of Kansas
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
@@ -20,7 +20,7 @@
  *          Greeshma Umapathi
  *
  * James P.G. Sterbenz <jpgs@ittc.ku.edu>, director
- * ResiliNets Research Group  http://wiki.ittc.ku.edu/resilinets
+ * ResiliNets Research Group  https://resilinets.org/
  * Information and Telecommunication Technology Center (ITTC)
  * and Department of Electrical Engineering and Computer Science
  * The University of Kansas Lawrence, KS USA.
@@ -44,7 +44,7 @@ namespace ns3 {
 NS_OBJECT_ENSURE_REGISTERED (TcpWestwood);
 
 TypeId
-TcpWestwood::GetTypeId (void)
+TcpWestwood::GetTypeId ()
 {
   static TypeId tid = TypeId("ns3::TcpWestwood")
     .SetParent<TcpNewReno>()
@@ -64,7 +64,7 @@ TcpWestwood::GetTypeId (void)
   return tid;
 }
 
-TcpWestwood::TcpWestwood (void) :
+TcpWestwood::TcpWestwood () :
   TcpNewReno (),
   m_currentBW (0),
   m_lastSampleBW (0),
@@ -89,7 +89,7 @@ TcpWestwood::TcpWestwood (const TcpWestwood& sock) :
   NS_LOG_LOGIC ("Invoked the copy constructor");
 }
 
-TcpWestwood::~TcpWestwood (void)
+TcpWestwood::~TcpWestwood ()
 {
 }
 

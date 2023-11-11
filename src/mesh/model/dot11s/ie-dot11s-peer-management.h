@@ -67,14 +67,14 @@ public:
    * Set peer close function
    * \param localLinkID the local link id
    * \param peerLinkId the peer link id
-   * \param reasonCode the reason code 
-   */   
+   * \param reasonCode the reason code
+   */
   void SetPeerClose (uint16_t localLinkID, uint16_t peerLinkId, PmpReasonCode reasonCode);
   /**
    * Set peer confirm function
    * \param localLinkID the local link id
    * \param peerLinkId the peer link id
-   */   
+   */
   void SetPeerConfirm (uint16_t localLinkID, uint16_t peerLinkId);
 
   /**
@@ -90,7 +90,7 @@ public:
   /**
    * Get peer link ID function
    * \returns the peer link ID
-   */ 
+   */
   uint16_t GetPeerLinkId () const;
   /**
    * Subtype is open function
@@ -114,11 +114,11 @@ public:
   uint8_t GetSubtype () const;
 
   // Inherited from WifiInformationElement
-  virtual WifiInformationElementId ElementId () const;
-  virtual uint8_t GetInformationFieldSize (void) const;
-  virtual void SerializeInformationField (Buffer::Iterator i) const;
-  virtual uint8_t DeserializeInformationField (Buffer::Iterator i, uint8_t length);
-  virtual void Print (std::ostream& os) const;
+  WifiInformationElementId ElementId () const override;
+  uint16_t GetInformationFieldSize () const override;
+  void SerializeInformationField (Buffer::Iterator i) const override;
+  uint16_t DeserializeInformationField (Buffer::Iterator i, uint16_t length) override;
+  void Print (std::ostream& os) const override;
 
 private:
   uint8_t m_length; ///< length

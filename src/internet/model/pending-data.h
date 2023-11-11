@@ -48,7 +48,7 @@ public:
    * \param msg message size
    * \param resp response size
    */
-  PendingData (uint32_t s, uint8_t* d = NULL, uint32_t msg = 0, uint32_t resp = 0);
+  PendingData (uint32_t s, uint8_t* d = nullptr, uint32_t msg = 0, uint32_t resp = 0);
   /**
    * Constructor from string
    * \param s string
@@ -78,7 +78,7 @@ public:
    * \param s the data size.
    * \param d the data to store.
    */
-  virtual void Add (uint32_t s, const uint8_t* d = 0); //
+  virtual void Add (uint32_t s, const uint8_t* d = nullptr); //
   /**
    * \brief Add some data to end
    * \param p packet containing the data.
@@ -90,7 +90,7 @@ public:
    *
    * The variables seqFront and seqOffset correspond to a sequence number
    * space in use by the user.  What is significant in this method is the
-   * difference between them; i.e. the quantity (seqOffset - seqFront). 
+   * difference between them; i.e. the quantity (seqOffset - seqFront).
    * This difference is subtracted from Size(), yielding the number of
    * bytes beyond seqOffset, from the user perspective, in the PendingData
    * buffer.
@@ -98,19 +98,19 @@ public:
    * If the first number specified is not a sequence number that corresponds
    * to the first data byte in the PendingData buffer, the computation
    * returned will be in error.
-   * 
-   * \return number of bytes 
+   *
+   * \return number of bytes
    * \param seqFront sequence number of assumed first byte in the PendingData
-   * \param seqOffset sequence number of offset 
+   * \param seqOffset sequence number of offset
    */
   virtual uint32_t SizeFromSeq (const SequenceNumber32& seqFront, const SequenceNumber32& seqOffset);
   // Inquire available data from offset
   /**
    * \return number of bytes in the data buffer beyond the offset specified
-   * \param offset offset (from zero) 
+   * \param offset offset (from zero)
    */
   virtual uint32_t SizeFromOffset (uint32_t offset);
-  // Available size from sequence difference 
+  // Available size from sequence difference
   /**
    * Subtracts seqFront from seqOffset after enforcing seqFront is less
    * than seqOffset
@@ -139,11 +139,11 @@ public:
    */
   virtual Ptr<Packet> CopyFromSeq (uint32_t s, const SequenceNumber32& f, const SequenceNumber32& o);
   /**
-   * Permits object to clear any pending data between seqFront and 
+   * Permits object to clear any pending data between seqFront and
    * seqOffset - 1).  Callers should check the return value to determine
    * whether any data was removed from the front.
    *
-   * \param seqFront sequence number to start to try to remove from 
+   * \param seqFront sequence number to start to try to remove from
    * \param seqOffset first sequence number in buffer that should be retained
    * \return number of bytes from the front that were removed from the buffer
    */

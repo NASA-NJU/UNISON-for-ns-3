@@ -36,12 +36,12 @@ class RawTextConfigSave : public FileConfig
 {
 public:
   RawTextConfigSave (); //!< default constructor
-  virtual ~RawTextConfigSave (); //!< destructor
+  ~RawTextConfigSave () override; //!< destructor
   // Inherited
-  virtual void SetFilename (std::string filename);
-  virtual void Default (void);
-  virtual void Global (void);
-  virtual void Attributes (void);
+  void SetFilename (std::string filename) override;
+  void Default () override;
+  void Global () override;
+  void Attributes () override;
 private:
   /// Config store output stream
   std::ofstream *m_os;
@@ -56,12 +56,12 @@ class RawTextConfigLoad : public FileConfig
 {
 public:
   RawTextConfigLoad (); //!< default constructor
-  virtual ~RawTextConfigLoad (); //!< destructor
+  ~RawTextConfigLoad () override; //!< destructor
   // Inherited
-  virtual void SetFilename (std::string filename);
-  virtual void Default (void);
-  virtual void Global (void);
-  virtual void Attributes (void);
+  void SetFilename (std::string filename) override;
+  void Default () override;
+  void Global () override;
+  void Attributes () override;
 private:
   /**
    * Parse (potentially multi-) line configs into type, name, and values.
@@ -73,7 +73,7 @@ private:
    * \param name the config attribute name
    * \param value the value to set
    * \returns true if all of type, name, and value parsed; false otherwise
-   * 
+   *
    */
   virtual bool ParseLine (const std::string &line, std::string &type, std::string &name, std::string &value);
 
@@ -82,7 +82,7 @@ private:
    * \param value the input string
    * \returns the updated string
    */
-  std::string Strip (std::string value); 
+  std::string Strip (std::string value);
   /// Config store input stream
   std::ifstream *m_is;
 };

@@ -40,7 +40,7 @@ using namespace ns3;
 NS_LOG_COMPONENT_DEFINE ("WiFiDistanceApps");
 
 TypeId
-Sender::GetTypeId (void)
+Sender::GetTypeId ()
 {
   static TypeId tid = TypeId ("Sender")
     .SetParent<Application> ()
@@ -77,7 +77,7 @@ Sender::Sender()
 {
   NS_LOG_FUNCTION_NOARGS ();
   m_interval = CreateObject<ConstantRandomVariable> ();
-  m_socket = 0;
+  m_socket = nullptr;
 }
 
 Sender::~Sender()
@@ -86,11 +86,11 @@ Sender::~Sender()
 }
 
 void
-Sender::DoDispose (void)
+Sender::DoDispose ()
 {
   NS_LOG_FUNCTION_NOARGS ();
 
-  m_socket = 0;
+  m_socket = nullptr;
   // chain up
   Application::DoDispose ();
 }
@@ -99,7 +99,7 @@ void Sender::StartApplication ()
 {
   NS_LOG_FUNCTION_NOARGS ();
 
-  if (m_socket == 0) {
+  if (!m_socket) {
       Ptr<SocketFactory> socketFactory = GetNode ()->GetObject<SocketFactory>
           (UdpSocketFactory::GetTypeId ());
       m_socket = socketFactory->CreateSocket ();
@@ -155,7 +155,7 @@ void Sender::SendPacket ()
 //-- Receiver
 //------------------------------------------------------
 TypeId
-Receiver::GetTypeId (void)
+Receiver::GetTypeId ()
 {
   static TypeId tid = TypeId ("Receiver")
     .SetParent<Application> ()
@@ -169,11 +169,11 @@ Receiver::GetTypeId (void)
 }
 
 Receiver::Receiver() :
-  m_calc (0),
-  m_delay (0)
+  m_calc (nullptr),
+  m_delay (nullptr)
 {
   NS_LOG_FUNCTION_NOARGS ();
-  m_socket = 0;
+  m_socket = nullptr;
 }
 
 Receiver::~Receiver()
@@ -182,11 +182,11 @@ Receiver::~Receiver()
 }
 
 void
-Receiver::DoDispose (void)
+Receiver::DoDispose ()
 {
   NS_LOG_FUNCTION_NOARGS ();
 
-  m_socket = 0;
+  m_socket = nullptr;
   // chain up
   Application::DoDispose ();
 }
@@ -196,11 +196,11 @@ Receiver::StartApplication ()
 {
   NS_LOG_FUNCTION_NOARGS ();
 
-  if (m_socket == 0) {
+  if (!m_socket) {
       Ptr<SocketFactory> socketFactory = GetNode ()->GetObject<SocketFactory>
           (UdpSocketFactory::GetTypeId ());
       m_socket = socketFactory->CreateSocket ();
-      InetSocketAddress local = 
+      InetSocketAddress local =
         InetSocketAddress (Ipv4Address::GetAny (), m_port);
       m_socket->Bind (local);
     }
@@ -215,7 +215,7 @@ Receiver::StopApplication ()
 {
   NS_LOG_FUNCTION_NOARGS ();
 
-  if (m_socket != 0) {
+  if (m_socket) {
       m_socket->SetRecvCallback (MakeNullCallback<void, Ptr<Socket> > ());
     }
 
@@ -254,12 +254,12 @@ Receiver::Receive (Ptr<Socket> socket)
       if (packet->FindFirstMatchingByteTag (timestamp)) {
           Time tx = timestamp.GetTimestamp ();
 
-          if (m_delay != 0) {
+          if (m_delay) {
               m_delay->Update (Simulator::Now () - tx);
             }
         }
 
-      if (m_calc != 0) {
+      if (m_calc) {
           m_calc->Update ();
         }
 
@@ -275,8 +275,8 @@ Receiver::Receive (Ptr<Socket> socket)
 //----------------------------------------------------------------------
 //-- TimestampTag
 //------------------------------------------------------
-TypeId 
-TimestampTag::GetTypeId (void)
+TypeId
+TimestampTag::GetTypeId ()
 {
   static TypeId tid = TypeId ("TimestampTag")
     .SetParent<Tag> ()
@@ -289,24 +289,24 @@ TimestampTag::GetTypeId (void)
   ;
   return tid;
 }
-TypeId 
-TimestampTag::GetInstanceTypeId (void) const
+TypeId
+TimestampTag::GetInstanceTypeId () const
 {
   return GetTypeId ();
 }
 
-uint32_t 
-TimestampTag::GetSerializedSize (void) const
+uint32_t
+TimestampTag::GetSerializedSize () const
 {
   return 8;
 }
-void 
+void
 TimestampTag::Serialize (TagBuffer i) const
 {
   int64_t t = m_timestamp.GetNanoSeconds ();
   i.Write ((const uint8_t *)&t, 8);
 }
-void 
+void
 TimestampTag::Deserialize (TagBuffer i)
 {
   int64_t t;
@@ -320,12 +320,12 @@ TimestampTag::SetTimestamp (Time time)
   m_timestamp = time;
 }
 Time
-TimestampTag::GetTimestamp (void) const
+TimestampTag::GetTimestamp () const
 {
   return m_timestamp;
 }
 
-void 
+void
 TimestampTag::Print (std::ostream &os) const
 {
   os << "t=" << m_timestamp;

@@ -38,7 +38,7 @@ NS_LOG_COMPONENT_DEFINE ("FqPieQueueDisc");
 
 NS_OBJECT_ENSURE_REGISTERED (FqPieFlow);
 
-TypeId FqPieFlow::GetTypeId (void)
+TypeId FqPieFlow::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::FqPieFlow")
     .SetParent<QueueDiscClass> ()
@@ -69,7 +69,7 @@ FqPieFlow::SetDeficit (uint32_t deficit)
 }
 
 int32_t
-FqPieFlow::GetDeficit (void) const
+FqPieFlow::GetDeficit () const
 {
   NS_LOG_FUNCTION (this);
   return m_deficit;
@@ -90,7 +90,7 @@ FqPieFlow::SetStatus (FlowStatus status)
 }
 
 FqPieFlow::FlowStatus
-FqPieFlow::GetStatus (void) const
+FqPieFlow::GetStatus () const
 {
   NS_LOG_FUNCTION (this);
   return m_status;
@@ -104,7 +104,7 @@ FqPieFlow::SetIndex (uint32_t index)
 }
 
 uint32_t
-FqPieFlow::GetIndex (void) const
+FqPieFlow::GetIndex () const
 {
   return m_index;
 }
@@ -112,7 +112,7 @@ FqPieFlow::GetIndex (void) const
 
 NS_OBJECT_ENSURE_REGISTERED (FqPieQueueDisc);
 
-TypeId FqPieQueueDisc::GetTypeId (void)
+TypeId FqPieQueueDisc::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::FqPieQueueDisc")
     .SetParent<QueueDisc> ()
@@ -248,7 +248,7 @@ FqPieQueueDisc::SetQuantum (uint32_t quantum)
 }
 
 uint32_t
-FqPieQueueDisc::GetQuantum (void) const
+FqPieQueueDisc::GetQuantum () const
 {
   return m_quantum;
 }
@@ -287,7 +287,8 @@ FqPieQueueDisc::DoEnqueue (Ptr<QueueDiscItem> item)
 {
   NS_LOG_FUNCTION (this << item);
 
-  uint32_t flowHash, h;
+  uint32_t flowHash;
+  uint32_t h;
 
   if (GetNPacketFilters () == 0)
     {
@@ -365,7 +366,7 @@ FqPieQueueDisc::DoEnqueue (Ptr<QueueDiscItem> item)
 }
 
 Ptr<QueueDiscItem>
-FqPieQueueDisc::DoDequeue (void)
+FqPieQueueDisc::DoDequeue ()
 {
   NS_LOG_FUNCTION (this);
 
@@ -416,7 +417,7 @@ FqPieQueueDisc::DoDequeue (void)
       if (!found)
         {
           NS_LOG_DEBUG ("No flow found to dequeue a packet");
-          return 0;
+          return nullptr;
         }
 
       item = flow->GetQueueDisc ()->Dequeue ();
@@ -441,7 +442,7 @@ FqPieQueueDisc::DoDequeue (void)
           NS_LOG_DEBUG ("Dequeued packet " << item->GetPacket ());
         }
     }
-  while (item == 0);
+  while (!item);
 
   flow->IncreaseDeficit (item->GetSize () * -1);
 
@@ -449,7 +450,7 @@ FqPieQueueDisc::DoDequeue (void)
 }
 
 bool
-FqPieQueueDisc::CheckConfig (void)
+FqPieQueueDisc::CheckConfig ()
 {
   NS_LOG_FUNCTION (this);
   if (GetNQueueDiscClasses () > 0)
@@ -504,7 +505,7 @@ FqPieQueueDisc::CheckConfig (void)
 }
 
 void
-FqPieQueueDisc::InitializeParams (void)
+FqPieQueueDisc::InitializeParams ()
 {
   NS_LOG_FUNCTION (this);
 
@@ -526,11 +527,12 @@ FqPieQueueDisc::InitializeParams (void)
 }
 
 uint32_t
-FqPieQueueDisc::FqPieDrop (void)
+FqPieQueueDisc::FqPieDrop ()
 {
   NS_LOG_FUNCTION (this);
 
-  uint32_t maxBacklog = 0, index = 0;
+  uint32_t maxBacklog = 0;
+  uint32_t index = 0;
   Ptr<QueueDisc> qd;
 
   /* Queue is full! Find the fat flow and drop packet(s) from it */
@@ -546,7 +548,9 @@ FqPieQueueDisc::FqPieDrop (void)
     }
 
   /* Our goal is to drop half of this fat flow backlog */
-  uint32_t len = 0, count = 0, threshold = maxBacklog >> 1;
+  uint32_t len = 0;
+  uint32_t count = 0;
+  uint32_t threshold = maxBacklog >> 1;
   qd = GetQueueDiscClass (index)->GetQueueDisc ();
   Ptr<QueueDiscItem> item;
 

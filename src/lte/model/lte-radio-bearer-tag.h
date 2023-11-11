@@ -38,8 +38,8 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
-  virtual TypeId GetInstanceTypeId (void) const;
+  static TypeId GetTypeId ();
+  TypeId GetInstanceTypeId () const override;
 
   /**
    * Create an empty LteRadioBearerTag
@@ -52,7 +52,7 @@ public:
    * \param lcId the LCID
    */
   LteRadioBearerTag (uint16_t  rnti, uint8_t lcId);
-  
+
   /**
   * Create a LteRadioBearerTag with the given RNTI, LC id and layer
    * \param rnti the RNTI
@@ -74,7 +74,7 @@ public:
    * @param lcid the value of the RNTI to set
    */
   void SetLcid (uint8_t lcid);
-  
+
   /**
   * Set the layer id to the given value.
   *
@@ -83,29 +83,29 @@ public:
   void SetLayer (uint8_t layer);
 
 
-  virtual void Serialize (TagBuffer i) const;
-  virtual void Deserialize (TagBuffer i);
-  virtual uint32_t GetSerializedSize () const;
-  virtual void Print (std::ostream &os) const;
+  void Serialize (TagBuffer i) const override;
+  void Deserialize (TagBuffer i) override;
+  uint32_t GetSerializedSize () const override;
+  void Print (std::ostream &os) const override;
 
   /**
    * Get RNTI function
    *
    * \returns RNTI
    */
-  uint16_t GetRnti (void) const;
+  uint16_t GetRnti () const;
   /**
    * Get LCID function
    *
    * \returns LCID
    */
-  uint8_t GetLcid (void) const;
+  uint8_t GetLcid () const;
   /**
    * Get layer function
    *
    * \returns layer
    */
-  uint8_t GetLayer (void) const;
+  uint8_t GetLayer () const;
 
 private:
   uint16_t m_rnti; ///< RNTI

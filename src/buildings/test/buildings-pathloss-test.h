@@ -34,7 +34,7 @@ using namespace ns3;
  * Test 1.1 BuildingsPathlossModel Pathloss compound test
  *
  * This TestSuite tests the BuildingPathlossModel by reproducing
- * several communication scenarios 
+ * several communication scenarios
  */
 class BuildingsPathlossTestSuite : public TestSuite
 {
@@ -64,10 +64,10 @@ public:
    * \param name Test name
    */
   BuildingsPathlossTestCase (double freq, uint16_t m1, uint16_t m2, EnvironmentType env, CitySize city, double refValue, std::string name);
-  virtual ~BuildingsPathlossTestCase ();
+  ~BuildingsPathlossTestCase () override;
 
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
   /**
    * Create a mobility model based on its index
    * \param index MobilityModel index

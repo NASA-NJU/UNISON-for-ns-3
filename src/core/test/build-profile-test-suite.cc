@@ -47,24 +47,23 @@ class BuildProfileTestCase : public TestCase
 {
 public:
   BuildProfileTestCase ();
-  virtual ~BuildProfileTestCase ()
+  ~BuildProfileTestCase () override
   {}
 
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
 };
 
-BuildProfileTestCase::BuildProfileTestCase (void)
+BuildProfileTestCase::BuildProfileTestCase ()
   : TestCase ("Check build profile macros")
 {}
 
 void
-BuildProfileTestCase::DoRun (void)
+BuildProfileTestCase::DoRun ()
 {
   int i = 0;
   int j = 0;
 
-  /* *NS_CHECK_STYLE_OFF* */
 #ifdef NS3_BUILD_PROFILE_DEBUG
   std::cout << GetName () << ": running in build profile debug" << std::endl;
   NS_BUILD_DEBUG (++i; ++j);
@@ -77,7 +76,6 @@ BuildProfileTestCase::DoRun (void)
 #else
   NS_TEST_ASSERT_MSG_EQ (0, 1, ": no build profile case executed");
 #endif
-  /* *NS_CHECK_STYLE_ON* */
 
   if (i == 1)
     {

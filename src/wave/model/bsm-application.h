@@ -44,13 +44,13 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   /**
    * \brief Constructor
    */
   BsmApplication ();
-  virtual ~BsmApplication ();
+  ~BsmApplication () override;
 
   /**
    * \brief Setup BSM generation parameters for a node
@@ -99,12 +99,12 @@ public:
   static int wavePort;
 
 protected:
-  virtual void DoDispose (void);
+  void DoDispose () override;
 
 private:
   // inherited from Application base class.
-  virtual void StartApplication (void);    ///< Called at time specified by Start
-  virtual void StopApplication (void);     ///< Called at time specified by Stop
+  void StartApplication () override;    ///< Called at time specified by Start
+  void StopApplication () override;     ///< Called at time specified by Stop
 
   /**
    * \brief Creates and transmits a WAVE BSM packet

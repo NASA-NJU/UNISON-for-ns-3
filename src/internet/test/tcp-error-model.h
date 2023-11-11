@@ -42,7 +42,7 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
   TcpGeneralErrorModel ();
 
   /**
@@ -67,7 +67,7 @@ protected:
 
 
 private:
-  virtual bool DoCorrupt (Ptr<Packet> p);
+  bool DoCorrupt (Ptr<Packet> p) override;
   Callback<void, const Ipv4Header&, const TcpHeader&, Ptr<const Packet> > m_dropCallback; //!< Drop callback.
 };
 
@@ -86,7 +86,7 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
   TcpSeqErrorModel () : TcpGeneralErrorModel () { }
 
   /**
@@ -103,14 +103,14 @@ public:
   }
 
 protected:
-  virtual bool ShouldDrop (const Ipv4Header &ipHeader, const TcpHeader &tcpHeader,
-                           uint32_t packetSize);
+  bool ShouldDrop (const Ipv4Header &ipHeader, const TcpHeader &tcpHeader,
+                           uint32_t packetSize) override;
 
 protected:
   std::list<SequenceNumber32> m_seqToKill; //!< List of the sequence numbers to be dropped.
 
 private:
-  virtual void DoReset (void);
+  void DoReset () override;
 };
 
 /**
@@ -133,7 +133,7 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
   TcpFlagErrorModel ();
 
   /**
@@ -163,15 +163,15 @@ public:
   }
 
 protected:
-  virtual bool ShouldDrop (const Ipv4Header &ipHeader, const TcpHeader &tcpHeader,
-                           uint32_t packetSize);
+  bool ShouldDrop (const Ipv4Header &ipHeader, const TcpHeader &tcpHeader,
+                           uint32_t packetSize) override;
 
 protected:
   TcpHeader::Flags_t m_flagsToKill; //!< Flags a packet should have to be dropped.
   int16_t m_killNumber;  //!< The number of times the packet should be killed.
 
 private:
-  virtual void DoReset (void);
+  void DoReset () override;
 };
 
 } // namespace ns3

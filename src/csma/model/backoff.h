@@ -39,12 +39,12 @@ public:
   /**
    * Minimum number of backoff slots (when multiplied by m_slotTime, determines minimum backoff time)
    */
-  uint32_t m_minSlots; 
+  uint32_t m_minSlots;
 
   /**
    * Maximum number of backoff slots (when multiplied by m_slotTime, determines maximum backoff time)
    */
-  uint32_t m_maxSlots; 
+  uint32_t m_maxSlots;
 
   /**
    * Caps the exponential function when the number of retries reaches m_ceiling.
@@ -61,7 +61,7 @@ public:
    */
   Time m_slotTime;
 
-  Backoff (void);
+  Backoff ();
   /**
    * \brief Constructor
    * \param slotTime Length of one slot
@@ -83,17 +83,17 @@ public:
    * successfully transmitted and that the number of retries should be
    * reset to 0.
    */
-  void ResetBackoffTime (void);
+  void ResetBackoffTime ();
 
   /**
    * \return True if the maximum number of retries has been reached
    */
-  bool MaxRetriesReached (void);
+  bool MaxRetriesReached ();
 
   /**
    * Increments the number of retries by 1.
    */
-  void IncrNumRetries (void);
+  void IncrNumRetries ();
 
  /**
   * Assign a fixed random variable stream number to the random variables

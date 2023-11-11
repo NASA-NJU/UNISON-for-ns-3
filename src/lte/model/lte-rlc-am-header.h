@@ -46,10 +46,10 @@ public:
    * Creates a null header
    */
   LteRlcAmHeader ();
-  ~LteRlcAmHeader ();
+  ~LteRlcAmHeader () override;
 
   /// Set data PDU function
-  void SetDataPdu (void);
+  void SetDataPdu ();
   /**
    * Set control PDU function
    *
@@ -60,12 +60,12 @@ public:
    * Is data PDU function
    * \returns true if data PDU
    */
-  bool IsDataPdu (void) const;
+  bool IsDataPdu () const;
   /**
    * Is control PDU function
    * \returns true if control PDU
    */
-  bool IsControlPdu (void) const;
+  bool IsControlPdu () const;
 
   /// DataControlPdu_t enumeration
   typedef enum {
@@ -138,13 +138,13 @@ public:
    *
    * \returns the extension bit
    */
-  uint8_t PopExtensionBit (void);
+  uint8_t PopExtensionBit ();
   /**
    * Pop length indicator function
    *
    * \returns the length indicator
    */
-  uint16_t PopLengthIndicator (void);
+  uint16_t PopLengthIndicator ();
 
   /// ExtensionBit_t typedef
   typedef enum {
@@ -250,46 +250,46 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
-  virtual TypeId GetInstanceTypeId (void) const;
-  virtual void Print (std::ostream &os) const;
-  virtual uint32_t GetSerializedSize (void) const;
-  virtual void Serialize (Buffer::Iterator start) const;
-  virtual uint32_t Deserialize (Buffer::Iterator start);
+  static TypeId GetTypeId ();
+  TypeId GetInstanceTypeId () const override;
+  void Print (std::ostream &os) const override;
+  uint32_t GetSerializedSize () const override;
+  void Serialize (Buffer::Iterator start) const override;
+  uint32_t Deserialize (Buffer::Iterator start) override;
 
-  /** 
-   * 
-   * 
+  /**
+   *
+   *
    * \param bytes max allowed CONTROL PDU size
-   * 
+   *
    * \return true if one more NACK would fit in the CONTROL PDU; false otherwise
    */
   bool OneMoreNackWouldFitIn (uint16_t bytes);
 
-  /** 
+  /**
    * Add one more NACK to the CONTROL PDU
-   * 
-   * \param nack 
+   *
+   * \param nack
    */
   void PushNack (int nack);
 
-  /** 
-   * 
-   * 
+  /**
+   *
+   *
    * \param nack SN of the NACK
-   * 
+   *
    * \return true if the NACK is present in the STATUS PDU, false otherwise
    */
   bool IsNackPresent (SequenceNumber10 nack);
 
 
-  /** 
+  /**
    * Retrieve one NACK from the CONTROL PDU
-   * 
-   * 
+   *
+   *
    * \return the SN  >= 0 of the next nack; returns -1 if no NACK is left
    */
-  int PopNack (void);
+  int PopNack ();
 
 
 private:
@@ -309,7 +309,7 @@ private:
   std::list <uint16_t> m_lengthIndicators; ///< length indicators
 
   // Control PDU fields
-  uint8_t  m_controlPduType; ///< control PDU type 
+  uint8_t  m_controlPduType; ///< control PDU type
 
   // Status PDU fields
   SequenceNumber10 m_ackSn; ///< ack sn

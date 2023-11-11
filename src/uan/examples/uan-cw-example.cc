@@ -3,7 +3,7 @@
  * Copyright (c) 2009 University of Washington
  *
  * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as 
+ * it under the terms of the GNU General Public License version 2 as
  * published by the Free Software Foundation;
  *
  * This program is distributed in the hope that it will be useful,
@@ -22,7 +22,7 @@
 /**
  * \file uan-cw-example.cc
  * \ingroup uan
- * 
+ *
  * This example showcases the "CW-MAC" described in System Design Considerations
  * for Undersea Networks article in the IEEE Journal on Selected Areas of
  * Communications 2008 by Nathan Parrish, Leonard Tracy and Sumit Roy.
@@ -34,7 +34,7 @@
  * the duration of each slot.  These parameters should be set
  * according to the overall network size, internode spacing and
  * the number of nodes in the network.
- * 
+ *
  * This example deploys nodes randomly (according to RNG seed of course)
  * in a finite square region with the X and Y coordinates of the nodes
  * distributed uniformly.  The CW parameter is varied throughout
@@ -55,7 +55,7 @@ using namespace ns3;
 
 NS_LOG_COMPONENT_DEFINE ("UanCwExample");
 
-Experiment::Experiment () 
+Experiment::Experiment ()
   : m_numNodes (15),
     m_dataRate (80),
     m_depth (70),
@@ -125,7 +125,7 @@ Experiment::ReceivePacket (Ptr<Socket> socket)
     {
       m_bytesTotal += packet->GetSize ();
     }
-  packet = 0;
+  packet = nullptr;
 }
 
 Gnuplot2dDataset
@@ -143,7 +143,7 @@ Experiment::Run (UanHelper &uan)
 
 #ifdef UAN_PROP_BH_INSTALLED
   Ptr<UanPropModelBh> prop = CreateObjectWithAttributes<UanPropModelBh> ("ConfigFile", StringValue ("exbhconfig.cfg"));
-#else 
+#else
   Ptr<UanPropModelIdeal> prop = CreateObjectWithAttributes<UanPropModelIdeal> ();
 #endif //UAN_PROP_BH_INSTALLED
   Ptr<UanChannel> channel = CreateObjectWithAttributes<UanChannel> ("PropagationModel", PointerValue (prop));
@@ -214,7 +214,7 @@ Experiment::Run (UanHelper &uan)
 
     Ptr<Node> sinkNode = sink.Get (0);
     TypeId psfid = TypeId::LookupByName ("ns3::PacketSocketFactory");
-    if (sinkNode->GetObject<SocketFactory> (psfid) == 0)
+    if (!sinkNode->GetObject<SocketFactory> (psfid))
       {
         Ptr<PacketSocketFactory> psf = CreateObject<PacketSocketFactory> ();
         sinkNode->AggregateObject (psf);
@@ -234,27 +234,27 @@ Experiment::Run (UanHelper &uan)
     uan.EnableAsciiAll (ascii);
 
     Simulator::Run ();
-    sinkNode = 0;
-    sinkSocket = 0;
-    pos = 0;
-    channel = 0;
-    prop = 0;
+    sinkNode = nullptr;
+    sinkSocket = nullptr;
+    pos = nullptr;
+    channel = nullptr;
+    prop = nullptr;
     for (uint32_t i=0; i < nc.GetN (); i++)
       {
-        nc.Get (i) = 0;
+        nc.Get (i) = nullptr;
       }
     for (uint32_t i=0; i < sink.GetN (); i++)
       {
-        sink.Get (i) = 0;
+        sink.Get (i) = nullptr;
       }
 
     for (uint32_t i=0; i < devices.GetN (); i++)
       {
-        devices.Get (i) = 0;
+        devices.Get (i) = nullptr;
       }
     for (uint32_t i=0; i < sinkdev.GetN (); i++)
       {
-        sinkdev.Get (i) = 0;
+        sinkdev.Get (i) = nullptr;
       }
 
     Simulator::Destroy ();
@@ -327,8 +327,8 @@ main (int argc, char **argv)
     }
   gp.GenerateOutput (of);
 
-  per = 0;
-  sinr = 0;
+  per = nullptr;
+  sinr = nullptr;
 
 }
 

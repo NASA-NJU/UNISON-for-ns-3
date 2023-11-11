@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2008-2009 Telecom Bretagne 
+ * Copyright (c) 2008-2009 Telecom Bretagne
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
@@ -32,6 +32,7 @@
 
 namespace ns3
 {
+class Node;
 
 /**
  * \ingroup ipv6
@@ -41,7 +42,7 @@ namespace ns3
 class Ipv6AutoconfiguredPrefix : public Object
 {
 public:
-  /** 
+  /**
    * \brief Constructor.
    * \param node node
    * \param interface interface index
@@ -56,7 +57,7 @@ public:
   /**
    * \brief Destructor.
    */
-  ~Ipv6AutoconfiguredPrefix ();
+  ~Ipv6AutoconfiguredPrefix () override;
 
   /**
    * \brief Set the default gateway router.
@@ -98,7 +99,7 @@ public:
    * \brief Get the prefix valid life time.
    * \return valid life time
    */
-  uint32_t GetValidLifeTime (void) const;
+  uint32_t GetValidLifeTime () const;
 
   /**
    * \brief Set the prefix valid life time.
@@ -232,7 +233,7 @@ private:
   /**
    * \brief Default gateway router.
    *
-   * If the RA received also configured the default gateway, 
+   * If the RA received also configured the default gateway,
    * this variable has the link-local address. Otherwise this
    * is "::"
    */

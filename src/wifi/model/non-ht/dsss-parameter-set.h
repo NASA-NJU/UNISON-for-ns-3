@@ -38,21 +38,6 @@ public:
 
   // Implementations of pure virtual methods of WifiInformationElement
   WifiInformationElementId ElementId () const override;
-  uint8_t GetInformationFieldSize () const override;
-  void SerializeInformationField (Buffer::Iterator start) const override;
-  uint8_t DeserializeInformationField (Buffer::Iterator start, uint8_t length) override;
-  /* This information element is a bit special in that it is only
-     included if the STA does support DSSS. To support this we
-     override the Serialize and GetSerializedSize methods of
-     WifiInformationElement. */
-  Buffer::Iterator Serialize (Buffer::Iterator start) const override;
-  uint16_t GetSerializedSize () const override;
-
-  /**
-   * Set DSSS supported
-   * \param dsssSupported the DSSS supported indicator
-   */
-  void SetDsssSupported (uint8_t dsssSupported);
 
   /**
    * Set the Current Channel field in the DsssParameterSet information element.
@@ -63,10 +48,11 @@ public:
 
 
 private:
-  uint8_t m_currentChannel; ///< current channel number
+  uint16_t GetInformationFieldSize () const override;
+  void SerializeInformationField (Buffer::Iterator start) const override;
+  uint16_t DeserializeInformationField (Buffer::Iterator start, uint16_t length) override;
 
-  /// This is used to decide whether this element should be added to the frame or not
-  bool m_dsssSupported;
+  uint8_t m_currentChannel; ///< current channel number
 };
 
 } //namespace ns3

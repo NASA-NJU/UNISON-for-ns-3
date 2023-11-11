@@ -52,8 +52,8 @@ public:
    *
    * This method is to be called when upper RRC entity has a
    * RRC PDU ready to send
-   * 
-   * \param params 
+   *
+   * \param params
    */
   virtual void TransmitPdcpSdu (TransmitPdcpSduParameters params) = 0;
 };
@@ -97,13 +97,13 @@ class LtePdcpSpecificLtePdcpSapProvider : public LtePdcpSapProvider
 public:
   /**
    * Constructor
-   * 
+   *
    * \param pdcp PDCP
    */
   LtePdcpSpecificLtePdcpSapProvider (C* pdcp);
 
   // Interface implemented from LtePdcpSapProvider
-  virtual void TransmitPdcpSdu (TransmitPdcpSduParameters params);
+  void TransmitPdcpSdu (TransmitPdcpSduParameters params) override;
 
 private:
   LtePdcpSpecificLtePdcpSapProvider ();
@@ -141,7 +141,7 @@ public:
   LtePdcpSpecificLtePdcpSapUser (C* rrc);
 
   // Interface implemented from LtePdcpSapUser
-  virtual void ReceivePdcpSdu (ReceivePdcpSduParameters params);
+  void ReceivePdcpSdu (ReceivePdcpSduParameters params) override;
 
 private:
   LtePdcpSpecificLtePdcpSapUser ();

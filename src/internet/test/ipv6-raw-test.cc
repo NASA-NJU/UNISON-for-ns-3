@@ -1,7 +1,7 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2012 Hajime Tazaki
- * 
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
  * published by the Free Software Foundation;
@@ -77,7 +77,7 @@ class Ipv6RawSocketImplTest : public TestCase
   void SendData (Ptr<Socket> socket, std::string to);
 
 public:
-  virtual void DoRun (void);
+  void DoRun () override;
   Ipv6RawSocketImplTest ();
 
   /**
@@ -108,7 +108,7 @@ public:
 
 
 Ipv6RawSocketImplTest::Ipv6RawSocketImplTest ()
-  : TestCase ("Ipv6 Raw socket implementation") 
+  : TestCase ("Ipv6 Raw socket implementation")
 {
 }
 
@@ -164,7 +164,7 @@ Ipv6RawSocketImplTest::SendData (Ptr<Socket> socket, std::string to)
 }
 
 void
-Ipv6RawSocketImplTest::DoRun (void)
+Ipv6RawSocketImplTest::DoRun ()
 {
   // Create topology
 
@@ -273,8 +273,8 @@ Ipv6RawSocketImplTest::DoRun (void)
   NS_TEST_EXPECT_MSG_EQ (m_receivedPacket->GetSize (), 163, "recv: ff02::1");
   NS_TEST_EXPECT_MSG_EQ (m_receivedPacket2->GetSize (), 163, "recv: ff02::1");
 
-  m_receivedPacket = 0;
-  m_receivedPacket2 = 0;
+  m_receivedPacket = nullptr;
+  m_receivedPacket2 = nullptr;
 
   // Simple getpeername tests
 

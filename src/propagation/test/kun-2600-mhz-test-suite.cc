@@ -37,26 +37,26 @@ NS_LOG_COMPONENT_DEFINE ("Kun2600MhzPropagationLossModelTest");
  * \ingroup propagation-tests
  *
  * \brief Kun2600MhzPropagationLossModel Test Case
- * 
+ *
  */
 class Kun2600MhzPropagationLossModelTestCase : public TestCase
 {
 public:
   /**
    * Constructor
-   * 
+   *
    * \param dist 2D distance between UT and BS in meters
    * \param hb height of BS in meters
    * \param hm height of UT in meters
    * \param refValue reference loss value
    * \param name TestCase name
-   */ 
+   */
   Kun2600MhzPropagationLossModelTestCase (double dist, double hb, double hm, double refValue, std::string name);
-  virtual ~Kun2600MhzPropagationLossModelTestCase ();
+  ~Kun2600MhzPropagationLossModelTestCase () override;
 
 private:
-  virtual void DoRun (void);
-  
+  void DoRun () override;
+
   /**
    * Create a MobilityModel
    * \param index mobility model index
@@ -86,7 +86,7 @@ Kun2600MhzPropagationLossModelTestCase::~Kun2600MhzPropagationLossModelTestCase 
 
 
 void
-Kun2600MhzPropagationLossModelTestCase::DoRun (void)
+Kun2600MhzPropagationLossModelTestCase::DoRun ()
 {
   NS_LOG_FUNCTION (this);
 
@@ -103,7 +103,7 @@ Kun2600MhzPropagationLossModelTestCase::DoRun (void)
 
   NS_LOG_INFO ("Calculated loss: " << loss);
   NS_LOG_INFO ("Theoretical loss: " << m_lossRef);
- 
+
   NS_TEST_ASSERT_MSG_EQ_TOL (loss, m_lossRef, 0.1, "Wrong loss!");
 
 }
@@ -114,7 +114,7 @@ Kun2600MhzPropagationLossModelTestCase::DoRun (void)
  * \ingroup propagation-tests
  *
  * \brief Kun2600MhzPropagationLossModel TestSuite
- * 
+ *
  */
 class Kun2600MhzPropagationLossModelTestSuite : public TestSuite
 {

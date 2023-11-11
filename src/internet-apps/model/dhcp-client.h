@@ -50,10 +50,10 @@ public:
    * \return the object TypeId
    */
   static TypeId
-  GetTypeId (void);
+  GetTypeId ();
 
   DhcpClient ();
-  virtual ~DhcpClient ();
+  ~DhcpClient () override;
 
   /**
    * \brief Constructor
@@ -65,7 +65,7 @@ public:
    * \brief Get the the NetDevice DHCP should work on
    * \return the NetDevice DHCP should work on
    */
-  Ptr<NetDevice> GetDhcpClientNetDevice (void);
+  Ptr<NetDevice> GetDhcpClientNetDevice ();
 
   /**
    * \brief Set the NetDevice DHCP should work on
@@ -77,7 +77,7 @@ public:
    * \brief Get the IPv4Address of current DHCP server
    * \return Ipv4Address of current DHCP server
    */
-  Ipv4Address GetDhcpServer (void);
+  Ipv4Address GetDhcpServer ();
 
   /**
    * Assign a fixed random variable stream number to the random variables
@@ -90,7 +90,7 @@ public:
   int64_t AssignStreams (int64_t stream);
 
 protected:
-  virtual void DoDispose (void);
+  void DoDispose () override;
 
 private:
   /// client states
@@ -106,17 +106,17 @@ private:
   /*
    * \brief Starts the DHCP client application
    */
-  virtual void StartApplication (void);
+  void StartApplication () override;
 
   /*
    * \brief Stops the DHCP client application
    */
-  virtual void StopApplication (void);
+  void StopApplication () override;
 
   /**
    * \brief Handles changes in LinkState
    */
-  void LinkStateHandler (void);
+  void LinkStateHandler ();
 
   /**
    * \brief Handles incoming packets from the network
@@ -127,7 +127,7 @@ private:
   /**
    * \brief Sends DHCP DISCOVER and changes the client state to WAIT_OFFER
    */
-  void Boot (void);
+  void Boot ();
 
   /**
    * \brief Stores DHCP offers in m_offerList
@@ -138,12 +138,12 @@ private:
   /**
    * \brief Selects an OFFER from m_offerList
    */
-  void Select (void);
+  void Select ();
 
   /**
    * \brief Sends the DHCP REQUEST message and changes the client state to WAIT_ACK
    */
-  void Request (void);
+  void Request ();
 
   /**
    * \brief Receives the DHCP ACK and configures IP address of the client.

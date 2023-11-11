@@ -42,48 +42,48 @@ namespace ns3 {
  * purpose of this class is to be used to generate a
  * Radio Environment Map (REM) by locating several instances in a grid
  * fashion, and connecting them to the channel only for a very short
- * amount of time. 
+ * amount of time.
  *
  * The assumption on which this class works is that the system
  * being considered is an infrastructure radio access network using
- * FDD, hence all signals will be transmitted simultaneously. 
+ * FDD, hence all signals will be transmitted simultaneously.
  */
 class RemSpectrumPhy : public SpectrumPhy
 {
 
 public:
   RemSpectrumPhy ();
-  virtual ~RemSpectrumPhy ();
+  ~RemSpectrumPhy () override;
 
   // inherited from Object
-  void DoDispose ();
+  void DoDispose () override;
   /**
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   // inherited from SpectrumPhy
-  void SetChannel (Ptr<SpectrumChannel> c);
-  void SetMobility (Ptr<MobilityModel> m);
-  void SetDevice (Ptr<NetDevice> d);
-  Ptr<MobilityModel> GetMobility () const;
-  Ptr<NetDevice> GetDevice () const;
-  Ptr<const SpectrumModel> GetRxSpectrumModel () const;
-  Ptr<Object> GetAntenna () const;
-  void StartRx (Ptr<SpectrumSignalParameters> params);
+  void SetChannel (Ptr<SpectrumChannel> c) override;
+  void SetMobility (Ptr<MobilityModel> m) override;
+  void SetDevice (Ptr<NetDevice> d) override;
+  Ptr<MobilityModel> GetMobility () const override;
+  Ptr<NetDevice> GetDevice () const override;
+  Ptr<const SpectrumModel> GetRxSpectrumModel () const override;
+  Ptr<Object> GetAntenna () const override;
+  void StartRx (Ptr<SpectrumSignalParameters> params) override;
 
-  /** 
+  /**
    * set the RX spectrum model to be used
-   * 
-   * \param m 
+   *
+   * \param m
    */
   void SetRxSpectrumModel (Ptr<const SpectrumModel> m);
 
-  /** 
-   * 
+  /**
+   *
    * \param noisePower the noise power
-   * \return the Signal to Noise Ratio calculated 
+   * \return the Signal to Noise Ratio calculated
    */
   double GetSinr (double noisePower);
 
@@ -93,15 +93,15 @@ public:
    */
   void Deactivate ();
 
-  /** 
-   * 
+  /**
+   *
    * \return true if active
    */
   bool IsActive ();
 
-  /** 
+  /**
    * Reset the SINR calculator
-   * 
+   *
    */
   void Reset ();
 

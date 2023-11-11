@@ -22,9 +22,10 @@
 #ifndef WIFI_PHY_LISTENER_H
 #define WIFI_PHY_LISTENER_H
 
-namespace ns3 {
+#include <vector>
+#include "wifi-phy-common.h"
 
-class Time;
+namespace ns3 {
 
 /**
  * \brief receive notifications about PHY events.
@@ -58,13 +59,13 @@ public:
    * NotifyRxStart was invoked first and, the packet has
    * been successfully received.
    */
-  virtual void NotifyRxEndOk (void) = 0;
+  virtual void NotifyRxEndOk () = 0;
   /**
    * We have received the last bit of a packet for which
    * NotifyRxStart was invoked first and, the packet has
    * _not_ been successfully received.
    */
-  virtual void NotifyRxEndError (void) = 0;
+  virtual void NotifyRxEndError () = 0;
   /**
    * \param duration the expected transmission duration.
    * \param txPowerDbm the nominal TX power in dBm
@@ -78,6 +79,11 @@ public:
   virtual void NotifyTxStart (Time duration, double txPowerDbm) = 0;
   /**
    * \param duration the expected busy duration.
+   * \param channelType the channel type for which the CCA busy state is reported.
+   * \param per20MhzDurations vector that indicates for how long each 20 MHz subchannel
+   *        (corresponding to the index of the element in the vector) is busy and where a zero duration
+   *        indicates that the subchannel is idle. The vector is non-empty if  the PHY supports 802.11ax
+   *        or later and if the operational channel width is larger than 20 MHz.
    *
    * This method does not really report a real state
    * change as opposed to the other methods in this class.
@@ -91,7 +97,8 @@ public:
    * which the last NotifyCcaBusyStart method is called and
    * what duration it reported.
    */
-  virtual void NotifyMaybeCcaBusyStart (Time duration) = 0;
+  virtual void NotifyCcaBusyStart (Time duration, WifiChannelListType channelType,
+                                   const std::vector<Time>& per20MhzDurations) = 0;
   /**
    * \param duration the expected channel switching duration.
    *
@@ -103,19 +110,19 @@ public:
   /**
    * Notify listeners that we went to sleep
    */
-  virtual void NotifySleep (void) = 0;
+  virtual void NotifySleep () = 0;
   /**
   * Notify listeners that we went to switch off
   */
-  virtual void NotifyOff (void) = 0;
+  virtual void NotifyOff () = 0;
   /**
    * Notify listeners that we woke up
    */
-  virtual void NotifyWakeup (void) = 0;
+  virtual void NotifyWakeup () = 0;
   /**
    * Notify listeners that we went to switch on
    */
-  virtual void NotifyOn (void) = 0;
+  virtual void NotifyOn () = 0;
 };
 
 } //namespace ns3

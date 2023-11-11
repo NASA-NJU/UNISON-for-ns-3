@@ -55,44 +55,44 @@ Ptr<const AttributeChecker> MakeUintegerChecker (uint64_t min, uint64_t max, std
         m_maxValue (maxValue),
         m_name (name)
     {}
-    virtual bool Check (const AttributeValue &value) const
+    bool Check (const AttributeValue &value) const override
     {
       NS_LOG_FUNCTION (&value);
       const UintegerValue *v = dynamic_cast<const UintegerValue *> (&value);
-      if (v == 0)
+      if (v == nullptr)
         {
           return false;
         }
       return v->Get () >= m_minValue && v->Get () <= m_maxValue;
     }
-    virtual std::string GetValueTypeName (void) const
+    std::string GetValueTypeName () const override
     {
       NS_LOG_FUNCTION_NOARGS ();
       return "ns3::UintegerValue";
     }
-    virtual bool HasUnderlyingTypeInformation (void) const
+    bool HasUnderlyingTypeInformation () const override
     {
       NS_LOG_FUNCTION_NOARGS ();
       return true;
     }
-    virtual std::string GetUnderlyingTypeInformation (void) const
+    std::string GetUnderlyingTypeInformation () const override
     {
       NS_LOG_FUNCTION_NOARGS ();
       std::ostringstream oss;
       oss << m_name << " " << m_minValue << ":" << m_maxValue;
       return oss.str ();
     }
-    virtual Ptr<AttributeValue> Create (void) const
+    Ptr<AttributeValue> Create () const override
     {
       NS_LOG_FUNCTION_NOARGS ();
       return ns3::Create<UintegerValue> ();
     }
-    virtual bool Copy (const AttributeValue &source, AttributeValue &destination) const
+    bool Copy (const AttributeValue &source, AttributeValue &destination) const override
     {
       NS_LOG_FUNCTION (&source << &destination);
       const UintegerValue *src = dynamic_cast<const UintegerValue *> (&source);
       UintegerValue *dst = dynamic_cast<UintegerValue *> (&destination);
-      if (src == 0 || dst == 0)
+      if (src == nullptr || dst == nullptr)
         {
           return false;
         }

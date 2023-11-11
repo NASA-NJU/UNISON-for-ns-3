@@ -25,6 +25,7 @@
 #include "ns3/event-id.h"
 #include "ns3/ptr.h"
 #include "ns3/packet-socket-address.h"
+#include "ns3/traced-callback.h"
 
 namespace ns3 {
 
@@ -56,11 +57,11 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   PacketSocketClient ();
 
-  virtual ~PacketSocketClient ();
+  ~PacketSocketClient () override;
 
   /**
    * \brief set the remote address and protocol to be used
@@ -72,15 +73,15 @@ public:
    * \brief Query the priority value of this socket
    * \return The priority value
    */
-  uint8_t GetPriority (void) const;
+  uint8_t GetPriority () const;
 
 protected:
-  virtual void DoDispose (void);
+  void DoDispose () override;
 
 private:
 
-  virtual void StartApplication (void);
-  virtual void StopApplication (void);
+  void StartApplication () override;
+  void StopApplication () override;
 
   /**
    * \brief Manually set the socket priority
@@ -91,7 +92,7 @@ private:
   /**
    * \brief Send a packet
    */
-  void Send (void);
+  void Send ();
 
   uint32_t m_maxPackets; //!< Maximum number of packets the application will send
   Time m_interval;       //!< Packet inter-send time

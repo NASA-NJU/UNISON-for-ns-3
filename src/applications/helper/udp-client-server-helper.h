@@ -78,7 +78,7 @@ public:
    *
    * \returns a Ptr to the last created server application
    */
-  Ptr<UdpServer> GetServer (void);
+  Ptr<UdpServer> GetServer ();
 private:
   ObjectFactory m_factory; //!< Object factory.
   Ptr<UdpServer> m_server; //!< The last created server application
@@ -147,8 +147,8 @@ private:
  * \ingroup udpclientserver
  * Create UdpTraceClient application which sends UDP packets based on a trace
  * file of an MPEG4 stream. Trace files could be downloaded form :
- * http://www2.tkn.tu-berlin.de/research/trace/ltvt.html (the 2 first lines of
- * the file should be removed)
+ * https://web.archive.org/web/20190907061916/http://www2.tkn.tu-berlin.de/research/trace/ltvt.html
+ * (the 2 first lines of the file should be removed)
  * A valid trace file is a file with 4 columns:
  * \li -1- the first one represents the frame index
  * \li -2- the second one indicates the type of the frame: I, P or B

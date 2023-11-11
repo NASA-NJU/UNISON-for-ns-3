@@ -1,7 +1,7 @@
 /* -*-  Mode: C++; c-file-style: "gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2011 Universita' di Firenze, Italy
- * 
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
  * published by the Free Software Foundation;
@@ -73,11 +73,11 @@ public:
     static TypeId tid = TypeId ("ns3::IPv4TestTag").SetParent<Tag> ().AddConstructor<IPv4TestTag> ();
     return tid;
   }
-  virtual TypeId GetInstanceTypeId () const { return GetTypeId (); }
-  virtual uint32_t GetSerializedSize () const { return sizeof (token); }
-  virtual void Serialize (TagBuffer buffer) const { buffer.WriteU64 (token); }
-  virtual void Deserialize (TagBuffer buffer) { token = buffer.ReadU64 (); }
-  virtual void Print (std::ostream &os) const { os << "token=" << token; }
+  TypeId GetInstanceTypeId () const override { return GetTypeId (); }
+  uint32_t GetSerializedSize () const override { return sizeof (token); }
+  void Serialize (TagBuffer buffer) const override { buffer.WriteU64 (token); }
+  void Deserialize (TagBuffer buffer) override { token = buffer.ReadU64 (); }
+  void Print (std::ostream &os) const override { os << "token=" << token; }
   /**
    * \brief Set the token.
    * \param token The token.
@@ -112,13 +112,13 @@ class Ipv4FragmentationTest: public TestCase
   bool m_broadcast;       //!< broadcast packets
 
 public:
-  virtual void DoRun (void);
+  void DoRun () override;
   /**
    * Constructor
    * \param broadcast send broadcast packets (true) or unicast packets (false)
    */
   Ipv4FragmentationTest (bool broadcast);
-  ~Ipv4FragmentationTest ();
+  ~Ipv4FragmentationTest () override;
 
   // server part
 
@@ -168,7 +168,7 @@ public:
    * \brief Send a packet.
    * \returns The sent packet.
    */
-  Ptr<Packet> SendClient (void);
+  Ptr<Packet> SendClient ();
 
 };
 
@@ -176,8 +176,8 @@ Ipv4FragmentationTest::Ipv4FragmentationTest (bool broadcast)
   : TestCase (std::string ("Verify the IPv4 layer 3 protocol fragmentation and reassembly: ") +
               (broadcast? "broadcast": "unicast"))
 {
-  m_socketServer = 0;
-  m_data = 0;
+  m_socketServer = nullptr;
+  m_data = nullptr;
   m_dataSize = 0;
   m_size = 0;
   m_icmpType = 0;
@@ -190,7 +190,7 @@ Ipv4FragmentationTest::~Ipv4FragmentationTest ()
     {
       delete[] m_data;
     }
-  m_data = 0;
+  m_data = nullptr;
   m_dataSize = 0;
 }
 
@@ -199,7 +199,7 @@ void
 Ipv4FragmentationTest::StartServer (Ptr<Node> ServerNode)
 {
 
-  if (m_socketServer == 0)
+  if (!m_socketServer)
     {
       TypeId tid = TypeId::LookupByName ("ns3::UdpSocketFactory");
       m_socketServer = Socket::CreateSocket (ServerNode, tid);
@@ -234,7 +234,7 @@ void
 Ipv4FragmentationTest::StartClient (Ptr<Node> ClientNode)
 {
 
-  if (m_socketClient == 0)
+  if (!m_socketClient)
     {
       TypeId tid = TypeId::LookupByName ("ns3::UdpSocketFactory");
       m_socketClient = Socket::CreateSocket (ClientNode, tid);
@@ -298,7 +298,7 @@ Ipv4FragmentationTest::SetFill (uint8_t *fill, uint32_t fillSize, uint32_t dataS
   m_size = dataSize;
 }
 
-Ptr<Packet> Ipv4FragmentationTest::SendClient (void)
+Ptr<Packet> Ipv4FragmentationTest::SendClient ()
 {
   Ptr<Packet> p;
   if (m_dataSize)
@@ -331,14 +331,14 @@ Ptr<Packet> Ipv4FragmentationTest::SendClient (void)
 }
 
 void
-Ipv4FragmentationTest::DoRun (void)
+Ipv4FragmentationTest::DoRun ()
 {
   // set the arp cache to something quite high
   // we shouldn't need because the NetDevice used doesn't need arp, but still
   Config::SetDefault ("ns3::ArpCache::PendingQueueSize", UintegerValue (100));
 
   // Create topology
-  
+
    // Receiver Node
   Ptr<Node> serverNode = CreateObject<Node> ();
   // Sender Node

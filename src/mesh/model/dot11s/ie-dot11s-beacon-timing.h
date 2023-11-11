@@ -41,7 +41,7 @@ public:
    */
   void SetAid (uint8_t aid);
   /**
-   * Set last beacon value 
+   * Set last beacon value
    * \param lastBeacon the last beacon
    */
   void SetLastBeacon (uint16_t lastBeacon);
@@ -62,7 +62,7 @@ public:
    */
   uint16_t GetLastBeacon () const;
   /**
-   * Get beacon interval 
+   * Get beacon interval
    * \returns the beacon interval
    */
   uint16_t GetBeaconInterval () const;
@@ -128,13 +128,13 @@ public:
     );
   /// Clear timing element
   void ClearTimingElement ();
-  
+
   // Inherited from WifiInformationElement
-  virtual WifiInformationElementId ElementId () const;
-  virtual uint8_t GetInformationFieldSize () const;
-  virtual void SerializeInformationField (Buffer::Iterator i) const;
-  virtual uint8_t DeserializeInformationField (Buffer::Iterator i, uint8_t length);
-  virtual void Print (std::ostream& os) const;
+  WifiInformationElementId ElementId () const override;
+  uint16_t GetInformationFieldSize () const override;
+  void SerializeInformationField (Buffer::Iterator i) const override;
+  uint16_t DeserializeInformationField (Buffer::Iterator i, uint16_t length) override;
+  void Print (std::ostream& os) const override;
 
   /**
    * equality operator
@@ -142,7 +142,7 @@ public:
    * \param a lhs
    * \returns true if equal
    */
-  bool operator== (WifiInformationElement const & a) const;
+  bool operator== (WifiInformationElement const & a) const override;
 private:
   // Converters:
   /**

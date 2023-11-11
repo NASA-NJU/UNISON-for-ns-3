@@ -98,7 +98,9 @@ TestCarrierAggregationSuite::TestCarrierAggregationSuite ()
         }
 
       if (abort)
-        return;
+        {
+          return;
+        }
 
       AddTestCase (new CarrierAggregationTestCase (1,0, 100, 100, 1), TestCase::QUICK);
       AddTestCase (new CarrierAggregationTestCase (3,0, 100, 100, 1), TestCase::QUICK);
@@ -244,7 +246,7 @@ TestCarrierAggregationSuite::TestCarrierAggregationSuite ()
 
 static TestCarrierAggregationSuite lenaTestRrFfMacSchedulerSuite;
 
-std::string 
+std::string
 CarrierAggregationTestCase::BuildNameString (uint16_t nUser, uint16_t dist, uint32_t dlBandwidth, uint32_t ulBandwidth, uint32_t numberOfComponentCarriers)
 {
   std::ostringstream oss;
@@ -269,7 +271,7 @@ CarrierAggregationTestCase::~CarrierAggregationTestCase ()
 }
 
 void
-CarrierAggregationTestCase::DoRun (void)
+CarrierAggregationTestCase::DoRun ()
 {
   NS_LOG_FUNCTION (this << m_nUser << m_dist << m_dlBandwidth << m_ulBandwidth << m_numberOfComponentCarriers);
 
@@ -305,7 +307,7 @@ CarrierAggregationTestCase::DoRun (void)
    */
 
   Ptr<LteHelper> lteHelper = CreateObject<LteHelper> ();
-  
+
   lteHelper->SetAttribute ("PathlossModel", StringValue ("ns3::FriisSpectrumPropagationLossModel"));
 
   // Create Nodes: eNodeB and UE
@@ -336,8 +338,8 @@ CarrierAggregationTestCase::DoRun (void)
   enum EpsBearer::Qci q = EpsBearer::GBR_CONV_VOICE;
   EpsBearer bearer (q);
   lteHelper->ActivateDataRadioBearer (ueDevs, bearer);
-  
- 
+
+
   Ptr<LteEnbNetDevice> lteEnbDev = enbDevs.Get (0)->GetObject<LteEnbNetDevice> ();
   Ptr<LteEnbPhy> enbPhy = lteEnbDev->GetPhy ();
   enbPhy->SetAttribute ("TxPower", DoubleValue (30.0));
@@ -422,7 +424,9 @@ CarrierAggregationTestCase::DoRun (void)
   NS_TEST_ASSERT_MSG_EQ (testUplinkShare, true , " Uplink traffic not split equally between carriers");
 
   if (s_writeResults)
-     WriteResultToFile ();
+   {
+      WriteResultToFile ();
+   }
 
   Simulator::Destroy ();
 }

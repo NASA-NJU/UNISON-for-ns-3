@@ -40,7 +40,7 @@ NS_LOG_COMPONENT_DEFINE ("DhcpServer");
 NS_OBJECT_ENSURE_REGISTERED (DhcpServer);
 
 TypeId
-DhcpServer::GetTypeId (void)
+DhcpServer::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::DhcpServer")
     .SetParent<Application> ()
@@ -101,13 +101,13 @@ DhcpServer::~DhcpServer ()
 }
 
 void
-DhcpServer::DoDispose (void)
+DhcpServer::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
   Application::DoDispose ();
 }
 
-void DhcpServer::StartApplication (void)
+void DhcpServer::StartApplication ()
 {
   NS_LOG_FUNCTION (this);
 
@@ -172,7 +172,7 @@ void DhcpServer::StopApplication ()
 {
   NS_LOG_FUNCTION (this);
 
-  if (m_socket != 0)
+  if (m_socket)
     {
       m_socket->SetRecvCallback (MakeNullCallback<void, Ptr<Socket> > ());
     }
@@ -211,7 +211,7 @@ void DhcpServer::NetHandler (Ptr<Socket> socket)
   NS_LOG_FUNCTION (this << socket);
 
   DhcpHeader header;
-  Ptr<Packet> packet = 0;
+  Ptr<Packet> packet = nullptr;
   Address from;
   packet = m_socket->RecvFrom (from);
 
@@ -246,7 +246,7 @@ void DhcpServer::SendOffer (Ptr<NetDevice> iDev, DhcpHeader header, InetSocketAd
   DhcpHeader newDhcpHeader;
   Address sourceChaddr = header.GetChaddr ();
   uint32_t tran = header.GetTran ();
-  Ptr<Packet> packet = 0;
+  Ptr<Packet> packet = nullptr;
   Ipv4Address offeredAddress;
 
   NS_LOG_INFO ("DHCP DISCOVER from: " << from.GetIpv4 () << " source port: " <<  from.GetPort ());
@@ -330,7 +330,7 @@ void DhcpServer::SendAck (Ptr<NetDevice> iDev, DhcpHeader header, InetSocketAddr
   DhcpHeader newDhcpHeader;
   Address sourceChaddr = header.GetChaddr ();
   uint32_t tran = header.GetTran ();
-  Ptr<Packet> packet = 0;
+  Ptr<Packet> packet = nullptr;
   Ipv4Address address = header.GetReq ();
 
   NS_LOG_INFO ("DHCP REQUEST from: " << from.GetIpv4 () <<

@@ -66,7 +66,7 @@ function(build_lib)
                                        "${BLIB_HEADER_FILES}"
     )
 
-    if(${PRECOMPILE_HEADERS_ENABLED} AND (NOT ${IGNORE_PCH}))
+    if(${PRECOMPILE_HEADERS_ENABLED} AND (NOT ${BLIB_IGNORE_PCH}))
       target_precompile_headers(${lib${BLIB_LIBNAME}-obj} REUSE_FROM stdlib_pch)
     endif()
 
@@ -80,7 +80,7 @@ function(build_lib)
     # specific path for that
     add_library(${lib${BLIB_LIBNAME}} SHARED "${BLIB_SOURCE_FILES}")
 
-    if(${PRECOMPILE_HEADERS_ENABLED} AND (NOT ${IGNORE_PCH}))
+    if(${PRECOMPILE_HEADERS_ENABLED} AND (NOT ${BLIB_IGNORE_PCH}))
       target_precompile_headers(${lib${BLIB_LIBNAME}} REUSE_FROM stdlib_pch)
     endif()
   endif()
@@ -97,12 +97,32 @@ function(build_lib)
            ${CMAKE_HEADER_OUTPUT_DIRECTORY}/version-defines.h
       )
     endif()
+
+    if(NOT FILESYSTEM_LIBRARY_IS_LINKED)
+      list(APPEND BLIB_LIBRARIES_TO_LINK -lstdc++fs)
+    endif()
+
+    # Enable examples as tests suites
+    if(${ENABLE_EXAMPLES} AND ${ENABLE_TESTS})
+      if(NOT ${XCODE})
+        target_compile_definitions(
+          ${lib${BLIB_LIBNAME}}-obj PRIVATE NS3_ENABLE_EXAMPLES
+        )
+      else()
+        target_compile_definitions(
+          ${lib${BLIB_LIBNAME}} PRIVATE NS3_ENABLE_EXAMPLES
+        )
+      endif()
+    endif()
   endif()
   set_target_properties(
     ${lib${BLIB_LIBNAME}}
     PROPERTIES
       PUBLIC_HEADER
       "${BLIB_HEADER_FILES};${BLIB_DEPRECATED_HEADER_FILES};${config_headers};${CMAKE_HEADER_OUTPUT_DIRECTORY}/${BLIB_LIBNAME}-module.h"
+      RUNTIME_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY} # set output
+                                                                 # directory for
+                                                                 # DLLs
   )
 
   if(${NS3_CLANG_TIMETRACE})
@@ -211,41 +231,58 @@ function(build_lib)
     )
   endif()
 
+  # Check if the module tests should be built
+  set(filtered_in ON)
+  if(NS3_FILTER_MODULE_EXAMPLES_AND_TESTS)
+    set(filtered_in OFF)
+    if(${BLIB_LIBNAME} IN_LIST NS3_FILTER_MODULE_EXAMPLES_AND_TESTS)
+      set(filtered_in ON)
+    endif()
+  endif()
+
   # Build tests if requested
-  if(${ENABLE_TESTS})
+  if(${ENABLE_TESTS} AND ${filtered_in})
     list(LENGTH BLIB_TEST_SOURCES test_source_len)
     if(${test_source_len} GREATER 0)
       # Create BLIB_LIBNAME of output library test of module
       set(test${BLIB_LIBNAME} lib${BLIB_LIBNAME}-test CACHE INTERNAL "")
-      set(ns3-libs-tests "${test${BLIB_LIBNAME}};${ns3-libs-tests}"
-          CACHE INTERNAL "list of test libraries"
-      )
 
-      # Create shared library containing tests of the module
-      add_library(${test${BLIB_LIBNAME}} SHARED "${BLIB_TEST_SOURCES}")
-
-      # Link test library to the module library
-      if(${NS3_MONOLIB})
-        target_link_libraries(
-          ${test${BLIB_LIBNAME}} ${LIB_AS_NEEDED_PRE} ${lib-ns3-monolib}
-          ${LIB_AS_NEEDED_POST}
+      # Create shared library containing tests of the module on UNIX and just
+      # the object file that will be part of test-runner on Windows
+      if(WIN32)
+        set(ns3-libs-tests
+            "$<TARGET_OBJECTS:${test${BLIB_LIBNAME}}>;${ns3-libs-tests}"
+            CACHE INTERNAL "list of test libraries"
         )
+        add_library(${test${BLIB_LIBNAME}} OBJECT "${BLIB_TEST_SOURCES}")
       else()
-        target_link_libraries(
-          ${test${BLIB_LIBNAME}} ${LIB_AS_NEEDED_PRE} ${lib${BLIB_LIBNAME}}
-          "${BLIB_LIBRARIES_TO_LINK}" ${LIB_AS_NEEDED_POST}
+        set(ns3-libs-tests "${test${BLIB_LIBNAME}};${ns3-libs-tests}"
+            CACHE INTERNAL "list of test libraries"
+        )
+        add_library(${test${BLIB_LIBNAME}} SHARED "${BLIB_TEST_SOURCES}")
+
+        # Link test library to the module library
+        if(${NS3_MONOLIB})
+          target_link_libraries(
+            ${test${BLIB_LIBNAME}} ${LIB_AS_NEEDED_PRE} ${lib-ns3-monolib}
+            ${LIB_AS_NEEDED_POST}
+          )
+        else()
+          target_link_libraries(
+            ${test${BLIB_LIBNAME}} ${LIB_AS_NEEDED_PRE} ${lib${BLIB_LIBNAME}}
+            "${BLIB_LIBRARIES_TO_LINK}" ${LIB_AS_NEEDED_POST}
+          )
+        endif()
+        set_target_properties(
+          ${test${BLIB_LIBNAME}}
+          PROPERTIES OUTPUT_NAME
+                     ns${NS3_VER}-${BLIB_LIBNAME}-test${build_profile_suffix}
         )
       endif()
-      set_target_properties(
-        ${test${BLIB_LIBNAME}}
-        PROPERTIES OUTPUT_NAME
-                   ns${NS3_VER}-${BLIB_LIBNAME}-test${build_profile_suffix}
-      )
-
       target_compile_definitions(
         ${test${BLIB_LIBNAME}} PRIVATE NS_TEST_SOURCEDIR="${FOLDER}/test"
       )
-      if(${PRECOMPILE_HEADERS_ENABLED} AND (NOT ${IGNORE_PCH}))
+      if(${PRECOMPILE_HEADERS_ENABLED} AND (NOT ${BLIB_IGNORE_PCH}))
         target_precompile_headers(${test${BLIB_LIBNAME}} REUSE_FROM stdlib_pch)
       endif()
     endif()
@@ -263,204 +300,13 @@ function(build_lib)
     endif()
   endforeach()
 
-  # Get architecture pair for python bindings
-  if((${CMAKE_SIZEOF_VOID_P} EQUAL 8) AND (NOT APPLE))
-    set(arch gcc_LP64)
-    set(arch_flags -m64)
-  else()
-    set(arch gcc_ILP32)
-    set(arch_flags)
-  endif()
-
-  # Add target to scan python bindings
-  if(${ENABLE_SCAN_PYTHON_BINDINGS}
-     AND (EXISTS ${CMAKE_HEADER_OUTPUT_DIRECTORY}/${BLIB_LIBNAME}-module.h)
-     AND (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/bindings")
-  )
-    set(bindings_output_folder ${PROJECT_SOURCE_DIR}/${FOLDER}/bindings)
-    file(MAKE_DIRECTORY ${bindings_output_folder})
-    set(module_api_ILP32 ${bindings_output_folder}/modulegen__gcc_ILP32.py)
-    set(module_api_LP64 ${bindings_output_folder}/modulegen__gcc_LP64.py)
-
-    set(modulescan_modular_command
-        ${Python3_EXECUTABLE}
-        ${PROJECT_SOURCE_DIR}/bindings/python/ns3modulescan-modular.py
-    )
-
-    set(header_map "")
-    # We need a python map that takes header.h to module e.g. "ptr.h": "core"
-    foreach(header ${BLIB_HEADER_FILES})
-      # header is a relative path to the current working directory
-      get_filename_component(
-        header_name ${CMAKE_CURRENT_SOURCE_DIR}/${header} NAME
-      )
-      string(APPEND header_map "\"${header_name}\":\"${BLIB_LIBNAME}\",")
-    endforeach()
-
-    set(ns3-headers-to-module-map "${ns3-headers-to-module-map}${header_map}"
-        CACHE INTERNAL "Map connecting headers to their modules"
-    )
-
-    # API scan needs the include directories to find a few headers (e.g. mpi.h)
-    get_target_includes(${lib${BLIB_LIBNAME}} modulegen_include_dirs)
-
-    set(module_to_generate_api ${module_api_ILP32})
-    set(LP64toILP32)
-    if("${arch}" STREQUAL "gcc_LP64")
-      set(module_to_generate_api ${module_api_LP64})
-      set(LP64toILP32
-          ${Python3_EXECUTABLE}
-          ${PROJECT_SOURCE_DIR}/build-support/pybindings-LP64-to-ILP32.py
-          ${module_api_LP64} ${module_api_ILP32}
-      )
-    endif()
-
-    add_custom_target(
-      ${lib${BLIB_LIBNAME}}-apiscan
-      COMMAND
-        ${modulescan_modular_command} ${CMAKE_OUTPUT_DIRECTORY} ${BLIB_LIBNAME}
-        ${PROJECT_BINARY_DIR}/header_map.json ${module_to_generate_api}
-        \"${arch_flags} ${modulegen_include_dirs}\" 2>
-        ${bindings_output_folder}/apiscan.log
-      COMMAND ${LP64toILP32}
-      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-      DEPENDS ${lib${BLIB_LIBNAME}}
-    )
-    add_dependencies(apiscan-all ${lib${BLIB_LIBNAME}}-apiscan)
-  endif()
-
-  # Build pybindings if requested and if bindings subfolder exists in
-  # NS3/src/BLIB_LIBNAME
-  if(${ENABLE_PYTHON_BINDINGS} AND (EXISTS
-                                    "${CMAKE_CURRENT_SOURCE_DIR}/bindings")
-  )
-    set(bindings_output_folder ${CMAKE_OUTPUT_DIRECTORY}/${FOLDER}/bindings)
-    file(MAKE_DIRECTORY ${bindings_output_folder})
-    set(module_src ${bindings_output_folder}/ns3module.cc)
-    set(module_hdr ${bindings_output_folder}/ns3module.h)
-
-    string(REPLACE "-" "_" BLIB_LIBNAME_sub ${BLIB_LIBNAME}) # '-' causes
-                                                             # problems (e.g.
-    # csma-layout), replace with '_' (e.g. csma_layout)
-
-    # Set prefix of binding to _ if a ${BLIB_LIBNAME}.py exists, and copy the
-    # ${BLIB_LIBNAME}.py to the output folder
-    set(prefix)
-    if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/bindings/${BLIB_LIBNAME}.py)
-      set(prefix _)
-      file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/bindings/${BLIB_LIBNAME}.py
-           DESTINATION ${CMAKE_OUTPUT_DIRECTORY}/bindings/python/ns
-      )
-    endif()
-
-    # Run modulegen-modular to generate the bindings sources
-    if((NOT EXISTS ${module_hdr}) OR (NOT EXISTS ${module_src})) # OR TRUE) # to
-                                                                 # force
-                                                                 # reprocessing
-      string(REPLACE ";" "," ENABLED_FEATURES
-                     "${ns3-libs};${BLIB_MODULE_ENABLED_FEATURES}"
-      )
-      set(modulegen_modular_command
-          GCC_RTTI_ABI_COMPLETE=True NS3_ENABLED_FEATURES="${ENABLED_FEATURES}"
-          ${Python3_EXECUTABLE}
-          ${PROJECT_SOURCE_DIR}/bindings/python/ns3modulegen-modular.py
-      )
-      execute_process(
-        COMMAND
-          ${CMAKE_COMMAND} -E env
-          PYTHONPATH=${CMAKE_OUTPUT_DIRECTORY}:$ENV{PYTHONPATH}
-          ${modulegen_modular_command} ${CMAKE_CURRENT_SOURCE_DIR} ${arch}
-          ${prefix}${BLIB_LIBNAME_sub} ${module_src}
-        TIMEOUT 60
-        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-        OUTPUT_FILE ${module_hdr}
-        ERROR_FILE ${bindings_output_folder}/ns3modulegen.log
-        RESULT_VARIABLE error_code
-      )
-      if(${error_code} OR NOT (EXISTS ${module_hdr}))
-        # Delete broken bindings to make sure we will his this error again if
-        # nothing changed
-        if(EXISTS ${module_src})
-          file(REMOVE ${module_src})
-        endif()
-        if(EXISTS ${module_hdr})
-          file(REMOVE ${module_hdr})
-        endif()
-        message(
-          FATAL_ERROR
-            "Something went wrong during processing of the python bindings of module ${BLIB_LIBNAME}."
-            " Make sure you have the latest version of Pybindgen."
-        )
-      endif()
-    endif()
-
-    # Add core module helper sources
-    set(python_module_files ${module_hdr} ${module_src})
-    file(GLOB custom_python_module_files
-         ${CMAKE_CURRENT_SOURCE_DIR}/bindings/*.cc
-         ${CMAKE_CURRENT_SOURCE_DIR}/bindings/*.h
-    )
-    list(APPEND python_module_files ${custom_python_module_files})
-    set(bindings-name lib${BLIB_LIBNAME}-bindings)
-    add_library(${bindings-name} SHARED "${python_module_files}")
-    target_include_directories(
-      ${bindings-name} PUBLIC ${Python3_INCLUDE_DIRS} ${bindings_output_folder}
-    )
-
-    # If there is any, remove the "lib" prefix of libraries (search for
-    # "set(lib${BLIB_LIBNAME}")
-    list(LENGTH ns_libraries_to_link num_libraries)
-    if(num_libraries GREATER "0")
-      string(REPLACE ";" "-bindings;" bindings_to_link
-                     "${ns_libraries_to_link};"
-      ) # add -bindings suffix to all lib${name}
-    endif()
-    target_link_libraries(
-      ${bindings-name}
-      PUBLIC ${LIB_AS_NEEDED_PRE} ${lib${BLIB_LIBNAME}} "${bindings_to_link}"
-             "${BLIB_LIBRARIES_TO_LINK}" ${LIB_AS_NEEDED_POST}
-      PRIVATE ${Python3_LIBRARIES}
-    )
-    target_include_directories(
-      ${bindings-name} PRIVATE ${PROJECT_SOURCE_DIR}/src/core/bindings
-    )
-
-    set(suffix)
-    if(APPLE)
-      # Python doesn't like Apple's .dylib and will refuse to load bindings
-      # unless its an .so
-      set(suffix SUFFIX .so)
-    endif()
-
-    # Set binding library name and output folder
-    set_target_properties(
-      ${bindings-name}
-      PROPERTIES OUTPUT_NAME ${prefix}${BLIB_LIBNAME_sub}
-                 PREFIX ""
-                 ${suffix} LIBRARY_OUTPUT_DIRECTORY
-                 ${CMAKE_OUTPUT_DIRECTORY}/bindings/python/ns
-    )
-
-    set(ns3-python-bindings-modules
-        "${bindings-name};${ns3-python-bindings-modules}"
-        CACHE INTERNAL "list of modules python bindings"
-    )
-
-    # Make sure all bindings are built before building the visualizer module
-    # that makes use of them
-    if(${ENABLE_VISUALIZER} AND (visualizer IN_LIST libs_to_build))
-      if(NOT (${BLIB_LIBNAME} STREQUAL visualizer))
-        add_dependencies(${libvisualizer} ${bindings-name})
-      endif()
-    endif()
-  endif()
-
   # Handle package export
   install(
     TARGETS ${lib${BLIB_LIBNAME}}
     EXPORT ns3ExportTargets
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}/
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}/
+    RUNTIME DESTINATION ${CMAKE_INSTALL_LIBDIR}/
     PUBLIC_HEADER DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/ns3"
   )
   if(${NS3_VERBOSE})
@@ -493,38 +339,34 @@ function(build_lib_example)
   check_for_missing_libraries(
     missing_dependencies "${BLIB_EXAMPLE_LIBRARIES_TO_LINK}"
   )
-  if(NOT missing_dependencies)
-    # Create shared library with sources and headers
-    add_executable(
-      "${BLIB_EXAMPLE_NAME}" ${BLIB_EXAMPLE_SOURCE_FILES}
-                             ${BLIB_EXAMPLE_HEADER_FILES}
-    )
 
-    if(${NS3_STATIC})
-      target_link_libraries(
-        ${BLIB_EXAMPLE_NAME} ${LIB_AS_NEEDED_PRE_STATIC} ${lib-ns3-static}
-      )
-    elseif(${NS3_MONOLIB})
-      target_link_libraries(
-        ${BLIB_EXAMPLE_NAME} ${LIB_AS_NEEDED_PRE} ${lib-ns3-monolib}
-        ${LIB_AS_NEEDED_POST}
-      )
-    else()
-      target_link_libraries(
-        ${BLIB_EXAMPLE_NAME} ${LIB_AS_NEEDED_PRE} ${lib${BLIB_EXAMPLE_LIBNAME}}
-        ${BLIB_EXAMPLE_LIBRARIES_TO_LINK} ${optional_visualizer_lib}
-        ${LIB_AS_NEEDED_POST}
-      )
+  # Check if a module example should be built
+  set(filtered_in ON)
+  if(NS3_FILTER_MODULE_EXAMPLES_AND_TESTS)
+    set(filtered_in OFF)
+    if(${BLIB_LIBNAME} IN_LIST NS3_FILTER_MODULE_EXAMPLES_AND_TESTS)
+      set(filtered_in ON)
     endif()
+  endif()
 
-    if(${PRECOMPILE_HEADERS_ENABLED} AND (NOT ${BLIB_EXAMPLE_IGNORE_PCH}))
-      target_precompile_headers(${BLIB_EXAMPLE_NAME} REUSE_FROM stdlib_pch_exec)
+  if((NOT missing_dependencies) AND ${filtered_in})
+    # Convert boolean into text to forward argument
+    if(${BLIB_EXAMPLE_IGNORE_PCH})
+      set(IGNORE_PCH IGNORE_PCH)
     endif()
-
-    set_runtime_outputdirectory(
-      ${BLIB_EXAMPLE_NAME}
-      ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${FOLDER}/ ""
+    # Create executable with sources and headers
+    # cmake-format: off
+    build_exec(
+      EXECNAME ${BLIB_EXAMPLE_NAME}
+      SOURCE_FILES ${BLIB_EXAMPLE_SOURCE_FILES}
+      HEADER_FILES ${BLIB_EXAMPLE_HEADER_FILES}
+      LIBRARIES_TO_LINK
+        ${lib${BLIB_LIBNAME}} ${BLIB_EXAMPLE_LIBRARIES_TO_LINK}
+        ${optional_visualizer_lib}
+      EXECUTABLE_DIRECTORY_PATH ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${FOLDER}/
+      ${IGNORE_PCH}
     )
+    # cmake-format: on
   endif()
 endfunction()
 

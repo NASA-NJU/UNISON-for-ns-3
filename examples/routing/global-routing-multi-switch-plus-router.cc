@@ -320,15 +320,16 @@ main (int argc, char *argv[])
   // ======================================================================
   // Define the list of valid PCAP taps
   // ----------------------------------------------------------------------
-  std::vector<std::string> pcapTaps;
-  pcapTaps.push_back ("t2");              // multi-switch  UDP echo client
-  pcapTaps.push_back ("t3");              // single-switch UDP echo server
-  pcapTaps.push_back ("b2");              // multi-switch  UDP echo server
-  pcapTaps.push_back ("b3");              // single-switch UDP echo client
-  pcapTaps.push_back ("trlan");           // top router    LAN side
-  pcapTaps.push_back ("trwan");           // top router    WAN side
-  pcapTaps.push_back ("brlan");           // bottom router LAN side
-  pcapTaps.push_back ("brwan");           // bottom router WAN side
+  const std::vector<std::string> pcapTaps {
+    "t2",    // multi-switch  UDP echo client
+    "t3",    // single-switch UDP echo server
+    "b2",    // multi-switch  UDP echo server
+    "b3",    // single-switch UDP echo client
+    "trlan", // top router    LAN side
+    "trwan", // top router    WAN side
+    "brlan", // bottom router LAN side
+    "brwan", // bottom router WAN side
+  };
 
   // ----------------------------------------------------------------------
   // Parse the pcapLocations string into pcapLocationVec
@@ -714,7 +715,7 @@ main (int argc, char *argv[])
   // ======================================================================
   // Print routing tables at T=0.1
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-  // NOTE: Node 0 and Node 13 must have non-empty tables (except for local 
+  // NOTE: Node 0 and Node 13 must have non-empty tables (except for local
   //       loopback and local LAN) if routing is operating correctly.
   // ----------------------------------------------------------------------
   NS_LOG_INFO ("Set up to print routing tables at T=0.1s");
@@ -807,4 +808,5 @@ main (int argc, char *argv[])
   Simulator::Destroy ();
   NS_LOG_INFO ("Done.");
 
+  return 0;
 }

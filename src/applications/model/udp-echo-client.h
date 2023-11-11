@@ -1,7 +1,7 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright 2007 University of Washington
- * 
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
  * published by the Free Software Foundation;
@@ -36,18 +36,18 @@ class Packet;
  *
  * Every packet sent should be returned by the server and received here.
  */
-class UdpEchoClient : public Application 
+class UdpEchoClient : public Application
 {
 public:
   /**
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   UdpEchoClient ();
 
-  virtual ~UdpEchoClient ();
+  ~UdpEchoClient () override;
 
   /**
    * \brief set the remote address and port
@@ -76,18 +76,18 @@ public:
   /**
    * Get the number of data bytes that will be sent to the server.
    *
-   * \warning The number of bytes may be modified by calling any one of the 
-   * SetFill methods.  If you have called SetFill, then the number of 
+   * \warning The number of bytes may be modified by calling any one of the
+   * SetFill methods.  If you have called SetFill, then the number of
    * data bytes will correspond to the size of an initialized data buffer.
    * If you have not called a SetFill method, the number of data bytes will
    * correspond to the number of don't care bytes that will be sent.
    *
    * \returns The number of data bytes.
    */
-  uint32_t GetDataSize (void) const;
+  uint32_t GetDataSize () const;
 
   /**
-   * Set the data fill of the packet (what is sent as data to the server) to 
+   * Set the data fill of the packet (what is sent as data to the server) to
    * the zero-terminated contents of the fill string string.
    *
    * \warning The size of resulting echo packets will be automatically adjusted
@@ -99,10 +99,10 @@ public:
   void SetFill (std::string fill);
 
   /**
-   * Set the data fill of the packet (what is sent as data to the server) to 
-   * the repeated contents of the fill byte.  i.e., the fill byte will be 
+   * Set the data fill of the packet (what is sent as data to the server) to
+   * the repeated contents of the fill byte.  i.e., the fill byte will be
    * used to initialize the contents of the data packet.
-   * 
+   *
    * \warning The size of resulting echo packets will be automatically adjusted
    * to reflect the dataSize parameter -- this means that the PacketSize
    * attribute may be changed as a result of this call.
@@ -116,7 +116,7 @@ public:
    * Set the data fill of the packet (what is sent as data to the server) to
    * the contents of the fill buffer, repeated as many times as is required.
    *
-   * Initializing the packet to the contents of a provided single buffer is 
+   * Initializing the packet to the contents of a provided single buffer is
    * accomplished by setting the fillSize set to your desired dataSize
    * (and providing an appropriate buffer).
    *
@@ -131,12 +131,12 @@ public:
   void SetFill (uint8_t *fill, uint32_t fillSize, uint32_t dataSize);
 
 protected:
-  virtual void DoDispose (void);
+  void DoDispose () override;
 
 private:
 
-  virtual void StartApplication (void);
-  virtual void StopApplication (void);
+  void StartApplication () override;
+  void StopApplication () override;
 
   /**
    * \brief Schedule the next packet transmission
@@ -146,7 +146,7 @@ private:
   /**
    * \brief Send a packet
    */
-  void Send (void);
+  void Send ();
 
   /**
    * \brief Handle a packet reception.
@@ -175,10 +175,10 @@ private:
 
   /// Callbacks for tracing the packet Rx events
   TracedCallback<Ptr<const Packet> > m_rxTrace;
-  
+
   /// Callbacks for tracing the packet Tx events, includes source and destination addresses
   TracedCallback<Ptr<const Packet>, const Address &, const Address &> m_txTraceWithAddresses;
-  
+
   /// Callbacks for tracing the packet Rx events, includes source and destination addresses
   TracedCallback<Ptr<const Packet>, const Address &, const Address &> m_rxTraceWithAddresses;
 

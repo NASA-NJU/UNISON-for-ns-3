@@ -84,14 +84,14 @@ QueueDiscFactory::CreateQueueDisc (const std::vector<Ptr<QueueDisc> > & queueDis
     }
 
   // create and add the queue disc classes
-  for (uint16_t i = 0; i < m_queueDiscClassesFactory.size (); i++)
+  for (std::size_t i = 0; i < m_queueDiscClassesFactory.size (); i++)
     {
       // the class ID is given by the index i of the vector
       NS_ABORT_MSG_IF (m_classIdChildHandleMap.find (i) == m_classIdChildHandleMap.end (),
                        "Cannot create a queue disc class with no attached queue disc");
 
       uint16_t handle = m_classIdChildHandleMap[i];
-      NS_ABORT_MSG_IF (handle >= queueDiscs.size () || queueDiscs[handle] == 0, 
+      NS_ABORT_MSG_IF (handle >= queueDiscs.size () || !queueDiscs[handle],
                        "A queue disc with handle " << handle << " has not been created yet");
 
       m_queueDiscClassesFactory[i].Set ("QueueDisc", PointerValue (queueDiscs[handle]));
@@ -131,7 +131,7 @@ TrafficControlHelper::DoSetRootQueueDisc (ObjectFactory factory)
 {
   NS_ABORT_MSG_UNLESS (m_queueDiscFactory.empty (), "A root queue disc has been already added to this factory");
 
-  m_queueDiscFactory.push_back (QueueDiscFactory (factory));
+  m_queueDiscFactory.emplace_back(factory);
   return 0;
 }
 
@@ -180,7 +180,7 @@ TrafficControlHelper::DoAddChildQueueDisc (uint16_t handle, uint16_t classId, Ob
                    << handle << " does not exist");
 
   uint16_t childHandle = static_cast<uint16_t>(m_queueDiscFactory.size ());
-  m_queueDiscFactory.push_back (QueueDiscFactory (factory));
+  m_queueDiscFactory.emplace_back(factory);
   m_queueDiscFactory[handle].SetChildQueueDisc (classId, childHandle);
 
   return childHandle;
@@ -207,7 +207,7 @@ TrafficControlHelper::Install (Ptr<NetDevice> d)
   // A TrafficControlLayer object is aggregated by the InternetStackHelper, but check
   // anyway because a queue disc has no effect without a TrafficControlLayer object
   Ptr<TrafficControlLayer> tc = d->GetNode ()->GetObject<TrafficControlLayer> ();
-  NS_ASSERT (tc != 0);
+  NS_ASSERT (tc);
 
   // Start from an empty vector of queue discs
   m_queueDiscs.clear ();
@@ -234,7 +234,7 @@ TrafficControlHelper::Install (Ptr<NetDevice> d)
       Ptr<NetDeviceQueueInterface> ndqi = d->GetObject<NetDeviceQueueInterface> ();
       NS_ABORT_MSG_IF (!ndqi, "A NetDeviceQueueInterface object has not been"
                               "aggregated to the NetDevice");
-      for (uint8_t i = 0; i < ndqi->GetNTxQueues (); i++)
+      for (std::size_t i = 0; i < ndqi->GetNTxQueues (); i++)
         {
           Ptr<QueueLimits> ql = m_queueLimitsFactory.Create<QueueLimits> ();
           ndqi->GetTxQueue (i)->SetQueueLimits (ql);
@@ -261,7 +261,7 @@ void
 TrafficControlHelper::Uninstall (Ptr<NetDevice> d)
 {
   Ptr<TrafficControlLayer> tc = d->GetNode ()->GetObject<TrafficControlLayer> ();
-  NS_ASSERT (tc != 0);
+  NS_ASSERT (tc);
 
   tc->DeleteRootQueueDiscOnDevice (d);
   // remove the queue limits objects installed on the device transmission queues
@@ -269,9 +269,9 @@ TrafficControlHelper::Uninstall (Ptr<NetDevice> d)
   // if a queue disc has been installed on the device, a netdevice queue interface
   // must have been aggregated to the device
   NS_ASSERT (ndqi);
-  for (uint8_t i = 0; i < ndqi->GetNTxQueues (); i++)
+  for (std::size_t i = 0; i < ndqi->GetNTxQueues (); i++)
     {
-      ndqi->GetTxQueue (i)->SetQueueLimits (0);
+      ndqi->GetTxQueue (i)->SetQueueLimits (nullptr);
     }
 }
 

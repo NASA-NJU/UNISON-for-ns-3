@@ -50,7 +50,7 @@ void
 LteChunkProcessor::Start ()
 {
   NS_LOG_FUNCTION (this);
-  m_sumValues = 0;
+  m_sumValues = nullptr;
   m_totDuration = MicroSeconds (0);
 }
 
@@ -59,7 +59,7 @@ void
 LteChunkProcessor::EvaluateChunk (const SpectrumValue& sinr, Time duration)
 {
   NS_LOG_FUNCTION (this << sinr << duration);
-  if (m_sumValues == 0)
+  if (!m_sumValues)
     {
       m_sumValues = Create<SpectrumValue> (sinr.GetSpectrumModel ());
     }

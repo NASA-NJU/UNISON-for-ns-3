@@ -27,7 +27,7 @@
  *
  * Applications used by this program are in test02-apps.h and
  * test02-apps.cc, which should be in the same place as this file.
- * 
+ *
  */
 
 #include <ctime>
@@ -41,10 +41,16 @@
 #include "wifi-example-apps.h"
 
 using namespace ns3;
-using namespace std;
 
 NS_LOG_COMPONENT_DEFINE ("WiFiDistanceExperiment");
 
+/**
+ * Function called when a packet is transmitted.
+ *
+ * \param datac The counter of the number of transmitted packets.
+ * \param path The callback context
+ * \param packet The transmsiotted packet.
+ */
 void TxCallback (Ptr<CounterCalculator<uint32_t> > datac,
                  std::string path, Ptr<const Packet> packet) {
   NS_LOG_INFO ("Sent frame counted in " <<
@@ -54,24 +60,22 @@ void TxCallback (Ptr<CounterCalculator<uint32_t> > datac,
 }
 
 
-
-
 //----------------------------------------------------------------------
 //-- main
 //----------------------------------------------
 int main (int argc, char *argv[]) {
 
   double distance = 50.0;
-  string format ("omnet");
+  std::string format ("omnet");
 
-  string experiment ("wifi-distance-test");
-  string strategy ("wifi-default");
-  string input;
-  string runID;
+  std::string experiment ("wifi-distance-test");
+  std::string strategy ("wifi-default");
+  std::string input;
+  std::string runID;
 
   {
-    stringstream sstr;
-    sstr << "run-" << time (NULL);
+    std::stringstream sstr;
+    sstr << "run-" << time (nullptr);
     runID = sstr.str ();
   }
 
@@ -102,7 +106,7 @@ int main (int argc, char *argv[]) {
   #endif
 
   {
-    stringstream sstr ("");
+    std::stringstream sstr ("");
     sstr << distance;
     input = sstr.str ();
   }
@@ -241,7 +245,7 @@ int main (int argc, char *argv[]) {
 
   /**
    * Just to show this is here...
-   Ptr<MinMaxAvgTotalCalculator<uint32_t> > test = 
+   Ptr<MinMaxAvgTotalCalculator<uint32_t> > test =
    CreateObject<MinMaxAvgTotalCalculator<uint32_t> >();
    test->SetKey("test-dc");
    data.AddDataCalculator(test);
@@ -295,7 +299,7 @@ int main (int argc, char *argv[]) {
   //--------------------------------------------
 
   // Pick an output writer based in the requested format.
-  Ptr<DataOutputInterface> output = 0;
+  Ptr<DataOutputInterface> output = nullptr;
   if (format == "omnet") {
       NS_LOG_INFO ("Creating omnet formatted data output.");
       output = CreateObject<OmnetDataOutput>();
@@ -310,8 +314,10 @@ int main (int argc, char *argv[]) {
 
   // Finally, have that writer interrogate the DataCollector and save
   // the results.
-  if (output != 0)
-    output->Output (data);
+  if (output)
+    {
+      output->Output (data);
+    }
 
   // Free any memory here at the end of this example.
   Simulator::Destroy ();

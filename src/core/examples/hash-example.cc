@@ -40,7 +40,7 @@
  *  Example Output:
  *  \verbatim
 
-./ns3 run="hasher-example --time \
+./ns3 run "hasher-example --time \
   --dict=/usr/share/dict/web2 \
   --dict=/usr/share/dict/web2a \
   --dict=/usr/share/dict/propernames \
@@ -166,11 +166,11 @@ public:
         // alphabetize
         if ( m_dict[h] < phrase)
           {
-            m_coll.push_back (std::make_pair (h, phrase));
+            m_coll.emplace_back (h, phrase);
           }
         else
           {
-            m_coll.push_back (std::make_pair (h, m_dict[h]));
+            m_coll.emplace_back (h, m_dict[h]);
             m_dict[h] = phrase;
           }
       }
@@ -191,11 +191,9 @@ public:
 
     switch (m_bits)
       {
-        /* *NS_CHECK_STYLE_OFF* */
       case Bits32:   name += " (32-bit version)";  break;
       case Bits64:   name += " (64-bit version)";  break;
       default:       name += " (unknown!?!)";
-        /* *NS_CHECK_STYLE_ON* */
       }
     return name;
   }
@@ -207,7 +205,7 @@ public:
 
     std::cout << GetName () << ": " << m_coll.size () << " collisions:"
               << std::endl;
-    for (auto collision : m_coll)
+    for (const auto& collision : m_coll)
       {
         uint64_t h = collision.first;
 
@@ -375,7 +373,7 @@ public:
   {
     ReportExpectedCollisions ();
 
-    for (auto collider : m_hashes)
+    for (const auto& collider : m_hashes)
       {
         collider.Report ();
       }
@@ -466,7 +464,7 @@ public:
   }
 
   /** \return The default dictionary path. */
-  static std::string GetDefault (void)
+  static std::string GetDefault ()
   {
     return "/usr/share/dict/words";
   }
@@ -487,7 +485,7 @@ public:
               << (m_files.size () == 1 ? "y" : "ies")
               << std::endl;
 
-    for (auto dictFile : m_files)
+    for (const auto& dictFile : m_files)
       {
         std::cout << "Dictionary file: " << dictFile << std::endl;
 

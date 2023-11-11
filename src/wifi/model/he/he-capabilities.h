@@ -38,21 +38,6 @@ public:
   // Implementations of pure virtual methods of WifiInformationElement
   WifiInformationElementId ElementId () const override;
   WifiInformationElementId ElementIdExt () const override;
-  uint8_t GetInformationFieldSize () const override;
-  void SerializeInformationField (Buffer::Iterator start) const override;
-  uint8_t DeserializeInformationField (Buffer::Iterator start, uint8_t length) override;
-  /* This information element is a bit special in that it is only
-     included if the STA is an HE STA. To support this we
-     override the Serialize and GetSerializedSize methods of
-     WifiInformationElement. */
-  Buffer::Iterator Serialize (Buffer::Iterator start) const override;
-  uint16_t GetSerializedSize () const override;
-
-  /**
-   * Set HE supported
-   * \param heSupported the HE supported indicator
-   */
-  void SetHeSupported (uint8_t heSupported);
 
   /**
    * Set the HE MAC Capabilities Info field in the HE Capabilities information element.
@@ -143,38 +128,38 @@ public:
    *
    * \returns the channel width set
    */
-  uint8_t GetChannelWidthSet (void) const;
+  uint8_t GetChannelWidthSet () const;
   /**
    * Indicates support for the transmission and reception of LDPC encoded packets.
    *
    * \returns indication whether the transmission and reception of LDPC encoded packets is supported
    */
-  uint8_t GetLdpcCodingInPayload (void) const;
+  uint8_t GetLdpcCodingInPayload () const;
   /**
    * Get 1xHE-LTF and 800ns GI in HE SU PPDU reception support
    *
    * \returns true if 1xHE-LTF and 800ns GI in HE SU PPDU reception is supported, false otherwise
    */
-  bool GetHeSuPpdu1xHeLtf800nsGi (void) const;
+  bool GetHeSuPpdu1xHeLtf800nsGi () const;
   /**
    * Get 4xHE-LTF and 800ns GI in HE SU PPDU and HE MU PPDU reception support
    *
    * \returns true if 4xHE-LTF and 800ns GI in HE SU PPDU and HE MU PPDU reception is supported,
    *          false otherwise
    */
-  bool GetHePpdu4xHeLtf800nsGi (void) const;
+  bool GetHePpdu4xHeLtf800nsGi () const;
   /**
    * Get highest MCS supported.
    *
    * \returns the highest MCS is supported
    */
-  uint8_t GetHighestMcsSupported (void) const;
+  uint8_t GetHighestMcsSupported () const;
   /**
    * Get highest NSS supported.
    *
    * \returns the highest supported NSS
    */
-  uint8_t GetHighestNssSupported (void) const;
+  uint8_t GetHighestNssSupported () const;
 
   // MAC Capabilities Info fields
   /**
@@ -218,10 +203,14 @@ public:
    *
    * \return the maximum A-MPDU length
    */
-  uint32_t GetMaxAmpduLength (void) const;
+  uint32_t GetMaxAmpduLength () const;
 
 
 private:
+  uint16_t GetInformationFieldSize () const override;
+  void SerializeInformationField (Buffer::Iterator start) const override;
+  uint16_t DeserializeInformationField (Buffer::Iterator start, uint16_t length) override;
+
   // MAC Capabilities Info fields
   // IEEE 802.11ax-2021 9.4.2.248.2 HE MAC Capabilities Information field
   uint8_t m_plusHtcHeSupport;                            //!< HTC HE support
@@ -325,9 +314,6 @@ private:
   uint8_t m_highestMcsSupported;   //!< highest MCS support
   std::vector<uint8_t> m_txBwMap;  //!< transmit BW map
   std::vector<uint8_t> m_rxBwMap;  //!< receive BW map
-
-  /// This is used to decide if this element should be added to the frame or not
-  uint8_t m_heSupported;
 };
 
 /**

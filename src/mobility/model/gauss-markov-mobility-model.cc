@@ -30,7 +30,7 @@ namespace ns3 {
 NS_OBJECT_ENSURE_REGISTERED (GaussMarkovMobilityModel);
 
 TypeId
-GaussMarkovMobilityModel::GetTypeId (void)
+GaussMarkovMobilityModel::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::GaussMarkovMobilityModel")
     .SetParent<MobilityModel> ()
@@ -95,7 +95,7 @@ GaussMarkovMobilityModel::GaussMarkovMobilityModel ()
 }
 
 void
-GaussMarkovMobilityModel::Start (void)
+GaussMarkovMobilityModel::Start ()
 {
   if (m_meanVelocity == 0.0)
     {
@@ -155,7 +155,10 @@ GaussMarkovMobilityModel::DoWalk (Time delayLeft)
   nextPosition.x += speed.x * delayLeft.GetSeconds ();
   nextPosition.y += speed.y * delayLeft.GetSeconds ();
   nextPosition.z += speed.z * delayLeft.GetSeconds ();
-  if (delayLeft.GetSeconds () < 0.0) delayLeft = Seconds (1.0);
+  if (delayLeft.GetSeconds () < 0.0)
+    {
+      delayLeft = Seconds (1.0);
+    }
 
   // Make sure that the position by the next time step is still within the boundary.
   // If out of bounds, then alter the velocity vector and average direction to keep the position in bounds
@@ -165,19 +168,19 @@ GaussMarkovMobilityModel::DoWalk (Time delayLeft)
     }
   else
     {
-      if (nextPosition.x > m_bounds.xMax || nextPosition.x < m_bounds.xMin) 
+      if (nextPosition.x > m_bounds.xMax || nextPosition.x < m_bounds.xMin)
         {
           speed.x = -speed.x;
           m_meanDirection = M_PI - m_meanDirection;
         }
 
-      if (nextPosition.y > m_bounds.yMax || nextPosition.y < m_bounds.yMin) 
+      if (nextPosition.y > m_bounds.yMax || nextPosition.y < m_bounds.yMin)
         {
           speed.y = -speed.y;
           m_meanDirection = -m_meanDirection;
         }
 
-      if (nextPosition.z > m_bounds.zMax || nextPosition.z < m_bounds.zMin) 
+      if (nextPosition.z > m_bounds.zMax || nextPosition.z < m_bounds.zMin)
         {
           speed.z = -speed.z;
           m_meanPitch = -m_meanPitch;
@@ -193,19 +196,19 @@ GaussMarkovMobilityModel::DoWalk (Time delayLeft)
 }
 
 void
-GaussMarkovMobilityModel::DoDispose (void)
+GaussMarkovMobilityModel::DoDispose ()
 {
   // chain up
   MobilityModel::DoDispose ();
 }
 
 Vector
-GaussMarkovMobilityModel::DoGetPosition (void) const
+GaussMarkovMobilityModel::DoGetPosition () const
 {
   m_helper.Update ();
   return m_helper.GetCurrentPosition ();
 }
-void 
+void
 GaussMarkovMobilityModel::DoSetPosition (const Vector &position)
 {
   m_helper.SetPosition (position);
@@ -213,7 +216,7 @@ GaussMarkovMobilityModel::DoSetPosition (const Vector &position)
   m_event = Simulator::ScheduleNow (&GaussMarkovMobilityModel::Start, this);
 }
 Vector
-GaussMarkovMobilityModel::DoGetVelocity (void) const
+GaussMarkovMobilityModel::DoGetVelocity () const
 {
   return m_helper.GetVelocity ();
 }

@@ -50,11 +50,11 @@ class LteCcmRrcSapProvider
 friend class UeManager;
 /// allow LteMacSapUser class friend access
 friend class LteMacSapUser;
- 
+
 public:
-  
+
   virtual ~LteCcmRrcSapProvider ();
-  
+
   /// LcsConfig structure
   struct LcsConfig
   {
@@ -65,7 +65,7 @@ public:
 
   /**
    * \brief Reports UE measurements to the component carrier manager.
-   * \param rnti Radio Network Temporary Identity, an integer identifying 
+   * \param rnti Radio Network Temporary Identity, an integer identifying
    * the UE where the measurement report originates from.
    * \param measResults a single report of one measurement identity
    *
@@ -107,15 +107,15 @@ public:
    * \param lcid the Logical Channel id
    * \param lcGroup the Logical Channel group
    * \param msu a pointer to the LteMacSapUser, the LteEnbComponentCarrierManager
-   *             has to store a LteMacSapUser for each Rlc istance, in order to 
+   *             has to store a LteMacSapUser for each Rlc istance, in order to
    *             properly redirect the packet
    * \return vector of LcsConfig contains the lc configuration for each Mac
    *                the size of the vector is equal to the number of component
    *                carrier enabled.
    *
-   * The Logical Channel configurations for each component carrier depend on the 
+   * The Logical Channel configurations for each component carrier depend on the
    * algorithm used to split the traffic between the component carriers themself.
-   */  
+   */
   virtual std::vector<LteCcmRrcSapProvider::LcsConfig> SetupDataRadioBearer (EpsBearer bearer, uint8_t bearerId, uint16_t rnti, uint8_t lcid, uint8_t lcGroup, LteMacSapUser *msu) = 0;
 
    /**
@@ -179,7 +179,7 @@ public:
    *             UE which shall perform the ComponentCarrier
    * \param targetCellId the cell ID of the target eNodeB
    *
-   * This function is used by the ComponentCarrier manager when a decision on 
+   * This function is used by the ComponentCarrier manager when a decision on
    * component carriers configurations.
    *
    * The process to produce the decision is up to the implementation of ComponentCarrier
@@ -188,17 +188,17 @@ public:
    */
   virtual void TriggerComponentCarrier (uint16_t rnti, uint16_t targetCellId) = 0;
 
-  /** 
-   * add a new Logical Channel (LC) 
-   * 
+  /**
+   * add a new Logical Channel (LC)
+   *
    * \param lcConfig is a single structure contains logical Channel Id, Logical Channel config and Component Carrier Id
    */
   virtual void AddLcs (std::vector<LteEnbRrcSapProvider::LogicalChannelConfig> lcConfig) = 0;
 
-  /** 
+  /**
    * remove an existing LC
-   * 
-   * \param rnti 
+   *
+   * \param rnti
    * \param lcid
    */
   virtual void ReleaseLcs (uint16_t rnti, uint8_t lcid) = 0;
@@ -227,19 +227,19 @@ class MemberLteCcmRrcSapProvider : public LteCcmRrcSapProvider
 public:
   /**
    * Constructor
-   * 
+   *
    * \param owner the owner class
    */
   MemberLteCcmRrcSapProvider (C* owner);
 
   // inherited from LteCcmRrcSapProvider
-  virtual void ReportUeMeas (uint16_t rnti, LteRrcSap::MeasResults measResults);
-  virtual void AddUe (uint16_t rnti, uint8_t state);
-  virtual void AddLc (LteEnbCmacSapProvider::LcInfo lcInfo, LteMacSapUser* msu);
-  virtual void RemoveUe (uint16_t rnti);
-  virtual std::vector<LteCcmRrcSapProvider::LcsConfig> SetupDataRadioBearer (EpsBearer bearer, uint8_t bearerId, uint16_t rnti, uint8_t lcid, uint8_t lcGroup, LteMacSapUser *msu);
-  virtual std::vector<uint8_t> ReleaseDataRadioBearer (uint16_t rnti, uint8_t lcid);
-  virtual LteMacSapUser* ConfigureSignalBearer(LteEnbCmacSapProvider::LcInfo lcInfo,  LteMacSapUser* rlcMacSapUser);
+  void ReportUeMeas (uint16_t rnti, LteRrcSap::MeasResults measResults) override;
+  void AddUe (uint16_t rnti, uint8_t state) override;
+  void AddLc (LteEnbCmacSapProvider::LcInfo lcInfo, LteMacSapUser* msu) override;
+  void RemoveUe (uint16_t rnti) override;
+  std::vector<LteCcmRrcSapProvider::LcsConfig> SetupDataRadioBearer (EpsBearer bearer, uint8_t bearerId, uint16_t rnti, uint8_t lcid, uint8_t lcGroup, LteMacSapUser *msu) override;
+  std::vector<uint8_t> ReleaseDataRadioBearer (uint16_t rnti, uint8_t lcid) override;
+  LteMacSapUser* ConfigureSignalBearer(LteEnbCmacSapProvider::LcInfo lcInfo,  LteMacSapUser* rlcMacSapUser) override;
 
 private:
   C* m_owner; ///< the owner class
@@ -301,18 +301,18 @@ class MemberLteCcmRrcSapUser : public LteCcmRrcSapUser
 public:
   /**
    * Constructor
-   * 
+   *
    * \param owner the owner class
    */
   MemberLteCcmRrcSapUser (C* owner);
 
   // inherited from LteCcmRrcSapUser
-  virtual void AddLcs (std::vector<LteEnbRrcSapProvider::LogicalChannelConfig> lcConfig);
-  virtual void ReleaseLcs (uint16_t rnti, uint8_t lcid);
-  virtual uint8_t AddUeMeasReportConfigForComponentCarrier (LteRrcSap::ReportConfigEutra reportConfig);
-  virtual void TriggerComponentCarrier (uint16_t rnti, uint16_t targetCellId);
-  virtual Ptr<UeManager> GetUeManager (uint16_t rnti);
-  virtual void SetNumberOfComponentCarriers (uint16_t noOfComponentCarriers);
+  void AddLcs (std::vector<LteEnbRrcSapProvider::LogicalChannelConfig> lcConfig) override;
+  void ReleaseLcs (uint16_t rnti, uint8_t lcid) override;
+  uint8_t AddUeMeasReportConfigForComponentCarrier (LteRrcSap::ReportConfigEutra reportConfig) override;
+  void TriggerComponentCarrier (uint16_t rnti, uint16_t targetCellId) override;
+  Ptr<UeManager> GetUeManager (uint16_t rnti) override;
+  void SetNumberOfComponentCarriers (uint16_t noOfComponentCarriers) override;
 
 private:
   C* m_owner; ///< the owner class

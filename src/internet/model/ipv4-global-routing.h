@@ -47,16 +47,16 @@ class Node;
  * \brief Global routing protocol for IPv4 stacks.
  *
  * In ns-3 we have the concept of a pluggable routing protocol.  Routing
- * protocols are added to a list maintained by the Ipv4L3Protocol.  Every 
+ * protocols are added to a list maintained by the Ipv4L3Protocol.  Every
  * stack gets one routing protocol for free -- the Ipv4StaticRouting routing
- * protocol is added in the constructor of the Ipv4L3Protocol (this is the 
+ * protocol is added in the constructor of the Ipv4L3Protocol (this is the
  * piece of code that implements the functionality of the IP layer).
  *
  * As an option to running a dynamic routing protocol, a GlobalRouteManager
  * object has been created to allow users to build routes for all participating
  * nodes.  One can think of this object as a "routing oracle"; it has
  * an omniscient view of the topology, and can construct shortest path
- * routes between all pairs of nodes.  These routes must be stored 
+ * routes between all pairs of nodes.  These routes must be stored
  * somewhere in the node, so therefore this class Ipv4GlobalRouting
  * is used as one of the pluggable routing protocols.  It is kept distinct
  * from Ipv4StaticRouting because these routes may be dynamically cleared
@@ -75,7 +75,7 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
   /**
    * \brief Construct an empty Ipv4GlobalRouting routing protocol,
    *
@@ -85,20 +85,20 @@ public:
    * \see Ipv4GlobalRouting
    */
   Ipv4GlobalRouting ();
-  virtual ~Ipv4GlobalRouting ();
+  ~Ipv4GlobalRouting () override;
 
   // These methods inherited from base class
-  virtual Ptr<Ipv4Route> RouteOutput (Ptr<Packet> p, const Ipv4Header &header, Ptr<NetDevice> oif, Socket::SocketErrno &sockerr);
+  Ptr<Ipv4Route> RouteOutput (Ptr<Packet> p, const Ipv4Header &header, Ptr<NetDevice> oif, Socket::SocketErrno &sockerr) override;
 
-  virtual bool RouteInput  (Ptr<const Packet> p, const Ipv4Header &header, Ptr<const NetDevice> idev,
+  bool RouteInput  (Ptr<const Packet> p, const Ipv4Header &header, Ptr<const NetDevice> idev,
                             UnicastForwardCallback ucb, MulticastForwardCallback mcb,
-                            LocalDeliverCallback lcb, ErrorCallback ecb);
-  virtual void NotifyInterfaceUp (uint32_t interface);
-  virtual void NotifyInterfaceDown (uint32_t interface);
-  virtual void NotifyAddAddress (uint32_t interface, Ipv4InterfaceAddress address);
-  virtual void NotifyRemoveAddress (uint32_t interface, Ipv4InterfaceAddress address);
-  virtual void SetIpv4 (Ptr<Ipv4> ipv4);
-  virtual void PrintRoutingTable (Ptr<OutputStreamWrapper> stream, Time::Unit unit = Time::S) const;
+                            LocalDeliverCallback lcb, ErrorCallback ecb) override;
+  void NotifyInterfaceUp (uint32_t interface) override;
+  void NotifyInterfaceDown (uint32_t interface) override;
+  void NotifyAddAddress (uint32_t interface, Ipv4InterfaceAddress address) override;
+  void NotifyRemoveAddress (uint32_t interface, Ipv4InterfaceAddress address) override;
+  void SetIpv4 (Ptr<Ipv4> ipv4) override;
+  void PrintRoutingTable (Ptr<OutputStreamWrapper> stream, Time::Unit unit = Time::S) const override;
 
   /**
    * \brief Add a host route to the global routing table.
@@ -110,8 +110,8 @@ public:
    *
    * \see Ipv4Address
    */
-  void AddHostRouteTo (Ipv4Address dest, 
-                       Ipv4Address nextHop, 
+  void AddHostRouteTo (Ipv4Address dest,
+                       Ipv4Address nextHop,
                        uint32_t interface);
   /**
    * \brief Add a host route to the global routing table.
@@ -122,7 +122,7 @@ public:
    *
    * \see Ipv4Address
    */
-  void AddHostRouteTo (Ipv4Address dest, 
+  void AddHostRouteTo (Ipv4Address dest,
                        uint32_t interface);
 
   /**
@@ -136,9 +136,9 @@ public:
    *
    * \see Ipv4Address
    */
-  void AddNetworkRouteTo (Ipv4Address network, 
-                          Ipv4Mask networkMask, 
-                          Ipv4Address nextHop, 
+  void AddNetworkRouteTo (Ipv4Address network,
+                          Ipv4Mask networkMask,
+                          Ipv4Address nextHop,
                           uint32_t interface);
 
   /**
@@ -151,8 +151,8 @@ public:
    *
    * \see Ipv4Address
    */
-  void AddNetworkRouteTo (Ipv4Address network, 
-                          Ipv4Mask networkMask, 
+  void AddNetworkRouteTo (Ipv4Address network,
+                          Ipv4Mask networkMask,
                           uint32_t interface);
 
   /**
@@ -176,7 +176,7 @@ public:
    * \warning The default route counts as one of the routes.
    * \returns the number of routes
    */
-  uint32_t GetNRoutes (void) const;
+  uint32_t GetNRoutes () const;
 
   /**
    * \brief Get a route from the global unicast routing table.
@@ -229,7 +229,7 @@ public:
   int64_t AssignStreams (int64_t stream);
 
 protected:
-  void DoDispose (void);
+  void DoDispose () override;
 
 private:
   /// Set to true if packets are randomly routed among ECMP; set to false for using only one route consistently
@@ -238,7 +238,7 @@ private:
   bool m_flowEcmpRouting;
   /// Set to true if this interface should respond to interface events by globallly recomputing routes 
   bool m_respondToInterfaceEvents;
-  /// A uniform random number generator for randomly routing packets among ECMP 
+  /// A uniform random number generator for randomly routing packets among ECMP
   Ptr<UniformRandomVariable> m_rand;
 
   /// container of Ipv4RoutingTableEntry (routes to hosts)
@@ -269,7 +269,7 @@ private:
    * \param oif output interface if any (put 0 otherwise)
    * \return Ipv4Route to route the packet to reach dest address
    */
-  Ptr<Ipv4Route> LookupGlobal (Ipv4Address dest, uint32_t flowHash = 0, Ptr<NetDevice> oif = 0);
+  Ptr<Ipv4Route> LookupGlobal (Ipv4Address dest, uint32_t flowHash = 0, Ptr<NetDevice> oif = nullptr);
 
   HostRoutes m_hostRoutes;             //!< Routes to hosts
   NetworkRoutes m_networkRoutes;       //!< Routes to networks

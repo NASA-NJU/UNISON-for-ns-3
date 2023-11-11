@@ -33,7 +33,7 @@ class Address;
 
 /**
  * \ingroup address
- * 
+ *
  * \brief an EUI-48 address
  *
  * This class can contain 48 bit IEEE addresses.
@@ -73,7 +73,7 @@ public:
   /**
    * \param address a polymorphic address
    * \returns a new Mac48Address from the polymorphic address
-   * 
+   *
    * This function performs a type check and asserts if the
    * type of the input address is not compatible with an
    * Mac48Address.
@@ -88,22 +88,37 @@ public:
    * Allocate a new Mac48Address.
    * \returns newly allocated mac48Address
    */
-  static Mac48Address Allocate (void);
+  static Mac48Address Allocate ();
+
+  /**
+   * Reset the Mac48Address allocation index.
+   *
+   * This function resets (to zero) the global integer
+   * that is used for unique address allocation.
+   * It is automatically called whenever
+   * \code
+   * SimulatorDestroy ();
+   * \endcode
+   * is called.  It may also be optionally called
+   * by user code if there is a need to force a reset
+   * of this allocation index.
+   */
+  static void ResetAllocationIndex ();
 
   /**
    * \returns true if this is a broadcast address, false otherwise.
    */
-  bool IsBroadcast (void) const;
+  bool IsBroadcast () const;
 
   /**
    * \returns true if the group bit is set, false otherwise.
    */
-  bool IsGroup (void) const;
+  bool IsGroup () const;
 
   /**
    * \returns the broadcast address
    */
-  static Mac48Address GetBroadcast (void);
+  static Mac48Address GetBroadcast ();
 
   /**
    * \param address base IPv4 address
@@ -121,13 +136,13 @@ public:
   /**
    * \returns the multicast prefix (01:00:5e:00:00:00).
    */
-  static Mac48Address GetMulticastPrefix (void);
+  static Mac48Address GetMulticastPrefix ();
 
   /**
    * \brief Get the multicast prefix for IPv6 (33:33:00:00:00:00).
    * \returns a multicast address.
    */
-  static Mac48Address GetMulticast6Prefix (void);
+  static Mac48Address GetMulticast6Prefix ();
 
   /**
    * TracedCallback signature for Mac48Address
@@ -135,20 +150,20 @@ public:
    * \param [in] value Current value of the Mac48Address
    */
   typedef void (* TracedCallback)(Mac48Address value);
-  
+
 private:
   /**
    * \returns a new Address instance
    *
    * Convert an instance of this class to a polymorphic Address instance.
    */
-  Address ConvertTo (void) const;
+  Address ConvertTo () const;
 
   /**
    * \brief Return the Type of address.
    * \return type of address
    */
-  static uint8_t GetType (void);
+  static uint8_t GetType ();
 
   /**
    * \brief Equal to operator.
@@ -195,6 +210,7 @@ private:
    */
   friend std::istream& operator>> (std::istream& is, Mac48Address & address);
 
+  static uint64_t m_allocationIndex; //!< Address allocation index
   uint8_t m_address[6]; //!< address value
 };
 

@@ -102,9 +102,9 @@ SOURCES = \
 	$(SRC)/sixlowpan/doc/sixlowpan.rst \
 	$(SRC)/lr-wpan/doc/lr-wpan.rst \
 
-# list all model library figure files that need to be copied to 
+# list all model library figure files that need to be copied to
 # $SOURCETEMP/figures.  For each figure to be included in all
-# documentation formats (html, latex...) the following formats are supported: 
+# documentation formats (html, latex...) the following formats are supported:
 #  1) a single .dia file (preferred option, because it can be edited)
 #  2) a single .eps file
 #  3) both a .pdf and .png file
@@ -145,6 +145,7 @@ SOURCEFIGS = \
 	$(SRC)/wifi/doc/source/figures/snir.dia \
 	$(SRC)/wifi/doc/source/figures/ack-su-format.pdf \
 	$(SRC)/wifi/doc/source/figures/ack-su-format.png \
+	$(SRC)/wifi/doc/source/figures/assoc-manager.eps \
 	$(SRC)/wifi/doc/source/figures/mu-bar.pdf \
 	$(SRC)/wifi/doc/source/figures/mu-bar.png \
 	$(SRC)/wifi/doc/source/figures/aggr-mu-bar.pdf \
@@ -347,7 +348,9 @@ SOURCEFIGS = \
 	$(SRC)/traffic-control/doc/figures/collision_prob.jpeg \
 	$(SRC)/traffic-control/doc/figures/overlapped.jpeg \
 	$(SRC)/lr-wpan/doc/lr-wpan-arch.dia \
+	$(SRC)/lr-wpan/doc/lr-wpan-assocSequence.dia \
 	$(SRC)/lr-wpan/doc/lr-wpan-data-example.dia \
+	$(SRC)/lr-wpan/doc/lr-wpan-phy.dia \
 	$(SRC)/lr-wpan/doc/lr-wpan-primitives.dia \
 	$(SRC)/lr-wpan/doc/802-15-4-ber.eps \
 	$(SRC)/lr-wpan/doc/802-15-4-per-sens.eps \
@@ -440,13 +443,16 @@ IMAGES_EPS = \
 	$(FIGURES)/spectrum-tv-rand-geo-points.eps \
 	$(FIGURES)/classful-queue-disc.eps \
 	$(FIGURES)/multi-queue-aware-queue-disc.eps \
+	$(FIGURES)/lr-wpan-phy.eps \
 	$(FIGURES)/lr-wpan-primitives.eps \
 	$(FIGURES)/lr-wpan-data-example.eps \
 	$(FIGURES)/lr-wpan-arch.eps \
+	$(FIGURES)/lr-wpan-assocSequence.eps \
 	$(FIGURES)/802-15-4-ber.eps \
 	$(FIGURES)/802-15-4-per-sens.eps \
 	$(FIGURES)/802-15-4-psr-distance.eps \
 	$(FIGURES)/clear-channel.eps \
+	$(FIGURES)/assoc-manager.eps \
 	$(FIGURES)/nist-frame-success-rate.eps \
 	$(FIGURES)/nist-frame-success-rate-n.eps \
 	$(FIGURES)/nist-frame-success-rate-ac.eps \
@@ -470,7 +476,7 @@ IMAGES_EPS = \
 # rescale pdf figures as necessary
 $(FIGURES)/testbed.pdf_width = 5in
 $(FIGURES)/emulated-channel.pdf_width = 6in
-$(FIGURES)/antenna-coordinate-system.pdf_width = 7cm	
+$(FIGURES)/antenna-coordinate-system.pdf_width = 7cm
 $(FIGURES)/node.pdf_width = 5in
 $(FIGURES)/packet.pdf_width = 4in
 $(FIGURES)/buffer.pdf_width = 15cm
@@ -499,7 +505,7 @@ $(FIGURES)/fr-soft-frequency-reuse-scheme-v1.pdf_width = 8cm
 $(FIGURES)/fr-soft-frequency-reuse-scheme-v2.pdf_width = 8cm
 $(FIGURES)/fr-strict-frequency-reuse-scheme.pdf_width = 8cm
 $(FIGURES)/ffr-distributed-scheme.pdf_width = 8cm
-$(FIGURES)/lte-arch-enb-data.pdf_width = 6cm 
+$(FIGURES)/lte-arch-enb-data.pdf_width = 6cm
 $(FIGURES)/lte-arch-enb-ctrl.pdf_width = 10cm
 $(FIGURES)/lte-arch-ue-data.pdf_width = 6cm
 $(FIGURES)/lte-arch-ue-ctrl.pdf_width = 10cm
@@ -517,6 +523,7 @@ $(FIGURES)/helpers.pdf_width = 8cm
 $(FIGURES)/auvmobility-classes.pdf_width = 10cm
 $(FIGURES)/spectrum-analyzer-example.pdf_width = 15cm
 $(FIGURES)/spectrum-tv-rand-geo-points.pdf_width = 8cm
+$(FIGURES)/lr-wpan-phy.pdf_width = 3in
 $(FIGURES)/lr-wpan-primitives.pdf_width = 3in
 $(FIGURES)/lr-wpan-arch.pdf_width = 2in
 $(FIGURES)/clear-channel.pdf_width = 12cm
@@ -524,6 +531,7 @@ $(FIGURES)/nist-frame-success-rate.pdf_width = 12cm
 $(FIGURES)/nist-frame-success-rate-n.pdf_width = 12cm
 $(FIGURES)/nist-frame-success-rate-ac.pdf_width = 12cm
 $(FIGURES)/nist-frame-success-rate-ax.pdf_width = 12cm
+$(FIGURES)/assoc-manager.pdf_width = 12cm
 
 IMAGES_PNG = ${IMAGES_EPS:.eps=.png}
 IMAGES_PDF = ${IMAGES_EPS:.eps=.pdf}
@@ -558,7 +566,7 @@ BUILDDIR      = build
 # Internal variables.
 PAPEROPT_a4     = -D latex_paper_size=a4
 PAPEROPT_letter = -D latex_paper_size=letter
-ALLSPHINXOPTS   = -d $(BUILDDIR)/doctrees $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) $(SOURCETEMP) 
+ALLSPHINXOPTS   = -d $(BUILDDIR)/doctrees $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) $(SOURCETEMP)
 
 .PHONY: help clean html dirhtml singlehtml pickle json htmlhelp qthelp devhelp epub latex latexpdf text man changes linkcheck doctest
 
@@ -584,8 +592,8 @@ help:
 	@echo "  doctest    to run all doctests embedded in the documentation (if enabled)"
 
 copy-sources:  $(SOURCES)
-	@mkdir -p $(SOURCETEMP) 
-	@mkdir -p $(FIGURES) 
+	@mkdir -p $(SOURCETEMP)
+	@mkdir -p $(FIGURES)
 	@cp -r -p $(SOURCES) $(SOURCETEMP)
 	@cp -r -p $(SOURCEFIGS) $(FIGURES)
 
@@ -598,7 +606,7 @@ frag: pickle
 	pushd $(BUILDDIR)/frag && ../../pickle-to-xml.py ../pickle/index.fpickle  > navigation.xml && popd
 	cp -r $(BUILDDIR)/pickle/_images $(BUILDDIR)/frag
 
-html: copy-sources $(IMAGES) 
+html: copy-sources $(IMAGES)
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."

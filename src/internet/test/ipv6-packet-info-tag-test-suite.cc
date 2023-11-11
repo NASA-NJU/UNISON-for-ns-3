@@ -86,7 +86,7 @@ class Ipv6PacketInfoTagTest : public TestCase
 public:
   Ipv6PacketInfoTagTest ();
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
   /**
    * \brief Receive callback.
    * \param socket Receiving socket.
@@ -125,7 +125,7 @@ void
 Ipv6PacketInfoTagTest::DoSendData (Ptr<Socket> socket, std::string to)
 {
   Address realTo = Inet6SocketAddress (Ipv6Address (to.c_str ()), 200);
-  if (DynamicCast<UdpSocket> (socket) != 0)
+  if (DynamicCast<UdpSocket> (socket))
     {
       NS_TEST_EXPECT_MSG_EQ (socket->SendTo (Create<Packet> (123), 0, realTo),
                              123, "100");
@@ -138,7 +138,7 @@ Ipv6PacketInfoTagTest::DoSendData (Ptr<Socket> socket, std::string to)
 }
 
 void
-Ipv6PacketInfoTagTest::DoRun (void)
+Ipv6PacketInfoTagTest::DoRun ()
 {
   Ptr<Node> node0 = CreateObject<Node> ();
   Ptr<Node> node1 = CreateObject<Node> ();

@@ -37,7 +37,7 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   /**
    * Constructor
@@ -47,23 +47,12 @@ public:
   /**
    * Destructor
    */
-  virtual ~ThreeGppV2vUrbanPropagationLossModel () override;
+  ~ThreeGppV2vUrbanPropagationLossModel () override;
 
-  /**
-   * \brief Copy constructor
-   *
-   * Defined and unimplemented to avoid misuse
-   */
+  // Delete copy constructor and assignment operator to avoid misuse
   ThreeGppV2vUrbanPropagationLossModel (const ThreeGppV2vUrbanPropagationLossModel &) = delete;
+  ThreeGppV2vUrbanPropagationLossModel &operator= (const ThreeGppV2vUrbanPropagationLossModel &) = delete;
 
-  /**
-   * \brief Copy constructor
-   *
-   * Defined and unimplemented to avoid misuse
-   * \returns the ThreeGppRmaPropagationLossModel instance
-   */
-  ThreeGppV2vUrbanPropagationLossModel & operator = (const ThreeGppV2vUrbanPropagationLossModel &) = delete;
-  
 private:
   /**
    * \brief Computes the pathloss between a and b considering that the line of
@@ -74,7 +63,25 @@ private:
    * \param hBs the height of the BS in meters
    * \return pathloss value in dB
    */
-  virtual double GetLossLos (double distance2D, double distance3D, double hUt, double hBs) const override;
+  double GetLossLos (double distance2D, double distance3D, double hUt, double hBs) const override;
+
+  /**
+   * \brief Returns the minimum of the two independently generated distances
+   *        according to the uniform distribution between the minimum and the maximum
+   *        value depending on the specific 3GPP scenario (UMa, UMi-Street Canyon, RMa),
+   *        i.e., between 0 and 25 m for UMa and UMi-Street Canyon, and between 0 and 10 m
+   *        for RMa.
+   *        According to 3GPP TR 38.901 this 2D−in distance shall be UT-specifically
+   *        generated. 2D−in distance is used for the O2I penetration losses
+   *        calculation according to 3GPP TR 38.901 7.4.3.
+   *        See GetO2iLowPenetrationLoss/GetO2iHighPenetrationLoss functions.
+   *
+   *        TODO O2I car penetration loss (TR 38.901 7.4.3.2) not considered
+   *
+   * \return Returns 02i 2D distance (in meters) used to calculate low/high losses.
+   */
+  double GetO2iDistance2dIn () const override;
+
 
   /**
    * \brief Computes the pathloss between a and b considering that the line of
@@ -85,8 +92,8 @@ private:
    * \param hBs the height of the BS in meters
    * \return pathloss value in dB
    */
-  virtual double GetLossNlosv (double distance2D, double distance3D, double hUt, double hBs) const override;
-  
+  double GetLossNlosv (double distance2D, double distance3D, double hUt, double hBs) const override;
+
   /**
    * \brief Computes the pathloss between a and b considering that the line of
    *        sight is obstructed by a building
@@ -96,8 +103,8 @@ private:
    * \param hBs the height of the BS in meters
    * \return pathloss value in dB
    */
-  virtual double GetLossNlos (double distance2D, double distance3D, double hUt, double hBs) const override;
-  
+  double GetLossNlos (double distance2D, double distance3D, double hUt, double hBs) const override;
+
   /**
    * \brief Computes the additional loss due to an obstruction caused by a vehicle
    * \param distance3D the 3D distance between tx and rx in meters
@@ -114,15 +121,17 @@ private:
    * \param cond the LOS/NLOS channel condition
    * \return shadowing std in dB
    */
-  virtual double GetShadowingStd (Ptr<MobilityModel> a, Ptr<MobilityModel> b, ChannelCondition::LosConditionValue cond) const override;
+  double GetShadowingStd (Ptr<MobilityModel> a, Ptr<MobilityModel> b, ChannelCondition::LosConditionValue cond) const override;
 
   /**
    * \brief Returns the shadow fading correlation distance
    * \param cond the LOS/NLOS channel condition
    * \return shadowing correlation distance in meters
    */
-  virtual double GetShadowingCorrelationDistance (ChannelCondition::LosConditionValue cond) const override;
-  
+  double GetShadowingCorrelationDistance (ChannelCondition::LosConditionValue cond) const override;
+
+  int64_t DoAssignStreams (int64_t stream) override;
+
   double m_percType3Vehicles; //!< percentage of Type 3 vehicles in the scenario (i.e., trucks)
   Ptr<UniformRandomVariable> m_uniformVar; //!< uniform random variable
   Ptr<LogNormalRandomVariable> m_logNorVar; //!< log normal random variable
@@ -135,13 +144,13 @@ private:
  *        for the Highway scenario.
  */
 class ThreeGppV2vHighwayPropagationLossModel : public ThreeGppV2vUrbanPropagationLossModel
-{ 
+{
 public:
   /**
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   /**
    * Constructor
@@ -151,7 +160,7 @@ public:
   /**
    * Destructor
    */
-  virtual ~ThreeGppV2vHighwayPropagationLossModel () override;
+  ~ThreeGppV2vHighwayPropagationLossModel () override;
 
 private:
   /**
@@ -163,7 +172,7 @@ private:
    * \param hBs the height of the BS in meters
    * \return pathloss value in dB
    */
-  virtual double GetLossLos (double distance2D, double distance3D, double hUt, double hBs) const override;
+  double GetLossLos (double distance2D, double distance3D, double hUt, double hBs) const override;
 };
 
 } // namespace ns3

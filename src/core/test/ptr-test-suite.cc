@@ -53,9 +53,9 @@ public:
   /** Destructor. */
   virtual ~PtrTestBase ();
   /** Increment the reference count. */
-  void Ref (void) const;
+  void Ref () const;
   /** Decrement the reference count, and delete if necessary. */
-  void Unref (void) const;
+  void Unref () const;
 
 private:
   mutable uint32_t m_count; //!< The reference count.
@@ -79,9 +79,9 @@ public:
    * The object being tracked will also be destroyed,
    * by calling DestroyNotify()
    */
-  ~NoCount ();
+  ~NoCount () override;
   /** Noop function. */
-  void Nothing (void) const;
+  void Nothing () const;
 
 private:
   PtrTestCase *m_test; //!< The object being tracked.
@@ -98,10 +98,10 @@ public:
   /** Constructor. */
   PtrTestCase ();
   /** Count the destruction of an object. */
-  void DestroyNotify (void);
+  void DestroyNotify ();
 
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
   /**
    * Test that \pname{p} is a valid object, by calling a member function.
    * \param [in] p The object pointer to test.
@@ -120,12 +120,12 @@ PtrTestBase::PtrTestBase ()
 PtrTestBase::~PtrTestBase ()
 {}
 void
-PtrTestBase::Ref (void) const
+PtrTestBase::Ref () const
 {
   m_count++;
 }
 void
-PtrTestBase::Unref (void) const
+PtrTestBase::Unref () const
 {
   m_count--;
   if (m_count == 0)
@@ -147,11 +147,11 @@ NoCount::Nothing () const
 
 
 
-PtrTestCase::PtrTestCase (void)
+PtrTestCase::PtrTestCase ()
   : TestCase ("Sanity checking of Ptr<>")
 {}
 void
-PtrTestCase::DestroyNotify (void)
+PtrTestCase::DestroyNotify ()
 {
   m_nDestroyed++;
 }
@@ -169,7 +169,7 @@ PtrTestCase::CallTestConst (Ptr<NoCount> const p)
 
 
 void
-PtrTestCase::DoRun (void)
+PtrTestCase::DoRun ()
 {
   m_nDestroyed = false;
   {
@@ -277,13 +277,13 @@ PtrTestCase::DoRun (void)
     p4 = ConstCast<NoCount> (p5);
     p5 = p1;
     Ptr<NoCount> p;
-    if (p == 0)
+    if (!p)
       {}
-    if (p != 0)
+    if (p)
       {}
-    if (0 == p)
+    if (!p)
       {}
-    if (0 != p)
+    if (p)
       {}
     if (p)
       {}
@@ -300,7 +300,7 @@ PtrTestCase::DoRun (void)
         Ptr<NoCount const> p1 = p;
       }
       raw = GetPointer (p);
-      p = 0;
+      p = nullptr;
     }
     NS_TEST_EXPECT_MSG_EQ (m_nDestroyed, 0, "012");
     delete raw;

@@ -34,12 +34,12 @@ class Node;
 
 /**
  * The X2 SAP defines the service between the X2 entity and the RRC entity.
- * 
+ *
  * The X2 SAP follows the specification 3GPP TS 36.423: "X2 application protocol (X2AP)"
- * 
- * The service primitives corresponds to the X2AP procedures and messages and 
+ *
+ * The service primitives corresponds to the X2AP procedures and messages and
  * the service parameters corresponds to the Information Elements
- * 
+ *
  * Note: Any reference in this file refers to the 3GPP TS 36.423 specification
  */
 
@@ -50,7 +50,7 @@ class EpcX2Sap
 {
 public:
   virtual ~EpcX2Sap ();
-  
+
   /**
    * E-RABs to be setup item as
    * it is used in the HANDOVER REQUEST message.
@@ -135,7 +135,7 @@ public:
    * Relative Narrowband Tx Power (RNTP) as
    * it is used in the LOAD INFORMATION message.
    * See section 9.2.19 for further info about the parameters
-   * 
+   *
    * Note: You can use INT16_MIN value for -infinite value
    *       in the rntpThreshold field
    */
@@ -233,7 +233,7 @@ public:
     uint16_t            targetCellId; ///< target cell ID
     uint32_t            mmeUeS1apId; ///< MME UE S1 AP ID
     uint64_t            ueAggregateMaxBitRateDownlink; ///< UE aggregrate max bit rate downlink
-    uint64_t            ueAggregateMaxBitRateUplink; ///< UE aggregrate max bit rate uplink 
+    uint64_t            ueAggregateMaxBitRateUplink; ///< UE aggregrate max bit rate uplink
     std::vector <ErabToBeSetupItem> bearers; ///< bearers
     Ptr<Packet>         rrcContext; ///< RRC context
   };
@@ -333,6 +333,21 @@ public:
     Ptr<Packet> ueData; ///< UE data
   };
 
+  /**
+   * \brief Parameters of the HANDOVER CANCEL message.
+   *
+   * See section 9.1.1.6 for further info about the parameters
+   *
+   */
+  struct HandoverCancelParams
+  {
+    uint16_t            oldEnbUeX2apId; ///< old ENB UE X2 AP ID
+    uint16_t            newEnbUeX2apId; ///< new ENB UE X2 AP ID
+    uint16_t            sourceCellId; ///< source cell ID
+    uint16_t            targetCellId; ///< target cell ID
+    uint16_t            cause; ///< cause
+  };
+
 };
 
 
@@ -343,7 +358,7 @@ public:
 class EpcX2SapProvider : public EpcX2Sap
 {
 public:
-  virtual ~EpcX2SapProvider ();
+  ~EpcX2SapProvider () override;
 
   //
   // Service primitives
@@ -396,6 +411,12 @@ public:
    * \param params the UE data parameters
    */
   virtual void SendUeData (UeDataParams params) = 0;
+
+  /**
+   * \brief Send handover Cancel to the target eNB
+   * \param params the handover cancel parameters
+   */
+  virtual void SendHandoverCancel (HandoverCancelParams params) = 0;
 };
 
 
@@ -406,7 +427,7 @@ public:
 class EpcX2SapUser : public EpcX2Sap
 {
 public:
-  virtual ~EpcX2SapUser ();
+  ~EpcX2SapUser () override;
 
   /*
    * Service primitives
@@ -427,7 +448,7 @@ public:
   /**
    * Receive handover preparation failure function
    * \param params the handover preparation failure parameters
-   */ 
+   */
   virtual void RecvHandoverPreparationFailure (HandoverPreparationFailureParams params) = 0;
 
   /**
@@ -447,7 +468,7 @@ public:
    * \param params the load information parameters
    */
   virtual void RecvLoadInformation (LoadInformationParams params) = 0;
-  
+
   /**
    * Receive resource status update function
    * \param params the resource status update parameters
@@ -459,6 +480,13 @@ public:
    * \param params UE data parameters
    */
   virtual void RecvUeData (UeDataParams params) = 0;
+
+  /**
+   * Receive handover cancel function
+   * \param params the receive handover cancel parameters
+   *
+   */
+  virtual void RecvHandoverCancel (HandoverCancelParams params) = 0;
 };
 
 ///////////////////////////////////////
@@ -485,49 +513,55 @@ public:
    * Send handover request function
    * \param params the hadnover request parameters
    */
-  virtual void SendHandoverRequest (HandoverRequestParams params);
+  void SendHandoverRequest (HandoverRequestParams params) override;
 
   /**
    * Send handover request ack function
    * \param params the handover request ack pararameters
    */
-  virtual void SendHandoverRequestAck (HandoverRequestAckParams params);
+  void SendHandoverRequestAck (HandoverRequestAckParams params) override;
 
   /**
    * Send handover preparation failure function
    * \param params the handover preparation failure parameters
    */
-  virtual void SendHandoverPreparationFailure (HandoverPreparationFailureParams params);
+  void SendHandoverPreparationFailure (HandoverPreparationFailureParams params) override;
 
   /**
    * Send SN status transfer function
    * \param params the SN status transfer parameters
    */
-  virtual void SendSnStatusTransfer (SnStatusTransferParams params);
+  void SendSnStatusTransfer (SnStatusTransferParams params) override;
 
   /**
    * Send UE context release function
    * \param params the UE context release parameters
    */
-  virtual void SendUeContextRelease (UeContextReleaseParams params);
+  void SendUeContextRelease (UeContextReleaseParams params) override;
 
   /**
    * Send load information function
    * \param params the load information parameters
    */
-  virtual void SendLoadInformation (LoadInformationParams params);
+  void SendLoadInformation (LoadInformationParams params) override;
 
   /**
    * Send resource status update function
    * \param params the resource status update parameters
    */
-  virtual void SendResourceStatusUpdate (ResourceStatusUpdateParams params);
+  void SendResourceStatusUpdate (ResourceStatusUpdateParams params) override;
 
   /**
    * Send UE data function
    * \param params the UE data parameters
    */
-  virtual void SendUeData (UeDataParams params);
+  void SendUeData (UeDataParams params) override;
+
+  /**
+   * \brief Send handover Cancel to the target eNB
+   * \param params the handover cancel parameters
+   */
+  void SendHandoverCancel (HandoverCancelParams params) override;
 
 private:
   EpcX2SpecificEpcX2SapProvider ();
@@ -601,6 +635,13 @@ EpcX2SpecificEpcX2SapProvider<C>::SendUeData (UeDataParams params)
   m_x2->DoSendUeData (params);
 }
 
+template <class C>
+void
+EpcX2SpecificEpcX2SapProvider<C>::SendHandoverCancel (HandoverCancelParams params)
+{
+  m_x2->DoSendHandoverCancel (params);
+}
+
 /**
  * EpcX2SpecificEpcX2SapUser
  */
@@ -623,49 +664,56 @@ public:
    * Receive handover request function
    * \param params the receive handover request parameters
    */
-  virtual void RecvHandoverRequest (HandoverRequestParams params);
+  void RecvHandoverRequest (HandoverRequestParams params) override;
 
   /**
    * Receive handover request ack function
    * \param params the receive handover request ack parameters
    */
-  virtual void RecvHandoverRequestAck (HandoverRequestAckParams params);
+  void RecvHandoverRequestAck (HandoverRequestAckParams params) override;
 
   /**
    * Receive handover preparation failure function
    * \param params the receive handover preparation failure parameters
    */
-  virtual void RecvHandoverPreparationFailure (HandoverPreparationFailureParams params);
+  void RecvHandoverPreparationFailure (HandoverPreparationFailureParams params) override;
 
   /**
    * Receive SN status transfer function
    * \param params the SN status transfer parameters
    */
-  virtual void RecvSnStatusTransfer (SnStatusTransferParams params);
+  void RecvSnStatusTransfer (SnStatusTransferParams params) override;
 
   /**
    * Receive UE context release function
    * \param params the UE context release parameters
    */
-  virtual void RecvUeContextRelease (UeContextReleaseParams params);
+  void RecvUeContextRelease (UeContextReleaseParams params) override;
 
   /**
    * Receive load information function
    * \param params the load information parameters
    */
-  virtual void RecvLoadInformation (LoadInformationParams params);
+  void RecvLoadInformation (LoadInformationParams params) override;
 
   /**
    * Receive resource status update function
    * \param params the receive resource status update
    */
-  virtual void RecvResourceStatusUpdate (ResourceStatusUpdateParams params);
+  void RecvResourceStatusUpdate (ResourceStatusUpdateParams params) override;
 
   /**
    * Receive UE data function
    * \param params the UE data parameters
    */
-  virtual void RecvUeData (UeDataParams params);
+  void RecvUeData (UeDataParams params) override;
+
+  /**
+   * Receive handover cancel function
+   * \param params the receive handover cancel parameters
+   *
+   */
+  void RecvHandoverCancel (HandoverCancelParams params) override;
 
 private:
   EpcX2SpecificEpcX2SapUser ();
@@ -737,6 +785,13 @@ void
 EpcX2SpecificEpcX2SapUser<C>::RecvUeData (UeDataParams params)
 {
   m_rrc->DoRecvUeData (params);
+}
+
+template <class C>
+void
+EpcX2SpecificEpcX2SapUser<C>::RecvHandoverCancel (HandoverCancelParams params)
+{
+  m_rrc->DoRecvHandoverCancel (params);
 }
 
 } // namespace ns3

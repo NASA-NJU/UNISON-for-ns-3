@@ -46,19 +46,19 @@ public:
   /**
    * Destructor
    */
-  virtual ~PointToPointEpcHelper ();
+  ~PointToPointEpcHelper () override;
 
   // inherited from Object
   /**
    *  Register this type.
    *  \return The object TypeId.
    */
-  static TypeId GetTypeId (void);
-  TypeId GetInstanceTypeId () const;
-  virtual void DoDispose ();
+  static TypeId GetTypeId ();
+  TypeId GetInstanceTypeId () const override;
+  void DoDispose () override;
 
   // inherited from EpcHelper
-  virtual void AddEnb (Ptr<Node> enbNode, Ptr<NetDevice> lteEnbNetDevice, std::vector<uint16_t> cellIds);
+  void AddEnb (Ptr<Node> enbNode, Ptr<NetDevice> lteEnbNetDevice, std::vector<uint16_t> cellIds) override;
 
 private:
 
@@ -67,9 +67,9 @@ private:
    */
 
   /**
-   * Helper to assign addresses to S1-U NetDevices 
+   * Helper to assign addresses to S1-U NetDevices
    */
-  Ipv4AddressHelper m_s1uIpv4AddressHelper; 
+  Ipv4AddressHelper m_s1uIpv4AddressHelper;
 
   /**
    * The data rate to be used for the next S1-U link to be created

@@ -68,19 +68,19 @@ public:
    *  Register this type.
    *  \return The object TypeId.
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   /** Constructor. */
   PriorityQueueScheduler ();
   /** Destructor. */
-  virtual ~PriorityQueueScheduler ();
+  ~PriorityQueueScheduler () override;
 
   // Inherited
-  virtual void Insert (const Scheduler::Event &ev);
-  virtual bool IsEmpty (void) const;
-  virtual Scheduler::Event PeekNext (void) const;
-  virtual Scheduler::Event RemoveNext (void);
-  virtual void Remove (const Scheduler::Event &ev);
+  void Insert (const Scheduler::Event &ev) override;
+  bool IsEmpty () const override;
+  Scheduler::Event PeekNext () const override;
+  Scheduler::Event RemoveNext () override;
+  void Remove (const Scheduler::Event &ev) override;
 
 private:
 
@@ -100,7 +100,7 @@ private:
      * \returns \c true if the event was found, false otherwise.
      */
     bool remove(const Scheduler::Event &ev);
-    
+
   };  // class EventPriorityQueue
 
   /** The event queue. */

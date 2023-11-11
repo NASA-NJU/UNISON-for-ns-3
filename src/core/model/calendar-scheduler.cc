@@ -42,7 +42,7 @@ NS_LOG_COMPONENT_DEFINE ("CalendarScheduler");
 NS_OBJECT_ENSURE_REGISTERED (CalendarScheduler);
 
 TypeId
-CalendarScheduler::GetTypeId (void)
+CalendarScheduler::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::CalendarScheduler")
     .SetParent<Scheduler> ()
@@ -68,7 +68,7 @@ CalendarScheduler::~CalendarScheduler ()
 {
   NS_LOG_FUNCTION (this);
   delete [] m_buckets;
-  m_buckets = 0;
+  m_buckets = nullptr;
 }
 void
 CalendarScheduler::SetReverse (bool reverse)
@@ -121,7 +121,7 @@ CalendarScheduler::Init (uint32_t nBuckets,
   m_bucketTop = (startPrio / width + 1) * width;
 }
 void
-CalendarScheduler::PrintInfo (void)
+CalendarScheduler::PrintInfo ()
 {
   NS_LOG_FUNCTION (this);
 
@@ -172,20 +172,20 @@ CalendarScheduler::Insert (const Event &ev)
   ResizeUp ();
 }
 bool
-CalendarScheduler::IsEmpty (void) const
+CalendarScheduler::IsEmpty () const
 {
   NS_LOG_FUNCTION (this);
   return m_qSize == 0;
 }
 Scheduler::Event
-CalendarScheduler::PeekNext (void) const
+CalendarScheduler::PeekNext () const
 {
   NS_LOG_FUNCTION (this);
   NS_ASSERT (!IsEmpty ());
   uint32_t i = m_lastBucket;
   uint64_t bucketTop = m_bucketTop;
   Scheduler::Event minEvent;
-  minEvent.impl = 0;
+  minEvent.impl = nullptr;
   minEvent.key.m_ts = UINT64_MAX;
   minEvent.key.m_uid = UINT32_MAX;
   minEvent.key.m_context = 0;
@@ -213,7 +213,7 @@ CalendarScheduler::PeekNext (void) const
 }
 
 Scheduler::Event
-CalendarScheduler::DoRemoveNext (void)
+CalendarScheduler::DoRemoveNext ()
 {
   NS_LOG_FUNCTION (this);
 
@@ -260,7 +260,7 @@ CalendarScheduler::DoRemoveNext (void)
 }
 
 Scheduler::Event
-CalendarScheduler::RemoveNext (void)
+CalendarScheduler::RemoveNext ()
 {
   NS_LOG_FUNCTION (this << m_lastBucket << m_bucketTop);
   NS_ASSERT (!IsEmpty ());
@@ -299,7 +299,7 @@ CalendarScheduler::Remove (const Event &ev)
 }
 
 void
-CalendarScheduler::ResizeUp (void)
+CalendarScheduler::ResizeUp ()
 {
   NS_LOG_FUNCTION (this);
 
@@ -310,7 +310,7 @@ CalendarScheduler::ResizeUp (void)
     }
 }
 void
-CalendarScheduler::ResizeDown (void)
+CalendarScheduler::ResizeDown ()
 {
   NS_LOG_FUNCTION (this);
 
@@ -321,7 +321,7 @@ CalendarScheduler::ResizeDown (void)
 }
 
 uint64_t
-CalendarScheduler::CalculateNewWidth (void)
+CalendarScheduler::CalculateNewWidth ()
 {
   NS_LOG_FUNCTION (this);
 

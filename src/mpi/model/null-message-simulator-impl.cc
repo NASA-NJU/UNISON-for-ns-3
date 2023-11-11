@@ -160,7 +160,7 @@ NullMessageSimulatorImpl::CalculateLookAhead (void)
                   continue;
                 }
               Ptr<Channel> channel = localNetDevice->GetChannel ();
-              if (channel == 0)
+              if (!channel)
                 {
                   continue;
                 }
@@ -212,7 +212,7 @@ NullMessageSimulatorImpl::SetScheduler (ObjectFactory schedulerFactory)
 
   Ptr<Scheduler> scheduler = schedulerFactory.Create<Scheduler> ();
 
-  if (m_events != 0)
+  if (m_events)
     {
       while (!m_events->IsEmpty ())
         {
@@ -230,7 +230,7 @@ NullMessageSimulatorImpl::ProcessOneEvent (void)
 
   Scheduler::Event next = m_events->RemoveNext ();
 
-  PreEventHook (EventId (next.impl, next.key.m_ts, 
+  PreEventHook (EventId (next.impl, next.key.m_ts,
                          next.key.m_context, next.key.m_uid));
 
   NS_ASSERT (next.key.m_ts >= m_currentTs);
@@ -269,7 +269,7 @@ NullMessageSimulatorImpl::ScheduleNullMessageEvent (Ptr<RemoteChannelBundle> bun
 
   Time delay (m_schedulerTune * bundle->GetDelay ().GetTimeStep ());
 
-  bundle->SetEventId (Simulator::Schedule (delay, &NullMessageSimulatorImpl::NullMessageEventHandler, 
+  bundle->SetEventId (Simulator::Schedule (delay, &NullMessageSimulatorImpl::NullMessageEventHandler,
                                            this, PeekPointer(bundle)));
 }
 
@@ -282,7 +282,7 @@ NullMessageSimulatorImpl::RescheduleNullMessageEvent (Ptr<RemoteChannelBundle> b
 
   Time delay (m_schedulerTune * bundle->GetDelay ().GetTimeStep ());
 
-  bundle->SetEventId (Simulator::Schedule (delay, &NullMessageSimulatorImpl::NullMessageEventHandler, 
+  bundle->SetEventId (Simulator::Schedule (delay, &NullMessageSimulatorImpl::NullMessageEventHandler,
                                            this, PeekPointer(bundle)));
 }
 

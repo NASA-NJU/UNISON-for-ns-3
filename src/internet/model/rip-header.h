@@ -37,40 +37,40 @@ namespace ns3 {
 class RipRte : public Header
 {
 public:
-  RipRte (void);
+  RipRte ();
 
   /**
    * \brief Get the type ID.
    * \return The object TypeId.
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   /**
    * \brief Return the instance type identifier.
    * \return Instance type ID.
    */
-  virtual TypeId GetInstanceTypeId (void) const;
+  TypeId GetInstanceTypeId () const override;
 
-  virtual void Print (std::ostream& os) const;
+  void Print (std::ostream& os) const override;
 
   /**
    * \brief Get the serialized size of the packet.
    * \return Size.
    */
-  virtual uint32_t GetSerializedSize (void) const;
+  uint32_t GetSerializedSize () const override;
 
   /**
    * \brief Serialize the packet.
    * \param start Buffer iterator.
    */
-  virtual void Serialize (Buffer::Iterator start) const;
+  void Serialize (Buffer::Iterator start) const override;
 
   /**
    * \brief Deserialize the packet.
    * \param start Buffer iterator.
    * \return Size of the packet.
    */
-  virtual uint32_t Deserialize (Buffer::Iterator start);
+  uint32_t Deserialize (Buffer::Iterator start) override;
 
   /**
    * \brief Set the prefix.
@@ -82,7 +82,7 @@ public:
    * \brief Get the prefix.
    * \returns The prefix.
    */
-  Ipv4Address GetPrefix (void) const;
+  Ipv4Address GetPrefix () const;
 
   /**
    * \brief Set the subnet mask.
@@ -94,7 +94,7 @@ public:
    * \brief Get the subnet mask.
    * \returns The subnet mask.
    */
-  Ipv4Mask GetSubnetMask (void) const;
+  Ipv4Mask GetSubnetMask () const;
 
   /**
    * \brief Set the route tag.
@@ -106,7 +106,7 @@ public:
    * \brief Get the route tag.
    * \returns The route tag.
    */
-  uint16_t GetRouteTag (void) const;
+  uint16_t GetRouteTag () const;
 
   /**
    * \brief Set the route metric.
@@ -118,7 +118,7 @@ public:
    * \brief Get the route metric.
    * \returns The route metric.
    */
-  uint32_t GetRouteMetric (void) const;
+  uint32_t GetRouteMetric () const;
 
   /**
    * \brief Set the next hop.
@@ -130,7 +130,7 @@ public:
    * \brief Get the next hop.
    * \returns The next hop.
    */
-  Ipv4Address GetNextHop (void) const;
+  Ipv4Address GetNextHop () const;
 
 
 private:
@@ -157,40 +157,40 @@ std::ostream & operator << (std::ostream & os, const RipRte & h);
 class RipHeader : public Header
 {
 public:
-  RipHeader (void);
+  RipHeader ();
 
   /**
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   /**
    * \brief Return the instance type identifier.
    * \return instance type ID
    */
-  virtual TypeId GetInstanceTypeId (void) const;
+  TypeId GetInstanceTypeId () const override;
 
-  virtual void Print (std::ostream& os) const;
+  void Print (std::ostream& os) const override;
 
   /**
    * \brief Get the serialized size of the packet.
    * \return size
    */
-  virtual uint32_t GetSerializedSize (void) const;
+  uint32_t GetSerializedSize () const override;
 
   /**
    * \brief Serialize the packet.
    * \param start Buffer iterator
    */
-  virtual void Serialize (Buffer::Iterator start) const;
+  void Serialize (Buffer::Iterator start) const override;
 
   /**
    * \brief Deserialize the packet.
    * \param start Buffer iterator
    * \return size of the packet
    */
-  virtual uint32_t Deserialize (Buffer::Iterator start);
+  uint32_t Deserialize (Buffer::Iterator start) override;
 
   /**
    * Commands to be used in Rip headers
@@ -211,7 +211,7 @@ public:
    * \brief Get the command
    * \returns the command
    */
-  Command_e GetCommand (void) const;
+  Command_e GetCommand () const;
 
   /**
    * \brief Add a RTE to the message
@@ -228,13 +228,13 @@ public:
    * \brief Get the number of RTE included in the message
    * \returns the number of RTE in the message
    */
-  uint16_t GetRteNumber (void) const;
+  uint16_t GetRteNumber () const;
 
   /**
    * \brief Get the list of the RTEs included in the message
    * \returns the list of the RTEs in the message
    */
-  std::list<RipRte> GetRteList (void) const;
+  std::list<RipRte> GetRteList () const;
 
 private:
   uint8_t m_command; //!< command type

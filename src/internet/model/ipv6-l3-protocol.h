@@ -62,7 +62,7 @@ class Ipv6AutoconfiguredPrefix;
 class Ipv6L3Protocol : public Ipv6
 {
 public:
-  /** 
+  /**
    * \brief Get the type ID of this class.
    * \return type ID
    */
@@ -77,7 +77,7 @@ public:
    * \enum DropReason
    * \brief Reason why a packet has been dropped.
    */
-  enum DropReason 
+  enum DropReason
   {
     DROP_TTL_EXPIRED = 1, /**< Packet TTL has expired */
     DROP_NO_ROUTE, /**< No route to host */
@@ -97,7 +97,7 @@ public:
   /**
    * \brief Destructor.
    */
-  virtual ~Ipv6L3Protocol ();
+  ~Ipv6L3Protocol () override;
 
   // Delete copy constructor and assignment operator to avoid misuse
   Ipv6L3Protocol (const Ipv6L3Protocol &) = delete;
@@ -109,14 +109,14 @@ public:
    */
   void SetNode (Ptr<Node> node);
 
-  virtual void Insert (Ptr<IpL4Protocol> protocol);
-  virtual void Insert (Ptr<IpL4Protocol> protocol, uint32_t interfaceIndex);
+  void Insert (Ptr<IpL4Protocol> protocol) override;
+  void Insert (Ptr<IpL4Protocol> protocol, uint32_t interfaceIndex) override;
 
-  virtual void Remove (Ptr<IpL4Protocol> protocol);
-  virtual void Remove (Ptr<IpL4Protocol> protocol, uint32_t interfaceIndex);
+  void Remove (Ptr<IpL4Protocol> protocol) override;
+  void Remove (Ptr<IpL4Protocol> protocol, uint32_t interfaceIndex) override;
 
-  virtual Ptr<IpL4Protocol> GetProtocol (int protocolNumber) const;
-  virtual Ptr<IpL4Protocol> GetProtocol (int protocolNumber, int32_t interfaceIndex) const;
+  Ptr<IpL4Protocol> GetProtocol (int protocolNumber) const override;
+  Ptr<IpL4Protocol> GetProtocol (int protocolNumber, int32_t interfaceIndex) const override;
 
   /**
    * \brief Create raw IPv6 socket.
@@ -155,26 +155,26 @@ public:
    */
   void Receive (Ptr<NetDevice> device, Ptr<const Packet> p, uint16_t protocol, const Address &from, const Address &to, NetDevice::PacketType packetType);
 
-  virtual void Send (Ptr<Packet> packet, Ipv6Address source, Ipv6Address destination, uint8_t protocol, Ptr<Ipv6Route> route);
+  void Send (Ptr<Packet> packet, Ipv6Address source, Ipv6Address destination, uint8_t protocol, Ptr<Ipv6Route> route) override;
 
   /**
    * \brief Set routing protocol for this stack.
    * \param routingProtocol IPv6 routing protocol to set
    */
-  void SetRoutingProtocol (Ptr<Ipv6RoutingProtocol> routingProtocol);
+  void SetRoutingProtocol (Ptr<Ipv6RoutingProtocol> routingProtocol) override;
 
   /**
    * \brief Get current routing protocol used.
    * \return routing protocol
    */
-  Ptr<Ipv6RoutingProtocol> GetRoutingProtocol () const;
+  Ptr<Ipv6RoutingProtocol> GetRoutingProtocol () const override;
 
   /**
    * \brief Add IPv6 interface for a device.
    * \param device net device
    * \return interface index
    */
-  uint32_t AddInterface (Ptr<NetDevice> device);
+  uint32_t AddInterface (Ptr<NetDevice> device) override;
 
   /**
    * \brief Get an interface.
@@ -187,14 +187,14 @@ public:
    * \brief Get current number of interface on this stack.
    * \return number of interface registered
    */
-  uint32_t GetNInterfaces () const;
+  uint32_t GetNInterfaces () const override;
 
   /**
    * \brief Get interface index which has specified IPv6 address
    * \param addr IPv6 address
    * \return interface index or -1 if not found
    */
-  int32_t GetInterfaceForAddress (Ipv6Address addr) const;
+  int32_t GetInterfaceForAddress (Ipv6Address addr) const override;
 
   /**
    * \brief Get interface index which match specified address/prefix.
@@ -202,14 +202,14 @@ public:
    * \param mask IPv6 prefix (mask)
    * \return interface index or -1 if not found
    */
-  int32_t GetInterfaceForPrefix (Ipv6Address addr, Ipv6Prefix mask) const;
+  int32_t GetInterfaceForPrefix (Ipv6Address addr, Ipv6Prefix mask) const override;
 
   /**
    * \brief Get interface index which is on a specified net device.
    * \param device net device
    * \returns the interface index
    */
-  int32_t GetInterfaceForDevice (Ptr<const NetDevice> device) const;
+  int32_t GetInterfaceForDevice (Ptr<const NetDevice> device) const override;
 
   /**
    * \brief Add an address on interface.
@@ -218,7 +218,7 @@ public:
    * \param addOnLinkRoute add on-link route to the network (default true)
    * \returns true if the operation succeeded
    */
-  bool AddAddress (uint32_t i, Ipv6InterfaceAddress address, bool addOnLinkRoute = true);
+  bool AddAddress (uint32_t i, Ipv6InterfaceAddress address, bool addOnLinkRoute = true) override;
 
   /**
    * \brief Get an address.
@@ -226,14 +226,14 @@ public:
    * \param addressIndex address index on the interface
    * \return Ipv6InterfaceAddress or assert if not found
    */
-  Ipv6InterfaceAddress GetAddress (uint32_t interfaceIndex, uint32_t addressIndex) const;
+  Ipv6InterfaceAddress GetAddress (uint32_t interfaceIndex, uint32_t addressIndex) const override;
 
   /**
    * \brief Get number of address for an interface.
    * \param interface interface index
    * \return number of address
    */
-  uint32_t GetNAddresses (uint32_t interface) const;
+  uint32_t GetNAddresses (uint32_t interface) const override;
 
   /**
    * \brief Remove an address from an interface.
@@ -241,7 +241,7 @@ public:
    * \param addressIndex address index on the interface
    * \returns true if the operation succeeded
    */
-  bool RemoveAddress (uint32_t interfaceIndex, uint32_t addressIndex);
+  bool RemoveAddress (uint32_t interfaceIndex, uint32_t addressIndex) override;
 
   /**
    * \brief Remove a specified Ipv6 address from an interface.
@@ -249,77 +249,77 @@ public:
    * \param address Ipv6Address to be removed from the interface
    * \returns true if the operation succeeded
    */
-  bool RemoveAddress (uint32_t interfaceIndex, Ipv6Address address);
+  bool RemoveAddress (uint32_t interfaceIndex, Ipv6Address address) override;
 
   /**
    * \brief Set metric for an interface.
    * \param i index
    * \param metric
    */
-  void SetMetric (uint32_t i, uint16_t metric);
+  void SetMetric (uint32_t i, uint16_t metric) override;
 
   /**
    * \brief Get metric for an interface.
    * \param i index
    * \return metric
    */
-  uint16_t GetMetric (uint32_t i) const;
+  uint16_t GetMetric (uint32_t i) const override;
 
   /**
    * \brief Get MTU for an interface.
    * \param i index
    * \return MTU
    */
-  uint16_t GetMtu (uint32_t i) const;
+  uint16_t GetMtu (uint32_t i) const override;
 
   /**
    * \brief Set the Path MTU for the specified IPv6 destination address.
    * \param dst Ipv6 destination address
    * \param pmtu the Path MTU
    */
-  virtual void SetPmtu (Ipv6Address dst, uint32_t pmtu);
+  void SetPmtu (Ipv6Address dst, uint32_t pmtu) override;
 
   /**
    * \brief Is specified interface up ?
    * \param i interface index
    * \returns true if the interface is up
    */
-  bool IsUp (uint32_t i) const;
+  bool IsUp (uint32_t i) const override;
 
   /**
    * \brief Set an interface up.
    * \param i interface index
    */
-  void SetUp (uint32_t i);
+  void SetUp (uint32_t i) override;
 
   /**
    * \brief set an interface down.
    * \param i interface index
    */
-  void SetDown (uint32_t i);
+  void SetDown (uint32_t i) override;
 
   /**
    * \brief Is interface allows forwarding ?
    * \param i interface index
    * \returns true if the interface is forwarding
    */
-  bool IsForwarding (uint32_t i) const;
+  bool IsForwarding (uint32_t i) const override;
 
   /**
    * \brief Enable or disable forwarding on interface
    * \param i interface index
    * \param val true = enable forwarding, false = disable
    */
-  void SetForwarding (uint32_t i, bool val);
+  void SetForwarding (uint32_t i, bool val) override;
 
-  Ipv6Address SourceAddressSelection (uint32_t interface, Ipv6Address dest);
+  Ipv6Address SourceAddressSelection (uint32_t interface, Ipv6Address dest) override;
 
   /**
    * \brief Get device by index.
    * \param i device index on this stack
    * \return NetDevice pointer
    */
-  Ptr<NetDevice> GetNetDevice (uint32_t i);
+  Ptr<NetDevice> GetNetDevice (uint32_t i) override;
 
   /**
    * \brief Get ICMPv6 protocol.
@@ -353,12 +353,12 @@ public:
   /**
    * \brief Register the IPv6 Extensions.
    */
-  virtual void RegisterExtensions ();
+  void RegisterExtensions () override;
 
   /**
    * \brief Register the IPv6 Options.
    */
-  virtual void RegisterOptions ();
+  void RegisterOptions () override;
 
   /**
    * \brief Report a packet drop
@@ -454,17 +454,17 @@ public:
 
   /**
    * Provides reachability hint for Neighbor Cache Entries from L4-L7 protocols.
-   * 
+   *
    * This function shall be called by L4-L7 protocols when an address is confirmed
    * to be reachable (i.e., at least a packet send and a reply received).
    * The net effect is to extend the NCE reachability time if the NCE is in
    * REACHABLE state, and to mark the NCE as REACHABLE if it is in STALE, PROBE, or
    * DELAY states. NCEs in INCOMPLETE state are not changed.
-   * 
+   *
    * Note that the IP interface index might not be the same as the NetDevice index.
-   * The correct way to check the IP interface index is by using 
+   * The correct way to check the IP interface index is by using
    * Ipv6::GetInterfaceForDevice ().
-   * 
+   *
    * \param ipInterfaceIndex IP interface index
    * \param address reachable address
    * \return true if the NCE has been successfully updated.
@@ -475,14 +475,14 @@ protected:
   /**
    * \brief Dispose object.
    */
-  virtual void DoDispose ();
+  void DoDispose () override;
 
   /**
    * \brief Notify other components connected to the node that a new stack member is now connected.
    *
    * This will be used to notify Layer 3 protocol of layer 4 protocol stack to connect them together.
    */
-  virtual void NotifyNewAggregate ();
+  void NotifyNewAggregate () override;
 
 private:
   /**
@@ -547,21 +547,21 @@ private:
    * \brief Callback to trace TX (transmission) packets.
    * \deprecated The non-const \c Ptr<Ipv6> argument is deprecated
    * and will be changed to \c Ptr<const Ipv6> in a future release.
-   */ 
+   */
   TracedCallback<Ptr<const Packet>, Ptr<Ipv6>, uint32_t> m_txTrace;
 
   /**
    * \brief Callback to trace RX (reception) packets.
    * \deprecated The non-const \c Ptr<Ipv6> argument is deprecated
    * and will be changed to \c Ptr<const Ipv6> in a future release.
-   */ 
+   */
   TracedCallback<Ptr<const Packet>, Ptr<Ipv6>, uint32_t> m_rxTrace;
 
   /**
    * \brief Callback to trace drop packets.
    * \deprecated The non-const \c Ptr<Ipv6> argument is deprecated
    * and will be changed to \c Ptr<const Ipv6> in a future release.
-   */ 
+   */
   TracedCallback<const Ipv6Header &, Ptr<const Packet>, DropReason, Ptr<Ipv6>, uint32_t> m_dropTrace;
 
   /// Trace of sent packets
@@ -586,7 +586,7 @@ private:
 
   /**
    * \brief Send packet with route.
-   * \param route route 
+   * \param route route
    * \param packet packet to send
    * \param ipHeader IPv6 header to add to the packet
    */
@@ -595,7 +595,7 @@ private:
   /**
    * \brief Forward a packet.
    * \param idev Pointer to ingress network device
-   * \param rtentry route 
+   * \param rtentry route
    * \param p packet to forward
    * \param header IPv6 header to add to the packet
    */
@@ -604,7 +604,7 @@ private:
   /**
    * \brief Forward a multicast packet.
    * \param idev Pointer to ingress network device
-   * \param mrtentry route 
+   * \param mrtentry route
    * \param p packet to forward
    * \param header IPv6 header to add to the packet
    */
@@ -642,25 +642,25 @@ private:
    * \brief Set IPv6 forwarding state.
    * \param forward IPv6 forwarding enabled or not
    */
-  virtual void SetIpForward (bool forward);
+  void SetIpForward (bool forward) override;
 
   /**
    * \brief Get IPv6 forwarding state.
    * \return forwarding state (enabled or not)
    */
-  virtual bool GetIpForward () const;
+  bool GetIpForward () const override;
 
   /**
    * \brief Set IPv6 MTU discover state.
    * \param mtuDiscover IPv6 MTU discover enabled or not
    */
-  virtual void SetMtuDiscover (bool mtuDiscover);
+  void SetMtuDiscover (bool mtuDiscover) override;
 
   /**
    * \brief Get IPv6 MTU discover state.
    * \return MTU discover state (enabled or not)
    */
-  virtual bool GetMtuDiscover (void) const;
+  bool GetMtuDiscover () const override;
 
   /**
    * \brief Set the ICMPv6 Redirect sending state.

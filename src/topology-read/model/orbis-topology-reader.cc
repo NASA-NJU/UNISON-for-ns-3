@@ -39,7 +39,7 @@ NS_LOG_COMPONENT_DEFINE ("OrbisTopologyReader");
 
 NS_OBJECT_ENSURE_REGISTERED (OrbisTopologyReader);
 
-TypeId OrbisTopologyReader::GetTypeId (void)
+TypeId OrbisTopologyReader::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::OrbisTopologyReader")
     .SetParent<TopologyReader> ()
@@ -60,7 +60,7 @@ OrbisTopologyReader::~OrbisTopologyReader ()
 }
 
 NodeContainer
-OrbisTopologyReader::Read (void)
+OrbisTopologyReader::Read ()
 {
   std::ifstream topgen;
   topgen.open (GetFileName ().c_str ());
@@ -95,7 +95,7 @@ OrbisTopologyReader::Read (void)
       if ( (!from.empty ()) && (!to.empty ()) )
         {
           NS_LOG_INFO ( linksNumber << " From: " << from << " to: " << to );
-          if ( nodeMap[from] == 0 )
+          if ( !nodeMap[from] )
             {
               Ptr<Node> tmpNode = CreateObject<Node> ();
               nodeMap[from] = tmpNode;
@@ -103,7 +103,7 @@ OrbisTopologyReader::Read (void)
               nodesNumber++;
             }
 
-          if (nodeMap[to] == 0)
+          if (!nodeMap[to])
             {
               Ptr<Node> tmpNode = CreateObject<Node> ();
               nodeMap[to] = tmpNode;

@@ -36,7 +36,7 @@ NS_LOG_COMPONENT_DEFINE ("PacketSocket");
 NS_OBJECT_ENSURE_REGISTERED (PacketSocket);
 
 TypeId
-PacketSocket::GetTypeId (void)
+PacketSocket::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::PacketSocket")
     .SetParent<Socket> ()
@@ -65,7 +65,7 @@ PacketSocket::PacketSocket () : m_rxAvailable (0)
   m_device = 0;
 }
 
-void 
+void
 PacketSocket::SetNode (Ptr<Node> node)
 {
   NS_LOG_FUNCTION (this << node);
@@ -77,36 +77,36 @@ PacketSocket::~PacketSocket ()
   NS_LOG_FUNCTION (this);
 }
 
-void 
-PacketSocket::DoDispose (void)
+void
+PacketSocket::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
   m_device = 0;
 }
 
 enum Socket::SocketErrno
-PacketSocket::GetErrno (void) const
+PacketSocket::GetErrno () const
 {
   NS_LOG_FUNCTION (this);
   return m_errno;
 }
 
 enum Socket::SocketType
-PacketSocket::GetSocketType (void) const
+PacketSocket::GetSocketType () const
 {
   NS_LOG_FUNCTION (this);
   return NS3_SOCK_RAW;
 }
 
 Ptr<Node>
-PacketSocket::GetNode (void) const
+PacketSocket::GetNode () const
 {
   NS_LOG_FUNCTION (this);
   return m_node;
 }
 
 int
-PacketSocket::Bind (void)
+PacketSocket::Bind ()
 {
   NS_LOG_FUNCTION (this);
   PacketSocketAddress address;
@@ -116,7 +116,7 @@ PacketSocket::Bind (void)
 }
 
 int
-PacketSocket::Bind6 (void)
+PacketSocket::Bind6 ()
 {
   NS_LOG_FUNCTION (this);
   return(Bind());
@@ -124,7 +124,7 @@ PacketSocket::Bind6 (void)
 
 int
 PacketSocket::Bind (const Address &address)
-{ 
+{
   NS_LOG_FUNCTION (this << address);
   if (!PacketSocketAddress::IsMatchingType (address))
     {
@@ -157,7 +157,7 @@ PacketSocket::DoBind (const PacketSocketAddress &address)
     }
   else
     {
-      dev = 0;
+      dev = nullptr;
     }
   m_node->RegisterProtocolHandler (MakeCallback (&PacketSocket::ForwardUp, this),
                                    address.GetProtocol (), dev);
@@ -170,7 +170,7 @@ PacketSocket::DoBind (const PacketSocketAddress &address)
 }
 
 int
-PacketSocket::ShutdownSend (void)
+PacketSocket::ShutdownSend ()
 {
   NS_LOG_FUNCTION (this);
   if (m_state == STATE_CLOSED)
@@ -183,7 +183,7 @@ PacketSocket::ShutdownSend (void)
 }
 
 int
-PacketSocket::ShutdownRecv (void)
+PacketSocket::ShutdownRecv ()
 {
   NS_LOG_FUNCTION (this);
   if (m_state == STATE_CLOSED)
@@ -196,7 +196,7 @@ PacketSocket::ShutdownRecv (void)
 }
 
 int
-PacketSocket::Close (void)
+PacketSocket::Close ()
 {
   NS_LOG_FUNCTION (this);
   if (m_state == STATE_CLOSED)
@@ -248,8 +248,8 @@ error:
   NotifyConnectionFailed ();
   return -1;
 }
-int 
-PacketSocket::Listen (void)
+int
+PacketSocket::Listen ()
 {
   NS_LOG_FUNCTION (this);
   m_errno = Socket::ERROR_OPNOTSUPP;
@@ -290,8 +290,8 @@ PacketSocket::GetMinMtu (PacketSocketAddress ad) const
     }
 }
 
-uint32_t 
-PacketSocket::GetTxAvailable (void) const
+uint32_t
+PacketSocket::GetTxAvailable () const
 {
   NS_LOG_FUNCTION (this);
   if (m_state == STATE_CONNECTED)
@@ -383,8 +383,8 @@ PacketSocket::SendTo (Ptr<Packet> p, uint32_t flags, const Address &address)
     }
 }
 
-void 
-PacketSocket::ForwardUp (Ptr<NetDevice> device, Ptr<const Packet> packet, 
+void
+PacketSocket::ForwardUp (Ptr<NetDevice> device, Ptr<const Packet> packet,
                          uint16_t protocol, const Address &from,
                          const Address &to, NetDevice::PacketType packetType)
 {
@@ -411,7 +411,7 @@ PacketSocket::ForwardUp (Ptr<NetDevice> device, Ptr<const Packet> packet,
       // in case the packet still has a priority tag, remove it
       SocketPriorityTag priorityTag;
       copy->RemovePacketTag (priorityTag);
-      m_deliveryQueue.push (std::make_pair (copy, address));
+      m_deliveryQueue.emplace (copy, address);
       m_rxAvailable += packet->GetSize ();
       NS_LOG_LOGIC ("UID is " << packet->GetUid () << " PacketSocket " << this);
       NotifyDataRecv ();
@@ -429,15 +429,15 @@ PacketSocket::ForwardUp (Ptr<NetDevice> device, Ptr<const Packet> packet,
 }
 
 uint32_t
-PacketSocket::GetRxAvailable (void) const
+PacketSocket::GetRxAvailable () const
 {
   NS_LOG_FUNCTION (this);
-  // We separately maintain this state to avoid walking the queue 
+  // We separately maintain this state to avoid walking the queue
   // every time this might be called
   return m_rxAvailable;
 }
 
-Ptr<Packet> 
+Ptr<Packet>
 PacketSocket::Recv (uint32_t maxSize, uint32_t flags)
 {
   NS_LOG_FUNCTION (this << maxSize << flags);
@@ -454,7 +454,7 @@ PacketSocket::RecvFrom (uint32_t maxSize, uint32_t flags, Address &fromAddress)
 
   if (m_deliveryQueue.empty () )
     {
-      return 0;
+      return nullptr;
     }
   Ptr<Packet> p = m_deliveryQueue.front ().first;
   fromAddress = m_deliveryQueue.front ().second;
@@ -466,7 +466,7 @@ PacketSocket::RecvFrom (uint32_t maxSize, uint32_t flags, Address &fromAddress)
     }
   else
     {
-      p = 0;
+      p = nullptr;
     }
   return p;
 }
@@ -543,7 +543,7 @@ PacketSocketTag::SetPacketType(NetDevice::PacketType t)
 }
 
 NetDevice::PacketType
-PacketSocketTag::GetPacketType (void) const
+PacketSocketTag::GetPacketType () const
 {
   return m_packetType;
 }
@@ -555,7 +555,7 @@ PacketSocketTag::SetDestAddress(Address a)
 }
 
 Address
-PacketSocketTag::GetDestAddress (void) const
+PacketSocketTag::GetDestAddress () const
 {
   return m_destAddr;
 }
@@ -563,7 +563,7 @@ PacketSocketTag::GetDestAddress (void) const
 NS_OBJECT_ENSURE_REGISTERED (PacketSocketTag);
 
 TypeId
-PacketSocketTag::GetTypeId (void)
+PacketSocketTag::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::PacketSocketTag")
     .SetParent<Tag> ()
@@ -573,12 +573,12 @@ PacketSocketTag::GetTypeId (void)
   return tid;
 }
 TypeId
-PacketSocketTag::GetInstanceTypeId (void) const
+PacketSocketTag::GetInstanceTypeId () const
 {
   return GetTypeId ();
 }
 uint32_t
-PacketSocketTag::GetSerializedSize (void) const
+PacketSocketTag::GetSerializedSize () const
 {
   return  1 + m_destAddr.GetSerializedSize();
 }
@@ -619,7 +619,7 @@ DeviceNameTag::SetDeviceName (std::string n)
 }
 
 std::string
-DeviceNameTag::GetDeviceName (void) const
+DeviceNameTag::GetDeviceName () const
 {
   return m_deviceName;
 }
@@ -627,7 +627,7 @@ DeviceNameTag::GetDeviceName (void) const
 NS_OBJECT_ENSURE_REGISTERED (DeviceNameTag);
 
 TypeId
-DeviceNameTag::GetTypeId (void)
+DeviceNameTag::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::DeviceNameTag")
     .SetParent<Tag> ()
@@ -636,12 +636,12 @@ DeviceNameTag::GetTypeId (void)
   return tid;
 }
 TypeId
-DeviceNameTag::GetInstanceTypeId (void) const
+DeviceNameTag::GetInstanceTypeId () const
 {
   return GetTypeId ();
 }
 uint32_t
-DeviceNameTag::GetSerializedSize (void) const
+DeviceNameTag::GetSerializedSize () const
 {
   uint32_t s = 1 + m_deviceName.size();  // +1 for name length field
   return s;

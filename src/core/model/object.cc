@@ -47,20 +47,20 @@ NS_LOG_COMPONENT_DEFINE ("Object");
 NS_OBJECT_ENSURE_REGISTERED (Object);
 
 Object::AggregateIterator::AggregateIterator ()
-  : m_object (0),
+  : m_object (nullptr),
     m_current (0)
 {
   NS_LOG_FUNCTION (this);
 }
 
 bool
-Object::AggregateIterator::HasNext (void) const
+Object::AggregateIterator::HasNext () const
 {
   NS_LOG_FUNCTION (this);
   return m_current < m_object->m_aggregates->n;
 }
 Ptr<const Object>
-Object::AggregateIterator::Next (void)
+Object::AggregateIterator::Next ()
 {
   NS_LOG_FUNCTION (this);
   Object *object = m_object->m_aggregates->buffer[m_current];
@@ -76,14 +76,14 @@ Object::AggregateIterator::AggregateIterator (Ptr<const Object> object)
 
 
 TypeId
-Object::GetInstanceTypeId (void) const
+Object::GetInstanceTypeId () const
 {
   NS_LOG_FUNCTION (this);
   return m_tid;
 }
 
 TypeId
-Object::GetTypeId (void)
+Object::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::Object")
     .SetParent<ObjectBase> ()
@@ -126,7 +126,7 @@ Object::~Object ()
     {
       std::free (m_aggregates);
     }
-  m_aggregates = 0;
+  m_aggregates = nullptr;
 }
 Object::Object (const Object &o)
   : m_tid (o.m_tid),
@@ -179,10 +179,10 @@ Object::DoGetObject (TypeId tid) const
           return const_cast<Object *> (current);
         }
     }
-  return 0;
+  return nullptr;
 }
 void
-Object::Initialize (void)
+Object::Initialize ()
 {
   /**
    * Note: the code here is a bit tricky because we need to protect ourselves from
@@ -207,13 +207,13 @@ restart:
     }
 }
 bool
-Object::IsInitialized (void) const
+Object::IsInitialized () const
 {
   NS_LOG_FUNCTION (this);
   return m_initialized;
 }
 void
-Object::Dispose (void)
+Object::Dispose ()
 {
   /**
    * Note: the code here is a bit tricky because we need to protect ourselves from
@@ -330,7 +330,7 @@ Object::NotifyNewAggregate ()
 }
 
 Object::AggregateIterator
-Object::GetAggregateIterator (void) const
+Object::GetAggregateIterator () const
 {
   NS_LOG_FUNCTION (this);
   return AggregateIterator (this);
@@ -345,21 +345,21 @@ Object::SetTypeId (TypeId tid)
 }
 
 void
-Object::DoDispose (void)
+Object::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
   NS_ASSERT (!m_disposed);
 }
 
 void
-Object::DoInitialize (void)
+Object::DoInitialize ()
 {
   NS_LOG_FUNCTION (this);
   NS_ASSERT (!m_initialized);
 }
 
 bool
-Object::Check (void) const
+Object::Check () const
 {
   NS_LOG_FUNCTION (this);
   return (GetReferenceCount () > 0);
@@ -373,7 +373,7 @@ Object::Check (void) const
  * check the aggregate reference count.
  */
 bool
-Object::CheckLoose (void) const
+Object::CheckLoose () const
 {
   NS_LOG_FUNCTION (this);
   bool nonZeroRefCount = false;
@@ -390,7 +390,7 @@ Object::CheckLoose (void) const
   return nonZeroRefCount;
 }
 void
-Object::DoDelete (void)
+Object::DoDelete ()
 {
   // check if we really need to die
   NS_LOG_FUNCTION (this);

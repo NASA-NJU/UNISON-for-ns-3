@@ -1,6 +1,4 @@
-
-UNISON for ns-3
-================================
+# UNISON for ns-3
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.10077300.svg)](https://doi.org/10.5281/zenodo.10077300)
 

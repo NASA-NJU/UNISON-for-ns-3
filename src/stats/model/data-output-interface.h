@@ -39,14 +39,14 @@ s */
 class DataOutputInterface : public Object {
 public:
   DataOutputInterface();
-  virtual ~DataOutputInterface();
+  ~DataOutputInterface() override;
 
   /**
    * Register this type.
    * \return The TypeId.
    */
-  static TypeId GetTypeId (void);
-  
+  static TypeId GetTypeId ();
+
   /**
    * Outputs information from the provided DataCollector
    * \param dc DataCollector object
@@ -65,7 +65,7 @@ public:
   std::string GetFilePrefix () const;
 
 protected:
-  virtual void DoDispose ();
+  void DoDispose () override;
 
   std::string m_filePrefix; //!< File prefix for the DataOutputInterface
 

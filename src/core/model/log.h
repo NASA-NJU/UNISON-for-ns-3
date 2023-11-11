@@ -25,6 +25,7 @@
 #include <iostream>
 #include <stdint.h>
 #include <map>
+#include <type_traits>
 #include <vector>
 
 #include "node-printer.h"
@@ -297,7 +298,7 @@ namespace ns3 {
  * Same as running your program with the NS_LOG environment
  * variable set as NS_LOG=print-list
  */
-void LogComponentPrintList (void);
+void LogComponentPrintList ();
 
 /**
  * Set the TimePrinter function to be used
@@ -312,7 +313,7 @@ void LogSetTimePrinter (TimePrinter lp);
  * Get the LogTimePrinter function currently in use.
  * \returns The current LogTimePrinter function.
  */
-TimePrinter LogGetTimePrinter (void);
+TimePrinter LogGetTimePrinter ();
 
 /**
  * Set the LogNodePrinter function to be used
@@ -327,7 +328,7 @@ void LogSetNodePrinter (NodePrinter np);
  * Get the LogNodePrinter function currently in use.
  * \returns The current LogNodePrinter function.
  */
-NodePrinter LogGetNodePrinter (void);
+NodePrinter LogGetNodePrinter ();
 
 
 /**
@@ -360,7 +361,7 @@ public:
    *
    * \return \c true if all levels are disabled.
    */
-  bool IsNoneEnabled (void) const;
+  bool IsNoneEnabled () const;
   /**
    * Enable this LogComponent at \c level
    *
@@ -378,12 +379,12 @@ public:
    *
    * \return The name of this LogComponent.
    */
-  char const * Name (void) const;
+  char const * Name () const;
   /**
    * Get the compilation unit defining this LogComponent.
    * \returns The file name.
    */
-  std::string File (void) const;
+  std::string File () const;
   /**
    * Get the string label for the given LogLevel.
    *
@@ -418,14 +419,14 @@ public:
    *
    * \returns The list of LogComponents.
    */
-  static ComponentList * GetComponentList (void);
+  static ComponentList * GetComponentList ();
 
 private:
   /**
    * Parse the `NS_LOG` environment variable for options relating to this
    * LogComponent.
    */
-  void EnvVarCheck (void);
+  void EnvVarCheck ();
 
   int32_t     m_levels;  //!< Enabled LogLevels.
   int32_t     m_mask;    //!< Blocked LogLevels.
@@ -447,9 +448,6 @@ LogComponent & GetLogComponent (const std::string name);
  */
 class ParameterLogger
 {
-  bool m_first;        //!< First argument flag, doesn't get `, `.
-  std::ostream &m_os;  //!< Underlying output stream.
-
 public:
   /**
    * Constructor.
@@ -461,12 +459,28 @@ public:
   /**
    * Write a function parameter on the output stream,
    * separating parameters after the first by `,` strings.
+   * Overload for arithmetic types (integral type or floating point type),
+   * enabling the parameter to be passed by value.
    *
    * \param [in] param The function parameter.
    * \return This ParameterLogger, so it's chainable.
    */
-  template<typename T>
+  template<typename T,
+           typename U = std::enable_if_t<std::is_arithmetic_v<T>>>
   ParameterLogger& operator<< (T param);
+
+  /**
+   * Write a function parameter on the output stream,
+   * separating parameters after the first by `,` strings.
+   * Overload for non-arithmetic types, enabling the parameter
+   * to be passed by reference.
+   *
+   * \param [in] param The function parameter.
+   * \return This ParameterLogger, so it's chainable.
+   */
+  template<typename T,
+           typename U = std::enable_if_t<!std::is_arithmetic_v<T>>>
+  ParameterLogger& operator<< (const T& param);
 
   /**
    * Overload for vectors, to print each element.
@@ -475,31 +489,50 @@ public:
    * \return This ParameterLogger, so it's chainable.
    */
   template<typename T>
-  ParameterLogger& operator<< (std::vector<T> vector);
+  ParameterLogger& operator<< (const std::vector<T>& vector);
+
+  /**
+   * Overload for C-strings.
+   *
+   * \param [in] param The C-string
+   * \return This ParameterLogger, so it's chainable.
+   */
+  ParameterLogger& operator<< (const char* param);
+
+private:
+
+  /** Add `, ` before every parameter after the first. */
+  void CommaRest();
+
+  bool m_first{true};  //!< First argument flag, doesn't get `, `.
+  std::ostream &m_os;  //!< Underlying output stream.
 
 };
 
-template<typename T>
+template<typename T, typename U>
 ParameterLogger&
 ParameterLogger::operator<< (T param)
 {
-  if (m_first)
-    {
-      m_os << param;
-      m_first = false;
-    }
-  else
-    {
-      m_os << ", " << param;
-    }
+  CommaRest();
+  m_os << param;
   return *this;
 }
 
+template<typename T, typename U>
+ParameterLogger&
+ParameterLogger::operator<< (const T& param)
+{
+  CommaRest();
+  m_os << param;
+  return *this;
+}
+
+
 template<typename T>
 ParameterLogger&
-ParameterLogger::operator<< (std::vector<T> vector)
+ParameterLogger::operator<< (const std::vector<T>& vector)
 {
-  for (auto i : vector)
+  for (const auto& i : vector)
     {
       *this << i;
     }
@@ -513,16 +546,7 @@ ParameterLogger::operator<< (std::vector<T> vector)
  */
 template<>
 ParameterLogger &
-ParameterLogger::operator<< <std::string> (const std::string param);
-
-/**
- * Specialization for C-strings.
- * \param [in] param The function parameter.
- * \return This ParameterLogger, so it's chainable.
- */
-template<>
-ParameterLogger &
-ParameterLogger::operator<< <const char *> (const char * param);
+ParameterLogger::operator<< <std::string> (const std::string& param);
 
 /**
  * Specialization for int8_t.
@@ -531,7 +555,7 @@ ParameterLogger::operator<< <const char *> (const char * param);
  */
 template<>
 ParameterLogger &
-ParameterLogger::operator<< <int8_t> (int8_t param);
+ParameterLogger::operator<< <int8_t> (const int8_t param);
 
 /**
  * Specialization for uint8_t.
@@ -540,7 +564,7 @@ ParameterLogger::operator<< <int8_t> (int8_t param);
  */
 template<>
 ParameterLogger &
-ParameterLogger::operator<< <uint8_t> (uint8_t param);
+ParameterLogger::operator<< <uint8_t> (const uint8_t param);
 
 } // namespace ns3
 

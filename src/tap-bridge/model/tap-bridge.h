@@ -42,7 +42,7 @@ namespace ns3 {
 class TapBridgeFdReader : public FdReader
 {
 private:
-  FdReader::Data DoRead (void);
+  FdReader::Data DoRead () override;
 };
 
 class Node;
@@ -111,21 +111,21 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   /**
    * Enumeration of the operating modes supported in the class.
    *
    */
   enum Mode {
-    ILLEGAL,         /**< mode not set */
-    CONFIGURE_LOCAL, /**< ns-3 creates and configures tap device */
-    USE_LOCAL,       /**< ns-3 uses a pre-created tap, without configuring it */
-    USE_BRIDGE, /**< ns-3 uses a pre-created tap, and bridges to a bridging net device */
+    ILLEGAL,         //!< mode not set
+    CONFIGURE_LOCAL, //!< ns-3 creates and configures tap device
+    USE_LOCAL,       //!< ns-3 uses a pre-created tap, without configuring it
+    USE_BRIDGE,      //!< ns-3 uses a pre-created tap, and bridges to a bridging net device
   };
 
   TapBridge ();
-  virtual ~TapBridge ();
+  ~TapBridge () override;
 
   /**
    * \brief Get the bridged net device.
@@ -134,7 +134,7 @@ public:
    *
    * \returns the bridged net device.
    */
-  Ptr<NetDevice> GetBridgedNetDevice (void);
+  Ptr<NetDevice> GetBridgedNetDevice ();
 
   /**
    * \brief Set the ns-3 net device to bridge.
@@ -185,36 +185,36 @@ public:
    *
    * \returns The operating mode of this device.
    */
-  TapBridge::Mode  GetMode (void);
+  TapBridge::Mode  GetMode ();
 
   //
   // The following methods are inherited from NetDevice base class and are
   // documented there.
   //
-  virtual void SetIfIndex (const uint32_t index);
-  virtual uint32_t GetIfIndex (void) const;
-  virtual Ptr<Channel> GetChannel (void) const;
-  virtual void SetAddress (Address address);
-  virtual Address GetAddress (void) const;
-  virtual bool SetMtu (const uint16_t mtu);
-  virtual uint16_t GetMtu (void) const;
-  virtual bool IsLinkUp (void) const;
-  virtual void AddLinkChangeCallback (Callback<void> callback);
-  virtual bool IsBroadcast (void) const;
-  virtual Address GetBroadcast (void) const;
-  virtual bool IsMulticast (void) const;
-  virtual Address GetMulticast (Ipv4Address multicastGroup) const;
-  virtual bool IsPointToPoint (void) const;
-  virtual bool IsBridge (void) const;
-  virtual bool Send (Ptr<Packet> packet, const Address& dest, uint16_t protocolNumber);
-  virtual bool SendFrom (Ptr<Packet> packet, const Address& source, const Address& dest, uint16_t protocolNumber);
-  virtual Ptr<Node> GetNode (void) const;
-  virtual void SetNode (Ptr<Node> node);
-  virtual bool NeedsArp (void) const;
-  virtual void SetReceiveCallback (NetDevice::ReceiveCallback cb);
-  virtual void SetPromiscReceiveCallback (NetDevice::PromiscReceiveCallback cb);
-  virtual bool SupportsSendFrom () const;
-  virtual Address GetMulticast (Ipv6Address addr) const;
+  void SetIfIndex (const uint32_t index) override;
+  uint32_t GetIfIndex () const override;
+  Ptr<Channel> GetChannel () const override;
+  void SetAddress (Address address) override;
+  Address GetAddress () const override;
+  bool SetMtu (const uint16_t mtu) override;
+  uint16_t GetMtu () const override;
+  bool IsLinkUp () const override;
+  void AddLinkChangeCallback (Callback<void> callback) override;
+  bool IsBroadcast () const override;
+  Address GetBroadcast () const override;
+  bool IsMulticast () const override;
+  Address GetMulticast (Ipv4Address multicastGroup) const override;
+  bool IsPointToPoint () const override;
+  bool IsBridge () const override;
+  bool Send (Ptr<Packet> packet, const Address& dest, uint16_t protocolNumber) override;
+  bool SendFrom (Ptr<Packet> packet, const Address& source, const Address& dest, uint16_t protocolNumber) override;
+  Ptr<Node> GetNode () const override;
+  void SetNode (Ptr<Node> node) override;
+  bool NeedsArp () const override;
+  void SetReceiveCallback (NetDevice::ReceiveCallback cb) override;
+  void SetPromiscReceiveCallback (NetDevice::PromiscReceiveCallback cb) override;
+  bool SupportsSendFrom () const override;
+  Address GetMulticast (Ipv6Address addr) const override;
 
 protected:
   /**
@@ -223,7 +223,7 @@ protected:
    * running as root.  If this method returns, we'll have a socket waiting
    * for us in m_sock that we can use to talk to the tap device.
    */
-  virtual void DoDispose (void);
+  void DoDispose () override;
 
   /**
    * Receives a packet from a bridged Device
@@ -257,17 +257,17 @@ private:
    * running as root.  If this method returns, we'll have a socket waiting
    * for us in m_sock that we can use to talk to the tap device.
    */
-  void CreateTap (void);
+  void CreateTap ();
 
   /**
    * Spin up the device
    */
-  void StartTapDevice (void);
+  void StartTapDevice ();
 
   /**
    * Tear down the device
    */
-  void StopTapDevice (void);
+  void StopTapDevice ();
 
   /**
    * Callback to process packets that are read
@@ -310,7 +310,7 @@ private:
   /**
    * Notifies that the link is up and ready.
    */
-  void NotifyLinkUp (void);
+  void NotifyLinkUp ();
 
   /**
    * Callback used to hook the standard packet receive callback of the TapBridge

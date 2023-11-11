@@ -88,7 +88,7 @@ TcpGeneralTest::SendPacket (Ptr<Socket> socket, uint32_t pktSize,
 }
 
 void
-TcpGeneralTest::DoTeardown (void)
+TcpGeneralTest::DoTeardown ()
 {
   FinalChecks ();
 
@@ -122,7 +122,7 @@ TcpGeneralTest::ConfigureProperties ()
 }
 
 void
-TcpGeneralTest::DoRun (void)
+TcpGeneralTest::DoRun ()
 {
   ConfigureEnvironment ();
 
@@ -335,11 +335,11 @@ TcpGeneralTest::CreateReceiverSocket (Ptr<Node> node)
 void
 TcpGeneralTest::QueueDropCb ( std::string context, Ptr<const Packet> p)
 {
-  if (context.compare ("SENDER") == 0)
+  if (context == "SENDER")
     {
       QueueDrop (SENDER);
     }
-  else if (context.compare ("RECEIVER") == 0)
+  else if (context == "RECEIVER")
     {
       QueueDrop (RECEIVER);
     }
@@ -352,11 +352,11 @@ TcpGeneralTest::QueueDropCb ( std::string context, Ptr<const Packet> p)
 void
 TcpGeneralTest::PhyDropCb (std::string context, [[maybe_unused]] Ptr<const Packet> p)
 {
-  if (context.compare ("SENDER") == 0)
+  if (context == "SENDER")
     {
       PhyDrop (SENDER);
     }
-  else if (context.compare ("RECEIVER") == 0)
+  else if (context == "RECEIVER")
     {
       PhyDrop (RECEIVER);
     }
@@ -1037,7 +1037,7 @@ TcpGeneralTest::SetInitialSsThresh (SocketWho who, uint32_t initialSsThresh)
 NS_OBJECT_ENSURE_REGISTERED (TcpSocketMsgBase);
 
 TypeId
-TcpSocketMsgBase::GetTypeId (void)
+TcpSocketMsgBase::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::TcpSocketMsgBase")
     .SetParent<TcpSocketBase> ()
@@ -1048,7 +1048,7 @@ TcpSocketMsgBase::GetTypeId (void)
 }
 
 Ptr<TcpSocketBase>
-TcpSocketMsgBase::Fork (void)
+TcpSocketMsgBase::Fork ()
 {
   return CopyObject<TcpSocketMsgBase> (this);
 }
@@ -1140,7 +1140,7 @@ TcpSocketMsgBase::CompleteFork (Ptr<Packet> p, const TcpHeader &tcpHeader,
 NS_OBJECT_ENSURE_REGISTERED (TcpSocketSmallAcks);
 
 TypeId
-TcpSocketSmallAcks::GetTypeId (void)
+TcpSocketSmallAcks::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::TcpSocketSmallAcks")
     .SetParent<TcpSocketMsgBase> ()
@@ -1317,7 +1317,7 @@ TcpSocketSmallAcks::SendEmptyPacket (uint8_t flags)
 }
 
 Ptr<TcpSocketBase>
-TcpSocketSmallAcks::Fork (void)
+TcpSocketSmallAcks::Fork ()
 {
   return CopyObject<TcpSocketSmallAcks> (this);
 }

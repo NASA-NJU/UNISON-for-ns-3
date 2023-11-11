@@ -31,7 +31,7 @@ NS_LOG_COMPONENT_DEFINE ("EnergyHarvesterContainer");
 NS_OBJECT_ENSURE_REGISTERED (EnergyHarvesterContainer);
 
 TypeId
-EnergyHarvesterContainer::GetTypeId (void)
+EnergyHarvesterContainer::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::EnergyHarvesterContainer")
     .SetParent<Object> ()
@@ -54,7 +54,7 @@ EnergyHarvesterContainer::~EnergyHarvesterContainer ()
 EnergyHarvesterContainer::EnergyHarvesterContainer (Ptr<EnergyHarvester> harvester)
 {
   NS_LOG_FUNCTION (this << harvester);
-  NS_ASSERT (harvester != 0);
+  NS_ASSERT (harvester);
   m_harvesters.push_back (harvester);
 }
 
@@ -62,7 +62,7 @@ EnergyHarvesterContainer::EnergyHarvesterContainer (std::string harvesterName)
 {
   NS_LOG_FUNCTION (this << harvesterName);
   Ptr<EnergyHarvester> harvester = Names::Find<EnergyHarvester> (harvesterName);
-  NS_ASSERT (harvester != 0);
+  NS_ASSERT (harvester);
   m_harvesters.push_back (harvester);
 }
 
@@ -75,21 +75,21 @@ EnergyHarvesterContainer::EnergyHarvesterContainer (const EnergyHarvesterContain
 }
 
 EnergyHarvesterContainer::Iterator
-EnergyHarvesterContainer::Begin (void) const
+EnergyHarvesterContainer::Begin () const
 {
   NS_LOG_FUNCTION (this);
   return m_harvesters.begin ();
 }
 
 EnergyHarvesterContainer::Iterator
-EnergyHarvesterContainer::End (void) const
+EnergyHarvesterContainer::End () const
 {
   NS_LOG_FUNCTION (this);
   return m_harvesters.end ();
 }
 
 uint32_t
-EnergyHarvesterContainer::GetN (void) const
+EnergyHarvesterContainer::GetN () const
 {
   NS_LOG_FUNCTION (this);
   return m_harvesters.size ();
@@ -116,7 +116,7 @@ void
 EnergyHarvesterContainer::Add (Ptr<EnergyHarvester> harvester)
 {
   NS_LOG_FUNCTION (this << harvester);
-  NS_ASSERT (harvester != 0);
+  NS_ASSERT (harvester);
   m_harvesters.push_back (harvester);
 }
 
@@ -125,12 +125,12 @@ EnergyHarvesterContainer::Add (std::string harvesterName)
 {
   NS_LOG_FUNCTION (this << harvesterName);
   Ptr<EnergyHarvester> harvester = Names::Find<EnergyHarvester> (harvesterName);
-  NS_ASSERT (harvester != 0);
+  NS_ASSERT (harvester);
   m_harvesters.push_back (harvester);
 }
 
 void
-EnergyHarvesterContainer::Clear (void)
+EnergyHarvesterContainer::Clear ()
 {
   NS_LOG_FUNCTION (this);
   m_harvesters.clear ();
@@ -142,7 +142,7 @@ EnergyHarvesterContainer::Clear (void)
  */
 
 void
-EnergyHarvesterContainer::DoDispose (void)
+EnergyHarvesterContainer::DoDispose ()
 {
   // call Object::Dispose for all EnergyHarvester objects
   for (std::vector< Ptr<EnergyHarvester> >::iterator i = m_harvesters.begin ();
@@ -154,7 +154,7 @@ EnergyHarvesterContainer::DoDispose (void)
 }
 
 void
-EnergyHarvesterContainer::DoInitialize (void)
+EnergyHarvesterContainer::DoInitialize ()
 {
   // call Object::Initialize for all EnergyHarvester objects
   for (std::vector< Ptr<EnergyHarvester> >::iterator i = m_harvesters.begin ();

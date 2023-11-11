@@ -95,7 +95,7 @@ typedef std::map<SpectrumModelUid_t, RxSpectrumModelInfo> RxSpectrumModelInfoMap
  *
  * This SpectrumChannel implementation can handle the presence of
  * SpectrumPhy instances which can use
- * different spectrum models, i.e.,  different SpectrumModel. 
+ * different spectrum models, i.e.,  different SpectrumModel.
  *
  * \note It is allowed for a receiving SpectrumPhy to switch to a
  * different SpectrumModel during the simulation. The requirement
@@ -113,21 +113,21 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   // inherited from SpectrumChannel
-  virtual void RemoveRx (Ptr<SpectrumPhy> phy);
-  virtual void AddRx (Ptr<SpectrumPhy> phy);
-  virtual void StartTx (Ptr<SpectrumSignalParameters> params);
+  void RemoveRx (Ptr<SpectrumPhy> phy) override;
+  void AddRx (Ptr<SpectrumPhy> phy) override;
+  void StartTx (Ptr<SpectrumSignalParameters> params) override;
 
 
   // inherited from Channel
-  virtual std::size_t GetNDevices (void) const;
-  virtual Ptr<NetDevice> GetDevice (std::size_t i) const;
+  std::size_t GetNDevices () const override;
+  Ptr<NetDevice> GetDevice (std::size_t i) const override;
 
 
 protected:
-  void DoDispose ();
+  void DoDispose () override;
 
 private:
   /**

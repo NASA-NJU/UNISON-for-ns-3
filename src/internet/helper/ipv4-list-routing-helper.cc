@@ -41,23 +41,23 @@ Ipv4ListRoutingHelper::Ipv4ListRoutingHelper (const Ipv4ListRoutingHelper &o)
   std::list<std::pair<const Ipv4RoutingHelper *, int16_t> >::const_iterator i;
   for (i = o.m_list.begin (); i != o.m_list.end (); ++i)
     {
-      m_list.push_back (std::make_pair (const_cast<const Ipv4RoutingHelper *> (i->first->Copy ()), i->second));
+      m_list.emplace_back (const_cast<const Ipv4RoutingHelper *> (i->first->Copy ()), i->second);
     }
 }
 
-Ipv4ListRoutingHelper* 
-Ipv4ListRoutingHelper::Copy (void) const 
+Ipv4ListRoutingHelper*
+Ipv4ListRoutingHelper::Copy () const
 {
-  return new Ipv4ListRoutingHelper (*this); 
+  return new Ipv4ListRoutingHelper (*this);
 }
 
-void 
+void
 Ipv4ListRoutingHelper::Add (const Ipv4RoutingHelper &routing, int16_t priority)
 {
-  m_list.push_back (std::make_pair (const_cast<const Ipv4RoutingHelper *> (routing.Copy ()), priority));
+  m_list.emplace_back (const_cast<const Ipv4RoutingHelper *> (routing.Copy ()), priority);
 }
 
-Ptr<Ipv4RoutingProtocol> 
+Ptr<Ipv4RoutingProtocol>
 Ipv4ListRoutingHelper::Create (Ptr<Node> node) const
 {
   Ptr<Ipv4ListRouting> list = CreateObject<Ipv4ListRouting> ();

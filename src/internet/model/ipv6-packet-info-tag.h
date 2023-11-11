@@ -33,8 +33,8 @@ class Packet;
 /**
  * \ingroup ipv6
  *
- * \brief This class implements a tag that carries socket ancillary 
- * data to the socket interface. This is used like 
+ * \brief This class implements a tag that carries socket ancillary
+ * data to the socket interface. This is used like
  * socket option of IP_PKTINFO/IPV6_PKTINFO in \RFC{3542}
  *
  * See also SocketIpv6TclassTag and SocketIpv6HopLimitTag
@@ -54,7 +54,7 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   /**
    * \brief Set the tag's address
@@ -68,7 +68,7 @@ public:
    *
    * \returns the address
    */
-  Ipv6Address GetAddress (void) const;
+  Ipv6Address GetAddress () const;
 
   /**
    * \brief Set the tag's receiving interface
@@ -82,7 +82,7 @@ public:
    *
    * \returns the interface index
    */
-  uint32_t GetRecvIf (void) const;
+  uint32_t GetRecvIf () const;
 
   /**
    * \brief Set the tag's Hop Limit
@@ -96,7 +96,7 @@ public:
    *
    * \returns the Hop Limit
    */
-  uint8_t GetHoplimit (void) const;
+  uint8_t GetHoplimit () const;
 
   /**
    * \brief Set the tag's Traffic Class
@@ -110,17 +110,17 @@ public:
    *
    * \returns the Traffic Class
    */
-  uint8_t GetTrafficClass (void) const;
+  uint8_t GetTrafficClass () const;
 
   // inherited functions, no doc necessary
-  virtual TypeId GetInstanceTypeId (void) const;
-  virtual uint32_t GetSerializedSize (void) const;
-  virtual void Serialize (TagBuffer i) const;
-  virtual void Deserialize (TagBuffer i);
-  virtual void Print (std::ostream &os) const;
+  TypeId GetInstanceTypeId () const override;
+  uint32_t GetSerializedSize () const override;
+  void Serialize (TagBuffer i) const override;
+  void Deserialize (TagBuffer i) override;
+  void Print (std::ostream &os) const override;
 
 private:
-  /* 
+  /*
    * RFC 3542 includes
    * for outgoing packet,
    *  1.  the source IPv6 address,

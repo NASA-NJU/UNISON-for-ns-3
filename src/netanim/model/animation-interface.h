@@ -44,7 +44,6 @@
 #include "ns3/rectangle.h"
 #include "ns3/ipv4.h"
 #include "ns3/ipv4-l3-protocol.h"
-#include "ns3/wifi-phy.h"
 
 namespace ns3 {
 
@@ -177,7 +176,7 @@ public:
    * \returns true if AnimationInterface was already initialized
    *
    */
-  static bool IsInitialized (void);
+  static bool IsInitialized ();
 
   /**
    * \brief Specify the time at which capture should start
@@ -348,7 +347,7 @@ public:
    *
    * \returns true if AnimationInterface was started
    */
-  bool IsStarted (void);
+  bool IsStarted ();
 
   /**
    * \brief Do not trace packets. This helps reduce the trace file size if AnimationInterface is solely
@@ -1481,42 +1480,42 @@ public:
    * \returns Type Id
    *
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   /**
    * \brief Get Instance Type Id
    * \returns Type Id
    *
    */
-  virtual TypeId GetInstanceTypeId (void) const;
+  TypeId GetInstanceTypeId () const override;
 
   /**
    * \brief Get Serialized Size
    * \returns Serialized Size (i.e size of uint64_t)
    *
    */
-  virtual uint32_t GetSerializedSize (void) const;
+  uint32_t GetSerializedSize () const override;
 
   /**
    * \brief Serialize function
    * \param i Tag Buffer
    *
    */
-  virtual void Serialize (TagBuffer i) const;
+  void Serialize (TagBuffer i) const override;
 
   /**
    * \brief Deserialize function
    * \param i Tag Buffer
    *
    */
-  virtual void Deserialize (TagBuffer i);
+  void Deserialize (TagBuffer i) override;
 
   /**
    * \brief Print tag info
    * \param os Reference of ostream object
    *
    */
-  virtual void Print (std::ostream &os) const;
+  void Print (std::ostream &os) const override;
 
   /**
    * \brief Set global Uid in tag
@@ -1530,7 +1529,7 @@ public:
    * \returns Uid in tag
    *
    */
-  uint64_t Get (void) const;
+  uint64_t Get () const;
 
 private:
   uint64_t m_AnimUid; ///< the UID

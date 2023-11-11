@@ -59,7 +59,7 @@ static const struct FrSoftUplinkDefaultConfiguration
 {
   uint8_t cellId; ///< cell ID
   uint8_t ulBandwidth; ///< UL bandwidth
-  uint8_t ulEdgeSubBandOffset; ///< UL edge subband offset  
+  uint8_t ulEdgeSubBandOffset; ///< UL edge subband offset
   uint8_t ulEdgeSubBandwidth; ///< UL endge subbandwidth
 } g_frSoftUplinkDefaultConfiguration[] = {
   { 1, 15, 0, 5},
@@ -86,8 +86,8 @@ const uint16_t NUM_UPLINK_CONFS (sizeof (g_frSoftUplinkDefaultConfiguration) / s
 
 
 LteFrSoftAlgorithm::LteFrSoftAlgorithm ()
-  : m_ffrSapUser (0),
-    m_ffrRrcSapUser (0),
+  : m_ffrSapUser (nullptr),
+    m_ffrRrcSapUser (nullptr),
     m_dlEdgeSubBandOffset (0),
     m_dlEdgeSubBandwidth (0),
     m_ulEdgeSubBandOffset (0),
@@ -153,7 +153,7 @@ LteFrSoftAlgorithm::GetTypeId ()
                    MakeUintegerAccessor (&LteFrSoftAlgorithm::m_edgeSubBandThreshold),
                    MakeUintegerChecker<uint8_t> ())
     .AddAttribute ("CenterPowerOffset",
-                   "PdschConfigDedicated::Pa value for Edge Sub-band, default value dB0",
+                   "PdschConfigDedicated::Pa value for Center Sub-band, default value dB0",
                    UintegerValue (5),
                    MakeUintegerAccessor (&LteFrSoftAlgorithm::m_centerPowerOffset),
                    MakeUintegerChecker<uint8_t> ())
@@ -297,7 +297,7 @@ LteFrSoftAlgorithm::InitializeDownlinkRbgMaps ()
   NS_ASSERT_MSG ((m_dlEdgeSubBandOffset + m_dlEdgeSubBandwidth) <= m_dlBandwidth,
                  "(DlEdgeSubBandOffset+DlEdgeSubBandwidth) higher than DlBandwidth");
 
-  for (uint8_t i = m_dlEdgeSubBandOffset / rbgSize;
+  for (int i = m_dlEdgeSubBandOffset / rbgSize;
        i < (m_dlEdgeSubBandOffset + m_dlEdgeSubBandwidth) / rbgSize; i++)
     {
       m_dlEdgeRbgMap[i] = true;

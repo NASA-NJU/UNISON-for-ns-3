@@ -57,7 +57,7 @@ public:
   /**
    * Create Reservation object with given packet list,
    * frame number and max packets.
-   * 
+   *
    * \param list List of packets for assigned to reservation.
    * \param frameNo Frame number of reservation transmission.
    * \param maxPkts Maximum number of packets to assign to reservation
@@ -85,10 +85,10 @@ public:
    *
    * \return The list of packets.
    */
-  const std::list<std::pair <Ptr<Packet>, Mac8Address > > &GetPktList (void) const;
+  const std::list<std::pair <Ptr<Packet>, Mac8Address > > &GetPktList () const;
   /**
    * Get the frame number.
-   * 
+   *
    * \return The frame number.
    */
   uint8_t GetFrameNo () const;
@@ -124,7 +124,7 @@ public:
   void IncrementRetry ();
   /**
    * Set the reservation transmitted state.
-   * 
+   *
    * \param t True if resevation has been transmitted.
    */
   void SetTransmitted (bool t = true);
@@ -174,20 +174,20 @@ public:
   /** Default constructor */
   UanMacRc ();
   /** Dummy destructor, DoDispose. */
-  virtual ~UanMacRc ();
+  ~UanMacRc () override;
 
   /**
    * Register this type.
    * \return The TypeId.
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   // Inherited methods
-  virtual bool Enqueue (Ptr<Packet> pkt, uint16_t protocolNumber, const Address &dest);
-  virtual void SetForwardUpCb (Callback<void, Ptr<Packet>, uint16_t, const Mac8Address&> cb);
-  virtual void AttachPhy (Ptr<UanPhy> phy);
-  virtual void Clear (void);
-  int64_t AssignStreams (int64_t stream);
+  bool Enqueue (Ptr<Packet> pkt, uint16_t protocolNumber, const Address &dest) override;
+  void SetForwardUpCb (Callback<void, Ptr<Packet>, uint16_t, const Mac8Address&> cb) override;
+  void AttachPhy (Ptr<UanPhy> phy) override;
+  void Clear () override;
+  int64_t AssignStreams (int64_t stream) override;
 
   /**
    *  TracedCallback signature for dequeue of a packet.
@@ -197,7 +197,7 @@ public:
    */
   typedef void (* QueueTracedCallback)
     (Ptr<const Packet> packet, uint32_t proto);
-  
+
 private:
   /** MAC state. */
   enum State {
@@ -257,13 +257,13 @@ private:
    */
   void ReceiveOkFromPhy (Ptr<Packet> pkt, double sinr, UanTxMode mode);
   /** Associate with a gateway by sending the first GWPING. */
-  void Associate (void);
+  void Associate ();
   /** Periodically retry association. */
-  void AssociateTimeout (void);
+  void AssociateTimeout ();
   /** Send RTS packet. */
-  void SendRts (void);
+  void SendRts ();
   /** Retry RTS. */
-  void RtsTimeout (void);
+  void RtsTimeout ();
   /**
    * Create the RTS header from a Reservation.
    *
@@ -298,9 +298,9 @@ private:
    *   not to my address
    * \return True if PHY is ok.
    */
-  bool IsPhy1Ok (void);
+  bool IsPhy1Ok ();
   /** Callback to block RST. */
-  void BlockRtsing (void);
+  void BlockRtsing ();
 
   /**
    * Global count of calls to Associate, AssociateTimeout,
@@ -312,7 +312,7 @@ private:
   Ptr<ExponentialRandomVariable> m_ev;
 
 protected:
-  void DoDispose ();
+  void DoDispose () override;
 
 };  // class UanMacRc
 

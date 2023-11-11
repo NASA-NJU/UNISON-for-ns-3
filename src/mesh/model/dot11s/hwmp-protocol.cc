@@ -19,33 +19,34 @@
  */
 
 #include "hwmp-protocol.h"
-#include "hwmp-protocol-mac.h"
-#include "hwmp-tag.h"
-#include "hwmp-rtable.h"
-#include "ns3/log.h"
-#include "ns3/simulator.h"
-#include "ns3/packet.h"
-#include "ns3/random-variable-stream.h"
-#include "ns3/string.h"
-#include "ns3/pointer.h"
-#include "ns3/mesh-point-device.h"
-#include "ns3/wifi-net-device.h"
-#include "ns3/mesh-wifi-interface-mac.h"
-#include "ns3/random-variable-stream.h"
+
 #include "airtime-metric.h"
-#include "ie-dot11s-preq.h"
-#include "ie-dot11s-prep.h"
-#include "ns3/trace-source-accessor.h"
+#include "hwmp-protocol-mac.h"
+#include "hwmp-rtable.h"
+#include "hwmp-tag.h"
 #include "ie-dot11s-perr.h"
+#include "ie-dot11s-prep.h"
+#include "ie-dot11s-preq.h"
+
+#include "ns3/log.h"
+#include "ns3/mesh-point-device.h"
+#include "ns3/mesh-wifi-interface-mac.h"
+#include "ns3/packet.h"
+#include "ns3/pointer.h"
+#include "ns3/random-variable-stream.h"
+#include "ns3/simulator.h"
+#include "ns3/string.h"
+#include "ns3/trace-source-accessor.h"
+#include "ns3/wifi-net-device.h"
 
 namespace ns3 {
 
 NS_LOG_COMPONENT_DEFINE ("HwmpProtocol");
-  
+
 namespace dot11s {
 
 NS_OBJECT_ENSURE_REGISTERED (HwmpProtocol);
-  
+
 TypeId
 HwmpProtocol::GetTypeId ()
 {
@@ -237,8 +238,8 @@ HwmpProtocol::DoDispose ()
   m_hwmpSeqnoMetricDatabase.clear ();
   m_interfaces.clear ();
   m_rqueue.clear ();
-  m_rtable = 0;
-  m_mp = 0;
+  m_rtable = nullptr;
+  m_mp = nullptr;
 }
 
 bool
@@ -780,12 +781,12 @@ HwmpProtocol::Install (Ptr<MeshPointDevice> mp)
     {
       // Checking for compatible net device
       Ptr<WifiNetDevice> wifiNetDev = (*i)->GetObject<WifiNetDevice> ();
-      if (wifiNetDev == 0)
+      if (!wifiNetDev)
         {
           return false;
         }
       Ptr<MeshWifiInterfaceMac>  mac = wifiNetDev->GetMac ()->GetObject<MeshWifiInterfaceMac> ();
-      if (mac == 0)
+      if (!mac)
         {
           return false;
         }
@@ -826,7 +827,7 @@ HwmpProtocol::DropDataFrame (uint32_t seqno, Mac48Address source)
   NS_LOG_FUNCTION (this << seqno << source);
   if (source == GetAddress ())
     {
-      NS_LOG_DEBUG ("Dropping seqno " << seqno << "; from self"); 
+      NS_LOG_DEBUG ("Dropping seqno " << seqno << "; from self");
       return true;
     }
   std::map<Mac48Address, uint32_t,std::less<Mac48Address> >::const_iterator i = m_lastDataSeqno.find (source);
@@ -998,7 +999,7 @@ HwmpProtocol::DequeueFirstPacketByDst (Mac48Address dst)
 {
   NS_LOG_FUNCTION (this << dst);
   QueuedPacket retval;
-  retval.pkt = 0;
+  retval.pkt = nullptr;
   for (std::vector<QueuedPacket>::iterator i = m_rqueue.begin (); i != m_rqueue.end (); i++)
     {
       if ((*i).dst == dst)
@@ -1016,7 +1017,7 @@ HwmpProtocol::DequeueFirstPacket ()
 {
   NS_LOG_FUNCTION (this);
   QueuedPacket retval;
-  retval.pkt = 0;
+  retval.pkt = nullptr;
   if (m_rqueue.size () != 0)
     {
       retval = m_rqueue[0];
@@ -1039,7 +1040,7 @@ HwmpProtocol::ReactivePathResolved (Mac48Address dst)
   NS_ASSERT (result.retransmitter != Mac48Address::GetBroadcast ());
   //Send all packets stored for this destination
   QueuedPacket packet = DequeueFirstPacketByDst (dst);
-  while (packet.pkt != 0)
+  while (packet.pkt)
     {
       //set RA tag for retransmitter:
       HwmpTag tag;
@@ -1061,7 +1062,7 @@ HwmpProtocol::ProactivePathResolved ()
   HwmpRtable::LookupResult result = m_rtable->LookupProactive ();
   NS_ASSERT (result.retransmitter != Mac48Address::GetBroadcast ());
   QueuedPacket packet = DequeueFirstPacket ();
-  while (packet.pkt != 0)
+  while (packet.pkt)
     {
       //set RA tag for retransmitter:
       HwmpTag tag;
@@ -1114,7 +1115,7 @@ HwmpProtocol::RetryPathDiscovery (Mac48Address dst, uint8_t numOfRetry)
     {
       QueuedPacket packet = DequeueFirstPacketByDst (dst);
       //purge queue and delete entry from retryDatabase
-      while (packet.pkt != 0)
+      while (packet.pkt)
         {
           m_stats.totalDropped++;
           packet.reply (false, packet.pkt, packet.src, packet.dst, packet.protocol, HwmpRtable::MAX_METRIC);
@@ -1298,13 +1299,13 @@ HwmpProtocol::AssignStreams (int64_t stream)
 }
 
 Ptr<HwmpRtable>
-HwmpProtocol::GetRoutingTable (void) const
+HwmpProtocol::GetRoutingTable () const
 {
   return m_rtable;
 }
 
 HwmpProtocol::QueuedPacket::QueuedPacket () :
-  pkt (0),
+  pkt (nullptr),
   protocol (0),
   inInterface (0)
 {

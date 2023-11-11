@@ -54,24 +54,38 @@ using namespace ns3;
 
 NS_LOG_COMPONENT_DEFINE ("CoDelPfifoFastBasicTest");
 
+/**
+ * Function called when Congestion Window is changed.
+ *
+ * \param stream Output stream.
+ * \param oldval Old value.
+ * \param newval New value.
+ */
 static void
-CwndTracer (Ptr<OutputStreamWrapper>stream, uint32_t oldval, uint32_t newval)
+CwndTracer (Ptr<OutputStreamWrapper> stream, uint32_t oldval, uint32_t newval)
 {
   *stream->GetStream () << oldval << " " << newval << std::endl;
 }
 
+/**
+ * Function to enable the Congestion window tracing.
+ *
+ * Note that you can not hook to the trace before the socket is created.
+ *
+ * \param cwndTrFileName Name of the output file.
+ */
 static void
 TraceCwnd (std::string cwndTrFileName)
 {
   AsciiTraceHelper ascii;
-  if (cwndTrFileName.compare ("") == 0)
+  if (cwndTrFileName == "")
     {
       NS_LOG_DEBUG ("No trace file for cwnd provided");
       return;
     }
   else
     {
-      Ptr<OutputStreamWrapper> stream = ascii.CreateFileStream (cwndTrFileName.c_str ());
+      Ptr<OutputStreamWrapper> stream = ascii.CreateFileStream (cwndTrFileName);
       Config::ConnectWithoutContext ("/NodeList/1/$ns3::TcpL4Protocol/SocketList/0/CongestionWindow",MakeBoundCallback (&CwndTracer, stream));
     }
 }
@@ -87,7 +101,7 @@ int main (int argc, char *argv[])
   uint32_t queueDiscSize = 1000;  //in packets
   uint32_t queueSize = 10;        //in packets
   uint32_t pktSize = 1458;        //in bytes. 1458 to prevent fragments
-  float startTime = 0.1f;
+  float startTime = 0.1F;
   float simDuration = 60;         //in seconds
 
   bool isPcapEnabled = true;
@@ -172,7 +186,8 @@ int main (int argc, char *argv[])
   // and the channels between the source/sink and the gateway
   Ipv4InterfaceContainer sinkInterface;
 
-  NetDeviceContainer devicesAccessLink, devicesBottleneckLink;
+  NetDeviceContainer devicesAccessLink;
+  NetDeviceContainer devicesBottleneckLink;
 
   devicesAccessLink = accessLink.Install (source.Get (0), gateway.Get (0));
   tchPfifoFastAccess.Install (devicesAccessLink);
@@ -182,11 +197,11 @@ int main (int argc, char *argv[])
   devicesBottleneckLink = bottleneckLink.Install (gateway.Get (0), sink.Get (0));
   address.NewNetwork ();
 
-  if (queueDiscType.compare ("PfifoFast") == 0)
+  if (queueDiscType == "PfifoFast")
     {
       tchPfifo.Install (devicesBottleneckLink);
     }
-  else if (queueDiscType.compare ("CoDel") == 0)
+  else if (queueDiscType == "CoDel")
     {
       tchCoDel.Install (devicesBottleneckLink);
     }

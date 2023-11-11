@@ -65,7 +65,7 @@ const uint32_t PCAP_SNAPLEN   = 64;         //!< Don't bother to save much data.
 
 /**
  * \ingroup system-tests-tcp
- * 
+ *
  * \brief Tests of TCP implementation state machine behavior
  */
 class Ns3TcpStateTestCase : public TestCase
@@ -77,14 +77,14 @@ public:
    * \param testCase Testcase number.
    */
   Ns3TcpStateTestCase (uint32_t testCase);
-  virtual ~Ns3TcpStateTestCase ()
+  ~Ns3TcpStateTestCase () override
   {
   }
 
 private:
-  virtual void DoSetup (void);
-  virtual void DoRun (void);
-  virtual void DoTeardown (void);
+  void DoSetup () override;
+  void DoRun () override;
+  void DoTeardown () override;
 
   std::string m_pcapFilename;     //!< The PCAP filename.
   PcapFile m_pcapFile;            //!< The PCAP ffile.
@@ -99,7 +99,7 @@ private:
   /**
    * Check that the transmitted packets are consitent with the trace.
    * This callback is hooked to ns3::Ipv4L3Protocol/Tx.
-   * 
+   *
    * \param context The callback context (unused).
    * \param packet The transmitted packet.
    * \param ipv4 The IPv4 object that did send the packet (unused).
@@ -109,7 +109,7 @@ private:
   /**
    * Check that the received packets are consitent with the trace.
    * This callback is hooked to ns3::Ipv4L3Protocol/Tx.
-   * 
+   *
    * \param context The callback context (unused).
    * \param packet The transmitted packet.
    * \param ipv4 The IPv4 object that did send the packet (unused).
@@ -118,14 +118,14 @@ private:
   void Ipv4L3Rx (std::string context, Ptr<const Packet> packet, Ptr<Ipv4> ipv4, uint32_t interface);
   /**
    * Write to the socket until the buffer is full.
-   * 
+   *
    * \param localSocket The output socket.
    * \param txSpace The space left on the socket (unused).
    */
   void WriteUntilBufferFull (Ptr<Socket> localSocket, uint32_t txSpace);
   /**
    * Start transmitting a TCP flow.
-   * 
+   *
    * \param localSocket The sending socket.
    * \param servAddress The IPv4 address of the server (i.e., the destination address).
    * \param servPort The TCP port of the server (i.e., the destination port).
@@ -161,7 +161,7 @@ Ns3TcpStateTestCase::Ns3TcpStateTestCase (uint32_t testCase)
 }
 
 void
-Ns3TcpStateTestCase::DoSetup (void)
+Ns3TcpStateTestCase::DoSetup ()
 {
   //
   // We expect there to be a file called ns3tcp-state-response-vectors.pcap in
@@ -187,7 +187,7 @@ Ns3TcpStateTestCase::DoSetup (void)
 }
 
 void
-Ns3TcpStateTestCase::DoTeardown (void)
+Ns3TcpStateTestCase::DoTeardown ()
 {
   m_pcapFile.Close ();
 }
@@ -239,7 +239,11 @@ Ns3TcpStateTestCase::Ipv4L3Tx (std::string, Ptr<const Packet> packet, Ptr<Ipv4>,
       // file and see if it still does the right thing.
       //
       uint8_t expectedBuffer[PCAP_SNAPLEN];
-      uint32_t tsSec, tsUsec, inclLen, origLen, readLen;
+      uint32_t tsSec;
+      uint32_t tsUsec;
+      uint32_t inclLen;
+      uint32_t origLen;
+      uint32_t readLen;
       m_pcapFile.Read (expectedBuffer, sizeof(expectedBuffer), tsSec, tsUsec, inclLen, origLen, readLen);
 
       NS_LOG_INFO ("read " << readLen << " bytes");
@@ -249,7 +253,8 @@ Ns3TcpStateTestCase::Ipv4L3Tx (std::string, Ptr<const Packet> packet, Ptr<Ipv4>,
 
       int result = memcmp (actual, expectedBuffer, readLen);
 
-      TcpHeader expectedHeader, receivedHeader;
+      TcpHeader expectedHeader;
+      TcpHeader receivedHeader;
       Ptr<Packet> expected = Create<Packet> (expectedBuffer, readLen);
 
       expected->RemoveHeader (expectedHeader);
@@ -291,7 +296,7 @@ Ns3TcpStateTestCase::WriteUntilBufferFull (Ptr<Socket> localSocket, uint32_t txS
           std::clog << "Submitting "
                     << toWrite << " bytes to TCP socket" << std::endl;
         }
-      int amountSent = localSocket->Send (0, toWrite, 0);
+      int amountSent = localSocket->Send (nullptr, toWrite, 0);
       NS_ASSERT (amountSent > 0);  // Given GetTxAvailable() non-zero, amountSent should not be zero
       m_currentTxBytes += amountSent;
     }
@@ -331,7 +336,7 @@ Ns3TcpStateTestCase::StartFlow (Ptr<Socket> localSocket,
 }
 
 void
-Ns3TcpStateTestCase::DoRun (void)
+Ns3TcpStateTestCase::DoRun ()
 {
   // Network topology
   //
@@ -518,7 +523,7 @@ Ns3TcpStateTestCase::DoRun (void)
 
 /**
  * \ingroup system-tests-tcp
- * 
+ *
  * TCP implementation state machine behavior TestSuite.
  */
 class Ns3TcpStateTestSuite : public TestSuite

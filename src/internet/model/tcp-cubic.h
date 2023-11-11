@@ -50,20 +50,20 @@ namespace ns3 {
  * slightly differ from the CUBIC paper. It also features HyStart.
  *
  * Home page:
- *      http://netsrv.csc.ncsu.edu/twiki/bin/view/Main/BIC
+ *      https://web.archive.org/web/20080607093013/http://netsrv.csc.ncsu.edu/twiki/bin/view/Main/BIC
  * The work starts from the implementation of CUBIC TCP in
  * Sangtae Ha, Injong Rhee and Lisong Xu,
  * "CUBIC: A New TCP-Friendly High-Speed TCP Variant"
  * in ACM SIGOPS Operating System Review, July 2008.
  * Available from:
- *  http://netsrv.csc.ncsu.edu/export/cubic_a_new_tcp_2008.pdf
+ *  https://web.archive.org/web/20160505194415/http://netsrv.csc.ncsu.edu/export/cubic_a_new_tcp_2008.pdf
  *
  * CUBIC integrates a new slow start algorithm, called HyStart.
  * The details of HyStart are presented in
  *  Sangtae Ha and Injong Rhee,
  *  "Taming the Elephants: New TCP Slow Start", NCSU TechReport 2008.
  * Available from:
- *  http://netsrv.csc.ncsu.edu/export/hystart_techreport_2008.pdf
+ *  https://web.archive.org/web/20160528233754/http://netsrv.csc.ncsu.edu/export/hystart_techreport_2008.pdf
  *
  * More information on this implementation: http://dl.acm.org/citation.cfm?id=2756518
  */
@@ -74,7 +74,7 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   TcpCubic ();
 
@@ -84,14 +84,14 @@ public:
    */
   TcpCubic (const TcpCubic& sock);
 
-  virtual std::string GetName () const;
-  virtual void PktsAcked (Ptr<TcpSocketState> tcb, uint32_t segmentsAcked, const Time& rtt);
-  virtual void IncreaseWindow (Ptr<TcpSocketState> tcb, uint32_t segmentsAcked);
-  virtual uint32_t GetSsThresh (Ptr<const TcpSocketState> tcb, uint32_t bytesInFlight);
-  virtual void CongestionStateSet (Ptr<TcpSocketState> tcb,
-                                   const TcpSocketState::TcpCongState_t newState);
+  std::string GetName () const override;
+  void PktsAcked (Ptr<TcpSocketState> tcb, uint32_t segmentsAcked, const Time& rtt) override;
+  void IncreaseWindow (Ptr<TcpSocketState> tcb, uint32_t segmentsAcked) override;
+  uint32_t GetSsThresh (Ptr<const TcpSocketState> tcb, uint32_t bytesInFlight) override;
+  void CongestionStateSet (Ptr<TcpSocketState> tcb,
+                                   const TcpSocketState::TcpCongState_t newState) override;
 
-  virtual Ptr<TcpCongestionOps> Fork ();
+  Ptr<TcpCongestionOps> Fork () override;
 
 private:
   /**

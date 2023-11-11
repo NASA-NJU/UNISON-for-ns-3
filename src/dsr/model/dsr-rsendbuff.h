@@ -18,7 +18,7 @@
  * Author: Yufei Cheng   <yfcheng@ittc.ku.edu>
  *
  * James P.G. Sterbenz <jpgs@ittc.ku.edu>, director
- * ResiliNets Research Group  http://wiki.ittc.ku.edu/resilinets
+ * ResiliNets Research Group  https://resilinets.org/
  * Information and Telecommunication Technology Center (ITTC)
  * and Department of Electrical Engineering and Computer Science
  * The University of Kansas Lawrence, KS USA.
@@ -53,7 +53,7 @@ public:
    * \param exp expiration time
    * \param p protocol number
    */
-  DsrSendBuffEntry (Ptr<const Packet> pa = 0, Ipv4Address d = Ipv4Address (),
+  DsrSendBuffEntry (Ptr<const Packet> pa = nullptr, Ipv4Address d = Ipv4Address (),
                     Time exp = Simulator::Now (), uint8_t p = 0)
     : m_packet (pa),
       m_dst (d),

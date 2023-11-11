@@ -57,7 +57,7 @@ public:
    * \param expectedQueue the expected queue disc index
    */
   WifiAcMappingTest (uint8_t tos, uint8_t expectedQueue);
-  virtual void DoRun (void);
+  void DoRun () override;
 
 private:
   /**
@@ -77,7 +77,7 @@ private:
    * \param count the pointer to the packet counter
    * \param item the enqueued item
    */
-  static void PacketEnqueuedInWifiMacQueue (uint8_t tos, uint16_t* count, Ptr<const WifiMacQueueItem> item);
+  static void PacketEnqueuedInWifiMacQueue (uint8_t tos, uint16_t* count, Ptr<const WifiMpdu> item);
   uint8_t m_tos; //!< type of service
   uint16_t m_expectedQueue; //!< expected queue disc index
   uint16_t m_QueueDiscCount[4]; //!< packet counter per queue disc
@@ -109,7 +109,7 @@ WifiAcMappingTest::PacketEnqueuedInQueueDisc (uint8_t tos, uint16_t* count, Ptr<
 }
 
 void
-WifiAcMappingTest::PacketEnqueuedInWifiMacQueue (uint8_t tos, uint16_t* count, Ptr<const WifiMacQueueItem> item)
+WifiAcMappingTest::PacketEnqueuedInWifiMacQueue (uint8_t tos, uint16_t* count, Ptr<const WifiMpdu> item)
 {
   LlcSnapHeader llc;
   Ptr<Packet> packet = item->GetPacket ()->Copy ();
@@ -127,7 +127,7 @@ WifiAcMappingTest::PacketEnqueuedInWifiMacQueue (uint8_t tos, uint16_t* count, P
 }
 
 void
-WifiAcMappingTest::DoRun (void)
+WifiAcMappingTest::DoRun ()
 {
   WifiHelper wifi;
   WifiMacHelper wifiMac;
@@ -181,7 +181,8 @@ WifiAcMappingTest::DoRun (void)
 
   Ipv4AddressHelper address;
   address.SetBase ("192.168.0.0", "255.255.255.0");
-  Ipv4InterfaceContainer staNodeInterface, apNodeInterface;
+  Ipv4InterfaceContainer staNodeInterface;
+  Ipv4InterfaceContainer apNodeInterface;
   staNodeInterface = address.Assign (staDev);
   apNodeInterface = address.Assign (apDev);
 

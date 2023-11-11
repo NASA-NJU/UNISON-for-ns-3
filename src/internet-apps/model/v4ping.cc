@@ -32,14 +32,14 @@ NS_LOG_COMPONENT_DEFINE ("V4Ping");
 
 NS_OBJECT_ENSURE_REGISTERED (V4Ping);
 
-TypeId 
-V4Ping::GetTypeId (void)
+TypeId
+V4Ping::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::V4Ping")
     .SetParent<Application> ()
     .SetGroupName("Internet-Apps")
     .AddConstructor<V4Ping> ()
-    .AddAttribute ("Remote", 
+    .AddAttribute ("Remote",
                    "The address of the machine we want to ping.",
                    Ipv4AddressValue (),
                    MakeIpv4AddressAccessor (&V4Ping::m_remote),
@@ -68,7 +68,7 @@ V4Ping::GetTypeId (void)
 V4Ping::V4Ping ()
   : m_interval (Seconds (1)),
     m_size (56),
-    m_socket (0),
+    m_socket (nullptr),
     m_seq (0),
     m_verbose (false),
     m_recv (0)
@@ -81,7 +81,7 @@ V4Ping::~V4Ping ()
 }
 
 void
-V4Ping::DoDispose (void)
+V4Ping::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
 
@@ -90,12 +90,12 @@ V4Ping::DoDispose (void)
       StopApplication ();
     }
 
-  m_socket = 0;
+  m_socket = nullptr;
   Application::DoDispose ();
 }
 
 uint32_t
-V4Ping::GetApplicationId (void) const
+V4Ping::GetApplicationId () const
 {
   NS_LOG_FUNCTION (this);
   Ptr<Node> node = GetNode ();
@@ -193,7 +193,7 @@ V4Ping::Read32 (const uint8_t *buffer, uint32_t &data)
   data = (buffer[3] << 24) + (buffer[2] << 16) + (buffer[1] << 8) + buffer[0];
 }
 
-void 
+void
 V4Ping::Send ()
 {
   NS_LOG_FUNCTION (this);
@@ -212,7 +212,10 @@ V4Ping::Send ()
   // be too surprised when you see that this is a little endian convention.
   //
   uint8_t* data = new uint8_t[m_size];
-  for (uint32_t i = 0; i < m_size; ++i) data[i] = 0;
+  for (uint32_t i = 0; i < m_size; ++i)
+    {
+      data[i] = 0;
+    }
   NS_ASSERT (m_size >= 16);
 
   uint32_t tmp = GetNode ()->GetId ();
@@ -238,8 +241,8 @@ V4Ping::Send ()
   delete[] data;
 }
 
-void 
-V4Ping::StartApplication (void)
+void
+V4Ping::StartApplication ()
 {
   NS_LOG_FUNCTION (this);
 
@@ -250,7 +253,7 @@ V4Ping::StartApplication (void)
     }
 
   m_socket = Socket::CreateSocket (GetNode (), TypeId::LookupByName ("ns3::Ipv4RawSocketFactory"));
-  NS_ASSERT (m_socket != 0);
+  NS_ASSERT (m_socket);
   m_socket->SetAttribute ("Protocol", UintegerValue (1)); // icmp
   m_socket->SetRecvCallback (MakeCallback (&V4Ping::Receive, this));
   InetSocketAddress src = InetSocketAddress (Ipv4Address::GetAny (), 0);
@@ -263,8 +266,8 @@ V4Ping::StartApplication (void)
 
   Send ();
 }
-void 
-V4Ping::StopApplication (void)
+void
+V4Ping::StopApplication ()
 {
   NS_LOG_FUNCTION (this);
 
@@ -281,15 +284,16 @@ V4Ping::StopApplication (void)
     {
       std::ostringstream os;
       os.precision (4);
-      os << "--- " << m_remote << " ping statistics ---\n" 
+      os << "--- " << m_remote << " ping statistics ---\n"
          << m_seq << " packets transmitted, " << m_recv << " received, "
          << ((m_seq - m_recv) * 100 / m_seq) << "% packet loss, "
          << "time " << (Simulator::Now () - m_started).As (Time::MS) << "\n";
 
       if (m_avgRtt.Count () > 0)
-        os << "rtt min/avg/max/mdev = " << m_avgRtt.Min () << "/" << m_avgRtt.Avg () << "/"
-           << m_avgRtt.Max () << "/" << m_avgRtt.Stddev ()
-           << " ms\n";
+        {
+          os << "rtt min/avg/max/mdev = " << m_avgRtt.Min () << "/" << m_avgRtt.Avg () << "/"
+             << m_avgRtt.Max () << "/" << m_avgRtt.Stddev () << " ms\n";
+        }
       std::cout << os.str ();
     }
 }

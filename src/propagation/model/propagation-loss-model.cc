@@ -3,7 +3,7 @@
  * Copyright (c) 2005,2006,2007 INRIA
  *
  * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as 
+ * it under the terms of the GNU General Public License version 2 as
  * published by the Free Software Foundation;
  *
  * This program is distributed in the hope that it will be useful,
@@ -38,8 +38,8 @@ NS_LOG_COMPONENT_DEFINE ("PropagationLossModel");
 
 NS_OBJECT_ENSURE_REGISTERED (PropagationLossModel);
 
-TypeId 
-PropagationLossModel::GetTypeId (void)
+TypeId
+PropagationLossModel::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::PropagationLossModel")
     .SetParent<Object> ()
@@ -49,7 +49,7 @@ PropagationLossModel::GetTypeId (void)
 }
 
 PropagationLossModel::PropagationLossModel ()
-  : m_next (0)
+  : m_next (nullptr)
 {
 }
 
@@ -75,7 +75,7 @@ PropagationLossModel::CalcRxPower (double txPowerDbm,
                                    Ptr<MobilityModel> b) const
 {
   double self = DoCalcRxPower (txPowerDbm, a, b);
-  if (m_next != 0)
+  if (m_next)
     {
       self = m_next->CalcRxPower (self, a, b);
     }
@@ -87,7 +87,7 @@ PropagationLossModel::AssignStreams (int64_t stream)
 {
   int64_t currentStream = stream;
   currentStream += DoAssignStreams (stream);
-  if (m_next != 0)
+  if (m_next)
     {
       currentStream += m_next->AssignStreams (currentStream);
     }
@@ -98,8 +98,8 @@ PropagationLossModel::AssignStreams (int64_t stream)
 
 NS_OBJECT_ENSURE_REGISTERED (RandomPropagationLossModel);
 
-TypeId 
-RandomPropagationLossModel::GetTypeId (void)
+TypeId
+RandomPropagationLossModel::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::RandomPropagationLossModel")
     .SetParent<PropagationLossModel> ()
@@ -142,15 +142,15 @@ RandomPropagationLossModel::DoAssignStreams (int64_t stream)
 
 NS_OBJECT_ENSURE_REGISTERED (FriisPropagationLossModel);
 
-TypeId 
-FriisPropagationLossModel::GetTypeId (void)
+TypeId
+FriisPropagationLossModel::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::FriisPropagationLossModel")
     .SetParent<PropagationLossModel> ()
     .SetGroupName ("Propagation")
     .AddConstructor<FriisPropagationLossModel> ()
-    .AddAttribute ("Frequency", 
-                   "The carrier frequency (in Hz) at which propagation occurs  (default is 5.15 GHz).",
+    .AddAttribute ("Frequency",
+                   "The carrier frequency (in Hz) at which propagation occurs (default is 5.15 GHz).",
                    DoubleValue (5.150e9),
                    MakeDoubleAccessor (&FriisPropagationLossModel::SetFrequency,
                                        &FriisPropagationLossModel::GetFrequency),
@@ -159,8 +159,8 @@ FriisPropagationLossModel::GetTypeId (void)
                    DoubleValue (1.0),
                    MakeDoubleAccessor (&FriisPropagationLossModel::m_systemLoss),
                    MakeDoubleChecker<double> ())
-    .AddAttribute ("MinLoss", 
-                   "The minimum value (dB) of the total loss, used at short ranges. Note: ",
+    .AddAttribute ("MinLoss",
+                   "The minimum value (dB) of the total loss, used at short ranges.",
                    DoubleValue (0.0),
                    MakeDoubleAccessor (&FriisPropagationLossModel::SetMinLoss,
                                        &FriisPropagationLossModel::GetMinLoss),
@@ -178,7 +178,7 @@ FriisPropagationLossModel::SetSystemLoss (double systemLoss)
   m_systemLoss = systemLoss;
 }
 double
-FriisPropagationLossModel::GetSystemLoss (void) const
+FriisPropagationLossModel::GetSystemLoss () const
 {
   return m_systemLoss;
 }
@@ -188,7 +188,7 @@ FriisPropagationLossModel::SetMinLoss (double minLoss)
   m_minLoss = minLoss;
 }
 double
-FriisPropagationLossModel::GetMinLoss (void) const
+FriisPropagationLossModel::GetMinLoss () const
 {
   return m_minLoss;
 }
@@ -202,7 +202,7 @@ FriisPropagationLossModel::SetFrequency (double frequency)
 }
 
 double
-FriisPropagationLossModel::GetFrequency (void) const
+FriisPropagationLossModel::GetFrequency () const
 {
   return m_frequency;
 }
@@ -221,7 +221,7 @@ FriisPropagationLossModel::DbmFromW (double w) const
   return dbm;
 }
 
-double 
+double
 FriisPropagationLossModel::DoCalcRxPower (double txPowerDbm,
                                           Ptr<MobilityModel> a,
                                           Ptr<MobilityModel> b) const
@@ -242,7 +242,7 @@ FriisPropagationLossModel::DoCalcRxPower (double txPowerDbm,
    * L: system loss
    * lambda: wavelength (m)
    *
-   * Here, we ignore tx and rx gain and the input and output values 
+   * Here, we ignore tx and rx gain and the input and output values
    * are in dB or dBm:
    *
    *                           lambda^2
@@ -282,14 +282,14 @@ FriisPropagationLossModel::DoAssignStreams (int64_t stream)
 
 NS_OBJECT_ENSURE_REGISTERED (TwoRayGroundPropagationLossModel);
 
-TypeId 
-TwoRayGroundPropagationLossModel::GetTypeId (void)
+TypeId
+TwoRayGroundPropagationLossModel::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::TwoRayGroundPropagationLossModel")
     .SetParent<PropagationLossModel> ()
     .SetGroupName ("Propagation")
     .AddConstructor<TwoRayGroundPropagationLossModel> ()
-    .AddAttribute ("Frequency", 
+    .AddAttribute ("Frequency",
                    "The carrier frequency (in Hz) at which propagation occurs  (default is 5.15 GHz).",
                    DoubleValue (5.150e9),
                    MakeDoubleAccessor (&TwoRayGroundPropagationLossModel::SetFrequency,
@@ -323,7 +323,7 @@ TwoRayGroundPropagationLossModel::SetSystemLoss (double systemLoss)
   m_systemLoss = systemLoss;
 }
 double
-TwoRayGroundPropagationLossModel::GetSystemLoss (void) const
+TwoRayGroundPropagationLossModel::GetSystemLoss () const
 {
   return m_systemLoss;
 }
@@ -333,7 +333,7 @@ TwoRayGroundPropagationLossModel::SetMinDistance (double minDistance)
   m_minDistance = minDistance;
 }
 double
-TwoRayGroundPropagationLossModel::GetMinDistance (void) const
+TwoRayGroundPropagationLossModel::GetMinDistance () const
 {
   return m_minDistance;
 }
@@ -352,12 +352,12 @@ TwoRayGroundPropagationLossModel::SetFrequency (double frequency)
 }
 
 double
-TwoRayGroundPropagationLossModel::GetFrequency (void) const
+TwoRayGroundPropagationLossModel::GetFrequency () const
 {
   return m_frequency;
 }
 
-double 
+double
 TwoRayGroundPropagationLossModel::DbmToW (double dbm) const
 {
   double mw = std::pow (10.0,dbm / 10.0);
@@ -371,7 +371,7 @@ TwoRayGroundPropagationLossModel::DbmFromW (double w) const
   return dbm;
 }
 
-double 
+double
 TwoRayGroundPropagationLossModel::DoCalcRxPower (double txPowerDbm,
                                                  Ptr<MobilityModel> a,
                                                  Ptr<MobilityModel> b) const
@@ -414,7 +414,7 @@ TwoRayGroundPropagationLossModel::DoCalcRxPower (double txPowerDbm,
 
   // Calculate a crossover distance, under which we use Friis
   /*
-   * 
+   *
    * dCross = (4 * pi * Ht * Hr) / lambda
    *
    */
@@ -456,7 +456,7 @@ TwoRayGroundPropagationLossModel::DoAssignStreams (int64_t stream)
 NS_OBJECT_ENSURE_REGISTERED (LogDistancePropagationLossModel);
 
 TypeId
-LogDistancePropagationLossModel::GetTypeId (void)
+LogDistancePropagationLossModel::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::LogDistancePropagationLossModel")
     .SetParent<PropagationLossModel> ()
@@ -498,7 +498,7 @@ LogDistancePropagationLossModel::SetReference (double referenceDistance, double 
   m_referenceLoss = referenceLoss;
 }
 double
-LogDistancePropagationLossModel::GetPathLossExponent (void) const
+LogDistancePropagationLossModel::GetPathLossExponent () const
 {
   return m_exponent;
 }
@@ -545,7 +545,7 @@ LogDistancePropagationLossModel::DoAssignStreams (int64_t stream)
 NS_OBJECT_ENSURE_REGISTERED (ThreeLogDistancePropagationLossModel);
 
 TypeId
-ThreeLogDistancePropagationLossModel::GetTypeId (void)
+ThreeLogDistancePropagationLossModel::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::ThreeLogDistancePropagationLossModel")
     .SetParent<PropagationLossModel> ()
@@ -595,7 +595,7 @@ ThreeLogDistancePropagationLossModel::ThreeLogDistancePropagationLossModel ()
 {
 }
 
-double 
+double
 ThreeLogDistancePropagationLossModel::DoCalcRxPower (double txPowerDbm,
                                                      Ptr<MobilityModel> a,
                                                      Ptr<MobilityModel> b) const
@@ -647,7 +647,7 @@ ThreeLogDistancePropagationLossModel::DoAssignStreams (int64_t stream)
 NS_OBJECT_ENSURE_REGISTERED (NakagamiPropagationLossModel);
 
 TypeId
-NakagamiPropagationLossModel::GetTypeId (void)
+NakagamiPropagationLossModel::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::NakagamiPropagationLossModel")
     .SetParent<PropagationLossModel> ()
@@ -761,8 +761,8 @@ NakagamiPropagationLossModel::DoAssignStreams (int64_t stream)
 
 NS_OBJECT_ENSURE_REGISTERED (FixedRssLossModel);
 
-TypeId 
-FixedRssLossModel::GetTypeId (void)
+TypeId
+FixedRssLossModel::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::FixedRssLossModel")
     .SetParent<PropagationLossModel> ()
@@ -808,8 +808,8 @@ FixedRssLossModel::DoAssignStreams (int64_t stream)
 
 NS_OBJECT_ENSURE_REGISTERED (MatrixPropagationLossModel);
 
-TypeId 
-MatrixPropagationLossModel::GetTypeId (void)
+TypeId
+MatrixPropagationLossModel::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::MatrixPropagationLossModel")
     .SetParent<PropagationLossModel> ()
@@ -832,7 +832,7 @@ MatrixPropagationLossModel::~MatrixPropagationLossModel ()
 {
 }
 
-void 
+void
 MatrixPropagationLossModel::SetDefaultLoss (double loss)
 {
   m_default = loss;
@@ -841,7 +841,7 @@ MatrixPropagationLossModel::SetDefaultLoss (double loss)
 void
 MatrixPropagationLossModel::SetLoss (Ptr<MobilityModel> ma, Ptr<MobilityModel> mb, double loss, bool symmetric)
 {
-  NS_ASSERT (ma != 0 && mb != 0);
+  NS_ASSERT (ma && mb);
 
   MobilityPair p = std::make_pair (ma, mb);
   std::map<MobilityPair, double>::iterator i = m_loss.find (p);
@@ -861,7 +861,7 @@ MatrixPropagationLossModel::SetLoss (Ptr<MobilityModel> ma, Ptr<MobilityModel> m
     }
 }
 
-double 
+double
 MatrixPropagationLossModel::DoCalcRxPower (double txPowerDbm,
                                            Ptr<MobilityModel> a,
                                            Ptr<MobilityModel> b) const
@@ -889,7 +889,7 @@ MatrixPropagationLossModel::DoAssignStreams (int64_t stream)
 NS_OBJECT_ENSURE_REGISTERED (RangePropagationLossModel);
 
 TypeId
-RangePropagationLossModel::GetTypeId (void)
+RangePropagationLossModel::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::RangePropagationLossModel")
     .SetParent<PropagationLossModel> ()

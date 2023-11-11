@@ -42,21 +42,6 @@ MuEdcaParameterSet::ElementIdExt () const
   return IE_EXT_MU_EDCA_PARAMETER_SET;
 }
 
-bool
-MuEdcaParameterSet::IsPresent (void) const
-{
-  auto timerNotNull = [](const ParameterRecord &r) { return r.muEdcaTimer != 0; };
-
-  bool isPresent = std::all_of (m_records.begin (), m_records.end (), timerNotNull);
-  if (isPresent)
-    {
-      return true;
-    }
-  NS_ABORT_MSG_IF (std::any_of (m_records.begin (), m_records.end (), timerNotNull),
-                   "MU EDCA Timers must be either all zero or all non-zero.");
-  return false;
-}
-
 void
 MuEdcaParameterSet::SetQosInfo (uint8_t qosInfo)
 {
@@ -112,7 +97,7 @@ MuEdcaParameterSet::SetMuEdcaTimer (uint8_t aci, Time timer)
 }
 
 uint8_t
-MuEdcaParameterSet::GetQosInfo (void) const
+MuEdcaParameterSet::GetQosInfo () const
 {
   return m_qosInfo;
 }
@@ -147,51 +132,27 @@ MuEdcaParameterSet::GetMuEdcaTimer (uint8_t aci) const
   return MicroSeconds (m_records[aci].muEdcaTimer * 8192);
 }
 
-uint8_t
+uint16_t
 MuEdcaParameterSet::GetInformationFieldSize () const
 {
-  NS_ASSERT (IsPresent ());
   // ElementIdExt (1) + QoS Info (1) + MU Parameter Records (4 * 3)
   return 14;
-}
-
-Buffer::Iterator
-MuEdcaParameterSet::Serialize (Buffer::Iterator i) const
-{
-  if (!IsPresent ())
-    {
-      return i;
-    }
-  return WifiInformationElement::Serialize (i);
-}
-
-uint16_t
-MuEdcaParameterSet::GetSerializedSize () const
-{
-  if (!IsPresent ())
-    {
-      return 0;
-    }
-  return WifiInformationElement::GetSerializedSize ();
 }
 
 void
 MuEdcaParameterSet::SerializeInformationField (Buffer::Iterator start) const
 {
-  if (IsPresent ())
+  start.WriteU8 (GetQosInfo ());
+  for (const auto& record : m_records)
     {
-      start.WriteU8 (GetQosInfo ());
-      for (const auto& record : m_records)
-        {
-          start.WriteU8 (record.aifsnField);
-          start.WriteU8 (record.cwMinMax);
-          start.WriteU8 (record.muEdcaTimer);
-        }
+      start.WriteU8 (record.aifsnField);
+      start.WriteU8 (record.cwMinMax);
+      start.WriteU8 (record.muEdcaTimer);
     }
 }
 
-uint8_t
-MuEdcaParameterSet::DeserializeInformationField (Buffer::Iterator start, uint8_t length)
+uint16_t
+MuEdcaParameterSet::DeserializeInformationField (Buffer::Iterator start, uint16_t length)
 {
   Buffer::Iterator i = start;
   m_qosInfo = i.ReadU8 ();

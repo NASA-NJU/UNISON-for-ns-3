@@ -70,18 +70,17 @@ public:
    * \param ecnCapable ECN capable
    */
   CodelQueueDiscTestItem (Ptr<Packet> p, const Address & addr, bool ecnCapable);
-  virtual ~CodelQueueDiscTestItem ();
+  ~CodelQueueDiscTestItem () override;
 
-  // Delete copy constructor and assignment operator to avoid misuse
+  // Delete default constructor, copy constructor and assignment operator to avoid misuse
+  CodelQueueDiscTestItem () = delete;
   CodelQueueDiscTestItem (const CodelQueueDiscTestItem &) = delete;
   CodelQueueDiscTestItem & operator = (const CodelQueueDiscTestItem &) = delete;
 
-  virtual void AddHeader (void);
-  virtual bool Mark(void);
+  void AddHeader () override;
+  bool Mark() override;
 
 private:
-  CodelQueueDiscTestItem ();
-  
   bool m_ecnCapablePacket; ///< ECN capable packet?
 };
 
@@ -96,12 +95,12 @@ CodelQueueDiscTestItem::~CodelQueueDiscTestItem ()
 }
 
 void
-CodelQueueDiscTestItem::AddHeader (void)
+CodelQueueDiscTestItem::AddHeader ()
 {
 }
 
 bool
-CodelQueueDiscTestItem::Mark (void)
+CodelQueueDiscTestItem::Mark ()
 {
   if (m_ecnCapablePacket)
     {
@@ -125,7 +124,7 @@ public:
    * \param mode the mode
    */
   CoDelQueueDiscBasicEnqueueDequeue (QueueSizeUnit mode);
-  virtual void DoRun (void);
+  void DoRun () override;
 
 private:
   QueueSizeUnit m_mode; ///< mode
@@ -138,13 +137,13 @@ CoDelQueueDiscBasicEnqueueDequeue::CoDelQueueDiscBasicEnqueueDequeue (QueueSizeU
 }
 
 void
-CoDelQueueDiscBasicEnqueueDequeue::DoRun (void)
+CoDelQueueDiscBasicEnqueueDequeue::DoRun ()
 {
   Ptr<CoDelQueueDisc> queue = CreateObject<CoDelQueueDisc> ();
 
   uint32_t pktSize = 1000;
   uint32_t modeSize = 0;
-  
+
   Address dest;
 
   NS_TEST_ASSERT_MSG_EQ (queue->SetAttributeFailSafe ("MinBytes", UintegerValue (pktSize)), true,
@@ -166,7 +165,12 @@ CoDelQueueDiscBasicEnqueueDequeue::DoRun (void)
                          true, "Verify that we can actually set the attribute MaxSize");
   queue->Initialize ();
 
-  Ptr<Packet> p1, p2, p3, p4, p5, p6;
+  Ptr<Packet> p1;
+  Ptr<Packet> p2;
+  Ptr<Packet> p3;
+  Ptr<Packet> p4;
+  Ptr<Packet> p5;
+  Ptr<Packet> p6;
   p1 = Create<Packet> (pktSize);
   p2 = Create<Packet> (pktSize);
   p3 = Create<Packet> (pktSize);
@@ -194,37 +198,37 @@ CoDelQueueDiscBasicEnqueueDequeue::DoRun (void)
   Ptr<QueueDiscItem> item;
 
   item = queue->Dequeue ();
-  NS_TEST_ASSERT_MSG_EQ ((item != 0), true, "I want to remove the first packet");
+  NS_TEST_ASSERT_MSG_NE (item, nullptr, "I want to remove the first packet");
   NS_TEST_ASSERT_MSG_EQ (queue->GetCurrentSize().GetValue (), 5 * modeSize, "There should be five packets in queue");
   NS_TEST_ASSERT_MSG_EQ (item->GetPacket ()->GetUid (), p1->GetUid (), "was this the first packet ?");
 
   item = queue->Dequeue ();
-  NS_TEST_ASSERT_MSG_EQ ((item != 0), true, "I want to remove the second packet");
+  NS_TEST_ASSERT_MSG_NE (item, nullptr, "I want to remove the second packet");
   NS_TEST_ASSERT_MSG_EQ (queue->GetCurrentSize().GetValue (), 4 * modeSize, "There should be four packets in queue");
   NS_TEST_ASSERT_MSG_EQ (item->GetPacket ()->GetUid (), p2->GetUid (), "Was this the second packet ?");
 
   item = queue->Dequeue ();
-  NS_TEST_ASSERT_MSG_EQ ((item != 0), true, "I want to remove the third packet");
+  NS_TEST_ASSERT_MSG_NE (item, nullptr, "I want to remove the third packet");
   NS_TEST_ASSERT_MSG_EQ (queue->GetCurrentSize().GetValue (), 3 * modeSize, "There should be three packets in queue");
   NS_TEST_ASSERT_MSG_EQ (item->GetPacket ()->GetUid (), p3->GetUid (), "Was this the third packet ?");
 
   item = queue->Dequeue ();
-  NS_TEST_ASSERT_MSG_EQ ((item != 0), true, "I want to remove the forth packet");
+  NS_TEST_ASSERT_MSG_NE (item, nullptr, "I want to remove the forth packet");
   NS_TEST_ASSERT_MSG_EQ (queue->GetCurrentSize().GetValue (), 2 * modeSize, "There should be two packets in queue");
   NS_TEST_ASSERT_MSG_EQ (item->GetPacket ()->GetUid (), p4->GetUid (), "Was this the fourth packet ?");
 
   item = queue->Dequeue ();
-  NS_TEST_ASSERT_MSG_EQ ((item != 0), true, "I want to remove the fifth packet");
+  NS_TEST_ASSERT_MSG_NE (item, nullptr, "I want to remove the fifth packet");
   NS_TEST_ASSERT_MSG_EQ (queue->GetCurrentSize().GetValue (), 1 * modeSize, "There should be one packet in queue");
   NS_TEST_ASSERT_MSG_EQ (item->GetPacket ()->GetUid (), p5->GetUid (), "Was this the fifth packet ?");
 
   item = queue->Dequeue ();
-  NS_TEST_ASSERT_MSG_EQ ((item != 0), true, "I want to remove the last packet");
+  NS_TEST_ASSERT_MSG_NE (item, nullptr, "I want to remove the last packet");
   NS_TEST_ASSERT_MSG_EQ (queue->GetCurrentSize().GetValue (), 0 * modeSize, "There should be zero packet in queue");
   NS_TEST_ASSERT_MSG_EQ (item->GetPacket ()->GetUid (), p6->GetUid (), "Was this the sixth packet ?");
 
   item = queue->Dequeue ();
-  NS_TEST_ASSERT_MSG_EQ ((item == 0), true, "There are really no packets in queue");
+  NS_TEST_ASSERT_MSG_EQ (item, nullptr, "There are really no packets in queue");
 
   NS_TEST_ASSERT_MSG_EQ (queue->GetStats ().GetNDroppedPackets (CoDelQueueDisc::TARGET_EXCEEDED_DROP), 0,
                          "There should be no packet drops according to CoDel algorithm");
@@ -245,7 +249,7 @@ public:
    * \param mode the mode
    */
   CoDelQueueDiscBasicOverflow (QueueSizeUnit mode);
-  virtual void DoRun (void);
+  void DoRun () override;
 
 private:
   /**
@@ -265,7 +269,7 @@ CoDelQueueDiscBasicOverflow::CoDelQueueDiscBasicOverflow (QueueSizeUnit mode)
 }
 
 void
-CoDelQueueDiscBasicOverflow::DoRun (void)
+CoDelQueueDiscBasicOverflow::DoRun ()
 {
   Ptr<CoDelQueueDisc> queue = CreateObject<CoDelQueueDisc> ();
   uint32_t pktSize = 1000;
@@ -282,7 +286,9 @@ CoDelQueueDiscBasicOverflow::DoRun (void)
       modeSize = 1;
     }
 
-  Ptr<Packet> p1, p2, p3;
+  Ptr<Packet> p1;
+  Ptr<Packet> p2;
+  Ptr<Packet> p3;
   p1 = Create<Packet> (pktSize);
   p2 = Create<Packet> (pktSize);
   p3 = Create<Packet> (pktSize);
@@ -324,7 +330,7 @@ class CoDelQueueDiscNewtonStepTest : public TestCase
 {
 public:
   CoDelQueueDiscNewtonStepTest ();
-  virtual void DoRun (void);
+  void DoRun () override;
 };
 
 CoDelQueueDiscNewtonStepTest::CoDelQueueDiscNewtonStepTest ()
@@ -333,7 +339,7 @@ CoDelQueueDiscNewtonStepTest::CoDelQueueDiscNewtonStepTest ()
 }
 
 void
-CoDelQueueDiscNewtonStepTest::DoRun (void)
+CoDelQueueDiscNewtonStepTest::DoRun ()
 {
   Ptr<CoDelQueueDisc> queue = CreateObject<CoDelQueueDisc> ();
 
@@ -362,7 +368,7 @@ class CoDelQueueDiscControlLawTest : public TestCase
 {
 public:
   CoDelQueueDiscControlLawTest ();
-  virtual void DoRun (void);
+  void DoRun () override;
   /**
    * Codel control law function
    * \param t
@@ -388,7 +394,7 @@ CoDelQueueDiscControlLawTest::_codel_control_law (uint32_t t, uint32_t interval,
 // End Linux borrrow
 
 void
-CoDelQueueDiscControlLawTest::DoRun (void)
+CoDelQueueDiscControlLawTest::DoRun ()
 {
   Ptr<CoDelQueueDisc> queue = CreateObject<CoDelQueueDisc> ();
 
@@ -401,8 +407,8 @@ CoDelQueueDiscControlLawTest::DoRun (void)
       for (uint16_t recInvSqrt = 0xff; recInvSqrt > 0; recInvSqrt /= 2)
         {
           codelTimeVal = queue->Time2CoDel (timeVal);
-          uint32_t ns3Result = queue->ControlLaw (codelTimeVal, interval, recInvSqrt); 
-          uint32_t linuxResult = _codel_control_law (codelTimeVal, interval, recInvSqrt); 
+          uint32_t ns3Result = queue->ControlLaw (codelTimeVal, interval, recInvSqrt);
+          uint32_t linuxResult = _codel_control_law (codelTimeVal, interval, recInvSqrt);
           NS_TEST_ASSERT_MSG_EQ (ns3Result, linuxResult, "Linux result for ControlLaw should equal ns-3 result");
         }
     }
@@ -423,7 +429,7 @@ public:
    * \param mode the mode
    */
   CoDelQueueDiscBasicDrop (QueueSizeUnit mode);
-  virtual void DoRun (void);
+  void DoRun () override;
 
 private:
   /**
@@ -462,7 +468,7 @@ CoDelQueueDiscBasicDrop::DropNextTracer ([[maybe_unused]] uint32_t oldVal, [[may
 }
 
 void
-CoDelQueueDiscBasicDrop::DoRun (void)
+CoDelQueueDiscBasicDrop::DoRun ()
 {
   Ptr<CoDelQueueDisc> queue = CreateObject<CoDelQueueDisc> ();
   uint32_t pktSize = 1000;
@@ -592,7 +598,7 @@ public:
    * \param mode the mode
    */
   CoDelQueueDiscBasicMark (QueueSizeUnit mode);
-  virtual void DoRun (void);
+  void DoRun () override;
 
 private:
   /**
@@ -635,7 +641,7 @@ CoDelQueueDiscBasicMark::DropNextTracer ([[maybe_unused]] uint32_t oldVal, [[may
 }
 
 void
-CoDelQueueDiscBasicMark::DoRun (void)
+CoDelQueueDiscBasicMark::DoRun ()
 {
   // Test is divided into 4 sub test cases:
   // 1) Packets are not ECN capable.
@@ -663,7 +669,7 @@ CoDelQueueDiscBasicMark::DoRun (void)
                          true, "Verify that we can actually set the attribute MaxSize");
   NS_TEST_ASSERT_MSG_EQ (queue->SetAttributeFailSafe ("UseEcn", BooleanValue (true)),
                          true, "Verify that we can actually set the attribute UseEcn");
-  
+
   queue->Initialize ();
 
   // Not-ECT traffic to induce packet drop
@@ -721,7 +727,7 @@ CoDelQueueDiscBasicMark::DoRun (void)
                          true, "Verify that we can actually set the attribute UseEcn");
   NS_TEST_ASSERT_MSG_EQ (queue->SetAttributeFailSafe ("CeThreshold", TimeValue (MilliSeconds (2))),
                          true, "Verify that we can actually set the attribute CeThreshold");
-  
+
   queue->Initialize ();
 
   // First 3 packets in the queue are ecnCapable
@@ -963,7 +969,7 @@ CoDelQueueDiscBasicMark::Dequeue (Ptr<CoDelQueueDisc> queue, uint32_t modeSize, 
                 }
             }
           else if (initialCeThreshMarkCount > 0 && currentTime < queue->GetInterval ())
-            { 
+            {
               if (initialCeThreshMarkCount < 2)
                 {
                   currentDropCount = queue->GetStats ().GetNDroppedPackets (CoDelQueueDisc::TARGET_EXCEEDED_DROP);

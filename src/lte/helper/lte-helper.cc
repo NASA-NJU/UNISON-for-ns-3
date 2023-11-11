@@ -18,7 +18,7 @@
  * Author: Nicola Baldo <nbaldo@cttc.es> (re-wrote from scratch this helper)
  *         Giuseppe Piro <g.piro@poliba.it> (parts of the PHY & channel  creation & configuration copied from the GSoC 2011 code)
  * Modified by: Danilo Abrignani <danilo.abrignani@unibo.it> (Carrier Aggregation - GSoC 2015)
- *              Biljana Bojovic <biljana.bojovic@cttc.es> (Carrier Aggregation) 
+ *              Biljana Bojovic <biljana.bojovic@cttc.es> (Carrier Aggregation)
  */
 
 #include "lte-helper.h"
@@ -72,7 +72,7 @@ NS_LOG_COMPONENT_DEFINE ("LteHelper");
 
 NS_OBJECT_ENSURE_REGISTERED (LteHelper);
 
-LteHelper::LteHelper (void)
+LteHelper::LteHelper ()
   : m_fadingStreamsAssigned (false),
     m_imsiCounter (0),
     m_cellIdCounter {1}
@@ -85,8 +85,8 @@ LteHelper::LteHelper (void)
   m_channelFactory.SetTypeId (MultiModelSpectrumChannel::GetTypeId ());
 }
 
-void 
-LteHelper::DoInitialize (void)
+void
+LteHelper::DoInitialize ()
 {
   NS_LOG_FUNCTION (this);
   ChannelModelInitialization ();
@@ -98,12 +98,12 @@ LteHelper::DoInitialize (void)
 
 }
 
-LteHelper::~LteHelper (void)
+LteHelper::~LteHelper ()
 {
   NS_LOG_FUNCTION (this);
 }
 
-TypeId LteHelper::GetTypeId (void)
+TypeId LteHelper::GetTypeId ()
 {
   static TypeId
     tid =
@@ -152,7 +152,7 @@ TypeId LteHelper::GetTypeId (void)
     .AddAttribute ("UseIdealRrc",
                    "If true, LteRrcProtocolIdeal will be used for RRC signaling. "
                    "If false, LteRrcProtocolReal will be used.",
-                   BooleanValue (true), 
+                   BooleanValue (true),
                    MakeBooleanAccessor (&LteHelper::m_useIdealRrc),
                    MakeBooleanChecker ())
     .AddAttribute ("AnrEnabled",
@@ -161,8 +161,8 @@ TypeId LteHelper::GetTypeId (void)
                    MakeBooleanAccessor (&LteHelper::m_isAnrEnabled),
                    MakeBooleanChecker ())
     .AddAttribute ("UsePdschForCqiGeneration",
-                   "If true, DL-CQI will be calculated from PDCCH as signal and PDSCH as interference "
-                   "If false, DL-CQI will be calculated from PDCCH as signal and PDCCH as interference  ",
+                   "If true, DL-CQI will be calculated from PDCCH as signal and PDSCH as interference. "
+                   "If false, DL-CQI will be calculated from PDCCH as signal and PDCCH as interference.",
                    BooleanValue (true),
                    MakeBooleanAccessor (&LteHelper::m_usePdschForCqiGeneration),
                    MakeBooleanChecker ())
@@ -183,14 +183,14 @@ TypeId LteHelper::GetTypeId (void)
                                        &LteHelper::GetUeComponentCarrierManagerType),
                    MakeStringChecker ())
     .AddAttribute ("UseCa",
-                   "If true, Carrier Aggregation feature is enabled and a valid Component Carrier Map is expected."
+                   "If true, Carrier Aggregation feature is enabled and a valid Component Carrier Map is expected. "
                    "If false, single carrier simulation.",
                    BooleanValue (false),
                    MakeBooleanAccessor (&LteHelper::m_useCa),
                    MakeBooleanChecker ())
     .AddAttribute ("NumberOfComponentCarriers",
-                   "Set the number of Component carrier to use "
-                   "If it is more than one and m_useCa is false, it will raise an error ",
+                   "Set the number of Component carrier to use. "
+                   "If it is more than one and m_useCa is false, it will raise an error.",
                    UintegerValue (1),
                    MakeUintegerAccessor (&LteHelper::m_noOfCcs),
                    MakeUintegerChecker<uint16_t> (MIN_NO_CC, MAX_NO_CC))
@@ -202,26 +202,26 @@ void
 LteHelper::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
-  m_downlinkChannel = 0;
-  m_uplinkChannel = 0;
+  m_downlinkChannel = nullptr;
+  m_uplinkChannel = nullptr;
   m_componentCarrierPhyParams.clear();
   Object::DoDispose ();
 }
 
 Ptr<SpectrumChannel>
-LteHelper::GetUplinkSpectrumChannel (void) const
+LteHelper::GetUplinkSpectrumChannel () const
 {
   return m_uplinkChannel;
 }
 
 Ptr<SpectrumChannel>
-LteHelper::GetDownlinkSpectrumChannel (void) const
+LteHelper::GetDownlinkSpectrumChannel () const
 {
   return m_downlinkChannel;
 }
 
 void
-LteHelper::ChannelModelInitialization (void)
+LteHelper::ChannelModelInitialization ()
 {
   // Channel Object (i.e. Ptr<SpectrumChannel>) are within a vector
   // PathLossModel Objects are vectors --> in InstallSingleEnb we will set the frequency
@@ -232,7 +232,7 @@ LteHelper::ChannelModelInitialization (void)
 
   m_downlinkPathlossModel = m_pathlossModelFactory.Create ();
   Ptr<SpectrumPropagationLossModel> dlSplm = m_downlinkPathlossModel->GetObject<SpectrumPropagationLossModel> ();
-  if (dlSplm != 0)
+  if (dlSplm)
     {
       NS_LOG_LOGIC (this << " using a SpectrumPropagationLossModel in DL");
       m_downlinkChannel->AddSpectrumPropagationLossModel (dlSplm);
@@ -241,13 +241,13 @@ LteHelper::ChannelModelInitialization (void)
     {
       NS_LOG_LOGIC (this << " using a PropagationLossModel in DL");
       Ptr<PropagationLossModel> dlPlm = m_downlinkPathlossModel->GetObject<PropagationLossModel> ();
-      NS_ASSERT_MSG (dlPlm != 0, " " << m_downlinkPathlossModel << " is neither PropagationLossModel nor SpectrumPropagationLossModel");
+      NS_ASSERT_MSG (dlPlm, " " << m_downlinkPathlossModel << " is neither PropagationLossModel nor SpectrumPropagationLossModel");
       m_downlinkChannel->AddPropagationLossModel (dlPlm);
     }
 
   m_uplinkPathlossModel = m_pathlossModelFactory.Create ();
   Ptr<SpectrumPropagationLossModel> ulSplm = m_uplinkPathlossModel->GetObject<SpectrumPropagationLossModel> ();
-  if (ulSplm != 0)
+  if (ulSplm)
     {
       NS_LOG_LOGIC (this << " using a SpectrumPropagationLossModel in UL");
       m_uplinkChannel->AddSpectrumPropagationLossModel (ulSplm);
@@ -256,7 +256,7 @@ LteHelper::ChannelModelInitialization (void)
     {
       NS_LOG_LOGIC (this << " using a PropagationLossModel in UL");
       Ptr<PropagationLossModel> ulPlm = m_uplinkPathlossModel->GetObject<PropagationLossModel> ();
-      NS_ASSERT_MSG (ulPlm != 0, " " << m_uplinkPathlossModel << " is neither PropagationLossModel nor SpectrumPropagationLossModel");
+      NS_ASSERT_MSG (ulPlm, " " << m_uplinkPathlossModel << " is neither PropagationLossModel nor SpectrumPropagationLossModel");
       m_uplinkChannel->AddPropagationLossModel (ulPlm);
     }
   if (!m_fadingModelType.empty ())
@@ -268,15 +268,15 @@ LteHelper::ChannelModelInitialization (void)
     }
 }
 
-void 
+void
 LteHelper::SetEpcHelper (Ptr<EpcHelper> h)
 {
   NS_LOG_FUNCTION (this << h);
   m_epcHelper = h;
 }
 
-void 
-LteHelper::SetSchedulerType (std::string type) 
+void
+LteHelper::SetSchedulerType (std::string type)
 {
   NS_LOG_FUNCTION (this << type);
   m_schedulerFactory = ObjectFactory ();
@@ -287,9 +287,9 @@ std::string
 LteHelper::GetSchedulerType () const
 {
   return m_schedulerFactory.GetTypeId ().GetName ();
-} 
+}
 
-void 
+void
 LteHelper::SetSchedulerAttribute (std::string n, const AttributeValue &v)
 {
   NS_LOG_FUNCTION (this << n);
@@ -389,7 +389,7 @@ LteHelper::SetPathlossModelType (TypeId type)
   m_pathlossModelFactory.SetTypeId (type);
 }
 
-void 
+void
 LteHelper::SetPathlossModelAttribute (std::string n, const AttributeValue &v)
 {
   NS_LOG_FUNCTION (this << n);
@@ -404,14 +404,14 @@ LteHelper::SetEnbDeviceAttribute (std::string n, const AttributeValue &v)
 }
 
 
-void 
+void
 LteHelper::SetEnbAntennaModelType (std::string type)
 {
   NS_LOG_FUNCTION (this);
   m_enbAntennaModelFactory.SetTypeId (type);
 }
 
-void 
+void
 LteHelper::SetEnbAntennaModelAttribute (std::string n, const AttributeValue &v)
 {
   NS_LOG_FUNCTION (this);
@@ -425,22 +425,22 @@ LteHelper::SetUeDeviceAttribute (std::string n, const AttributeValue &v)
   m_ueNetDeviceFactory.Set (n, v);
 }
 
-void 
+void
 LteHelper::SetUeAntennaModelType (std::string type)
 {
   NS_LOG_FUNCTION (this);
   m_ueAntennaModelFactory.SetTypeId (type);
 }
 
-void 
+void
 LteHelper::SetUeAntennaModelAttribute (std::string n, const AttributeValue &v)
 {
   NS_LOG_FUNCTION (this);
   m_ueAntennaModelFactory.Set (n, v);
 }
 
-void 
-LteHelper::SetFadingModel (std::string type) 
+void
+LteHelper::SetFadingModel (std::string type)
 {
   NS_LOG_FUNCTION (this << type);
   m_fadingModelType = type;
@@ -451,20 +451,20 @@ LteHelper::SetFadingModel (std::string type)
     }
 }
 
-void 
+void
 LteHelper::SetFadingModelAttribute (std::string n, const AttributeValue &v)
 {
   m_fadingModelFactory.Set (n, v);
 }
 
-void 
-LteHelper::SetSpectrumChannelType (std::string type) 
+void
+LteHelper::SetSpectrumChannelType (std::string type)
 {
   NS_LOG_FUNCTION (this << type);
   m_channelFactory.SetTypeId (type);
 }
 
-void 
+void
 LteHelper::SetSpectrumChannelAttribute (std::string n, const AttributeValue &v)
 {
   m_channelFactory.Set (n, v);
@@ -587,7 +587,7 @@ LteHelper::InstallSingleEnbDevice (Ptr<Node> n)
 
   Ptr<LteEnbRrc> rrc = CreateObject<LteEnbRrc> ();
   Ptr<LteEnbComponentCarrierManager> ccmEnbManager = m_enbComponentCarrierManagerFactory.Create<LteEnbComponentCarrierManager> ();
-  
+
   //ComponentCarrierManager SAP
   rrc->SetLteCcmRrcSapProvider (ccmEnbManager->GetLteCcmRrcSapProvider ());
   ccmEnbManager->SetLteCcmRrcSapUser (rrc->GetLteCcmRrcSapUser ());
@@ -614,7 +614,7 @@ LteHelper::InstallSingleEnbDevice (Ptr<Node> n)
       rrcProtocol->SetCellId (cellId);
     }
 
-  if (m_epcHelper != 0)
+  if (m_epcHelper)
     {
       EnumValue epsBearerToRlcMapping;
       rrc->GetAttribute ("EpsBearerToRlcMapping", epsBearerToRlcMapping);
@@ -627,7 +627,7 @@ LteHelper::InstallSingleEnbDevice (Ptr<Node> n)
 
   rrc->SetLteHandoverManagementSapProvider (handoverAlgorithm->GetLteHandoverManagementSapProvider ());
   handoverAlgorithm->SetLteHandoverManagementSapUser (rrc->GetLteHandoverManagementSapUser ());
- 
+
   // This RRC attribute is used to connect each new RLC instance with the MAC layer
   // (for function such as TransmitPdu, ReportBufferStatusReport).
   // Since in this new architecture, the component carrier manager acts a proxy, it
@@ -688,7 +688,7 @@ LteHelper::InstallSingleEnbDevice (Ptr<Node> n)
   dev->SetAttribute ("LteEnbComponentCarrierManager", PointerValue (ccmEnbManager));
   dev->SetCcMap (ccMap);
   std::map<uint8_t,Ptr<ComponentCarrierBaseStation> >::iterator it = ccMap.begin ();
-  dev->SetAttribute ("LteEnbRrc", PointerValue (rrc)); 
+  dev->SetAttribute ("LteEnbRrc", PointerValue (rrc));
   dev->SetAttribute ("LteHandoverAlgorithm", PointerValue (handoverAlgorithm));
   dev->SetAttribute ("LteFfrAlgorithm", PointerValue (DynamicCast<ComponentCarrierEnb> (it->second)->GetFfrAlgorithm ()));
 
@@ -736,12 +736,12 @@ LteHelper::InstallSingleEnbDevice (Ptr<Node> n)
       m_uplinkChannel->AddRx (DynamicCast<ComponentCarrierEnb>(it->second)->GetPhy ()->GetUlSpectrumPhy ());
     }
 
-  if (m_epcHelper != 0)
+  if (m_epcHelper)
     {
       NS_LOG_INFO ("adding this eNB to the EPC");
       m_epcHelper->AddEnb (n, dev, dev->GetCellIds ());
       Ptr<EpcEnbApplication> enbApp = n->GetApplication (0)->GetObject<EpcEnbApplication> ();
-      NS_ASSERT_MSG (enbApp != 0, "cannot retrieve EpcEnbApplication");
+      NS_ASSERT_MSG (enbApp, "cannot retrieve EpcEnbApplication");
 
       // S1 SAPs
       rrc->SetS1SapProvider (enbApp->GetS1SapProvider ());
@@ -883,12 +883,12 @@ LteHelper::InstallSingleUeDevice (Ptr<Node> n)
       rrc->SetLteUeRrcSapUser (rrcProtocol->GetLteUeRrcSapUser ());
     }
 
-  if (m_epcHelper != 0)
+  if (m_epcHelper)
     {
       rrc->SetUseRlcSm (false);
     }
   Ptr<EpcUeNas> nas = CreateObject<EpcUeNas> ();
- 
+
   nas->SetAsSapProvider (rrc->GetAsSapProvider ());
   rrc->SetAsSapUser (nas->GetAsSapUser ());
 
@@ -944,7 +944,7 @@ LteHelper::InstallSingleUeDevice (Ptr<Node> n)
 
   nas->SetForwardUpCallback (MakeCallback (&LteUeNetDevice::Receive, dev));
 
-  if (m_epcHelper != 0)
+  if (m_epcHelper)
     {
       m_epcHelper->AddUe (dev, dev->GetImsi ());
     }
@@ -970,20 +970,20 @@ LteHelper::Attach (Ptr<NetDevice> ueDevice)
 {
   NS_LOG_FUNCTION (this);
 
-  if (m_epcHelper == 0)
+  if (!m_epcHelper)
     {
       NS_FATAL_ERROR ("This function is not valid without properly configured EPC");
     }
 
   Ptr<LteUeNetDevice> ueLteDevice = ueDevice->GetObject<LteUeNetDevice> ();
-  if (ueLteDevice == 0)
+  if (!ueLteDevice)
     {
       NS_FATAL_ERROR ("The passed NetDevice must be an LteUeNetDevice");
     }
 
   // initiate cell selection
   Ptr<EpcUeNas> ueNas = ueLteDevice->GetNas ();
-  NS_ASSERT (ueNas != 0);
+  NS_ASSERT (ueNas);
   uint32_t dlEarfcn = ueLteDevice->GetDlEarfcn ();
   ueNas->StartCellSelection (dlEarfcn);
 
@@ -1019,14 +1019,14 @@ LteHelper::Attach (Ptr<NetDevice> ueDevice, Ptr<NetDevice> enbDevice, uint8_t co
   Ptr<ComponentCarrierEnb> componentCarrier = DynamicCast<ComponentCarrierEnb> (enbLteDevice->GetCcMap ().at (componentCarrierId));
   ueNas->Connect (componentCarrier->GetCellId (), componentCarrier->GetDlEarfcn ());
 
-  if (m_epcHelper != 0)
+  if (m_epcHelper)
     {
       // activate default EPS bearer
       m_epcHelper->ActivateEpsBearer (ueDevice, ueLteDevice->GetImsi (), EpcTft::Default (), EpsBearer (EpsBearer::NGBR_VIDEO_TCP_DEFAULT));
     }
 
-  // tricks needed for the simplified LTE-only simulations 
-  if (m_epcHelper == 0)
+  // tricks needed for the simplified LTE-only simulations
+  if (!m_epcHelper)
     {
       ueDevice->GetObject<LteUeNetDevice> ()->SetTargetEnb (enbDevice->GetObject<LteEnbNetDevice> ());
     }
@@ -1060,7 +1060,7 @@ LteHelper::AttachToClosestEnb (Ptr<NetDevice> ueDevice, NetDeviceContainer enbDe
           closestEnbDevice = *i;
         }
     }
-  NS_ASSERT (closestEnbDevice != 0);
+  NS_ASSERT (closestEnbDevice);
   Attach (ueDevice, closestEnbDevice);
 }
 
@@ -1082,7 +1082,7 @@ LteHelper::ActivateDedicatedEpsBearer (Ptr<NetDevice> ueDevice, EpsBearer bearer
 {
   NS_LOG_FUNCTION (this);
 
-  NS_ASSERT_MSG (m_epcHelper != 0, "dedicated EPS bearers cannot be set up when the EPC is not used");
+  NS_ASSERT_MSG (m_epcHelper, "dedicated EPS bearers cannot be set up when the EPC is not used");
 
   uint64_t imsi = ueDevice->GetObject<LteUeNetDevice> ()->GetImsi ();
   uint8_t bearerId = m_epcHelper->ActivateEpsBearer (ueDevice, imsi, tft, bearer);
@@ -1170,7 +1170,7 @@ DrbActivator::ActivateCallback (Ptr<DrbActivator> a, std::string context, uint64
 
 void
 DrbActivator::ActivateDrb (uint64_t imsi, uint16_t cellId, uint16_t rnti)
-{ 
+{
   NS_LOG_FUNCTION (this << imsi << cellId << rnti << m_active);
   if ((!m_active) && (imsi == m_imsi))
     {
@@ -1194,11 +1194,11 @@ DrbActivator::ActivateDrb (uint64_t imsi, uint16_t cellId, uint16_t rnti)
 }
 
 
-void 
+void
 LteHelper::ActivateDataRadioBearer (Ptr<NetDevice> ueDevice, EpsBearer bearer)
 {
   NS_LOG_FUNCTION (this << ueDevice);
-  NS_ASSERT_MSG (m_epcHelper == 0, "this method must not be used when the EPC is being used");
+  NS_ASSERT_MSG (!m_epcHelper, "this method must not be used when the EPC is being used");
 
   // Normally it is the EPC that takes care of activating DRBs
   // when the UE gets connected. When the EPC is not used, we achieve
@@ -1209,7 +1209,7 @@ LteHelper::ActivateDataRadioBearer (Ptr<NetDevice> ueDevice, EpsBearer bearer)
   Ptr<LteEnbNetDevice> enbLteDevice = ueDevice->GetObject<LteUeNetDevice> ()->GetTargetEnb ();
 
   std::ostringstream path;
-  path << "/NodeList/" << enbLteDevice->GetNode ()->GetId () 
+  path << "/NodeList/" << enbLteDevice->GetNode ()->GetId ()
        << "/DeviceList/" << enbLteDevice->GetIfIndex ()
        << "/LteEnbRrc/ConnectionEstablished";
   Ptr<DrbActivator> arg = Create<DrbActivator> (ueDevice, bearer);
@@ -1221,7 +1221,7 @@ LteHelper::AddX2Interface (NodeContainer enbNodes)
 {
   NS_LOG_FUNCTION (this);
 
-  NS_ASSERT_MSG (m_epcHelper != 0, "X2 interfaces cannot be set up when the EPC is not used");
+  NS_ASSERT_MSG (m_epcHelper, "X2 interfaces cannot be set up when the EPC is not used");
 
   for (NodeContainer::Iterator i = enbNodes.Begin (); i != enbNodes.End (); ++i)
     {
@@ -1272,7 +1272,7 @@ void
 LteHelper::DeActivateDedicatedEpsBearer (Ptr<NetDevice> ueDevice,Ptr<NetDevice> enbDevice, uint8_t bearerId)
 {
   NS_LOG_FUNCTION (this << ueDevice << bearerId);
-  NS_ASSERT_MSG (m_epcHelper != 0, "Dedicated EPS bearers cannot be de-activated when the EPC is not used");
+  NS_ASSERT_MSG (m_epcHelper, "Dedicated EPS bearers cannot be de-activated when the EPC is not used");
   NS_ASSERT_MSG (bearerId != 1, "Default bearer cannot be de-activated until and unless and UE is released");
 
   DoDeActivateDedicatedEpsBearer (ueDevice, enbDevice, bearerId);
@@ -1309,7 +1309,7 @@ LteHelper::DoComponentCarrierConfigure (uint32_t ulEarfcn, uint32_t dlEarfcn, ui
   m_componentCarrierPhyParams.at (0).SetAsPrimary (true);
 }
 
-void 
+void
 LteHelper::ActivateDataRadioBearer (NetDeviceContainer ueDevices, EpsBearer bearer)
 {
   NS_LOG_FUNCTION (this);
@@ -1320,7 +1320,7 @@ LteHelper::ActivateDataRadioBearer (NetDeviceContainer ueDevices, EpsBearer bear
 }
 
 void
-LteHelper::EnableLogComponents (void)
+LteHelper::EnableLogComponents ()
 {
   LogComponentEnableAll (LOG_PREFIX_TIME);
   LogComponentEnableAll (LOG_PREFIX_FUNC);
@@ -1423,7 +1423,7 @@ LteHelper::EnableLogComponents (void)
 }
 
 void
-LteHelper::EnableTraces (void)
+LteHelper::EnableTraces ()
 {
   EnablePhyTraces ();
   EnableMacTraces ();
@@ -1432,9 +1432,9 @@ LteHelper::EnableTraces (void)
 }
 
 void
-LteHelper::EnableRlcTraces (void)
+LteHelper::EnableRlcTraces ()
 {
-  NS_ASSERT_MSG (m_rlcStats == 0, "please make sure that LteHelper::EnableRlcTraces is called at most once");
+  NS_ASSERT_MSG (!m_rlcStats, "please make sure that LteHelper::EnableRlcTraces is called at most once");
   m_rlcStats = CreateObject<RadioBearerStatsCalculator> ("RLC");
   m_radioBearerStatsConnector.EnableRlcStats (m_rlcStats);
 }
@@ -1443,10 +1443,10 @@ int64_t
 LteHelper::AssignStreams (NetDeviceContainer c, int64_t stream)
 {
   int64_t currentStream = stream;
-  if ((m_fadingModel != 0) && (m_fadingStreamsAssigned == false))
+  if (m_fadingModel && (m_fadingStreamsAssigned == false))
     {
       Ptr<TraceFadingLossModel> tflm = m_fadingModel->GetObject<TraceFadingLossModel> ();
-      if (tflm != 0)
+      if (tflm)
         {
           currentStream += tflm->AssignStreams (currentStream);
           m_fadingStreamsAssigned = true;
@@ -1481,12 +1481,16 @@ LteHelper::AssignStreams (NetDeviceContainer c, int64_t stream)
           currentStream += ueMac->AssignStreams (currentStream);
         }
     }
+  if (m_epcHelper)
+    {
+      currentStream += m_epcHelper->AssignStreams (currentStream);
+    }
   return (currentStream - stream);
 }
 
 
 void
-LteHelper::EnablePhyTraces (void)
+LteHelper::EnablePhyTraces ()
 {
   EnableDlPhyTraces ();
   EnableUlPhyTraces ();
@@ -1497,28 +1501,28 @@ LteHelper::EnablePhyTraces (void)
 }
 
 void
-LteHelper::EnableDlTxPhyTraces (void)
+LteHelper::EnableDlTxPhyTraces ()
 {
   Config::Connect ("/NodeList/*/DeviceList/*/ComponentCarrierMap/*/LteEnbPhy/DlPhyTransmission",
                    MakeBoundCallback (&PhyTxStatsCalculator::DlPhyTransmissionCallback, m_phyTxStats));
 }
 
 void
-LteHelper::EnableUlTxPhyTraces (void)
+LteHelper::EnableUlTxPhyTraces ()
 {
   Config::Connect ("/NodeList/*/DeviceList/*/ComponentCarrierMapUe/*/LteUePhy/UlPhyTransmission",
                    MakeBoundCallback (&PhyTxStatsCalculator::UlPhyTransmissionCallback, m_phyTxStats));
 }
 
 void
-LteHelper::EnableDlRxPhyTraces (void)
+LteHelper::EnableDlRxPhyTraces ()
 {
   Config::Connect ("/NodeList/*/DeviceList/*/ComponentCarrierMapUe/*/LteUePhy/DlSpectrumPhy/DlPhyReception",
                    MakeBoundCallback (&PhyRxStatsCalculator::DlPhyReceptionCallback, m_phyRxStats));
 }
 
 void
-LteHelper::EnableUlRxPhyTraces (void)
+LteHelper::EnableUlRxPhyTraces ()
 {
   Config::Connect ("/NodeList/*/DeviceList/*/ComponentCarrierMap/*/LteEnbPhy/UlSpectrumPhy/UlPhyReception",
                    MakeBoundCallback (&PhyRxStatsCalculator::UlPhyReceptionCallback, m_phyRxStats));
@@ -1526,7 +1530,7 @@ LteHelper::EnableUlRxPhyTraces (void)
 
 
 void
-LteHelper::EnableMacTraces (void)
+LteHelper::EnableMacTraces ()
 {
   EnableDlMacTraces ();
   EnableUlMacTraces ();
@@ -1534,7 +1538,7 @@ LteHelper::EnableMacTraces (void)
 
 
 void
-LteHelper::EnableDlMacTraces (void)
+LteHelper::EnableDlMacTraces ()
 {
   NS_LOG_FUNCTION_NOARGS ();
   Config::Connect ("/NodeList/*/DeviceList/*/ComponentCarrierMap/*/LteEnbMac/DlScheduling",
@@ -1542,7 +1546,7 @@ LteHelper::EnableDlMacTraces (void)
 }
 
 void
-LteHelper::EnableUlMacTraces (void)
+LteHelper::EnableUlMacTraces ()
 {
   NS_LOG_FUNCTION_NOARGS ();
   Config::Connect ("/NodeList/*/DeviceList/*/ComponentCarrierMap/*/LteEnbMac/UlScheduling",
@@ -1550,7 +1554,7 @@ LteHelper::EnableUlMacTraces (void)
 }
 
 void
-LteHelper::EnableDlPhyTraces (void)
+LteHelper::EnableDlPhyTraces ()
 {
   NS_LOG_FUNCTION_NOARGS ();
   Config::Connect ("/NodeList/*/DeviceList/*/ComponentCarrierMapUe/*/LteUePhy/ReportCurrentCellRsrpSinr",
@@ -1558,7 +1562,7 @@ LteHelper::EnableDlPhyTraces (void)
 }
 
 void
-LteHelper::EnableUlPhyTraces (void)
+LteHelper::EnableUlPhyTraces ()
 {
   NS_LOG_FUNCTION_NOARGS ();
   Config::Connect ("/NodeList/*/DeviceList/*/ComponentCarrierMap/*/LteEnbPhy/ReportUeSinr",
@@ -1569,21 +1573,21 @@ LteHelper::EnableUlPhyTraces (void)
 }
 
 Ptr<RadioBearerStatsCalculator>
-LteHelper::GetRlcStats (void)
+LteHelper::GetRlcStats ()
 {
   return m_rlcStats;
 }
 
 void
-LteHelper::EnablePdcpTraces (void)
+LteHelper::EnablePdcpTraces ()
 {
-  NS_ASSERT_MSG (m_pdcpStats == 0, "please make sure that LteHelper::EnablePdcpTraces is called at most once");
+  NS_ASSERT_MSG (!m_pdcpStats, "please make sure that LteHelper::EnablePdcpTraces is called at most once");
   m_pdcpStats = CreateObject<RadioBearerStatsCalculator> ("PDCP");
   m_radioBearerStatsConnector.EnablePdcpStats (m_pdcpStats);
 }
 
 Ptr<RadioBearerStatsCalculator>
-LteHelper::GetPdcpStats (void)
+LteHelper::GetPdcpStats ()
 {
   return m_pdcpStats;
 }

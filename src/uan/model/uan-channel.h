@@ -52,17 +52,17 @@ public:
   typedef std::vector<std::pair<Ptr<UanNetDevice>, Ptr<UanTransducer> > > UanDeviceList;
 
   UanChannel ();           //!< Constructor
-  virtual ~UanChannel ();  //!< Dummy destructor, see DoDispose.
+  ~UanChannel () override;  //!< Dummy destructor, see DoDispose.
 
   /**
    * Register this type.
    * \return The object TypeId.
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   // Inherited methods
-  virtual std::size_t GetNDevices (void) const;
-  virtual Ptr<NetDevice> GetDevice (std::size_t i) const;
+  std::size_t GetNDevices () const override;
+  Ptr<NetDevice> GetDevice (std::size_t i) const override;
 
   /**
    * Send a packet out on the channel.
@@ -109,7 +109,7 @@ public:
 
   /**
    * Clear all pointer references. */
-  void Clear (void);
+  void Clear ();
 
 protected:
   UanDeviceList m_devList;     //!< The list of devices on this channel.
@@ -129,7 +129,7 @@ protected:
    */
   void SendUp (uint32_t i, Ptr<Packet> packet, double rxPowerDb, UanTxMode txMode, UanPdp pdp);
 
-  virtual void DoDispose (void);
+  void DoDispose () override;
 
 };  // class UanChannel
 

@@ -49,16 +49,16 @@ class UanNoiseModelDefault : public UanNoiseModel
 {
 public:
   UanNoiseModelDefault ();           //!< Default constructor.
-  virtual ~UanNoiseModelDefault ();  //!< Dummy destructor, DoDispose.
+  ~UanNoiseModelDefault () override;  //!< Dummy destructor, DoDispose.
 
   /**
    * Register this type.
    * \return The TypeId.
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   // Inherited methods
-  virtual double GetNoiseDbHz (double fKhz) const;
+  double GetNoiseDbHz (double fKhz) const override;
 
 private:
   double m_wind;      //!< Wind speed in m/s.

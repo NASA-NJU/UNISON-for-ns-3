@@ -95,7 +95,7 @@ public:
    *
    * \return Broadcast address.
    */
-  static Mac8Address GetBroadcast (void);
+  static Mac8Address GetBroadcast ();
 
   /**
    * Allocates Mac8Address from 0-254
@@ -107,8 +107,23 @@ public:
    */
   static Mac8Address Allocate ();
 
+  /**
+   * Reset the Mac8Address allocation index.
+   *
+   * This function resets (to zero) the global integer
+   * that is used for unique address allocation.
+   * It is automatically called whenever
+   * \code
+   * SimulatorDestroy ();
+   * \endcode
+   * is called.  It may also be optionally called
+   * by user code if there is a need to force a reset
+   * of this allocation index.
+   */
+  static void ResetAllocationIndex ();
 
 private:
+  static uint8_t m_allocationIndex; //!< Address allocation index
   uint8_t m_address;  //!< The address.
 
   /**
@@ -116,13 +131,13 @@ private:
    *
    * \return The type value.
    */
-  static uint8_t GetType (void);
+  static uint8_t GetType ();
   /**
    * Convert to a generic Address.
    *
    * \return The Address value.
    */
-  Address ConvertTo (void) const;
+  Address ConvertTo () const;
 
   friend bool operator <  (const Mac8Address &a, const Mac8Address &b);
   friend bool operator == (const Mac8Address &a, const Mac8Address &b);

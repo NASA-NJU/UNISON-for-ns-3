@@ -40,23 +40,23 @@ class LteTestMac;
  * \ingroup lte-test
  * \ingroup tests
  *
- * \brief A simplified version of LteHelper, that 
- * is used for creation and configuration of LTE entities for testing purposes 
+ * \brief A simplified version of LteHelper, that
+ * is used for creation and configuration of LTE entities for testing purposes
  * when just a limited LteHelper functionality is wanted.
  *
  */
 class LteSimpleHelper : public Object
 {
 public:
-  LteSimpleHelper (void);
-  virtual ~LteSimpleHelper (void);
+  LteSimpleHelper ();
+  ~LteSimpleHelper () override;
 
   /**
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
-  virtual void DoDispose (void);
+  static TypeId GetTypeId ();
+  void DoDispose () override;
 
 
   /**
@@ -82,52 +82,52 @@ public:
    * Enables logging for all components of the LENA architecture
    *
    */
-  void EnableLogComponents (void);
+  void EnableLogComponents ();
 
   /**
    * Enables trace sinks for MAC, RLC and PDCP
    */
-  void EnableTraces (void);
+  void EnableTraces ();
 
 
   /**
    * Enable trace sinks for RLC layer
    */
-  void EnableRlcTraces (void);
+  void EnableRlcTraces ();
 
   /**
    * Enable trace sinks for DL RLC layer
    */
-  void EnableDlRlcTraces (void);
+  void EnableDlRlcTraces ();
 
   /**
    * Enable trace sinks for UL RLC layer
    */
-  void EnableUlRlcTraces (void);
+  void EnableUlRlcTraces ();
 
 
   /**
    * Enable trace sinks for PDCP layer
    */
-  void EnablePdcpTraces (void);
+  void EnablePdcpTraces ();
 
   /**
    * Enable trace sinks for DL PDCP layer
    */
-  void EnableDlPdcpTraces (void);
+  void EnableDlPdcpTraces ();
 
   /**
    * Enable trace sinks for UL PDCP layer
    */
-  void EnableUlPdcpTraces (void);
+  void EnableUlPdcpTraces ();
 
 protected:
   // inherited from Object
-  virtual void DoInitialize (void);
+  void DoInitialize () override;
 
 private:
   /**
-   * Install single ENB device 
+   * Install single ENB device
    *
    * \param n the node
    * \returns the device

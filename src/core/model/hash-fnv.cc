@@ -69,7 +69,8 @@ extern "C" {
 // Changes from FNV distribution are marked with `//PDB'
 //
 
-/* Begin fnv.h -------------- *NS_CHECK_STYLE_OFF* ----> */
+// NOLINTBEGIN
+// clang-format off
 
 /*
  * fnv - Fowler/Noll/Vo- hash code
@@ -107,7 +108,7 @@ extern "C" {
  ***
  *
  * NOTE: The FNV-0 historic hash is not recommended.  One should use
- *	 the FNV-1 hash instead.
+ *   the FNV-1 hash instead.
  *
  * To use the 32 bit FNV-0 historic hash, pass FNV0_32_INIT as the
  * Fnv32_t hashval argument to fnv_32_buf() or fnv_32_str().
@@ -140,10 +141,10 @@ extern "C" {
  * PERFORMANCE OF THIS SOFTWARE.
  *
  * By:
- *	chongo <Landon Curt Noll> /\oo/\
+ *  chongo <Landon Curt Noll> /\oo/\
  *      http://www.isthe.com/chongo/
  *
- * Share and Enjoy!	:-)
+ * Share and Enjoy! :-)
  */
 
 #if !defined(__FNV_H__)
@@ -153,7 +154,7 @@ extern "C" {
 
 //#include <sys/types.h>  //PDB
 
-#define FNV_VERSION "5.0.2"	/**< @(#) FNV Version */
+#define FNV_VERSION "5.0.2" /**< @(#) FNV Version */
 
 
 /**
@@ -194,11 +195,11 @@ typedef uint32_t Fnv32_t;  //PDB
  * Determine how 64 bit unsigned values are represented
  */
 //#include "longlong.h"  //PDB - assume `unsigned long long' is 64 bit
-#define HAVE_64BIT_LONG_LONG  
+#define HAVE_64BIT_LONG_LONG
 
 
 
-/** 
+/**
  * 64 bit FNV-0 hash
  */
 #if defined(HAVE_64BIT_LONG_LONG)
@@ -229,7 +230,7 @@ extern const Fnv64_t fnv0_64_init;
  * 64 bit FNV-1 non-zero initial basis
  *
  * The FNV-1 initial basis is the FNV-0 hash of the following 32 octets:
- * 
+ *
  *              chongo <Landon Curt Noll> /\../\
  *
  * \note The \'s above are not back-slashing escape characters.
@@ -254,13 +255,13 @@ extern const Fnv64_t fnv1a_64_init;
  * FNV hash types
  */
 enum fnv_type {
-    FNV_NONE = 0,	/**< invalid FNV hash type */
-    FNV0_32 = 1,	/**< FNV-0 32 bit hash */
-    FNV1_32 = 2,	/**< FNV-1 32 bit hash */
-    FNV1a_32 = 3,	/**< FNV-1a 32 bit hash */
-    FNV0_64 = 4,	/**< FNV-0 64 bit hash */
-    FNV1_64 = 5,	/**< FNV-1 64 bit hash */
-    FNV1a_64 = 6,	/**< FNV-1a 64 bit hash */
+    FNV_NONE = 0, /**< invalid FNV hash type */
+    FNV0_32 = 1,  /**< FNV-0 32 bit hash */
+    FNV1_32 = 2,  /**< FNV-1 32 bit hash */
+    FNV1a_32 = 3, /**< FNV-1a 32 bit hash */
+    FNV0_64 = 4,  /**< FNV-0 64 bit hash */
+    FNV1_64 = 5,  /**< FNV-1 64 bit hash */
+    FNV1a_64 = 6, /**< FNV-1a 64 bit hash */
 };
 
 //PDB  test vector declarations deleted
@@ -291,10 +292,6 @@ enum fnv_type {
 
 
 #endif /* __FNV_H__ */
-
-/* End fnv.h ---------------- *NS_CHECK_STYLE_ON* -----> */
-
-/* Begin hash_32a.c --------- *NS_CHECK_STYLE_OFF* ----> */
 
 /*
  * hash_32 - 32 bit Fowler/Noll/Vo FNV-1a hash code
@@ -346,10 +343,10 @@ enum fnv_type {
  * PERFORMANCE OF THIS SOFTWARE.
  *
  * By:
- *	chongo <Landon Curt Noll> /\oo/\
+ *   chongo <Landon Curt Noll> /\oo/\
  *      http://www.isthe.com/chongo/
  *
- * Share and Enjoy!	:-)
+ * Share and Enjoy! :-)
  */
 
 //#include <stdlib.h>    //PDB
@@ -366,34 +363,34 @@ enum fnv_type {
  * fnv_32a_buf - perform a 32 bit Fowler/Noll/Vo FNV-1a hash on a buffer
  *
  * input:
- * \param  [in] buf	start of buffer to hash
- * \param  [in] len	length of buffer in octets
- * \param  [in] hval	previous hash value or 0 if first call
+ * \param  [in] buf start of buffer to hash
+ * \param  [in] len length of buffer in octets
+ * \param  [in] hval previous hash value or 0 if first call
  *
- * \returns		32 bit hash as a static hash type.
+ * \returns 32 bit hash as a static hash type.
  *
  * \note To use the recommended 32 bit FNV-1a hash, use FNV1_32A_INIT as the
- * 	 hval arg on the first call to either fnv_32a_buf() or fnv_32a_str().
+ * hval arg on the first call to either fnv_32a_buf() or fnv_32a_str().
  */
 Fnv32_t
 fnv_32a_buf(void *buf, size_t len, Fnv32_t hval)
 {
-    unsigned char *bp = (unsigned char *)buf;	/* start of buffer */
-    unsigned char *be = bp + len;		/* beyond end of buffer */
+    unsigned char *bp = (unsigned char *)buf; /* start of buffer */
+    unsigned char *be = bp + len; /* beyond end of buffer */
 
     /*
      * FNV-1a hash each octet in the buffer
      */
     while (bp < be) {
 
-	/* xor the bottom with the current octet */
-	hval ^= (Fnv32_t)*bp++;
+        /* xor the bottom with the current octet */
+        hval ^= (Fnv32_t)*bp++;
 
-	/* multiply by the 32 bit FNV magic prime mod 2^32 */
+        /* multiply by the 32 bit FNV magic prime mod 2^32 */
 #if defined(NO_FNV_GCC_OPTIMIZATION)
-	hval *= FNV_32_PRIME;
+        hval *= FNV_32_PRIME;
 #else
-	hval += (hval<<1) + (hval<<4) + (hval<<7) + (hval<<8) + (hval<<24);
+        hval += (hval<<1) + (hval<<4) + (hval<<7) + (hval<<8) + (hval<<24);
 #endif
     }
 
@@ -406,42 +403,38 @@ fnv_32a_buf(void *buf, size_t len, Fnv32_t hval)
  * fnv_32a_str - perform a 32 bit Fowler/Noll/Vo FNV-1a hash on a string
  *
  * input:
- * \param  [in] str	string to hash
- * \param  [in] hval	previous hash value or 0 if first call
+ * \param  [in] str string to hash
+ * \param  [in] hval previous hash value or 0 if first call
  *
- * \returns		32 bit hash as a static hash type
+ * \returns 32 bit hash as a static hash type
  *
  * \note To use the recommended 32 bit FNV-1a hash, use FNV1_32A_INIT as the
- *  	 hval arg on the first call to either fnv_32a_buf() or fnv_32a_str().
+ * hval arg on the first call to either fnv_32a_buf() or fnv_32a_str().
  */
 Fnv32_t
 fnv_32a_str(char *str, Fnv32_t hval)
 {
-    unsigned char *s = (unsigned char *)str;	/* unsigned string */
+    unsigned char *s = (unsigned char *)str; /* unsigned string */
 
     /*
      * FNV-1a hash each octet in the buffer
      */
     while (*s) {
 
-	/* xor the bottom with the current octet */
-	hval ^= (Fnv32_t)*s++;
+        /* xor the bottom with the current octet */
+        hval ^= (Fnv32_t)*s++;
 
-	/* multiply by the 32 bit FNV magic prime mod 2^32 */
+        /* multiply by the 32 bit FNV magic prime mod 2^32 */
 #if defined(NO_FNV_GCC_OPTIMIZATION)
-	hval *= FNV_32_PRIME;
+        hval *= FNV_32_PRIME;
 #else
-	hval += (hval<<1) + (hval<<4) + (hval<<7) + (hval<<8) + (hval<<24);
+        hval += (hval<<1) + (hval<<4) + (hval<<7) + (hval<<8) + (hval<<24);
 #endif
     }
 
     /* return our new hash value */
     return hval;
 }
-
-/* End hash_32a.c ----------- *NS_CHECK_STYLE_ON* -----> */
-
-/* Begin hash_64a.c --------- *NS_CHECK_STYLE_OFF* ----> */
 
 /*
  * hash_64 - 64 bit Fowler/Noll/Vo-0 FNV-1a hash code
@@ -494,10 +487,10 @@ fnv_32a_str(char *str, Fnv32_t hval)
  * PERFORMANCE OF THIS SOFTWARE.
  *
  * By:
- *	chongo <Landon Curt Noll> /\oo/\
+ *   chongo <Landon Curt Noll> /\oo/\
  *      http://www.isthe.com/chongo/
  *
- * Share and Enjoy!	:-)
+ * Share and Enjoy! :-)
  */
 
 //#include <stdlib.h>    //PDB
@@ -519,8 +512,8 @@ const Fnv64_t fnv1a_64_init = { 0x84222325, 0xcbf29ce4 };
 #if defined(HAVE_64BIT_LONG_LONG)
 #define FNV_64_PRIME ((Fnv1aImplementation::Fnv64_t)0x100000001b3ULL)
 #else /* HAVE_64BIT_LONG_LONG */
-#define FNV_64_PRIME_LOW ((unsigned long)0x1b3)	/* lower bits of FNV prime */
-#define FNV_64_PRIME_SHIFT (8)		/* top FNV prime shift above 2^32 */
+#define FNV_64_PRIME_LOW ((unsigned long)0x1b3) /* lower bits of FNV prime */
+#define FNV_64_PRIME_SHIFT (8) /* top FNV prime shift above 2^32 */
 #endif /* HAVE_64BIT_LONG_LONG */
 /**@}*/
 
@@ -529,20 +522,20 @@ const Fnv64_t fnv1a_64_init = { 0x84222325, 0xcbf29ce4 };
  * fnv_64a_buf - perform a 64 bit Fowler/Noll/Vo FNV-1a hash on a buffer
  *
  * input:
- * \param  [in] buf	start of buffer to hash
- * \param  [in] len	length of buffer in octets
- * \param  [in] hval	previous hash value or 0 if first call
+ * \param  [in] buf start of buffer to hash
+ * \param  [in] len length of buffer in octets
+ * \param  [in] hval previous hash value or 0 if first call
  *
- * \returns		64 bit hash as a static hash type
+ * \returns 64 bit hash as a static hash type
  *
  * \note To use the recommended 64 bit FNV-1a hash, use FNV1A_64_INIT as the
- * 	 hval arg on the first call to either fnv_64a_buf() or fnv_64a_str().
+ * hval arg on the first call to either fnv_64a_buf() or fnv_64a_str().
  */
 Fnv64_t
 fnv_64a_buf(void *buf, size_t len, Fnv64_t hval)
 {
-    unsigned char *bp = (unsigned char *)buf;	/* start of buffer */
-    unsigned char *be = bp + len;		/* beyond end of buffer */
+    unsigned char *bp = (unsigned char *)buf; /* start of buffer */
+    unsigned char *be = bp + len; /* beyond end of buffer */
 
 #if defined(HAVE_64BIT_LONG_LONG)
     /*
@@ -550,22 +543,22 @@ fnv_64a_buf(void *buf, size_t len, Fnv64_t hval)
      */
     while (bp < be) {
 
-	/* xor the bottom with the current octet */
-	hval ^= (Fnv64_t)*bp++;
+        /* xor the bottom with the current octet */
+        hval ^= (Fnv64_t)*bp++;
 
-	/* multiply by the 64 bit FNV magic prime mod 2^64 */
+        /* multiply by the 64 bit FNV magic prime mod 2^64 */
 #if defined(NO_FNV_GCC_OPTIMIZATION)
-	hval *= FNV_64_PRIME;
+        hval *= FNV_64_PRIME;
 #else /* NO_FNV_GCC_OPTIMIZATION */
-	hval += (hval << 1) + (hval << 4) + (hval << 5) +
-		(hval << 7) + (hval << 8) + (hval << 40);
+        hval += (hval << 1) + (hval << 4) + (hval << 5) +
+            (hval << 7) + (hval << 8) + (hval << 40);
 #endif /* NO_FNV_GCC_OPTIMIZATION */
     }
 
 #else /* HAVE_64BIT_LONG_LONG */
 
-    unsigned long val[4];			/* hash value in base 2^16 */
-    unsigned long tmp[4];			/* tmp 64 bit value */
+    unsigned long val[4]; /* hash value in base 2^16 */
+    unsigned long tmp[4]; /* tmp 64 bit value */
 
     /*
      * Convert Fnv64_t hval into a base 2^16 array
@@ -582,40 +575,40 @@ fnv_64a_buf(void *buf, size_t len, Fnv64_t hval)
      */
     while (bp < be) {
 
-	/* xor the bottom with the current octet */
-	val[0] ^= (unsigned long)*bp++;
+        /* xor the bottom with the current octet */
+        val[0] ^= (unsigned long)*bp++;
 
-	/*
-	 * multiply by the 64 bit FNV magic prime mod 2^64
-	 *
-	 * Using 0x100000001b3 we have the following digits base 2^16:
-	 *
-	 *	0x0	0x100	0x0	0x1b3
-	 *
-	 * which is the same as:
-	 *
-	 *	0x0	1<<FNV_64_PRIME_SHIFT	0x0	FNV_64_PRIME_LOW
-	 */
-	/* multiply by the lowest order digit base 2^16 */
-	tmp[0] = val[0] * FNV_64_PRIME_LOW;
-	tmp[1] = val[1] * FNV_64_PRIME_LOW;
-	tmp[2] = val[2] * FNV_64_PRIME_LOW;
-	tmp[3] = val[3] * FNV_64_PRIME_LOW;
-	/* multiply by the other non-zero digit */
-	tmp[2] += val[0] << FNV_64_PRIME_SHIFT;	/* tmp[2] += val[0] * 0x100 */
-	tmp[3] += val[1] << FNV_64_PRIME_SHIFT;	/* tmp[3] += val[1] * 0x100 */
-	/* propagate carries */
-	tmp[1] += (tmp[0] >> 16);
-	val[0] = tmp[0] & 0xffff;
-	tmp[2] += (tmp[1] >> 16);
-	val[1] = tmp[1] & 0xffff;
-	val[3] = tmp[3] + (tmp[2] >> 16);
-	val[2] = tmp[2] & 0xffff;
-	/*
-	 * Doing a val[3] &= 0xffff; is not really needed since it simply
-	 * removes multiples of 2^64.  We can discard these excess bits
-	 * outside of the loop when we convert to Fnv64_t.
-	 */
+        /*
+         * multiply by the 64 bit FNV magic prime mod 2^64
+         *
+         * Using 0x100000001b3 we have the following digits base 2^16:
+         *
+         *   0x0  0x100  0x0  0x1b3
+         *
+         * which is the same as:
+         *
+         *   0x0  1<<FNV_64_PRIME_SHIFT  0x0  FNV_64_PRIME_LOW
+         */
+        /* multiply by the lowest order digit base 2^16 */
+        tmp[0] = val[0] * FNV_64_PRIME_LOW;
+        tmp[1] = val[1] * FNV_64_PRIME_LOW;
+        tmp[2] = val[2] * FNV_64_PRIME_LOW;
+        tmp[3] = val[3] * FNV_64_PRIME_LOW;
+        /* multiply by the other non-zero digit */
+        tmp[2] += val[0] << FNV_64_PRIME_SHIFT; /* tmp[2] += val[0] * 0x100 */
+        tmp[3] += val[1] << FNV_64_PRIME_SHIFT; /* tmp[3] += val[1] * 0x100 */
+        /* propagate carries */
+        tmp[1] += (tmp[0] >> 16);
+        val[0] = tmp[0] & 0xffff;
+        tmp[2] += (tmp[1] >> 16);
+        val[1] = tmp[1] & 0xffff;
+        val[3] = tmp[3] + (tmp[2] >> 16);
+        val[2] = tmp[2] & 0xffff;
+        /*
+         * Doing a val[3] &= 0xffff; is not really needed since it simply
+         * removes multiples of 2^64.  We can discard these excess bits
+         * outside of the loop when we convert to Fnv64_t.
+         */
     }
 
     /*
@@ -635,18 +628,18 @@ fnv_64a_buf(void *buf, size_t len, Fnv64_t hval)
  * fnv_64a_str - perform a 64 bit Fowler/Noll/Vo FNV-1a hash on a buffer
  *
  * input:
- * \param  [in] str	string to hash
- * \param  [in] hval	previous hash value or 0 if first call
+ * \param  [in] str string to hash
+ * \param  [in] hval previous hash value or 0 if first call
  *
- * \returns		64 bit hash as a static hash type
+ * \returns 64 bit hash as a static hash type
  *
  * \note To use the recommended 64 bit FNV-1a hash, use FNV1A_64_INIT as the
- * 	 hval arg on the first call to either fnv_64a_buf() or fnv_64a_str().
+ * hval arg on the first call to either fnv_64a_buf() or fnv_64a_str().
  */
 Fnv64_t
 fnv_64a_str(char *str, Fnv64_t hval)
 {
-    unsigned char *s = (unsigned char *)str;	/* unsigned string */
+    unsigned char *s = (unsigned char *)str; /* unsigned string */
 
 #if defined(HAVE_64BIT_LONG_LONG)
 
@@ -655,22 +648,22 @@ fnv_64a_str(char *str, Fnv64_t hval)
      */
     while (*s) {
 
-	/* xor the bottom with the current octet */
-	hval ^= (Fnv64_t)*s++;
+        /* xor the bottom with the current octet */
+        hval ^= (Fnv64_t)*s++;
 
-	/* multiply by the 64 bit FNV magic prime mod 2^64 */
+        /* multiply by the 64 bit FNV magic prime mod 2^64 */
 #if defined(NO_FNV_GCC_OPTIMIZATION)
-	hval *= FNV_64_PRIME;
+        hval *= FNV_64_PRIME;
 #else /* NO_FNV_GCC_OPTIMIZATION */
-	hval += (hval << 1) + (hval << 4) + (hval << 5) +
-		(hval << 7) + (hval << 8) + (hval << 40);
+        hval += (hval << 1) + (hval << 4) + (hval << 5) +
+            (hval << 7) + (hval << 8) + (hval << 40);
 #endif /* NO_FNV_GCC_OPTIMIZATION */
     }
 
 #else /* !HAVE_64BIT_LONG_LONG */
 
-    unsigned long val[4];	/* hash value in base 2^16 */
-    unsigned long tmp[4];	/* tmp 64 bit value */
+    unsigned long val[4]; /* hash value in base 2^16 */
+    unsigned long tmp[4]; /* tmp 64 bit value */
 
     /*
      * Convert Fnv64_t hval into a base 2^16 array
@@ -687,40 +680,40 @@ fnv_64a_str(char *str, Fnv64_t hval)
      */
     while (*s) {
 
-	/* xor the bottom with the current octet */
+        /* xor the bottom with the current octet */
 
-	/*
-	 * multiply by the 64 bit FNV magic prime mod 2^64
-	 *
-	 * Using 1099511628211, we have the following digits base 2^16:
-	 *
-	 *	0x0	0x100	0x0	0x1b3
-	 *
-	 * which is the same as:
-	 *
-	 *	0x0	1<<FNV_64_PRIME_SHIFT	0x0	FNV_64_PRIME_LOW
-	 */
-	/* multiply by the lowest order digit base 2^16 */
-	tmp[0] = val[0] * FNV_64_PRIME_LOW;
-	tmp[1] = val[1] * FNV_64_PRIME_LOW;
-	tmp[2] = val[2] * FNV_64_PRIME_LOW;
-	tmp[3] = val[3] * FNV_64_PRIME_LOW;
-	/* multiply by the other non-zero digit */
-	tmp[2] += val[0] << FNV_64_PRIME_SHIFT;	/* tmp[2] += val[0] * 0x100 */
-	tmp[3] += val[1] << FNV_64_PRIME_SHIFT;	/* tmp[3] += val[1] * 0x100 */
-	/* propagate carries */
-	tmp[1] += (tmp[0] >> 16);
-	val[0] = tmp[0] & 0xffff;
-	tmp[2] += (tmp[1] >> 16);
-	val[1] = tmp[1] & 0xffff;
-	val[3] = tmp[3] + (tmp[2] >> 16);
-	val[2] = tmp[2] & 0xffff;
-	/*
-	 * Doing a val[3] &= 0xffff; is not really needed since it simply
-	 * removes multiples of 2^64.  We can discard these excess bits
-	 * outside of the loop when we convert to Fnv64_t.
-	 */
-	val[0] ^= (unsigned long)(*s++);
+        /*
+         * multiply by the 64 bit FNV magic prime mod 2^64
+         *
+         * Using 1099511628211, we have the following digits base 2^16:
+         *
+         *   0x0  0x100  0x0  0x1b3
+         *
+         * which is the same as:
+         *
+         *   0x0  1<<FNV_64_PRIME_SHIFT  0x0  FNV_64_PRIME_LOW
+         */
+        /* multiply by the lowest order digit base 2^16 */
+        tmp[0] = val[0] * FNV_64_PRIME_LOW;
+        tmp[1] = val[1] * FNV_64_PRIME_LOW;
+        tmp[2] = val[2] * FNV_64_PRIME_LOW;
+        tmp[3] = val[3] * FNV_64_PRIME_LOW;
+        /* multiply by the other non-zero digit */
+        tmp[2] += val[0] << FNV_64_PRIME_SHIFT; /* tmp[2] += val[0] * 0x100 */
+        tmp[3] += val[1] << FNV_64_PRIME_SHIFT; /* tmp[3] += val[1] * 0x100 */
+        /* propagate carries */
+        tmp[1] += (tmp[0] >> 16);
+        val[0] = tmp[0] & 0xffff;
+        tmp[2] += (tmp[1] >> 16);
+        val[1] = tmp[1] & 0xffff;
+        val[3] = tmp[3] + (tmp[2] >> 16);
+        val[2] = tmp[2] & 0xffff;
+        /*
+         * Doing a val[3] &= 0xffff; is not really needed since it simply
+         * removes multiples of 2^64.  We can discard these excess bits
+         * outside of the loop when we convert to Fnv64_t.
+         */
+        val[0] ^= (unsigned long)(*s++);
     }
 
     /*
@@ -735,9 +728,10 @@ fnv_64a_str(char *str, Fnv64_t hval)
     return hval;
 }
 
-/* End hash_64a.c ----------- *NS_CHECK_STYLE_ON* -----> */
+// clang-format on
+// NOLINTEND
 
-}  /* extern "C" */
+} /* extern "C" */
 
 //-----------------------------------------------------------------------------
 
@@ -768,7 +762,7 @@ Fnv1a::GetHash64  (const char * buffer, const std::size_t size)
 }
 
 void
-Fnv1a::clear (void)
+Fnv1a::clear ()
 {
   m_hash32 = FNV1_32A_INIT;
   m_hash64 = FNV1A_64_INIT;

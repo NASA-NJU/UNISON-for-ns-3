@@ -43,14 +43,14 @@ namespace ns3 {
  * and speed. This model is often identified as a brownian motion
  * model.
  */
-class RandomWalk2dMobilityModel : public MobilityModel 
+class RandomWalk2dMobilityModel : public MobilityModel
 {
 public:
   /**
    * Register this type with the TypeId system.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
   /** An enum representing the different working modes of this module. */
   enum Mode  {
     MODE_DISTANCE,
@@ -72,16 +72,16 @@ private:
   /**
    * Perform initialization of the object before MobilityModel::DoInitialize ()
    */
-  void DoInitializePrivate (void);
-  virtual void DoDispose (void);
-  virtual void DoInitialize (void);
-  virtual Vector DoGetPosition (void) const;
-  virtual void DoSetPosition (const Vector &position);
-  virtual Vector DoGetVelocity (void) const;
-  virtual int64_t DoAssignStreams (int64_t);
+  void DoInitializePrivate ();
+  void DoDispose () override;
+  void DoInitialize () override;
+  Vector DoGetPosition () const override;
+  void DoSetPosition (const Vector &position) override;
+  Vector DoGetVelocity () const override;
+  int64_t DoAssignStreams (int64_t) override;
 
   ConstantVelocityHelper m_helper; //!< helper for this object
-  EventId m_event; //!< stored event ID 
+  EventId m_event; //!< stored event ID
   enum Mode m_mode; //!< whether in time or distance mode
   double m_modeDistance; //!< Change direction and speed after this distance
   Time m_modeTime; //!< Change current direction and speed after this delay

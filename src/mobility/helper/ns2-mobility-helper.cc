@@ -107,7 +107,7 @@ struct DestinationPoint
  */
 static ParseResult ParseNs2Line (const std::string& str);
 
-/** 
+/**
  * Put out blank spaces at the start and end of a line
  * \param str input line
  * \returns the line trimmed
@@ -134,24 +134,24 @@ static bool IsVal (const std::string& str, T& ret);
  * Checks if the value between brackets is a correct nodeId number
  * \param str string to check
  * \returns true if the string represents a nodeId number
- */ 
+ */
 static bool HasNodeIdNumber (std::string str);
 
-/** 
+/**
  * Gets nodeId number in string format from the string like $node_(4)
  * \param str string to de-tokenize
  * \returns A string with the nodeId number
  */
 static std::string GetNodeIdFromToken (std::string str);
 
-/** 
+/**
  * Get node id number in int format
  * \param pr the ParseResult to analyze
  * \returns the node ID (as an int)
  */
 static int GetNodeIdInt (ParseResult pr);
 
-/**  
+/**
  * Get node id number in string format
  * \param pr the ParseResult to analyze
  * \returns the node ID (as a string)
@@ -167,14 +167,14 @@ static std::string GetNodeIdString (ParseResult pr);
  */
 static Vector SetOneInitialCoord (Vector actPos, std::string& coord, double value);
 
-/** 
+/**
  * Check if this corresponds to a line like this: $node_(0) set X_ 123
  * \param pr the ParseResult to analyze
  * \returns true if the ParseResult looks like a coordinate without a scheduled time
  */
 static bool IsSetInitialPos (ParseResult pr);
 
-/** 
+/**
  * Check if this corresponds to a line like this: $ns_ at 1 "$node_(0) setdest 2 3 4"
  * \param pr the ParseResult to analyze
  * \returns true if the ParseResult looks like a coordinate with a scheduled time and destionation
@@ -210,7 +210,7 @@ static DestinationPoint SetMovement (Ptr<ConstantVelocityMobilityModel> model, V
  */
 static Vector SetInitialPosition (Ptr<ConstantVelocityMobilityModel> model, std::string coord, double coordVal);
 
-/** 
+/**
  * Schedule a set of position for a node
  * \param model mobility model
  * \param at initial movement time
@@ -225,7 +225,11 @@ Ns2MobilityHelper::Ns2MobilityHelper (std::string filename)
   : m_filename (filename)
 {
   std::ifstream file (m_filename.c_str (), std::ios::in);
-  if (!(file.is_open ())) NS_FATAL_ERROR("Could not open trace file " << m_filename.c_str() << " for reading, aborting here \n"); 
+  if (!(file.is_open ()))
+    {
+      NS_FATAL_ERROR ("Could not open trace file " << m_filename.c_str ()
+                                                   << " for reading, aborting here \n");
+    }
 }
 
 Ptr<ConstantVelocityMobilityModel>
@@ -236,12 +240,12 @@ Ns2MobilityHelper::GetMobilityModel (std::string idString, const ObjectStore &st
   uint32_t id (0);
   iss >> id;
   Ptr<Object> object = store.Get (id);
-  if (object == 0)
+  if (!object)
     {
-      return 0;
+      return nullptr;
     }
   Ptr<ConstantVelocityMobilityModel> model = object->GetObject<ConstantVelocityMobilityModel> ();
-  if (model == 0)
+  if (!model)
     {
       model = CreateObject<ConstantVelocityMobilityModel> ();
       object->AggregateObject (model);
@@ -301,7 +305,7 @@ Ns2MobilityHelper::ConfigNodesMovements (const ObjectStore &store) const
           Ptr<ConstantVelocityMobilityModel> model = GetMobilityModel (nodeId,store);
 
           // if model not exists, continue
-          if (model == 0)
+          if (!model)
             {
               NS_LOG_ERROR ("Unknown node ID (corrupted file?): " << nodeId << "\n");
               continue;
@@ -372,7 +376,7 @@ Ns2MobilityHelper::ConfigNodesMovements (const ObjectStore &store) const
           Ptr<ConstantVelocityMobilityModel> model = GetMobilityModel (nodeId,store);
 
           // if model not exists, continue
-          if (model == 0)
+          if (!model)
             {
               NS_LOG_ERROR ("Unknown node ID (corrupted file?): " << nodeId << "\n");
               continue;
@@ -625,8 +629,8 @@ HasNodeIdNumber (std::string str)
 {
 
   // find brackets
-  std::string::size_type startNodeId = str.find_first_of ("("); // index of left bracket
-  std::string::size_type endNodeId   = str.find_first_of (")"); // index of right bracket
+  std::string::size_type startNodeId = str.find_first_of ('('); // index of left bracket
+  std::string::size_type endNodeId   = str.find_first_of (')'); // index of right bracket
 
   // Get de nodeId in a string and in a int value
   std::string nodeId;     // node id
@@ -640,7 +644,7 @@ HasNodeIdNumber (std::string str)
   nodeId = str.substr (startNodeId + 1, endNodeId - (startNodeId + 1)); // set node id
 
   //   is number              is integer                                       is not negative
-  if (IsNumber (nodeId) && (nodeId.find_first_of (".") == std::string::npos) && (nodeId[0] != '-'))
+  if (IsNumber (nodeId) && (nodeId.find_first_of ('.') == std::string::npos) && (nodeId[0] != '-'))
     {
       return true;
     }
@@ -657,8 +661,8 @@ GetNodeIdFromToken (std::string str)
   if (HasNodeIdNumber (str))
     {
       // find brackets
-      std::string::size_type startNodeId = str.find_first_of ("(");     // index of left bracket
-      std::string::size_type endNodeId   = str.find_first_of (")");     // index of right bracket
+      std::string::size_type startNodeId = str.find_first_of ('(');     // index of left bracket
+      std::string::size_type endNodeId   = str.find_first_of (')');     // index of right bracket
 
       return str.substr (startNodeId + 1, endNodeId - (startNodeId + 1)); // set node id
     }
@@ -846,7 +850,7 @@ SetSchedPosition (Ptr<ConstantVelocityMobilityModel> model, double at, std::stri
 }
 
 void
-Ns2MobilityHelper::Install (void) const
+Ns2MobilityHelper::Install () const
 {
   Install (NodeList::Begin (), NodeList::End ());
 }

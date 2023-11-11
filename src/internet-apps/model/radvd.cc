@@ -75,10 +75,10 @@ Radvd::~Radvd ()
   NS_LOG_FUNCTION (this);
   for (RadvdInterfaceListI it = m_configurations.begin (); it != m_configurations.end (); ++it)
     {
-      *it = 0;
+      *it = nullptr;
     }
   m_configurations.clear ();
-  m_recvSocket = 0;
+  m_recvSocket = nullptr;
 }
 
 void Radvd::DoDispose ()
@@ -86,12 +86,12 @@ void Radvd::DoDispose ()
   NS_LOG_FUNCTION (this);
 
   m_recvSocket->Close ();
-  m_recvSocket = 0;
+  m_recvSocket = nullptr;
 
   for (SocketMapI it = m_sendSockets.begin (); it != m_sendSockets.end (); ++it)
     {
       it->second->Close ();
-      it->second = 0;
+      it->second = nullptr;
     }
 
   Application::DoDispose ();
@@ -165,7 +165,7 @@ void Radvd::AddConfiguration (Ptr<RadvdInterface> routerInterface)
   m_configurations.push_back (routerInterface);
 }
 
-int64_t 
+int64_t
 Radvd:: AssignStreams (int64_t stream)
 {
   NS_LOG_FUNCTION (this << stream);
@@ -249,8 +249,8 @@ void Radvd::Send (Ptr<RadvdInterface> config, Ipv6Address dst, bool reschedule)
   m_sendSockets[config->GetInterface ()]->GetSockName (sockAddr);
   Ipv6Address src = Inet6SocketAddress::ConvertFrom (sockAddr).GetIpv6 ();
 
-  /* as we know interface index that will be used to send RA and 
-   * we always send RA with router's link-local address, we can 
+  /* as we know interface index that will be used to send RA and
+   * we always send RA with router's link-local address, we can
    * calculate checksum here.
    */
   raHdr.CalculatePseudoHeaderChecksum (src, dst, p->GetSize () + raHdr.GetSerializedSize (), 58 /* ICMPv6 */);
@@ -273,7 +273,9 @@ void Radvd::Send (Ptr<RadvdInterface> config, Ipv6Address dst, bool reschedule)
       if (config->IsInitialRtrAdv ())
         {
           if (delay > MAX_INITIAL_RTR_ADVERT_INTERVAL)
-            delay = MAX_INITIAL_RTR_ADVERT_INTERVAL;
+            {
+              delay = MAX_INITIAL_RTR_ADVERT_INTERVAL;
+            }
         }
 
       NS_LOG_INFO ("Reschedule in " << delay << " milliseconds");
@@ -285,7 +287,7 @@ void Radvd::Send (Ptr<RadvdInterface> config, Ipv6Address dst, bool reschedule)
 void Radvd::HandleRead (Ptr<Socket> socket)
 {
   NS_LOG_FUNCTION (this << socket);
-  Ptr<Packet> packet = 0;
+  Ptr<Packet> packet = nullptr;
   Address from;
 
   while ((packet = socket->RecvFrom (from)))

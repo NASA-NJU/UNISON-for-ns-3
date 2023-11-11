@@ -61,7 +61,7 @@ struct RrpaaWifiRemoteStation : public WifiRemoteStation
 NS_OBJECT_ENSURE_REGISTERED (RrpaaWifiManager);
 
 TypeId
-RrpaaWifiManager::GetTypeId (void)
+RrpaaWifiManager::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::RrpaaWifiManager")
     .SetParent<WifiRemoteStationManager> ()
@@ -211,7 +211,7 @@ void
 RrpaaWifiManager::AddCalcTxTime (WifiMode mode, Time t)
 {
   NS_LOG_FUNCTION (this << mode << t);
-  m_calcTxTime.push_back (std::make_pair (t, mode));
+  m_calcTxTime.emplace_back (t, mode);
 }
 
 WifiRrpaaThresholds
@@ -231,7 +231,7 @@ RrpaaWifiManager::GetThresholds (RrpaaWifiRemoteStation *station, WifiMode mode)
 }
 
 WifiRemoteStation *
-RrpaaWifiManager::DoCreateStation (void) const
+RrpaaWifiManager::DoCreateStation () const
 {
   NS_LOG_FUNCTION (this);
   RrpaaWifiRemoteStation *station = new RrpaaWifiRemoteStation ();
@@ -315,7 +315,7 @@ RrpaaWifiManager::InitThresholds (RrpaaWifiRemoteStation *station)
       th.m_ewnd = static_cast<uint32_t> (ceil (m_tau / totalTxTime.GetSeconds ()));
       th.m_ori = ori;
       th.m_mtl = mtl;
-      station->m_thresholds.push_back (std::make_pair (th, mode));
+      station->m_thresholds.emplace_back (th, mode);
       mtl = nextMtl;
       NS_LOG_DEBUG (mode << " " << th.m_ewnd << " " << th.m_mtl << " " << th.m_ori);
     }
@@ -387,9 +387,9 @@ RrpaaWifiManager::DoReportFinalDataFailed (WifiRemoteStation *st)
 }
 
 WifiTxVector
-RrpaaWifiManager::DoGetDataTxVector (WifiRemoteStation *st)
+RrpaaWifiManager::DoGetDataTxVector (WifiRemoteStation *st, uint16_t allowedWidth)
 {
-  NS_LOG_FUNCTION (this << st);
+  NS_LOG_FUNCTION (this << st << allowedWidth);
   RrpaaWifiRemoteStation *station = static_cast<RrpaaWifiRemoteStation*> (st);
   uint16_t channelWidth = GetChannelWidth (station);
   if (channelWidth > 20 && channelWidth != 22)

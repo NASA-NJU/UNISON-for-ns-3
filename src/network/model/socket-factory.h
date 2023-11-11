@@ -30,7 +30,7 @@ class Socket;
 /**
  * \ingroup socket
  *
- * \brief Object to create transport layer instances that provide a 
+ * \brief Object to create transport layer instances that provide a
  * socket API to applications.
  *
  * This base class defines the API for creating sockets.
@@ -39,9 +39,9 @@ class Socket;
  * set through the sysctl or proc interfaces in Linux.
 
  * If you want to write a new transport protocol accessible through
- * sockets, you need to subclass this factory class, implement CreateSocket, 
+ * sockets, you need to subclass this factory class, implement CreateSocket,
  * instantiate the object, and aggregate it to the node.
- * 
+ *
  * \see Udp
  * \see UdpImpl
  */
@@ -52,16 +52,16 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   SocketFactory ();
 
   /**
    * \return smart pointer to Socket
-   * 
+   *
    * Base class method for creating socket instances.
    */
-  virtual Ptr<Socket> CreateSocket (void) = 0;
+  virtual Ptr<Socket> CreateSocket () = 0;
 };
 
 } // namespace ns3

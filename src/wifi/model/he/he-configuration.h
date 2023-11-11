@@ -42,7 +42,7 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   /**
    * \param guardInterval the supported HE guard interval
@@ -51,7 +51,7 @@ public:
   /**
    * \return the supported HE guard interval
    */
-  Time GetGuardInterval (void) const;
+  Time GetGuardInterval () const;
   /**
    * \param bssColor the BSS color
    */
@@ -59,7 +59,15 @@ public:
   /**
    * \return the BSS color
    */
-  uint8_t GetBssColor (void) const;
+  uint8_t GetBssColor () const;
+  /**
+   * \param maxTbPpduDelay the maximum TB PPDU delay
+   */
+  void SetMaxTbPpduDelay (Time maxTbPpduDelay);
+  /**
+   * \return the maximum TB PPDU delay
+   */
+  Time GetMaxTbPpduDelay () const;
   /**
    * \param size the MPDU buffer size to receive A-MPDUs
    */
@@ -67,12 +75,13 @@ public:
   /**
    * \return the MPDU buffer size to receive A-MPDUs
    */
-  uint16_t GetMpduBufferSize (void) const;
+  uint16_t GetMpduBufferSize () const;
 
 
 private:
   Time m_guardInterval;      //!< Supported HE guard interval
   uint8_t m_bssColor;        //!< BSS color
+  Time m_maxTbPpduDelay;     //!< Max TB PPDU delay
   uint16_t m_mpduBufferSize; //!< MPDU buffer size
   uint8_t m_muBeAifsn;       //!< AIFSN for BE in MU EDCA Parameter Set
   uint8_t m_muBkAifsn;       //!< AIFSN for BK in MU EDCA Parameter Set

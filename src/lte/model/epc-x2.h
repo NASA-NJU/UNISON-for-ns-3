@@ -47,12 +47,12 @@ public:
    * \param localUserPlaneSocket user plane socket
    */
   X2IfaceInfo (Ipv4Address remoteIpAddr, Ptr<Socket> localCtrlPlaneSocket, Ptr<Socket> localUserPlaneSocket);
-  virtual ~X2IfaceInfo (void);
+  virtual ~X2IfaceInfo ();
 
   /**
    * Assignment operator
    * \param value value to assign
-   * \returns X2IfaceInfo& 
+   * \returns X2IfaceInfo&
    */
   X2IfaceInfo& operator= (const X2IfaceInfo &value);
 
@@ -76,12 +76,12 @@ public:
    * \param remoteCellIds remote cell IDs
    */
   X2CellInfo (std::vector<uint16_t> localCellIds, std::vector<uint16_t> remoteCellIds);
-  virtual ~X2CellInfo (void);
+  virtual ~X2CellInfo ();
 
   /**
    * Assignment operator
    * \param value value to assign
-   * \returns X2CellInfo&  
+   * \returns X2CellInfo&
    */
   X2CellInfo& operator= (const X2CellInfo &value);
 
@@ -102,7 +102,7 @@ class EpcX2 : public Object
   friend class EpcX2SpecificEpcX2SapProvider<EpcX2>;
 
 public:
-  /** 
+  /**
    * Constructor
    */
   EpcX2 ();
@@ -110,14 +110,14 @@ public:
   /**
    * Destructor
    */
-  virtual ~EpcX2 (void);
+  ~EpcX2 () override;
 
   /**
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
-  virtual void DoDispose (void);
+  static TypeId GetTypeId ();
+  void DoDispose () override;
 
 
   /**
@@ -142,18 +142,18 @@ public:
                        std::vector<uint16_t> enb2CellIds, Ipv4Address enb2X2Address);
 
 
-  /** 
+  /**
    * Method to be assigned to the recv callback of the X2-C (X2 Control Plane) socket.
    * It is called when the eNB receives a packet from the peer eNB of the X2-C interface
-   * 
+   *
    * \param socket socket of the X2-C interface
    */
   void RecvFromX2cSocket (Ptr<Socket> socket);
 
-  /** 
+  /**
    * Method to be assigned to the recv callback of the X2-U (X2 User Plane) socket.
    * It is called when the eNB receives a packet from the peer eNB of the X2-U interface
-   * 
+   *
    * \param socket socket of the X2-U interface
    */
   void RecvFromX2uSocket (Ptr<Socket> socket);
@@ -178,7 +178,7 @@ protected:
   virtual void DoSendHandoverPreparationFailure (EpcX2SapProvider::HandoverPreparationFailureParams params);
   /**
    * Send SN status transfer function
-   * \param params the SN status transfer parameters 
+   * \param params the SN status transfer parameters
    */
   virtual void DoSendSnStatusTransfer (EpcX2SapProvider::SnStatusTransferParams params);
   /**
@@ -202,6 +202,12 @@ protected:
    * \param params EpcX2SapProvider::UeDataParams
    */
   virtual void DoSendUeData (EpcX2SapProvider::UeDataParams params);
+  /**
+   * \brief Send Handover Cancel function
+   * \param params the handover cancel parameters
+   *
+   */
+  virtual void DoSendHandoverCancel (EpcX2SapProvider::HandoverCancelParams params);
 
   EpcX2SapUser* m_x2SapUser; ///< X2 SAP user
   EpcX2SapProvider* m_x2SapProvider; ///< X2 SAP provider
@@ -216,7 +222,7 @@ private:
   std::map < uint16_t, Ptr<X2IfaceInfo> > m_x2InterfaceSockets;
 
   /**
-   * Map the localSocket (the one receiving the X2 message) 
+   * Map the localSocket (the one receiving the X2 message)
    * to the corresponding (sourceCellId, targetCellId) associated with the X2 interface
    */
   std::map < Ptr<Socket>, Ptr<X2CellInfo> > m_x2InterfaceCellIds;

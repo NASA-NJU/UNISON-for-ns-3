@@ -47,7 +47,7 @@ TypeId Ipv6RawSocketImpl::GetTypeId ()
   static TypeId tid = TypeId ("ns3::Ipv6RawSocketImpl")
     .SetParent<Socket> ()
     .SetGroupName ("Internet")
-    .AddAttribute ("Protocol", "Protocol number to match.", 
+    .AddAttribute ("Protocol", "Protocol number to match.",
                    UintegerValue (0),
                    MakeUintegerAccessor (&Ipv6RawSocketImpl::m_protocol),
                    MakeUintegerChecker<uint16_t> ())
@@ -59,7 +59,7 @@ Ipv6RawSocketImpl::Ipv6RawSocketImpl ()
 {
   NS_LOG_FUNCTION (this);
   m_err = Socket::ERROR_NOTERROR;
-  m_node = 0;
+  m_node = nullptr;
   m_src = Ipv6Address::GetAny ();
   m_dst = Ipv6Address::GetAny ();
   m_protocol = 0;
@@ -75,7 +75,7 @@ Ipv6RawSocketImpl::~Ipv6RawSocketImpl ()
 void Ipv6RawSocketImpl::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
-  m_node = 0;
+  m_node = nullptr;
   Socket::DoDispose ();
 }
 
@@ -184,10 +184,12 @@ int Ipv6RawSocketImpl::Connect (const Address& address)
   if (!Inet6SocketAddress::IsMatchingType (address))
     {
       m_err = Socket::ERROR_INVAL;
+      NotifyConnectionFailed ();
       return -1;
     }
   Inet6SocketAddress ad = Inet6SocketAddress::ConvertFrom (address);
   m_dst = ad.GetIpv6 ();
+  NotifyConnectionSucceeded ();
 
   return 0;
 }
@@ -244,7 +246,7 @@ int Ipv6RawSocketImpl::SendTo (Ptr<Packet> p, uint32_t flags, const Address& toA
       Ipv6Header hdr;
       hdr.SetDestination (dst);
       SocketErrno err = ERROR_NOTERROR;
-      Ptr<Ipv6Route> route = 0;
+      Ptr<Ipv6Route> route = nullptr;
       Ptr<NetDevice> oif = m_boundnetdevice; //specify non-zero if bound to a specific device
 
       if (!m_src.IsAny ())
@@ -261,8 +263,8 @@ int Ipv6RawSocketImpl::SendTo (Ptr<Packet> p, uint32_t flags, const Address& toA
           NS_LOG_LOGIC ("Route exists");
           if (m_protocol == Icmpv6L4Protocol::GetStaticProtocolNumber ())
             {
-              /* calculate checksum here for ICMPv6 echo request (sent by ping6) 
-               * as we cannot determine source IPv6 address at application level 
+              /* calculate checksum here for ICMPv6 echo request (sent by ping6)
+               * as we cannot determine source IPv6 address at application level
                */
               uint8_t type;
               p->CopyData (&type, sizeof(type));
@@ -310,7 +312,7 @@ Ptr<Packet> Ipv6RawSocketImpl::RecvFrom (uint32_t maxSize, uint32_t flags, Addre
 
   if (m_data.empty ())
     {
-      return 0;
+      return nullptr;
     }
 
   /* get packet */
@@ -412,7 +414,7 @@ bool Ipv6RawSocketImpl::ForwardUp (Ptr<const Packet> p, Ipv6Header hdr, Ptr<NetD
         }
     }
 
-  if ((m_src == Ipv6Address::GetAny () || hdr.GetDestination () == m_src) && 
+  if ((m_src == Ipv6Address::GetAny () || hdr.GetDestination () == m_src) &&
       (m_dst == Ipv6Address::GetAny () || hdr.GetSource () == m_dst) &&
       hdr.GetNextHeader () == m_protocol)
     {

@@ -59,7 +59,7 @@ LtePhy::LtePhy (Ptr<LteSpectrumPhy> dlPhy, Ptr<LteSpectrumPhy> ulPhy)
 
 
 TypeId
-LtePhy::GetTypeId (void)
+LtePhy::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::LtePhy")
     .SetParent<Object> ()
@@ -81,10 +81,10 @@ LtePhy::DoDispose ()
   m_packetBurstQueue.clear ();
   m_controlMessagesQueue.clear ();
   m_downlinkSpectrumPhy->Dispose ();
-  m_downlinkSpectrumPhy = 0;
+  m_downlinkSpectrumPhy = nullptr;
   m_uplinkSpectrumPhy->Dispose ();
-  m_uplinkSpectrumPhy = 0;
-  m_netDevice = 0;
+  m_uplinkSpectrumPhy = nullptr;
+  m_netDevice = nullptr;
   Object::DoDispose ();
 }
 
@@ -103,13 +103,13 @@ LtePhy::GetDevice () const
   return m_netDevice;
 }
 
-Ptr<LteSpectrumPhy> 
+Ptr<LteSpectrumPhy>
 LtePhy::GetDownlinkSpectrumPhy ()
 {
   return m_downlinkSpectrumPhy;
 }
 
-Ptr<LteSpectrumPhy> 
+Ptr<LteSpectrumPhy>
 LtePhy::GetUplinkSpectrumPhy ()
 {
   return m_uplinkSpectrumPhy;
@@ -139,7 +139,7 @@ LtePhy::SetTti (double tti)
 
 
 double
-LtePhy::GetTti (void) const
+LtePhy::GetTti () const
 {
   NS_LOG_FUNCTION (this << m_tti);
   return m_tti;
@@ -183,7 +183,7 @@ LtePhy::GetSrsSubframeOffset (uint16_t srcCi) const
 }
 
 uint8_t
-LtePhy::GetRbgSize (void) const
+LtePhy::GetRbgSize () const
 {
   return m_rbgSize;
 }
@@ -195,7 +195,7 @@ LtePhy::SetMacPdu (Ptr<Packet> p)
 }
 
 Ptr<PacketBurst>
-LtePhy::GetPacketBurst (void)
+LtePhy::GetPacketBurst ()
 {
   if (m_packetBurstQueue.at (0)->GetSize () > 0)
     {
@@ -208,7 +208,7 @@ LtePhy::GetPacketBurst (void)
     {
       m_packetBurstQueue.erase (m_packetBurstQueue.begin ());
       m_packetBurstQueue.push_back (CreateObject <PacketBurst> ());
-      return (0);
+      return (nullptr);
     }
 }
 
@@ -222,7 +222,7 @@ LtePhy::SetControlMessages (Ptr<LteControlMessage> m)
 }
 
 std::list<Ptr<LteControlMessage> >
-LtePhy::GetControlMessages (void)
+LtePhy::GetControlMessages ()
 {
   NS_LOG_FUNCTION (this);
   if (m_controlMessagesQueue.at (0).size () > 0)

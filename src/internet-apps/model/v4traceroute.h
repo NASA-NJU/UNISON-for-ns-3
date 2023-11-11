@@ -54,9 +54,9 @@ public:
   * \brief Get the type ID.
   * \return the object TypeId
   */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
   V4TraceRoute ();
-  virtual ~V4TraceRoute ();
+  ~V4TraceRoute () override;
   /**
    * \brief Prints the application traced routes into a given OutputStream.
    * \param stream the output stream
@@ -64,14 +64,14 @@ public:
   void Print (Ptr<OutputStreamWrapper> stream);
 
 private:
-  virtual void StartApplication (void);
-  virtual void StopApplication (void);
-  virtual void DoDispose (void);
+  void StartApplication () override;
+  void StopApplication () override;
+  void DoDispose () override;
   /**
    * \brief Return the application ID in the node.
    * \returns the application id
    */
-  uint32_t GetApplicationId (void) const;
+  uint32_t GetApplicationId () const;
   /**
    * \brief Receive an ICMP Echo
    * \param socket the receiving socket

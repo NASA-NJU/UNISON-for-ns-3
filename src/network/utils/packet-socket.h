@@ -48,12 +48,12 @@ class PacketSocketAddress;
  * is very similar to the linux and BSD "packet" sockets.
  *
  * Here is a summary of the semantics of this class:
- * - Bind: Bind uses only the protocol and device fields of the 
- *       PacketSocketAddress. If none are provided, Bind uses 
+ * - Bind: Bind uses only the protocol and device fields of the
+ *       PacketSocketAddress. If none are provided, Bind uses
  *       zero for both, which means that the socket is bound
  *       to all protocols on all devices on the node.
  *
- * - Connect: uses only the protocol, device and "physical address" 
+ * - Connect: uses only the protocol, device and "physical address"
  *       field of the PacketSocketAddress. It is used to set the default
  *       destination address for outgoing packets.
  *
@@ -61,11 +61,11 @@ class PacketSocketAddress;
  *       with the default destination address. The socket must
  *       be bound and connected.
  *
- * - SendTo: uses the protocol, device, and "physical address" 
- *       fields of the PacketSocketAddress. The device value is 
- *       used to specialize the packet transmission to a single 
+ * - SendTo: uses the protocol, device, and "physical address"
+ *       fields of the PacketSocketAddress. The device value is
+ *       used to specialize the packet transmission to a single
  *       device, the protocol value specifies the protocol of this
- *       packet only and the "physical address" field is used to override the 
+ *       packet only and the "physical address" field is used to override the
  *       default destination address. The socket must be bound.
  *
  * - Recv: The address represents the address of the packer originator.
@@ -97,10 +97,10 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   PacketSocket ();
-  virtual ~PacketSocket ();
+  ~PacketSocket () override;
 
   /**
    * \brief Set the associated node.
@@ -108,9 +108,9 @@ public:
    */
   void SetNode (Ptr<Node> node);
 
-  virtual enum SocketErrno GetErrno (void) const;
-  virtual enum SocketType GetSocketType (void) const;
-  virtual Ptr<Node> GetNode (void) const;
+  enum SocketErrno GetErrno () const override;
+  enum SocketType GetSocketType () const override;
+  Ptr<Node> GetNode () const override;
   /**
    * \brief Bind the socket to the NetDevice and register the protocol handler.
    *
@@ -118,7 +118,7 @@ public:
    *
    * \returns 0 on success, -1 on failure.
    */
-  virtual int Bind (void);
+  int Bind () override;
   /**
    * \brief Bind the socket to the NetDevice and register the protocol handler.
    *
@@ -126,7 +126,7 @@ public:
    *
    * \returns 0 on success, -1 on failure.
    */
-  virtual int Bind6 (void);
+  int Bind6 () override;
   /**
    * \brief Bind the socket to the NetDevice and register the
    *        protocol handler specified in the address.
@@ -134,23 +134,23 @@ public:
    * \param address the packet socket address
    * \returns 0 on success, -1 on failure.
    */
-  virtual int Bind (const Address & address);
-  virtual int Close (void);
-  virtual int ShutdownSend (void);
-  virtual int ShutdownRecv (void);
-  virtual int Connect (const Address &address);
-  virtual int Listen (void);
-  virtual uint32_t GetTxAvailable (void) const;
-  virtual int Send (Ptr<Packet> p, uint32_t flags);
-  virtual int SendTo (Ptr<Packet> p, uint32_t flags, const Address &toAddress);
-  virtual uint32_t GetRxAvailable (void) const;
-  virtual Ptr<Packet> Recv (uint32_t maxSize, uint32_t flags);
-  virtual Ptr<Packet> RecvFrom (uint32_t maxSize, uint32_t flags,
-                                Address &fromAddress);
-  virtual int GetSockName (Address &address) const; 
-  virtual int GetPeerName (Address &address) const;
-  virtual bool SetAllowBroadcast (bool allowBroadcast);
-  virtual bool GetAllowBroadcast () const;
+  int Bind (const Address & address) override;
+  int Close () override;
+  int ShutdownSend () override;
+  int ShutdownRecv () override;
+  int Connect (const Address &address) override;
+  int Listen () override;
+  uint32_t GetTxAvailable () const override;
+  int Send (Ptr<Packet> p, uint32_t flags) override;
+  int SendTo (Ptr<Packet> p, uint32_t flags, const Address &toAddress) override;
+  uint32_t GetRxAvailable () const override;
+  Ptr<Packet> Recv (uint32_t maxSize, uint32_t flags) override;
+  Ptr<Packet> RecvFrom (uint32_t maxSize, uint32_t flags,
+                                Address &fromAddress) override;
+  int GetSockName (Address &address) const override;
+  int GetPeerName (Address &address) const override;
+  bool SetAllowBroadcast (bool allowBroadcast) override;
+  bool GetAllowBroadcast () const override;
 
 private:
   /**
@@ -163,7 +163,7 @@ private:
    * \param to destination address
    * \param packetType packet type
    */
-  void ForwardUp (Ptr<NetDevice> device, Ptr<const Packet> packet, 
+  void ForwardUp (Ptr<NetDevice> device, Ptr<const Packet> packet,
                   uint16_t protocol, const Address &from, const Address &to,
                   NetDevice::PacketType packetType);
   /**
@@ -180,7 +180,7 @@ private:
    * \returns The minimum MTU
    */
   uint32_t GetMinMtu (PacketSocketAddress ad) const;
-  virtual void DoDispose (void);
+  void DoDispose () override;
 
   /**
    * \brief States of the socket
@@ -229,10 +229,10 @@ public:
    */
   void SetPacketType (NetDevice::PacketType t);
   /**
-   * Get the packet type 
+   * Get the packet type
    * @return the packet type of the corresponding packet
    */
-  NetDevice::PacketType GetPacketType (void) const;
+  NetDevice::PacketType GetPacketType () const;
   /**
    * Set the destination address of the corresponding packet
    * @param a the destination address of the corresponding packet
@@ -242,18 +242,18 @@ public:
    * Get the destination address of the corresponding packet
    * @return the destination address of the corresponding packet
    */
-  Address GetDestAddress (void) const;
+  Address GetDestAddress () const;
 
   /**
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
-  virtual TypeId GetInstanceTypeId (void) const;
-  virtual uint32_t GetSerializedSize (void) const;
-  virtual void Serialize (TagBuffer i) const;
-  virtual void Deserialize (TagBuffer i);
-  virtual void Print (std::ostream &os) const;
+  static TypeId GetTypeId ();
+  TypeId GetInstanceTypeId () const override;
+  uint32_t GetSerializedSize () const override;
+  void Serialize (TagBuffer i) const override;
+  void Deserialize (TagBuffer i) override;
+  void Print (std::ostream &os) const override;
 
 private:
   NetDevice::PacketType m_packetType; //!< Packet type
@@ -278,17 +278,17 @@ public:
    * Get the device name from where the corresponding packet is coming.
    * @return the device name from where the corresponding packet is coming.
    */
-  std::string GetDeviceName (void) const;
+  std::string GetDeviceName () const;
   /**
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
-  virtual TypeId GetInstanceTypeId (void) const;
-  virtual uint32_t GetSerializedSize (void) const;
-  virtual void Serialize (TagBuffer i) const;
-  virtual void Deserialize (TagBuffer i);
-  virtual void Print (std::ostream &os) const;
+  static TypeId GetTypeId ();
+  TypeId GetInstanceTypeId () const override;
+  uint32_t GetSerializedSize () const override;
+  void Serialize (TagBuffer i) const override;
+  void Deserialize (TagBuffer i) override;
+  void Print (std::ostream &os) const override;
 
 private:
   std::string m_deviceName; //!< Device name

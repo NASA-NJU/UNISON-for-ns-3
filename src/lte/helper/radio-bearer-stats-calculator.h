@@ -22,15 +22,15 @@
 #ifndef RADIO_BEARER_STATS_CALCULATOR_H_
 #define RADIO_BEARER_STATS_CALCULATOR_H_
 
-#include "ns3/lte-stats-calculator.h"
-#include "ns3/lte-common.h"
-#include "ns3/uinteger.h"
-#include "ns3/object.h"
 #include "ns3/basic-data-calculators.h"
 #include "ns3/lte-common.h"
-#include <string>
-#include <map>
+#include "ns3/lte-stats-calculator.h"
+#include "ns3/object.h"
+#include "ns3/uinteger.h"
+
 #include <fstream>
+#include <map>
+#include <string>
 
 namespace ns3
 {
@@ -52,10 +52,10 @@ typedef std::map<ImsiLcidPair_t, LteFlowId_t> FlowIdMap;
  *
  * This class is an ns-3 trace sink that performs the calculation of
  * PDU statistics for uplink and downlink. Statistics are generated
- * on a per radio bearer basis. This class can be used for 
+ * on a per radio bearer basis. This class can be used for
  * RLC PDU stats or PDCP PDU stats by connecting to the appropriate
  * trace sources at the RLC or PDCP layer.
- * 
+ *
  * The statistics are calculated at consecutive time windows and
  * periodically written to a file. The calculated statistics are:
  *
@@ -84,28 +84,28 @@ public:
   /**
    * Class destructor
    */
-  virtual
-  ~RadioBearerStatsCalculator ();
+  
+  ~RadioBearerStatsCalculator () override;
 
   // Inherited from ns3::Object
   /**
    *  Register this type.
    *  \return The object TypeId.
    */
-  static TypeId GetTypeId (void);
-  void DoDispose ();
+  static TypeId GetTypeId ();
+  void DoDispose () override;
 
   /**
    * Get the name of the file where the uplink statistics will be stored.
    * @return the name of the file where the uplink statistics will be stored
    */
-  std::string GetUlOutputFilename (void);
+  std::string GetUlOutputFilename ();
 
   /**
    * Get the name of the file where the downlink statistics will be stored.
    * @return the name of the file where the downlink statistics will be stored
    */
-  std::string GetDlOutputFilename (void);
+  std::string GetDlOutputFilename ();
 
   /**
    * Set the name of the file where the uplink PDCP statistics will be stored.
@@ -118,7 +118,7 @@ public:
    * Get the name of the file where the uplink PDCP statistics will be stored.
    * @return the name of the file where the uplink PDCP statistics will be stored
    */
-  std::string GetUlPdcpOutputFilename (void);
+  std::string GetUlPdcpOutputFilename ();
 
   /**
    * Set the name of the file where the downlink PDCP statistics will be stored.
@@ -131,29 +131,29 @@ public:
    * Get the name of the file where the downlink PDCP statistics will be stored.
    * @return the name of the file where the downlink PDCP statistics will be stored
    */
-  std::string GetDlPdcpOutputFilename (void);
+  std::string GetDlPdcpOutputFilename ();
 
 
-  /** 
-   * 
+  /**
+   *
    * \param t the value of the StartTime attribute
    */
   void SetStartTime (Time t);
 
-  /** 
-   * 
+  /**
+   *
    * \return the value of the StartTime attribute
    */
   Time GetStartTime () const;
 
-  /** 
-   * 
+  /**
+   *
    * \param e the epoch duration
    */
   void SetEpoch (Time e);
 
-  /** 
-   * 
+  /**
+   *
    * \return the epoch duration
    */
   Time GetEpoch () const;
@@ -356,7 +356,7 @@ private:
    * During next calls it opens output files in append mode.
    */
   void
-  ShowResults (void);
+  ShowResults ();
 
   /**
    * Writes collected statistics to UL output file and
@@ -378,7 +378,7 @@ private:
    * Erases collected statistics
    */
   void
-  ResetResults (void);
+  ResetResults ();
 
   /**
    * Reschedules EndEpoch event. Usually used after
@@ -391,7 +391,7 @@ private:
    * ShowResults() to write statistics to output files
    * and ResetResults() to clear collected statistics.
    */
-  void EndEpoch (void);
+  void EndEpoch ();
 
   EventId m_endEpochEvent; //!< Event id for next end epoch event
 

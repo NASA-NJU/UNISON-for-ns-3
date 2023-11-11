@@ -39,26 +39,26 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
   /**
    * \brief MqQueueDisc constructor
    */
   MqQueueDisc ();
 
-  virtual ~MqQueueDisc();
+  ~MqQueueDisc() override;
 
  /**
    * \brief Return the wake mode adopted by this queue disc.
    * \return the wake mode adopted by this queue disc.
    */
-  WakeMode GetWakeMode (void) const;
+  WakeMode GetWakeMode () const override;
 
 private:
-  virtual bool DoEnqueue (Ptr<QueueDiscItem> item);
-  virtual Ptr<QueueDiscItem> DoDequeue (void);
-  virtual Ptr<const QueueDiscItem> DoPeek (void);
-  virtual bool CheckConfig (void);
-  virtual void InitializeParams (void);
+  bool DoEnqueue (Ptr<QueueDiscItem> item) override;
+  Ptr<QueueDiscItem> DoDequeue () override;
+  Ptr<const QueueDiscItem> DoPeek () override;
+  bool CheckConfig () override;
+  void InitializeParams () override;
 };
 
 } // namespace ns3

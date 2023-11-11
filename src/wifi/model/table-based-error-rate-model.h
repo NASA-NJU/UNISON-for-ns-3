@@ -43,10 +43,10 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   TableBasedErrorRateModel ();
-  ~TableBasedErrorRateModel ();
+  ~TableBasedErrorRateModel () override;
 
   /**
    * \brief Utility function to convert WifiMode to an MCS value

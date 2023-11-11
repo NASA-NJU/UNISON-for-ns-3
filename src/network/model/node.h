@@ -60,7 +60,7 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   Node();
   /**
@@ -68,15 +68,15 @@ public:
    */
   Node(uint32_t systemId);
 
-  virtual ~Node();
+  ~Node() override;
 
   /**
    * \returns the unique id of this node.
-   * 
+   *
    * This unique id happens to be also the index of the Node into
-   * the NodeList. 
+   * the NodeList.
    */
-  uint32_t GetId (void) const;
+  uint32_t GetId () const;
 
   /**
    * In the future, ns3 nodes may have clock that returned a local time
@@ -86,13 +86,13 @@ public:
    *
    * \return The time as seen by this node
    */
-  Time GetLocalTime (void) const;
+  Time GetLocalTime () const;
 
   /**
    * \returns the system id for parallel simulations associated
    *          to this node.
    */
-  uint32_t GetSystemId (void) const;
+  uint32_t GetSystemId () const;
 
   /**
    * \brief Set the system ID for auto-partition in the multithreaded simulator
@@ -120,7 +120,7 @@ public:
    * \returns the number of NetDevice instances associated
    *          to this Node.
    */
-  uint32_t GetNDevices (void) const;
+  uint32_t GetNDevices () const;
 
   /**
    * \brief Associate an Application to this Node.
@@ -141,7 +141,7 @@ public:
   /**
    * \returns the number of Application instances associated to this Node.
    */
-  uint32_t GetNApplications (void) const;
+  uint32_t GetNApplications () const;
 
   /**
    * A protocol handler
@@ -155,7 +155,7 @@ public:
    * \param receiver the address of the receiver; Note: this value is
    *                 only valid for promiscuous mode protocol
    *                 handlers.  Note:  If the L2 protocol does not use L2
-   *                 addresses, the address reported here is the value of 
+   *                 addresses, the address reported here is the value of
    *                 device->GetAddress().
    * \param packetType type of packet received
    *                   (broadcast/multicast/unicast/otherhost); Note:
@@ -166,7 +166,7 @@ public:
                    const Address &, NetDevice::PacketType> ProtocolHandler;
   /**
    * \param handler the handler to register
-   * \param protocolType the type of protocol this handler is 
+   * \param protocolType the type of protocol this handler is
    *        interested in. This protocol type is a so-called
    *        EtherType, as registered here:
    *        http://standards.ieee.org/regauth/ethertype/eth.txt
@@ -177,7 +177,7 @@ public:
    *        devices on this node.
    * \param promiscuous whether to register a promiscuous mode handler
    */
-  void RegisterProtocolHandler (ProtocolHandler handler, 
+  void RegisterProtocolHandler (ProtocolHandler handler,
                                 uint16_t protocolType,
                                 Ptr<NetDevice> device,
                                 bool promiscuous=false);
@@ -204,7 +204,7 @@ public:
   /**
    * \param listener the listener to remove
    *
-   * Remove an existing listener from the list of listeners for the 
+   * Remove an existing listener from the list of listeners for the
    * device-added event.
    */
   void UnregisterDeviceAdditionListener (DeviceAdditionListener listener);
@@ -214,7 +214,7 @@ public:
   /**
    * \returns true if checksums are enabled, false otherwise.
    */
-  static bool ChecksumEnabled (void);
+  static bool ChecksumEnabled ();
 
 
 protected:
@@ -223,8 +223,8 @@ protected:
    * and must chain up to it by calling Node::DoDispose at the
    * end of their own DoDispose method.
    */
-  virtual void DoDispose (void);
-  virtual void DoInitialize (void);
+  void DoDispose () override;
+  void DoInitialize () override;
 private:
 
   /**
@@ -271,7 +271,7 @@ private:
   /**
    * \brief Finish node's construction by setting the correct node ID.
    */
-  void Construct (void);
+  void Construct ();
 
   /**
    * \brief Protocol handler entry.

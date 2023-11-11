@@ -40,7 +40,7 @@ using namespace ns3;
 
 /**
  * \ingroup simulator-tests
- *  
+ *
  * \brief Check that basic event handling is working with different Simulator implementations.
  */
 class SimulatorEventsTestCase : public TestCase
@@ -51,7 +51,7 @@ public:
    * \param schedulerFactory Scheduler factory.
    */
   SimulatorEventsTestCase (ObjectFactory schedulerFactory);
-  virtual void DoRun (void);
+  void DoRun () override;
   /**
    * Test Event.
    * \param value Event parameter.
@@ -66,17 +66,17 @@ public:
   /**
    * Test Event.
    */
-  void Eventfoo0 (void);
+  void Eventfoo0 ();
 
   /**
    * Get the simulator time.
    * \return The actual time [ms].
    */
-  uint64_t NowUs (void);
+  uint64_t NowUs ();
   /**
    * Checks that the events has been detroyed.
    */
-  void Destroy (void);
+  void Destroy ();
   /**
    * Checks that events are properly handled.
    * @{
@@ -99,7 +99,7 @@ SimulatorEventsTestCase::SimulatorEventsTestCase (ObjectFactory schedulerFactory
     m_schedulerFactory (schedulerFactory)
 {}
 uint64_t
-SimulatorEventsTestCase::NowUs (void)
+SimulatorEventsTestCase::NowUs ()
 {
   uint64_t ns = Now ().GetNanoSeconds ();
   return ns / 1000;
@@ -146,11 +146,11 @@ SimulatorEventsTestCase::EventD (int d)
 }
 
 void
-SimulatorEventsTestCase::Eventfoo0 (void)
+SimulatorEventsTestCase::Eventfoo0 ()
 {}
 
 void
-SimulatorEventsTestCase::Destroy (void)
+SimulatorEventsTestCase::Destroy ()
 {
   if (m_destroyId.IsExpired ())
     {
@@ -158,7 +158,7 @@ SimulatorEventsTestCase::Destroy (void)
     }
 }
 void
-SimulatorEventsTestCase::DoRun (void)
+SimulatorEventsTestCase::DoRun ()
 {
   m_a = true;
   m_b = false;
@@ -215,9 +215,9 @@ SimulatorEventsTestCase::DoRun (void)
 
 /**
  * \ingroup simulator-tests
- *  
+ *
  * \brief Check that all templates are instantiated correctly.
- * 
+ *
  * This is a compilation test, it cannot fail at runtime.
  */
 class SimulatorTemplateTestCase : public TestCase
@@ -226,66 +226,63 @@ public:
   SimulatorTemplateTestCase ();
   /**
    * Ref and Unref - only here for testing of Ptr<>
-   * 
+   *
    * @{
    */
-  void Ref (void) const {};
-  void Unref (void) const {};
+  void Ref () const {};
+  void Unref () const {};
   /** @} */
 
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
 
-  /* *NS_CHECK_STYLE_OFF* */
   /**
    * Function used for scheduling.
-   * 
+   *
    * @{
    */
-  void bar0 (void) {}
-  void bar1 (int) {}
-  void bar2 (int, int) {}
-  void bar3 (int, int, int) {}
-  void bar4 (int, int, int, int) {}
-  void bar5 (int, int, int, int, int) {}
-  void baz1 (int &) {}
-  void baz2 (int &, int &) {}
-  void baz3 (int &, int &, int &) {}
-  void baz4 (int &, int &, int &, int &) {}
-  void baz5 (int &, int &, int &, int &, int &) {}
-  void cbaz1 (const int &) {}
-  void cbaz2 (const int &, const int &) {}
-  void cbaz3 (const int &, const int &, const int &) {}
-  void cbaz4 (const int &, const int &, const int &, const int &) {}
-  void cbaz5 (const int &, const int &, const int &, const int &, const int &) {}
+  void bar0 () {};
+  void bar1 (int) {};
+  void bar2 (int, int) {};
+  void bar3 (int, int, int) {};
+  void bar4 (int, int, int, int) {};
+  void bar5 (int, int, int, int, int) {};
+  void baz1 (int &) {};
+  void baz2 (int &, int &) {};
+  void baz3 (int &, int &, int &) {};
+  void baz4 (int &, int &, int &, int &) {};
+  void baz5 (int &, int &, int &, int &, int &) {};
+  void cbaz1 (const int &) {};
+  void cbaz2 (const int &, const int &) {};
+  void cbaz3 (const int &, const int &, const int &) {};
+  void cbaz4 (const int &, const int &, const int &, const int &) {};
+  void cbaz5 (const int &, const int &, const int &, const int &, const int &) {};
 
-  void bar0c (void) const {}
-  void bar1c (int) const {}
-  void bar2c (int, int) const {}
-  void bar3c (int, int, int) const {}
-  void bar4c (int, int, int, int) const {}
-  void bar5c (int, int, int, int, int) const {}
-  void baz1c (int &) const {}
-  void baz2c (int &, int &) const {}
-  void baz3c (int &, int &, int &) const {}
-  void baz4c (int &, int &, int &, int &) const {}
-  void baz5c (int &, int &, int &, int &, int &) const {}
-  void cbaz1c (const int &) const {}
-  void cbaz2c (const int &, const int &) const {}
-  void cbaz3c (const int &, const int &, const int &) const {}
-  void cbaz4c (const int &, const int &, const int &, const int &) const {}
-  void cbaz5c (const int &, const int &, const int &, const int &, const int &) const {}
+  void bar0c () const {};
+  void bar1c (int) const {};
+  void bar2c (int, int) const {};
+  void bar3c (int, int, int) const {};
+  void bar4c (int, int, int, int) const {};
+  void bar5c (int, int, int, int, int) const {};
+  void baz1c (int &) const {};
+  void baz2c (int &, int &) const {};
+  void baz3c (int &, int &, int &) const {};
+  void baz4c (int &, int &, int &, int &) const {};
+  void baz5c (int &, int &, int &, int &, int &) const {};
+  void cbaz1c (const int &) const {};
+  void cbaz2c (const int &, const int &) const {};
+  void cbaz3c (const int &, const int &, const int &) const {};
+  void cbaz4c (const int &, const int &, const int &, const int &) const {};
+  void cbaz5c (const int &, const int &, const int &, const int &, const int &) const {};
   /** @} */
-  /* *NS_CHECK_STYLE_ON* */
-
 };
 
 /**
   * Function used for scheduling.
-  * 
+  *
   * @{
   */
-static void foo0 (void)
+static void foo0 ()
 {}
 static void foo1 (int)
 {}
@@ -323,7 +320,7 @@ SimulatorTemplateTestCase::SimulatorTemplateTestCase ()
   : TestCase ("Check that all templates are instantiated correctly. This is a compilation test, it cannot fail at runtime.")
 {}
 void
-SimulatorTemplateTestCase::DoRun (void)
+SimulatorTemplateTestCase::DoRun ()
 {
   // Test schedule of const methods
   Simulator::Schedule (Seconds (0.0), &SimulatorTemplateTestCase::bar0c, this);
@@ -533,7 +530,7 @@ SimulatorTemplateTestCase::DoRun (void)
 
 /**
  * \ingroup simulator-tests
- *  
+ *
  * \brief The simulator Test Suite.
  */
 class SimulatorTestSuite : public TestSuite

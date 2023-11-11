@@ -35,6 +35,8 @@
 #include "ns3/channel-access-manager.h"
 #include "ns3/mac-tx-middle.h"
 #include "ns3/qos-txop.h"
+#include "ns3/wifi-mac-queue-scheduler.h"
+#include "ns3/wifi-mac-queue.h"
 
 namespace ns3 {
 
@@ -183,7 +185,7 @@ uint16_t
 MeshWifiInterfaceMac::GetFrequencyChannel () const
 {
   NS_LOG_FUNCTION (this);
-  NS_ASSERT (GetWifiPhy () != 0); // need PHY to set/get channel
+  NS_ASSERT (GetWifiPhy ()); // need PHY to set/get channel
   return GetWifiPhy ()->GetChannelNumber ();
 }
 
@@ -191,7 +193,7 @@ void
 MeshWifiInterfaceMac::SwitchFrequencyChannel (uint16_t new_id)
 {
   NS_LOG_FUNCTION (this);
-  NS_ASSERT (GetWifiPhy () != 0); // need PHY to set/get channel
+  NS_ASSERT (GetWifiPhy ()); // need PHY to set/get channel
   /**
    * \todo
    * Correct channel switching is:
@@ -205,7 +207,7 @@ MeshWifiInterfaceMac::SwitchFrequencyChannel (uint16_t new_id)
    */
   GetWifiPhy ()->SetOperatingChannel (WifiPhy::ChannelTuple {new_id, 0, GetWifiPhy ()->GetPhyBand (), 0});
   // Don't know NAV on new channel
-  m_channelAccessManager->NotifyNavResetNow (Seconds (0));
+  GetLink (SINGLE_LINK_OP_ID).channelAccessManager->NotifyNavResetNow (Seconds (0));
 }
 //-----------------------------------------------------------------------------
 // Forward frame down
@@ -413,7 +415,7 @@ MeshWifiInterfaceMac::SendBeacon ()
   ScheduleNextBeacon ();
 }
 void
-MeshWifiInterfaceMac::Receive (Ptr<WifiMacQueueItem> mpdu)
+MeshWifiInterfaceMac::Receive (Ptr<const WifiMpdu> mpdu, uint8_t linkId)
 {
   const WifiMacHeader* hdr = &mpdu->GetHeader ();
   Ptr<Packet> packet = mpdu->GetPacket ()->Copy ();
@@ -560,12 +562,13 @@ MeshWifiInterfaceMac::ConfigureContentionWindow (uint32_t cwMin, uint32_t cwMax)
   // Beacon transmission. For this we need to reconfigure the channel
   // access parameters slightly, and do so here.
   m_txop = CreateObject<Txop> ();
-  m_txop->SetChannelAccessManager (m_channelAccessManager);
   m_txop->SetWifiMac (this);
+  GetLink (0).channelAccessManager->Add (m_txop);
   m_txop->SetTxMiddle (m_txMiddle);
   m_txop->SetMinCw (0);
   m_txop->SetMaxCw (0);
   m_txop->SetAifsn (1);
+  m_scheduler->SetWifiMac (this);
 }
 } // namespace ns3
 

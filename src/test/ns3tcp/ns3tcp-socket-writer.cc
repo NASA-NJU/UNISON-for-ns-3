@@ -23,19 +23,19 @@
 namespace ns3
 {
 
-SocketWriter::SocketWriter () : m_node (0), m_socket (0), m_isSetup (false), m_isConnected (false)
+SocketWriter::SocketWriter () : m_node (nullptr), m_socket (nullptr), m_isSetup (false), m_isConnected (false)
 {
 }
 
 SocketWriter::~SocketWriter ()
 {
-  m_socket = 0;
-  m_node = 0;
+  m_socket = nullptr;
+  m_node = nullptr;
 }
 
 /* static */
 TypeId
-SocketWriter::GetTypeId (void)
+SocketWriter::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::SocketWriter")
     .SetParent<Application> ()
@@ -44,7 +44,7 @@ SocketWriter::GetTypeId (void)
     ;
   return tid;
 }
-  
+
 void
 SocketWriter::StartApplication ()
 {

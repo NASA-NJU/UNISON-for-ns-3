@@ -56,13 +56,13 @@ WifiAc::WifiAc (uint8_t lowTid, uint8_t highTid)
 }
 
 uint8_t
-WifiAc::GetLowTid (void) const
+WifiAc::GetLowTid () const
 {
   return m_lowTid;
 }
 
 uint8_t
-WifiAc::GetHighTid (void) const
+WifiAc::GetHighTid () const
 {
   return m_highTid;
 }
@@ -186,7 +186,7 @@ QosUtilsIsOldPacket (uint16_t startingSeq, uint16_t seqNumber)
 uint8_t
 GetTid (Ptr<const Packet> packet, const WifiMacHeader hdr)
 {
-  NS_ASSERT (hdr.IsQosData () || packet != 0);
+  NS_ASSERT (hdr.IsQosData () || packet);
   if (hdr.IsQosData ())
     {
       return hdr.GetQosTid ();
@@ -252,7 +252,8 @@ GetTid (Ptr<const Packet> packet, const WifiMacHeader hdr)
 uint8_t
 SelectQueueByDSField (Ptr<QueueItem> item)
 {
-  uint8_t dscp, priority = 0;
+  uint8_t dscp;
+  uint8_t priority = 0;
   if (item->GetUint8Value (QueueItem::IP_DSFIELD, dscp))
     {
       // if the QoS map element is implemented, it should be used here

@@ -72,7 +72,7 @@ public:
     RIP_INVALID,
   };
 
-  RipRoutingTableEntry (void);
+  RipRoutingTableEntry ();
 
   /**
    * \brief Constructor
@@ -103,7 +103,7 @@ public:
    * \brief Get the route tag
    * \returns the route tag
    */
-  uint16_t GetRouteTag (void) const;
+  uint16_t GetRouteTag () const;
 
   /**
    * \brief Set the route metric
@@ -115,7 +115,7 @@ public:
    * \brief Get the route metric
    * \returns the route metric
    */
-  uint8_t GetRouteMetric (void) const;
+  uint8_t GetRouteMetric () const;
 
   /**
    * \brief Set the route status
@@ -127,7 +127,7 @@ public:
    * \brief Get the route status
    * \returns the route status
    */
-  Status_e GetRouteStatus (void) const;
+  Status_e GetRouteStatus () const;
 
   /**
    * \brief Set the route as changed
@@ -145,7 +145,7 @@ public:
    *
    * \returns true if route is changed
    */
-  bool IsRouteChanged (void) const;
+  bool IsRouteChanged () const;
 
 private:
   uint16_t m_tag; //!< route tag
@@ -175,26 +175,26 @@ class Rip : public Ipv4RoutingProtocol
 public:
   // /< C-tor
   Rip ();
-  virtual ~Rip ();
+  ~Rip () override;
 
   /**
    * \brief Get the type ID
    * \return type ID
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   // From Ipv4RoutingProtocol
   Ptr<Ipv4Route> RouteOutput (Ptr<Packet> p, const Ipv4Header &header, Ptr<NetDevice> oif,
-                              Socket::SocketErrno &sockerr);
+                              Socket::SocketErrno &sockerr) override;
   bool RouteInput (Ptr<const Packet> p, const Ipv4Header &header, Ptr<const NetDevice> idev,
                    UnicastForwardCallback ucb, MulticastForwardCallback mcb,
-                   LocalDeliverCallback lcb, ErrorCallback ecb);
-  virtual void NotifyInterfaceUp (uint32_t interface);
-  virtual void NotifyInterfaceDown (uint32_t interface);
-  virtual void NotifyAddAddress (uint32_t interface, Ipv4InterfaceAddress address);
-  virtual void NotifyRemoveAddress (uint32_t interface, Ipv4InterfaceAddress address);
-  virtual void SetIpv4 (Ptr<Ipv4> ipv4);
-  virtual void PrintRoutingTable (Ptr<OutputStreamWrapper> stream, Time::Unit unit = Time::S) const;
+                   LocalDeliverCallback lcb, ErrorCallback ecb) override;
+  void NotifyInterfaceUp (uint32_t interface) override;
+  void NotifyInterfaceDown (uint32_t interface) override;
+  void NotifyAddAddress (uint32_t interface, Ipv4InterfaceAddress address) override;
+  void NotifyRemoveAddress (uint32_t interface, Ipv4InterfaceAddress address) override;
+  void SetIpv4 (Ptr<Ipv4> ipv4) override;
+  void PrintRoutingTable (Ptr<OutputStreamWrapper> stream, Time::Unit unit = Time::S) const override;
 
   /**
    * Split Horizon strategy type. See \RFC{2453}.
@@ -256,12 +256,12 @@ protected:
   /**
    * \brief Dispose this object.
    */
-  virtual void DoDispose ();
+  void DoDispose () override;
 
   /**
    * Start protocol operation
    */
-  void DoInitialize ();
+  void DoInitialize () override;
 
 private:
   /// Container for the network routes - pair RipRoutingTableEntry *, EventId (update event)
@@ -309,7 +309,7 @@ private:
    * \param interface output interface if any (put 0 otherwise)
    * \return Ipv4Route to route the packet to reach dest address
    */
-  Ptr<Ipv4Route> Lookup (Ipv4Address dest, bool setSource, Ptr<NetDevice> = 0);
+  Ptr<Ipv4Route> Lookup (Ipv4Address dest, bool setSource, Ptr<NetDevice> = nullptr);
 
   /**
    * Receive and process unicast packet
@@ -358,7 +358,7 @@ private:
   /**
    * \brief Send Unsolicited Routing Updates on all interfaces.
    */
-  void SendUnsolicitedRouteUpdate (void);
+  void SendUnsolicitedRouteUpdate ();
 
   /**
    * \brief Invalidate a route.

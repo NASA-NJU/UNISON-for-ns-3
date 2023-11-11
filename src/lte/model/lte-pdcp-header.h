@@ -45,7 +45,7 @@ public:
    * Creates a null header
    */
   LtePdcpHeader ();
-  ~LtePdcpHeader ();
+  ~LtePdcpHeader () override;
 
   /**
    * \brief Set DC bit
@@ -77,18 +77,18 @@ public:
   enum {
     CONTROL_PDU   = 0,
     DATA_PDU      = 1
-  } DcBit_t; ///< DcBit_t typedef 
+  } DcBit_t; ///< DcBit_t typedef
 
   /**
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
-  virtual TypeId GetInstanceTypeId (void) const;
-  virtual void Print (std::ostream &os) const;
-  virtual uint32_t GetSerializedSize (void) const;
-  virtual void Serialize (Buffer::Iterator start) const;
-  virtual uint32_t Deserialize (Buffer::Iterator start);
+  static TypeId GetTypeId ();
+  TypeId GetInstanceTypeId () const override;
+  void Print (std::ostream &os) const override;
+  uint32_t GetSerializedSize () const override;
+  void Serialize (Buffer::Iterator start) const override;
+  uint32_t Deserialize (Buffer::Iterator start) override;
 
 private:
   uint8_t m_dcBit; ///< the DC bit

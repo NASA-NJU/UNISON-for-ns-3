@@ -53,7 +53,7 @@ public:
    * Register this type.
    * \return The TypeId.
    */
-  static TypeId GetTypeId (void)
+  static TypeId GetTypeId ()
   {
     static TypeId tid = TypeId ("ATestTagBase")
       .SetParent<Tag> ()
@@ -89,7 +89,7 @@ public:
    * Register this type.
    * \return The TypeId.
    */
-  static TypeId GetTypeId (void) {
+  static TypeId GetTypeId () {
     std::ostringstream oss;
     oss << "anon::ATestTag<" << N << ">";
     static TypeId tid = TypeId (oss.str ())
@@ -100,20 +100,20 @@ public:
     ;
     return tid;
   }
-  virtual TypeId GetInstanceTypeId (void) const {
+  TypeId GetInstanceTypeId () const override {
     return GetTypeId ();
   }
-  virtual uint32_t GetSerializedSize (void) const {
+  uint32_t GetSerializedSize () const override {
     return N + sizeof(m_data);
   }
-  virtual void Serialize (TagBuffer buf) const {
+  void Serialize (TagBuffer buf) const override {
     buf.WriteU8 (m_data);
     for (uint32_t i = 0; i < N; ++i)
       {
         buf.WriteU8 (N);
       }
   }
-  virtual void Deserialize (TagBuffer buf) {
+  void Deserialize (TagBuffer buf) override {
     m_data = buf.ReadU8 ();
     for (uint32_t i = 0; i < N; ++i)
       {
@@ -124,7 +124,7 @@ public:
           }
       }
   }
-  virtual void Print (std::ostream &os) const {
+  void Print (std::ostream &os) const override {
     os << N << "(" << m_data << ")";
   }
   ATestTag ()
@@ -163,7 +163,7 @@ public:
    * Register this type.
    * \return The TypeId.
    */
-  static TypeId GetTypeId (void)
+  static TypeId GetTypeId ()
   {
     static TypeId tid = TypeId ("ALargeTestTag")
       .SetParent<Tag> ()
@@ -173,20 +173,20 @@ public:
       ;
     return tid;
   }
-  virtual TypeId GetInstanceTypeId (void) const {
+  TypeId GetInstanceTypeId () const override {
     return GetTypeId ();
   }
-  virtual uint32_t GetSerializedSize (void) const {
+  uint32_t GetSerializedSize () const override {
     return (uint32_t) m_size;
   }
-  virtual void Serialize (TagBuffer buf) const {
+  void Serialize (TagBuffer buf) const override {
     buf.WriteU8 (m_size);
     for (uint8_t i = 0; i < (m_size - 1); ++i)
       {
         buf.WriteU8 (m_data[i]);
       }
   }
-  virtual void Deserialize (TagBuffer buf) {
+  void Deserialize (TagBuffer buf) override {
     m_size = buf.ReadU8 ();
     for (uint8_t i = 0; i < (m_size - 1); ++i)
       {
@@ -194,7 +194,7 @@ public:
         m_data.push_back (v);
       }
   }
-  virtual void Print (std::ostream &os) const {
+  void Print (std::ostream &os) const override {
     os << "(" << (uint16_t) m_size << ")";
   }
 private:
@@ -218,7 +218,7 @@ public:
    * Register this type.
    * \return The TypeId.
    */
-  static TypeId GetTypeId (void)
+  static TypeId GetTypeId ()
   {
     static TypeId tid = TypeId ("ATestHeaderBase")
       .SetParent<Header> ()
@@ -247,7 +247,7 @@ public:
    * Register this type.
    * \return The TypeId.
    */
-  static TypeId GetTypeId (void) {
+  static TypeId GetTypeId () {
     std::ostringstream oss;
     oss << "anon::ATestHeader<" << N << ">";
     static TypeId tid = TypeId (oss.str ())
@@ -258,19 +258,19 @@ public:
     ;
     return tid;
   }
-  virtual TypeId GetInstanceTypeId (void) const {
+  TypeId GetInstanceTypeId () const override {
     return GetTypeId ();
   }
-  virtual uint32_t GetSerializedSize (void) const {
+  uint32_t GetSerializedSize () const override {
     return N;
   }
-  virtual void Serialize (Buffer::Iterator iter) const {
+  void Serialize (Buffer::Iterator iter) const override {
     for (uint32_t i = 0; i < N; ++i)
       {
         iter.WriteU8 (N);
       }
   }
-  virtual uint32_t Deserialize (Buffer::Iterator iter) {
+  uint32_t Deserialize (Buffer::Iterator iter) override {
     for (uint32_t i = 0; i < N; ++i)
       {
         uint8_t v = iter.ReadU8 ();
@@ -281,7 +281,7 @@ public:
       }
     return N;
   }
-  virtual void Print (std::ostream &os) const {
+  void Print (std::ostream &os) const override {
   }
   ATestHeader ()
     : ATestHeaderBase () {}
@@ -304,7 +304,7 @@ public:
    * Register this type.
    * \return The TypeId.
    */
-  static TypeId GetTypeId (void)
+  static TypeId GetTypeId ()
   {
     static TypeId tid = TypeId ("ATestTrailerBase")
       .SetParent<Trailer> ()
@@ -333,7 +333,7 @@ public:
    * Register this type.
    * \return The TypeId.
    */
-  static TypeId GetTypeId (void) {
+  static TypeId GetTypeId () {
     std::ostringstream oss;
     oss << "anon::ATestTrailer<" << N << ">";
     static TypeId tid = TypeId (oss.str ())
@@ -344,20 +344,20 @@ public:
     ;
     return tid;
   }
-  virtual TypeId GetInstanceTypeId (void) const {
+  TypeId GetInstanceTypeId () const override {
     return GetTypeId ();
   }
-  virtual uint32_t GetSerializedSize (void) const {
+  uint32_t GetSerializedSize () const override {
     return N;
   }
-  virtual void Serialize (Buffer::Iterator iter) const {
+  void Serialize (Buffer::Iterator iter) const override {
     iter.Prev (N);
     for (uint32_t i = 0; i < N; ++i)
       {
         iter.WriteU8 (N);
       }
   }
-  virtual uint32_t Deserialize (Buffer::Iterator iter) {
+  uint32_t Deserialize (Buffer::Iterator iter) override {
     iter.Prev (N);
     for (uint32_t i = 0; i < N; ++i)
       {
@@ -369,7 +369,7 @@ public:
       }
     return N;
   }
-  virtual void Print (std::ostream &os) const {
+  void Print (std::ostream &os) const override {
   }
   ATestTrailer ()
     : ATestTrailerBase () {}
@@ -437,7 +437,7 @@ class PacketTest : public TestCase
 {
 public:
   PacketTest ();
-  virtual void DoRun (void);
+  void DoRun () override;
 private:
   /**
    * Checks the packet
@@ -471,7 +471,7 @@ PacketTest::DoCheck (Ptr<const Packet> p, uint32_t n, ...)
       uint32_t N = va_arg (ap, uint32_t);
       uint32_t start = va_arg (ap, uint32_t);
       uint32_t end = va_arg (ap, uint32_t);
-      expected.push_back (Expected (N, start, end));
+      expected.emplace_back(N, start, end);
     }
   va_end (ap);
 
@@ -509,7 +509,7 @@ PacketTest::DoCheckData (Ptr<const Packet> p, uint32_t n, ...)
       uint32_t start = va_arg (ap, uint32_t);
       uint32_t end = va_arg (ap, uint32_t);
       int data = va_arg (ap, int);
-      expected.push_back (Expected (N, start, end, data));
+      expected.emplace_back(N, start, end, data);
     }
   va_end (ap);
 
@@ -537,7 +537,7 @@ PacketTest::DoCheckData (Ptr<const Packet> p, uint32_t n, ...)
 }
 
 void
-PacketTest::DoRun (void)
+PacketTest::DoRun ()
 {
   Ptr<Packet> pkt1 = Create<Packet> (reinterpret_cast<const uint8_t*> ("hello"), 5);
   Ptr<Packet> pkt2 = Create<Packet> (reinterpret_cast<const uint8_t*> (" world"), 6);
@@ -605,7 +605,7 @@ PacketTest::DoRun (void)
   // force caching a buffer of the right size.
   frag0 = Create<Packet> (1000);
   frag0->AddHeader (ATestHeader<10> ());
-  frag0 = 0;
+  frag0 = nullptr;
 
   p = Create<Packet> (1000);
   p->AddByteTag (ATestTag<20> ());
@@ -613,7 +613,7 @@ PacketTest::DoRun (void)
   frag0 = p->CreateFragment (10, 90);
   CHECK (p, 1, E (20, 0, 1000));
   CHECK (frag0, 1, E (20, 0, 90));
-  p = 0;
+  p = nullptr;
   frag0->AddHeader (ATestHeader<10> ());
   CHECK (frag0, 1, E (20, 10, 100));
 
@@ -867,9 +867,9 @@ class PacketTagListTest : public TestCase
 {
 public:
   PacketTagListTest ();
-  virtual ~PacketTagListTest ();
+  ~PacketTagListTest () override;
 private:
-  void DoRun (void);
+  void DoRun () override;
   /**
    * Checks against a reference PacketTagList
    * \param ref Reference
@@ -900,7 +900,7 @@ private:
    */
   int RemoveTime (const PacketTagList & ref,
                   ATestTagBase & t,
-                  const char * msg = 0);
+                  const char * msg = nullptr);
 
   /**
    * Prints the remove time
@@ -1008,7 +1008,7 @@ PacketTagListTest::AddRemoveTime (const bool verbose /* = false */)
 }
 
 void
-PacketTagListTest::DoRun (void)
+PacketTagListTest::DoRun ()
 {
   std::cout << GetName () << "begin" << std::endl;
 
@@ -1115,7 +1115,10 @@ PacketTagListTest::DoRun (void)
     const int nIterations = 100;
     for (int i = 0; i < nIterations; ++i) {
       int now = AddRemoveTime ();
-      if (now < flm) flm = now;
+      if (now < flm)
+        {
+          flm = now;
+        }
     }
     std::cout << GetName () << "min add+remove time: "
               << std::setw (8) << flm        << " ticks"
@@ -1137,7 +1140,10 @@ PacketTagListTest::DoRun (void)
         case 1:  now = RemoveTime (ref, t1);  break;
 	}  // switch
 
-	if (now < rmn[j]) rmn[j] = now;
+        if (now < rmn[j])
+        {
+          rmn[j] = now;
+        }
       } // for tag j
     } // for iteration i
     for (int j = tagLast; j > 0; --j) {

@@ -90,25 +90,25 @@ public:
   /**
    * Destructor
    */
-  virtual ~PssFfMacScheduler ();
+  ~PssFfMacScheduler () override;
 
   // inherited from Object
-  virtual void DoDispose (void);
+  void DoDispose () override;
   /**
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   // inherited from FfMacScheduler
-  virtual void SetFfMacCschedSapUser (FfMacCschedSapUser* s);
-  virtual void SetFfMacSchedSapUser (FfMacSchedSapUser* s);
-  virtual FfMacCschedSapProvider* GetFfMacCschedSapProvider ();
-  virtual FfMacSchedSapProvider* GetFfMacSchedSapProvider ();
+  void SetFfMacCschedSapUser (FfMacCschedSapUser* s) override;
+  void SetFfMacSchedSapUser (FfMacSchedSapUser* s) override;
+  FfMacCschedSapProvider* GetFfMacCschedSapProvider () override;
+  FfMacSchedSapProvider* GetFfMacSchedSapProvider () override;
 
   // FFR SAPs
-  virtual void SetLteFfrSapProvider (LteFfrSapProvider* s);
-  virtual LteFfrSapUser* GetLteFfrSapUser ();
+  void SetLteFfrSapProvider (LteFfrSapProvider* s) override;
+  LteFfrSapUser* GetLteFfrSapUser () override;
 
   /// allow MemberCschedSapProvider<PssFfMacScheduler> class friend access
   friend class MemberCschedSapProvider<PssFfMacScheduler>;
@@ -272,9 +272,9 @@ private:
   double EstimateUlSinr (uint16_t rnti, uint16_t rb);
 
   /// Refresh DL CQI maps function
-  void RefreshDlCqiMaps (void);
+  void RefreshDlCqiMaps ();
   /// Refresh UL CQI maps function
-  void RefreshUlCqiMaps (void);
+  void RefreshUlCqiMaps ();
 
   /**
    * \brief Update DL RLC buffer info function
@@ -379,7 +379,7 @@ private:
 
   // FFR SAPs
   LteFfrSapUser* m_ffrSapUser; ///< FFR SAP user
-  LteFfrSapProvider* m_ffrSapProvider; ///< FFR SAP provider 
+  LteFfrSapProvider* m_ffrSapProvider; ///< FFR SAP provider
 
   // Internal parameters
   FfMacCschedSapProvider::CschedCellConfigReqParameters m_cschedCellConfig; ///< CSched cell config

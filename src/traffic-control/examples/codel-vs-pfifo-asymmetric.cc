@@ -69,96 +69,149 @@ using namespace ns3;
 
 NS_LOG_COMPONENT_DEFINE ("CoDelPfifoFastAsymmetricTest");
 
+/**
+ * TCP Congestion window tracker.
+ *
+ * \param stream The ouput stream.
+ * \param oldval Old value.
+ * \param newval New value.
+ */
 static void
-CwndTracer (Ptr<OutputStreamWrapper>stream, uint32_t oldval, uint32_t newval)
+CwndTracer (Ptr<OutputStreamWrapper> stream, uint32_t oldval, uint32_t newval)
 {
   *stream->GetStream () << oldval << " " << newval << std::endl;
 }
 
+/**
+ * Setup for TCP congestion window tracking.
+ *
+ * \param cwndTrFileName Congestion window output file name.
+ */
 static void
 TraceCwnd (std::string cwndTrFileName)
 {
   AsciiTraceHelper ascii;
-  if (cwndTrFileName.compare ("") == 0)
+  if (cwndTrFileName == "")
     {
       NS_LOG_DEBUG ("No trace file for cwnd provided");
       return;
     }
   else
     {
-      Ptr<OutputStreamWrapper> stream = ascii.CreateFileStream (cwndTrFileName.c_str ());
+      Ptr<OutputStreamWrapper> stream = ascii.CreateFileStream (cwndTrFileName);
       Config::ConnectWithoutContext ("/NodeList/0/$ns3::TcpL4Protocol/SocketList/0/CongestionWindow",MakeBoundCallback (&CwndTracer, stream));
     }
 }
 
+/**
+ * Traffic Control Sojourn tracker.
+ *
+ * \param stream The ouput stream.
+ * \param newval New value.
+ */
 static void
-SojournTracer (Ptr<OutputStreamWrapper>stream, Time newval)
+SojournTracer (Ptr<OutputStreamWrapper> stream, Time newval)
 {
   *stream->GetStream () << newval << std::endl;
 }
 
+/**
+ * Setup for Traffic Control Sojourn time tracking.
+ *
+ * \param sojournTrFileName Sojourn time output file name.
+ */
 static void
 TraceSojourn (std::string sojournTrFileName)
 {
   AsciiTraceHelper ascii;
-  if (sojournTrFileName.compare ("") == 0)
+  if (sojournTrFileName == "")
     {
       NS_LOG_DEBUG ("No trace file for sojourn provided");
       return;
     }
   else
     {
-      Ptr<OutputStreamWrapper> stream = ascii.CreateFileStream (sojournTrFileName.c_str ());
+      Ptr<OutputStreamWrapper> stream = ascii.CreateFileStream (sojournTrFileName);
       Config::ConnectWithoutContext ("/NodeList/2/$ns3::TrafficControlLayer/RootQueueDiscList/0/$ns3::CoDelQueueDisc/SojournTime", MakeBoundCallback (&SojournTracer, stream));
     }
 }
 
+/**
+ * Traffic Control Queue length tracker.
+ *
+ * \param stream The ouput stream.
+ * \param oldval Old value.
+ * \param newval New value.
+ */
 static void
-QueueLengthTracer (Ptr<OutputStreamWrapper>stream, uint32_t oldval, uint32_t newval)
+QueueLengthTracer (Ptr<OutputStreamWrapper> stream, uint32_t oldval, uint32_t newval)
 {
   *stream->GetStream () << oldval << " " << newval << std::endl;
 }
 
+/**
+ * Setup for Traffic Control Queue length tracking.
+ *
+ * \param queueLengthTrFileName Queue length output file name.
+ */
 static void
 TraceQueueLength (std::string queueLengthTrFileName)
 {
   AsciiTraceHelper ascii;
-  if (queueLengthTrFileName.compare ("") == 0)
+  if (queueLengthTrFileName == "")
     {
       NS_LOG_DEBUG ("No trace file for queue length provided");
       return;
     }
   else
     {
-      Ptr<OutputStreamWrapper> stream = ascii.CreateFileStream (queueLengthTrFileName.c_str ());
+      Ptr<OutputStreamWrapper> stream = ascii.CreateFileStream (queueLengthTrFileName);
       Config::ConnectWithoutContext ("/NodeList/2/$ns3::TrafficControlLayer/RootQueueDiscList/0/BytesInQueue", MakeBoundCallback (&QueueLengthTracer, stream));
     }
 }
 
+/**
+ * Traffic control drop trace.
+ *
+ * \param stream The ouput stream.
+ * \param item The dropped item.
+ */
 static void
-EveryDropTracer (Ptr<OutputStreamWrapper>stream, Ptr<const QueueDiscItem> item)
+EveryDropTracer (Ptr<OutputStreamWrapper> stream, Ptr<const QueueDiscItem> item)
 {
   *stream->GetStream () << Simulator::Now ().GetSeconds () << " " << item << std::endl;
 }
 
+/**
+ * Setup for Traffic Control drop tracking.
+ *
+ * \param everyDropTrFileName TC drop output file name.
+ */
 static void
 TraceEveryDrop (std::string everyDropTrFileName)
 {
   AsciiTraceHelper ascii;
-  if (everyDropTrFileName.compare ("") == 0)
+  if (everyDropTrFileName == "")
     {
       NS_LOG_DEBUG ("No trace file for every drop event provided");
       return;
     }
   else
     {
-      Ptr<OutputStreamWrapper> stream = ascii.CreateFileStream (everyDropTrFileName.c_str ());
+      Ptr<OutputStreamWrapper> stream = ascii.CreateFileStream (everyDropTrFileName);
       Config::ConnectWithoutContext ("/NodeList/2/$ns3::TrafficControlLayer/RootQueueDiscList/0/Drop", MakeBoundCallback (&EveryDropTracer, stream));
     }
 }
 
+/**
+ * Traffic Control Dropping state trace.
+ *
+ * \param stream The ouput stream.
+ * \param oldVal Old value.
+ * \param newVal New value.
+ */
 static void
-DroppingStateTracer (Ptr<OutputStreamWrapper>stream, bool oldVal, bool newVal)
+DroppingStateTracer (Ptr<OutputStreamWrapper> stream, bool oldVal, bool newVal)
 {
   if (oldVal == false && newVal == true)
     {
@@ -172,22 +225,35 @@ DroppingStateTracer (Ptr<OutputStreamWrapper>stream, bool oldVal, bool newVal)
     }
 }
 
+/**
+ * Setup for Traffic Control dropping tracking.
+ *
+ * \param dropStateTrFileName TC drop state output file name.
+ */
 static void
 TraceDroppingState (std::string dropStateTrFileName)
 {
   AsciiTraceHelper ascii;
-  if (dropStateTrFileName.compare ("") == 0)
+  if (dropStateTrFileName == "")
     {
       NS_LOG_DEBUG ("No trace file for dropping state provided");
       return;
     }
   else
     {
-      Ptr<OutputStreamWrapper> stream = ascii.CreateFileStream (dropStateTrFileName.c_str ());
+      Ptr<OutputStreamWrapper> stream = ascii.CreateFileStream (dropStateTrFileName);
       Config::ConnectWithoutContext ("/NodeList/2/$ns3::TrafficControlLayer/RootQueueDiscList/0/$ns3::CoDelQueueDisc/DropState", MakeBoundCallback (&DroppingStateTracer, stream));
     }
 }
 
+/**
+ * Create a Bulk Flow application
+ *
+ * \param remoteAddress Remote address.
+ * \param sender Sender node.
+ * \param pktSize Pakcet size.
+ * \param stopTime Stop time.
+ */
 void
 CreateBulkFlow (AddressValue remoteAddress, Ptr<Node> sender, uint32_t pktSize, float stopTime)
 {
@@ -200,6 +266,13 @@ CreateBulkFlow (AddressValue remoteAddress, Ptr<Node> sender, uint32_t pktSize, 
   sourceApp.Stop (Seconds (stopTime - 3));
 }
 
+/**
+ * Create a On Off Flow application.
+ *
+ * \param remoteAddress Remote address.
+ * \param sender Sender node.
+ * \param stopTime Stop time.
+ */
 void
 CreateOnOffFlow (AddressValue remoteAddress, Ptr<Node> sender, float stopTime)
 {
@@ -232,7 +305,7 @@ int main (int argc, char *argv[])
   uint32_t numOfDownLoadOnOffFlows = 1;   // # of download onoff flows
   bool isPcapEnabled = true;
 
-  float startTime = 0.1f;
+  float startTime = 0.1F;
   float simDuration = 60;        //in seconds
 
   std::string fileNamePrefix = "codel-vs-pfifo-fast-asymmetric";
@@ -351,11 +424,11 @@ int main (int argc, char *argv[])
 
   tchPfifo.Install (serverCmtsDev);
   tchPfifo.Install (cmtsWanDev);
-  if (routerWanQueueDiscType.compare ("PfifoFast") == 0)
+  if (routerWanQueueDiscType == "PfifoFast")
     {
       tchPfifo.Install (routerWanDev);
     }
-  else if (routerWanQueueDiscType.compare ("CoDel") == 0)
+  else if (routerWanQueueDiscType == "CoDel")
     {
       tchCoDel.Install (routerWanDev);
     }
@@ -363,7 +436,7 @@ int main (int argc, char *argv[])
     {
       NS_LOG_DEBUG ("Invalid router WAN queue disc type");
       exit (1);
-    }  
+    }
   tchPfifo.Install (routerHostDev);
 
   NS_LOG_INFO ("Assign IP Addresses");
@@ -420,7 +493,7 @@ int main (int argc, char *argv[])
 
   Simulator::Schedule (Seconds (0.00001), &TraceCwnd, cwndTrFileName);
   TraceEveryDrop (everyDropTrFileName);
-  if (routerWanQueueDiscType.compare ("CoDel") == 0)
+  if (routerWanQueueDiscType == "CoDel")
     {
       TraceSojourn (sojournTrFileName);
       TraceQueueLength (queueLengthTrFileName);

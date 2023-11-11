@@ -51,7 +51,7 @@ CallbackValue::Set (CallbackBase base)
   m_value = base;
 }
 Ptr<AttributeValue>
-CallbackValue::Copy (void) const
+CallbackValue::Copy () const
 {
   NS_LOG_FUNCTION (this);
   return Create<CallbackValue> (m_value);
@@ -79,7 +79,6 @@ ATTRIBUTE_CHECKER_IMPLEMENT (Callback);
 
 #include <cstdlib>
 #include <cxxabi.h>
-#include "log.h"
 
 namespace ns3 {
 
@@ -90,7 +89,7 @@ CallbackImplBase::Demangle (const std::string& mangled)
 
   int status;
   char* demangled = abi::__cxa_demangle (mangled.c_str (),
-                                         NULL, NULL, &status);
+                                         nullptr, nullptr, &status);
 
   std::string ret;
   if (status == 0)

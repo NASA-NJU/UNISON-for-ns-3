@@ -35,7 +35,7 @@
 namespace ns3 {
 
 NS_LOG_COMPONENT_DEFINE ("HwmpProtocolMac");
-  
+
 namespace dot11s {
 
 HwmpProtocolMac::HwmpProtocolMac (uint32_t ifIndex, Ptr<HwmpProtocol> protocol) :
@@ -90,7 +90,7 @@ HwmpProtocolMac::ReceiveData (Ptr<Packet> packet, const WifiMacHeader & header)
   if ((destination == Mac48Address::GetBroadcast ()) && (m_protocol->DropDataFrame (meshHdr.GetMeshSeqno (),
                                                                                     source)))
     {
-      NS_LOG_DEBUG ("Dropping frame; source " << source << " dest " << destination << " seqno " << meshHdr.GetMeshSeqno ()); 
+      NS_LOG_DEBUG ("Dropping frame; source " << source << " dest " << destination << " seqno " << meshHdr.GetMeshSeqno ());
       return false;
     }
   return true;
@@ -122,7 +122,7 @@ HwmpProtocolMac::ReceiveAction (Ptr<Packet> packet, const WifiMacHeader & header
       if ((*i)->ElementId () == IE_PREQ)
         {
           Ptr<IePreq> preq = DynamicCast<IePreq> (*i);
-          NS_ASSERT (preq != 0);
+          NS_ASSERT (preq);
           m_stats.rxPreq++;
           if (preq->GetOriginatorAddress () == m_protocol->GetAddress ())
             {
@@ -139,7 +139,7 @@ HwmpProtocolMac::ReceiveAction (Ptr<Packet> packet, const WifiMacHeader & header
       if ((*i)->ElementId () == IE_PREP)
         {
           Ptr<IePrep> prep = DynamicCast<IePrep> (*i);
-          NS_ASSERT (prep != 0);
+          NS_ASSERT (prep);
           m_stats.rxPrep++;
           if (prep->GetTtl () == 0)
             {
@@ -152,7 +152,7 @@ HwmpProtocolMac::ReceiveAction (Ptr<Packet> packet, const WifiMacHeader & header
       if ((*i)->ElementId () == IE_PERR)
         {
           Ptr<IePerr> perr = DynamicCast<IePerr> (*i);
-          NS_ASSERT (perr != 0);
+          NS_ASSERT (perr);
           m_stats.rxPerr++;
           std::vector<HwmpProtocol::FailedDestination> destinations = perr->GetAddressUnitVector ();
           for (std::vector<HwmpProtocol::FailedDestination>::const_iterator i = destinations.begin (); i
@@ -221,7 +221,7 @@ HwmpProtocolMac::GetWifiActionHeader ()
   WifiActionHeader actionHdr;
   WifiActionHeader::ActionValue action;
   action.meshAction = WifiActionHeader::PATH_SELECTION;
-  actionHdr.SetAction (WifiActionHeader::MESH, action); 
+  actionHdr.SetAction (WifiActionHeader::MESH, action);
   return actionHdr;
 }
 void

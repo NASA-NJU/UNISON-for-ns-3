@@ -27,8 +27,8 @@ namespace ns3 {
 class Socket;
 
 /**
- * \ingroup socket 
- * 
+ * \ingroup socket
+ *
  * This can be used as an interface in a node in order for the node to
  * generate PacketSockets that can connect to net devices.
  */
@@ -39,7 +39,7 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   PacketSocketFactory ();
 
@@ -48,7 +48,7 @@ public:
    *
    * \return a pointer to the created socket
    */
-  virtual Ptr<Socket> CreateSocket (void);
+  Ptr<Socket> CreateSocket () override;
 };
 
 } // namespace ns3

@@ -29,8 +29,9 @@
 namespace ns3 {
 
 class WifiTxParameters;
-class WifiMacQueueItem;
+class WifiMpdu;
 class WifiMac;
+class WifiRemoteStationManager;
 
 /**
  * \ingroup wifi
@@ -45,8 +46,9 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
-  virtual ~WifiProtectionManager ();
+  static TypeId GetTypeId ();
+  WifiProtectionManager ();
+  ~WifiProtectionManager () override;
 
   /**
    * Set the MAC which is using this Protection Manager
@@ -54,6 +56,12 @@ public:
    * \param mac a pointer to the MAC
    */
   void SetWifiMac (Ptr<WifiMac> mac);
+  /**
+   * Set the ID of the link this Protection Manager is associated with.
+   *
+   * \param linkId the ID of the link this Protection Manager is associated with
+   */
+  void SetLinkId (uint8_t linkId);
 
   /**
    * Determine the protection method to use if the given MPDU is added to the current
@@ -65,7 +73,7 @@ public:
    * \return a null pointer if the protection method is unchanged or the new
    *         protection method otherwise
    */
-  virtual std::unique_ptr<WifiProtection> TryAddMpdu (Ptr<const WifiMacQueueItem> mpdu,
+  virtual std::unique_ptr<WifiProtection> TryAddMpdu (Ptr<const WifiMpdu> mpdu,
                                                       const WifiTxParameters& txParams) = 0;
 
   /**
@@ -78,13 +86,19 @@ public:
    * \return a null pointer if the protection method is unchanged or the new
    *         protection method otherwise
    */
-  virtual std::unique_ptr<WifiProtection> TryAggregateMsdu (Ptr<const WifiMacQueueItem> msdu,
+  virtual std::unique_ptr<WifiProtection> TryAggregateMsdu (Ptr<const WifiMpdu> msdu,
                                                             const WifiTxParameters& txParams) = 0;
 
 protected:
-  virtual void DoDispose (void);
+  void DoDispose () override;
+
+  /**
+   * \return the remote station manager operating on our link
+   */
+  Ptr<WifiRemoteStationManager> GetWifiRemoteStationManager () const;
 
   Ptr<WifiMac> m_mac; //!< MAC which is using this Protection Manager
+  uint8_t m_linkId;   //!< ID of the link this Protection Manager is operating on
 };
 
 

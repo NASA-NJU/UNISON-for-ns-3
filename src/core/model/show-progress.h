@@ -89,7 +89,7 @@ namespace ns3 {
  *
  * Based on a python version by Gustavo Carneiro <gjcarneiro@gmail.com>,
  * as released here:
- * 
+ *
  * https://mailman.isi.edu/pipermail/ns-developers/2009-January/005039.html
  */
 class ShowProgress
@@ -104,7 +104,7 @@ public:
                 std::ostream & os = std::cout);
 
   /** Destructor. */
-  ~ShowProgress (void);
+  ~ShowProgress ();
 
   /**
    * Set the target update interval, in wallclock time.
@@ -136,23 +136,23 @@ public:
   void SetVerbose (bool verbose);
 
 private:
-  
+
   /**
    * Start the elapsed wallclock timestamp and print the start time.
    * This is triggered by the constructor.
    */
-  void Start (void);
+  void Start ();
 
   /**
    * Stop the elapsed wallclock timestamp and print the total elapsed time.
    * This is triggered by the destructor.
    */
-  void Stop (void);
+  void Stop ();
 
   /**
    * Schedule the next CheckProgress.
    */
-  void ScheduleCheckProgress (void);
+  void ScheduleCheckProgress ();
 
   /**
    * Check on execution progress.
@@ -160,12 +160,12 @@ private:
    * state on rate of progress, and decides if it's time to generate
    * output.
    */
-  void CheckProgress (void);
+  void CheckProgress ();
 
   /**
    * Show execution progress.
    * This function actually generates output, when directed by CheckProgress().
-   * \param [in] nEvents The actual number of events processed since the last 
+   * \param [in] nEvents The actual number of events processed since the last
    *             progress output.
    * \param [in] ratio The current ratio of elapsed wall clock time to the
    *             target update interval.

@@ -36,12 +36,12 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
-  virtual TypeId GetInstanceTypeId (void) const;
-  virtual uint32_t GetSerializedSize (void) const;
-  virtual void Serialize (TagBuffer i) const;
-  virtual void Deserialize (TagBuffer i);
-  virtual void Print (std::ostream &os) const;
+  static TypeId GetTypeId ();
+  TypeId GetInstanceTypeId () const override;
+  uint32_t GetSerializedSize () const override;
+  void Serialize (TagBuffer i) const override;
+  void Deserialize (TagBuffer i) override;
+  void Print (std::ostream &os) const override;
 
   // these are our accessors to our tag structure
   /**
@@ -53,13 +53,13 @@ public:
    * Get the tag value
    * \return the tag value.
    */
-  uint8_t GetSimpleValue (void) const;
+  uint8_t GetSimpleValue () const;
 private:
   uint8_t m_simpleValue;  //!< tag value
 };
 
-TypeId 
-MyTag::GetTypeId (void)
+TypeId
+MyTag::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::MyTag")
     .SetParent<Tag> ()
@@ -72,38 +72,38 @@ MyTag::GetTypeId (void)
   ;
   return tid;
 }
-TypeId 
-MyTag::GetInstanceTypeId (void) const
+TypeId
+MyTag::GetInstanceTypeId () const
 {
   return GetTypeId ();
 }
-uint32_t 
-MyTag::GetSerializedSize (void) const
+uint32_t
+MyTag::GetSerializedSize () const
 {
   return 1;
 }
-void 
+void
 MyTag::Serialize (TagBuffer i) const
 {
   i.WriteU8 (m_simpleValue);
 }
-void 
+void
 MyTag::Deserialize (TagBuffer i)
 {
   m_simpleValue = i.ReadU8 ();
 }
-void 
+void
 MyTag::Print (std::ostream &os) const
 {
   os << "v=" << (uint32_t)m_simpleValue;
 }
-void 
+void
 MyTag::SetSimpleValue (uint8_t value)
 {
   m_simpleValue = value;
 }
-uint8_t 
-MyTag::GetSimpleValue (void) const
+uint8_t
+MyTag::GetSimpleValue () const
 {
   return m_simpleValue;
 }

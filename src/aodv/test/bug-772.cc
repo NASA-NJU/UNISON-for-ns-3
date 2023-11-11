@@ -48,7 +48,7 @@ using namespace ns3;
 //-----------------------------------------------------------------------------
 Bug772ChainTest::Bug772ChainTest (const char * const prefix, const char * const proto, Time t, uint32_t size)
   : TestCase ("Bug 772 UDP and TCP chain regression test"),
-    m_nodes (0),
+    m_nodes (nullptr),
     m_prefix (prefix),
     m_proto (proto),
     m_time (t),
@@ -99,7 +99,7 @@ Bug772ChainTest::DoRun ()
 
   CheckResults ();
 
-  delete m_nodes, m_nodes = 0;
+  delete m_nodes, m_nodes = nullptr;
 }
 
 void
@@ -155,10 +155,10 @@ Bug772ChainTest::CreateDevices ()
   internetStack.Install (*m_nodes);
   streamsUsed += internetStack.AssignStreams (*m_nodes, streamsUsed);
   // Expect to use (3*m_size) more streams for internet stack random variables
-  NS_TEST_ASSERT_MSG_EQ (streamsUsed, ((devices.GetN () * 2) + (3 * m_size)), "Stream assignment mismatch");
+  NS_TEST_ASSERT_MSG_EQ (streamsUsed, ((devices.GetN () * 3) + (3 * m_size)), "Stream assignment mismatch");
   streamsUsed += aodv.AssignStreams (*m_nodes, streamsUsed);
   // Expect to use m_size more streams for AODV
-  NS_TEST_ASSERT_MSG_EQ (streamsUsed, ((devices.GetN () * 2) + (3 * m_size) + m_size), "Stream assignment mismatch");
+  NS_TEST_ASSERT_MSG_EQ (streamsUsed, ((devices.GetN () * 3) + (3 * m_size) + m_size), "Stream assignment mismatch");
   Ipv4AddressHelper address;
   address.SetBase ("10.1.1.0", "255.255.255.0");
   Ipv4InterfaceContainer interfaces = address.Assign (devices);

@@ -15,7 +15,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * Author: Manuel Requena <manuel.requena@cttc.es> 
+ * Author: Manuel Requena <manuel.requena@cttc.es>
  *         Nicola Baldo <nbaldo@cttc.es>
  */
 
@@ -40,36 +40,36 @@ class LteRlcTm : public LteRlc
 {
 public:
   LteRlcTm ();
-  virtual ~LteRlcTm ();
+  ~LteRlcTm () override;
   /**
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
-  virtual void DoDispose ();
+  static TypeId GetTypeId ();
+  void DoDispose () override;
 
   /**
    * RLC SAP
    *
    * \param p packet
    */
-  virtual void DoTransmitPdcpPdu (Ptr<Packet> p);
+  void DoTransmitPdcpPdu (Ptr<Packet> p) override;
 
   /**
    * MAC SAP
-   * 
+   *
    * \param txOpParams the LteMacSapUser::TxOpportunityParameters
    */
-  virtual void DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txOpParams);
+  void DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txOpParams) override;
   /**
    * Notify HARQ deliver failure
    */
-  virtual void DoNotifyHarqDeliveryFailure ();
-  virtual void DoReceivePdu (LteMacSapUser::ReceivePduParameters rxPduParams);
+  void DoNotifyHarqDeliveryFailure () override;
+  void DoReceivePdu (LteMacSapUser::ReceivePduParameters rxPduParams) override;
 
 private:
   /// Expire RBS timer function
-  void ExpireRbsTimer (void);
+  void ExpireRbsTimer ();
   /// Report buffer status
   void DoReportBufferStatus ();
 

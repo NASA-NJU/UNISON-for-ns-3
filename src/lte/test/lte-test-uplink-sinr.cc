@@ -85,7 +85,7 @@ LteUplinkSinrTestSuite::LteUplinkSinrTestSuite ()
   (*theoreticalSinr1)[1] = 3.72255684126076;
 
   AddTestCase (new LteUplinkDataSinrTestCase (rxPsd1, rxPsd2, theoreticalSinr1, "sdBm = [-46 -inf] and [-inf -48]"), TestCase::QUICK);
-  
+
   AddTestCase (new LteUplinkSrsSinrTestCase (rxPsd1, rxPsd2, theoreticalSinr1, "sdBm = [-46 -inf] and [-inf -48]"), TestCase::QUICK);
 
   /**
@@ -104,7 +104,7 @@ LteUplinkSinrTestSuite::LteUplinkSinrTestSuite ()
   (*theoreticalSinr2)[1] = 0.1865697965291756;
 
   AddTestCase (new LteUplinkDataSinrTestCase (rxPsd3, rxPsd4, theoreticalSinr2, "sdBm = [-63 -inf] and [-inf -61]"), TestCase::QUICK);
-  
+
   AddTestCase (new LteUplinkSrsSinrTestCase (rxPsd3, rxPsd4, theoreticalSinr2, "sdBm = [-63 -inf] and [-inf -61]"), TestCase::QUICK);
 
 }
@@ -132,7 +132,7 @@ LteUplinkDataSinrTestCase::~LteUplinkDataSinrTestCase ()
 
 
 void
-LteUplinkDataSinrTestCase::DoRun (void)
+LteUplinkDataSinrTestCase::DoRun ()
 {
   /**
    * Instantiate a single receiving LteSpectrumPhy
@@ -150,10 +150,10 @@ LteUplinkDataSinrTestCase::DoRun (void)
   ulPhy->AddDataSinrChunkProcessor (chunkProcessor);
 
   /**
-  * Generate several calls to LteSpectrumPhy::StartRx corresponding to 
+  * Generate several calls to LteSpectrumPhy::StartRx corresponding to
   * several signals. One will be the signal of interest, i.e., the
   *  LteSpectrumSignalParametersDataFrame of the Packet burst
-  * will have the same CellId of the receiving PHY; the others will have 
+  * will have the same CellId of the receiving PHY; the others will have
   * a different CellId and hence will be the interfering signals
   */
 
@@ -173,7 +173,7 @@ LteUplinkDataSinrTestCase::DoRun (void)
 
   // Bursts cellId
   uint16_t pbCellId[numOfPbs];
-  
+
 
 
   /**
@@ -247,7 +247,7 @@ LteUplinkDataSinrTestCase::DoRun (void)
   // 2 UEs send data to the eNB through 2 subcarriers
   Ptr<LteSpectrumSignalParametersDataFrame> sp1 = Create<LteSpectrumSignalParametersDataFrame> ();
   sp1->psd = m_sv1;
-  sp1->txPhy = 0;
+  sp1->txPhy = nullptr;
   sp1->duration = ds;
   sp1->packetBurst = packetBursts[0];
   sp1->cellId = pbCellId[0];
@@ -255,7 +255,7 @@ LteUplinkDataSinrTestCase::DoRun (void)
 
   Ptr<LteSpectrumSignalParametersDataFrame> sp2 = Create<LteSpectrumSignalParametersDataFrame> ();
   sp2->psd = m_sv2;
-  sp2->txPhy = 0;
+  sp2->txPhy = nullptr;
   sp2->duration = ds;
   sp2->packetBurst = packetBursts[1];
   sp2->cellId = pbCellId[1];
@@ -264,7 +264,7 @@ LteUplinkDataSinrTestCase::DoRun (void)
 
   Ptr<LteSpectrumSignalParametersDataFrame> ip1 = Create<LteSpectrumSignalParametersDataFrame> ();
   ip1->psd = i1;
-  ip1->txPhy = 0;
+  ip1->txPhy = nullptr;
   ip1->duration = di1;
   ip1->packetBurst = packetBursts[2];
   ip1->cellId = pbCellId[2];
@@ -272,7 +272,7 @@ LteUplinkDataSinrTestCase::DoRun (void)
 
   Ptr<LteSpectrumSignalParametersDataFrame> ip2 = Create<LteSpectrumSignalParametersDataFrame> ();
   ip2->psd = i2;
-  ip2->txPhy = 0;
+  ip2->txPhy = nullptr;
   ip2->duration = di2;
   ip2->packetBurst = packetBursts[3];
   ip2->cellId = pbCellId[3];
@@ -280,7 +280,7 @@ LteUplinkDataSinrTestCase::DoRun (void)
 
   Ptr<LteSpectrumSignalParametersDataFrame> ip3 = Create<LteSpectrumSignalParametersDataFrame> ();
   ip3->psd = i3;
-  ip3->txPhy = 0;
+  ip3->txPhy = nullptr;
   ip3->duration = di3;
   ip3->packetBurst = packetBursts[4];
   ip3->cellId = pbCellId[4];
@@ -288,7 +288,7 @@ LteUplinkDataSinrTestCase::DoRun (void)
 
   Ptr<LteSpectrumSignalParametersDataFrame> ip4 = Create<LteSpectrumSignalParametersDataFrame> ();
   ip4->psd = i4;
-  ip4->txPhy = 0;
+  ip4->txPhy = nullptr;
   ip4->duration = di4;
   ip4->packetBurst = packetBursts[5];
   ip4->cellId = pbCellId[5];
@@ -300,12 +300,12 @@ LteUplinkDataSinrTestCase::DoRun (void)
   NS_LOG_INFO ("Data Frame - Theoretical SINR: " << *m_expectedSinr);
   NS_LOG_INFO ("Data Frame - Calculated SINR: " << *(actualSinrCatcher.GetValue ()));
 
-  NS_TEST_EXPECT_MSG_NE (actualSinrCatcher.GetValue (), 0, "no actual SINR reported");
+  NS_TEST_EXPECT_MSG_NE (actualSinrCatcher.GetValue (), nullptr, "no actual SINR reported");
 
   NS_TEST_ASSERT_MSG_SPECTRUM_VALUE_EQ_TOL (*(actualSinrCatcher.GetValue ()), *m_expectedSinr, 0.0000001, "Data Frame - Wrong SINR !");
   ulPhy->Dispose ();
   Simulator::Destroy ();
-  
+
 }
 
 
@@ -334,12 +334,12 @@ LteUplinkSrsSinrTestCase::ReportSinr (const SpectrumValue& sinr)
 }
 
 void
-LteUplinkSrsSinrTestCase::DoRun (void)
+LteUplinkSrsSinrTestCase::DoRun ()
 {
   /**
   * Instantiate a single receiving LteSpectrumPhy
   */
-  
+
   Ptr<LteHelper> lteHelper = CreateObject<LteHelper> ();
   // lteHelper->EnableLogComponents ();
   Ptr<LteSpectrumPhy> dlPhy = CreateObject<LteSpectrumPhy> ();
@@ -348,29 +348,29 @@ LteUplinkSrsSinrTestCase::DoRun (void)
   uint16_t cellId = 100;
   dlPhy->SetCellId (cellId);
   ulPhy->SetCellId (cellId);
-  
+
   Ptr<LteChunkProcessor> chunkProcessor = Create<LteChunkProcessor> ();
   chunkProcessor->AddCallback (MakeCallback (&LteUplinkSrsSinrTestCase::ReportSinr, this));
   ulPhy->AddCtrlSinrChunkProcessor (chunkProcessor);
 
   /**
-  * Generate several calls to LteSpectrumPhy::StartRx corresponding to 
+  * Generate several calls to LteSpectrumPhy::StartRx corresponding to
   * several signals.
   * One will be the signal of interest, i.e., the
   *  LteSpectrumSignalParametersUlSrsFrame of the first signal will have the
-  *   same CellId of the receiving PHY; the others will have a different 
+  *   same CellId of the receiving PHY; the others will have a different
   *   CellId and hence will be the interfering signals
   */
-  
+
   // Number of packet bursts (2 data + 4 interferences)
   int numOfDataSignals = 2;
   int numOfIntfSignals = 4;
   int numOfSignals = numOfDataSignals + numOfIntfSignals;
 
   uint16_t pbCellId[numOfSignals];
-  
-  
-  
+
+
+
   /**
   * Build packet burst (Data and interference)
   */
@@ -386,17 +386,17 @@ LteUplinkSrsSinrTestCase::DoRun (void)
       pbCellId[pb] = cellId * (pb + 1);
 
     }
-  
-  
+
+
   Ptr<SpectrumValue> noisePsd = Create<SpectrumValue> (m_sm);
   Ptr<SpectrumValue> i1 = Create<SpectrumValue> (m_sm);
   Ptr<SpectrumValue> i2 = Create<SpectrumValue> (m_sm);
   Ptr<SpectrumValue> i3 = Create<SpectrumValue> (m_sm);
   Ptr<SpectrumValue> i4 = Create<SpectrumValue> (m_sm);
-  
+
   (*noisePsd)[0] = 5.000000000000e-19;
   (*noisePsd)[1] = 4.545454545455e-19;
-  
+
   (*i1)[0] = 5.000000000000e-18;
   (*i2)[0] = 5.000000000000e-16;
   (*i3)[0] = 1.581138830084e-16;
@@ -405,7 +405,7 @@ LteUplinkSrsSinrTestCase::DoRun (void)
   (*i2)[1] = 5.722388235428e-16;
   (*i3)[1] = 7.204059965732e-17;
   (*i4)[1] = 5.722388235428e-17;
-  
+
   Time ts  = Seconds (1);
   Time ds  = Seconds (1);
   Time ti1 = Seconds (0);
@@ -416,67 +416,67 @@ LteUplinkSrsSinrTestCase::DoRun (void)
   Time di3 = Seconds (1);
   Time ti4 = Seconds (1.5);
   Time di4 = Seconds (0.1);
-  
+
   ulPhy->SetNoisePowerSpectralDensity (noisePsd);
-  
+
   /**
   * Schedule the reception of the data signals plus the interference signals
   */
-  
+
   // 2 UEs send data to the eNB through 2 subcarriers
   Ptr<LteSpectrumSignalParametersUlSrsFrame> sp1 = Create<LteSpectrumSignalParametersUlSrsFrame> ();
   sp1->psd = m_sv1;
-  sp1->txPhy = 0;
+  sp1->txPhy = nullptr;
   sp1->duration = ds;
   sp1->cellId = pbCellId[0];
   Simulator::Schedule (ts, &LteSpectrumPhy::StartRx, ulPhy, sp1);
-  
+
   Ptr<LteSpectrumSignalParametersUlSrsFrame> sp2 = Create<LteSpectrumSignalParametersUlSrsFrame> ();
   sp2->psd = m_sv2;
-  sp2->txPhy = 0;
+  sp2->txPhy = nullptr;
   sp2->duration = ds;
   sp2->cellId = pbCellId[1];
   Simulator::Schedule (ts, &LteSpectrumPhy::StartRx, ulPhy, sp2);
-  
-  
+
+
   Ptr<LteSpectrumSignalParametersUlSrsFrame> ip1 = Create<LteSpectrumSignalParametersUlSrsFrame> ();
   ip1->psd = i1;
-  ip1->txPhy = 0;
+  ip1->txPhy = nullptr;
   ip1->duration = di1;
   ip1->cellId = pbCellId[2];
   Simulator::Schedule (ti1, &LteSpectrumPhy::StartRx, ulPhy, ip1);
-  
+
   Ptr<LteSpectrumSignalParametersUlSrsFrame> ip2 = Create<LteSpectrumSignalParametersUlSrsFrame> ();
   ip2->psd = i2;
-  ip2->txPhy = 0;
+  ip2->txPhy = nullptr;
   ip2->duration = di2;
   ip2->cellId = pbCellId[3];
   Simulator::Schedule (ti2, &LteSpectrumPhy::StartRx, ulPhy, ip2);
-  
+
   Ptr<LteSpectrumSignalParametersUlSrsFrame> ip3 = Create<LteSpectrumSignalParametersUlSrsFrame> ();
   ip3->psd = i3;
-  ip3->txPhy = 0;
+  ip3->txPhy = nullptr;
   ip3->duration = di3;
   ip3->cellId = pbCellId[4];
   Simulator::Schedule (ti3, &LteSpectrumPhy::StartRx, ulPhy, ip3);
-  
+
   Ptr<LteSpectrumSignalParametersUlSrsFrame> ip4 = Create<LteSpectrumSignalParametersUlSrsFrame> ();
   ip4->psd = i4;
-  ip4->txPhy = 0;
+  ip4->txPhy = nullptr;
   ip4->duration = di4;
   ip4->cellId = pbCellId[5];
   Simulator::Schedule (ti4, &LteSpectrumPhy::StartRx, ulPhy, ip4);
-  
+
   Simulator::Stop (Seconds (5.0));
   Simulator::Run ();
-  
-  NS_ASSERT_MSG (m_actualSinr != 0, "no actual SINR reported");
-  
+
+  NS_ASSERT_MSG (m_actualSinr, "no actual SINR reported");
+
   NS_LOG_INFO ("SRS Frame - Theoretical SINR: " << *m_expectedSinr);
   NS_LOG_INFO ("SRS Frame - Calculated SINR: " << *m_actualSinr);
 
   NS_TEST_ASSERT_MSG_SPECTRUM_VALUE_EQ_TOL (*m_actualSinr, *m_expectedSinr, 0.0000001, "Data Frame - Wrong SINR !");
   ulPhy->Dispose ();
   Simulator::Destroy ();
-  
+
 }

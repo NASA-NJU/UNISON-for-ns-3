@@ -44,7 +44,7 @@ NS_LOG_COMPONENT_DEFINE ("RipNg");
 NS_OBJECT_ENSURE_REGISTERED (RipNg);
 
 RipNg::RipNg ()
-  : m_ipv6 (0), m_splitHorizonStrategy (RipNg::POISON_REVERSE), m_initialized (false)
+  : m_ipv6 (nullptr), m_splitHorizonStrategy (RipNg::POISON_REVERSE), m_initialized (false)
 {
   m_rng = CreateObject<UniformRandomVariable> ();
 }
@@ -54,7 +54,7 @@ RipNg::~RipNg ()
 }
 
 TypeId
-RipNg::GetTypeId (void)
+RipNg::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::RipNg")
     .SetParent<Ipv6RoutingProtocol> ()
@@ -183,7 +183,7 @@ Ptr<Ipv6Route> RipNg::RouteOutput (Ptr<Packet> p, const Ipv6Header &header, Ptr<
   NS_LOG_FUNCTION (this << header << oif);
 
   Ipv6Address destination = header.GetDestination ();
-  Ptr<Ipv6Route> rtentry = 0;
+  Ptr<Ipv6Route> rtentry = nullptr;
 
   if (destination.IsMulticast ())
     {
@@ -214,7 +214,7 @@ bool RipNg::RouteInput (Ptr<const Packet> p, const Ipv6Header &header, Ptr<const
 {
   NS_LOG_FUNCTION (this << p << header << header.GetSource () << header.GetDestination () << idev);
 
-  NS_ASSERT (m_ipv6 != 0);
+  NS_ASSERT (m_ipv6);
   // Check if input device supports IP
   NS_ASSERT (m_ipv6->GetInterfaceForDevice (idev) >= 0);
   uint32_t iif = m_ipv6->GetInterfaceForDevice (idev);
@@ -251,7 +251,7 @@ bool RipNg::RouteInput (Ptr<const Packet> p, const Ipv6Header &header, Ptr<const
   NS_LOG_LOGIC ("Unicast destination");
   Ptr<Ipv6Route> rtentry = Lookup (header.GetDestination (), false);
 
-  if (rtentry != 0)
+  if (rtentry)
     {
       NS_LOG_LOGIC ("Found unicast destination - calling unicast callback");
       ucb (idev, rtentry, p, header);  // unicast forwarding callback
@@ -450,7 +450,7 @@ void RipNg::SetIpv6 (Ptr<Ipv6> ipv6)
 {
   NS_LOG_FUNCTION (this << ipv6);
 
-  NS_ASSERT (m_ipv6 == 0 && ipv6 != 0);
+  NS_ASSERT (!m_ipv6 && ipv6);
   uint32_t i = 0;
   m_ipv6 = ipv6;
 
@@ -489,7 +489,10 @@ void RipNg::PrintRoutingTable (Ptr<OutputStreamWrapper> stream, Time::Unit unit)
 
           if (status == RipNgRoutingTableEntry::RIPNG_VALID)
             {
-              std::ostringstream dest, gw, mask, flags;
+              std::ostringstream dest;
+              std::ostringstream gw;
+              std::ostringstream mask;
+              std::ostringstream flags;
 
               dest << route->GetDest () << "/" << int(route->GetDestNetworkPrefix ().GetPrefixLength ());
               *os << std::setw (31) << dest.str ();
@@ -547,9 +550,9 @@ void RipNg::DoDispose ()
   m_unicastSocketList.clear ();
 
   m_multicastRecvSocket->Close ();
-  m_multicastRecvSocket = 0;
+  m_multicastRecvSocket = nullptr;
 
-  m_ipv6 = 0;
+  m_ipv6 = nullptr;
 
   Ipv6RoutingProtocol::DoDispose ();
 }
@@ -558,7 +561,7 @@ Ptr<Ipv6Route> RipNg::Lookup (Ipv6Address dst, bool setSource, Ptr<NetDevice> in
 {
   NS_LOG_FUNCTION (this << dst << interface);
 
-  Ptr<Ipv6Route> rtentry = 0;
+  Ptr<Ipv6Route> rtentry = nullptr;
   uint16_t longestMask = 0;
 
   /* when sending on link-local multicast, there have to be interface specified */
@@ -649,7 +652,7 @@ void RipNg::AddNetworkRouteTo (Ipv6Address network, Ipv6Prefix networkPrefix, Ip
   route->SetRouteStatus (RipNgRoutingTableEntry::RIPNG_VALID);
   route->SetRouteChanged (true);
 
-  m_routes.push_back (std::make_pair (route, EventId ()));
+  m_routes.emplace_back (route, EventId ());
 }
 
 void RipNg::AddNetworkRouteTo (Ipv6Address network, Ipv6Prefix networkPrefix, uint32_t interface)
@@ -661,7 +664,7 @@ void RipNg::AddNetworkRouteTo (Ipv6Address network, Ipv6Prefix networkPrefix, ui
   route->SetRouteStatus (RipNgRoutingTableEntry::RIPNG_VALID);
   route->SetRouteChanged (true);
 
-  m_routes.push_back (std::make_pair (route, EventId ()));
+  m_routes.emplace_back (route, EventId ());
 }
 
 void RipNg::InvalidateRoute (RipNgRoutingTableEntry *route)
@@ -754,7 +757,6 @@ void RipNg::Receive (Ptr<Socket> socket)
     {
       NS_LOG_LOGIC ("Ignoring message with unknown command: " << int (hdr.GetCommand ()));
     }
-  return;
 }
 
 void RipNg::HandleRequests (RipNgHeader requestHdr, Ipv6Address senderAddress, uint16_t senderPort, uint32_t incomingInterface, uint8_t hopLimit)
@@ -1065,7 +1067,7 @@ void RipNg::HandleResponses (RipNgHeader hdr, Ipv6Address senderAddress, uint32_
           route->SetRouteMetric (rteMetric);
           route->SetRouteStatus (RipNgRoutingTableEntry::RIPNG_VALID);
           route->SetRouteChanged (true);
-          m_routes.push_front (std::make_pair (route, EventId ()));
+          m_routes.emplace_front (route, EventId ());
           EventId invalidateEvent = Simulator::Schedule (m_timeoutDelay, &RipNg::InvalidateRoute, this, route);
           (m_routes.begin ())->second = invalidateEvent;
           changed = true;
@@ -1341,7 +1343,7 @@ void RipNgRoutingTableEntry::SetRouteStatus (Status_e status)
     }
 }
 
-RipNgRoutingTableEntry::Status_e RipNgRoutingTableEntry::GetRouteStatus (void) const
+RipNgRoutingTableEntry::Status_e RipNgRoutingTableEntry::GetRouteStatus () const
 {
   return m_status;
 }
@@ -1351,7 +1353,7 @@ void RipNgRoutingTableEntry::SetRouteChanged (bool changed)
   m_changed = changed;
 }
 
-bool RipNgRoutingTableEntry::IsRouteChanged (void) const
+bool RipNgRoutingTableEntry::IsRouteChanged () const
 {
   return m_changed;
 }

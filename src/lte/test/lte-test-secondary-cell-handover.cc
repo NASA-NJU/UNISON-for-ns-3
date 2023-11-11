@@ -19,21 +19,20 @@
  *
  */
 
+#include <ns3/boolean.h>
+#include <ns3/double.h>
 #include <ns3/friis-spectrum-propagation-loss.h>
+#include <ns3/integer.h>
+#include <ns3/internet-stack-helper.h>
 #include <ns3/log.h>
 #include <ns3/lte-enb-net-device.h>
 #include <ns3/lte-helper.h>
-#include <ns3/test.h>
-#include <ns3/point-to-point-epc-helper.h>
-#include <ns3/mobility-helper.h>
-#include <ns3/boolean.h>
-#include <ns3/double.h>
-#include <ns3/integer.h>
-#include <ns3/log.h>
-#include <ns3/simulator.h>
 #include <ns3/lte-ue-net-device.h>
-#include <ns3/internet-stack-helper.h>
 #include <ns3/lte-ue-rrc.h>
+#include <ns3/mobility-helper.h>
+#include <ns3/point-to-point-epc-helper.h>
+#include <ns3/simulator.h>
+#include <ns3/test.h>
 
 using namespace ns3;
 
@@ -80,12 +79,12 @@ private:
   /**
    * \brief Run a simulation.
    */
-  virtual void DoRun ();
+  void DoRun () override;
 
   /**
    * \brief Verify that handover has occurred during the simulation.
    */
-  virtual void DoTeardown ();
+  void DoTeardown () override;
 
   bool m_useIdealRrc; ///< whether LTE is configured to use ideal RRC
   uint8_t m_numberOfComponentCarriers; ///< Number of component carriers

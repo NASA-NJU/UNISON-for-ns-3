@@ -16,15 +16,13 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include <ctime>       // clock_t
-#include <sys/time.h>  // gettimeofday
-                       // clock_getres: glibc < 2.17, link with librt
-
-#include "log.h"
 #include "wall-clock-synchronizer.h"
 
-#include <condition_variable>
+#include "log.h"
+
 #include <chrono>
+#include <condition_variable>
+#include <ctime>       // clock_t
 #include <mutex>
 
 /**
@@ -40,7 +38,7 @@ NS_LOG_COMPONENT_DEFINE ("WallClockSynchronizer");
 NS_OBJECT_ENSURE_REGISTERED (WallClockSynchronizer);
 
 TypeId
-WallClockSynchronizer::GetTypeId (void)
+WallClockSynchronizer::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::WallClockSynchronizer")
     .SetParent<Synchronizer> ()
@@ -79,14 +77,8 @@ WallClockSynchronizer::WallClockSynchronizer ()
 // If the underlying OS does not support posix clocks, we'll just assume a
 // one millisecond quantum and deal with this as best we can
 
-#ifdef CLOCK_REALTIME
-  struct timespec ts;
-  clock_getres (CLOCK_REALTIME, &ts);
-  m_jiffy = ts.tv_sec * NS_PER_SEC + ts.tv_nsec;
+  m_jiffy = std::chrono::system_clock::period::num*std::nano::den/std::chrono::system_clock::period::den;
   NS_LOG_INFO ("Jiffy is " << m_jiffy << " ns");
-#else
-  m_jiffy = 1000000;
-#endif
 }
 
 WallClockSynchronizer::~WallClockSynchronizer ()
@@ -95,14 +87,14 @@ WallClockSynchronizer::~WallClockSynchronizer ()
 }
 
 bool
-WallClockSynchronizer::DoRealtime (void)
+WallClockSynchronizer::DoRealtime ()
 {
   NS_LOG_FUNCTION (this);
   return true;
 }
 
 uint64_t
-WallClockSynchronizer::DoGetCurrentRealtime (void)
+WallClockSynchronizer::DoGetCurrentRealtime ()
 {
   NS_LOG_FUNCTION (this);
   return GetNormalizedRealtime ();
@@ -283,7 +275,7 @@ WallClockSynchronizer::DoSynchronize (uint64_t nsCurrent, uint64_t nsDelay)
 }
 
 void
-WallClockSynchronizer::DoSignal (void)
+WallClockSynchronizer::DoSignal ()
 {
   NS_LOG_FUNCTION (this);
 
@@ -305,14 +297,14 @@ WallClockSynchronizer::DoSetCondition (bool cond)
 }
 
 void
-WallClockSynchronizer::DoEventStart (void)
+WallClockSynchronizer::DoEventStart ()
 {
   NS_LOG_FUNCTION (this);
   m_nsEventStart = GetNormalizedRealtime ();
 }
 
 uint64_t
-WallClockSynchronizer::DoEventEnd (void)
+WallClockSynchronizer::DoEventEnd ()
 {
   NS_LOG_FUNCTION (this);
   return GetNormalizedRealtime () - m_nsEventStart;
@@ -385,53 +377,18 @@ WallClockSynchronizer::DriftCorrect (uint64_t nsNow, uint64_t nsDelay)
 }
 
 uint64_t
-WallClockSynchronizer::GetRealtime (void)
+WallClockSynchronizer::GetRealtime ()
 {
   NS_LOG_FUNCTION (this);
-  struct timeval tvNow;
-  gettimeofday (&tvNow, NULL);
-  return TimevalToNs (&tvNow);
+  auto now = std::chrono::system_clock::now().time_since_epoch();
+  return std::chrono::duration_cast<std::chrono::nanoseconds>(now).count();
 }
 
 uint64_t
-WallClockSynchronizer::GetNormalizedRealtime (void)
+WallClockSynchronizer::GetNormalizedRealtime ()
 {
   NS_LOG_FUNCTION (this);
   return GetRealtime () - m_realtimeOriginNano;
-}
-
-void
-WallClockSynchronizer::NsToTimeval (int64_t ns, struct timeval *tv)
-{
-  NS_LOG_FUNCTION (this << ns << tv);
-  NS_ASSERT ((ns % US_PER_NS) == 0);
-  tv->tv_sec = static_cast<long> (ns / NS_PER_SEC);
-  tv->tv_usec = (ns % NS_PER_SEC) / US_PER_NS;
-}
-
-uint64_t
-WallClockSynchronizer::TimevalToNs (struct timeval *tv)
-{
-  NS_LOG_FUNCTION (this << tv);
-  uint64_t nsResult = tv->tv_sec * NS_PER_SEC + tv->tv_usec * US_PER_NS;
-  NS_ASSERT ((nsResult % US_PER_NS) == 0);
-  return nsResult;
-}
-
-void
-WallClockSynchronizer::TimevalAdd (
-  struct timeval *tv1,
-  struct timeval *tv2,
-  struct timeval *result)
-{
-  NS_LOG_FUNCTION (this << tv1 << tv2 << result);
-  result->tv_sec = tv1->tv_sec + tv2->tv_sec;
-  result->tv_usec = tv1->tv_usec + tv2->tv_usec;
-  if (result->tv_usec > (int64_t)US_PER_SEC)
-    {
-      ++result->tv_sec;
-      result->tv_usec %= US_PER_SEC;
-    }
 }
 
 } // namespace ns3

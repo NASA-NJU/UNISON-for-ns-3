@@ -30,7 +30,7 @@ NS_LOG_COMPONENT_DEFINE ("ComponentCarrier");
 
 NS_OBJECT_ENSURE_REGISTERED ( ComponentCarrier);
 
-TypeId ComponentCarrier::GetTypeId (void)
+TypeId ComponentCarrier::GetTypeId ()
 {
   static TypeId
     tid =
@@ -51,14 +51,14 @@ TypeId ComponentCarrier::GetTypeId (void)
                    MakeUintegerChecker<uint8_t> ())
     .AddAttribute ("DlEarfcn",
                    "Downlink E-UTRA Absolute Radio Frequency Channel Number (EARFCN) "
-                   "as per 3GPP 36.101 Section 5.7.3. ",
+                   "as per 3GPP 36.101 Section 5.7.3.",
                    UintegerValue (100),
                    MakeUintegerAccessor (&ComponentCarrier::SetDlEarfcn,
                                          &ComponentCarrier::GetDlEarfcn),
                    MakeUintegerChecker<uint32_t> (0, 262143))
     .AddAttribute ("UlEarfcn",
                    "Uplink E-UTRA Absolute Radio Frequency Channel Number (EARFCN) "
-                   "as per 3GPP 36.101 Section 5.7.3. ",
+                   "as per 3GPP 36.101 Section 5.7.3.",
                    UintegerValue (18100),
                    MakeUintegerAccessor (&ComponentCarrier::SetUlEarfcn,
                                          &ComponentCarrier::GetUlEarfcn),
@@ -92,7 +92,7 @@ ComponentCarrier::ComponentCarrier () : Object ()
   NS_LOG_FUNCTION (this);
 }
 
-ComponentCarrier::~ComponentCarrier (void)
+ComponentCarrier::~ComponentCarrier ()
 {
   NS_LOG_FUNCTION (this);
 }
@@ -227,7 +227,7 @@ ComponentCarrier::SetAsPrimary (bool primaryCarrier)
 
 NS_OBJECT_ENSURE_REGISTERED (ComponentCarrierBaseStation);
 
-TypeId ComponentCarrierBaseStation::GetTypeId (void)
+TypeId ComponentCarrierBaseStation::GetTypeId ()
 {
   static TypeId
     tid =
@@ -243,7 +243,7 @@ ComponentCarrierBaseStation::ComponentCarrierBaseStation () : ComponentCarrier (
   NS_LOG_FUNCTION (this);
 }
 
-ComponentCarrierBaseStation::~ComponentCarrierBaseStation (void)
+ComponentCarrierBaseStation::~ComponentCarrierBaseStation ()
 {
   NS_LOG_FUNCTION (this);
 }
@@ -262,5 +262,3 @@ ComponentCarrierBaseStation::SetCellId (uint16_t cellId)
 }
 
 } // namespace ns3
-
-

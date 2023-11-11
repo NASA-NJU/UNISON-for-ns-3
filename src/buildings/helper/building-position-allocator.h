@@ -45,10 +45,10 @@ public:
    * \brief Get the type ID.
    * \return The object TypeId.
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   // inherited from PositionAllocator
-  virtual Vector GetNext (void) const;
+  Vector GetNext () const override;
 
   /**
    * Assign a fixed random variable stream number to the random variables
@@ -58,7 +58,7 @@ public:
    * \param stream first stream index to use
    * \return the number of stream indices assigned by this model
    */
-  int64_t AssignStreams (int64_t stream);
+  int64_t AssignStreams (int64_t stream) override;
 
 private:
 
@@ -74,12 +74,12 @@ private:
  * \brief allocate outdoor positions
  *
  * Allocate positions outside of existing buildings using rejection sampling.
- * This class extracts a random position in a box defined by the three 
- * RandomVariableStreams for the X, Y and Z dimensions (similarly to 
- * RandomBoxPositionAllocator), until a position is found that is outdoors 
- * with respect to all of the buildings in the scenario, or a maximum number 
- * of attempts is reached.  The RandomVariableStream and the maximum number 
- * of attempts can be set using attributes.  If the maximum number of 
+ * This class extracts a random position in a box defined by the three
+ * RandomVariableStreams for the X, Y and Z dimensions (similarly to
+ * RandomBoxPositionAllocator), until a position is found that is outdoors
+ * with respect to all of the buildings in the scenario, or a maximum number
+ * of attempts is reached.  The RandomVariableStream and the maximum number
+ * of attempts can be set using attributes.  If the maximum number of
  * attempts is reached, then the simulation aborts due to failure of properly
  * positioning the node.
  */
@@ -92,10 +92,10 @@ public:
    * \brief Get the type ID.
    * \return The object TypeId.
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   // inherited from PositionAllocator
-  virtual Vector GetNext (void) const;
+  Vector GetNext () const override;
 
   /**
    * \brief Set the random variable stream object that generates x-positions
@@ -121,7 +121,7 @@ public:
    * \param stream first stream index to use
    * \return the number of stream indices assigned by this model
    */
-  int64_t AssignStreams (int64_t stream);
+  int64_t AssignStreams (int64_t stream) override;
 
 private:
   Ptr<RandomVariableStream> m_x; //!< pointer to x's random variable stream
@@ -135,7 +135,7 @@ private:
  * Allocate each position by randomly choosing a room from the list
  * of all buildings, and then randomly choosing a position inside the room.
  * The selection of the room is always done without replacement.
- * 
+ *
  */
 class RandomRoomPositionAllocator : public PositionAllocator
 {
@@ -146,10 +146,10 @@ public:
    * \brief Get the type ID.
    * \return The object TypeId.
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   // inherited from PositionAllocator
-  virtual Vector GetNext (void) const;
+  Vector GetNext () const override;
 
  /**
   * Assign a fixed random variable stream number to the random variables
@@ -159,14 +159,14 @@ public:
   * \param stream first stream index to use
   * \return the number of stream indices assigned by this model
   */
-  int64_t AssignStreams (int64_t stream);
+  int64_t AssignStreams (int64_t stream) override;
 
 private:
 
   /**
    * Room informations
    */
-  struct RoomInfo 
+  struct RoomInfo
   {
     Ptr<Building> b; //!< Building
     uint32_t roomx;  //!< Room (x coord)
@@ -201,10 +201,10 @@ public:
    * \brief Get the type ID.
    * \return The object TypeId.
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   // inherited from PositionAllocator
-  virtual Vector GetNext (void) const;
+  Vector GetNext () const override;
 
   /**
    * Assign a fixed random variable stream number to the random variables
@@ -214,7 +214,7 @@ public:
    * \param stream first stream index to use
    * \return the number of stream indices assigned by this model
    */
-  int64_t AssignStreams (int64_t);
+  int64_t AssignStreams (int64_t) override;
 
 private:
 
@@ -227,20 +227,20 @@ private:
 
 /**
  * Generate a random position uniformly distributed in the volume of a
- * chosen room inside a chosen building.  
+ * chosen room inside a chosen building.
  */
 class FixedRoomPositionAllocator : public PositionAllocator
 {
 public:
 
-  /** 
-   * 
-   * 
-   * \param x index of the room on the x-axis 
-   * \param y index of the room on the y-axis 
+  /**
+   *
+   *
+   * \param x index of the room on the x-axis
+   * \param y index of the room on the y-axis
    * \param z index of the room on the z-axis (i.e., floor number)
    * \param b pointer to the chosen building
-   * 
+   *
    */
   FixedRoomPositionAllocator (uint32_t x,
                               uint32_t y,
@@ -250,9 +250,9 @@ public:
    * \brief Get the type ID.
    * \return The object TypeId.
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
   // inherited from PositionAllocator
-  virtual Vector GetNext (void) const;
+  Vector GetNext () const override;
 
   /**
    * Assign a fixed random variable stream number to the random variables
@@ -262,12 +262,12 @@ public:
    * \param stream first stream index to use
    * \return the number of stream indices assigned by this model
    */
-  int64_t AssignStreams (int64_t);
+  int64_t AssignStreams (int64_t) override;
 
 private:
 
-  uint32_t roomx; //!< Index of the room on the x-axis 
-  uint32_t roomy; //!< Index of the room on the y-axis 
+  uint32_t roomx; //!< Index of the room on the x-axis
+  uint32_t roomy; //!< Index of the room on the y-axis
   uint32_t floor; //!< Index of the room on the z-axis (i.e., floor number)
 
   Ptr<Building> bptr; //!< Pointer to the chosen building

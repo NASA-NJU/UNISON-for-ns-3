@@ -21,6 +21,7 @@
 #ifndef FRAME_CAPTURE_MODEL_H
 #define FRAME_CAPTURE_MODEL_H
 
+#include "ns3/nstime.h"
 #include "ns3/object.h"
 
 namespace ns3 {
@@ -40,7 +41,7 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   /**
    * A pure virtual method that must be implemented in the subclass.

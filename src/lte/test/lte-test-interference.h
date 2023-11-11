@@ -22,6 +22,7 @@
 #ifndef LTE_TEST_INTERFERENCE_H
 #define LTE_TEST_INTERFERENCE_H
 
+#include "ns3/lte-common.h"
 #include "ns3/test.h"
 
 
@@ -45,7 +46,7 @@ public:
  * \ingroup lte-test
  * \ingroup tests
  *
- * \brief Test that SINR calculation and MCS selection works fine in a 
+ * \brief Test that SINR calculation and MCS selection works fine in a
  * multi-cell interference scenario.
  */
 class LteInterferenceTestCase : public TestCase
@@ -65,7 +66,7 @@ public:
    * \param ulMcs the UL MCS
    */
   LteInterferenceTestCase (std::string name, double d1, double d2, double dlSinr, double ulSinr, double dlSe, double ulSe, uint16_t dlMcs, uint16_t ulMcs);
-  virtual ~LteInterferenceTestCase ();
+  ~LteInterferenceTestCase () override;
 
   /**
    * DL scheduling function
@@ -85,7 +86,7 @@ public:
                      uint8_t mcs, uint16_t sizeTb);
 
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
 
 
   double m_d1; ///< distance between UE and ENB

@@ -25,12 +25,12 @@
 namespace ns3 {
 
 TcpSocketFactoryImpl::TcpSocketFactoryImpl ()
-  : m_tcp (0)
+  : m_tcp (nullptr)
 {
 }
 TcpSocketFactoryImpl::~TcpSocketFactoryImpl ()
 {
-  NS_ASSERT (m_tcp == 0);
+  NS_ASSERT (!m_tcp);
 }
 
 void
@@ -40,15 +40,15 @@ TcpSocketFactoryImpl::SetTcp (Ptr<TcpL4Protocol> tcp)
 }
 
 Ptr<Socket>
-TcpSocketFactoryImpl::CreateSocket (void)
+TcpSocketFactoryImpl::CreateSocket ()
 {
   return m_tcp->CreateSocket ();
 }
 
-void 
-TcpSocketFactoryImpl::DoDispose (void)
+void
+TcpSocketFactoryImpl::DoDispose ()
 {
-  m_tcp = 0;
+  m_tcp = nullptr;
   TcpSocketFactory::DoDispose ();
 }
 

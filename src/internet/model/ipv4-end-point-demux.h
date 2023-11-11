@@ -61,7 +61,7 @@ public:
    * \brief Get the entire list of end points registered.
    * \return list of Ipv4EndPoint
    */
-  EndPoints GetAllEndPoints (void);
+  EndPoints GetAllEndPoints ();
 
   /**
    * \brief Lookup for port local.
@@ -97,9 +97,9 @@ public:
    * \param incomingInterface the incoming interface
    * \return list of IPv4EndPoints (could be 0 element)
    */
-  EndPoints Lookup (Ipv4Address daddr, 
-                    uint16_t dport, 
-                    Ipv4Address saddr, 
+  EndPoints Lookup (Ipv4Address daddr,
+                    uint16_t dport,
+                    Ipv4Address saddr,
                     uint16_t sport,
                     Ptr<Ipv4Interface> incomingInterface);
 
@@ -111,16 +111,16 @@ public:
    * \param sport source port to test
    * \return IPv4EndPoint (0 if not found)
    */
-  Ipv4EndPoint *SimpleLookup (Ipv4Address daddr, 
-                              uint16_t dport, 
-                              Ipv4Address saddr, 
+  Ipv4EndPoint *SimpleLookup (Ipv4Address daddr,
+                              uint16_t dport,
+                              Ipv4Address saddr,
                               uint16_t sport);
 
   /**
    * \brief Allocate a Ipv4EndPoint.
    * \return an empty Ipv4EndPoint instance
    */
-  Ipv4EndPoint *Allocate (void);
+  Ipv4EndPoint *Allocate ();
 
   /**
    * \brief Allocate a Ipv4EndPoint.
@@ -171,7 +171,7 @@ private:
    * \brief Allocate an ephemeral port.
    * \returns the ephemeral port
    */
-  uint16_t AllocateEphemeralPort (void);
+  uint16_t AllocateEphemeralPort ();
 
   /**
    * \brief The ephemeral port.

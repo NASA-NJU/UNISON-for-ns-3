@@ -49,10 +49,10 @@ class BulkSendBasicTestCase : public TestCase
 {
 public:
   BulkSendBasicTestCase ();
-  virtual ~BulkSendBasicTestCase ();
+  ~BulkSendBasicTestCase () override;
 
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
   /**
    * Record a packet successfully sent
    * \param p the packet
@@ -63,7 +63,7 @@ private:
    * \param p the packet
    * \param addr the sender's address
    */
-  void ReceiveRx (Ptr<const Packet> p, const Address& addr); 
+  void ReceiveRx (Ptr<const Packet> p, const Address& addr);
   uint64_t m_sent {0};      //!< number of bytes sent
   uint64_t m_received {0};  //!< number of bytes received
 };
@@ -84,13 +84,13 @@ BulkSendBasicTestCase::SendTx (Ptr<const Packet> p)
 }
 
 void
-BulkSendBasicTestCase::ReceiveRx (Ptr<const Packet> p, const Address& addr) 
+BulkSendBasicTestCase::ReceiveRx (Ptr<const Packet> p, const Address& addr)
 {
   m_received += p->GetSize ();
 }
 
 void
-BulkSendBasicTestCase::DoRun (void)
+BulkSendBasicTestCase::DoRun ()
 {
   Ptr<Node> sender = CreateObject<Node> ();
   Ptr<Node> receiver = CreateObject<Node> ();
@@ -145,10 +145,10 @@ class BulkSendSeqTsSizeTestCase : public TestCase
 {
 public:
   BulkSendSeqTsSizeTestCase ();
-  virtual ~BulkSendSeqTsSizeTestCase ();
+  ~BulkSendSeqTsSizeTestCase () override;
 
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
   /**
    * Record a packet successfully sent
    * \param p the packet
@@ -205,7 +205,7 @@ BulkSendSeqTsSizeTestCase::ReceiveRx (Ptr<const Packet> p, const Address &from, 
 }
 
 void
-BulkSendSeqTsSizeTestCase::DoRun (void)
+BulkSendSeqTsSizeTestCase::DoRun ()
 {
   Ptr<Node> sender = CreateObject<Node> ();
   Ptr<Node> receiver = CreateObject<Node> ();

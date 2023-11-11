@@ -61,7 +61,7 @@ public:
    */
   CommandLineTestCaseBase (std::string description);
   /** Destructor */
-  virtual ~CommandLineTestCaseBase ()
+  ~CommandLineTestCaseBase () override
   {}
 
   /**
@@ -91,7 +91,7 @@ CommandLineTestCaseBase::Parse (CommandLine &cmd, int n, ...)
 
   int argc = n + 1;  // test name will go in argv[0], other n to follow
   char ** argv = new char* [argc + 1];  // extra entry for final null
-  argv[argc] = 0;
+  argv[argc] = nullptr;
 
   argv[0] = new char [strlen (ss.str ().c_str ()) + 1];
   strcpy (argv[0], ss.str ().c_str ());
@@ -126,12 +126,12 @@ public:
   /** Constructor */
   CommandLineBooleanTestCase ();
   /** Destructor */
-  virtual ~CommandLineBooleanTestCase ()
+  ~CommandLineBooleanTestCase () override
   {}
 
 private:
   /** Run the test */
-  virtual void DoRun (void);
+  void DoRun () override;
 
 };
 
@@ -140,7 +140,7 @@ CommandLineBooleanTestCase::CommandLineBooleanTestCase ()
 {}
 
 void
-CommandLineBooleanTestCase::DoRun (void)
+CommandLineBooleanTestCase::DoRun ()
 {
   CommandLine cmd;
   bool myBool = true;
@@ -176,14 +176,14 @@ class CommandLineUint8tTestCase : public CommandLineTestCaseBase
 {
 public:
   /** Constructor */
-  CommandLineUint8tTestCase ();             
+  CommandLineUint8tTestCase ();
   /** Destructor */
-  virtual ~CommandLineUint8tTestCase ()
-  {}                                        
+  ~CommandLineUint8tTestCase () override
+  {}
 
 private:
   /** Run the test */
-  virtual void DoRun (void);
+  void DoRun () override;
 
 };
 
@@ -192,7 +192,7 @@ CommandLineUint8tTestCase::CommandLineUint8tTestCase ()
 {}
 
 void
-CommandLineUint8tTestCase::DoRun (void)
+CommandLineUint8tTestCase::DoRun ()
 {
   CommandLine cmd;
   uint8_t myUint8 = 10;
@@ -213,12 +213,12 @@ public:
   /** Constructor */
   CommandLineIntTestCase ();
   /** Destructor */
-  virtual ~CommandLineIntTestCase ()
+  ~CommandLineIntTestCase () override
   {}
 
 private:
   /** Run the test */
-  virtual void DoRun (void);
+  void DoRun () override;
 
 };
 
@@ -227,7 +227,7 @@ CommandLineIntTestCase::CommandLineIntTestCase ()
 {}
 
 void
-CommandLineIntTestCase::DoRun (void)
+CommandLineIntTestCase::DoRun ()
 {
   CommandLine cmd;
   bool myBool = true;
@@ -255,12 +255,12 @@ public:
   /** Constructor */
   CommandLineUnsignedIntTestCase ();
   /** Destructor */
-  virtual ~CommandLineUnsignedIntTestCase ()
+  ~CommandLineUnsignedIntTestCase () override
   {}
 
 private:
   /** Run the test */
-  virtual void DoRun (void);
+  void DoRun () override;
 
 };
 
@@ -269,7 +269,7 @@ CommandLineUnsignedIntTestCase::CommandLineUnsignedIntTestCase ()
 {}
 
 void
-CommandLineUnsignedIntTestCase::DoRun (void)
+CommandLineUnsignedIntTestCase::DoRun ()
 {
   CommandLine cmd;
   bool myBool = true;
@@ -294,12 +294,12 @@ public:
   /** Constructor */
   CommandLineStringTestCase ();
   /** Destructor */
-  virtual ~CommandLineStringTestCase ()
+  ~CommandLineStringTestCase () override
   {}
 
 private:
   /** Run the test */
-  virtual void DoRun (void);
+  void DoRun () override;
 
 };
 
@@ -308,7 +308,7 @@ CommandLineStringTestCase::CommandLineStringTestCase ()
 {}
 
 void
-CommandLineStringTestCase::DoRun (void)
+CommandLineStringTestCase::DoRun ()
 {
   CommandLine cmd;
   uint32_t myUint32 = 10;
@@ -333,12 +333,12 @@ public:
   /** Constructor */
   CommandLineOrderTestCase ();
   /** Destructor */
-  virtual ~CommandLineOrderTestCase ()
+  ~CommandLineOrderTestCase () override
   {}
 
 private:
   /** Run the test */
-  virtual void DoRun (void);
+  void DoRun () override;
 
 };
 
@@ -347,7 +347,7 @@ CommandLineOrderTestCase::CommandLineOrderTestCase ()
 {}
 
 void
-CommandLineOrderTestCase::DoRun (void)
+CommandLineOrderTestCase::DoRun ()
 {
   CommandLine cmd;
   uint32_t myUint32 = 0;
@@ -369,12 +369,12 @@ public:
   /** Constructor */
   CommandLineInvalidTestCase ();
   /** Destructor */
-  virtual ~CommandLineInvalidTestCase ()
+  ~CommandLineInvalidTestCase () override
   {}
 
 private:
   /** Run the test */
-  virtual void DoRun (void);
+  void DoRun () override;
 
 };
 
@@ -383,7 +383,7 @@ CommandLineInvalidTestCase::CommandLineInvalidTestCase ()
 {}
 
 void
-CommandLineInvalidTestCase::DoRun (void)
+CommandLineInvalidTestCase::DoRun ()
 {
   CommandLine cmd;
   uint32_t myUint32 = 0;
@@ -405,12 +405,12 @@ public:
   /** Constructor */
   CommandLineNonOptionTestCase ();
   /** Destructor */
-  virtual ~CommandLineNonOptionTestCase ()
+  ~CommandLineNonOptionTestCase () override
   {}
 
 private:
   /** Run the test */
-  virtual void DoRun (void);
+  void DoRun () override;
 
 };
 
@@ -419,7 +419,7 @@ CommandLineNonOptionTestCase::CommandLineNonOptionTestCase ()
 {}
 
 void
-CommandLineNonOptionTestCase::DoRun (void)
+CommandLineNonOptionTestCase::DoRun ()
 {
   CommandLine cmd;
   bool myBool = false;

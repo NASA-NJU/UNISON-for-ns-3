@@ -27,7 +27,7 @@
 #include "ns3/traffic-control-module.h"
 #include "ns3/flow-monitor-module.h"
 
-// This simple example shows how to use TrafficControlHelper to install a 
+// This simple example shows how to use TrafficControlHelper to install a
 // QueueDisc on a device.
 //
 // The default QueueDisc is a pfifo_fast with a capacity of 1000 packets (as in
@@ -66,18 +66,35 @@ using namespace ns3;
 
 NS_LOG_COMPONENT_DEFINE ("TrafficControlExample");
 
+/**
+ * Number of packets in TX queue trace.
+ *
+ * \param oldValue Old velue.
+ * \param newValue New value.
+ */
 void
 TcPacketsInQueueTrace (uint32_t oldValue, uint32_t newValue)
 {
   std::cout << "TcPacketsInQueue " << oldValue << " to " << newValue << std::endl;
 }
 
+/**
+ * Packets in the device queue trace.
+ *
+ * \param oldValue Old velue.
+ * \param newValue New value.
+ */
 void
 DevicePacketsInQueueTrace (uint32_t oldValue, uint32_t newValue)
 {
   std::cout << "DevicePacketsInQueue " << oldValue << " to " << newValue << std::endl;
 }
 
+/**
+ * TC Soujoun time trace.
+ *
+ * \param sojournTime The soujourn time.
+ */
 void
 SojournTimeTrace (Time sojournTime)
 {
@@ -95,7 +112,7 @@ main (int argc, char *argv[])
   cmd.AddValue ("transportProt", "Transport protocol to use: Tcp, Udp", transportProt);
   cmd.Parse (argc, argv);
 
-  if (transportProt.compare ("Tcp") == 0)
+  if (transportProt == "Tcp")
     {
       socketType = "ns3::TcpSocketFactory";
     }

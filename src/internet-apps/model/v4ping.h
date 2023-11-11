@@ -45,13 +45,13 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   /**
    * create a pinger applications
    */
   V4Ping ();
-  virtual ~V4Ping ();
+  ~V4Ping () override;
 
 private:
   /**
@@ -72,14 +72,14 @@ private:
   void Read32 (const uint8_t *buffer, uint32_t &data);
 
   // inherited from Application base class.
-  virtual void StartApplication (void);
-  virtual void StopApplication (void);
-  virtual void DoDispose (void);
+  void StartApplication () override;
+  void StopApplication () override;
+  void DoDispose () override;
   /**
    * \brief Return the application ID in the node.
    * \returns the application id
    */
-  uint32_t GetApplicationId (void) const;
+  uint32_t GetApplicationId () const;
   /**
    * \brief Receive an ICMP Echo
    * \param socket the receiving socket
@@ -96,8 +96,8 @@ private:
   Ipv4Address m_remote;
   /// Wait  interval  seconds between sending each packet
   Time m_interval;
-  /** 
-   * Specifies  the number of data bytes to be sent. 
+  /**
+   * Specifies  the number of data bytes to be sent.
    * The default is 56, which translates into 64 ICMP data bytes when combined with the 8 bytes of ICMP header data.
    */
   uint32_t m_size;

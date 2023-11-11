@@ -22,6 +22,7 @@
 #define WIFI_INFORMATION_ELEMENT_H
 
 #include "ns3/header.h"
+#include <optional>
 
 namespace ns3 {
 
@@ -171,9 +172,41 @@ typedef uint8_t WifiInformationElementId;
 #define IE_MIC                                  ((WifiInformationElementId)140)
 #define IE_DESTINATION_URI                      ((WifiInformationElementId)141)
 #define IE_UAPSD_COEXISTENCE                    ((WifiInformationElementId)142)
-// 143 to 173 are reserved
+#define IE_DMG_WAKEUP_SCHEDULE                  ((WifiInformationElementId)143)
+#define IE_EXTENDED_SCHEDULE                    ((WifiInformationElementId)144)
+#define IE_STA_AVAILABILITY                     ((WifiInformationElementId)145)
+#define IE_DMG_TSPEC                            ((WifiInformationElementId)146)
+#define IE_NEXT_DMG_ATI                         ((WifiInformationElementId)147)
+#define IE_DMG_CAPABILITIES                     ((WifiInformationElementId)148)
+// 149 to 150 are reserved
+#define IE_DMG_OPERATION                        ((WifiInformationElementId)151)
+#define IE_DMG_BSS_PARAMETER_CHANGE             ((WifiInformationElementId)152)
+#define IE_DMG_BEAM_REFINEMENT                  ((WifiInformationElementId)153)
+#define IE_CHANNEL_MEASUREMENT_FEEDBACK         ((WifiInformationElementId)154)
+// 155 to 156 are reserved
+#define IE_AWAKE_WINDOW                         ((WifiInformationElementId)157)
+#define IE_MULTI_BAND                           ((WifiInformationElementId)158)
+#define IE_ADDBA_EXTENSION                      ((WifiInformationElementId)159)
+#define IE_NEXT_PCP_LIST                        ((WifiInformationElementId)160)
+#define IE_PCP_HANDOVER                         ((WifiInformationElementId)161)
+#define IE_DMG_LINK_MARGIN                      ((WifiInformationElementId)162)
+#define IE_SWITCHING_STREAM                     ((WifiInformationElementId)163)
+#define IE_SESSION_TRANSITION                   ((WifiInformationElementId)164)
+#define IE_DYNAMIC_TONE_PAIRING_REPORT          ((WifiInformationElementId)165)
+#define IE_CLUSTER_REPORT                       ((WifiInformationElementId)166)
+#define IE_RELAY_CAPABILITIES                   ((WifiInformationElementId)167)
+#define IE_RELAY_TRANSFER_PARAMETER_SET         ((WifiInformationElementId)168)
+#define IE_BEAMLINK_MAINENANCE                  ((WifiInformationElementId)169)
+// 170 to 171 are reserved
+#define IE_DMG_LINK_ADAPTATION_ACKNOWLEDGMENT   ((WifiInformationElementId)172)
+// 173 is reserved
 #define IE_MCCAOP_ADVERTISEMENT_OVERVIEW        ((WifiInformationElementId)174)
-// 175 to 190 are reserved
+#define IE_QUIET_PERIOD_REQUEST                 ((WifiInformationElementId)175)
+// 176 is reserved
+#define IE_QUIET_PERIOD_RESPONSE                ((WifiInformationElementId)177)
+// 178 to 181 are reserved
+#define IE_ECPAC_POLICY                         ((WifiInformationElementId)182)
+// 183 to 190 are reserved
 #define IE_VHT_CAPABILITIES                     ((WifiInformationElementId)191)
 #define IE_VHT_OPERATION                        ((WifiInformationElementId)192)
 #define IE_EXTENDED_BSS_LOAD                    ((WifiInformationElementId)193)
@@ -183,15 +216,22 @@ typedef uint8_t WifiInformationElementId;
 #define IE_AID                                  ((WifiInformationElementId)197)
 #define IE_QUIET_CHANNEL                        ((WifiInformationElementId)198)
 #define IE_OPERATING_MODE_NOTIFICATION          ((WifiInformationElementId)199)
-// 200 to 220 are reserved
+#define IE_UPSIM                                ((WifiInformationElementId)200)
+#define IE_REDUCED_NEIGHBOR_REPORT              ((WifiInformationElementId)201)
+// TODO Add 202 to 220. See Table 9-92 of 802.11-2020
 #define IE_VENDOR_SPECIFIC                      ((WifiInformationElementId)221)
-// 222 to 254 are reserved
+// TODO Add 222 to 241. See Table 9-92 of 802.11-2020
+#define IE_FRAGMENT                             ((WifiInformationElementId)242)
+// 243 to 254 are reserved
 #define IE_EXTENSION                            ((WifiInformationElementId)255)
 
 #define IE_EXT_HE_CAPABILITIES                  ((WifiInformationElementId)35)
 #define IE_EXT_HE_OPERATION                     ((WifiInformationElementId)36)
 #define IE_EXT_UORA_PARAMETER_SET               ((WifiInformationElementId)37)
 #define IE_EXT_MU_EDCA_PARAMETER_SET            ((WifiInformationElementId)38)
+
+#define IE_EXT_MULTI_LINK_ELEMENT               ((WifiInformationElementId)107)
+#define IE_EXT_EHT_CAPABILITIES                 ((WifiInformationElementId)108)
 
 /**
  * \brief Information element, as defined in 802.11-2007 standard
@@ -227,6 +267,12 @@ typedef uint8_t WifiInformationElementId;
  * Length field specifies the number of octets in the Information
  * field.
  *
+ * Fragmentation of an Information Element is handled transparently by the base
+ * class. Subclasses can simply serialize/deserialize their data into/from a
+ * single large buffer. It is the base class that takes care of splitting
+ * serialized data into multiple fragments (when serializing) or reconstructing
+ * data from multiple fragments when deserializing.
+ *
  * This class is pure virtual and acts as base for classes which know
  * how to serialize specific IEs.
  */
@@ -235,18 +281,19 @@ class WifiInformationElement : public SimpleRefCount<WifiInformationElement>
 public:
   virtual ~WifiInformationElement ();
   /**
-   * Serialize entire IE including Element ID and length fields
+   * Serialize entire IE including Element ID and length fields. Handle
+   * fragmentation of the IE if needed.
    *
    * \param i an iterator which points to where the IE should be written.
    *
    * \return an iterator
    */
-  virtual Buffer::Iterator Serialize (Buffer::Iterator i) const;
+  Buffer::Iterator Serialize (Buffer::Iterator i) const;
   /**
-   * Deserialize entire IE, which must be present. The iterator
-   * passed in must be pointing at the Element ID (i.e., the very
-   * first octet) of the correct type of information element,
-   * otherwise this method will generate a fatal error.
+   * Deserialize entire IE (which may possibly be fragmented into multiple
+   * elements), which must be present. The iterator passed in must be pointing
+   * at the Element ID (i.e., the very first octet) of the correct type of
+   * information element, otherwise this method will generate a fatal error.
    *
    * \param i an iterator which points to where the IE should be read.
    *
@@ -254,60 +301,42 @@ public:
    */
   Buffer::Iterator Deserialize (Buffer::Iterator i);
   /**
-   * Deserialize entire IE if it is present. The iterator passed in
+   * Deserialize an entire IE (which may possibly be fragmented into multiple
+   * elements) that is optionally present. The iterator passed in
    * must be pointing at the Element ID of an information element. If
-   * the Element ID is not the one that the given class is interested
-   * in then it will return the same iterator.
+   * the Element ID is not the requested one, the same iterator will
+   * be returned. Otherwise, an iterator pointing to the octet after
+   * the end of the information element is returned.
    *
-   * \param i an iterator which points to where the IE should be read.
-   *
-   * \return an iterator
+   * \tparam IE \deduced Information Element type
+   * \tparam Args \deduced type of the arguments to forward to the constructor of the IE
+   * \param[out] optElem an object that contains the information element, if present
+   * \param i an iterator which points to where the IE should be read
+   * \param args arguments to forward to the constructor of the IE.
+   * \return the input iterator, if the requested IE is not present, or an iterator
+   *         pointing to the octet after the end of the information element, otherwise
    */
-  Buffer::Iterator DeserializeIfPresent (Buffer::Iterator i);
+  template <typename IE, typename... Args>
+  static Buffer::Iterator DeserializeIfPresent (std::optional<IE>& optElem, Buffer::Iterator i,
+                                                Args&&... args);
   /**
    * Get the size of the serialized IE including Element ID and
-   * length fields.
+   * length fields (for every element this IE is possibly fragmented into).
    *
    * \return the size of the serialized IE in bytes
    */
-  virtual uint16_t GetSerializedSize () const;
+  uint16_t GetSerializedSize () const;
 
   // Each subclass must implement these pure virtual functions:
   /**
-   * \returns Own unique Element ID
+   * Get the wifi information element ID
+   * \returns the wifi information element ID
    */
   virtual WifiInformationElementId ElementId () const = 0;
-  /**
-   * Length of serialized information (i.e., the length of the body
-   * of the IE, not including the Element ID and length octets. This
-   * is the value that will appear in the second octet of the entire
-   * IE - the length field)
-   *
-   * \return the length of serialized information
-   */
-  virtual uint8_t GetInformationFieldSize () const = 0;
-  /**
-   * Serialize information (i.e., the body of the IE, not including
-   * the Element ID and length octets)
-   *
-   * \param start an iterator which points to where the information should
-   *        be written.
-   */
-  virtual void SerializeInformationField (Buffer::Iterator start) const = 0;
-  /**
-   * Deserialize information (i.e., the body of the IE, not including
-   * the Element ID and length octets)
-   *
-   * \param start an iterator which points to where the information should be written.
-   * \param length
-   *
-   * \return the number of bytes read
-   */
-  virtual uint8_t DeserializeInformationField (Buffer::Iterator start,
-                                               uint8_t length) = 0;
 
   /**
-   * \returns Own unique Element ID Extension
+   * Get the wifi information element ID extension
+   * \returns the wifi information element ID extension
    */
   virtual WifiInformationElementId ElementIdExt () const;
 
@@ -329,8 +358,95 @@ public:
    */
   virtual bool operator== (WifiInformationElement const & a) const;
 
+private:
+  /**
+   * Deserialize entire IE (which may possibly be fragmented into multiple
+   * elements) if it is present. The iterator passed in
+   * must be pointing at the Element ID of an information element. If
+   * the Element ID is not the one that the given class is interested
+   * in then it will return the same iterator.
+   *
+   * \param i an iterator which points to where the IE should be read.
+   *
+   * \return an iterator
+   */
+  Buffer::Iterator DeserializeIfPresent (Buffer::Iterator i);
+  /**
+   * Serialize an IE that needs to be fragmented.
+   *
+   * \param i an iterator which points to where the IE should be written.
+   * \param size the size of the body of the IE
+   * \return an iterator pointing to past the IE that was serialized
+   */
+  Buffer::Iterator SerializeFragments (Buffer::Iterator i, uint16_t size) const;
+  /**
+   * Deserialize the Information field of an IE. Also handle the case in which
+   * the IE is fragmented.
+   *
+   * \param i an iterator which points to where the Information field should be read.
+   * \param length the expected number of bytes to read
+   * \return an iterator pointing to past the IE that was deserialized
+   */
+  Buffer::Iterator DoDeserialize (Buffer::Iterator i, uint16_t length);
+  /**
+   * Length of serialized information (i.e., the length of the body
+   * of the IE, not including the Element ID and length octets. This
+   * is the value that will appear in the second octet of the entire
+   * IE - the length field - if the IE is not fragmented)
+   *
+   * \return the length of serialized information
+   */
+  virtual uint16_t GetInformationFieldSize () const = 0;
+  /**
+   * Serialize information (i.e., the body of the IE, not including
+   * the Element ID and length octets)
+   *
+   * \param start an iterator which points to where the information should
+   *        be written.
+   */
+  virtual void SerializeInformationField (Buffer::Iterator start) const = 0;
+  /**
+   * Deserialize information (i.e., the body of the IE, not including
+   * the Element ID and length octets)
+   *
+   * \param start an iterator which points to where the information should be written.
+   * \param length the expected number of bytes to read
+   *
+   * \return the number of bytes read
+   */
+  virtual uint16_t DeserializeInformationField (Buffer::Iterator start,
+                                               uint16_t length) = 0;
 };
 
 } //namespace ns3
+
+
+/***************************************************************
+ *  Implementation of the templates declared above.
+ ***************************************************************/
+
+namespace ns3 {
+
+template <typename IE, typename... Args>
+Buffer::Iterator
+WifiInformationElement::DeserializeIfPresent (std::optional<IE>& optElem, Buffer::Iterator i,
+                                              Args&&... args)
+{
+  optElem = std::nullopt;
+  IE elem (std::forward<Args> (args)...);
+
+  Buffer::Iterator start = i;
+  i = elem.DeserializeIfPresent (i);
+
+  if (i.GetDistanceFrom (start) != 0)
+    {
+      // the element is present and has been deserialized
+      optElem = elem;
+    }
+
+  return i;
+}
+
+} // namespace ns3
 
 #endif /* WIFI_INFORMATION_ELEMENT_H */

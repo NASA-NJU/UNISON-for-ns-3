@@ -22,6 +22,7 @@
 
 #include "ns3/wifi-net-device.h"
 #include "ns3/ap-wifi-mac.h"
+#include "ns3/sta-wifi-mac.h"
 #include "ns3/ampdu-subframe-header.h"
 #include "ns3/mobility-model.h"
 #include "ns3/log.h"
@@ -36,6 +37,7 @@
 #include "ns3/ht-configuration.h"
 #include "ns3/vht-configuration.h"
 #include "ns3/he-configuration.h"
+#include "ns3/eht-configuration.h"
 #include "ns3/obss-pd-algorithm.h"
 #include "ns3/wifi-mac-trailer.h"
 #include "wifi-helper.h"
@@ -140,9 +142,15 @@ AsciiPhyReceiveSinkWithoutContext (
   *stream->GetStream () << "r " << Simulator::Now ().GetSeconds () << " " << mode << " " << *pCopy << " " << fcs << std::endl;
 }
 
-WifiPhyHelper::WifiPhyHelper ()
+WifiPhyHelper::WifiPhyHelper (uint8_t nLinks)
   : m_pcapDlt (PcapHelper::DLT_IEEE802_11)
 {
+  NS_ABORT_IF (nLinks == 0);
+  m_phy.resize (nLinks);
+  m_errorRateModel.resize (nLinks);
+  m_frameCaptureModel.resize (nLinks);
+  m_preambleDetectionModel.resize (nLinks);
+
   SetPreambleDetectionModel ("ns3::ThresholdPreambleDetectionModel");
 }
 
@@ -153,13 +161,25 @@ WifiPhyHelper::~WifiPhyHelper ()
 void
 WifiPhyHelper::Set (std::string name, const AttributeValue &v)
 {
-  m_phy.Set (name, v);
+  for (auto& phy : m_phy)
+    {
+      phy.Set (name, v);
+    }
+}
+
+void
+WifiPhyHelper::Set (uint8_t linkId, std::string name, const AttributeValue &v)
+{
+  m_phy.at (linkId).Set (name, v);
 }
 
 void
 WifiPhyHelper::DisablePreambleDetectionModel ()
 {
-    m_preambleDetectionModel.SetTypeId (TypeId ());
+  for (auto& preambleDetectionModel : m_preambleDetectionModel)
+    {
+      preambleDetectionModel.SetTypeId (TypeId ());
+    }
 }
 
 void
@@ -508,7 +528,8 @@ WifiPhyHelper::GetRadiotapHeader (
   if (preamble == WIFI_PREAMBLE_HE_MU)
     {
       //TODO: fill in fields (everything is set to 0 so far)
-      std::array<uint8_t, 4> ruChannel1, ruChannel2;
+      std::array<uint8_t, 4> ruChannel1;
+      std::array<uint8_t, 4> ruChannel2;
       header.SetHeMuFields (0, 0, ruChannel1, ruChannel2);
       header.SetHeMuPerUserFields (0, 0, 0, 0);
     }
@@ -534,7 +555,7 @@ WifiPhyHelper::SetPcapDataLinkType (SupportedPcapDataLinkTypes dlt)
 }
 
 PcapHelper::DataLinkType
-WifiPhyHelper::GetPcapDataLinkType (void) const
+WifiPhyHelper::GetPcapDataLinkType () const
 {
   return m_pcapDlt;
 }
@@ -548,14 +569,13 @@ WifiPhyHelper::EnablePcapInternal (std::string prefix, Ptr<NetDevice> nd, bool p
   //that are wandering through all of devices on perhaps all of the nodes in
   //the system. We can only deal with devices of type WifiNetDevice.
   Ptr<WifiNetDevice> device = nd->GetObject<WifiNetDevice> ();
-  if (device == 0)
+  if (!device)
     {
       NS_LOG_INFO ("WifiHelper::EnablePcapInternal(): Device " << &device << " not of type ns3::WifiNetDevice");
       return;
     }
 
-  Ptr<WifiPhy> phy = device->GetPhy ();
-  NS_ABORT_MSG_IF (phy == 0, "WifiPhyHelper::EnablePcapInternal(): Phy layer in WifiNetDevice must be set");
+  NS_ABORT_MSG_IF (device->GetPhys ().empty (), "WifiPhyHelper::EnablePcapInternal(): Phy layer in WifiNetDevice must be set");
 
   PcapHelper pcapHelper;
 
@@ -569,10 +589,24 @@ WifiPhyHelper::EnablePcapInternal (std::string prefix, Ptr<NetDevice> nd, bool p
       filename = pcapHelper.GetFilenameFromDevice (prefix, device);
     }
 
-  Ptr<PcapFileWrapper> file = pcapHelper.CreateFile (filename, std::ios::out, m_pcapDlt);
+  uint8_t linkId = 0;
+  // find the last point in the filename
+  auto pos = filename.find_last_of ('.');
+  // if not found, set pos to filename size
+  pos = (pos == std::string::npos) ? filename.size () : pos;
 
-  phy->TraceConnectWithoutContext ("MonitorSnifferTx", MakeBoundCallback (&WifiPhyHelper::PcapSniffTxEvent, file));
-  phy->TraceConnectWithoutContext ("MonitorSnifferRx", MakeBoundCallback (&WifiPhyHelper::PcapSniffRxEvent, file));
+  for (auto& phy : device->GetPhys ())
+    {
+      std::string tmp = filename;
+      if (device->GetNPhys () > 1)
+        {
+          // insert LinkId only for multi-link devices
+          tmp.insert (pos, "-" + std::to_string (linkId++));
+        }
+      auto file = pcapHelper.CreateFile (tmp, std::ios::out, m_pcapDlt);
+      phy->TraceConnectWithoutContext ("MonitorSnifferTx", MakeBoundCallback (&WifiPhyHelper::PcapSniffTxEvent, file));
+      phy->TraceConnectWithoutContext ("MonitorSnifferRx", MakeBoundCallback (&WifiPhyHelper::PcapSniffRxEvent, file));
+    }
 }
 
 void
@@ -586,7 +620,7 @@ WifiPhyHelper::EnableAsciiInternal (
   //that are wandering through all of devices on perhaps all of the nodes in
   //the system. We can only deal with devices of type WifiNetDevice.
   Ptr<WifiNetDevice> device = nd->GetObject<WifiNetDevice> ();
-  if (device == 0)
+  if (!device)
     {
       NS_LOG_INFO ("WifiHelper::EnableAsciiInternal(): Device " << device << " not of type ns3::WifiNetDevice");
       return;
@@ -604,7 +638,7 @@ WifiPhyHelper::EnableAsciiInternal (
   //one using the usual trace filename conventions and write our traces
   //without a context since there will be one file per context and therefore
   //the context would be redundant.
-  if (stream == 0)
+  if (!stream)
     {
       //Set up an output stream object to deal with private ofstream copy
       //constructor and lifetime issues. Let the helper decide the actual
@@ -621,18 +655,34 @@ WifiPhyHelper::EnableAsciiInternal (
           filename = asciiTraceHelper.GetFilenameFromDevice (prefix, device);
         }
 
-      Ptr<OutputStreamWrapper> theStream = asciiTraceHelper.CreateFileStream (filename);
-      //We could go poking through the PHY and the state looking for the
-      //correct trace source, but we can let Config deal with that with
-      //some search cost.  Since this is presumably happening at topology
-      //creation time, it doesn't seem much of a price to pay.
-      oss.str ("");
-      oss << "/NodeList/" << nodeid << "/DeviceList/" << deviceid << "/$ns3::WifiNetDevice/Phy/State/RxOk";
-      Config::ConnectWithoutContext (oss.str (), MakeBoundCallback (&AsciiPhyReceiveSinkWithoutContext, theStream));
+      // find the last point in the filename
+      auto pos = filename.find_last_of ('.');
+      // if not found, set pos to filename size
+      pos = (pos == std::string::npos) ? filename.size () : pos;
 
-      oss.str ("");
-      oss << "/NodeList/" << nodeid << "/DeviceList/" << deviceid << "/$ns3::WifiNetDevice/Phy/State/Tx";
-      Config::ConnectWithoutContext (oss.str (), MakeBoundCallback (&AsciiPhyTransmitSinkWithoutContext, theStream));
+      for (uint8_t linkId = 0; linkId < device->GetNPhys (); linkId++)
+        {
+          std::string tmp = filename;
+          if (device->GetNPhys () > 1)
+            {
+              // insert LinkId only for multi-link devices
+              tmp.insert (pos, "-" + std::to_string (linkId));
+            }
+          auto theStream = asciiTraceHelper.CreateFileStream (tmp);
+          //We could go poking through the PHY and the state looking for the
+          //correct trace source, but we can let Config deal with that with
+          //some search cost.  Since this is presumably happening at topology
+          //creation time, it doesn't seem much of a price to pay.
+          oss.str ("");
+          oss << "/NodeList/" << nodeid << "/DeviceList/" << deviceid << "/$ns3::WifiNetDevice/Phys/"
+              << +linkId << "/State/RxOk";
+          Config::ConnectWithoutContext (oss.str (), MakeBoundCallback (&AsciiPhyReceiveSinkWithoutContext, theStream));
+
+          oss.str ("");
+          oss << "/NodeList/" << nodeid << "/DeviceList/" << deviceid << "/$ns3::WifiNetDevice/Phys/"
+              << +linkId << "/State/Tx";
+          Config::ConnectWithoutContext (oss.str (), MakeBoundCallback (&AsciiPhyTransmitSinkWithoutContext, theStream));
+        }
 
       return;
     }
@@ -661,6 +711,10 @@ WifiHelper::WifiHelper ()
     m_enableFlowControl (true)
 {
   SetRemoteStationManager ("ns3::IdealWifiManager");
+  m_htConfig.SetTypeId ("ns3::HtConfiguration");
+  m_vhtConfig.SetTypeId ("ns3::VhtConfiguration");
+  m_heConfig.SetTypeId ("ns3::HeConfiguration");
+  m_ehtConfig.SetTypeId ("ns3::EhtConfiguration");
 }
 
 void
@@ -670,7 +724,7 @@ WifiHelper::SetStandard (WifiStandard standard)
 }
 
 void
-WifiHelper::DisableFlowControl (void)
+WifiHelper::DisableFlowControl ()
 {
   m_enableFlowControl = false;
 }
@@ -692,6 +746,7 @@ WifiHelper::Install (const WifiPhyHelper &phyHelper,
     {
       Ptr<Node> node = *i;
       Ptr<WifiNetDevice> device = CreateObject<WifiNetDevice> ();
+      node->AddDevice (device);
       device->SetStandard (m_standard);
       if (m_standard == WIFI_STANDARD_UNSPECIFIED)
         {
@@ -700,7 +755,7 @@ WifiHelper::Install (const WifiPhyHelper &phyHelper,
         }
       if (m_standard >= WIFI_STANDARD_80211n)
         {
-          Ptr<HtConfiguration> htConfiguration = CreateObject<HtConfiguration> ();
+          auto htConfiguration = m_htConfig.Create<HtConfiguration> ();
           device->SetHtConfiguration (htConfiguration);
         }
       if (m_standard >= WIFI_STANDARD_80211ac)
@@ -710,22 +765,29 @@ WifiHelper::Install (const WifiPhyHelper &phyHelper,
           // This approach allows us not to worry about deleting this object when
           // the PHY band is switched from 5GHz to 2.4GHz and creating this object
           // when the PHY band is switched from 2.4GHz to 5GHz.
-          Ptr<VhtConfiguration> vhtConfiguration = CreateObject<VhtConfiguration> ();
+          auto vhtConfiguration = m_vhtConfig.Create<VhtConfiguration> ();
           device->SetVhtConfiguration (vhtConfiguration);
         }
       if (m_standard >= WIFI_STANDARD_80211ax)
         {
-          Ptr<HeConfiguration> heConfiguration = CreateObject<HeConfiguration> ();
+          auto heConfiguration = m_heConfig.Create<HeConfiguration> ();
           device->SetHeConfiguration (heConfiguration);
         }
-      Ptr<WifiRemoteStationManager> manager = m_stationManager.Create<WifiRemoteStationManager> ();
-      Ptr<WifiPhy> phy = phyHelper.Create (node, device);
-      phy->ConfigureStandard (m_standard);
-      device->SetPhy (phy);
+      if (m_standard >= WIFI_STANDARD_80211be)
+        {
+          auto ehtConfiguration = m_ehtConfig.Create<EhtConfiguration> ();
+          device->SetEhtConfiguration (ehtConfiguration);
+        }
+      std::vector<Ptr<WifiRemoteStationManager>> managers;
+      std::vector<Ptr<WifiPhy>> phys = phyHelper.Create (node, device);
+      device->SetPhys (phys);
+      for (std::size_t i = 0; i < phys.size (); i++)
+        {
+          phys[i]->ConfigureStandard (m_standard);
+          managers.push_back (m_stationManager.Create<WifiRemoteStationManager> ());
+        }
+      device->SetRemoteStationManagers (managers);
       Ptr<WifiMac> mac = macHelper.Create (device, m_standard);
-      device->SetMac (mac);
-      device->SetRemoteStationManager (manager);
-      node->AddDevice (device);
       if ((m_standard >= WIFI_STANDARD_80211ax) && (m_obssPdAlgorithm.IsTypeIdSet ()))
         {
           Ptr<ObssPdAlgorithm> obssPdAlgorithm = m_obssPdAlgorithm.Create<ObssPdAlgorithm> ();
@@ -789,7 +851,7 @@ WifiHelper::Install (const WifiPhyHelper &phy,
 }
 
 void
-WifiHelper::EnableLogComponents (void)
+WifiHelper::EnableLogComponents ()
 {
   LogComponentEnableAll (LOG_PREFIX_TIME);
   LogComponentEnableAll (LOG_PREFIX_NODE);
@@ -814,6 +876,8 @@ WifiHelper::EnableLogComponents (void)
   LogComponentEnable ("DsssPpdu", LOG_LEVEL_ALL);
   LogComponentEnable ("ErpOfdmPhy", LOG_LEVEL_ALL);
   LogComponentEnable ("ErpOfdmPpdu", LOG_LEVEL_ALL);
+  LogComponentEnable ("EhtPhy", LOG_LEVEL_ALL);
+  LogComponentEnable ("EhtPpdu", LOG_LEVEL_ALL);
   LogComponentEnable ("FrameExchangeManager", LOG_LEVEL_ALL);
   LogComponentEnable ("HeConfiguration", LOG_LEVEL_ALL);
   LogComponentEnable ("HeFrameExchangeManager", LOG_LEVEL_ALL);
@@ -858,11 +922,13 @@ WifiHelper::EnableLogComponents (void)
   LogComponentEnable ("VhtPhy", LOG_LEVEL_ALL);
   LogComponentEnable ("VhtPpdu", LOG_LEVEL_ALL);
   LogComponentEnable ("WifiAckManager", LOG_LEVEL_ALL);
+  LogComponentEnable ("WifiAssocManager", LOG_LEVEL_ALL);
   LogComponentEnable ("WifiDefaultAckManager", LOG_LEVEL_ALL);
+  LogComponentEnable ("WifiDefaultAssocManager", LOG_LEVEL_ALL);
   LogComponentEnable ("WifiDefaultProtectionManager", LOG_LEVEL_ALL);
   LogComponentEnable ("WifiMac", LOG_LEVEL_ALL);
   LogComponentEnable ("WifiMacQueue", LOG_LEVEL_ALL);
-  LogComponentEnable ("WifiMacQueueItem", LOG_LEVEL_ALL);
+  LogComponentEnable ("WifiMpdu", LOG_LEVEL_ALL);
   LogComponentEnable ("WifiNetDevice", LOG_LEVEL_ALL);
   LogComponentEnable ("WifiPhyStateHelper", LOG_LEVEL_ALL);
   LogComponentEnable ("WifiPhy", LOG_LEVEL_ALL);
@@ -930,11 +996,15 @@ WifiHelper::AssignStreams (NetDeviceContainer c, int64_t stream)
               currentStream += bk_txop->AssignStreams (currentStream);
             }
 
-          //if an AP, handle any beacon jitter
-          Ptr<ApWifiMac> apmac = DynamicCast<ApWifiMac> (mac);
-          if (apmac)
+          // if an AP, handle any beacon jitter
+          if (auto apMac = DynamicCast<ApWifiMac> (mac); apMac)
             {
-              currentStream += apmac->AssignStreams (currentStream);
+              currentStream += apMac->AssignStreams (currentStream);
+            }
+          // if a STA, handle any probe request jitter
+          if (auto staMac = DynamicCast<StaWifiMac> (mac); staMac)
+            {
+              currentStream += staMac->AssignStreams (currentStream);
             }
         }
     }

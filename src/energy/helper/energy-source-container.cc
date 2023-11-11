@@ -28,7 +28,7 @@ namespace ns3 {
 NS_OBJECT_ENSURE_REGISTERED (EnergySourceContainer);
 
 TypeId
-EnergySourceContainer::GetTypeId (void)
+EnergySourceContainer::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::EnergySourceContainer")
     .SetParent<Object> ()
@@ -48,14 +48,14 @@ EnergySourceContainer::~EnergySourceContainer ()
 
 EnergySourceContainer::EnergySourceContainer (Ptr<EnergySource> source)
 {
-  NS_ASSERT (source != NULL);
+  NS_ASSERT (source);
   m_sources.push_back (source);
 }
 
 EnergySourceContainer::EnergySourceContainer (std::string sourceName)
 {
   Ptr<EnergySource> source = Names::Find<EnergySource> (sourceName);
-  NS_ASSERT (source != NULL);
+  NS_ASSERT (source);
   m_sources.push_back (source);
 }
 
@@ -67,19 +67,19 @@ EnergySourceContainer::EnergySourceContainer (const EnergySourceContainer &a,
 }
 
 EnergySourceContainer::Iterator
-EnergySourceContainer::Begin (void) const
+EnergySourceContainer::Begin () const
 {
   return m_sources.begin ();
 }
 
 EnergySourceContainer::Iterator
-EnergySourceContainer::End (void) const
+EnergySourceContainer::End () const
 {
   return m_sources.end ();
 }
 
 uint32_t
-EnergySourceContainer::GetN (void) const
+EnergySourceContainer::GetN () const
 {
   return m_sources.size ();
 }
@@ -102,7 +102,7 @@ EnergySourceContainer::Add (EnergySourceContainer container)
 void
 EnergySourceContainer::Add (Ptr<EnergySource> source)
 {
-  NS_ASSERT (source != NULL);
+  NS_ASSERT (source);
   m_sources.push_back (source);
 }
 
@@ -110,7 +110,7 @@ void
 EnergySourceContainer::Add (std::string sourceName)
 {
   Ptr<EnergySource> source = Names::Find<EnergySource> (sourceName);
-  NS_ASSERT (source != NULL);
+  NS_ASSERT (source);
   m_sources.push_back (source);
 }
 
@@ -119,7 +119,7 @@ EnergySourceContainer::Add (std::string sourceName)
  */
 
 void
-EnergySourceContainer::DoDispose (void)
+EnergySourceContainer::DoDispose ()
 {
   // call Object::Dispose for all EnergySource objects
   for (std::vector< Ptr<EnergySource> >::iterator i = m_sources.begin ();
@@ -132,7 +132,7 @@ EnergySourceContainer::DoDispose (void)
 }
 
 void
-EnergySourceContainer::DoInitialize (void)
+EnergySourceContainer::DoInitialize ()
 {
   // call Object::Start for all EnergySource objects
   for (std::vector< Ptr<EnergySource> >::iterator i = m_sources.begin ();

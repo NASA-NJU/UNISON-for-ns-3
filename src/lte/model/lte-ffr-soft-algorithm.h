@@ -42,7 +42,7 @@ public:
    */
   LteFfrSoftAlgorithm ();
 
-  virtual ~LteFfrSoftAlgorithm ();
+  ~LteFfrSoftAlgorithm () override;
 
   /**
    * \brief Get the type ID.
@@ -51,11 +51,11 @@ public:
   static TypeId GetTypeId ();
 
   // inherited from LteFfrAlgorithm
-  virtual void SetLteFfrSapUser (LteFfrSapUser* s);
-  virtual LteFfrSapProvider* GetLteFfrSapProvider ();
+  void SetLteFfrSapUser (LteFfrSapUser* s) override;
+  LteFfrSapProvider* GetLteFfrSapProvider () override;
 
-  virtual void SetLteFfrRrcSapUser (LteFfrRrcSapUser* s);
-  virtual LteFfrRrcSapProvider* GetLteFfrRrcSapProvider ();
+  void SetLteFfrRrcSapUser (LteFfrRrcSapUser* s) override;
+  LteFfrRrcSapProvider* GetLteFfrRrcSapProvider () override;
 
   /// let the forwarder class access the protected and private members
   friend class MemberLteFfrSapProvider<LteFfrSoftAlgorithm>;
@@ -64,25 +64,25 @@ public:
 
 protected:
   // inherited from Object
-  virtual void DoInitialize ();
-  virtual void DoDispose ();
+  void DoInitialize () override;
+  void DoDispose () override;
 
-  virtual void Reconfigure ();
+  void Reconfigure () override;
 
   // FFR SAP PROVIDER IMPLEMENTATION
-  virtual std::vector <bool> DoGetAvailableDlRbg ();
-  virtual bool DoIsDlRbgAvailableForUe (int i, uint16_t rnti);
-  virtual std::vector <bool> DoGetAvailableUlRbg ();
-  virtual bool DoIsUlRbgAvailableForUe (int i, uint16_t rnti);
-  virtual void DoReportDlCqiInfo (const struct FfMacSchedSapProvider::SchedDlCqiInfoReqParameters& params);
-  virtual void DoReportUlCqiInfo (const struct FfMacSchedSapProvider::SchedUlCqiInfoReqParameters& params);
-  virtual void DoReportUlCqiInfo ( std::map <uint16_t, std::vector <double> > ulCqiMap );
-  virtual uint8_t DoGetTpc (uint16_t rnti);
-  virtual uint16_t DoGetMinContinuousUlBandwidth ();
+  std::vector <bool> DoGetAvailableDlRbg () override;
+  bool DoIsDlRbgAvailableForUe (int i, uint16_t rnti) override;
+  std::vector <bool> DoGetAvailableUlRbg () override;
+  bool DoIsUlRbgAvailableForUe (int i, uint16_t rnti) override;
+  void DoReportDlCqiInfo (const struct FfMacSchedSapProvider::SchedDlCqiInfoReqParameters& params) override;
+  void DoReportUlCqiInfo (const struct FfMacSchedSapProvider::SchedUlCqiInfoReqParameters& params) override;
+  void DoReportUlCqiInfo ( std::map <uint16_t, std::vector <double> > ulCqiMap ) override;
+  uint8_t DoGetTpc (uint16_t rnti) override;
+  uint16_t DoGetMinContinuousUlBandwidth () override;
 
   // FFR SAP RRC PROVIDER IMPLEMENTATION
-  virtual void DoReportUeMeas (uint16_t rnti, LteRrcSap::MeasResults measResults);
-  virtual void DoRecvLoadInformation (EpcX2Sap::LoadInformationParams params);
+  void DoReportUeMeas (uint16_t rnti, LteRrcSap::MeasResults measResults) override;
+  void DoRecvLoadInformation (EpcX2Sap::LoadInformationParams params) override;
 
 private:
   /**
@@ -120,7 +120,7 @@ private:
   uint8_t m_dlCommonSubBandwidth; ///< DL common subbandwidth
   uint8_t m_dlEdgeSubBandOffset; ///< DL edge subband offset
   uint8_t m_dlEdgeSubBandwidth; ///< DL edge subbandwidth
- 
+
   uint8_t m_ulCommonSubBandwidth; ///< UL common subbandwidth
   uint8_t m_ulEdgeSubBandOffset; ///< UL edge subband offset
   uint8_t m_ulEdgeSubBandwidth; ///< UL edge subbandwidth
@@ -152,7 +152,7 @@ private:
   uint8_t m_edgeSubBandThreshold; ///< edge subband threshold
 
   uint8_t m_centerAreaPowerOffset; ///< center area power offset
-  uint8_t m_mediumAreaPowerOffset; ///< medium area power offset 
+  uint8_t m_mediumAreaPowerOffset; ///< medium area power offset
   uint8_t m_edgeAreaPowerOffset; ///< edge area power offset
 
   uint8_t m_centerAreaTpc; ///< center area tpc

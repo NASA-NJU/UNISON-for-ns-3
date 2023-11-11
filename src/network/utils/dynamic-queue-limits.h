@@ -66,15 +66,15 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   DynamicQueueLimits ();
-  virtual ~DynamicQueueLimits ();
+  ~DynamicQueueLimits () override;
 
-  virtual void Reset ();
-  virtual void Completed (uint32_t count);
-  virtual int32_t Available () const;
-  virtual void Queued (uint32_t count);
+  void Reset () override;
+  void Completed (uint32_t count) override;
+  int32_t Available () const override;
+  void Queued (uint32_t count) override;
 
 private:
   /**

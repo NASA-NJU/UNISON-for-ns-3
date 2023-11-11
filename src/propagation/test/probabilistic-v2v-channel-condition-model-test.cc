@@ -37,7 +37,7 @@ NS_LOG_COMPONENT_DEFINE ("ProbabilisticV2vChannelConditionModelsTest");
 
 /**
  * \ingroup propagation-tests
- * 
+ *
  * Test case for the V2V Urban channel condition models using a fully
  * probabilistic model to determine LOS, NLOS and NLOSv states. The test
  * determines the channel condition multiple times,
@@ -58,13 +58,13 @@ public:
   /**
    * Destructor
    */
-  virtual ~V2vUrbanProbChCondModelTestCase ();
+  ~V2vUrbanProbChCondModelTestCase () override;
 
 private:
   /**
    * Builds the simulation scenario and perform the tests
    */
-  virtual void DoRun (void);
+  void DoRun () override;
 
   /**
    * Evaluates the channel condition between two nodes by calling the method
@@ -119,7 +119,7 @@ V2vUrbanProbChCondModelTestCase::EvaluateChannelCondition (Ptr<MobilityModel> a,
 }
 
 void
-V2vUrbanProbChCondModelTestCase::DoRun (void)
+V2vUrbanProbChCondModelTestCase::DoRun ()
 {
   RngSeedManager::SetSeed (1);
   RngSeedManager::SetRun (1);
@@ -229,7 +229,7 @@ V2vUrbanProbChCondModelTestCase::DoRun (void)
 
 /**
  * \ingroup propagation-tests
- * 
+ *
  * Test case for the V2V Highway channel condition models using a fully
  * probabilistic model to determine LOS, NLOS and NLOSv states. The test
  * determines the channel condition multiple times,
@@ -250,13 +250,13 @@ public:
   /**
    * Destructor
    */
-  virtual ~V2vHighwayProbChCondModelTestCase ();
+  ~V2vHighwayProbChCondModelTestCase () override;
 
 private:
   /**
    * Builds the simulation scenario and perform the tests
    */
-  virtual void DoRun (void);
+  void DoRun () override;
 
   /**
    * Evaluates the channel condition between two nodes by calling the method
@@ -311,7 +311,7 @@ V2vHighwayProbChCondModelTestCase::EvaluateChannelCondition (Ptr<MobilityModel> 
 }
 
 void
-V2vHighwayProbChCondModelTestCase::DoRun (void)
+V2vHighwayProbChCondModelTestCase::DoRun ()
 {
   RngSeedManager::SetSeed (1);
   RngSeedManager::SetRun (1);
@@ -439,7 +439,7 @@ V2vHighwayProbChCondModelTestCase::DoRun (void)
 
 /**
  * \ingroup propagation-tests
- * 
+ *
  * Test suite for the probabilistic V2V channel condition model
  *
  * The tests V2vUrbanProbChCondModelTestCase and

@@ -40,11 +40,11 @@ namespace ns3 {
  * This class allows subclasses of the ns3::Tag base class
  * to serialize and deserialize their data through a stream-like
  * API. This class keeps track of the "current" point in the
- * buffer and advances that "current" point every time data is 
- * written. The in-memory format of the data written by 
+ * buffer and advances that "current" point every time data is
+ * written. The in-memory format of the data written by
  * this class is unspecified.
  *
- * If the user attempts to write more data in the buffer than 
+ * If the user attempts to write more data in the buffer than
  * he allocated with Tag::GetSerializedSize, he will trigger
  * an NS_ASSERT error.
  */
@@ -116,35 +116,35 @@ public:
    * Read one byte, advance the "current" point by one,
    * and return the value read.
    */
-  TAG_BUFFER_INLINE uint8_t  ReadU8 (void);
+  TAG_BUFFER_INLINE uint8_t  ReadU8 ();
   /**
    * \returns the value read
    *
    * Read two bytes, advance the "current" point by two,
    * and return the value read.
    */
-  TAG_BUFFER_INLINE uint16_t ReadU16 (void);
+  TAG_BUFFER_INLINE uint16_t ReadU16 ();
   /**
    * \returns the value read
    *
    * Read four bytes, advance the "current" point by four,
    * and return the value read.
    */
-  TAG_BUFFER_INLINE uint32_t ReadU32 (void);
+  TAG_BUFFER_INLINE uint32_t ReadU32 ();
   /**
    * \returns the value read
    *
    * Read eight bytes, advance the "current" point by eight,
    * and return the value read.
    */
-  uint64_t ReadU64 (void);
+  uint64_t ReadU64 ();
   /**
    * \returns the value read
    *
    * Read a double, advance the "current" point by the size
    * of the data read, and, return the value read.
    */
-  double ReadDouble (void);
+  double ReadDouble ();
   /**
    * \param buffer a pointer to the buffer where data should be
    * written.
@@ -168,7 +168,7 @@ private:
 
 namespace ns3 {
 
-void 
+void
 TagBuffer::WriteU8 (uint8_t v)
 {
   NS_ASSERT (m_current + 1 <= m_end);
@@ -176,13 +176,13 @@ TagBuffer::WriteU8 (uint8_t v)
   m_current++;
 }
 
-void 
+void
 TagBuffer::WriteU16 (uint16_t data)
 {
   WriteU8 ((data >> 0) & 0xff);
   WriteU8 ((data >> 8) & 0xff);
 }
-void 
+void
 TagBuffer::WriteU32 (uint32_t data)
 {
   WriteU8 ((data >> 0) & 0xff);
@@ -192,7 +192,7 @@ TagBuffer::WriteU32 (uint32_t data)
 }
 
 uint8_t
-TagBuffer::ReadU8 (void)
+TagBuffer::ReadU8 ()
 {
   NS_ASSERT (m_current + 1 <= m_end);
   uint8_t v;
@@ -201,8 +201,8 @@ TagBuffer::ReadU8 (void)
   return v;
 }
 
-uint16_t 
-TagBuffer::ReadU16 (void)
+uint16_t
+TagBuffer::ReadU16 ()
 {
   uint8_t byte0 = ReadU8 ();
   uint8_t byte1 = ReadU8 ();
@@ -211,8 +211,8 @@ TagBuffer::ReadU16 (void)
   data |= byte0;
   return data;
 }
-uint32_t 
-TagBuffer::ReadU32 (void)
+uint32_t
+TagBuffer::ReadU32 ()
 {
   uint8_t byte0 = ReadU8 ();
   uint8_t byte1 = ReadU8 ();

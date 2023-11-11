@@ -29,7 +29,7 @@ NS_LOG_COMPONENT_DEFINE ("TcpRxBuffer");
 NS_OBJECT_ENSURE_REGISTERED (TcpRxBuffer);
 
 TypeId
-TcpRxBuffer::GetTypeId (void)
+TcpRxBuffer::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::TcpRxBuffer")
     .SetParent<Object> ()
@@ -60,7 +60,7 @@ TcpRxBuffer::~TcpRxBuffer ()
 }
 
 SequenceNumber32
-TcpRxBuffer::NextRxSequence (void) const
+TcpRxBuffer::NextRxSequence () const
 {
   return m_nextRxSeq;
 }
@@ -72,7 +72,7 @@ TcpRxBuffer::SetNextRxSequence (const SequenceNumber32& s)
 }
 
 uint32_t
-TcpRxBuffer::MaxBufferSize (void) const
+TcpRxBuffer::MaxBufferSize () const
 {
   return m_maxBuffer;
 }
@@ -84,7 +84,7 @@ TcpRxBuffer::SetMaxBufferSize (uint32_t s)
 }
 
 uint32_t
-TcpRxBuffer::Size (void) const
+TcpRxBuffer::Size () const
 {
   return m_size;
 }
@@ -107,7 +107,7 @@ TcpRxBuffer::IncNextRxSequence ()
 
 // Return the lowest sequence number that this TcpRxBuffer cannot accept
 SequenceNumber32
-TcpRxBuffer::MaxRxSequence (void) const
+TcpRxBuffer::MaxRxSequence () const
 {
   if (m_gotFin)
     { // No data allowed beyond FIN
@@ -127,17 +127,20 @@ TcpRxBuffer::SetFinSequence (const SequenceNumber32& s)
 
   m_gotFin = true;
   m_finSeq = s;
-  if (m_nextRxSeq == m_finSeq) ++m_nextRxSeq;
+  if (m_nextRxSeq == m_finSeq)
+    {
+      ++m_nextRxSeq;
+    }
 }
 
 bool
-TcpRxBuffer::Finished (void)
+TcpRxBuffer::Finished ()
 {
   return (m_gotFin && m_finSeq < m_nextRxSeq);
 }
 
 bool
-TcpRxBuffer::Add (Ptr<Packet> p, TcpHeader const& tcph)
+TcpRxBuffer::Add (Ptr<Packet> p, const TcpHeader& tcph)
 {
   NS_LOG_FUNCTION (this << p << tcph);
 
@@ -148,12 +151,21 @@ TcpRxBuffer::Add (Ptr<Packet> p, TcpHeader const& tcph)
                            << ", when NextRxSeq=" << m_nextRxSeq << ", buffsize=" << m_size);
 
   // Trim packet to fit Rx window specification
-  if (headSeq < m_nextRxSeq) headSeq = m_nextRxSeq;
+  if (headSeq < m_nextRxSeq)
+    {
+      headSeq = m_nextRxSeq;
+    }
   if (m_data.size ())
     {
       SequenceNumber32 maxSeq = m_data.begin ()->first + SequenceNumber32 (m_maxBuffer);
-      if (maxSeq < tailSeq) tailSeq = maxSeq;
-      if (tailSeq < headSeq) headSeq = tailSeq;
+      if (maxSeq < tailSeq)
+        {
+          tailSeq = maxSeq;
+        }
+      if (tailSeq < headSeq)
+        {
+          headSeq = tailSeq;
+        }
     }
   // Remove overlapped bytes from packet
   BufIterator i = m_data.begin ();
@@ -367,7 +379,10 @@ TcpRxBuffer::Extract (uint32_t maxSize)
 
   uint32_t extractSize = std::min (maxSize, m_availBytes);
   NS_LOG_LOGIC ("Requested to extract " << extractSize << " bytes from TcpRxBuffer of size=" << m_size);
-  if (extractSize == 0) return nullptr;  // No contiguous block to return
+  if (extractSize == 0)
+    {
+      return nullptr; // No contiguous block to return
+    }
   NS_ASSERT (m_data.size ()); // At least we have something to extract
   Ptr<Packet> outPkt = Create<Packet> (); // The packet that contains all the data to return
   BufIterator i;

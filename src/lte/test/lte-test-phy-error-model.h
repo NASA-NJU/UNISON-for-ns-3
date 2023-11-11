@@ -33,10 +33,10 @@ using namespace ns3;
  * \ingroup lte-test
  * \ingroup tests
  *
- * \brief This system test program creates different test cases with a single eNB and 
- * several UEs, all having the same Radio Bearer specification. In each test 
- * case, the UEs see the same SINR from the eNB; different test cases are 
- * implemented obtained by using different SINR values and different numbers of 
+ * \brief This system test program creates different test cases with a single eNB and
+ * several UEs, all having the same Radio Bearer specification. In each test
+ * case, the UEs see the same SINR from the eNB; different test cases are
+ * implemented obtained by using different SINR values and different numbers of
  * UEs. The test consists on ...
  */
 class LenaDataPhyErrorModelTestCase : public TestCase
@@ -55,10 +55,10 @@ public:
   LenaDataPhyErrorModelTestCase (uint16_t nUser, uint16_t dist,
                                  double blerRef, uint16_t toleranceRxPackets,
                                  Time statsStartTime, uint32_t rngRun);
-  virtual ~LenaDataPhyErrorModelTestCase ();
+  ~LenaDataPhyErrorModelTestCase () override;
 
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
   /**
    * Builds the test name string based on provided parameter values
    * \param nUser the number of UE nodes
@@ -100,10 +100,10 @@ public:
   LenaDlCtrlPhyErrorModelTestCase (uint16_t nEnb, uint16_t dist,
                                    double blerRef, uint16_t toleranceRxPackets,
                                    Time statsStartTime, uint32_t rngRun);
-  virtual ~LenaDlCtrlPhyErrorModelTestCase ();
+  ~LenaDlCtrlPhyErrorModelTestCase () override;
 
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
   /**
    * Build name string
    * \param nUser the number of UE nodes

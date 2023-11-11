@@ -28,7 +28,7 @@ NS_LOG_COMPONENT_DEFINE ("LteUeComponentCarrierManager");
 NS_OBJECT_ENSURE_REGISTERED (LteUeComponentCarrierManager);
 
 LteUeComponentCarrierManager::LteUeComponentCarrierManager ()
-: m_ccmRrcSapUser (0), m_ccmRrcSapProvider (0), m_noOfComponentCarriers(0)
+: m_ccmRrcSapUser (nullptr), m_ccmRrcSapProvider (nullptr), m_noOfComponentCarriers(0)
 {
   NS_LOG_FUNCTION (this);
 }
@@ -68,7 +68,7 @@ LteUeComponentCarrierManager::GetLteCcmRrcSapProvider ()
 }
 
 
-bool 
+bool
 LteUeComponentCarrierManager::SetComponentCarrierMacSapProviders (uint8_t componentCarrierId, LteMacSapProvider* sap)
 {
   NS_LOG_FUNCTION (this);
@@ -89,7 +89,7 @@ LteUeComponentCarrierManager::SetComponentCarrierMacSapProviders (uint8_t compon
       result = true;
     }
   return result;
-  
+
 }
 
 void

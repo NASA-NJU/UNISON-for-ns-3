@@ -50,8 +50,8 @@ public:
    * \param name test name
    */
   SpectrumInterferenceTestCase (Ptr<SpectrumValue> s, uint32_t txBytes, bool rxCorrect, std::string name);
-  virtual ~SpectrumInterferenceTestCase ();
-  virtual void DoRun (void);
+  ~SpectrumInterferenceTestCase () override;
+  void DoRun () override;
   /**
    * Retrieve the test results
    * \param si SpectrumInterference instance
@@ -83,7 +83,7 @@ SpectrumInterferenceTestCase::~SpectrumInterferenceTestCase ()
 
 
 void
-SpectrumInterferenceTestCase::DoRun (void)
+SpectrumInterferenceTestCase::DoRun ()
 {
   Ptr<SpectrumValue> n = Create<SpectrumValue> (m_mySpectrumModel);
   Ptr<SpectrumValue> i1 = Create<SpectrumValue> (m_mySpectrumModel);

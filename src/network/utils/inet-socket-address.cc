@@ -62,25 +62,25 @@ InetSocketAddress::InetSocketAddress (uint16_t port)
   NS_LOG_FUNCTION (this << port);
 }
 uint16_t
-InetSocketAddress::GetPort (void) const
+InetSocketAddress::GetPort () const
 {
   NS_LOG_FUNCTION (this);
   return m_port;
 }
 Ipv4Address
-InetSocketAddress::GetIpv4 (void) const
+InetSocketAddress::GetIpv4 () const
 {
   NS_LOG_FUNCTION (this);
   return m_ipv4;
 }
 uint8_t
-InetSocketAddress::GetTos (void) const
+InetSocketAddress::GetTos () const
 {
   NS_LOG_FUNCTION (this);
   return m_tos;
 }
 
-void 
+void
 InetSocketAddress::SetPort (uint16_t port)
 {
   NS_LOG_FUNCTION (this << port);
@@ -111,8 +111,8 @@ InetSocketAddress::operator Address () const
   return ConvertTo ();
 }
 
-Address 
-InetSocketAddress::ConvertTo (void) const
+Address
+InetSocketAddress::ConvertTo () const
 {
   NS_LOG_FUNCTION (this);
   uint8_t buf[7];
@@ -122,7 +122,7 @@ InetSocketAddress::ConvertTo (void) const
   buf[6] = m_tos;
   return Address (GetType (), buf, 7);
 }
-InetSocketAddress 
+InetSocketAddress
 InetSocketAddress::ConvertFrom (const Address &address)
 {
   NS_LOG_FUNCTION (&address);
@@ -136,8 +136,8 @@ InetSocketAddress::ConvertFrom (const Address &address)
   inet.SetTos (tos);
   return inet;
 }
-uint8_t 
-InetSocketAddress::GetType (void)
+uint8_t
+InetSocketAddress::GetType ()
 {
   NS_LOG_FUNCTION_NOARGS ();
   static uint8_t type = Address::Register ();

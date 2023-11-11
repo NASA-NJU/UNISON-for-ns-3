@@ -45,7 +45,8 @@ TestDoubleIsEqual (const double x1, const double x2, const double epsilon)
 {
   NS_LOG_FUNCTION (x1 << x2 << epsilon);
   int exponent;
-  double delta, difference;
+  double delta;
+  double difference;
 
   //
   // Find exponent of largest absolute value
@@ -147,14 +148,14 @@ public:
    */
   void AddTestSuite (TestSuite *testSuite);
   /** \copydoc TestCase::MustAssertOnFailure() */
-  bool MustAssertOnFailure (void) const;
+  bool MustAssertOnFailure () const;
   /** \copydoc TestCase::MustContinueOnFailure() */
-  bool MustContinueOnFailure (void) const;
+  bool MustContinueOnFailure () const;
   /**
    * Check if this run should update the reference data.
    * \return \c true if we should update the reference data.
    */
-  bool MustUpdateData (void) const;
+  bool MustUpdateData () const;
   /**
    * Get the path to the root of the source tree.
    *
@@ -163,12 +164,12 @@ public:
    *
    * \returns The path to the root.
    */
-  std::string GetTopLevelSourceDir (void) const;
+  std::string GetTopLevelSourceDir () const;
   /**
    * Get the path to temporary directory.
    * \return The temporary directory path.
    */
-  std::string GetTempDir (void) const;
+  std::string GetTempDir () const;
   /** \copydoc TestRunner::Run() */
   int Run (int argc, char *argv[]);
 
@@ -220,7 +221,7 @@ private:
                           std::list<TestCase *>::const_iterator end,
                           bool printTestType) const;
   /** Print the list of test types. */
-  void PrintTestTypeList (void) const;
+  void PrintTestTypeList () const;
   /**
    * Print the help text.
    * \param [in] programName The name of the invoking program.
@@ -272,10 +273,10 @@ TestCase::Result::Result ()
 
 
 TestCase::TestCase (std::string name)
-  : m_parent (0),
+  : m_parent (nullptr),
     m_dataDir (""),
-    m_runner (0),
-    m_result (0),
+    m_runner (nullptr),
+    m_result (nullptr),
     m_name (name),
     m_duration (TestCase::QUICK)
 {
@@ -285,8 +286,8 @@ TestCase::TestCase (std::string name)
 TestCase::~TestCase ()
 {
   NS_LOG_FUNCTION (this);
-  NS_ASSERT (m_runner == 0);
-  m_parent = 0;
+  NS_ASSERT (m_runner == nullptr);
+  m_parent = nullptr;
   delete m_result;
   for (std::vector<TestCase *>::const_iterator i = m_children.begin (); i != m_children.end (); ++i)
     {
@@ -337,7 +338,7 @@ TestCase::AddTestCase (TestCase *testCase, enum TestCase::TestDuration duration)
 }
 
 bool
-TestCase::IsFailed (void) const
+TestCase::IsFailed () const
 {
   NS_LOG_FUNCTION (this);
   return m_result->childrenFailed || !m_result->failure.empty ();
@@ -364,10 +365,10 @@ TestCase::Run (TestRunnerImpl *runner)
 out:
   m_result->clock.End ();
   DoTeardown ();
-  m_runner = 0;
+  m_runner = nullptr;
 }
 std::string
-TestCase::GetName (void) const
+TestCase::GetName () const
 {
   NS_LOG_FUNCTION (this);
   return m_name;
@@ -384,11 +385,11 @@ TestCase::ReportTestFailure (std::string cond, std::string actual,
                              std::string file, int32_t line)
 {
   NS_LOG_FUNCTION (this << cond << actual << limit << message << file << line);
-  m_result->failure.push_back (TestCaseFailure (cond, actual, limit,
-                                                message, file, line));
+  m_result->failure.emplace_back(cond, actual, limit,
+                                                message, file, line);
   // set childrenFailed flag on parents.
   TestCase *current = m_parent;
-  while (current != 0)
+  while (current != nullptr)
     {
       current->m_result->childrenFailed = true;
       current = current->m_parent;
@@ -396,13 +397,13 @@ TestCase::ReportTestFailure (std::string cond, std::string actual,
 
 }
 bool
-TestCase::MustAssertOnFailure (void) const
+TestCase::MustAssertOnFailure () const
 {
   NS_LOG_FUNCTION (this);
   return m_runner->MustAssertOnFailure ();
 }
 bool
-TestCase::MustContinueOnFailure (void) const
+TestCase::MustContinueOnFailure () const
 {
   NS_LOG_FUNCTION (this);
   return m_runner->MustContinueOnFailure ();
@@ -413,11 +414,11 @@ TestCase::CreateDataDirFilename (std::string filename)
 {
   NS_LOG_FUNCTION (this << filename);
   const TestCase *current = this;
-  while (current != 0 && current->m_dataDir == "")
+  while (current != nullptr && current->m_dataDir == "")
     {
       current = current->m_parent;
     }
-  if (current == 0)
+  if (current == nullptr)
     {
       NS_FATAL_ERROR ("No one called SetDataDir prior to calling this function");
     }
@@ -438,24 +439,26 @@ TestCase::CreateTempDirFilename (std::string filename)
     {
       std::list<std::string> names;
       const TestCase *current = this;
-      while (current != 0)
+      while (current != nullptr)
         {
           names.push_front (current->m_name);
           current = current->m_parent;
         }
       std::string tempDir = SystemPath::Append (m_runner->GetTempDir (), SystemPath::Join (names.begin (), names.end ()));
+      tempDir = SystemPath::CreateValidSystemPath (tempDir);
+
       SystemPath::MakeDirectories (tempDir);
       return SystemPath::Append (tempDir, filename);
     }
 }
 bool
-TestCase::IsStatusFailure (void) const
+TestCase::IsStatusFailure () const
 {
   NS_LOG_FUNCTION (this);
   return !IsStatusSuccess ();
 }
 bool
-TestCase::IsStatusSuccess (void) const
+TestCase::IsStatusSuccess () const
 {
   NS_LOG_FUNCTION (this);
   return m_result->failure.empty ();
@@ -469,12 +472,12 @@ TestCase::SetDataDir (std::string directory)
 }
 
 void
-TestCase::DoSetup (void)
+TestCase::DoSetup ()
 {
   NS_LOG_FUNCTION (this);
 }
 void
-TestCase::DoTeardown (void)
+TestCase::DoTeardown ()
 {
   NS_LOG_FUNCTION (this);
 }
@@ -489,14 +492,14 @@ TestSuite::TestSuite (std::string name, TestSuite::Type type)
 }
 
 TestSuite::Type
-TestSuite::GetTestType (void)
+TestSuite::GetTestType ()
 {
   NS_LOG_FUNCTION (this);
   return m_type;
 }
 
 void
-TestSuite::DoRun (void)
+TestSuite::DoRun ()
 {
   NS_LOG_FUNCTION (this);
 }
@@ -519,26 +522,26 @@ TestRunnerImpl::AddTestSuite (TestSuite *testSuite)
 
 
 bool
-TestRunnerImpl::MustAssertOnFailure (void) const
+TestRunnerImpl::MustAssertOnFailure () const
 {
   NS_LOG_FUNCTION (this);
   return m_assertOnFailure;
 }
 bool
-TestRunnerImpl::MustContinueOnFailure (void) const
+TestRunnerImpl::MustContinueOnFailure () const
 {
   NS_LOG_FUNCTION (this);
   return m_continueOnFailure;
 }
 
 bool
-TestRunnerImpl::MustUpdateData (void) const
+TestRunnerImpl::MustUpdateData () const
 {
   NS_LOG_FUNCTION (this);
   return m_updateData;
 }
 std::string
-TestRunnerImpl::GetTempDir (void) const
+TestRunnerImpl::GetTempDir () const
 {
   NS_LOG_FUNCTION (this);
   return m_tempDir;
@@ -572,7 +575,7 @@ TestRunnerImpl::IsTopLevelSourceDir (std::string path) const
 }
 
 std::string
-TestRunnerImpl::GetTopLevelSourceDir (void) const
+TestRunnerImpl::GetTopLevelSourceDir () const
 {
   NS_LOG_FUNCTION (this);
   std::string self = SystemPath::FindSelfDirectory ();
@@ -663,7 +666,7 @@ void
 TestRunnerImpl::PrintReport (TestCase *test, std::ostream *os, bool xml, int level)
 {
   NS_LOG_FUNCTION (this << test << os << xml << level);
-  if (test->m_result == 0)
+  if (test->m_result == nullptr)
     {
       // Do not print reports for tests that were not run.
       return;
@@ -786,7 +789,7 @@ TestRunnerImpl::PrintTestNameList (std::list<TestCase *>::const_iterator begin,
   for (std::list<TestCase *>::const_iterator i = begin; i != end; ++i)
     {
       TestSuite * test = dynamic_cast<TestSuite *> (*i);
-      NS_ASSERT (test != 0);
+      NS_ASSERT (test != nullptr);
       if (printTestType)
         {
           std::cout << label[test->GetTestType ()];
@@ -796,7 +799,7 @@ TestRunnerImpl::PrintTestNameList (std::list<TestCase *>::const_iterator begin,
 }
 
 void
-TestRunnerImpl::PrintTestTypeList (void) const
+TestRunnerImpl::PrintTestTypeList () const
 {
   NS_LOG_FUNCTION (this);
   std::cout << "  core:        Run all TestSuite-based tests (exclude examples)" << std::endl;
@@ -879,7 +882,7 @@ TestRunnerImpl::Run (int argc, char *argv[])
   char ** argi = argv;
   ++argi;
 
-  while (*argi != 0)
+  while (*argi != nullptr)
     {
       char *arg = *argi;
 

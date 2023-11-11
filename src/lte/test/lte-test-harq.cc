@@ -101,7 +101,7 @@ LenaHarqTestCase::~LenaHarqTestCase ()
 }
 
 void
-LenaHarqTestCase::DoRun (void)
+LenaHarqTestCase::DoRun ()
 {
 
   Config::SetDefault ("ns3::LteAmc::Ber", DoubleValue (m_amcBer));
@@ -181,7 +181,7 @@ LenaHarqTestCase::DoRun (void)
   mobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
   mobility.Install (enbNodes);
   BuildingsHelper::Install (enbNodes);
-  
+
   mobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
   mobility.Install (ueNodes);
   BuildingsHelper::Install (ueNodes);
@@ -230,7 +230,7 @@ LenaHarqTestCase::DoRun (void)
     }
 
 
-  double statsStartTime = 0.050; // need to allow for RRC connection establishment + SRS 
+  double statsStartTime = 0.050; // need to allow for RRC connection establishment + SRS
   double statsDuration = 2.0;
   Simulator::Stop (Seconds (statsStartTime + statsDuration - 0.0001));
 

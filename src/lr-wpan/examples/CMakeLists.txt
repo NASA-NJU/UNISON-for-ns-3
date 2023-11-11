@@ -3,6 +3,8 @@ set(base_examples
     lr-wpan-mlme
     lr-wpan-packet-print
     lr-wpan-phy-test
+    lr-wpan-ed-scan
+    lr-wpan-active-scan
 )
 
 foreach(
@@ -28,4 +30,11 @@ build_lib_example(
   SOURCE_FILES lr-wpan-error-model-plot.cc
   LIBRARIES_TO_LINK ${liblr-wpan}
                     ${libstats}
+)
+
+build_lib_example(
+  NAME lr-wpan-bootstrap
+  SOURCE_FILES lr-wpan-bootstrap.cc
+  LIBRARIES_TO_LINK ${liblr-wpan}
+                    ${libnetanim}
 )

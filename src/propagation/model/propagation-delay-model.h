@@ -3,7 +3,7 @@
  * Copyright (c) 2005,2006,2007 INRIA
  *
  * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as 
+ * it under the terms of the GNU General Public License version 2 as
  * published by the Free Software Foundation;
  *
  * This program is distributed in the hope that it will be useful,
@@ -41,8 +41,8 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
-  virtual ~PropagationDelayModel ();
+  static TypeId GetTypeId ();
+  ~PropagationDelayModel () override;
   /**
    * \param a the source
    * \param b the destination
@@ -65,10 +65,10 @@ public:
 protected:
   /**
    * Assign a fixed random variable stream number to the random variables used by this model.
-   * 
+   *
    * Subclasses must implement this; those not using random variables
    * can return zero.
-   * 
+   *
    * \param stream first stream index to use
    * \return the number of stream indices assigned by this model
    */
@@ -87,13 +87,13 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   /**
    * Use the default parameters from PropagationDelayRandomDistribution.
    */
   RandomPropagationDelayModel ();
-  virtual ~RandomPropagationDelayModel ();
+  ~RandomPropagationDelayModel () override;
   Time GetDelay (Ptr<MobilityModel> a, Ptr<MobilityModel> b) const override;
 private:
   int64_t DoAssignStreams (int64_t stream) override;
@@ -112,7 +112,7 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   /**
    * Use the default parameters from PropagationDelayConstantSpeed.
@@ -126,7 +126,7 @@ public:
   /**
    * \returns the current propagation speed (m/s).
    */
-  double GetSpeed (void) const;
+  double GetSpeed () const;
 private:
   int64_t DoAssignStreams (int64_t stream) override;
   double m_speed; //!< speed

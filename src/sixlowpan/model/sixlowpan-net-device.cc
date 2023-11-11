@@ -46,7 +46,7 @@ namespace ns3 {
 
 NS_OBJECT_ENSURE_REGISTERED (SixLowPanNetDevice);
 
-TypeId SixLowPanNetDevice::GetTypeId (void)
+TypeId SixLowPanNetDevice::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::SixLowPanNetDevice")
     .SetParent<NetDevice> ()
@@ -125,12 +125,12 @@ TypeId SixLowPanNetDevice::GetTypeId (void)
 }
 
 SixLowPanNetDevice::SixLowPanNetDevice ()
-  : m_node (0),
-  m_netDevice (0),
+  : m_node (nullptr),
+  m_netDevice (nullptr),
   m_ifIndex (0)
 {
   NS_LOG_FUNCTION (this);
-  m_netDevice = 0;
+  m_netDevice = nullptr;
   m_rng = CreateObject<UniformRandomVariable> ();
   m_bc0Serial = 0;
 }
@@ -170,8 +170,8 @@ void SixLowPanNetDevice::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
 
-  m_netDevice = 0;
-  m_node = 0;
+  m_netDevice = nullptr;
+  m_node = nullptr;
 
   m_timeoutEventList.clear ();
   if (m_timeoutEvent.IsRunning ())
@@ -181,7 +181,7 @@ void SixLowPanNetDevice::DoDispose ()
 
   for (MapFragmentsI_t iter = m_fragments.begin (); iter != m_fragments.end (); iter++)
     {
-      iter->second = 0;
+      iter->second = nullptr;
     }
   m_fragments.clear ();
 
@@ -377,8 +377,6 @@ void SixLowPanNetDevice::ReceiveFromDevice (Ptr<NetDevice> incomingPort,
     }
 
   m_rxCallback (this, copyPkt, Ipv6L3Protocol::PROT_NUMBER, realSrc);
-
-  return;
 }
 
 void SixLowPanNetDevice::SetIfIndex (const uint32_t index)
@@ -387,16 +385,16 @@ void SixLowPanNetDevice::SetIfIndex (const uint32_t index)
   m_ifIndex = index;
 }
 
-uint32_t SixLowPanNetDevice::GetIfIndex (void) const
+uint32_t SixLowPanNetDevice::GetIfIndex () const
 {
   NS_LOG_FUNCTION (this);
   return m_ifIndex;
 }
 
-Ptr<Channel> SixLowPanNetDevice::GetChannel (void) const
+Ptr<Channel> SixLowPanNetDevice::GetChannel () const
 {
   NS_LOG_FUNCTION (this);
-  NS_ASSERT_MSG ( m_netDevice != 0, "Sixlowpan: can't find any lower-layer protocol " << m_netDevice );
+  NS_ASSERT_MSG ( m_netDevice, "Sixlowpan: can't find any lower-layer protocol " << m_netDevice );
 
   return m_netDevice->GetChannel ();
 }
@@ -404,15 +402,15 @@ Ptr<Channel> SixLowPanNetDevice::GetChannel (void) const
 void SixLowPanNetDevice::SetAddress (Address address)
 {
   NS_LOG_FUNCTION (this << address);
-  NS_ASSERT_MSG ( m_netDevice != 0, "Sixlowpan: can't find any lower-layer protocol " << m_netDevice );
+  NS_ASSERT_MSG ( m_netDevice, "Sixlowpan: can't find any lower-layer protocol " << m_netDevice );
 
   m_netDevice->SetAddress (address);
 }
 
-Address SixLowPanNetDevice::GetAddress (void) const
+Address SixLowPanNetDevice::GetAddress () const
 {
   NS_LOG_FUNCTION (this);
-  NS_ASSERT_MSG ( m_netDevice != 0, "Sixlowpan: can't find any lower-layer protocol " << m_netDevice );
+  NS_ASSERT_MSG ( m_netDevice, "Sixlowpan: can't find any lower-layer protocol " << m_netDevice );
 
   return m_netDevice->GetAddress ();
 }
@@ -420,12 +418,12 @@ Address SixLowPanNetDevice::GetAddress (void) const
 bool SixLowPanNetDevice::SetMtu (const uint16_t mtu)
 {
   NS_LOG_FUNCTION (this << mtu);
-  NS_ASSERT_MSG ( m_netDevice != 0, "Sixlowpan: can't find any lower-layer protocol " << m_netDevice );
+  NS_ASSERT_MSG ( m_netDevice, "Sixlowpan: can't find any lower-layer protocol " << m_netDevice );
 
   return m_netDevice->SetMtu (mtu);
 }
 
-uint16_t SixLowPanNetDevice::GetMtu (void) const
+uint16_t SixLowPanNetDevice::GetMtu () const
 {
   NS_LOG_FUNCTION (this);
 
@@ -439,10 +437,10 @@ uint16_t SixLowPanNetDevice::GetMtu (void) const
   return mtu;
 }
 
-bool SixLowPanNetDevice::IsLinkUp (void) const
+bool SixLowPanNetDevice::IsLinkUp () const
 {
   NS_LOG_FUNCTION (this);
-  NS_ASSERT_MSG ( m_netDevice != 0, "Sixlowpan: can't find any lower-layer protocol " << m_netDevice );
+  NS_ASSERT_MSG ( m_netDevice, "Sixlowpan: can't find any lower-layer protocol " << m_netDevice );
 
   return m_netDevice->IsLinkUp ();
 }
@@ -450,31 +448,31 @@ bool SixLowPanNetDevice::IsLinkUp (void) const
 void SixLowPanNetDevice::AddLinkChangeCallback (Callback<void> callback)
 {
   NS_LOG_FUNCTION (this);
-  NS_ASSERT_MSG ( m_netDevice != 0, "Sixlowpan: can't find any lower-layer protocol " << m_netDevice );
+  NS_ASSERT_MSG ( m_netDevice, "Sixlowpan: can't find any lower-layer protocol " << m_netDevice );
 
   return m_netDevice->AddLinkChangeCallback (callback);
 }
 
-bool SixLowPanNetDevice::IsBroadcast (void) const
+bool SixLowPanNetDevice::IsBroadcast () const
 {
   NS_LOG_FUNCTION (this);
-  NS_ASSERT_MSG ( m_netDevice != 0, "Sixlowpan: can't find any lower-layer protocol " << m_netDevice );
+  NS_ASSERT_MSG ( m_netDevice, "Sixlowpan: can't find any lower-layer protocol " << m_netDevice );
 
   return m_netDevice->IsBroadcast ();
 }
 
-Address SixLowPanNetDevice::GetBroadcast (void) const
+Address SixLowPanNetDevice::GetBroadcast () const
 {
   NS_LOG_FUNCTION (this);
-  NS_ASSERT_MSG ( m_netDevice != 0, "Sixlowpan: can't find any lower-layer protocol " << m_netDevice );
+  NS_ASSERT_MSG ( m_netDevice, "Sixlowpan: can't find any lower-layer protocol " << m_netDevice );
 
   return m_netDevice->GetBroadcast ();
 }
 
-bool SixLowPanNetDevice::IsMulticast (void) const
+bool SixLowPanNetDevice::IsMulticast () const
 {
   NS_LOG_FUNCTION (this);
-  NS_ASSERT_MSG ( m_netDevice != 0, "Sixlowpan: can't find any lower-layer protocol " << m_netDevice );
+  NS_ASSERT_MSG ( m_netDevice, "Sixlowpan: can't find any lower-layer protocol " << m_netDevice );
 
   return m_netDevice->IsMulticast ();
 }
@@ -482,7 +480,7 @@ bool SixLowPanNetDevice::IsMulticast (void) const
 Address SixLowPanNetDevice::GetMulticast (Ipv4Address multicastGroup) const
 {
   NS_LOG_FUNCTION (this << multicastGroup);
-  NS_ASSERT_MSG ( m_netDevice != 0, "Sixlowpan: can't find any lower-layer protocol " << m_netDevice );
+  NS_ASSERT_MSG ( m_netDevice, "Sixlowpan: can't find any lower-layer protocol " << m_netDevice );
 
   return m_netDevice->GetMulticast (multicastGroup);
 }
@@ -490,23 +488,23 @@ Address SixLowPanNetDevice::GetMulticast (Ipv4Address multicastGroup) const
 Address SixLowPanNetDevice::GetMulticast (Ipv6Address addr) const
 {
   NS_LOG_FUNCTION (this << addr);
-  NS_ASSERT_MSG ( m_netDevice != 0, "Sixlowpan: can't find any lower-layer protocol " << m_netDevice );
+  NS_ASSERT_MSG ( m_netDevice, "Sixlowpan: can't find any lower-layer protocol " << m_netDevice );
 
   return m_netDevice->GetMulticast (addr);
 }
 
-bool SixLowPanNetDevice::IsPointToPoint (void) const
+bool SixLowPanNetDevice::IsPointToPoint () const
 {
   NS_LOG_FUNCTION (this);
-  NS_ASSERT_MSG ( m_netDevice != 0, "Sixlowpan: can't find any lower-layer protocol " << m_netDevice );
+  NS_ASSERT_MSG ( m_netDevice, "Sixlowpan: can't find any lower-layer protocol " << m_netDevice );
 
   return m_netDevice->IsPointToPoint ();
 }
 
-bool SixLowPanNetDevice::IsBridge (void) const
+bool SixLowPanNetDevice::IsBridge () const
 {
   NS_LOG_FUNCTION (this);
-  NS_ASSERT_MSG ( m_netDevice != 0, "Sixlowpan: can't find any lower-layer protocol " << m_netDevice );
+  NS_ASSERT_MSG ( m_netDevice, "Sixlowpan: can't find any lower-layer protocol " << m_netDevice );
 
   return m_netDevice->IsBridge ();
 }
@@ -542,7 +540,7 @@ bool SixLowPanNetDevice::DoSend (Ptr<Packet> packet,
                                  bool doSendFrom)
 {
   NS_LOG_FUNCTION (this << *packet << src << dest << protocolNumber << doSendFrom);
-  NS_ASSERT_MSG ( m_netDevice != 0, "Sixlowpan: can't find any lower-layer protocol " << m_netDevice );
+  NS_ASSERT_MSG ( m_netDevice, "Sixlowpan: can't find any lower-layer protocol " << m_netDevice );
 
   Ptr<Packet> origPacket = packet->Copy ();
   uint32_t origHdrSize = 0;
@@ -673,7 +671,7 @@ bool SixLowPanNetDevice::DoSend (Ptr<Packet> packet,
   return ret;
 }
 
-Ptr<Node> SixLowPanNetDevice::GetNode (void) const
+Ptr<Node> SixLowPanNetDevice::GetNode () const
 {
   NS_LOG_FUNCTION (this);
   return m_node;
@@ -685,10 +683,10 @@ void SixLowPanNetDevice::SetNode (Ptr<Node> node)
   m_node = node;
 }
 
-bool SixLowPanNetDevice::NeedsArp (void) const
+bool SixLowPanNetDevice::NeedsArp () const
 {
   NS_LOG_FUNCTION (this);
-  NS_ASSERT_MSG ( m_netDevice != 0, "Sixlowpan: can't find any lower-layer protocol " << m_netDevice );
+  NS_ASSERT_MSG ( m_netDevice, "Sixlowpan: can't find any lower-layer protocol " << m_netDevice );
 
   return m_netDevice->NeedsArp ();
 }
@@ -2269,7 +2267,7 @@ void SixLowPanNetDevice::DoFragmentation (Ptr<Packet> packet,
   uint32_t size;
   NS_ASSERT_MSG ( l2Mtu > frag1Hdr.GetSerializedSize (),
                   "6LoWPAN: can not fragment, 6LoWPAN headers are bigger than MTU");
-  
+
   // All the headers are substracted to get remaining units for data
   size = l2Mtu - frag1Hdr.GetSerializedSize () - compressedHeaderSize - extraHdrSize;
   size -= size % 8;
@@ -2315,8 +2313,6 @@ void SixLowPanNetDevice::DoFragmentation (Ptr<Packet> packet,
         }
     }
   while (moreFrag);
-
-  return;
 }
 
 bool SixLowPanNetDevice::ProcessFragment (Ptr<Packet>& packet, Address const &src, Address const &dst, bool isFirst)
@@ -2405,7 +2401,7 @@ bool SixLowPanNetDevice::ProcessFragment (Ptr<Packet>& packet, Address const &sr
             }
 
           m_timeoutEventList.erase (m_fragments[oldestKey]->GetTimeoutIter ());
-          m_fragments[oldestKey] = 0;
+          m_fragments[oldestKey] = nullptr;
           m_fragments.erase (oldestKey);
 
         }
@@ -2441,7 +2437,7 @@ bool SixLowPanNetDevice::ProcessFragment (Ptr<Packet>& packet, Address const &sr
 
       NS_LOG_LOGIC ("Rebuilt packet. Size " << packet->GetSize () << " - " << *packet);
       m_timeoutEventList.erase (fragments->GetTimeoutIter ());
-      fragments = 0;
+      fragments = nullptr;
       m_fragments.erase (key);
       return true;
     }
@@ -2576,7 +2572,6 @@ void
 SixLowPanNetDevice::Fragments::SetTimeoutIter (FragmentsTimeoutsListI_t iter)
 {
   m_timeoutIter = iter;
-  return;
 }
 
 SixLowPanNetDevice::FragmentsTimeoutsListI_t
@@ -2597,7 +2592,7 @@ void SixLowPanNetDevice::HandleFragmentsTimeout (FragmentKey_t key, uint32_t iif
       m_dropTrace (DROP_FRAGMENT_TIMEOUT, *fragIter, this, iif);
     }
   // clear the buffers
-  it->second = 0;
+  it->second = nullptr;
 
   m_fragments.erase (key);
 }
@@ -2628,7 +2623,7 @@ SixLowPanNetDevice::FragmentsTimeoutsListI_t SixLowPanNetDevice::SetTimeout (Fra
   return (iter);
 }
 
-void SixLowPanNetDevice::HandleTimeout (void)
+void SixLowPanNetDevice::HandleTimeout ()
 {
   Time now = Simulator::Now ();
 
@@ -2646,8 +2641,6 @@ void SixLowPanNetDevice::HandleTimeout (void)
 
   Time difference = std::get<0> (*m_timeoutEventList.begin ()) - now;
   m_timeoutEvent = Simulator::Schedule (difference, &SixLowPanNetDevice::HandleTimeout, this);
-
-  return;
 }
 
 void SixLowPanNetDevice::AddContext (uint8_t contextId, Ipv6Prefix contextPrefix, bool compressionAllowed, Time validLifetime)
@@ -2670,8 +2663,6 @@ void SixLowPanNetDevice::AddContext (uint8_t contextId, Ipv6Prefix contextPrefix
   m_contextTable[contextId].contextPrefix = contextPrefix;
   m_contextTable[contextId].compressionAllowed = compressionAllowed;
   m_contextTable[contextId].validLifetime = Simulator::Now () + validLifetime;
-
-  return;
 }
 
 bool SixLowPanNetDevice::GetContext (uint8_t contextId, Ipv6Prefix& contextPrefix, bool& compressionAllowed, Time& validLifetime)
@@ -2714,7 +2705,6 @@ void SixLowPanNetDevice::RenewContext (uint8_t contextId, Time validLifetime)
     }
   m_contextTable[contextId].compressionAllowed = true;
   m_contextTable[contextId].validLifetime = Simulator::Now () + validLifetime;
-  return;
 }
 
 
@@ -2734,7 +2724,6 @@ void SixLowPanNetDevice::InvalidateContext (uint8_t contextId)
       return;
     }
   m_contextTable[contextId].compressionAllowed = false;
-  return;
 }
 
 void SixLowPanNetDevice::RemoveContext (uint8_t contextId)
@@ -2754,7 +2743,6 @@ void SixLowPanNetDevice::RemoveContext (uint8_t contextId)
     }
 
   m_contextTable.erase (contextId);
-  return;
 }
 
 bool SixLowPanNetDevice::FindUnicastCompressionContext (Ipv6Address address, uint8_t& contextId)

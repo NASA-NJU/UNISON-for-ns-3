@@ -83,8 +83,7 @@ HtCapabilities::HtCapabilities ()
     m_antennaIndicesFeedbackCapable (0),
     m_rxASelCapable (0),
     m_txSoundingPpdusCapable (0),
-    m_reservedASel (0),
-    m_htSupported (0)
+    m_reservedASel (0)
 {
   for (uint8_t i = 0; i < MAX_SUPPORTED_MCS; i++)
     {
@@ -96,12 +95,6 @@ WifiInformationElementId
 HtCapabilities::ElementId () const
 {
   return IE_HT_CAPABILITIES;
-}
-
-void
-HtCapabilities::SetHtSupported (uint8_t htSupported)
-{
-  m_htSupported = htSupported;
 }
 
 void
@@ -147,7 +140,7 @@ HtCapabilities::SetMaxAmpduLength (uint32_t maxAmpduLength)
 {
   for (uint8_t i = 0; i <= 3; i++)
     {
-      if ((1ul << (13 + i)) - 1 == maxAmpduLength)
+      if ((1UL << (13 + i)) - 1 == maxAmpduLength)
         {
           m_maxAmpduLengthExponent = i;
           return;
@@ -193,25 +186,25 @@ HtCapabilities::SetTxUnequalModulation (uint8_t txUnequalModulation)
 }
 
 uint8_t
-HtCapabilities::GetLdpc (void) const
+HtCapabilities::GetLdpc () const
 {
   return m_ldpc;
 }
 
 uint8_t
-HtCapabilities::GetSupportedChannelWidth (void) const
+HtCapabilities::GetSupportedChannelWidth () const
 {
   return m_supportedChannelWidth;
 }
 
 uint8_t
-HtCapabilities::GetShortGuardInterval20 (void) const
+HtCapabilities::GetShortGuardInterval20 () const
 {
   return m_shortGuardInterval20;
 }
 
 uint16_t
-HtCapabilities::GetMaxAmsduLength (void) const
+HtCapabilities::GetMaxAmsduLength () const
 {
   if (m_maxAmsduLength == 0)
     {
@@ -221,9 +214,9 @@ HtCapabilities::GetMaxAmsduLength (void) const
 }
 
 uint32_t
-HtCapabilities::GetMaxAmpduLength (void) const
+HtCapabilities::GetMaxAmpduLength () const
 {
-  return (1ul << (13 + m_maxAmpduLengthExponent)) - 1;
+  return (1UL << (13 + m_maxAmpduLengthExponent)) - 1;
 }
 
 bool
@@ -237,11 +230,13 @@ HtCapabilities::IsSupportedMcs (uint8_t mcs) const
 }
 
 uint8_t
-HtCapabilities::GetRxHighestSupportedAntennas (void) const
+HtCapabilities::GetRxHighestSupportedAntennas () const
 {
   for (uint8_t nRx = 2; nRx <= 4; nRx++)
     {
-      for (uint8_t mcs = (nRx - 1) * 8; mcs <= ((7 * nRx) + (nRx - 1)); mcs++)
+      uint8_t maxMcs = (7 * nRx) + (nRx - 1);
+
+      for (uint8_t mcs = (nRx - 1) * 8; mcs <= maxMcs; mcs++)
         {
           if (IsSupportedMcs (mcs) == false)
             {
@@ -252,36 +247,14 @@ HtCapabilities::GetRxHighestSupportedAntennas (void) const
   return 4;
 }
 
-uint8_t
+uint16_t
 HtCapabilities::GetInformationFieldSize () const
 {
-  //we should not be here if HT is not supported
-  NS_ASSERT (m_htSupported > 0);
   return 26;
 }
 
-Buffer::Iterator
-HtCapabilities::Serialize (Buffer::Iterator i) const
-{
-  if (m_htSupported < 1)
-    {
-      return i;
-    }
-  return WifiInformationElement::Serialize (i);
-}
-
 uint16_t
-HtCapabilities::GetSerializedSize () const
-{
-  if (m_htSupported < 1)
-    {
-      return 0;
-    }
-  return WifiInformationElement::GetSerializedSize ();
-}
-
-uint16_t
-HtCapabilities::GetHtCapabilitiesInfo (void) const
+HtCapabilities::GetHtCapabilitiesInfo () const
 {
   uint16_t val = 0;
   val |= m_ldpc & 0x01;
@@ -329,7 +302,7 @@ HtCapabilities::SetAmpduParameters (uint8_t ctrl)
 }
 
 uint8_t
-HtCapabilities::GetAmpduParameters (void) const
+HtCapabilities::GetAmpduParameters () const
 {
   uint8_t val = 0;
   val |=  m_maxAmpduLengthExponent & 0x03;
@@ -363,7 +336,7 @@ HtCapabilities::SetSupportedMcsSet (uint64_t ctrl1, uint64_t ctrl2)
 }
 
 uint64_t
-HtCapabilities::GetSupportedMcsSet1 (void) const
+HtCapabilities::GetSupportedMcsSet1 () const
 {
   uint64_t val = 0;
   for (uint64_t i = 63; i > 0; i--)
@@ -375,7 +348,7 @@ HtCapabilities::GetSupportedMcsSet1 (void) const
 }
 
 uint64_t
-HtCapabilities::GetSupportedMcsSet2 (void) const
+HtCapabilities::GetSupportedMcsSet2 () const
 {
   uint64_t val = 0;
   val = val | (m_reservedMcsSet3 & 0x07ffffff);
@@ -395,7 +368,7 @@ HtCapabilities::GetSupportedMcsSet2 (void) const
 }
 
 uint16_t
-HtCapabilities::GetExtendedHtCapabilities (void) const
+HtCapabilities::GetExtendedHtCapabilities () const
 {
   uint16_t val = 0;
   val |= m_pco & 0x01;
@@ -421,7 +394,7 @@ HtCapabilities::SetExtendedHtCapabilities (uint16_t ctrl)
 }
 
 uint32_t
-HtCapabilities::GetTxBfCapabilities (void) const
+HtCapabilities::GetTxBfCapabilities () const
 {
   uint32_t val = 0;
   val |= m_implicitRxBfCapable & 0x01;
@@ -473,7 +446,7 @@ HtCapabilities::SetTxBfCapabilities (uint32_t ctrl)
 }
 
 uint8_t
-HtCapabilities::GetAntennaSelectionCapabilities (void) const
+HtCapabilities::GetAntennaSelectionCapabilities () const
 {
   uint8_t val = 0;
   val |= m_antennaSelectionCapability & 0x01;
@@ -503,22 +476,19 @@ HtCapabilities::SetAntennaSelectionCapabilities (uint8_t ctrl)
 void
 HtCapabilities::SerializeInformationField (Buffer::Iterator start) const
 {
-  if (m_htSupported == 1)
-    {
-      //write the corresponding value for each bit
-      start.WriteHtolsbU16 (GetHtCapabilitiesInfo ());
-      start.WriteU8 (GetAmpduParameters ());
-      start.WriteHtolsbU64 (GetSupportedMcsSet1 ());
-      start.WriteHtolsbU64 (GetSupportedMcsSet2 ());
-      start.WriteU16 (GetExtendedHtCapabilities ());
-      start.WriteU32 (GetTxBfCapabilities ());
-      start.WriteU8 (GetAntennaSelectionCapabilities ());
-    }
+  //write the corresponding value for each bit
+  start.WriteHtolsbU16 (GetHtCapabilitiesInfo ());
+  start.WriteU8 (GetAmpduParameters ());
+  start.WriteHtolsbU64 (GetSupportedMcsSet1 ());
+  start.WriteHtolsbU64 (GetSupportedMcsSet2 ());
+  start.WriteU16 (GetExtendedHtCapabilities ());
+  start.WriteU32 (GetTxBfCapabilities ());
+  start.WriteU8 (GetAntennaSelectionCapabilities ());
 }
 
-uint8_t
+uint16_t
 HtCapabilities::DeserializeInformationField (Buffer::Iterator start,
-                                             uint8_t length)
+                                             uint16_t length)
 {
   Buffer::Iterator i = start;
   uint16_t htinfo = i.ReadLsbtohU16 ();

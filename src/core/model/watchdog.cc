@@ -32,7 +32,7 @@ namespace ns3 {
 NS_LOG_COMPONENT_DEFINE ("Watchdog");
 
 Watchdog::Watchdog ()
-  : m_impl (0),
+  : m_impl (nullptr),
     m_event (),
     m_end (MicroSeconds (0))
 {
@@ -60,7 +60,7 @@ Watchdog::Ping (Time delay)
 }
 
 void
-Watchdog::Expire (void)
+Watchdog::Expire ()
 {
   NS_LOG_FUNCTION (this);
   if (m_end == Simulator::Now ())

@@ -42,16 +42,16 @@ public:
    * \brief Get the type ID.
    * \return The object TypeId.
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
   Sender();
-  virtual ~Sender();
+  ~Sender() override;
 
 protected:
-  virtual void DoDispose (void);
+  void DoDispose () override;
 
 private:
-  virtual void StartApplication (void);
-  virtual void StopApplication (void);
+  void StartApplication () override;
+  void StopApplication () override;
 
   /**
    * Send a packet.
@@ -85,9 +85,9 @@ public:
    * \brief Get the type ID.
    * \return The object TypeId.
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
   Receiver();
-  virtual ~Receiver();
+  ~Receiver() override;
 
   /**
    * Set the counter calculator for received packets.
@@ -102,11 +102,11 @@ public:
   void SetDelayTracker (Ptr<TimeMinMaxAvgTotalCalculator> delay);
 
 protected:
-  virtual void DoDispose (void);
+  void DoDispose () override;
 
 private:
-  virtual void StartApplication (void);
-  virtual void StopApplication (void);
+  void StartApplication () override;
+  void StopApplication () override;
 
   /**
    * Receive a packet.
@@ -126,8 +126,8 @@ private:
 
 /**
  * Timestamp tag - it carries when the packet has been sent.
- * 
- * It would have been more realistic to include this info in 
+ *
+ * It would have been more realistic to include this info in
  * a header. Here we show how to avoid the extra overhead in
  * a simulation.
  */
@@ -137,12 +137,12 @@ public:
    * \brief Get the type ID.
    * \return The object TypeId.
    */
-  static TypeId GetTypeId (void);
-  virtual TypeId GetInstanceTypeId (void) const;
+  static TypeId GetTypeId ();
+  TypeId GetInstanceTypeId () const override;
 
-  virtual uint32_t GetSerializedSize (void) const;
-  virtual void Serialize (TagBuffer i) const;
-  virtual void Deserialize (TagBuffer i);
+  uint32_t GetSerializedSize () const override;
+  void Serialize (TagBuffer i) const override;
+  void Deserialize (TagBuffer i) override;
 
   /**
    * Set the timestamp.
@@ -153,9 +153,9 @@ public:
    * Get the timestamp.
    * \return the timestamp.
    */
-  Time GetTimestamp (void) const;
+  Time GetTimestamp () const;
 
-  void Print (std::ostream &os) const;
+  void Print (std::ostream &os) const override;
 
 private:
   Time m_timestamp; //!< Timestamp.

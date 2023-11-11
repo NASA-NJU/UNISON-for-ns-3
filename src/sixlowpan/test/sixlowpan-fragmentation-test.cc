@@ -64,9 +64,9 @@ class SixlowpanFragmentationTest : public TestCase
   uint8_t m_icmpCode;   //!< ICMP code.
 
 public:
-  virtual void DoRun (void);
+  void DoRun () override;
   SixlowpanFragmentationTest ();
-  ~SixlowpanFragmentationTest ();
+  ~SixlowpanFragmentationTest () override;
 
   // server part
 
@@ -114,7 +114,7 @@ public:
    * Send a packet to the server.
    * \returns The packet sent.
    */
-  Ptr<Packet> SendClient (void);
+  Ptr<Packet> SendClient ();
 
 };
 
@@ -122,8 +122,8 @@ public:
 SixlowpanFragmentationTest::SixlowpanFragmentationTest ()
   : TestCase ("Verify the 6LoWPAN protocol fragmentation and reassembly")
 {
-  m_socketServer = 0;
-  m_data = 0;
+  m_socketServer = nullptr;
+  m_data = nullptr;
   m_dataSize = 0;
   m_size = 0;
   m_icmpType = 0;
@@ -136,7 +136,7 @@ SixlowpanFragmentationTest::~SixlowpanFragmentationTest ()
     {
       delete[] m_data;
     }
-  m_data = 0;
+  m_data = nullptr;
   m_dataSize = 0;
 }
 
@@ -145,7 +145,7 @@ void
 SixlowpanFragmentationTest::StartServer (Ptr<Node> serverNode)
 {
 
-  if (m_socketServer == 0)
+  if (!m_socketServer)
     {
       TypeId tid = TypeId::LookupByName ("ns3::UdpSocketFactory");
       m_socketServer = Socket::CreateSocket (serverNode, tid);
@@ -178,7 +178,7 @@ void
 SixlowpanFragmentationTest::StartClient (Ptr<Node> clientNode)
 {
 
-  if (m_socketClient == 0)
+  if (!m_socketClient)
     {
       TypeId tid = TypeId::LookupByName ("ns3::UdpSocketFactory");
       m_socketClient = Socket::CreateSocket (clientNode, tid);
@@ -242,7 +242,7 @@ SixlowpanFragmentationTest::SetFill (uint8_t *fill, uint32_t fillSize, uint32_t 
   m_size = dataSize;
 }
 
-Ptr<Packet> SixlowpanFragmentationTest::SendClient (void)
+Ptr<Packet> SixlowpanFragmentationTest::SendClient ()
 {
   Ptr<Packet> p;
   if (m_dataSize)
@@ -259,7 +259,7 @@ Ptr<Packet> SixlowpanFragmentationTest::SendClient (void)
 }
 
 void
-SixlowpanFragmentationTest::DoRun (void)
+SixlowpanFragmentationTest::DoRun ()
 {
   // Create topology
   InternetStackHelper internet;

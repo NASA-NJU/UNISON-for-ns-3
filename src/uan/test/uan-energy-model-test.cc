@@ -56,7 +56,7 @@ class AcousticModemEnergyTestCase : public TestCase
 {
 public:
   AcousticModemEnergyTestCase ();
-  ~AcousticModemEnergyTestCase ();
+  ~AcousticModemEnergyTestCase () override;
 
   /**
    * Receive packet function
@@ -73,7 +73,7 @@ public:
    */
   void SendOnePacket (Ptr<Node> node);
 
-  void DoRun (void);
+  void DoRun () override;
 
   double m_simTime; ///< simulation time
   uint32_t m_bytesRx; ///< bytes received
@@ -94,8 +94,8 @@ AcousticModemEnergyTestCase::AcousticModemEnergyTestCase ()
 
 AcousticModemEnergyTestCase::~AcousticModemEnergyTestCase ()
 {
-  m_node = 0;
-  m_gateway = 0;
+  m_node = nullptr;
+  m_gateway = nullptr;
 }
 
 void
@@ -116,8 +116,8 @@ AcousticModemEnergyTestCase::SendOnePacket (Ptr<Node> node)
 }
 
 bool
-AcousticModemEnergyTestCase::RxPacket (Ptr<NetDevice> dev, Ptr<const Packet> pkt, 
-                                       [[maybe_unused]] uint16_t mode, 
+AcousticModemEnergyTestCase::RxPacket (Ptr<NetDevice> dev, Ptr<const Packet> pkt,
+                                       [[maybe_unused]] uint16_t mode,
                                        [[maybe_unused]] const Address &sender)
 {
   // increase the total bytes received
@@ -225,17 +225,17 @@ class AcousticModemEnergyDepletionTestCase : public TestCase
 {
 public:
   AcousticModemEnergyDepletionTestCase ();
-  ~AcousticModemEnergyDepletionTestCase ();
+  ~AcousticModemEnergyDepletionTestCase () override;
 
   /// Depletion handler function
-  void DepletionHandler (void);
+  void DepletionHandler ();
   /**
    * Send one packet function
    * \param node the node to send to
    */
   void SendOnePacket (Ptr<Node> node);
 
-  void DoRun (void);
+  void DoRun () override;
 
   double m_simTime; ///< Simulation time
   uint32_t m_callbackCount; ///< callback count
@@ -253,11 +253,11 @@ AcousticModemEnergyDepletionTestCase::AcousticModemEnergyDepletionTestCase ()
 
 AcousticModemEnergyDepletionTestCase::~AcousticModemEnergyDepletionTestCase ()
 {
-  m_node = 0;
+  m_node = nullptr;
 }
 
 void
-AcousticModemEnergyDepletionTestCase::DepletionHandler (void)
+AcousticModemEnergyDepletionTestCase::DepletionHandler ()
 {
   // increase callback count
   m_callbackCount++;
@@ -279,7 +279,7 @@ AcousticModemEnergyDepletionTestCase::SendOnePacket (Ptr<Node> node)
 }
 
 void
-AcousticModemEnergyDepletionTestCase::DoRun (void)
+AcousticModemEnergyDepletionTestCase::DoRun ()
 {
   // create a generic node
   m_node = CreateObject<Node> ();

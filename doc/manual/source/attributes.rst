@@ -168,17 +168,17 @@ This is defined in the ``node.cc`` file as follows::
         .SetGroupName ("Network")
         .AddConstructor<Node> ()
         .AddAttribute ("DeviceList",
-	               "The list of devices associated to this Node.",
+                       "The list of devices associated to this Node.",
                        ObjectVectorValue (),
                        MakeObjectVectorAccessor (&Node::m_devices),
                        MakeObjectVectorChecker<NetDevice> ())
         .AddAttribute ("ApplicationList",
-	               "The list of applications associated to this Node.",
+                       "The list of applications associated to this Node.",
                        ObjectVectorValue (),
                        MakeObjectVectorAccessor (&Node::m_applications),
                        MakeObjectVectorChecker<Application> ())
         .AddAttribute ("Id",
-	               "The id (unique integer) of this Node.",
+                       "The id (unique integer) of this Node.",
                        TypeId::ATTR_GET, // allow only getting it.
                        UintegerValue (0),
                        MakeUintegerAccessor (&Node::m_id),
@@ -1261,7 +1261,7 @@ The typical use-cases are:
 As a matter of fact, some Objects might be created when the simulation starts.
 Hence, ConfigStore will not "report" their attributes if invoked earlier in the code.
 
-A typical workflow might involve running the simulation, calling ConfigStore 
+A typical workflow might involve running the simulation, calling ConfigStore
 at the end of the simulation (after ``Simulator::Run ()`` and before ``Simulator::Destroy ()``)
 This will show all the attributes in the Objects, both those with default values, and those
 with values changed during the simulation execution.
@@ -1277,7 +1277,7 @@ ConfigStore GUI
 There is a GTK-based front end for the ConfigStore.  This allows users to use a
 GUI to access and change variables.
 
-Some screenshots are presented here. They are the result of using GtkConfig on 
+Some screenshots are presented here. They are the result of using GtkConfig on
 ``src/lte/examples/lena-dual-stripe.cc`` after ``Simulator::Run ()``.
 
 .. _GtkConfig:

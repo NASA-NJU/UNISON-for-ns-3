@@ -43,7 +43,7 @@ NS_LOG_COMPONENT_DEFINE ("BSSchedulerRtps");
 NS_OBJECT_ENSURE_REGISTERED (BSSchedulerRtps);
 
 TypeId
-BSSchedulerRtps::GetTypeId (void)
+BSSchedulerRtps::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::BSSchedulerRtps")
     .SetParent<BSScheduler> ()
@@ -56,7 +56,7 @@ BSSchedulerRtps::GetTypeId (void)
 BSSchedulerRtps::BSSchedulerRtps ()
   : m_downlinkBursts (new std::list<std::pair<OfdmDlMapIe*, Ptr<PacketBurst> > > ())
 {
-  SetBs (0);
+  SetBs (nullptr);
 }
 
 BSSchedulerRtps::BSSchedulerRtps (Ptr<BaseStationNetDevice> bs)
@@ -67,7 +67,7 @@ BSSchedulerRtps::BSSchedulerRtps (Ptr<BaseStationNetDevice> bs)
   SetBs (bs);
 }
 
-BSSchedulerRtps::~BSSchedulerRtps (void)
+BSSchedulerRtps::~BSSchedulerRtps ()
 {
 
   std::list<std::pair<OfdmDlMapIe*, Ptr<PacketBurst> > > *downlinkBursts = m_downlinkBursts;
@@ -75,17 +75,17 @@ BSSchedulerRtps::~BSSchedulerRtps (void)
   while (downlinkBursts->size ())
     {
       pair = downlinkBursts->front ();
-      pair.second = 0;
+      pair.second = nullptr;
       delete pair.first;
     }
 
-  SetBs (0);
+  SetBs (nullptr);
   delete m_downlinkBursts;
-  m_downlinkBursts = 0;
+  m_downlinkBursts = nullptr;
 }
 
 std::list<std::pair<OfdmDlMapIe*, Ptr<PacketBurst> > >*
-BSSchedulerRtps::GetDownlinkBursts (void) const
+BSSchedulerRtps::GetDownlinkBursts () const
 {
   return m_downlinkBursts;
 }
@@ -128,7 +128,7 @@ BSSchedulerRtps::AddDownlinkBurst (Ptr<const WimaxConnection> connection,
  * packet, according to the available bandwidth.
  */
 void
-BSSchedulerRtps::Schedule (void)
+BSSchedulerRtps::Schedule ()
 {
 
   uint32_t availableSymbols = GetBs ()->GetNrDlSymbols ();

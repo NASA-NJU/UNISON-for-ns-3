@@ -33,7 +33,7 @@ namespace ns3 {
 /**
  * \ingroup lte
  *
- * \brief Service Access Point (SAP) offered by the component carrier manager (CCM) 
+ * \brief Service Access Point (SAP) offered by the component carrier manager (CCM)
  *  by MAC to CCM.
  *
  * This is the *Component Carrier Manager SAP Provider*, i.e., the part of the SAP
@@ -42,7 +42,7 @@ namespace ns3 {
  */
 class LteCcmMacSapProvider
 {
- 
+
 public:
   virtual ~LteCcmMacSapProvider ();
 
@@ -67,20 +67,20 @@ public:
 /**
  * \ingroup lte
  *
- * \brief Service Access Point (SAP) offered by MAC to the 
+ * \brief Service Access Point (SAP) offered by MAC to the
  *        component carrier manager (CCM).
- *  
+ *
  *
  * This is the *CCM MAC SAP User*, i.e., the part of the SAP
- * that contains the component carrier manager methods called 
+ * that contains the component carrier manager methods called
  * by the eNodeB MAC instance.
  */
 class LteCcmMacSapUser : public LteMacSapUser
 {
 public:
-  virtual ~LteCcmMacSapUser ();
+  ~LteCcmMacSapUser () override;
   /**
-   * \brief When the Primary Component carrier receive a buffer status report 
+   * \brief When the Primary Component carrier receive a buffer status report
    *  it is sent to the CCM.
    * \param bsr Buffer Status Report received from a Ue
    * \param componentCarrierId
@@ -122,8 +122,8 @@ public:
    */
   MemberLteCcmMacSapProvider (C* owner);
   // inherited from LteCcmRrcSapProvider
-  virtual void ReportMacCeToScheduler (MacCeListElement_s bsr) override;
-  virtual void ReportSrToScheduler (uint16_t rnti) override;
+  void ReportMacCeToScheduler (MacCeListElement_s bsr) override;
+  void ReportSrToScheduler (uint16_t rnti) override;
 
 private:
   C* m_owner; ///< the owner class
@@ -134,7 +134,7 @@ MemberLteCcmMacSapProvider<C>::MemberLteCcmMacSapProvider (C* owner)
   : m_owner (owner)
 {
 }
- 
+
 template <class C>
 void MemberLteCcmMacSapProvider<C>::ReportMacCeToScheduler (MacCeListElement_s bsr)
 {
@@ -159,13 +159,13 @@ public:
    */
   MemberLteCcmMacSapUser (C* owner);
   // inherited from LteCcmRrcSapUser
-  virtual void UlReceiveMacCe (MacCeListElement_s bsr, uint8_t componentCarrierId);
-  virtual void UlReceiveSr (uint16_t rnti, uint8_t componentCarrierId);
-  virtual void NotifyPrbOccupancy (double prbOccupancy, uint8_t componentCarrierId);
+  void UlReceiveMacCe (MacCeListElement_s bsr, uint8_t componentCarrierId) override;
+  void UlReceiveSr (uint16_t rnti, uint8_t componentCarrierId) override;
+  void NotifyPrbOccupancy (double prbOccupancy, uint8_t componentCarrierId) override;
   // inherited from LteMacSapUser
-  virtual void NotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txOpParams);
-  virtual void ReceivePdu (LteMacSapUser::ReceivePduParameters rxPduParams);
-  virtual void NotifyHarqDeliveryFailure ();
+  void NotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txOpParams) override;
+  void ReceivePdu (LteMacSapUser::ReceivePduParameters rxPduParams) override;
+  void NotifyHarqDeliveryFailure () override;
 
 
 private:
@@ -214,7 +214,7 @@ void MemberLteCcmMacSapUser<C>::NotifyHarqDeliveryFailure ()
   m_owner->DoNotifyHarqDeliveryFailure ();
 }
 
-  
+
 } // end of namespace ns3
 
 

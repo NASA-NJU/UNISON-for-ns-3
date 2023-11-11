@@ -46,7 +46,7 @@ class Trailer;
  * the metadata to analyse the content of the packet's buffer.
  *
  * To achieve this, this class maintains a linked list of so-called
- * "items", each of which represents a header or a trailer, or 
+ * "items", each of which represents a header or a trailer, or
  * payload, or a fragment of any of these. Each item contains a "next"
  * and a "prev" field which point to the next and previous entries
  * in the linked list. The PacketMetadata class maintains a pair
@@ -71,19 +71,19 @@ class Trailer;
  *
  * Each item of the linked list is a variable-sized byte buffer
  * made of a number of fields. Some of these fields are stored
- * as fixed-size 32 bit integers, others as fixed-size 16 bit 
+ * as fixed-size 32 bit integers, others as fixed-size 16 bit
  * integers, and some others as variable-size 32-bit integers.
  * The variable-size 32 bit integers are stored using the uleb128
  * encoding.
  */
-class PacketMetadata 
+class PacketMetadata
 {
 public:
 
   /**
    * \brief structure describing a packet metadata item
    */
-  struct Item 
+  struct Item
   {
     /// Type of data in the packet
     enum ItemType {
@@ -103,7 +103,7 @@ public:
     TypeId tid;
     /**
      * size of item. If fragment, size of fragment. Otherwise,
-     * size of original item. 
+     * size of original item.
      */
     uint32_t currentSize;
     /**
@@ -126,7 +126,7 @@ public:
   /**
    * \brief Iterator class for metadata items.
    */
-  class ItemIterator 
+  class ItemIterator
   {
 public:
     /**
@@ -139,12 +139,12 @@ public:
      * \brief Checks if there is another metadata item
      * \returns true if there is another item
      */
-    bool HasNext (void) const;
+    bool HasNext () const;
     /**
      * \brief Retrieve the next metadata item
      * \returns the next metadata item
      */
-    Item Next (void);
+    Item Next ();
 private:
     const PacketMetadata *m_metadata; //!< pointer to the metadata
     Buffer m_buffer; //!< buffer the metadata refers to
@@ -156,11 +156,11 @@ private:
   /**
    * \brief Enable the packet metadata
    */
-  static void Enable (void);
+  static void Enable ();
   /**
    * \brief Enable the packet metadata checking
    */
-  static void EnableChecking (void);
+  static void EnableChecking ();
 
   /**
    * \brief Constructor
@@ -180,6 +180,9 @@ private:
    */
   inline PacketMetadata &operator = (PacketMetadata const& o);
   inline ~PacketMetadata ();
+
+  // Delete default constructor to avoid misuse
+  PacketMetadata () = delete;
 
   /**
    * \brief Add an header
@@ -244,13 +247,13 @@ private:
    * \brief Get the packet Uid
    * \return the packet Uid
    */
-  uint64_t GetUid (void) const;
+  uint64_t GetUid () const;
 
   /**
    * \brief Get the metadata serialized size
    * \return the seralized size
    */
-  uint32_t GetSerializedSize (void) const;
+  uint32_t GetSerializedSize () const;
 
   /**
    * \brief Initialize the item iterator to the buffer begin
@@ -406,9 +409,9 @@ private:
   /**
    * the size of PacketMetadata::Data::m_data such that the total size
    * of PacketMetadata::Data is 16 bytes
-   */ 
+   */
 #define PACKET_METADATA_DATA_M_DATA_SIZE 8
-  
+
   /**
    * Data structure
    */
@@ -425,12 +428,12 @@ private:
      * reference this struct Data instance */
     uint16_t m_dirtyEnd;
     /** variable-sized buffer of bytes */
-    uint8_t m_data[PACKET_METADATA_DATA_M_DATA_SIZE]; 
+    uint8_t m_data[PACKET_METADATA_DATA_M_DATA_SIZE];
   };
   /* Note that since the next and prev fields are 16 bit integers
-     and since the value 0xffff is reserved to identify the 
+     and since the value 0xffff is reserved to identify the
      fact that the end or the start of the list is reached,
-     only a limited number of elements can be stored in 
+     only a limited number of elements can be stored in
      a m_data byte buffer.
    */
   /**
@@ -438,19 +441,19 @@ private:
    */
   struct SmallItem {
     /** offset (in bytes) from start of m_data buffer
-       to next element in linked list. value is 0xffff 
+       to next element in linked list. value is 0xffff
        if next element does not exist.
        stored as a fixed-size 16 bit integer.
     */
     uint16_t next;
     /** offset (in bytes) from start of m_data buffer
-       to previous element in linked list. value is 0xffff 
+       to previous element in linked list. value is 0xffff
        if previous element does not exist.
        stored as a fixed-size 16 bit integer.
      */
     uint16_t prev;
     /** the high 31 bits of this field identify the
-       type of the header or trailer represented by 
+       type of the header or trailer represented by
        this item: the value zero represents payload.
        If the low bit of this uid is one, an ExtraItem
        structure follows this SmallItem structure.
@@ -465,11 +468,11 @@ private:
     /** this field tries to uniquely identify each header or
        trailer _instance_ while the typeUid field uniquely
        identifies each header or trailer _type_. This field
-       is used to test whether two items are equal in the sense 
+       is used to test whether two items are equal in the sense
        that they represent the same header or trailer instance.
        That equality test is based on the typeUid and chunkUid
-       fields so, the likelihood that two header instances 
-       share the same chunkUid _and_ typeUid is very small 
+       fields so, the likelihood that two header instances
+       share the same chunkUid _and_ typeUid is very small
        unless they are really representations of the same header
        instance.
        stored as a fixed-size 16 bit integer.
@@ -504,15 +507,13 @@ private:
    */
   class DataFreeList : public std::vector<struct Data *>
   {
-public:
+  public:
     ~DataFreeList ();
   };
 
   friend DataFreeList::~DataFreeList ();
   /// Friend class
   friend class ItemIterator;
-
-  PacketMetadata ();
 
   /**
    * \brief Add a SmallItem
@@ -529,7 +530,7 @@ public:
    * \return added size
    */
   uint16_t AddBig (uint32_t head, uint32_t tail,
-                   const PacketMetadata::SmallItem *item, 
+                   const PacketMetadata::SmallItem *item,
                    const PacketMetadata::ExtraItem *extraItem);
   /**
    * \brief Replace the tail
@@ -538,7 +539,7 @@ public:
    * \param available the number of bytes which can
    *        be written without having to rewrite the buffer entirely.
    */
-  void ReplaceTail (PacketMetadata::SmallItem *item, 
+  void ReplaceTail (PacketMetadata::SmallItem *item,
                     PacketMetadata::ExtraItem *extraItem,
                     uint32_t available);
   /**
@@ -607,7 +608,7 @@ public:
    * \brief Get the total size used by the metadata
    * \return the metadata used size
    */
-  uint32_t GetTotalSize (void) const;
+  uint32_t GetTotalSize () const;
 
   /**
    * \brief Read items
@@ -616,7 +617,7 @@ public:
    * \param extraItem pointer to where we should store the data to return to the caller
    * \returns the number of bytes read.
    */
-  uint32_t ReadItems (uint16_t current, 
+  uint32_t ReadItems (uint16_t current,
                       struct PacketMetadata::SmallItem *item,
                       struct PacketMetadata::ExtraItem *extraItem) const;
   /**
@@ -629,7 +630,7 @@ public:
    * \brief Check if the metadata state is ok
    * \returns true if the internal state is ok
    */
-  bool IsStateOk (void) const;
+  bool IsStateOk () const;
   /**
    * \brief Check if the position is valid
    * \param pointer the position to check
@@ -716,23 +717,23 @@ PacketMetadata::PacketMetadata (PacketMetadata const &o)
     m_used (o.m_used),
     m_packetUid (o.m_packetUid)
 {
-  NS_ASSERT (m_data != 0);
+  NS_ASSERT (m_data != nullptr);
   NS_ASSERT (m_data->m_count < std::numeric_limits<uint32_t>::max());
   m_data->m_count++;
 }
 PacketMetadata &
 PacketMetadata::operator = (PacketMetadata const& o)
 {
-  if (m_data != o.m_data) 
+  if (m_data != o.m_data)
     {
       // not self assignment
-      NS_ASSERT (m_data != 0);
+      NS_ASSERT (m_data != nullptr);
       if (m_data->m_count-- == 1) 
         {
           PacketMetadata::Recycle (m_data);
         }
       m_data = o.m_data;
-      NS_ASSERT (m_data != 0);
+      NS_ASSERT (m_data != nullptr);
       m_data->m_count++;
     }
   m_head = o.m_head;
@@ -743,7 +744,7 @@ PacketMetadata::operator = (PacketMetadata const& o)
 }
 PacketMetadata::~PacketMetadata ()
 {
-  NS_ASSERT (m_data != 0);
+  NS_ASSERT (m_data != nullptr);
   if (m_data->m_count-- == 1) 
     {
       PacketMetadata::Recycle (m_data);

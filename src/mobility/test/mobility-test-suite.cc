@@ -45,7 +45,7 @@ class WaypointLazyNotifyFalse : public TestCase
 {
 public:
   WaypointLazyNotifyFalse ();
-  virtual ~WaypointLazyNotifyFalse ();
+  ~WaypointLazyNotifyFalse () override;
 
 private:
   /**
@@ -59,7 +59,7 @@ private:
    * \param model the mobility model
    */
   void CourseChangeCallback (std::string path, Ptr<const MobilityModel> model);
-  virtual void DoRun (void);
+  void DoRun () override;
   Ptr<Node> m_node; ///< mode
   Ptr<WaypointMobilityModel> m_mob; ///< modility model
   int m_courseChanges; ///< course changes
@@ -91,7 +91,7 @@ WaypointLazyNotifyFalse::CourseChangeCallback (std::string path, Ptr<const Mobil
 }
 
 void
-WaypointLazyNotifyFalse::DoRun (void)
+WaypointLazyNotifyFalse::DoRun ()
 {
   m_node = CreateObject<Node> ();
   m_mob = CreateObject<WaypointMobilityModel> ();
@@ -119,7 +119,7 @@ class WaypointLazyNotifyTrue : public TestCase
 {
 public:
   WaypointLazyNotifyTrue ();
-  virtual ~WaypointLazyNotifyTrue ();
+  ~WaypointLazyNotifyTrue () override;
 
 private:
   /**
@@ -133,7 +133,7 @@ private:
    * \param model the mobility model
    */
   void CourseChangeCallback (std::string path, Ptr<const MobilityModel> model);
-  virtual void DoRun (void);
+  void DoRun () override;
   Ptr<Node> m_node; ///< node
   Ptr<WaypointMobilityModel> m_mob; ///< modility model
 };
@@ -163,7 +163,7 @@ WaypointLazyNotifyTrue::CourseChangeCallback (std::string path, Ptr<const Mobili
 }
 
 void
-WaypointLazyNotifyTrue::DoRun (void)
+WaypointLazyNotifyTrue::DoRun ()
 {
   m_node = CreateObject<Node> ();
   m_mob = CreateObject<WaypointMobilityModel> ();
@@ -191,7 +191,7 @@ class WaypointInitialPositionIsWaypoint : public TestCase
 {
 public:
   WaypointInitialPositionIsWaypoint ();
-  virtual ~WaypointInitialPositionIsWaypoint ();
+  ~WaypointInitialPositionIsWaypoint () override;
 
 private:
   /**
@@ -206,7 +206,7 @@ private:
    * \param num the number of way points
    */
   void TestNumWaypoints (Ptr<const WaypointMobilityModel> model, uint32_t num);
-  virtual void DoRun (void);
+  void DoRun () override;
   Ptr<WaypointMobilityModel> m_mob1; ///< mobility model 1
   Ptr<WaypointMobilityModel> m_mob2; ///< mobility model 2
   Ptr<WaypointMobilityModel> m_mob3; ///< mobility model 3
@@ -237,7 +237,7 @@ WaypointInitialPositionIsWaypoint::TestNumWaypoints (Ptr<const WaypointMobilityM
 }
 
 void
-WaypointInitialPositionIsWaypoint::DoRun (void)
+WaypointInitialPositionIsWaypoint::DoRun ()
 {
   // Case 1:  InitialPositionIsWaypoint == false, and we call SetPosition
   // without any waypoints added.  There should be no waypoints after
@@ -331,7 +331,7 @@ class WaypointMobilityModelViaHelper : public TestCase
 {
 public:
   WaypointMobilityModelViaHelper ();
-  virtual ~WaypointMobilityModelViaHelper ();
+  ~WaypointMobilityModelViaHelper () override;
 
 private:
   /**
@@ -340,7 +340,7 @@ private:
    * \param expectedXPos the expected X position
    */
   void TestXPosition (Ptr<const WaypointMobilityModel> mob, double expectedXPos);
-  virtual void DoRun (void);
+  void DoRun () override;
 };
 
 WaypointMobilityModelViaHelper::WaypointMobilityModelViaHelper ()
@@ -361,7 +361,7 @@ WaypointMobilityModelViaHelper::TestXPosition (Ptr<const WaypointMobilityModel> 
 
 // WaypointMobilityModel tests using the helper
 void
-WaypointMobilityModelViaHelper::DoRun (void)
+WaypointMobilityModelViaHelper::DoRun ()
 {
   NodeContainer c;
   c.Create (1);

@@ -72,7 +72,7 @@ public:
  */
 ChainRegressionTest::ChainRegressionTest (const char * const prefix, Time t, uint32_t size, Time arpAliveTimeout)
   : TestCase ("AODV chain regression test"),
-    m_nodes (0),
+    m_nodes (nullptr),
     m_prefix (prefix),
     m_time (t),
     m_size (size),
@@ -137,7 +137,7 @@ ChainRegressionTest::DoRun ()
 
   CheckResults ();
 
-  delete m_nodes, m_nodes = 0;
+  delete m_nodes, m_nodes = nullptr;
 }
 
 void
@@ -192,10 +192,10 @@ ChainRegressionTest::CreateDevices ()
   internetStack.Install (*m_nodes);
   streamsUsed += internetStack.AssignStreams (*m_nodes, streamsUsed);
   // InternetStack uses m_size more streams
-  NS_TEST_ASSERT_MSG_EQ (streamsUsed, (devices.GetN () * 4) + m_size, "Stream assignment mismatch");
+  NS_TEST_ASSERT_MSG_EQ (streamsUsed, (devices.GetN () * 5) + m_size, "Stream assignment mismatch");
   streamsUsed += aodv.AssignStreams (*m_nodes, streamsUsed);
   // AODV uses m_size more streams
-  NS_TEST_ASSERT_MSG_EQ (streamsUsed, ((devices.GetN () * 4) + (2 * m_size)), "Stream assignment mismatch");
+  NS_TEST_ASSERT_MSG_EQ (streamsUsed, ((devices.GetN () * 5) + (2 * m_size)), "Stream assignment mismatch");
 
   Ipv4AddressHelper address;
   address.SetBase ("10.1.1.0", "255.255.255.0");

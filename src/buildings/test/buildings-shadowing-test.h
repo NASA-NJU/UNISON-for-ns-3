@@ -21,20 +21,24 @@
 #ifndef BUILDINGS_SHADOWING_TEST_H
 #define BUILDINGS_SHADOWING_TEST_H
 
+#include "ns3/ptr.h"
 #include "ns3/test.h"
 
-
+namespace ns3
+{
+class MobilityModel;
+}
 
 using namespace ns3;
 
 /**
  * \ingroup building-test
  * \ingroup tests
- * 
+ *
  * Shadowing compound test
  *
- * This TestSuite tests the shadowing model of BuildingPathlossModel 
- * by reproducing several communication scenarios 
+ * This TestSuite tests the shadowing model of BuildingPathlossModel
+ * by reproducing several communication scenarios
  */
 class BuildingsShadowingTestSuite : public TestSuite
 {
@@ -46,7 +50,7 @@ public:
 /**
  * \ingroup building-test
  * \ingroup tests
- * 
+ *
  * Shadowing test
  */
 class BuildingsShadowingTestCase : public TestCase
@@ -61,10 +65,10 @@ public:
    * \param name Test name
    */
   BuildingsShadowingTestCase (uint16_t m1, uint16_t m2, double refValue, double sigmaRef, std::string name);
-  virtual ~BuildingsShadowingTestCase ();
+  ~BuildingsShadowingTestCase () override;
 
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
   /**
    * Create a mobility model based on its index
    * \param index MobilityModel index

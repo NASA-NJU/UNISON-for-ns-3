@@ -46,14 +46,14 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
   AarfWifiManager ();
-  virtual ~AarfWifiManager ();
+  ~AarfWifiManager () override;
 
 
 private:
-  void DoInitialize (void) override;
-  WifiRemoteStation * DoCreateStation (void) const override;
+  void DoInitialize () override;
+  WifiRemoteStation * DoCreateStation () const override;
   void DoReportRxOk (WifiRemoteStation *station,
                      double rxSnr, WifiMode txMode) override;
   void DoReportRtsFailed (WifiRemoteStation *station) override;
@@ -64,7 +64,7 @@ private:
                        double dataSnr, uint16_t dataChannelWidth, uint8_t dataNss) override;
   void DoReportFinalRtsFailed (WifiRemoteStation *station) override;
   void DoReportFinalDataFailed (WifiRemoteStation *station) override;
-  WifiTxVector DoGetDataTxVector (WifiRemoteStation *station) override;
+  WifiTxVector DoGetDataTxVector (WifiRemoteStation *station, uint16_t allowedWidth) override;
   WifiTxVector DoGetRtsTxVector (WifiRemoteStation *station) override;
 
   uint32_t m_minTimerThreshold;   ///< minimum timer threshold

@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2013 ResiliNets, ITTC, University of Kansas 
+ * Copyright (c) 2013 ResiliNets, ITTC, University of Kansas
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
@@ -19,7 +19,7 @@
  * and Greeshma Umapathi
  *
  * James P.G. Sterbenz <jpgs@ittc.ku.edu>, director
- * ResiliNets Research Group  http://wiki.ittc.ku.edu/resilinets
+ * ResiliNets Research Group  https://resilinets.org/
  * Information and Telecommunication Technology Center (ITTC)
  * and Department of Electrical Engineering and Computer Science
  * The University of Kansas Lawrence, KS USA.
@@ -48,11 +48,11 @@ class Time;
  *
  * \brief An implementation of TCP Westwood and Westwood+.
  *
- * Westwood and Westwood+ employ the AIAD (Additive Increase/Adaptive Decrease) 
- * congestion control paradigm. When a congestion episode happens, 
+ * Westwood and Westwood+ employ the AIAD (Additive Increase/Adaptive Decrease)
+ * congestion control paradigm. When a congestion episode happens,
  * instead of halving the cwnd, these protocols try to estimate the network's
- * bandwidth and use the estimated value to adjust the cwnd. 
- * While Westwood performs the bandwidth sampling every ACK reception, 
+ * bandwidth and use the estimated value to adjust the cwnd.
+ * While Westwood performs the bandwidth sampling every ACK reception,
  * Westwood+ samples the bandwidth every RTT.
  *
  * The two main methods in the implementation are the CountAck (const TCPHeader&)
@@ -70,20 +70,20 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
-  TcpWestwood (void);
+  TcpWestwood ();
   /**
    * \brief Copy constructor
    * \param sock the object to copy
    */
   TcpWestwood (const TcpWestwood& sock);
-  virtual ~TcpWestwood (void);
+  ~TcpWestwood () override;
 
   /**
    * \brief Protocol variant (Westwood or Westwood+)
    */
-  enum ProtocolType 
+  enum ProtocolType
   {
     WESTWOOD,
     WESTWOODPLUS
@@ -92,19 +92,19 @@ public:
   /**
    * \brief Filter type (None or Tustin)
    */
-  enum FilterType 
+  enum FilterType
   {
     NONE,
     TUSTIN
   };
 
-  virtual uint32_t GetSsThresh (Ptr<const TcpSocketState> tcb,
-                                uint32_t bytesInFlight);
+  uint32_t GetSsThresh (Ptr<const TcpSocketState> tcb,
+                                uint32_t bytesInFlight) override;
 
-  virtual void PktsAcked (Ptr<TcpSocketState> tcb, uint32_t packetsAcked,
-                          const Time& rtt);
+  void PktsAcked (Ptr<TcpSocketState> tcb, uint32_t packetsAcked,
+                          const Time& rtt) override;
 
-  virtual Ptr<TcpCongestionOps> Fork ();
+  Ptr<TcpCongestionOps> Fork () override;
 
 private:
   /**

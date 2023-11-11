@@ -34,19 +34,19 @@ class LtePdcp;
 
 /**
  * store information on active radio bearer instance
- * 
+ *
  */
 class LteRadioBearerInfo : public Object
 {
 
 public:
-  LteRadioBearerInfo (void);
-  virtual ~LteRadioBearerInfo (void);
+  LteRadioBearerInfo ();
+  ~LteRadioBearerInfo () override;
   /**
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   Ptr<LteRlc> m_rlc; ///< RLC
   Ptr<LtePdcp> m_pdcp; ///< PDCP
@@ -55,7 +55,7 @@ public:
 
 /**
  * store information on active signaling radio bearer instance
- * 
+ *
  */
 class LteSignalingRadioBearerInfo : public LteRadioBearerInfo
 {
@@ -65,16 +65,16 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   uint8_t m_srbIdentity; ///< SRB indentity
-  LteRrcSap::LogicalChannelConfig m_logicalChannelConfig; ///< logical channel config  
+  LteRrcSap::LogicalChannelConfig m_logicalChannelConfig; ///< logical channel config
 };
 
 
 /**
  * store information on active data radio bearer instance
- * 
+ *
  */
 class LteDataRadioBearerInfo : public LteRadioBearerInfo
 {
@@ -84,7 +84,7 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   EpsBearer m_epsBearer; ///< EPS bearer
   uint8_t m_epsBearerIdentity; ///< EPS bearer identity

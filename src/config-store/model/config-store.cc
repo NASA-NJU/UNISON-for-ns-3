@@ -45,20 +45,20 @@ NS_LOG_COMPONENT_DEFINE ("ConfigStore");
 
 NS_OBJECT_ENSURE_REGISTERED (ConfigStore);
 
-TypeId 
-ConfigStore::GetTypeId (void)
+TypeId
+ConfigStore::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::ConfigStore")
     .SetParent<ObjectBase> ()
     .SetGroupName ("ConfigStore")
-    .AddAttribute ("Mode", 
+    .AddAttribute ("Mode",
                    "Configuration mode",
                    EnumValue (ConfigStore::NONE),
                    MakeEnumAccessor (&ConfigStore::SetMode),
                    MakeEnumChecker (ConfigStore::NONE, "None",
                                     ConfigStore::LOAD, "Load",
                                     ConfigStore::SAVE, "Save"))
-    .AddAttribute ("Filename", 
+    .AddAttribute ("Filename",
                    "The file where the configuration should be saved to or loaded from.",
                    StringValue (""),
                    MakeStringAccessor (&ConfigStore::SetFilename),
@@ -77,8 +77,8 @@ ConfigStore::GetTypeId (void)
   ;
   return tid;
 }
-TypeId 
-ConfigStore::GetInstanceTypeId (void) const
+TypeId
+ConfigStore::GetInstanceTypeId () const
 {
   return GetTypeId ();
 }
@@ -100,7 +100,7 @@ ConfigStore::ConfigStore ()
         {
           m_file = new XmlConfigLoad ();
         }
-      else 
+      else
         {
           m_file = new NoneFileConfig ();
         }
@@ -146,22 +146,22 @@ ConfigStore::~ConfigStore ()
 {
   NS_LOG_FUNCTION (this);
   delete m_file;
-  m_file = 0;
+  m_file = nullptr;
 }
 
-void 
+void
 ConfigStore::SetMode (enum Mode mode)
 {
   NS_LOG_FUNCTION (this << mode);
   m_mode = mode;
 }
-void 
+void
 ConfigStore::SetFileFormat (enum FileFormat format)
 {
   NS_LOG_FUNCTION (this << format);
   m_fileFormat = format;
 }
-void 
+void
 ConfigStore::SetFilename (std::string filename)
 {
   NS_LOG_FUNCTION (this << filename);
@@ -174,15 +174,15 @@ ConfigStore::SetSaveDeprecated (bool saveDeprecated)
   m_saveDeprecated = saveDeprecated;
 }
 
-void 
-ConfigStore::ConfigureAttributes (void)
+void
+ConfigStore::ConfigureAttributes ()
 {
   NS_LOG_FUNCTION (this);
   m_file->Attributes ();
 }
 
-void 
-ConfigStore::ConfigureDefaults (void)
+void
+ConfigStore::ConfigureDefaults ()
 {
   NS_LOG_FUNCTION (this);
   m_file->Default ();

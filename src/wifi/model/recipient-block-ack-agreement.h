@@ -27,7 +27,7 @@
 
 namespace ns3 {
 
-class WifiMacQueueItem;
+class WifiMpdu;
 class MacRxMiddle;
 class CtrlBAckResponseHeader;
 
@@ -53,7 +53,7 @@ public:
   RecipientBlockAckAgreement (Mac48Address originator, bool amsduSupported, uint8_t tid,
                               uint16_t bufferSize, uint16_t timeout, uint16_t startingSeq,
                               bool htSupported);
-  ~RecipientBlockAckAgreement ();
+  ~RecipientBlockAckAgreement () override;
 
   /**
    * Set the MAC RX Middle to use.
@@ -68,7 +68,7 @@ public:
    *
    * \param mpdu the received MPDU
    */
-  void NotifyReceivedMpdu (Ptr<WifiMacQueueItem> mpdu);
+  void NotifyReceivedMpdu (Ptr<const WifiMpdu> mpdu);
   /**
    * Update both the scoreboard and the receive reordering buffer upon reception
    * of a Block Ack Request.
@@ -91,7 +91,7 @@ public:
    * This is called when a Block Ack agreement is destroyed to flush the
    * received packets.
    */
-  void Flush (void);
+  void Flush ();
 
 private:
   /**
@@ -101,7 +101,7 @@ private:
    * Set WinStartB to the value of the Sequence Number subfield of the last
    * MSDU or A-MSDU that was passed up to the next MAC process plus one.
    */
-  void PassBufferedMpdusUntilFirstLost (void);
+  void PassBufferedMpdusUntilFirstLost ();
 
   /**
    * Pass any complete MSDUs or A-MSDUs stored in the buffer with Sequence Number
@@ -131,7 +131,7 @@ private:
   BlockAckWindow m_scoreboard;                                   ///< recipient's scoreboard
   uint16_t m_winStartB;                                          ///< starting SN for the reordering buffer
   std::size_t m_winSizeB;                                        ///< size of the receive reordering buffer
-  std::map<Key, Ptr<WifiMacQueueItem>, Compare> m_bufferedMpdus; ///< buffered MPDUs sorted by Seq Number
+  std::map<Key, Ptr<const WifiMpdu>, Compare> m_bufferedMpdus;  ///< buffered MPDUs sorted by Seq Number
   Ptr<MacRxMiddle> m_rxMiddle;                                   ///< the MAC RX Middle on this station
 };
 

@@ -38,18 +38,18 @@ public:
   /** Default constructor. */
   UanPropModelIdeal ();
   /** Destructor */
-  virtual ~UanPropModelIdeal ();
+  ~UanPropModelIdeal () override;
 
   /**
    * Register this type.
    * \return The object TypeId.
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   // Inherited methods
-  virtual double GetPathLossDb (Ptr<MobilityModel> a, Ptr<MobilityModel> b, UanTxMode mode);
-  virtual UanPdp GetPdp (Ptr<MobilityModel> a, Ptr<MobilityModel> b, UanTxMode mode);
-  virtual Time GetDelay (Ptr<MobilityModel> a, Ptr<MobilityModel> b, UanTxMode mode);
+  double GetPathLossDb (Ptr<MobilityModel> a, Ptr<MobilityModel> b, UanTxMode mode) override;
+  UanPdp GetPdp (Ptr<MobilityModel> a, Ptr<MobilityModel> b, UanTxMode mode) override;
+  Time GetDelay (Ptr<MobilityModel> a, Ptr<MobilityModel> b, UanTxMode mode) override;
 
 };  // class UanPropModelIdeal
 

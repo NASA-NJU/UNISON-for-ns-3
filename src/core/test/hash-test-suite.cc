@@ -57,7 +57,7 @@ public:
    */
   HashTestCase (const std::string name);
   /** Destructor. */
-  virtual ~HashTestCase ();
+  ~HashTestCase () override;
 
 protected:
   /**
@@ -85,7 +85,7 @@ private:
    * \param [in] hash the hash value
    */
   void Check ( const std::string hashName, const int bits, const uint64_t hash);
-  virtual void DoRun (void);
+  void DoRun () override;
 
 };  // class HashTestCase
 
@@ -143,7 +143,7 @@ HashTestCase::Check ( std::string hashName, int bits, uint64_t hash)
 }
 
 void
-HashTestCase::DoRun (void)
+HashTestCase::DoRun ()
 {}
 
 
@@ -157,10 +157,10 @@ public:
   /** Constructor. */
   DefaultHashTestCase ();
   /** Destructor. */
-  virtual ~DefaultHashTestCase ();
+  ~DefaultHashTestCase () override;
 
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
 };
 
 DefaultHashTestCase::DefaultHashTestCase ()
@@ -171,7 +171,7 @@ DefaultHashTestCase::~DefaultHashTestCase ()
 {}
 
 void
-DefaultHashTestCase::DoRun (void)
+DefaultHashTestCase::DoRun ()
 {
   std::cout << GetName () << "checking with key: \""
             << key << "\"" << std::endl;
@@ -193,10 +193,10 @@ public:
   /** Constructor. */
   Fnv1aTestCase ();
   /** Destructor. */
-  virtual ~Fnv1aTestCase ();
+  ~Fnv1aTestCase () override;
 
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
 };
 
 Fnv1aTestCase::Fnv1aTestCase ()
@@ -207,7 +207,7 @@ Fnv1aTestCase::~Fnv1aTestCase ()
 {}
 
 void
-Fnv1aTestCase::DoRun (void)
+Fnv1aTestCase::DoRun ()
 {
   Hasher hasher = Hasher ( Create<Hash::Function::Fnv1a> () );
   hash32Reference = 0xa3fc0d6d;  // Fnv1a(key)
@@ -228,10 +228,10 @@ public:
   /** Constructor. */
   Murmur3TestCase ();
   /** Destructor. */
-  virtual ~Murmur3TestCase ();
+  ~Murmur3TestCase () override;
 
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
 };
 
 Murmur3TestCase::Murmur3TestCase ()
@@ -242,7 +242,7 @@ Murmur3TestCase::~Murmur3TestCase ()
 {}
 
 void
-Murmur3TestCase::DoRun (void)
+Murmur3TestCase::DoRun ()
 {
   Hasher hasher = Hasher ( Create<Hash::Function::Murmur3> () );
   hash32Reference = 0x463d70e2;  // Murmur3(key)
@@ -316,10 +316,10 @@ public:
   /** Constructor. */
   Hash32FunctionPtrTestCase ();
   /** Destructor. */
-  virtual ~Hash32FunctionPtrTestCase ();
+  ~Hash32FunctionPtrTestCase () override;
 
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
 };
 
 Hash32FunctionPtrTestCase::Hash32FunctionPtrTestCase ()
@@ -330,7 +330,7 @@ Hash32FunctionPtrTestCase::~Hash32FunctionPtrTestCase ()
 {}
 
 void
-Hash32FunctionPtrTestCase::DoRun (void)
+Hash32FunctionPtrTestCase::DoRun ()
 {
   Hasher hasher = Hasher ( Create<Hash::Function::Hash32> (&gnu_sum32) );
   hash32Reference = 0x41264126;  // Hash32FunctionPtr(key)
@@ -347,10 +347,10 @@ public:
   /** Constructor. */
   Hash64FunctionPtrTestCase ();
   /** Destructor. */
-  virtual ~Hash64FunctionPtrTestCase ();
+  ~Hash64FunctionPtrTestCase () override;
 
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
 };
 
 Hash64FunctionPtrTestCase::Hash64FunctionPtrTestCase ()
@@ -361,7 +361,7 @@ Hash64FunctionPtrTestCase::~Hash64FunctionPtrTestCase ()
 {}
 
 void
-Hash64FunctionPtrTestCase::DoRun (void)
+Hash64FunctionPtrTestCase::DoRun ()
 {
   Hasher hasher = Hasher ( Create<Hash::Function::Hash64> (&gnu_sum64) );
   hash64Reference = 0x4126412641264126ULL;  // Hash64FunctionPtr(key)
@@ -378,10 +378,10 @@ public:
   /** Constructor. */
   IncrementalTestCase ();
   /** Destructor. */
-  virtual ~IncrementalTestCase ();
+  ~IncrementalTestCase () override;
 
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
   /**
    * Complute the hash test function
    * \param name the hash name
@@ -413,7 +413,7 @@ IncrementalTestCase::DoHash (const std::string name, Hasher hasher)
 }
 
 void
-IncrementalTestCase::DoRun (void)
+IncrementalTestCase::DoRun ()
 {
   key1 = "The quick brown ";
   key2 = "Incremental.";

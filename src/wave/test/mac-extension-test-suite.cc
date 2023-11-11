@@ -49,8 +49,8 @@ using namespace ns3;
 class ChannelCoordinationTestCase : public TestCase
 {
 public:
-  ChannelCoordinationTestCase (void);
-  virtual ~ChannelCoordinationTestCase (void);
+  ChannelCoordinationTestCase ();
+  ~ChannelCoordinationTestCase () override;
 
   // below three methods are used in CoordinationTestListener
   /**
@@ -77,7 +77,7 @@ private:
    * \param guardi the guard
    */
   void TestIntervalAfter (bool cchi, bool schi, bool guardi);
-  virtual void DoRun (void);
+  void DoRun () override;
   Ptr<ChannelCoordinator> m_coordinator; ///< coordinator
 
 };
@@ -100,29 +100,29 @@ public:
     : m_coordinatorTest (coordinatorTest)
   {
   }
-  virtual ~CoordinationTestListener (void)
+  ~CoordinationTestListener () override
   {
   }
-  virtual void NotifyCchSlotStart (Time duration)
+  void NotifyCchSlotStart (Time duration) override
   {
     m_coordinatorTest->NotifyCchStartNow (duration);
   }
-  virtual void NotifySchSlotStart (Time duration)
+  void NotifySchSlotStart (Time duration) override
   {
     m_coordinatorTest->NotifySchStartNow (duration);
   }
-  virtual void NotifyGuardSlotStart (Time duration, bool cchi)
+  void NotifyGuardSlotStart (Time duration, bool cchi) override
   {
     m_coordinatorTest->NotifyGuardStartNow (duration, cchi);
   }
   ChannelCoordinationTestCase *m_coordinatorTest; ///< coordinator test
 };
 
-ChannelCoordinationTestCase::ChannelCoordinationTestCase (void)
+ChannelCoordinationTestCase::ChannelCoordinationTestCase ()
   : TestCase ("channel-coordination")
 {
 }
-ChannelCoordinationTestCase::~ChannelCoordinationTestCase (void)
+ChannelCoordinationTestCase::~ChannelCoordinationTestCase ()
 {
 }
 
@@ -312,8 +312,8 @@ TestCaseHelper::CreatWaveDevice (uint32_t nodesNumber)
 class ChannelRoutingTestCase : public TestCase
 {
 public:
-  ChannelRoutingTestCase (void);
-  virtual ~ChannelRoutingTestCase (void);
+  ChannelRoutingTestCase ();
+  ~ChannelRoutingTestCase () override;
 
   /**
    * Send IP-based packets
@@ -336,7 +336,7 @@ public:
   void SendWsa (bool shouldSucceed, const VsaInfo &vsaInfo);
 
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
   /**
    * Receive function
    * \param dev the device
@@ -357,12 +357,12 @@ private:
   Ptr<WaveNetDevice>  m_sender; ///< sender
 };
 
-ChannelRoutingTestCase::ChannelRoutingTestCase (void)
+ChannelRoutingTestCase::ChannelRoutingTestCase ()
   : TestCase ("channel-routing")
 {
 
 }
-ChannelRoutingTestCase::~ChannelRoutingTestCase (void)
+ChannelRoutingTestCase::~ChannelRoutingTestCase ()
 {
 
 }
@@ -446,7 +446,8 @@ ChannelRoutingTestCase::DoRun ()
     NetDeviceContainer devices = TestCaseHelper::CreatWaveDevice (1);
     m_sender = DynamicCast<WaveNetDevice> (devices.Get (0));
 
-    bool ipv6 = true, ipv4 = false;
+    bool ipv6 = true;
+    bool ipv4 = false;
     Simulator::Schedule (Seconds (0.1), &ChannelRoutingTestCase::SendIp, this, false, ipv6);
     Simulator::Schedule (Seconds (0.1), &ChannelRoutingTestCase::SendIp, this, false, ipv4);
 
@@ -534,8 +535,8 @@ ChannelRoutingTestCase::DoRun ()
 class ChannelAccessTestCase : public TestCase
 {
 public:
-  ChannelAccessTestCase (void);
-  virtual ~ChannelAccessTestCase (void);
+  ChannelAccessTestCase ();
+  ~ChannelAccessTestCase () override;
 private:
   /**
    * Test continuous function
@@ -590,18 +591,18 @@ private:
    */
   bool Receive (Ptr<NetDevice> dev, Ptr<const Packet> pkt, uint16_t mode, const Address &sender);
 
-  virtual void DoRun (void);
+  void DoRun () override;
 
   NetDeviceContainer m_devices; ///< the devices
   Ptr<WaveNetDevice>  m_sender; ///< sender
   uint32_t m_received; ///< received
 };
 
-ChannelAccessTestCase::ChannelAccessTestCase (void)
+ChannelAccessTestCase::ChannelAccessTestCase ()
   : TestCase ("channel-access")
 {
 }
-ChannelAccessTestCase::~ChannelAccessTestCase (void)
+ChannelAccessTestCase::~ChannelAccessTestCase ()
 {
 
 }
@@ -1023,9 +1024,9 @@ class AnnexC_TestCase : public TestCase
 {
 public:
   AnnexC_TestCase ();
-  virtual ~AnnexC_TestCase ();
+  ~AnnexC_TestCase () override;
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
 
   /**
    * Send packet function
@@ -1049,12 +1050,12 @@ private:
   Ptr<WaveNetDevice>  m_receiver; ///< receiver
 };
 
-AnnexC_TestCase::AnnexC_TestCase (void)
+AnnexC_TestCase::AnnexC_TestCase ()
   : TestCase ("annex-c")
 {
 }
 
-AnnexC_TestCase::~AnnexC_TestCase (void)
+AnnexC_TestCase::~AnnexC_TestCase ()
 {
 }
 
@@ -1143,7 +1144,7 @@ AnnexC_TestCase::Receive (Ptr<NetDevice> dev, Ptr<const Packet> pkt, uint16_t mo
 }
 
 void
-AnnexC_TestCase::DoRun (void)
+AnnexC_TestCase::DoRun ()
 {
   m_devices = TestCaseHelper::CreatWaveDevice (2);
   m_sender = DynamicCast<WaveNetDevice> (m_devices.Get (0));

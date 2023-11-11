@@ -51,9 +51,12 @@ namespace SystemPath {
  * \ingroup systempath
  * Get the file system path to the current executable.
  *
+ * This path is only equivalent to the current working directory when
+ * the executable is executed in its parent directory.
+ *
  * \return The directory in which the currently-executing binary is located
  */
-std::string FindSelfDirectory (void);
+std::string FindSelfDirectory ();
 
 /**
  * \ingroup systempath
@@ -128,7 +131,7 @@ std::list<std::string> ReadFiles (std::string path);
  *
  * \return A path which identifies a temporary directory.
  */
-std::string MakeTemporaryDirectoryName (void);
+std::string MakeTemporaryDirectoryName ();
 
 /**
  * \ingroup systempath
@@ -146,6 +149,16 @@ void MakeDirectories (std::string path);
  * \returns \c true if the \pname{path} exists.
  */
 bool Exists (const std::string path);
+
+/**
+ * \ingroup systempath
+ * Replace incompatible characters in a path,
+ * to get a path compatible with different
+ * file systems.
+ * \param [in] path The path to check.
+ * \returns A compatible path.
+ */
+std::string CreateValidSystemPath (const std::string path);
 
 } // namespace SystemPath
 

@@ -33,9 +33,9 @@
 namespace ns3 {
 
 NS_LOG_COMPONENT_DEFINE ("FlameProtocol");
-  
+
 namespace flame {
-  
+
 //-----------------------------------------------------------------------------
 // FlameTag
 //-----------------------------------------------------------------------------
@@ -144,8 +144,8 @@ void
 FlameProtocol::DoDispose ()
 {
   m_interfaces.clear ();
-  m_rtable = 0;
-  m_mp = 0;
+  m_rtable = nullptr;
+  m_mp = nullptr;
 }
 bool
 FlameProtocol::RequestRoute (uint32_t sourceIface, const Mac48Address source, const Mac48Address destination,
@@ -301,12 +301,12 @@ FlameProtocol::Install (Ptr<MeshPointDevice> mp)
     {
       // Checking for compatible net device
       Ptr<WifiNetDevice> wifiNetDev = (*i)->GetObject<WifiNetDevice> ();
-      if (wifiNetDev == 0)
+      if (!wifiNetDev)
         {
           return false;
         }
       Ptr<MeshWifiInterfaceMac> mac = wifiNetDev->GetMac ()->GetObject<MeshWifiInterfaceMac> ();
-      if (mac == 0)
+      if (!mac)
         {
           return false;
         }

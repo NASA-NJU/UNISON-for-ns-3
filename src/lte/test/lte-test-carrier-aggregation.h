@@ -22,6 +22,7 @@
 #ifndef TEST_CARRIER_AGGREGATION_H
 #define TEST_CARRIER_AGGREGATION_H
 
+#include "ns3/lte-common.h"
 #include "ns3/simulator.h"
 #include "ns3/test.h"
 #include "fcntl.h"
@@ -33,10 +34,10 @@ using namespace ns3;
  * \ingroup wifi-test
  * \ingroup tests wifi-test wifi module tests
  *
- * \brief This system test program creates different test cases with a single eNB and 
- * several UEs, all having the same Radio Bearer specification. In each test 
- * case, the UEs see the same SINR from the eNB; different test cases are 
- * implemented obtained by using different SINR values and different numbers of 
+ * \brief This system test program creates different test cases with a single eNB and
+ * several UEs, all having the same Radio Bearer specification. In each test
+ * case, the UEs see the same SINR from the eNB; different test cases are
+ * implemented obtained by using different SINR values and different numbers of
  * UEs. eNb and UEs are configured to use the secondary carrier and the component
  * carrier manager is configured to split the data equally between primary and
  * secondary carrier. The test consists of checking that the throughput
@@ -58,7 +59,7 @@ public:
    * \param numberOfComponentCarriers number of component carriers to be used in test configuration
    */
   CarrierAggregationTestCase (uint16_t nUser, uint16_t dist, uint32_t dlbandwidth, uint32_t ulBandwidth, uint32_t numberOfComponentCarriers);
-  virtual ~CarrierAggregationTestCase ();
+  ~CarrierAggregationTestCase () override;
   /**
    * DL Scheduling function that is used in this test as callback function of DL scheduling trace
    * \param dlInfo the DL scheduling callback info
@@ -80,7 +81,7 @@ public:
 
 private:
 
-  virtual void DoRun (void);
+  void DoRun () override;
   /**
    * Builds the test name string based on provided parameter values
    * \param nUser number of users
@@ -89,7 +90,7 @@ private:
    * \param ulBandwidth the UL badnwidth
    * \param numberOfComponentCarriers number of component carriers
    * \returns the test name
-   */   
+   */
   static std::string BuildNameString  (uint16_t nUser, uint16_t dist, uint32_t dlBandwidth, uint32_t ulBandwidth, uint32_t numberOfComponentCarriers);
 
   uint16_t m_nUser; ///< the number of users

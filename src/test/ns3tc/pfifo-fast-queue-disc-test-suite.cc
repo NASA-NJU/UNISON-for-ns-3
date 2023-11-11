@@ -33,20 +33,20 @@ using namespace ns3;
 
 /**
  * \ingroup system-tests-tc
- * 
+ *
  * This class tests that each possible TOS is enqueued in the right band
  */
 class PfifoFastQueueDiscTosPrioritization : public TestCase
 {
 public:
   PfifoFastQueueDiscTosPrioritization ();
-  virtual ~PfifoFastQueueDiscTosPrioritization ();
+  ~PfifoFastQueueDiscTosPrioritization () override;
 
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
   /**
    * Enqueue a packet and checks that it's added to the proper band.
-   * 
+   *
    * \param queue The queue disc.
    * \param tos The TOS of the packet.
    * \param band Expected band.
@@ -83,7 +83,7 @@ PfifoFastQueueDiscTosPrioritization::TestTosValue (Ptr<PfifoFastQueueDisc> queue
 }
 
 void
-PfifoFastQueueDiscTosPrioritization::DoRun (void)
+PfifoFastQueueDiscTosPrioritization::DoRun ()
 {
   Ptr<PfifoFastQueueDisc> queueDisc = CreateObject<PfifoFastQueueDisc> ();
   for (uint16_t i = 0; i < 3; i++)
@@ -119,20 +119,20 @@ PfifoFastQueueDiscTosPrioritization::DoRun (void)
 
 /**
  * \ingroup system-tests-tc
- * 
+ *
  * This class tests that each possible DSCP is enqueued in the right band.
  */
 class PfifoFastQueueDiscDscpPrioritization : public TestCase
 {
 public:
   PfifoFastQueueDiscDscpPrioritization ();
-  virtual ~PfifoFastQueueDiscDscpPrioritization ();
+  ~PfifoFastQueueDiscDscpPrioritization () override;
 
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
   /**
    * Enqueue a packet and checks that it's added to the proper band.
-   * 
+   *
    * \param queue The queue disc.
    * \param dscp The DSCP of the packet.
    * \param band Expected band.
@@ -169,7 +169,7 @@ PfifoFastQueueDiscDscpPrioritization::TestDscpValue (Ptr<PfifoFastQueueDisc> que
 }
 
 void
-PfifoFastQueueDiscDscpPrioritization::DoRun (void)
+PfifoFastQueueDiscDscpPrioritization::DoRun ()
 {
   Ptr<PfifoFastQueueDisc> queueDisc = CreateObject<PfifoFastQueueDisc> ();
   for (uint16_t i = 0; i < 3; i++)
@@ -210,20 +210,20 @@ PfifoFastQueueDiscDscpPrioritization::DoRun (void)
 
 /**
  * \ingroup system-tests-tc
- * 
+ *
  * This class tests that each band is txqueuelen deep.
  */
 class PfifoFastQueueDiscOverflow : public TestCase
 {
 public:
   PfifoFastQueueDiscOverflow ();
-  virtual ~PfifoFastQueueDiscOverflow ();
+  ~PfifoFastQueueDiscOverflow () override;
 
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
   /**
    * Enqueue a packet.
-   * 
+   *
    * \param queue The queue disc.
    * \param dscp The DSCP of the packet.
    */
@@ -256,7 +256,7 @@ PfifoFastQueueDiscOverflow::AddPacket (Ptr<PfifoFastQueueDisc> queue, Ipv4Header
 }
 
 void
-PfifoFastQueueDiscOverflow::DoRun (void)
+PfifoFastQueueDiscOverflow::DoRun ()
 {
   Ptr<PfifoFastQueueDisc> queueDisc = CreateObjectWithAttributes<PfifoFastQueueDisc> ("MaxSize", StringValue ("6p"));
   Ptr<DropTailQueue<QueueDiscItem> > band0 = CreateObjectWithAttributes<DropTailQueue<QueueDiscItem> > ("MaxSize", StringValue ("6p"));
@@ -291,7 +291,7 @@ PfifoFastQueueDiscOverflow::DoRun (void)
 
 /**
  * \ingroup system-tests-tc
- * 
+ *
  * This class tests that packets without a priority tag are handled by placing
  * them into band 1.
  */
@@ -299,10 +299,10 @@ class PfifoFastQueueDiscNoPriority : public TestCase
 {
 public:
   PfifoFastQueueDiscNoPriority ();
-  virtual ~PfifoFastQueueDiscNoPriority ();
+  ~PfifoFastQueueDiscNoPriority () override;
 
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
 };
 
 PfifoFastQueueDiscNoPriority::PfifoFastQueueDiscNoPriority ()
@@ -315,7 +315,7 @@ PfifoFastQueueDiscNoPriority::~PfifoFastQueueDiscNoPriority ()
 }
 
 void
-PfifoFastQueueDiscNoPriority::DoRun (void)
+PfifoFastQueueDiscNoPriority::DoRun ()
 {
   // all packets with non-IP headers should enqueue in band 1
   Ptr<PfifoFastQueueDisc> queueDisc = CreateObject<PfifoFastQueueDisc> ();
@@ -356,7 +356,7 @@ PfifoFastQueueDiscNoPriority::DoRun (void)
 
 /**
  * \ingroup system-tests-tc
- * 
+ *
  * PfifoFast queue disc test suite.
  */
 class PfifoFastQueueDiscTestSuite : public TestSuite

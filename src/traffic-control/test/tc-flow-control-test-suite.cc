@@ -54,17 +54,15 @@ public:
    * \param p the packet stored in this item
    */
   QueueDiscTestItem (Ptr<Packet> p);
-  virtual ~QueueDiscTestItem ();
+  ~QueueDiscTestItem () override;
 
-  // Delete copy constructor and assignment operator to avoid misuse
+  // Delete default constructor, copy constructor and assignment operator to avoid misuse
+  QueueDiscTestItem () = delete;
   QueueDiscTestItem (const QueueDiscTestItem &) = delete;
   QueueDiscTestItem & operator = (const QueueDiscTestItem &) = delete;
 
-  virtual void AddHeader (void);
-  virtual bool Mark(void);
-
-private:
-  QueueDiscTestItem ();
+  void AddHeader () override;
+  bool Mark() override;
 };
 
 QueueDiscTestItem::QueueDiscTestItem (Ptr<Packet> p)
@@ -77,12 +75,12 @@ QueueDiscTestItem::~QueueDiscTestItem ()
 }
 
 void
-QueueDiscTestItem::AddHeader (void)
+QueueDiscTestItem::AddHeader ()
 {
 }
 
 bool
-QueueDiscTestItem::Mark (void)
+QueueDiscTestItem::Mark ()
 {
   return false;
 }
@@ -101,12 +99,12 @@ public:
    *
    * \param tt the test type
    * \param deviceQueueLength the queue length of the device
-   * \param totalTxPackets the toal number of packets to transmit
+   * \param totalTxPackets the total number of packets to transmit
    */
   TcFlowControlTestCase (QueueSizeUnit tt, uint32_t deviceQueueLength, uint32_t totalTxPackets);
-  virtual ~TcFlowControlTestCase ();
+  ~TcFlowControlTestCase () override;
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
   /**
    * Instruct a node to send a specified number of packets
    * \param n the node
@@ -186,7 +184,7 @@ TcFlowControlTestCase::CheckPacketsInQueueDisc (Ptr<NetDevice> dev, uint16_t nPa
 
 
 void
-TcFlowControlTestCase::DoRun (void)
+TcFlowControlTestCase::DoRun ()
 {
   NodeContainer n;
   n.Create (2);
@@ -221,14 +219,14 @@ TcFlowControlTestCase::DoRun (void)
        * When the device queue is in packet mode, all the packets enqueued in the
        * queue disc are correctly transmitted, even if the device queue is stopped
        * when the last packet is received from the upper layers
-       * 
+       *
        * We have the following invariants:
        *  - totalPackets = txPackets + deviceQueuePackets + qdiscPackets
        *  - deviceQueuePackets = MIN(totalPackets - txPackets, deviceQueueLen)
        *  - qdiscPackets = MAX(totalPackets - txPackets - deviceQueuePackets, 0)
-       * 
+       *
        * The transmission of each packet takes 1000B/1Mbps = 8ms
-       * 
+       *
        * We check the values of deviceQueuePackets and qdiscPackets 1ms after each
        * packet is transmitted (i.e. at 1ms, 9ms, 17ms, ...), as well as verifying
        * that the device queue is stopped or not, as appropriate.

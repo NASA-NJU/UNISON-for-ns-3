@@ -53,7 +53,7 @@ EthernetHeader::SetLengthType (uint16_t lengthType)
   m_lengthType = lengthType;
 }
 uint16_t
-EthernetHeader::GetLengthType (void) const
+EthernetHeader::GetLengthType () const
 {
   NS_LOG_FUNCTION (this);
   return m_lengthType;
@@ -66,7 +66,7 @@ EthernetHeader::SetPreambleSfd (uint64_t preambleSfd)
   m_preambleSfd = preambleSfd;
 }
 uint64_t
-EthernetHeader::GetPreambleSfd (void) const
+EthernetHeader::GetPreambleSfd () const
 {
   NS_LOG_FUNCTION (this);
   return m_preambleSfd;
@@ -79,42 +79,42 @@ EthernetHeader::SetSource (Mac48Address source)
   m_source = source;
 }
 Mac48Address
-EthernetHeader::GetSource (void) const
+EthernetHeader::GetSource () const
 {
   NS_LOG_FUNCTION (this);
   return m_source;
 }
 
-void 
+void
 EthernetHeader::SetDestination (Mac48Address dst)
 {
   NS_LOG_FUNCTION (this << dst);
   m_destination = dst;
 }
 Mac48Address
-EthernetHeader::GetDestination (void) const
+EthernetHeader::GetDestination () const
 {
   NS_LOG_FUNCTION (this);
   return m_destination;
 }
 
-ethernet_header_t 
-EthernetHeader::GetPacketType (void) const
+ethernet_header_t
+EthernetHeader::GetPacketType () const
 {
   NS_LOG_FUNCTION (this);
   return LENGTH;
 }
 
-uint32_t 
-EthernetHeader::GetHeaderSize (void) const
+uint32_t
+EthernetHeader::GetHeaderSize () const
 {
   NS_LOG_FUNCTION (this);
   return GetSerializedSize ();
 }
 
 
-TypeId 
-EthernetHeader::GetTypeId (void)
+TypeId
+EthernetHeader::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::EthernetHeader")
     .SetParent<Header> ()
@@ -123,12 +123,12 @@ EthernetHeader::GetTypeId (void)
   ;
   return tid;
 }
-TypeId 
-EthernetHeader::GetInstanceTypeId (void) const
+TypeId
+EthernetHeader::GetInstanceTypeId () const
 {
   return GetTypeId ();
 }
-void 
+void
 EthernetHeader::Print (std::ostream &os) const
 {
   NS_LOG_FUNCTION (this << &os);
@@ -142,15 +142,15 @@ EthernetHeader::Print (std::ostream &os) const
      << ", source=" << m_source
      << ", destination=" << m_destination;
 }
-uint32_t 
-EthernetHeader::GetSerializedSize (void) const
+uint32_t
+EthernetHeader::GetSerializedSize () const
 {
   NS_LOG_FUNCTION (this);
   if (m_enPreambleSfd)
     {
       return PREAMBLE_SIZE + LENGTH_SIZE + 2*MAC_ADDR_SIZE;
-    } 
-  else 
+    }
+  else
     {
       return LENGTH_SIZE + 2*MAC_ADDR_SIZE;
     }

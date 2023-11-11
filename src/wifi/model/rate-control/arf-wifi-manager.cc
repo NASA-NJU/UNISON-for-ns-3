@@ -48,7 +48,7 @@ struct ArfWifiRemoteStation : public WifiRemoteStation
 NS_OBJECT_ENSURE_REGISTERED (ArfWifiManager);
 
 TypeId
-ArfWifiManager::GetTypeId (void)
+ArfWifiManager::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::ArfWifiManager")
     .SetParent<WifiRemoteStationManager> ()
@@ -102,7 +102,7 @@ ArfWifiManager::DoInitialize ()
 }
 
 WifiRemoteStation *
-ArfWifiManager::DoCreateStation (void) const
+ArfWifiManager::DoCreateStation () const
 {
   NS_LOG_FUNCTION (this);
   ArfWifiRemoteStation *station = new ArfWifiRemoteStation ();
@@ -224,9 +224,9 @@ ArfWifiManager::DoReportFinalDataFailed (WifiRemoteStation *station)
 }
 
 WifiTxVector
-ArfWifiManager::DoGetDataTxVector (WifiRemoteStation *st)
+ArfWifiManager::DoGetDataTxVector (WifiRemoteStation *st, uint16_t allowedWidth)
 {
-  NS_LOG_FUNCTION (this << st);
+  NS_LOG_FUNCTION (this << st << allowedWidth);
   ArfWifiRemoteStation *station = static_cast<ArfWifiRemoteStation*> (st);
   uint16_t channelWidth = GetChannelWidth (station);
   if (channelWidth > 20 && channelWidth != 22)

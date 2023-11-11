@@ -12,11 +12,11 @@
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- * 
+ *
  * Authors: Faker Moatamri <faker.moatamri@sophia.inria.fr>
  *          Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
- 
+
 #ifndef ATTRIBUTE_DEFAULT_ITERATOR_H
 #define ATTRIBUTE_DEFAULT_ITERATOR_H
 
@@ -40,7 +40,7 @@ public:
    * and VisitAttribute on the attributes in one TypeId. At the end of each TypeId
    * EndVisitTypeId is called.
    */
-  void Iterate (void);
+  void Iterate ();
 private:
   /**
    * \brief Begin the analysis of a TypeId
@@ -50,7 +50,7 @@ private:
   /**
    * \brief End the analysis of a TypeId
    */
-  virtual void EndVisitTypeId (void);
+  virtual void EndVisitTypeId ();
   /**
    * \brief Visit an Attribute
    * \param tid the TypeId the attribute belongs to

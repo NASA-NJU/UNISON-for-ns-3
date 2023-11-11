@@ -37,7 +37,7 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
   /**
    * \brief FifoQueueDisc constructor
    *
@@ -45,17 +45,17 @@ public:
    */
   FifoQueueDisc ();
 
-  virtual ~FifoQueueDisc();
+  ~FifoQueueDisc() override;
 
   // Reasons for dropping packets
   static constexpr const char* LIMIT_EXCEEDED_DROP = "Queue disc limit exceeded";  //!< Packet dropped due to queue disc limit exceeded
 
 private:
-  virtual bool DoEnqueue (Ptr<QueueDiscItem> item);
-  virtual Ptr<QueueDiscItem> DoDequeue (void);
-  virtual Ptr<const QueueDiscItem> DoPeek (void);
-  virtual bool CheckConfig (void);
-  virtual void InitializeParams (void);
+  bool DoEnqueue (Ptr<QueueDiscItem> item) override;
+  Ptr<QueueDiscItem> DoDequeue () override;
+  Ptr<const QueueDiscItem> DoPeek () override;
+  bool CheckConfig () override;
+  void InitializeParams () override;
 };
 
 } // namespace ns3

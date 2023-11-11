@@ -39,29 +39,29 @@ public:
   /** Constructor */
   UanTransducerHd ();
   /** Dummy destructor, see DoDispose */
-  virtual ~UanTransducerHd ();
+  ~UanTransducerHd () override;
 
   /**
    * Register this type.
    * \return The object TypeId.
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   // inherited methods
-  virtual State GetState (void) const;
-  virtual bool IsRx (void) const;
-  virtual bool IsTx (void) const;
-  virtual const ArrivalList &GetArrivalList (void) const;
-  virtual double ApplyRxGainDb (double rxPowerDb, UanTxMode mode);
-  virtual void SetRxGainDb (double gainDb);  
-  virtual double GetRxGainDb (void);
-  virtual void Receive (Ptr<Packet> packet, double rxPowerDb, UanTxMode txMode, UanPdp pdp);
-  virtual void Transmit (Ptr<UanPhy> src, Ptr<Packet> packet, double txPowerDb, UanTxMode txMode);
-  virtual void SetChannel (Ptr<UanChannel> chan);
-  virtual Ptr<UanChannel> GetChannel (void) const;
-  virtual void AddPhy (Ptr<UanPhy>);
-  virtual const UanPhyList &GetPhyList (void) const;
-  virtual void Clear (void);
+  State GetState () const override;
+  bool IsRx () const override;
+  bool IsTx () const override;
+  const ArrivalList &GetArrivalList () const override;
+  double ApplyRxGainDb (double rxPowerDb, UanTxMode mode) override;
+  void SetRxGainDb (double gainDb) override;
+  double GetRxGainDb () override;
+  void Receive (Ptr<Packet> packet, double rxPowerDb, UanTxMode txMode, UanPdp pdp) override;
+  void Transmit (Ptr<UanPhy> src, Ptr<Packet> packet, double txPowerDb, UanTxMode txMode) override;
+  void SetChannel (Ptr<UanChannel> chan) override;
+  Ptr<UanChannel> GetChannel () const override;
+  void AddPhy (Ptr<UanPhy>) override;
+  const UanPhyList &GetPhyList () const override;
+  void Clear () override;
 
 private:
   State m_state;              //!< Transducer state.
@@ -80,9 +80,9 @@ private:
    */
   void RemoveArrival (UanPacketArrival arrival);
   /** Handle end of transmission event. */
-  void EndTx (void);
+  void EndTx ();
 protected:
-  virtual void DoDispose ();
+  void DoDispose () override;
 
 };  // class UanTransducerHd
 

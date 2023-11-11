@@ -22,8 +22,13 @@
 #ifndef LTE_TEST_RLC_AM_E2E_H
 #define LTE_TEST_RLC_AM_E2E_H
 
+#include "ns3/ptr.h"
 #include "ns3/test.h"
 
+namespace ns3
+{
+class Packet;
+}
 
 using namespace ns3;
 
@@ -45,7 +50,7 @@ public:
  * \ingroup tests
  *
  * Test cases used for the test suite lte-rlc-am-e2e. See the testing section of
- * the LTE module documentation for details.  
+ * the LTE module documentation for details.
  */
 class LteRlcAmE2eTestCase : public TestCase
 {
@@ -60,10 +65,10 @@ class LteRlcAmE2eTestCase : public TestCase
    */
     LteRlcAmE2eTestCase (std::string name, uint32_t seed, double losses, bool bulkSduArrival);
     LteRlcAmE2eTestCase ();
-    virtual ~LteRlcAmE2eTestCase ();
+    ~LteRlcAmE2eTestCase () override;
 
   private:
-    virtual void DoRun (void);
+    void DoRun () override;
 
     /**
      * DL drop event

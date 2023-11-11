@@ -16,7 +16,11 @@ lock_file = os.sep.join([ns3_path, ".lock-ns3_%s_build" % sys.platform])
 max_cpu_threads = max(1, os.cpu_count() - 1)
 print_buffer = ""
 run_verbose = True
-path_sep = ";" if sys.platform == "win32" else ":"
+# Windows uses ; as a PATH entry separator,
+# but msys shell uses : just like most Unix-like systems
+path_sep = ";" if ";" in os.environ["PATH"] else ":"
+path_variable = "$PATH" if path_sep == ":" else "%PATH%"
+
 
 # Prints everything in the print_buffer on exit
 def exit_handler(dry_run):
@@ -26,6 +30,7 @@ def exit_handler(dry_run):
         return
     if print_buffer == "":
         return
+    print_buffer = print_buffer.replace('\\','/').replace('//','/').replace('/', os.sep)
     if dry_run:
         print("The following commands would be executed:")
     elif run_verbose:
@@ -76,7 +81,7 @@ def add_argument_to_subparsers(parsers: list,
 def parse_args(argv):
     parser = argparse.ArgumentParser(description="ns-3 wrapper for the CMake build system", add_help=False)
 
-    parser.add_argument('--help',
+    parser.add_argument('-h', '--help',
                         help="Print a summary of available commands",
                         action="store_true", default=None, dest="help")
     # parser.add_argument('--docset',
@@ -90,10 +95,13 @@ def parse_args(argv):
 
     parser_build = sub_parser.add_parser('build',
                                          help=('Accepts a list of targets to build,'
-                                               ' or builds the entire project if no target is given'))
+                                               ' or builds the entire project if no target is given'),
+                                         formatter_class=argparse.RawTextHelpFormatter)
     parser_build.add_argument('build',
-                              help='Build the entire project or the specified target and dependencies',
-                              action="store", nargs='*', default=None)
+                              help=('Build the entire project or the specified target and its dependencies.\n'
+                                    'To get the list of targets, use:\n'
+                                    './ns3 show targets\n'),
+                              action="store", nargs='*', default=None, metavar='target')
 
     parser_configure = sub_parser.add_parser('configure',
                                              help='Try "./ns3 configure --help" for more configuration options')
@@ -122,9 +130,10 @@ def parse_args(argv):
     on_off_options = [
         ("asserts", "the asserts regardless of the compile mode"),
         ("des-metrics", "Logging all events in a json file with the name of the executable "
-                        "(which must call CommandLine::Parse(argc, argv)"
+                        "(which must call CommandLine::Parse(argc, argv))"
          ),
         ("build-version", "embedding git changes as a build version during build"),
+        ("clang-tidy", "clang-tidy static analysis"),
         ("dpdk", "the fd-net-device DPDK features"),
         ("examples", "the ns-3 examples"),
         ("gcov", "code coverage analysis"),
@@ -134,6 +143,7 @@ def parse_args(argv):
         ("monolib", "a single shared library with all ns-3 modules"),
         ("mpi", "the MPI support for distributed simulation"),
         ("mtp", "Multithreading support for high speed parallel simulation"),
+        ("precompiled-headers", "precompiled headers"),
         ("python-bindings", "python bindings"),
         ("tests", "the ns-3 tests"),
         ("sanitizers", "address, memory leaks and undefined behavior sanitizers"),
@@ -156,14 +166,17 @@ def parse_args(argv):
     parser_configure.add_argument('--disable-modules',
                                   help='List of modules not to build (e.g. lte;wimax)',
                                   action="store", type=str, default=None)
+    parser_configure.add_argument('--filter-module-examples-and-tests',
+                                  help='List of modules that should have their examples and tests built (e.g. lte;wifi)',
+                                  action="store", type=str, default=None)
     parser_configure.add_argument('--lcov-report',
                                   help=('Generate a code coverage report '
                                         '(use this option after configuring with --enable-gcov and running a program)'),
                                   action="store_true", default=None)
     parser_configure.add_argument('--lcov-zerocounters',
                                   help=('Zero the lcov counters'
-                                        '(use this option before rerunning a program'
-                                        'when generating repeated lcov reports)'),
+                                        ' (use this option before rerunning a program'
+                                        ' when generating repeated lcov reports)'),
                                   action="store_true", default=None)
 
     parser_configure.add_argument('--out', '--output-directory',
@@ -182,7 +195,7 @@ def parse_args(argv):
                                   type=str, default=None)
     parser_configure.add_argument('--force-refresh',
                                   help='Force refresh the CMake cache by deleting'
-                                       'the cache and reconfiguring the project',
+                                       ' the cache and reconfiguring the project',
                                   action="store_true", default=None)
     parser_configure.add_argument('--prefix',
                                   help='Target output directory to install',
@@ -201,10 +214,18 @@ def parse_args(argv):
     parser_uninstall.add_argument('uninstall', action="store_true", default=False)
 
     parser_run = sub_parser.add_parser('run',
-                                       help='Try "./ns3 run --help" for more runtime options')
+                                       help='Try "./ns3 run --help" for more runtime options',
+                                       formatter_class=argparse.RawTextHelpFormatter)
     parser_run.add_argument('run',
-                            help='Build and run executable. If --no-build is present, build step is skipped.',
-                            type=str, default='')
+                            help=('Build and run the target executable.\n'
+                                  'If --no-build is present, the build step is skipped.\n'
+                                  'To get the list of targets, use:\n'
+                                  './ns3 show targets\n'
+                                  'Arguments can be passed down to a program in one of the following ways:\n'
+                                  './ns3 run "target --help"\n'
+                                  './ns3 run target -- --help\n'
+                                  './ns3 run target --command-template="%%s --help"\n'),
+                            default='', nargs='?', metavar='target')
     parser_run.add_argument('--no-build',
                             help='Skip build step.',
                             action="store_true", default=False)
@@ -222,7 +243,7 @@ def parse_args(argv):
     parser_run.add_argument('--lldb',
                             help='Change the default command template to run programs with lldb',
                             action="store_true", default=None)
-    parser_run.add_argument('--valgrind',
+    parser_run.add_argument('-g', '--valgrind',
                             help='Change the default command template to run programs with valgrind',
                             action="store_true", default=None)
     parser_run.add_argument('--vis', '--visualize',
@@ -234,7 +255,7 @@ def parse_args(argv):
                             default=False)
 
     parser_shell = sub_parser.add_parser('shell',
-                                         help='Try "./ns3 shell --help" for more runtime options')
+                                         help='Try "./ns3 shell --help" for more shell options')
     parser_shell.add_argument('shell',
                               help='Export necessary environment variables and open a shell',
                               action="store_true", default=False)
@@ -248,11 +269,12 @@ def parse_args(argv):
                              action="store", type=str, default=None)
 
     parser_show = sub_parser.add_parser('show',
-                                        help='Try "./ns3 show --help" for more runtime options')
+                                        help='Try "./ns3 show --help" for more show options')
     parser_show.add_argument('show',
-                             help='Print build profile type, ns-3 version or current configuration',
-                             choices=["profile", "version", "config"],
-                             action="store", type=str, default=None)
+                             help=('Print the current ns-3 build profile type, configuration or version, '
+                                   'or a list of buildable/runnable targets'),
+                             choices=["profile", "version", "config", "targets", "all"],
+                             action="store", type=str, nargs="?", default="all")
 
     add_argument_to_subparsers(
         [parser, parser_build, parser_configure, parser_clean, parser_docs, parser_run, parser_show],
@@ -278,8 +300,22 @@ def parse_args(argv):
                                dest='verbose',
                                default_value=False)
 
+    # Try to split -- separated arguments into two lists for ns3 and for the runnable target
+    try:
+        args_separator_index = argv.index('--')
+        ns3_args = argv[:args_separator_index]
+        runnable_args = argv[args_separator_index + 1:]
+    except ValueError:
+        ns3_args = argv
+        runnable_args = []
+
     # Parse known arguments and separate from unknown arguments
-    args, unknown_args = parser.parse_known_args(argv)
+    args, unknown_args = parser.parse_known_args(ns3_args)
+
+    # If run doesn't have a target, print the help message of the run parser
+    if "run" in args and args.run == '':
+        parser_run.print_help()
+        exit(-1)
 
     if args.help:
         print(parser.description)
@@ -326,30 +362,26 @@ def parse_args(argv):
     if args.run and args.enable_sudo is None:
         args.enable_sudo = True
 
-    # Filter arguments before --
-    setattr(args, "program_args", [])
+    # Save runnable target arguments
+    setattr(args, "program_args", runnable_args)
+
+    # Emit error in case of unknown arguments
     if unknown_args:
-        try:
-            args_separator_index = argv.index('--')
-            args.program_args = argv[args_separator_index + 1:]
-        except ValueError:
-            msg = "Unknown options were given: {options}.\n" \
-                  "To see the allowed options add the `--help` option.\n" \
-                  "To forward configuration or runtime options, put them after '--'.\n"
-            if args.run:
-                msg += "Try: ./ns3 run {target} -- {options}\n"
-            if args.configure:
-                msg += "Try: ./ns3 configure -- {options}\n"
-            msg = msg.format(options=", ".join(unknown_args), target=args.run)
-            raise Exception(msg)
+        msg = ("Unknown options were given: {options}.\n"
+               "To see the allowed options add the `--help` option.\n"
+               "To forward configuration or runtime options, put them after '--'.\n")
+        if args.run:
+            msg += "Try: ./ns3 run {target} -- {options}\n"
+        if args.configure:
+            msg += "Try: ./ns3 configure -- {options}\n"
+        msg = msg.format(options=", ".join(unknown_args), target=args.run)
+        raise Exception(msg)
     return args
 
 
 def check_lock_data(output_directory):
     # Check the .lock-ns3 for the build type (in case there are multiple cmake cache folders
     ns3_modules_tests = []
-    ns3_modules_apiscan = []
-    ns3_modules_bindings = []
     ns3_modules = None
 
     build_info = {"NS3_ENABLED_MODULES": [],
@@ -358,6 +390,7 @@ def check_lock_data(output_directory):
                   "ENABLE_EXAMPLES": False,
                   "ENABLE_SUDO": False,
                   "ENABLE_TESTS": False,
+                  "BUILD_VERSION_STRING": None
                   }
     if output_directory and os.path.exists(lock_file):
         exec(open(lock_file).read(), globals(), build_info)
@@ -366,11 +399,7 @@ def check_lock_data(output_directory):
             ns3_modules.extend(build_info["NS3_ENABLED_CONTRIBUTED_MODULES"])
             if build_info["ENABLE_TESTS"]:
                 ns3_modules_tests = [x + "-test" for x in ns3_modules]
-            if build_info["ENABLE_PYTHON_BINDINGS"]:
-                ns3_modules_bindings = [x + "-bindings" for x in ns3_modules]
-            if "ENABLE_SCAN_PYTHON_BINDINGS" in build_info and build_info["ENABLE_SCAN_PYTHON_BINDINGS"]:
-                ns3_modules_apiscan = [x + "-apiscan" for x in ns3_modules]
-            ns3_modules = ns3_modules + ns3_modules_tests + ns3_modules_apiscan + ns3_modules_bindings
+            ns3_modules = ns3_modules + ns3_modules_tests
     return build_info, ns3_modules
 
 
@@ -526,6 +555,7 @@ def configure_cmake(cmake, args, current_cmake_cache_folder, current_cmake_gener
             cmake_args.append("-DNS3_NATIVE_OPTIMIZATIONS=%s" % on_off((args.build_profile == "optimized")))
 
     options = (("ASSERT", "asserts"),
+               ("CLANG_TIDY", "clang_tidy"),
                ("COVERAGE", "gcov"),
                ("DES_METRICS", "des_metrics"),
                ("DPDK", "dpdk"),
@@ -538,6 +568,7 @@ def configure_cmake(cmake, args, current_cmake_cache_folder, current_cmake_gener
                ("MONOLIB", "monolib"),
                ("MPI", "mpi"),
                ("MTP", "mtp"),
+               ("PRECOMPILE_HEADERS", "precompiled_headers"),
                ("PYTHON_BINDINGS", "python_bindings"),
                ("SANITIZE", "sanitizers"),
                ("STATIC", "static"),
@@ -571,11 +602,14 @@ def configure_cmake(cmake, args, current_cmake_cache_folder, current_cmake_gener
         cmake_args.append("-DCMAKE_INSTALL_PREFIX=%s" % args.prefix)
 
     # Process enabled/disabled modules
-    if args.enable_modules:
+    if args.enable_modules is not None:
         cmake_args.append("-DNS3_ENABLED_MODULES=%s" % args.enable_modules)
 
-    if args.disable_modules:
+    if args.disable_modules is not None:
         cmake_args.append("-DNS3_DISABLED_MODULES=%s" % args.disable_modules)
+
+    if args.filter_module_examples_and_tests is not None:
+        cmake_args.append("-DNS3_FILTER_MODULE_EXAMPLES_AND_TESTS=%s" % args.filter_module_examples_and_tests)
 
     # Try to set specified generator (will probably fail if there is an old cache)
     if args.G:
@@ -585,7 +619,7 @@ def configure_cmake(cmake, args, current_cmake_cache_folder, current_cmake_gener
         cmake_performance_trace = os.path.join(os.path.relpath(ns3_path, current_cmake_cache_folder),
                                                "cmake_performance_trace.log")
         cmake_args.extend(["--profiling-format=google-trace",
-                           "--profiling-output="+cmake_performance_trace])
+                           "--profiling-output=" + cmake_performance_trace])
 
     # Append CMake flags passed using the -- separator
     cmake_args.extend(args.program_args)
@@ -636,7 +670,10 @@ def get_program_shortcuts(build_profile, ns3_version):
     for program in programs_dict["ns3_runnable_programs"]:
         if "pch_exec" in program:
             continue
-        temp_path = program.replace(out_dir, "").split(os.sep)
+        temp_path = program.replace(out_dir, "")
+        # Sometimes Windows uses \\, sometimes /
+        # quite the mess
+        temp_path = temp_path.split(os.sep if os.sep in temp_path else '/')
         temp_path.pop(0)  # remove first path separator
 
         # Remove version prefix and build type suffix from shortcuts (or keep them too?)
@@ -668,9 +705,20 @@ def get_program_shortcuts(build_profile, ns3_version):
                 longest_shortcut_map[shortcut_path].append(longest_shortcut)
 
             ns3_program_map[shortcut_path] = [program]
+
+            # Add an additional shortcut with .exe suffix when running on Windows
+            if sys.platform == "win32":
+                ns3_program_map[shortcut_path.replace("\\","/")] = [program]
+                ns3_program_map[shortcut_path+".exe"] = [program]
+                ns3_program_map[shortcut_path.replace("\\","/")+".exe"] = [program]
+
+
             if source_shortcut:
                 cc_shortcut_path = shortcut_path + ".cc"
                 ns3_program_map[cc_shortcut_path] = [program]
+                if sys.platform == "win32":
+                    ns3_program_map[cc_shortcut_path] = [program]
+                    ns3_program_map[cc_shortcut_path.replace("\\","/")] = [program]
 
                 # Store longest shortcut path for collisions
                 if cc_shortcut_path not in longest_shortcut_map:
@@ -708,7 +756,7 @@ def cmake_check_version():
     # Check CMake version
     cmake = shutil.which("cmake")
     if not cmake:
-        print("Error:  CMake not found; please install version 3.10 or greater, or modify $PATH")
+        print("Error:  CMake not found; please install version 3.10 or greater, or modify", path_variable)
         exit(1)
     cmake_output = subprocess.check_output([cmake, "--version"]).decode("utf-8")
     version = re.findall("version (.*)", cmake_output)[0]
@@ -902,7 +950,7 @@ def build_step(args,
 
     # If we are building specific targets, we build them one by one
     if "build" in args:
-        non_executable_targets = ["apiscan-all",
+        non_executable_targets = ["assemble-introspected-command-line",
                                   "check-version",
                                   "cmake-format",
                                   "docs",
@@ -991,11 +1039,14 @@ def run_step(args, target_to_run, target_args):
 
         # running valgrind?
         if args.valgrind:
-            debugging_software.extend([shutil.which("valgrind"), "--leak-check=full"])
+            debugging_software.extend([shutil.which("valgrind"), "--leak-check=full", "--show-leak-kinds=all"])
 
         # running gdb?
         if args.gdb:
-            debugging_software.extend([shutil.which("gdb"), "--args"])
+            gdb_eval_command = []
+            if os.getenv("gdb_eval"):
+                gdb_eval_command.append("--eval-command=quit")
+            debugging_software.extend([shutil.which("gdb"), *gdb_eval_command, "--args"])
 
         # running lldb?
         if args.lldb:
@@ -1023,7 +1074,7 @@ def run_step(args, target_to_run, target_args):
         exported_variables = "export "
         for (variable, value) in custom_env.items():
             if variable == "PATH":
-                value = "$PATH" + path_sep + libdir
+                value = path_variable + path_sep + libdir
             exported_variables += "%s=%s " % (variable, value)
         print_and_buffer("cd %s; %s; %s" % (os.path.relpath(ns3_path, working_dir),
                                             exported_variables,
@@ -1046,6 +1097,98 @@ def run_step(args, target_to_run, target_args):
             print("Process was interrupted by the user")
 
         # Exit normally
+        exit(0)
+
+
+def non_ambiguous_program_target_list(programs: dict) -> list:
+    # Assembles a dictionary of all the possible shortcuts a program have
+    list_of_shortcuts = {}
+    for (shortcut, possible_programs) in programs.items():
+        if len(possible_programs) == 1:
+            if possible_programs[0] not in list_of_shortcuts:
+                list_of_shortcuts[possible_programs[0]] = [shortcut]
+            else:
+                list_of_shortcuts[possible_programs[0]].append(shortcut)
+    # Select the shortest non-ambiguous shortcut for each program
+    final_list = []
+    for shortcuts in list_of_shortcuts.values():
+        final_list.append(sorted(shortcuts, key=lambda x: len(x))[0])
+    return final_list
+
+
+def print_targets_list(ns3_modules: list, ns3_programs: dict) -> None:
+    def list_to_table(l: list) -> str:
+        # Set column width and check how much is space is left at the end
+        columnwidth = 30
+        try:
+            terminal_width = os.get_terminal_size().columns
+        except OSError:
+            terminal_width = 80  # assume 80 columns when grepping
+        dead_space = terminal_width % columnwidth
+
+        # Filter the targets with names longer than the column width
+        large_items = list(filter(lambda x: len(x) >= columnwidth, l))
+
+        # Then filter the targets with names shorter than the column width
+        small_items = sorted(list(set(l) - set(large_items)))
+
+        prev_new_line = 0
+        output = "\n"
+        for item in small_items:
+            current_end = len(output)
+            # If the terminal width minus the written columns is smaller than the dead space,
+            # we add a new line and start counting the width of the new line from it
+            if terminal_width - (current_end - prev_new_line) < dead_space:
+                prev_new_line = len(output)
+                output += "\n"
+            # After the new line or space, add the item plus some spacing
+            output += item + " " * (columnwidth - len(item))
+        # Add a new line in case we did not fill all the columns
+        # of the last small item line
+        if len(output) - prev_new_line > 0:
+            output += "\n"
+
+        # The list of large items is printed next
+        for large_item in sorted(large_items):
+            output += large_item + "\n"
+        return output
+
+    print("""Buildable targets:{buildables}\n\nRunnable/Buildable targets:{runnables}
+                  """.format(buildables=list_to_table(sorted(ns3_modules)),
+                             runnables=list_to_table(non_ambiguous_program_target_list(ns3_programs))
+                             )
+          )
+    return
+
+
+def show_profile(build_profile, exit_early=True):
+    if build_profile:
+        print("Build profile: %s" % build_profile)
+    else:
+        project_not_configured()
+
+    if exit_early:
+        exit(0)
+
+
+def show_build_version(build_version_string, exit_early=True):
+    if build_version_string is None:
+        project_not_configured()
+
+    if build_version_string == '' and shutil.which("git") and os.path.exists(os.path.join(ns3_path, ".git")):
+        try:
+            build_version_string = subprocess.check_output(["git", "describe", "--dirty"], cwd=ns3_path).decode()
+            build_version_string += ("Reconfigure with './ns3 configure --enable-build-version' "
+                                     "to bake the version into the libraries.")
+        except subprocess.CalledProcessError:
+            pass
+
+    if build_version_string == '':
+        print("Build version feature disabled. Reconfigure ns-3 with ./ns3 configure --enable-build-version")
+    else:
+        print("ns-3 version: %s" % build_version_string)
+
+    if exit_early:
         exit(0)
 
 
@@ -1171,6 +1314,7 @@ def main():
     # Get build profile and other settings
     build_info, ns3_modules = check_lock_data(out_dir)
     build_profile = build_info["BUILD_PROFILE"]
+    build_version_string = build_info["BUILD_VERSION_STRING"]
     enable_sudo = build_info["ENABLE_SUDO"]
     ns3_version = build_info["VERSION"]
 
@@ -1184,13 +1328,10 @@ def main():
             exit(1)
 
     if args.show == "profile":
-        if build_profile:
-            print("Build profile: %s" % build_profile)
-        else:
-            project_not_configured()
+        show_profile(build_profile)
 
     if args.show == "version":
-        args.build = ["check-version"]
+        show_build_version(build_version_string)
 
     # Check if running something or reconfiguring ns-3
     run_only = False
@@ -1226,7 +1367,7 @@ def main():
         if args.show == "config":
             check_config(current_cmake_cache_folder)
             # We end things earlier if only checking the current project configuration
-            return
+            exit(0)
 
         # Check for changes in scratch sources and trigger a reconfiguration if sources changed
         if current_cmake_cache_folder:
@@ -1258,6 +1399,20 @@ def main():
 
     # Now that CMake is configured, we can look for c++ targets in .lock-ns3
     ns3_programs = get_program_shortcuts(build_profile, ns3_version)
+
+    if args.show == "targets":
+        print_targets_list(ns3_modules, ns3_programs)
+        exit(0)
+
+    if args.show == "all":
+        show_profile(build_profile, exit_early=False)
+        show_build_version(build_version_string, exit_early=False)
+        check_config(current_cmake_cache_folder)
+        print("---- Summary of buildable targets:")
+        print("Buildable targets:          %4.d" % len(ns3_modules))
+        print("Runnable/Buildable targets: %4.d" % len(non_ambiguous_program_target_list(ns3_programs)))
+
+        exit(0)
 
     def check_ambiguous_target(target_type, target_to_check, programs):
         if len(programs[target_to_check]) > 1:
@@ -1302,8 +1457,8 @@ def main():
         :param target_path: path to the executable to run
         :return: target_path without the overlapping parts
         """
-        target_path = target_path.split(os.sep)
-        base_path = base_path.split(os.sep)
+        target_path = target_path.replace('/', os.sep).split(os.sep)
+        base_path = base_path.replace('/', os.sep).split(os.sep)
         while target_path[0] in base_path:
             target_path = target_path[1:]
         target_path = os.sep.join(target_path)
@@ -1319,6 +1474,8 @@ def main():
                 if os.path.exists(os.sep.join([out_dir, waf_target_to_run])):
                     target_to_run = waf_target_to_run
         target_to_run = os.sep.join([out_dir, target_to_run])
+        if sys.platform == "win32":
+            target_to_run += ".exe"
 
         # If we're only trying to run the target, we need to check if it actually exists first
         if (run_only or build_and_run) and ".py" not in target_to_run and not os.path.exists(target_to_run):

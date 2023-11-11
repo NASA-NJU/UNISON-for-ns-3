@@ -33,7 +33,7 @@ NS_LOG_COMPONENT_DEFINE ("EnergySource");
 NS_OBJECT_ENSURE_REGISTERED (EnergySource);
 
 TypeId
-EnergySource::GetTypeId (void)
+EnergySource::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::EnergySource")
     .SetParent<Object> ()
@@ -56,12 +56,12 @@ void
 EnergySource::SetNode (Ptr<Node> node)
 {
   NS_LOG_FUNCTION (this);
-  NS_ASSERT (node != NULL);
+  NS_ASSERT (node);
   m_node = node;
 }
 
 Ptr<Node>
-EnergySource::GetNode (void) const
+EnergySource::GetNode () const
 {
   return m_node;
 }
@@ -70,7 +70,7 @@ void
 EnergySource::AppendDeviceEnergyModel (Ptr<DeviceEnergyModel> deviceEnergyModelPtr)
 {
   NS_LOG_FUNCTION (this << deviceEnergyModelPtr);
-  NS_ASSERT (deviceEnergyModelPtr != NULL); // model must exist
+  NS_ASSERT (deviceEnergyModelPtr); // model must exist
   m_models.Add (deviceEnergyModelPtr);
 }
 
@@ -98,7 +98,7 @@ EnergySource::FindDeviceEnergyModels (std::string name)
   DeviceEnergyModelContainer::Iterator i;
   for (i = m_models.Begin (); i != m_models.End (); i++)
     {
-      if ((*i)->GetInstanceTypeId ().GetName ().compare (name) == 0)
+      if ((*i)->GetInstanceTypeId ().GetName () == name)
         {
           container.Add (*i);
         }
@@ -107,7 +107,7 @@ EnergySource::FindDeviceEnergyModels (std::string name)
 }
 
 void
-EnergySource::InitializeDeviceModels (void)
+EnergySource::InitializeDeviceModels ()
 {
   NS_LOG_FUNCTION (this);
   /*
@@ -122,7 +122,7 @@ EnergySource::InitializeDeviceModels (void)
 }
 
 void
-EnergySource::DisposeDeviceModels (void)
+EnergySource::DisposeDeviceModels ()
 {
   NS_LOG_FUNCTION (this);
   /*
@@ -135,12 +135,12 @@ EnergySource::DisposeDeviceModels (void)
       (*i)->Dispose ();
     }
 }
-  
+
 void
 EnergySource::ConnectEnergyHarvester (Ptr<EnergyHarvester> energyHarvesterPtr)
 {
   NS_LOG_FUNCTION (this << energyHarvesterPtr);
-  NS_ASSERT (energyHarvesterPtr != 0); // energy harvester must exist
+  NS_ASSERT (energyHarvesterPtr); // energy harvester must exist
   m_harvesters.push_back (energyHarvesterPtr);
 }
 
@@ -149,7 +149,7 @@ EnergySource::ConnectEnergyHarvester (Ptr<EnergyHarvester> energyHarvesterPtr)
  */
 
 void
-EnergySource::DoDispose (void)
+EnergySource::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
   BreakDeviceEnergyModelRefCycle ();
@@ -160,7 +160,7 @@ EnergySource::DoDispose (void)
  */
 
 double
-EnergySource::CalculateTotalCurrent (void)
+EnergySource::CalculateTotalCurrent ()
 {
   NS_LOG_FUNCTION (this);
   double totalCurrentA = 0.0;
@@ -169,27 +169,27 @@ EnergySource::CalculateTotalCurrent (void)
     {
       totalCurrentA += (*i)->GetCurrentA ();
     }
-  
+
   double totalHarvestedPower = 0.0;
-  
+
   std::vector< Ptr<EnergyHarvester> >::const_iterator harvester;
   for (harvester = m_harvesters.begin (); harvester != m_harvesters.end (); harvester++)
   {
     totalHarvestedPower += (*harvester)->GetPower ();
   }
-  
+
   NS_LOG_DEBUG ("EnergySource("<< GetNode ()->GetId () << "): Total harvested power = " << totalHarvestedPower);
 
   double currentHarvestersA = totalHarvestedPower / GetSupplyVoltage ();
   NS_LOG_DEBUG ("EnergySource("<< GetNode ()->GetId () << "): Current from harvesters = " << currentHarvestersA);
-  
+
   totalCurrentA -= currentHarvestersA;
-  
+
   return totalCurrentA;
 }
 
 void
-EnergySource::NotifyEnergyDrained (void)
+EnergySource::NotifyEnergyDrained ()
 {
   NS_LOG_FUNCTION (this);
   // notify all device energy models installed on node
@@ -201,7 +201,7 @@ EnergySource::NotifyEnergyDrained (void)
 }
 
 void
-EnergySource::NotifyEnergyRecharged (void)
+EnergySource::NotifyEnergyRecharged ()
 {
   NS_LOG_FUNCTION (this);
   // notify all device energy models installed on node
@@ -213,7 +213,7 @@ EnergySource::NotifyEnergyRecharged (void)
 }
 
 void
-EnergySource::NotifyEnergyChanged (void)
+EnergySource::NotifyEnergyChanged ()
 {
   NS_LOG_FUNCTION (this);
   // notify all device energy models installed on node
@@ -225,12 +225,12 @@ EnergySource::NotifyEnergyChanged (void)
 }
 
 void
-EnergySource::BreakDeviceEnergyModelRefCycle (void)
+EnergySource::BreakDeviceEnergyModelRefCycle ()
 {
   NS_LOG_FUNCTION (this);
   m_models.Clear ();
   m_harvesters.clear ();
-  m_node = NULL;
+  m_node = nullptr;
 }
 
 } // namespace ns3

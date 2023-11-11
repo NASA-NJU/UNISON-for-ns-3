@@ -33,8 +33,10 @@
 #include "ns3/ht-configuration.h"
 #include "ns3/vht-configuration.h"
 #include "ns3/he-configuration.h"
+#include "ns3/eht-configuration.h"
 #include "ns3/he-frame-exchange-manager.h"
 #include "extended-capabilities.h"
+#include "wifi-mac-queue-scheduler.h"
 
 namespace ns3 {
 
@@ -43,9 +45,7 @@ NS_LOG_COMPONENT_DEFINE ("WifiMac");
 NS_OBJECT_ENSURE_REGISTERED (WifiMac);
 
 WifiMac::WifiMac ()
-  : m_qosSupported (false),
-    m_erpSupported (false),
-    m_dsssSupported (false)
+  : m_qosSupported (false)
 {
   NS_LOG_FUNCTION (this);
 
@@ -53,8 +53,6 @@ WifiMac::WifiMac ()
   m_rxMiddle->SetForwardCallback (MakeCallback (&WifiMac::Receive, this));
 
   m_txMiddle = Create<MacTxMiddle> ();
-
-  m_channelAccessManager = CreateObject<ChannelAccessManager> ();
 }
 
 WifiMac::~WifiMac ()
@@ -63,7 +61,7 @@ WifiMac::~WifiMac ()
 }
 
 TypeId
-WifiMac::GetTypeId (void)
+WifiMac::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::WifiMac")
     .SetParent<Object> ()
@@ -118,60 +116,64 @@ WifiMac::GetTypeId (void)
                    MakePointerChecker<QosTxop> ())
     .AddAttribute ("VO_MaxAmsduSize",
                    "Maximum length in bytes of an A-MSDU for AC_VO access class "
-                   "(capped to 7935 for HT PPDUs and 11398 for VHT/HE PPDUs). "
+                   "(capped to 7935 for HT PPDUs and 11398 for VHT/HE/EHT PPDUs). "
                    "Value 0 means A-MSDU aggregation is disabled for that AC.",
                    UintegerValue (0),
                    MakeUintegerAccessor (&WifiMac::m_voMaxAmsduSize),
                    MakeUintegerChecker<uint16_t> (0, 11398))
     .AddAttribute ("VI_MaxAmsduSize",
                    "Maximum length in bytes of an A-MSDU for AC_VI access class "
-                   "(capped to 7935 for HT PPDUs and 11398 for VHT/HE PPDUs). "
+                   "(capped to 7935 for HT PPDUs and 11398 for VHT/HE/EHT PPDUs). "
                    "Value 0 means A-MSDU aggregation is disabled for that AC.",
                    UintegerValue (0),
                    MakeUintegerAccessor (&WifiMac::m_viMaxAmsduSize),
                    MakeUintegerChecker<uint16_t> (0, 11398))
     .AddAttribute ("BE_MaxAmsduSize",
                    "Maximum length in bytes of an A-MSDU for AC_BE access class "
-                   "(capped to 7935 for HT PPDUs and 11398 for VHT/HE PPDUs). "
+                   "(capped to 7935 for HT PPDUs and 11398 for VHT/HE/EHT PPDUs). "
                    "Value 0 means A-MSDU aggregation is disabled for that AC.",
                    UintegerValue (0),
                    MakeUintegerAccessor (&WifiMac::m_beMaxAmsduSize),
                    MakeUintegerChecker<uint16_t> (0, 11398))
     .AddAttribute ("BK_MaxAmsduSize",
                    "Maximum length in bytes of an A-MSDU for AC_BK access class "
-                   "(capped to 7935 for HT PPDUs and 11398 for VHT/HE PPDUs). "
+                   "(capped to 7935 for HT PPDUs and 11398 for VHT/HE/EHT PPDUs). "
                    "Value 0 means A-MSDU aggregation is disabled for that AC.",
                    UintegerValue (0),
                    MakeUintegerAccessor (&WifiMac::m_bkMaxAmsduSize),
                    MakeUintegerChecker<uint16_t> (0, 11398))
     .AddAttribute ("VO_MaxAmpduSize",
                    "Maximum length in bytes of an A-MPDU for AC_VO access class "
-                   "(capped to 65535 for HT PPDUs, 1048575 for VHT PPDUs, and 6500631 for HE PPDUs). "
+                   "(capped to 65535 for HT PPDUs, 1048575 for VHT PPDUs, 6500631 for HE PPDUs "
+                   "and 15523200 for EHT PPDUs). "
                    "Value 0 means A-MPDU aggregation is disabled for that AC.",
                    UintegerValue (0),
                    MakeUintegerAccessor (&WifiMac::m_voMaxAmpduSize),
-                   MakeUintegerChecker<uint32_t> (0, 6500631))
+                   MakeUintegerChecker<uint32_t> (0, 15523200))
     .AddAttribute ("VI_MaxAmpduSize",
                    "Maximum length in bytes of an A-MPDU for AC_VI access class "
-                   "(capped to 65535 for HT PPDUs, 1048575 for VHT PPDUs, and 6500631 for HE PPDUs). "
+                   "(capped to 65535 for HT PPDUs, 1048575 for VHT PPDUs, 6500631 for HE PPDUs "
+                   "and 15523200 for EHT PPDUs). "
                    "Value 0 means A-MPDU aggregation is disabled for that AC.",
                    UintegerValue (65535),
                    MakeUintegerAccessor (&WifiMac::m_viMaxAmpduSize),
-                   MakeUintegerChecker<uint32_t> (0, 6500631))
+                   MakeUintegerChecker<uint32_t> (0, 15523200))
     .AddAttribute ("BE_MaxAmpduSize",
                    "Maximum length in bytes of an A-MPDU for AC_BE access class "
-                   "(capped to 65535 for HT PPDUs, 1048575 for VHT PPDUs, and 6500631 for HE PPDUs). "
+                   "(capped to 65535 for HT PPDUs, 1048575 for VHT PPDUs, 6500631 for HE PPDUs "
+                   "and 15523200 for EHT PPDUs). "
                    "Value 0 means A-MPDU aggregation is disabled for that AC.",
                    UintegerValue (65535),
                    MakeUintegerAccessor (&WifiMac::m_beMaxAmpduSize),
-                   MakeUintegerChecker<uint32_t> (0, 6500631))
+                   MakeUintegerChecker<uint32_t> (0, 15523200))
     .AddAttribute ("BK_MaxAmpduSize",
                    "Maximum length in bytes of an A-MPDU for AC_BK access class "
-                   "(capped to 65535 for HT PPDUs, 1048575 for VHT PPDUs, and 6500631 for HE PPDUs). "
+                   "(capped to 65535 for HT PPDUs, 1048575 for VHT PPDUs, 6500631 for HE PPDUs "
+                   "and 15523200 for EHT PPDUs). "
                    "Value 0 means A-MPDU aggregation is disabled for that AC.",
                    UintegerValue (0),
                    MakeUintegerAccessor (&WifiMac::m_bkMaxAmpduSize),
-                   MakeUintegerChecker<uint32_t> (0, 6500631))
+                   MakeUintegerChecker<uint32_t> (0, 15523200))
     .AddAttribute ("VO_BlockAckThreshold",
                    "If number of packets in VO queue reaches this value, "
                    "block ack mechanism is used. If this value is 0, block ack is never used."
@@ -275,11 +277,11 @@ WifiMac::GetTypeId (void)
                      "An MPDU that was successfully acknowledged, via either a "
                      "Normal Ack or a Block Ack.",
                      MakeTraceSourceAccessor (&WifiMac::m_ackedMpduCallback),
-                     "ns3::WifiMacQueueItem::TracedCallback")
+                     "ns3::WifiMpdu::TracedCallback")
     .AddTraceSource ("NAckedMpdu",
                      "An MPDU that was negatively acknowledged via a Block Ack.",
                      MakeTraceSourceAccessor (&WifiMac::m_nackedMpduCallback),
-                     "ns3::WifiMacQueueItem::TracedCallback")
+                     "ns3::WifiMpdu::TracedCallback")
     .AddTraceSource ("DroppedMpdu",
                      "An MPDU that was dropped for the given reason (see WifiMacDropReason).",
                      MakeTraceSourceAccessor (&WifiMac::m_droppedMpduCallback),
@@ -321,7 +323,7 @@ WifiMac::DoInitialize ()
 {
   NS_LOG_FUNCTION (this);
 
-  if (m_txop != nullptr)
+  if (m_txop)
     {
       m_txop->Initialize ();
     }
@@ -337,34 +339,41 @@ WifiMac::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
 
-  m_rxMiddle = 0;
-  m_txMiddle = 0;
+  m_rxMiddle = nullptr;
+  m_txMiddle = nullptr;
+  m_links.clear ();
 
-  m_channelAccessManager->Dispose ();
-  m_channelAccessManager = 0;
-
-  if (m_txop != nullptr)
+  if (m_txop)
     {
       m_txop->Dispose ();
     }
-  m_txop = 0;
+  m_txop = nullptr;
 
   for (auto it = m_edca.begin (); it != m_edca.end (); ++it)
     {
       it->second->Dispose ();
-      it->second = 0;
+      it->second = nullptr;
     }
 
-  if (m_feManager != 0)
+  m_device = nullptr;
+  if (m_scheduler != nullptr)
     {
-      m_feManager->Dispose ();
+      m_scheduler->Dispose ();
     }
-  m_feManager = 0;
+  m_scheduler = nullptr;
+}
 
-  m_stationManager = 0;
-  m_phy = 0;
-
-  m_device = 0;
+WifiMac::LinkEntity::~LinkEntity ()
+{
+  // WifiMac owns pointers to ChannelAccessManager and FrameExchangeManager
+  if (channelAccessManager)
+    {
+      channelAccessManager->Dispose ();
+    }
+  if (feManager)
+    {
+      feManager->Dispose ();
+    }
 }
 
 void
@@ -375,7 +384,7 @@ WifiMac::SetTypeOfStation (TypeOfStation type)
 }
 
 TypeOfStation
-WifiMac::GetTypeOfStation (void) const
+WifiMac::GetTypeOfStation () const
 {
   return m_typeOfStation;
 }
@@ -387,7 +396,7 @@ WifiMac::SetDevice (const Ptr<WifiNetDevice> device)
 }
 
 Ptr<WifiNetDevice>
-WifiMac::GetDevice (void) const
+WifiMac::GetDevice () const
 {
   return m_device;
 }
@@ -400,7 +409,7 @@ WifiMac::SetAddress (Mac48Address address)
 }
 
 Mac48Address
-WifiMac::GetAddress (void) const
+WifiMac::GetAddress () const
 {
   return m_address;
 }
@@ -413,33 +422,31 @@ WifiMac::SetSsid (Ssid ssid)
 }
 
 Ssid
-WifiMac::GetSsid (void) const
+WifiMac::GetSsid () const
 {
   return m_ssid;
 }
 
 void
-WifiMac::SetBssid (Mac48Address bssid)
+WifiMac::SetBssid (Mac48Address bssid, uint8_t linkId)
 {
-  NS_LOG_FUNCTION (this << bssid);
-  m_bssid = bssid;
-  if (m_feManager)
-    {
-      m_feManager->SetBssid (bssid);
-    }
+  NS_LOG_FUNCTION (this << bssid << +linkId);
+  GetLink (linkId).feManager->SetBssid (bssid);
 }
 
 Mac48Address
-WifiMac::GetBssid (void) const
+WifiMac::GetBssid (uint8_t linkId) const
 {
-  return m_bssid;
+  return GetLink (linkId).feManager->GetBssid ();
 }
 
 void
-WifiMac::SetPromisc (void)
+WifiMac::SetPromisc ()
 {
-  NS_ASSERT (m_feManager != 0);
-  m_feManager->SetPromisc ();
+  for (auto& link : m_links)
+    {
+      link->feManager->SetPromisc ();
+    }
 }
 
 Ptr<Txop>
@@ -497,22 +504,35 @@ Ptr<WifiMacQueue>
 WifiMac::GetTxopQueue (AcIndex ac) const
 {
   Ptr<Txop> txop = (ac == AC_BE_NQOS ? m_txop : StaticCast<Txop> (GetQosTxop (ac)));
-  return (txop != nullptr ? txop->GetWifiMacQueue () : nullptr);
+  return (txop ? txop->GetWifiMacQueue () : nullptr);
 }
 
 void
-WifiMac::NotifyChannelSwitching (void)
+WifiMac::SetMacQueueScheduler (Ptr<WifiMacQueueScheduler> scheduler)
 {
-  NS_LOG_FUNCTION (this);
+  m_scheduler = scheduler;
+  m_scheduler->SetWifiMac (this);
+}
+
+Ptr<WifiMacQueueScheduler>
+WifiMac::GetMacQueueScheduler () const
+{
+  return m_scheduler;
+}
+
+void
+WifiMac::NotifyChannelSwitching (uint8_t linkId)
+{
+  NS_LOG_FUNCTION (this << +linkId);
 
   // we may have changed PHY band, in which case it is necessary to re-configure
   // the PHY dependent parameters. In any case, this makes no harm
-  ConfigurePhyDependentParameters ();
+  ConfigurePhyDependentParameters (linkId);
 
   // SetupPhy not only resets the remote station manager, but also sets the
   // default TX mode and MCS, which is required when switching to a channel
   // in a different band
-  m_stationManager->SetupPhy (m_phy);
+  GetLink (linkId).stationManager->SetupPhy (GetLink (linkId).phy);
 }
 
 void
@@ -555,8 +575,6 @@ WifiMac::SetupEdcaQueue (AcIndex ac)
   NS_ASSERT (m_edca.find (ac) == m_edca.end ());
 
   Ptr<QosTxop> edca = CreateObject<QosTxop> (ac);
-  edca->SetChannelAccessManager (m_channelAccessManager);
-  edca->SetWifiMac (this);
   edca->SetTxMiddle (m_txMiddle);
   edca->GetBaManager ()->SetTxOkCallback (MakeCallback (&MpduTracedCallback::operator(),
                                                         &m_ackedMpduCallback));
@@ -571,8 +589,13 @@ WifiMac::SetupEdcaQueue (AcIndex ac)
 void
 WifiMac::ConfigureContentionWindow (uint32_t cwMin, uint32_t cwMax)
 {
-  bool isDsssOnly = GetDsssSupported () && !GetErpSupported ();
-  if (m_txop != nullptr)
+  std::list<bool> isDsssOnly;
+  for (const auto& link : m_links)
+    {
+      isDsssOnly.push_back (link->dsssSupported && !link->erpSupported);
+    }
+
+  if (m_txop)
     {
       //The special value of AC_BE_NQOS which exists in the Access
       //Category enumeration allows us to configure plain old DCF.
@@ -587,55 +610,53 @@ WifiMac::ConfigureContentionWindow (uint32_t cwMin, uint32_t cwMax)
 }
 
 void
-WifiMac::ConfigureDcf (Ptr<Txop> dcf, uint32_t cwmin, uint32_t cwmax, bool isDsss, AcIndex ac)
+WifiMac::ConfigureDcf (Ptr<Txop> dcf, uint32_t cwmin, uint32_t cwmax,
+                       std::list<bool> isDsss, AcIndex ac)
 {
-  NS_LOG_FUNCTION (this << dcf << cwmin << cwmax << isDsss << +ac);
-  /* see IEEE 802.11 section 7.3.2.29 */
+  NS_LOG_FUNCTION (this << dcf << cwmin << cwmax << +ac);
+
+  uint32_t cwMinValue = 0;
+  uint32_t cwMaxValue = 0;
+  uint8_t aifsnValue = 0;
+  Time txopLimitDsss (0);
+  Time txopLimitNoDsss (0);
+
+  /* see IEEE 802.11-2020 Table 9-155 "Default EDCA Parameter Set element parameter values" */
   switch (ac)
     {
     case AC_VO:
-      dcf->SetMinCw ((cwmin + 1) / 4 - 1);
-      dcf->SetMaxCw ((cwmin + 1) / 2 - 1);
-      dcf->SetAifsn (2);
-      if (isDsss)
-        {
-          dcf->SetTxopLimit (MicroSeconds (3264));
-        }
-      else
-        {
-          dcf->SetTxopLimit (MicroSeconds (1504));
-        }
+      cwMinValue = (cwmin + 1) / 4 - 1;
+      cwMaxValue = (cwmin + 1) / 2 - 1;
+      aifsnValue = 2;
+      txopLimitDsss = MicroSeconds (3264);
+      txopLimitNoDsss = MicroSeconds (2080);
       break;
     case AC_VI:
-      dcf->SetMinCw ((cwmin + 1) / 2 - 1);
-      dcf->SetMaxCw (cwmin);
-      dcf->SetAifsn (2);
-      if (isDsss)
-        {
-          dcf->SetTxopLimit (MicroSeconds (6016));
-        }
-      else
-        {
-          dcf->SetTxopLimit (MicroSeconds (3008));
-        }
+      cwMinValue = (cwmin + 1) / 2 - 1;
+      cwMaxValue = cwmin;
+      aifsnValue = 2;
+      txopLimitDsss = MicroSeconds (6016);
+      txopLimitNoDsss = MicroSeconds (4096);
       break;
     case AC_BE:
-      dcf->SetMinCw (cwmin);
-      dcf->SetMaxCw (cwmax);
-      dcf->SetAifsn (3);
-      dcf->SetTxopLimit (MicroSeconds (0));
+      cwMinValue = cwmin;
+      cwMaxValue = cwmax;
+      aifsnValue = 3;
+      txopLimitDsss = MicroSeconds (0);  // TODO should be MicroSeconds (3264)
+      txopLimitNoDsss = MicroSeconds (0);  // TODO should be MicroSeconds (2528)
       break;
     case AC_BK:
-      dcf->SetMinCw (cwmin);
-      dcf->SetMaxCw (cwmax);
-      dcf->SetAifsn (7);
-      dcf->SetTxopLimit (MicroSeconds (0));
+      cwMinValue = cwmin;
+      cwMaxValue = cwmax;
+      aifsnValue = 7;
+      txopLimitDsss = MicroSeconds (0);  // TODO should be MicroSeconds (3264)
+      txopLimitNoDsss = MicroSeconds (0);  // TODO should be MicroSeconds (2528)
       break;
     case AC_BE_NQOS:
-      dcf->SetMinCw (cwmin);
-      dcf->SetMaxCw (cwmax);
-      dcf->SetAifsn (2);
-      dcf->SetTxopLimit (MicroSeconds (0));
+      cwMinValue = cwmin;
+      cwMaxValue = cwmax;
+      aifsnValue = 2;
+      txopLimitDsss = txopLimitNoDsss = MicroSeconds (0);
       break;
     case AC_BEACON:
       // done by ApWifiMac
@@ -644,149 +665,259 @@ WifiMac::ConfigureDcf (Ptr<Txop> dcf, uint32_t cwmin, uint32_t cwmax, bool isDss
       NS_FATAL_ERROR ("I don't know what to do with this");
       break;
     }
+
+  std::vector<uint32_t> cwValues (m_links.size ());
+  std::vector<uint8_t> aifsnValues (m_links.size ());
+  std::vector<Time> txopLimitValues (m_links.size ());
+
+  std::fill (cwValues.begin (), cwValues.end (), cwMinValue);
+  dcf->SetMinCws (cwValues);
+  std::fill (cwValues.begin (), cwValues.end (), cwMaxValue);
+  dcf->SetMaxCws (cwValues);
+  std::fill (aifsnValues.begin (), aifsnValues.end (), aifsnValue);
+  dcf->SetAifsns (aifsnValues);
+  std::transform (isDsss.begin (), isDsss.end (), txopLimitValues.begin (),
+                  [&txopLimitDsss, &txopLimitNoDsss] (bool dsss)
+                  { return (dsss ? txopLimitDsss : txopLimitNoDsss); });
+  dcf->SetTxopLimits (txopLimitValues);
 }
 
 void
 WifiMac::ConfigureStandard (WifiStandard standard)
 {
   NS_LOG_FUNCTION (this << standard);
-
   NS_ABORT_IF (standard >= WIFI_STANDARD_80211n && !m_qosSupported);
+  NS_ABORT_MSG_IF (m_links.empty (), "No PHY configured yet");
 
-  SetupFrameExchangeManager (standard);
+  for (auto& link : m_links)
+    {
+      NS_ABORT_MSG_IF (!link->phy || !link->phy->GetOperatingChannel ().IsSet (),
+                       "[LinkID " << link->id << "] PHY must have been set and an operating channel must have been set");
+
+      // do not create a ChannelAccessManager and a FrameExchangeManager if they
+      // already exist (this function may be called after ResetWifiPhys)
+      if (!link->channelAccessManager)
+        {
+          link->channelAccessManager = CreateObject<ChannelAccessManager> ();
+        }
+      link->channelAccessManager->SetupPhyListener (link->phy);
+
+      if (!link->feManager)
+        {
+          link->feManager = SetupFrameExchangeManager (standard);
+        }
+      link->feManager->SetWifiPhy (link->phy);
+      link->feManager->SetWifiMac (this);
+      link->feManager->SetLinkId (link->id);
+      link->channelAccessManager->SetLinkId (link->id);
+      link->channelAccessManager->SetupFrameExchangeManager (link->feManager);
+
+      if (m_txop)
+        {
+          m_txop->SetWifiMac (this);
+          link->channelAccessManager->Add (m_txop);
+        }
+      for (auto it = m_edca.begin (); it!= m_edca.end (); ++it)
+        {
+          it->second->SetWifiMac (this);
+          link->channelAccessManager->Add (it->second);
+        }
+
+      ConfigurePhyDependentParameters (link->id);
+    }
 }
 
 void
-WifiMac::ConfigurePhyDependentParameters (void)
+WifiMac::ConfigurePhyDependentParameters (uint8_t linkId)
 {
-  WifiPhyBand band = m_phy->GetPhyBand ();
-  NS_LOG_FUNCTION (this << band);
+  NS_LOG_FUNCTION (this << +linkId);
 
-  uint32_t cwmin = 0;
-  uint32_t cwmax = 0;
+  WifiStandard standard = GetLink (linkId).phy->GetStandard ();
 
-  NS_ASSERT (m_phy != 0);
-  WifiStandard standard = m_phy->GetStandard ();
+  uint32_t cwmin = (standard == WIFI_STANDARD_80211b ? 31 : 15);
+  uint32_t cwmax = 1023;
 
-  if (standard == WIFI_STANDARD_80211b)
-    {
-      SetDsssSupported (true);
-      cwmin = 31;
-      cwmax = 1023;
-    }
-  else
-    {
-      if (standard >= WIFI_STANDARD_80211g && band == WIFI_PHY_BAND_2_4GHZ)
-        {
-          SetErpSupported (true);
-        }
-
-      cwmin = 15;
-      cwmax = 1023;
-    }
+  SetDsssSupported (standard == WIFI_STANDARD_80211b, linkId);
+  SetErpSupported (standard >= WIFI_STANDARD_80211g
+                    && m_links[linkId]->phy->GetPhyBand () == WIFI_PHY_BAND_2_4GHZ, linkId);
 
   ConfigureContentionWindow (cwmin, cwmax);
 }
 
-void
+Ptr<FrameExchangeManager>
 WifiMac::SetupFrameExchangeManager (WifiStandard standard)
 {
   NS_LOG_FUNCTION (this << standard);
   NS_ABORT_MSG_IF (standard == WIFI_STANDARD_UNSPECIFIED, "Wifi standard not set");
+  Ptr<FrameExchangeManager> feManager;
 
   if (standard >= WIFI_STANDARD_80211ax)
     {
-      m_feManager = CreateObject<HeFrameExchangeManager> ();
+      feManager = CreateObject<HeFrameExchangeManager> ();
     }
   else if (standard >= WIFI_STANDARD_80211ac)
     {
-      m_feManager = CreateObject<VhtFrameExchangeManager> ();
+      feManager = CreateObject<VhtFrameExchangeManager> ();
     }
   else if (standard >= WIFI_STANDARD_80211n)
     {
-      m_feManager = CreateObject<HtFrameExchangeManager> ();
+      feManager = CreateObject<HtFrameExchangeManager> ();
     }
   else if (m_qosSupported)
     {
-      m_feManager = CreateObject<QosFrameExchangeManager> ();
+      feManager = CreateObject<QosFrameExchangeManager> ();
     }
   else
     {
-      m_feManager = CreateObject<FrameExchangeManager> ();
+      feManager = CreateObject<FrameExchangeManager> ();
     }
 
-  m_feManager->SetWifiMac (this);
-  m_feManager->SetMacTxMiddle (m_txMiddle);
-  m_feManager->SetMacRxMiddle (m_rxMiddle);
-  m_feManager->SetAddress (GetAddress ());
-  m_feManager->SetBssid (GetBssid ());
-  m_feManager->GetWifiTxTimer ().SetMpduResponseTimeoutCallback (MakeCallback (&MpduResponseTimeoutTracedCallback::operator(),
-                                                                               &m_mpduResponseTimeoutCallback));
-  m_feManager->GetWifiTxTimer ().SetPsduResponseTimeoutCallback (MakeCallback (&PsduResponseTimeoutTracedCallback::operator(),
-                                                                               &m_psduResponseTimeoutCallback));
-  m_feManager->GetWifiTxTimer ().SetPsduMapResponseTimeoutCallback (MakeCallback (&PsduMapResponseTimeoutTracedCallback::operator(),
-                                                                                  &m_psduMapResponseTimeoutCallback));
-  m_feManager->SetDroppedMpduCallback (MakeCallback (&DroppedMpduTracedCallback::operator(),
-                                                     &m_droppedMpduCallback));
-  m_feManager->SetAckedMpduCallback (MakeCallback (&MpduTracedCallback::operator(),
-                                                   &m_ackedMpduCallback));
-  m_channelAccessManager->SetupFrameExchangeManager (m_feManager);
-  if (GetQosSupported ())
-    {
-      for (const auto& pair : m_edca)
-        {
-          pair.second->SetQosFrameExchangeManager (DynamicCast<QosFrameExchangeManager> (m_feManager));
-        }
-    }
+  feManager->SetMacTxMiddle (m_txMiddle);
+  feManager->SetMacRxMiddle (m_rxMiddle);
+  feManager->SetAddress (GetAddress ());
+  feManager->GetWifiTxTimer ().SetMpduResponseTimeoutCallback (MakeCallback (&MpduResponseTimeoutTracedCallback::operator(),
+                                                                             &m_mpduResponseTimeoutCallback));
+  feManager->GetWifiTxTimer ().SetPsduResponseTimeoutCallback (MakeCallback (&PsduResponseTimeoutTracedCallback::operator(),
+                                                                             &m_psduResponseTimeoutCallback));
+  feManager->GetWifiTxTimer ().SetPsduMapResponseTimeoutCallback (MakeCallback (&PsduMapResponseTimeoutTracedCallback::operator(),
+                                                                                &m_psduMapResponseTimeoutCallback));
+  feManager->SetDroppedMpduCallback (MakeCallback (&DroppedMpduTracedCallback::operator(),
+                                                   &m_droppedMpduCallback));
+  feManager->SetAckedMpduCallback (MakeCallback (&MpduTracedCallback::operator(),
+                                                 &m_ackedMpduCallback));
+  return feManager;
 }
 
 Ptr<FrameExchangeManager>
-WifiMac::GetFrameExchangeManager (void) const
+WifiMac::GetFrameExchangeManager (uint8_t linkId) const
 {
-  return m_feManager;
+  return GetLink (linkId).feManager;
+}
+
+Ptr<ChannelAccessManager>
+WifiMac::GetChannelAccessManager (uint8_t linkId) const
+{
+  return GetLink (linkId).channelAccessManager;
 }
 
 void
 WifiMac::SetWifiRemoteStationManager (const Ptr<WifiRemoteStationManager> stationManager)
 {
   NS_LOG_FUNCTION (this << stationManager);
-  m_stationManager = stationManager;
+  SetWifiRemoteStationManagers ({stationManager});
+}
+
+void
+WifiMac::SetWifiRemoteStationManagers (const std::vector<Ptr<WifiRemoteStationManager>>& stationManagers)
+{
+  NS_LOG_FUNCTION (this);
+
+  NS_ABORT_MSG_UNLESS (m_links.size () == 0 || m_links.size () == stationManagers.size (),
+                       "If links have been already created, the number of provided "
+                       "Remote Manager objects (" << stationManagers.size () << ") must "
+                       "match the number of links (" << m_links.size () << ")");
+
+  for (std::size_t i = 0; i < stationManagers.size (); i++)
+    {
+      // the link may already exist in case PHY objects were configured first
+      if (i == m_links.size ())
+        {
+          m_links.push_back (CreateLinkEntity ());
+          m_links.back ()->id = i;
+        }
+      NS_ABORT_IF (i != m_links[i]->id);
+      m_links[i]->stationManager = stationManagers[i];
+    }
 }
 
 Ptr<WifiRemoteStationManager>
-WifiMac::GetWifiRemoteStationManager () const
+WifiMac::GetWifiRemoteStationManager (uint8_t linkId) const
 {
-  return m_stationManager;
+  return GetLink (linkId).stationManager;
+}
+
+std::unique_ptr<WifiMac::LinkEntity>
+WifiMac::CreateLinkEntity () const
+{
+  return std::make_unique<LinkEntity> ();
+}
+
+WifiMac::LinkEntity&
+WifiMac::GetLink (uint8_t linkId) const
+{
+  NS_ASSERT (linkId < m_links.size ());
+  NS_ASSERT (m_links.at (linkId));  // check that the pointer owns an object
+  return *m_links.at (linkId);
+}
+
+uint8_t
+WifiMac::GetNLinks () const
+{
+  return m_links.size ();
+}
+
+std::optional<uint8_t>
+WifiMac::GetLinkIdByAddress (const Mac48Address& address) const
+{
+  for (std::size_t ret = 0; ret < m_links.size (); ++ret)
+    {
+      if (m_links[ret]->feManager->GetAddress () == address)
+        {
+          return ret;
+        }
+    }
+  return std::nullopt;
 }
 
 void
-WifiMac::SetWifiPhy (const Ptr<WifiPhy> phy)
+WifiMac::SetWifiPhys (const std::vector<Ptr<WifiPhy>>& phys)
 {
-  NS_LOG_FUNCTION (this << phy);
-  m_phy = phy;
-  NS_ABORT_MSG_IF (!m_phy->GetOperatingChannel ().IsSet (),
-                   "PHY operating channel must have been set");
-  ConfigurePhyDependentParameters ();
-  m_channelAccessManager->SetupPhyListener (phy);
-  NS_ASSERT (m_feManager != 0);
-  m_feManager->SetWifiPhy (phy);
+  NS_LOG_FUNCTION (this);
+  ResetWifiPhys ();
+
+  NS_ABORT_MSG_UNLESS (m_links.size () == 0 || m_links.size () == phys.size (),
+                       "If links have been already created, the number of provided "
+                       "PHY objects (" << phys.size () << ") must match the number "
+                       "of links (" << m_links.size () << ")");
+
+  for (std::size_t i = 0; i < phys.size (); i++)
+    {
+      // the link may already exist in case we are setting new PHY objects
+      // (ResetWifiPhys just nullified the PHY(s) but left the links)
+      // or the remote station managers were configured first
+      if (i == m_links.size ())
+        {
+          m_links.push_back (CreateLinkEntity ());
+          m_links.back ()->id = i;
+        }
+      NS_ABORT_IF (i != m_links[i]->id);
+      m_links[i]->phy = phys[i];
+    }
 }
 
 Ptr<WifiPhy>
-WifiMac::GetWifiPhy (void) const
+WifiMac::GetWifiPhy (uint8_t linkId) const
 {
-  NS_LOG_FUNCTION (this);
-  return m_phy;
+  NS_LOG_FUNCTION (this << +linkId);
+  return GetLink (linkId).phy;
 }
 
 void
-WifiMac::ResetWifiPhy (void)
+WifiMac::ResetWifiPhys ()
 {
   NS_LOG_FUNCTION (this);
-  NS_ASSERT (m_feManager != 0);
-  m_feManager->ResetPhy ();
-  m_channelAccessManager->RemovePhyListener (m_phy);
-  m_phy = 0;
+  for (auto& link : m_links)
+    {
+      if (link->feManager)
+        {
+          link->feManager->ResetPhy ();
+        }
+      if (link->channelAccessManager)
+        {
+          link->channelAccessManager->RemovePhyListener (link->phy);
+        }
+      link->phy = nullptr;
+    }
 }
 
 void
@@ -800,8 +931,6 @@ WifiMac::SetQosSupported (bool enable)
     {
       // create a non-QoS TXOP
       m_txop = CreateObject<Txop> ();
-      m_txop->SetChannelAccessManager (m_channelAccessManager);
-      m_txop->SetWifiMac (this);
       m_txop->SetTxMiddle (m_txMiddle);
       m_txop->SetDroppedMpduCallback (MakeCallback (&DroppedMpduTracedCallback::operator(),
                                                     &m_droppedMpduCallback));
@@ -815,6 +944,16 @@ WifiMac::SetQosSupported (bool enable)
       SetupEdcaQueue (AC_VI);
       SetupEdcaQueue (AC_BE);
       SetupEdcaQueue (AC_BK);
+
+      std::map<AcIndex, Ptr<BlockAckManager>> bamMap;
+      for (const auto& ac : {AC_BE, AC_BK, AC_VI, AC_VO})
+        {
+          bamMap[ac] = GetQosTxop (ac)->GetBaManager ();
+        }
+      for (const auto& ac : {AC_BE, AC_BK, AC_VI, AC_VO})
+        {
+          GetQosTxop (ac)->GetBaManager ()->SetBlockAckManagerMap (bamMap);
+        }
     }
 }
 
@@ -825,33 +964,33 @@ WifiMac::GetQosSupported () const
 }
 
 bool
-WifiMac::GetErpSupported () const
+WifiMac::GetErpSupported (uint8_t linkId) const
 {
-  return m_erpSupported;
+  return GetLink (linkId).erpSupported;
 }
 
 void
-WifiMac::SetErpSupported (bool enable)
+WifiMac::SetErpSupported (bool enable, uint8_t linkId)
 {
-  NS_LOG_FUNCTION (this);
+  NS_LOG_FUNCTION (this << enable << +linkId);
   if (enable)
     {
-      SetDsssSupported (true);
+      SetDsssSupported (true, linkId);
     }
-  m_erpSupported = enable;
+  GetLink (linkId).erpSupported = enable;
 }
 
 void
-WifiMac::SetDsssSupported (bool enable)
+WifiMac::SetDsssSupported (bool enable, uint8_t linkId)
 {
-  NS_LOG_FUNCTION (this);
-  m_dsssSupported = enable;
+  NS_LOG_FUNCTION (this << enable << +linkId);
+  GetLink (linkId).dsssSupported = enable;
 }
 
 bool
-WifiMac::GetDsssSupported () const
+WifiMac::GetDsssSupported (uint8_t linkId) const
 {
-  return m_dsssSupported;
+  return GetLink (linkId).dsssSupported;
 }
 
 void
@@ -869,13 +1008,13 @@ WifiMac::SetShortSlotTimeSupported (bool enable)
 }
 
 bool
-WifiMac::GetShortSlotTimeSupported (void) const
+WifiMac::GetShortSlotTimeSupported () const
 {
   return m_shortSlotTimeSupported;
 }
 
 bool
-WifiMac::SupportsSendFrom (void) const
+WifiMac::SupportsSendFrom () const
 {
   return false;
 }
@@ -920,14 +1059,15 @@ WifiMac::ForwardUp (Ptr<const Packet> packet, Mac48Address from, Mac48Address to
 }
 
 void
-WifiMac::Receive (Ptr<WifiMacQueueItem> mpdu)
+WifiMac::Receive (Ptr<const WifiMpdu> mpdu, uint8_t linkId)
 {
-  NS_LOG_FUNCTION (this << *mpdu);
+  NS_LOG_FUNCTION (this << *mpdu << linkId);
 
   const WifiMacHeader* hdr = &mpdu->GetHeader ();
   Ptr<Packet> packet = mpdu->GetPacket ()->Copy ();
   Mac48Address to = hdr->GetAddr1 ();
   Mac48Address from = hdr->GetAddr2 ();
+  auto& link = GetLink (SINGLE_LINK_OP_ID);
 
   //We don't know how to deal with any frame that is not addressed to
   //us (and odds are there is nothing sensible we could do anyway),
@@ -963,9 +1103,9 @@ WifiMac::Receive (Ptr<WifiMacQueueItem> mpdu)
                 //We've received an ADDBA Request. Our policy here is
                 //to automatically accept it, so we get the ADDBA
                 //Response on it's way immediately.
-                NS_ASSERT (m_feManager != 0);
-                Ptr<HtFrameExchangeManager> htFem = DynamicCast<HtFrameExchangeManager> (m_feManager);
-                if (htFem != 0)
+                NS_ASSERT (link.feManager);
+                auto htFem = DynamicCast<HtFrameExchangeManager> (link.feManager);
+                if (htFem)
                   {
                     htFem->SendAddBaResponse (&reqHdr, from);
                   }
@@ -984,8 +1124,8 @@ WifiMac::Receive (Ptr<WifiMacQueueItem> mpdu)
                 //and act by locally establishing the agreement on
                 //the appropriate queue.
                 GetQosTxop (respHdr.GetTid ())->GotAddBaResponse (&respHdr, from);
-                auto htFem = DynamicCast<HtFrameExchangeManager> (m_feManager);
-                if (htFem != 0)
+                auto htFem = DynamicCast<HtFrameExchangeManager> (link.feManager);
+                if (htFem)
                   {
                     GetQosTxop (respHdr.GetTid ())->GetBaManager ()->SetBlockAckInactivityCallback (MakeCallback (&HtFrameExchangeManager::SendDelbaFrame, htFem));
                   }
@@ -1003,9 +1143,9 @@ WifiMac::Receive (Ptr<WifiMacQueueItem> mpdu)
                     //this means that an ingoing established
                     //agreement exists in HtFrameExchangeManager and we need to
                     //destroy it.
-                    NS_ASSERT (m_feManager != 0);
-                    Ptr<HtFrameExchangeManager> htFem = DynamicCast<HtFrameExchangeManager> (m_feManager);
-                    if (htFem != 0)
+                    NS_ASSERT (link.feManager);
+                    auto htFem = DynamicCast<HtFrameExchangeManager> (link.feManager);
+                    if (htFem)
                       {
                         htFem->DestroyBlockAckAgreement (from, delBaHdr.GetTid ());
                       }
@@ -1033,7 +1173,7 @@ WifiMac::Receive (Ptr<WifiMacQueueItem> mpdu)
 }
 
 void
-WifiMac::DeaggregateAmsduAndForward (Ptr<WifiMacQueueItem> mpdu)
+WifiMac::DeaggregateAmsduAndForward (Ptr<const WifiMpdu> mpdu)
 {
   NS_LOG_FUNCTION (this << *mpdu);
   for (auto& msduPair : *PeekPointer (mpdu))
@@ -1044,51 +1184,52 @@ WifiMac::DeaggregateAmsduAndForward (Ptr<WifiMacQueueItem> mpdu)
 }
 
 Ptr<HtConfiguration>
-WifiMac::GetHtConfiguration (void) const
+WifiMac::GetHtConfiguration () const
 {
   return GetDevice ()->GetHtConfiguration ();
 }
 
 Ptr<VhtConfiguration>
-WifiMac::GetVhtConfiguration (void) const
+WifiMac::GetVhtConfiguration () const
 {
   return GetDevice ()->GetVhtConfiguration ();
 }
 
 Ptr<HeConfiguration>
-WifiMac::GetHeConfiguration (void) const
+WifiMac::GetHeConfiguration () const
 {
   return GetDevice ()->GetHeConfiguration ();
+}
+
+Ptr<EhtConfiguration>
+WifiMac::GetEhtConfiguration () const
+{
+  return GetDevice ()->GetEhtConfiguration ();
 }
 
 bool
 WifiMac::GetHtSupported () const
 {
-  if (GetHtConfiguration ())
-    {
-      return true;
-    }
-  return false;
+  return bool (GetDevice ()->GetHtConfiguration ());
 }
 
 bool
-WifiMac::GetVhtSupported () const
+WifiMac::GetVhtSupported (uint8_t linkId) const
 {
-  if (GetVhtConfiguration ())
-    {
-      return true;
-    }
-  return false;
+  return (GetDevice ()->GetVhtConfiguration ()
+          && GetWifiPhy (linkId)->GetPhyBand () != WIFI_PHY_BAND_2_4GHZ);
 }
 
 bool
 WifiMac::GetHeSupported () const
 {
-  if (GetHeConfiguration ())
-    {
-      return true;
-    }
-  return false;
+  return bool (GetDevice ()->GetHeConfiguration ());
+}
+
+bool
+WifiMac::GetEhtSupported () const
+{
+  return bool (GetDevice ()->GetEhtConfiguration ());
 }
 
 void
@@ -1172,206 +1313,211 @@ WifiMac::SetBkBlockAckInactivityTimeout (uint16_t timeout)
 }
 
 ExtendedCapabilities
-WifiMac::GetExtendedCapabilities (void) const
+WifiMac::GetExtendedCapabilities () const
 {
   NS_LOG_FUNCTION (this);
   ExtendedCapabilities capabilities;
   capabilities.SetHtSupported (GetHtSupported ());
-  capabilities.SetVhtSupported (GetVhtSupported ());
+  capabilities.SetVhtSupported (GetVhtSupported (SINGLE_LINK_OP_ID));
   //TODO: to be completed
   return capabilities;
 }
 
 HtCapabilities
-WifiMac::GetHtCapabilities (void) const
+WifiMac::GetHtCapabilities (uint8_t linkId) const
 {
-  NS_LOG_FUNCTION (this);
+  NS_LOG_FUNCTION (this << +linkId);
+  NS_ASSERT (GetHtSupported ());
   HtCapabilities capabilities;
-  if (GetHtSupported ())
-    {
-      Ptr<HtConfiguration> htConfiguration = GetHtConfiguration ();
-      bool sgiSupported = htConfiguration->GetShortGuardIntervalSupported ();
-      capabilities.SetHtSupported (1);
-      capabilities.SetLdpc (htConfiguration->GetLdpcSupported ());
-      capabilities.SetSupportedChannelWidth (GetWifiPhy ()->GetChannelWidth () >= 40);
-      capabilities.SetShortGuardInterval20 (sgiSupported);
-      capabilities.SetShortGuardInterval40 (GetWifiPhy ()->GetChannelWidth () >= 40 && sgiSupported);
-      // Set Maximum A-MSDU Length subfield
-      uint16_t maxAmsduSize = std::max ({m_voMaxAmsduSize, m_viMaxAmsduSize,
-                                         m_beMaxAmsduSize, m_bkMaxAmsduSize});
-      if (maxAmsduSize <= 3839)
-        {
-          capabilities.SetMaxAmsduLength (3839);
-        }
-      else
-        {
-          capabilities.SetMaxAmsduLength (7935);
-        }
-      uint32_t maxAmpduLength = std::max ({m_voMaxAmpduSize, m_viMaxAmpduSize,
-                                           m_beMaxAmpduSize, m_bkMaxAmpduSize});
-      // round to the next power of two minus one
-      maxAmpduLength = (1ul << static_cast<uint32_t> (std::ceil (std::log2 (maxAmpduLength + 1)))) - 1;
-      // The maximum A-MPDU length in HT capabilities elements ranges from 2^13-1 to 2^16-1
-      capabilities.SetMaxAmpduLength (std::min (std::max (maxAmpduLength, 8191u), 65535u));
 
-      capabilities.SetLSigProtectionSupport (true);
-      uint64_t maxSupportedRate = 0; //in bit/s
-      for (const auto & mcs : GetWifiPhy ()->GetMcsList (WIFI_MOD_CLASS_HT))
-        {
-          capabilities.SetRxMcsBitmask (mcs.GetMcsValue ());
-          uint8_t nss = (mcs.GetMcsValue () / 8) + 1;
-          NS_ASSERT (nss > 0 && nss < 5);
-          uint64_t dataRate = mcs.GetDataRate (GetWifiPhy ()->GetChannelWidth (), sgiSupported ? 400 : 800, nss);
-          if (dataRate > maxSupportedRate)
-            {
-              maxSupportedRate = dataRate;
-              NS_LOG_DEBUG ("Updating maxSupportedRate to " << maxSupportedRate);
-            }
-        }
-      capabilities.SetRxHighestSupportedDataRate (static_cast<uint16_t> (maxSupportedRate / 1e6)); //in Mbit/s
-      capabilities.SetTxMcsSetDefined (GetWifiPhy ()->GetNMcs () > 0);
-      capabilities.SetTxMaxNSpatialStreams (GetWifiPhy ()->GetMaxSupportedTxSpatialStreams ());
-      //we do not support unequal modulations
-      capabilities.SetTxRxMcsSetUnequal (0);
-      capabilities.SetTxUnequalModulation (0);
+  auto phy = GetWifiPhy (linkId);
+  Ptr<HtConfiguration> htConfiguration = GetHtConfiguration ();
+  bool sgiSupported = htConfiguration->GetShortGuardIntervalSupported ();
+  capabilities.SetLdpc (htConfiguration->GetLdpcSupported ());
+  capabilities.SetSupportedChannelWidth (htConfiguration->Get40MHzOperationSupported () ? 1 : 0);
+  capabilities.SetShortGuardInterval20 (sgiSupported);
+  capabilities.SetShortGuardInterval40 (phy->GetChannelWidth () >= 40 && sgiSupported);
+  // Set Maximum A-MSDU Length subfield
+  uint16_t maxAmsduSize = std::max ({m_voMaxAmsduSize, m_viMaxAmsduSize,
+                                     m_beMaxAmsduSize, m_bkMaxAmsduSize});
+  if (maxAmsduSize <= 3839)
+    {
+      capabilities.SetMaxAmsduLength (3839);
     }
+  else
+    {
+      capabilities.SetMaxAmsduLength (7935);
+    }
+  uint32_t maxAmpduLength = std::max ({m_voMaxAmpduSize, m_viMaxAmpduSize,
+                                       m_beMaxAmpduSize, m_bkMaxAmpduSize});
+  // round to the next power of two minus one
+  maxAmpduLength = (1UL << static_cast<uint32_t> (std::ceil (std::log2 (maxAmpduLength + 1)))) - 1;
+  // The maximum A-MPDU length in HT capabilities elements ranges from 2^13-1 to 2^16-1
+  capabilities.SetMaxAmpduLength (std::min (std::max (maxAmpduLength, 8191U), 65535U));
+
+  capabilities.SetLSigProtectionSupport (true);
+  uint64_t maxSupportedRate = 0; //in bit/s
+  for (const auto & mcs : phy->GetMcsList (WIFI_MOD_CLASS_HT))
+    {
+      capabilities.SetRxMcsBitmask (mcs.GetMcsValue ());
+      uint8_t nss = (mcs.GetMcsValue () / 8) + 1;
+      NS_ASSERT (nss > 0 && nss < 5);
+      uint64_t dataRate = mcs.GetDataRate (phy->GetChannelWidth (), sgiSupported ? 400 : 800, nss);
+      if (dataRate > maxSupportedRate)
+        {
+          maxSupportedRate = dataRate;
+          NS_LOG_DEBUG ("Updating maxSupportedRate to " << maxSupportedRate);
+        }
+    }
+  capabilities.SetRxHighestSupportedDataRate (static_cast<uint16_t> (maxSupportedRate / 1e6)); //in Mbit/s
+  capabilities.SetTxMcsSetDefined (phy->GetNMcs () > 0);
+  capabilities.SetTxMaxNSpatialStreams (phy->GetMaxSupportedTxSpatialStreams ());
+  //we do not support unequal modulations
+  capabilities.SetTxRxMcsSetUnequal (0);
+  capabilities.SetTxUnequalModulation (0);
+
   return capabilities;
 }
 
 VhtCapabilities
-WifiMac::GetVhtCapabilities (void) const
+WifiMac::GetVhtCapabilities (uint8_t linkId) const
 {
-  NS_LOG_FUNCTION (this);
+  NS_LOG_FUNCTION (this << +linkId);
+  NS_ASSERT (GetVhtSupported (linkId));
   VhtCapabilities capabilities;
-  if (GetVhtSupported ())
-    {
-      Ptr<HtConfiguration> htConfiguration = GetHtConfiguration ();
-      Ptr<VhtConfiguration> vhtConfiguration = GetVhtConfiguration ();
-      bool sgiSupported = htConfiguration->GetShortGuardIntervalSupported ();
-      capabilities.SetVhtSupported (1);
-      if (GetWifiPhy ()->GetChannelWidth () == 160)
-        {
-          capabilities.SetSupportedChannelWidthSet (1);
-        }
-      else
-        {
-          capabilities.SetSupportedChannelWidthSet (0);
-        }
-      // Set Maximum MPDU Length subfield
-      uint16_t maxAmsduSize = std::max ({m_voMaxAmsduSize, m_viMaxAmsduSize,
-                                         m_beMaxAmsduSize, m_bkMaxAmsduSize});
-      if (maxAmsduSize <= 3839)
-        {
-          capabilities.SetMaxMpduLength (3895);
-        }
-      else if (maxAmsduSize <= 7935)
-        {
-          capabilities.SetMaxMpduLength (7991);
-        }
-      else
-        {
-          capabilities.SetMaxMpduLength (11454);
-        }
-      uint32_t maxAmpduLength = std::max ({m_voMaxAmpduSize, m_viMaxAmpduSize,
-                                           m_beMaxAmpduSize, m_bkMaxAmpduSize});
-      // round to the next power of two minus one
-      maxAmpduLength = (1ul << static_cast<uint32_t> (std::ceil (std::log2 (maxAmpduLength + 1)))) - 1;
-      // The maximum A-MPDU length in VHT capabilities elements ranges from 2^13-1 to 2^20-1
-      capabilities.SetMaxAmpduLength (std::min (std::max (maxAmpduLength, 8191u), 1048575u));
 
-      capabilities.SetRxLdpc (htConfiguration->GetLdpcSupported ());
-      capabilities.SetShortGuardIntervalFor80Mhz ((GetWifiPhy ()->GetChannelWidth () == 80) && sgiSupported);
-      capabilities.SetShortGuardIntervalFor160Mhz ((GetWifiPhy ()->GetChannelWidth () == 160) && sgiSupported);
-      uint8_t maxMcs = 0;
-      for (const auto & mcs : GetWifiPhy ()->GetMcsList (WIFI_MOD_CLASS_VHT))
-        {
-          if (mcs.GetMcsValue () > maxMcs)
-            {
-              maxMcs = mcs.GetMcsValue ();
-            }
-        }
-      // Support same MaxMCS for each spatial stream
-      for (uint8_t nss = 1; nss <= GetWifiPhy ()->GetMaxSupportedRxSpatialStreams (); nss++)
-        {
-          capabilities.SetRxMcsMap (maxMcs, nss);
-        }
-      for (uint8_t nss = 1; nss <= GetWifiPhy ()->GetMaxSupportedTxSpatialStreams (); nss++)
-        {
-          capabilities.SetTxMcsMap (maxMcs, nss);
-        }
-      uint64_t maxSupportedRateLGI = 0; //in bit/s
-      for (const auto & mcs : GetWifiPhy ()->GetMcsList (WIFI_MOD_CLASS_VHT))
-        {
-          if (!mcs.IsAllowed (GetWifiPhy ()->GetChannelWidth (), 1))
-            {
-              continue;
-            }
-          if (mcs.GetDataRate (GetWifiPhy ()->GetChannelWidth ()) > maxSupportedRateLGI)
-            {
-              maxSupportedRateLGI = mcs.GetDataRate (GetWifiPhy ()->GetChannelWidth ());
-              NS_LOG_DEBUG ("Updating maxSupportedRateLGI to " << maxSupportedRateLGI);
-            }
-        }
-      capabilities.SetRxHighestSupportedLgiDataRate (static_cast<uint16_t> (maxSupportedRateLGI / 1e6)); //in Mbit/s
-      capabilities.SetTxHighestSupportedLgiDataRate (static_cast<uint16_t> (maxSupportedRateLGI / 1e6)); //in Mbit/s
-      //To be filled in once supported
-      capabilities.SetRxStbc (0);
-      capabilities.SetTxStbc (0);
+  auto phy = GetWifiPhy (linkId);
+  Ptr<HtConfiguration> htConfiguration = GetHtConfiguration ();
+  NS_ABORT_MSG_IF (!htConfiguration->Get40MHzOperationSupported (),
+                    "VHT stations have to support 40 MHz operation");
+  Ptr<VhtConfiguration> vhtConfiguration = GetVhtConfiguration ();
+  bool sgiSupported = htConfiguration->GetShortGuardIntervalSupported ();
+  capabilities.SetSupportedChannelWidthSet (vhtConfiguration->Get160MHzOperationSupported () ? 1 : 0);
+  // Set Maximum MPDU Length subfield
+  uint16_t maxAmsduSize = std::max ({m_voMaxAmsduSize, m_viMaxAmsduSize,
+                                     m_beMaxAmsduSize, m_bkMaxAmsduSize});
+  if (maxAmsduSize <= 3839)
+    {
+      capabilities.SetMaxMpduLength (3895);
     }
+  else if (maxAmsduSize <= 7935)
+    {
+      capabilities.SetMaxMpduLength (7991);
+    }
+  else
+    {
+      capabilities.SetMaxMpduLength (11454);
+    }
+  uint32_t maxAmpduLength = std::max ({m_voMaxAmpduSize, m_viMaxAmpduSize,
+                                       m_beMaxAmpduSize, m_bkMaxAmpduSize});
+  // round to the next power of two minus one
+  maxAmpduLength = (1UL << static_cast<uint32_t> (std::ceil (std::log2 (maxAmpduLength + 1)))) - 1;
+  // The maximum A-MPDU length in VHT capabilities elements ranges from 2^13-1 to 2^20-1
+  capabilities.SetMaxAmpduLength (std::min (std::max (maxAmpduLength, 8191U), 1048575U));
+
+  capabilities.SetRxLdpc (htConfiguration->GetLdpcSupported ());
+  capabilities.SetShortGuardIntervalFor80Mhz ((phy->GetChannelWidth () == 80) && sgiSupported);
+  capabilities.SetShortGuardIntervalFor160Mhz ((phy->GetChannelWidth () == 160) && sgiSupported);
+  uint8_t maxMcs = 0;
+  for (const auto & mcs : phy->GetMcsList (WIFI_MOD_CLASS_VHT))
+    {
+      if (mcs.GetMcsValue () > maxMcs)
+        {
+          maxMcs = mcs.GetMcsValue ();
+        }
+    }
+  // Support same MaxMCS for each spatial stream
+  for (uint8_t nss = 1; nss <= phy->GetMaxSupportedRxSpatialStreams (); nss++)
+    {
+      capabilities.SetRxMcsMap (maxMcs, nss);
+    }
+  for (uint8_t nss = 1; nss <= phy->GetMaxSupportedTxSpatialStreams (); nss++)
+    {
+      capabilities.SetTxMcsMap (maxMcs, nss);
+    }
+  uint64_t maxSupportedRateLGI = 0; //in bit/s
+  for (const auto & mcs : phy->GetMcsList (WIFI_MOD_CLASS_VHT))
+    {
+      if (!mcs.IsAllowed (phy->GetChannelWidth (), 1))
+        {
+          continue;
+        }
+      if (mcs.GetDataRate (phy->GetChannelWidth ()) > maxSupportedRateLGI)
+        {
+          maxSupportedRateLGI = mcs.GetDataRate (phy->GetChannelWidth ());
+          NS_LOG_DEBUG ("Updating maxSupportedRateLGI to " << maxSupportedRateLGI);
+        }
+    }
+  capabilities.SetRxHighestSupportedLgiDataRate (static_cast<uint16_t> (maxSupportedRateLGI / 1e6)); //in Mbit/s
+  capabilities.SetTxHighestSupportedLgiDataRate (static_cast<uint16_t> (maxSupportedRateLGI / 1e6)); //in Mbit/s
+  //To be filled in once supported
+  capabilities.SetRxStbc (0);
+  capabilities.SetTxStbc (0);
+
   return capabilities;
 }
 
 HeCapabilities
-WifiMac::GetHeCapabilities (void) const
+WifiMac::GetHeCapabilities (uint8_t linkId) const
 {
-  NS_LOG_FUNCTION (this);
+  NS_LOG_FUNCTION (this << +linkId);
+  NS_ASSERT (GetHeSupported ());
   HeCapabilities capabilities;
-  if (GetHeSupported ())
+
+  Ptr<WifiPhy> phy = GetLink (linkId).phy;
+  Ptr<HtConfiguration> htConfiguration = GetHtConfiguration ();
+  Ptr<HeConfiguration> heConfiguration = GetHeConfiguration ();
+  uint8_t channelWidthSet = 0;
+  if ((phy->GetChannelWidth () >= 40) && (phy->GetPhyBand () == WIFI_PHY_BAND_2_4GHZ))
     {
-      Ptr<HtConfiguration> htConfiguration = GetHtConfiguration ();
-      Ptr<HeConfiguration> heConfiguration = GetHeConfiguration ();
-      capabilities.SetHeSupported (1);
-      uint8_t channelWidthSet = 0;
-      if ((m_phy->GetChannelWidth () >= 40) && (m_phy->GetPhyBand () == WIFI_PHY_BAND_2_4GHZ))
-        {
-          channelWidthSet |= 0x01;
-        }
-      if ((m_phy->GetChannelWidth () >= 80) && ((m_phy->GetPhyBand () == WIFI_PHY_BAND_5GHZ) || (m_phy->GetPhyBand () == WIFI_PHY_BAND_6GHZ)))
-        {
-          channelWidthSet |= 0x02;
-        }
-      if ((m_phy->GetChannelWidth () >= 160) && ((m_phy->GetPhyBand () == WIFI_PHY_BAND_5GHZ) || (m_phy->GetPhyBand () == WIFI_PHY_BAND_6GHZ)))
-        {
-          channelWidthSet |= 0x04;
-        }
-      capabilities.SetChannelWidthSet (channelWidthSet);
-      capabilities.SetLdpcCodingInPayload (htConfiguration->GetLdpcSupported ());
-      if (heConfiguration->GetGuardInterval () == NanoSeconds (800))
-        {
-          //todo: We assume for now that if we support 800ns GI then 1600ns GI is supported as well
-          //todo: Assuming reception support for both 1x HE LTF and 4x HE LTF 800 ns
-          capabilities.SetHeSuPpdu1xHeLtf800nsGi (true);
-          capabilities.SetHePpdu4xHeLtf800nsGi (true);
-        }
-
-      uint32_t maxAmpduLength = std::max ({m_voMaxAmpduSize, m_viMaxAmpduSize,
-                                           m_beMaxAmpduSize, m_bkMaxAmpduSize});
-      // round to the next power of two minus one
-      maxAmpduLength = (1ul << static_cast<uint32_t> (std::ceil (std::log2 (maxAmpduLength + 1)))) - 1;
-      // The maximum A-MPDU length in HE capabilities elements ranges from 2^20-1 to 2^23-1
-      capabilities.SetMaxAmpduLength (std::min (std::max (maxAmpduLength, 1048575u), 8388607u));
-
-      uint8_t maxMcs = 0;
-      for (const auto & mcs : m_phy->GetMcsList (WIFI_MOD_CLASS_HE))
-        {
-          if (mcs.GetMcsValue () > maxMcs)
-            {
-              maxMcs = mcs.GetMcsValue ();
-            }
-        }
-      capabilities.SetHighestMcsSupported (maxMcs);
-      capabilities.SetHighestNssSupported (m_phy->GetMaxSupportedTxSpatialStreams ());
+      channelWidthSet |= 0x01;
     }
+  if ((phy->GetChannelWidth () >= 80) && ((phy->GetPhyBand () == WIFI_PHY_BAND_5GHZ) || (phy->GetPhyBand () == WIFI_PHY_BAND_6GHZ)))
+    {
+      channelWidthSet |= 0x02;
+    }
+  if ((phy->GetChannelWidth () >= 160) && ((phy->GetPhyBand () == WIFI_PHY_BAND_5GHZ) || (phy->GetPhyBand () == WIFI_PHY_BAND_6GHZ)))
+    {
+      channelWidthSet |= 0x04;
+    }
+  capabilities.SetChannelWidthSet (channelWidthSet);
+  capabilities.SetLdpcCodingInPayload (htConfiguration->GetLdpcSupported ());
+  if (heConfiguration->GetGuardInterval () == NanoSeconds (800))
+    {
+      //todo: We assume for now that if we support 800ns GI then 1600ns GI is supported as well
+      //todo: Assuming reception support for both 1x HE LTF and 4x HE LTF 800 ns
+      capabilities.SetHeSuPpdu1xHeLtf800nsGi (true);
+      capabilities.SetHePpdu4xHeLtf800nsGi (true);
+    }
+
+  uint32_t maxAmpduLength = std::max ({m_voMaxAmpduSize, m_viMaxAmpduSize,
+                                        m_beMaxAmpduSize, m_bkMaxAmpduSize});
+  // round to the next power of two minus one
+  maxAmpduLength = (1UL << static_cast<uint32_t> (std::ceil (std::log2 (maxAmpduLength + 1)))) - 1;
+  // The maximum A-MPDU length in HE capabilities elements ranges from 2^20-1 to 2^23-1
+  capabilities.SetMaxAmpduLength (std::min (std::max (maxAmpduLength, 1048575U), 8388607U));
+
+  uint8_t maxMcs = 0;
+  for (const auto & mcs : phy->GetMcsList (WIFI_MOD_CLASS_HE))
+    {
+      if (mcs.GetMcsValue () > maxMcs)
+        {
+          maxMcs = mcs.GetMcsValue ();
+        }
+    }
+  capabilities.SetHighestMcsSupported (maxMcs);
+  capabilities.SetHighestNssSupported (phy->GetMaxSupportedTxSpatialStreams ());
+
+  return capabilities;
+}
+
+EhtCapabilities
+WifiMac::GetEhtCapabilities (uint8_t linkId) const
+{
+  NS_LOG_FUNCTION (this << +linkId);
+  NS_ASSERT (GetEhtSupported ());
+  EhtCapabilities capabilities;
+  // TODO: fill in EHT capabilities
   return capabilities;
 }
 

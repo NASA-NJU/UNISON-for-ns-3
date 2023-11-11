@@ -39,8 +39,8 @@ public:
   RttEstimatorTestCase ();
 
 private:
-  virtual void DoRun (void);
-  virtual void DoTeardown (void);
+  void DoRun () override;
+  void DoTeardown () override;
 
   /**
    * \brief Check RTT values.
@@ -83,7 +83,7 @@ RttEstimatorTestCase::CheckValuesWithTolerance (Ptr<RttEstimator> rtt, Time m, T
 
 
 void
-RttEstimatorTestCase::DoRun (void)
+RttEstimatorTestCase::DoRun ()
 {
   // Set to a non-default value
   Config::SetDefault ("ns3::RttEstimator::InitialEstimation", TimeValue (MilliSeconds (500)));
@@ -159,7 +159,7 @@ RttEstimatorTestCase::DoRun (void)
   CheckValues (rtt, Time (Seconds (1)), Time (Seconds (1)), Time (MilliSeconds (500)));
   CheckValues (rtt, Time (Seconds (2.5)), Time (Seconds (2.5)), Time (Seconds (1.5)));
   CheckValues (rtt, Time (Seconds (7)), Time (Seconds (7)), Time (Seconds (4.5)));
-  
+
   // recheck initial values
   rtt->Reset ();
   NS_TEST_EXPECT_MSG_EQ (rtt->GetEstimate (), Time (Seconds (1)), "Incorrect initial estimate");
@@ -168,7 +168,7 @@ RttEstimatorTestCase::DoRun (void)
 }
 
 void
-RttEstimatorTestCase::DoTeardown (void)
+RttEstimatorTestCase::DoTeardown ()
 {
 }
 

@@ -42,19 +42,19 @@ public:
   /** Constructor. */
   TypeTraitsTestCase ();
   /** Destructor. */
-  virtual ~TypeTraitsTestCase ()
+  ~TypeTraitsTestCase () override
   {}
 
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
 };
 
-TypeTraitsTestCase::TypeTraitsTestCase (void)
+TypeTraitsTestCase::TypeTraitsTestCase ()
   : TestCase ("Check type traits")
 {}
 
 void
-TypeTraitsTestCase::DoRun (void)
+TypeTraitsTestCase::DoRun ()
 {
   NS_TEST_ASSERT_MSG_EQ
     (TypeTraits<void (TypeTraitsTestCase::*)(void)>::IsPointerToMember, 1,

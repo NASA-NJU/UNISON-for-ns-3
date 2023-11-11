@@ -96,25 +96,25 @@ public:
    *  Register this type.
    *  \return The object TypeId.
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   /** Constructor. */
   CalendarScheduler ();
   /** Destructor. */
-  virtual ~CalendarScheduler ();
+  ~CalendarScheduler () override;
 
   // Inherited
-  virtual void Insert (const Scheduler::Event &ev);
-  virtual bool IsEmpty (void) const;
-  virtual Scheduler::Event PeekNext (void) const;
-  virtual Scheduler::Event RemoveNext (void);
-  virtual void Remove (const Scheduler::Event &ev);
+  void Insert (const Scheduler::Event &ev) override;
+  bool IsEmpty () const override;
+  Scheduler::Event PeekNext () const override;
+  Scheduler::Event RemoveNext () override;
+  void Remove (const Scheduler::Event &ev) override;
 
 private:
   /** Double the number of buckets if necessary. */
-  void ResizeUp (void);
+  void ResizeUp ();
   /** Halve the number of buckets if necessary. */
-  void ResizeDown (void);
+  void ResizeDown ();
   /**
    * Resize to a new number of buckets, with automatically computed width.
    *
@@ -126,7 +126,7 @@ private:
    *
    * \returns The new width.
    */
-  uint64_t CalculateNewWidth (void);
+  uint64_t CalculateNewWidth ();
   /**
    * Initialize the calendar queue.
    *
@@ -145,7 +145,7 @@ private:
    */
   inline uint32_t Hash (uint64_t key) const;
   /** Print the configuration and bucket size distribution. */
-  void PrintInfo (void);
+  void PrintInfo ();
   /**
    * Resize the number of buckets and width.
    *
@@ -158,7 +158,7 @@ private:
    *
    * \returns The earliest event.
    */
-  Scheduler::Event DoRemoveNext (void);
+  Scheduler::Event DoRemoveNext ();
   /**
    * Insert a new event in to the correct bucket.
    *

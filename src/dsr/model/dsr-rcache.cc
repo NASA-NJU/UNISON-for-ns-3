@@ -19,7 +19,7 @@
  *              Song Luan <lsuper@mail.ustc.edu.cn> (Implemented Link Cache using Dijsktra algorithm)
  *
  * James P.G. Sterbenz <jpgs@ittc.ku.edu>, director
- * ResiliNets Research Group  http://wiki.ittc.ku.edu/resilinets
+ * ResiliNets Research Group  https://resilinets.org/
  * Information and Telecommunication Technology Center (ITTC)
  * and Department of Electrical Engineering and Computer Science
  * The University of Kansas Lawrence, KS USA.
@@ -1025,7 +1025,6 @@ DsrRouteCache::Purge ()
           m_sortedRoutes.erase (itmp);
         }
     }
-  return;
 }
 
 void
@@ -1229,7 +1228,7 @@ DsrRouteCache::LookupMacAddress (Ipv4Address addr)
        i != m_arp.end (); ++i)
     {
       ArpCache::Entry * entry = (*i)->Lookup (addr);
-      if (entry != 0 && (entry->IsAlive () || entry->IsPermanent ()) && !entry->IsExpired ())
+      if (entry != nullptr && (entry->IsAlive () || entry->IsPermanent ()) && !entry->IsExpired ())
         {
           hwaddr = Mac48Address::ConvertFrom (entry->GetMacAddress ());
           break;

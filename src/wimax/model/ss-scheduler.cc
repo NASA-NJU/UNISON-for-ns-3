@@ -34,10 +34,10 @@
 namespace ns3 {
 
 NS_LOG_COMPONENT_DEFINE ("SSScheduler");
-  
+
 NS_OBJECT_ENSURE_REGISTERED (SSScheduler);
 
-TypeId SSScheduler::GetTypeId (void)
+TypeId SSScheduler::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::SSScheduler")
     .SetParent<Object> ()
@@ -51,14 +51,14 @@ SSScheduler::SSScheduler (Ptr<SubscriberStationNetDevice> ss)
 {
 }
 
-SSScheduler::~SSScheduler (void)
+SSScheduler::~SSScheduler ()
 {
 }
 
 void
-SSScheduler::DoDispose (void)
+SSScheduler::DoDispose ()
 {
-  m_ss = 0;
+  m_ss = nullptr;
 }
 
 void
@@ -68,7 +68,7 @@ SSScheduler::SetPollMe (bool pollMe)
 }
 
 bool
-SSScheduler::GetPollMe (void) const
+SSScheduler::GetPollMe () const
 {
   return m_pollMe;
 }
@@ -164,7 +164,7 @@ SSScheduler::Schedule (uint16_t availableSymbols,
 }
 
 Ptr<WimaxConnection>
-SSScheduler::SelectConnection (void)
+SSScheduler::SelectConnection ()
 {
   Time currentTime = Simulator::Now ();
   std::vector<ServiceFlow*>::const_iterator iter;
@@ -246,7 +246,7 @@ SSScheduler::SelectConnection (void)
       return m_ss->GetBroadcastConnection ();
     }
   NS_LOG_INFO ("NO connection is selected!");
-  return 0;
+  return nullptr;
 }
 
 } // namespace ns3

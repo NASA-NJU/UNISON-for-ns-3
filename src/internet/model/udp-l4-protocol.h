@@ -64,11 +64,11 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
   static const uint8_t PROT_NUMBER; //!< protocol number (0x11)
 
   UdpL4Protocol ();
-  virtual ~UdpL4Protocol ();
+  ~UdpL4Protocol () override;
 
   // Delete copy constructor and assignment operator to avoid misuse
   UdpL4Protocol (const UdpL4Protocol &) = delete;
@@ -80,19 +80,19 @@ public:
    */
   void SetNode (Ptr<Node> node);
 
-  virtual int GetProtocolNumber (void) const;
+  int GetProtocolNumber () const override;
 
   /**
    * \return A smart Socket pointer to a UdpSocket, allocated by this instance
    * of the UDP protocol
    */
-  Ptr<Socket> CreateSocket (void);
+  Ptr<Socket> CreateSocket ();
 
   /**
    * \brief Allocate an IPv4 Endpoint
    * \return the Endpoint
    */
-  Ipv4EndPoint *Allocate (void);
+  Ipv4EndPoint *Allocate ();
   /**
    * \brief Allocate an IPv4 Endpoint
    * \param address address to use
@@ -131,7 +131,7 @@ public:
    * \brief Allocate an IPv6 Endpoint
    * \return the Endpoint
    */
-  Ipv6EndPoint *Allocate6 (void);
+  Ipv6EndPoint *Allocate6 ();
   /**
    * \brief Allocate an IPv6 Endpoint
    * \param address address to use
@@ -187,7 +187,7 @@ public:
    * \param dport The destination port number
    */
   void Send (Ptr<Packet> packet,
-             Ipv4Address saddr, Ipv4Address daddr, 
+             Ipv4Address saddr, Ipv4Address daddr,
              uint16_t sport, uint16_t dport);
   /**
    * \brief Send a packet via UDP (IPv4)
@@ -199,7 +199,7 @@ public:
    * \param route The route
    */
   void Send (Ptr<Packet> packet,
-             Ipv4Address saddr, Ipv4Address daddr, 
+             Ipv4Address saddr, Ipv4Address daddr,
              uint16_t sport, uint16_t dport, Ptr<Ipv4Route> route);
   /**
    * \brief Send a packet via UDP (IPv6)
@@ -210,7 +210,7 @@ public:
    * \param dport The destination port number
    */
   void Send (Ptr<Packet> packet,
-             Ipv6Address saddr, Ipv6Address daddr, 
+             Ipv6Address saddr, Ipv6Address daddr,
              uint16_t sport, uint16_t dport);
   /**
    * \brief Send a packet via UDP (IPv6)
@@ -222,40 +222,40 @@ public:
    * \param route The route
    */
   void Send (Ptr<Packet> packet,
-             Ipv6Address saddr, Ipv6Address daddr, 
+             Ipv6Address saddr, Ipv6Address daddr,
              uint16_t sport, uint16_t dport, Ptr<Ipv6Route> route);
 
   // inherited from Ipv4L4Protocol
-  virtual enum IpL4Protocol::RxStatus Receive (Ptr<Packet> p,
+  enum IpL4Protocol::RxStatus Receive (Ptr<Packet> p,
                                                Ipv4Header const &header,
-                                               Ptr<Ipv4Interface> interface);
-  virtual enum IpL4Protocol::RxStatus Receive (Ptr<Packet> p,
+                                               Ptr<Ipv4Interface> interface) override;
+  enum IpL4Protocol::RxStatus Receive (Ptr<Packet> p,
                                                Ipv6Header const &header,
-                                               Ptr<Ipv6Interface> interface);
+                                               Ptr<Ipv6Interface> interface) override;
 
-  virtual void ReceiveIcmp (Ipv4Address icmpSource, uint8_t icmpTtl,
+  void ReceiveIcmp (Ipv4Address icmpSource, uint8_t icmpTtl,
                             uint8_t icmpType, uint8_t icmpCode, uint32_t icmpInfo,
                             Ipv4Address payloadSource,Ipv4Address payloadDestination,
-                            const uint8_t payload[8]);
-  virtual void ReceiveIcmp (Ipv6Address icmpSource, uint8_t icmpTtl,
+                            const uint8_t payload[8]) override;
+  void ReceiveIcmp (Ipv6Address icmpSource, uint8_t icmpTtl,
                             uint8_t icmpType, uint8_t icmpCode, uint32_t icmpInfo,
                             Ipv6Address payloadSource,Ipv6Address payloadDestination,
-                            const uint8_t payload[8]);
+                            const uint8_t payload[8]) override;
 
   // From IpL4Protocol
-  virtual void SetDownTarget (IpL4Protocol::DownTargetCallback cb);
-  virtual void SetDownTarget6 (IpL4Protocol::DownTargetCallback6 cb);
+  void SetDownTarget (IpL4Protocol::DownTargetCallback cb) override;
+  void SetDownTarget6 (IpL4Protocol::DownTargetCallback6 cb) override;
   // From IpL4Protocol
-  virtual IpL4Protocol::DownTargetCallback GetDownTarget (void) const;
-  virtual IpL4Protocol::DownTargetCallback6 GetDownTarget6 (void) const;
+  IpL4Protocol::DownTargetCallback GetDownTarget () const override;
+  IpL4Protocol::DownTargetCallback6 GetDownTarget6 () const override;
 
 protected:
-  virtual void DoDispose (void);
+  void DoDispose () override;
   /*
    * This function will notify other components connected to the node that a new stack member is now connected
    * This will be used to notify Layer 3 protocol of layer 4 protocol stack to connect them together.
    */
-  virtual void NotifyNewAggregate ();
+  void NotifyNewAggregate () override;
 private:
   Ptr<Node> m_node; //!< the node this stack is associated with
   Ipv4EndPointDemux *m_endPoints; //!< A list of IPv4 end points.

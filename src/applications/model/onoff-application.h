@@ -40,10 +40,10 @@ class RandomVariableStream;
 class Socket;
 
 /**
- * \ingroup applications 
+ * \ingroup applications
  * \defgroup onoff OnOffApplication
  *
- * This traffic generator follows an On/Off pattern: after 
+ * This traffic generator follows an On/Off pattern: after
  * Application::StartApplication
  * is called, "On" and "Off" states alternate. The duration of each of
  * these states is determined with the onTime and the offTime random
@@ -86,24 +86,24 @@ class Socket;
 *
  * If the attribute "EnableSeqTsSizeHeader" is enabled, the application will
  * use some bytes of the payload to store an header with a sequence number,
- * a timestamp, and the size of the packet sent. Support for extracting 
- * statistics from this header have been added to \c ns3::PacketSink 
+ * a timestamp, and the size of the packet sent. Support for extracting
+ * statistics from this header have been added to \c ns3::PacketSink
  * (enable its "EnableSeqTsSizeHeader" attribute), or users may extract
  * the header via trace sources.  Note that the continuity of the sequence
  * number may be disrupted across On/Off cycles.
 */
-class OnOffApplication : public Application 
+class OnOffApplication : public Application
 {
 public:
   /**
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   OnOffApplication ();
 
-  virtual ~OnOffApplication();
+  ~OnOffApplication() override;
 
   /**
    * \brief Set the total number of bytes to send.
@@ -119,7 +119,7 @@ public:
    * \brief Return a pointer to associated socket.
    * \return pointer to associated socket
    */
-  Ptr<Socket> GetSocket (void) const;
+  Ptr<Socket> GetSocket () const;
 
  /**
   * \brief Assign a fixed random variable stream number to the random variables
@@ -131,11 +131,11 @@ public:
   int64_t AssignStreams (int64_t stream);
 
 protected:
-  virtual void DoDispose (void);
+  void DoDispose () override;
 private:
   // inherited from Application base class.
-  virtual void StartApplication (void);    // Called at time specified by Start
-  virtual void StopApplication (void);     // Called at time specified by Stop
+  void StartApplication () override;    // Called at time specified by Start
+  void StopApplication () override;     // Called at time specified by Stop
 
   //helpers
   /**

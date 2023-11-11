@@ -20,13 +20,14 @@
  *
  */
 #include "building-list.h"
-#include "ns3/simulator.h"
-#include "ns3/object-vector.h"
+
+#include "building.h"
+
+#include "ns3/assert.h"
 #include "ns3/config.h"
 #include "ns3/log.h"
-#include "ns3/assert.h"
-#include "building-list.h"
-#include "building.h"
+#include "ns3/object-vector.h"
+#include "ns3/simulator.h"
 
 namespace ns3 {
 
@@ -42,29 +43,29 @@ public:
    * \brief Get the type ID.
    * \return The object TypeId.
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
   BuildingListPriv ();
-  ~BuildingListPriv ();
-  
+  ~BuildingListPriv () override;
+
   /**
    * Add a Building to the list.
-   * 
+   *
    * \param building building to add
    * \returns index of building in list.
    */
   uint32_t Add (Ptr<Building> building);
   /**
    * Returns an interator to the start of the list.
-   * 
+   *
    * \returns iterator to the begin of the container.
    */
-  BuildingList::Iterator Begin (void) const;
+  BuildingList::Iterator Begin () const;
   /**
    * Returns an interator to the end of the list.
-   * 
+   *
    * \returns iterator to the end of the container.
    */
-  BuildingList::Iterator End (void) const;
+  BuildingList::Iterator End () const;
   /**
    * Gets the n-th Building in the container
    * \param n Building position
@@ -75,35 +76,35 @@ public:
    * Gets the number of Building in the container
    * \returns the container size
    */
-  uint32_t GetNBuildings (void);
+  uint32_t GetNBuildings ();
 
   /**
    * Get the Singleton instance of BuildingListPriv (or create one)
    * \return the BuildingListPriv instance
    */
-  static Ptr<BuildingListPriv> Get (void);
+  static Ptr<BuildingListPriv> Get ();
 
 private:
-  virtual void DoDispose (void);
+  void DoDispose () override;
   /**
    * Get the Singleton instance of BuildingListPriv (or create one)
    * \return the BuildingListPriv instance
    */
-  static Ptr<BuildingListPriv> *DoGet (void);
+  static Ptr<BuildingListPriv> *DoGet ();
   /**
    * Dispose the Singleton instance of BuildingListPriv.
-   * 
+   *
    * \note: this function is automatically called at the simulation end.
-   * 
+   *
    */
-  static void Delete (void);
+  static void Delete ();
   std::vector<Ptr<Building> > m_buildings; //!< Container of Building
 };
 
 NS_OBJECT_ENSURE_REGISTERED (BuildingListPriv);
 
 TypeId
-BuildingListPriv::GetTypeId (void)
+BuildingListPriv::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::BuildingListPriv")
     .SetParent<Object> ()
@@ -117,15 +118,15 @@ BuildingListPriv::GetTypeId (void)
 }
 
 Ptr<BuildingListPriv>
-BuildingListPriv::Get (void)
+BuildingListPriv::Get ()
 {
   return *DoGet ();
 }
 Ptr<BuildingListPriv> *
-BuildingListPriv::DoGet (void)
+BuildingListPriv::DoGet ()
 {
-  static Ptr<BuildingListPriv> ptr = 0;
-  if (ptr == 0)
+  static Ptr<BuildingListPriv> ptr = nullptr;
+  if (!ptr)
     {
       ptr = CreateObject<BuildingListPriv> ();
       Config::RegisterRootNamespaceObject (ptr);
@@ -134,11 +135,11 @@ BuildingListPriv::DoGet (void)
   return &ptr;
 }
 void
-BuildingListPriv::Delete (void)
+BuildingListPriv::Delete ()
 {
   NS_LOG_FUNCTION_NOARGS ();
   Config::UnregisterRootNamespaceObject (Get ());
-  (*DoGet ()) = 0;
+  (*DoGet ()) = nullptr;
 }
 
 
@@ -150,7 +151,7 @@ BuildingListPriv::~BuildingListPriv ()
 {
 }
 void
-BuildingListPriv::DoDispose (void)
+BuildingListPriv::DoDispose ()
 {
   NS_LOG_FUNCTION_NOARGS ();
   for (std::vector<Ptr<Building> >::iterator i = m_buildings.begin ();
@@ -158,7 +159,7 @@ BuildingListPriv::DoDispose (void)
     {
       Ptr<Building> building = *i;
       building->Dispose ();
-      *i = 0;
+      *i = nullptr;
     }
   m_buildings.erase (m_buildings.begin (), m_buildings.end ());
   Object::DoDispose ();
@@ -175,17 +176,17 @@ BuildingListPriv::Add (Ptr<Building> building)
 
 }
 BuildingList::Iterator
-BuildingListPriv::Begin (void) const
+BuildingListPriv::Begin () const
 {
   return m_buildings.begin ();
 }
 BuildingList::Iterator
-BuildingListPriv::End (void) const
+BuildingListPriv::End () const
 {
   return m_buildings.end ();
 }
 uint32_t
-BuildingListPriv::GetNBuildings (void)
+BuildingListPriv::GetNBuildings ()
 {
   return m_buildings.size ();
 }
@@ -213,12 +214,12 @@ BuildingList::Add (Ptr<Building> building)
   return BuildingListPriv::Get ()->Add (building);
 }
 BuildingList::Iterator
-BuildingList::Begin (void)
+BuildingList::Begin ()
 {
   return BuildingListPriv::Get ()->Begin ();
 }
 BuildingList::Iterator
-BuildingList::End (void)
+BuildingList::End ()
 {
   return BuildingListPriv::Get ()->End ();
 }
@@ -228,7 +229,7 @@ BuildingList::GetBuilding (uint32_t n)
   return BuildingListPriv::Get ()->GetBuilding (n);
 }
 uint32_t
-BuildingList::GetNBuildings (void)
+BuildingList::GetNBuildings ()
 {
   return BuildingListPriv::Get ()->GetNBuildings ();
 }

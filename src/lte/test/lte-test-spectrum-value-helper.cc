@@ -34,7 +34,7 @@ NS_LOG_COMPONENT_DEFINE ("LteTestSpectrumValueHelper");
  * \ingroup lte-test
  * \ingroup tests
  *
- * \brief Test checks if lte spectrum model is generated properly. Different 
+ * \brief Test checks if lte spectrum model is generated properly. Different
  * test cases are configured by defining different frequency and banwidth.
  */
 class LteSpectrumModelTestCase : public TestCase
@@ -49,14 +49,14 @@ public:
    * \param fcs the expected spectrum model
    */
   LteSpectrumModelTestCase (const char* str, uint16_t earfcn, uint8_t bw, std::vector<double> fcs);
-  virtual ~LteSpectrumModelTestCase ();
+  ~LteSpectrumModelTestCase () override;
 
 protected:
   Ptr<SpectrumModel> m_actual; ///< actual spectrum model
   Ptr<SpectrumModel> m_expected; ///< expected spectrum model
 
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
 };
 
 LteSpectrumModelTestCase::LteSpectrumModelTestCase (const char* str, uint16_t earfcn, uint8_t bw, std::vector<double> fcs)
@@ -71,8 +71,8 @@ LteSpectrumModelTestCase::~LteSpectrumModelTestCase ()
 {
 }
 
-void 
-LteSpectrumModelTestCase::DoRun (void)
+void
+LteSpectrumModelTestCase::DoRun ()
 {
   NS_LOG_FUNCTION (this);
   NS_TEST_ASSERT_MSG_SPECTRUM_MODEL_EQ_TOL ((*m_actual), (*m_expected), 0.0000001, "spectrum model mismatch");
@@ -85,7 +85,7 @@ LteSpectrumModelTestCase::DoRun (void)
  * \ingroup lte-test
  * \ingroup tests
  *
- * \brief Test that the function for creation of LTE noise power spectral 
+ * \brief Test that the function for creation of LTE noise power spectral
  * density is working properly.
  */
 class LteNoisePsdTestCase : public TestCase
@@ -101,14 +101,14 @@ public:
    * \param expected executed spectrum value
    */
   LteNoisePsdTestCase (const char* str, uint16_t earfcn, uint8_t bw, double noiseFigureDb, SpectrumValue& expected);
-  virtual ~LteNoisePsdTestCase ();
+  ~LteNoisePsdTestCase () override;
 
 protected:
   Ptr<SpectrumValue> m_actual; ///< actual spectrum value
   Ptr<SpectrumValue> m_expected; ///< expected spectrum value
 
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
 };
 
 LteNoisePsdTestCase::LteNoisePsdTestCase (const char* str, uint16_t earfcn, uint8_t bw, double noiseFigureDb, SpectrumValue& expected)
@@ -123,8 +123,8 @@ LteNoisePsdTestCase::~LteNoisePsdTestCase ()
 {
 }
 
-void 
-LteNoisePsdTestCase::DoRun (void)
+void
+LteNoisePsdTestCase::DoRun ()
 {
   NS_TEST_ASSERT_MSG_EQ (m_actual->GetSpectrumModelUid (), m_expected->GetSpectrumModelUid (), "SpectrumModel UID mismatch");
   NS_TEST_ASSERT_MSG_SPECTRUM_VALUE_EQ_TOL ((*m_actual), (*m_expected), 0.0000001, "SpectrumValue not equal");
@@ -138,7 +138,7 @@ LteNoisePsdTestCase::DoRun (void)
  * \ingroup lte-test
  * \ingroup tests
  *
- * \brief Test that the funtcion for the creation of the Lte transmission power 
+ * \brief Test that the funtcion for the creation of the Lte transmission power
  * spectral density is working as expected.
  */
 class LteTxPsdTestCase : public TestCase
@@ -155,14 +155,14 @@ public:
    * \param expected executed spectrum value
    */
   LteTxPsdTestCase (const char* str, uint16_t earfcn, uint8_t bw, double txPowerDbm, std::vector<int> activeRbs, SpectrumValue& expected);
-  virtual ~LteTxPsdTestCase ();
+  ~LteTxPsdTestCase () override;
 
 protected:
   Ptr<SpectrumValue> m_actual; ///< actual spectrum value
   Ptr<SpectrumValue> m_expected; ///< expected spectrum value
 
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
 };
 
 LteTxPsdTestCase::LteTxPsdTestCase (const char* str, uint16_t earfcn, uint8_t bw, double txPowerDbm, std::vector<int> activeRbs, SpectrumValue& expected)
@@ -177,8 +177,8 @@ LteTxPsdTestCase::~LteTxPsdTestCase ()
 {
 }
 
-void 
-LteTxPsdTestCase::DoRun (void)
+void
+LteTxPsdTestCase::DoRun ()
 {
   NS_TEST_ASSERT_MSG_EQ (m_actual->GetSpectrumModelUid (), m_expected->GetSpectrumModelUid (), "SpectrumModel UID mismatch");
   NS_TEST_ASSERT_MSG_SPECTRUM_VALUE_EQ_TOL ((*m_actual), (*m_expected), 0.0000001, "SpectrumValues not equal");
@@ -191,7 +191,7 @@ LteTxPsdTestCase::DoRun (void)
  * \ingroup lte-test
  * \ingroup tests
  *
- * \brief Test suite for LteSpectrumValueHelper. Test suite is 
+ * \brief Test suite for LteSpectrumValueHelper. Test suite is
  * checking different functionalities of LteSpectrumValueHelper.
  */
 class LteSpectrumValueHelperTestSuite : public TestSuite
@@ -210,7 +210,7 @@ LteSpectrumValueHelperTestSuite::LteSpectrumValueHelperTestSuite ()
 //   LogComponentEnable ("LteSpectrumValueHelperTestSuite", logLevel);
 //   LogComponentEnable ("LteSpectrumValueHelper", logLevel);
 
- 
+
   NS_LOG_INFO ("Creating LteSpectrumValueHelperTestSuite");
 
 

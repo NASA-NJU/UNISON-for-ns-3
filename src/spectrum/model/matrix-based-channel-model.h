@@ -22,7 +22,7 @@
 #ifndef MATRIX_BASED_CHANNEL_H
 #define MATRIX_BASED_CHANNEL_H
 
-#include <complex.h>
+// #include <complex>
 #include <ns3/object.h>
 #include <ns3/nstime.h>
 #include <ns3/vector.h>
@@ -46,7 +46,7 @@ public:
   /**
    * Destructor for MatrixBasedChannelModel
    */
-  virtual ~MatrixBasedChannelModel ();
+  ~MatrixBasedChannelModel () override;
 
   typedef std::vector<double> DoubleVector; //!< type definition for vectors of doubles
   typedef std::vector<DoubleVector> Double2DVector; //!< type definition for matrices of doubles
@@ -68,7 +68,7 @@ public:
      * Destructor for ChannelMatrix
      */
     virtual ~ChannelMatrix () = default;
-    
+
     /**
      * Returns true if the ChannelMatrix object was generated
      * considering node b as transmitter and node a as receiver.
@@ -78,7 +78,8 @@ public:
      */
     bool IsReverse (uint32_t aAntennaId, uint32_t bAntennaId) const
     {
-      uint32_t sAntennaId, uAntennaId;
+      uint32_t sAntennaId;
+      uint32_t uAntennaId;
       std::tie (sAntennaId, uAntennaId) = m_antennaPair;
       NS_ASSERT_MSG ((sAntennaId == aAntennaId && uAntennaId == bAntennaId) || (sAntennaId == bAntennaId && uAntennaId == aAntennaId),
                       "This channel matrix does not represent the channel among the antenna arrays for which are provided IDs.");
@@ -126,7 +127,7 @@ public:
                                                Ptr<const MobilityModel> bMob,
                                                Ptr<const PhasedArrayModel> aAntenna,
                                                Ptr<const PhasedArrayModel> bAntenna) = 0;
-  
+
   /**
    * Returns a channel parameters structure used to obtain the channel between
    * the nodes with mobility objects passed as input parameters.

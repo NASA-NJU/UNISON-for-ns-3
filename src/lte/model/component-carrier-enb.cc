@@ -35,7 +35,7 @@ namespace ns3 {
 NS_LOG_COMPONENT_DEFINE ("ComponentCarrierEnb");
 NS_OBJECT_ENSURE_REGISTERED (ComponentCarrierEnb);
 
-TypeId ComponentCarrierEnb::GetTypeId (void)
+TypeId ComponentCarrierEnb::GetTypeId ()
 {
   static TypeId
     tid =
@@ -70,7 +70,7 @@ ComponentCarrierEnb::ComponentCarrierEnb ()
   NS_LOG_FUNCTION (this);
 }
 
-ComponentCarrierEnb::~ComponentCarrierEnb (void)
+ComponentCarrierEnb::~ComponentCarrierEnb ()
 {
   NS_LOG_FUNCTION (this);
 }
@@ -82,22 +82,22 @@ ComponentCarrierEnb::DoDispose ()
   if (m_phy)
     {
       m_phy->Dispose ();
-      m_phy = 0;
+      m_phy = nullptr;
     }
   if (m_mac)
     {
       m_mac->Dispose ();
-      m_mac = 0;
+      m_mac = nullptr;
     }
   if (m_scheduler)
     {
       m_scheduler->Dispose ();
-      m_scheduler = 0;
+      m_scheduler = nullptr;
     }
   if (m_ffrAlgorithm)
     {
       m_ffrAlgorithm->Dispose ();
-      m_ffrAlgorithm = 0;
+      m_ffrAlgorithm = nullptr;
     }
 
   Object::DoDispose ();
@@ -105,7 +105,7 @@ ComponentCarrierEnb::DoDispose ()
 
 
 void
-ComponentCarrierEnb::DoInitialize (void)
+ComponentCarrierEnb::DoInitialize ()
 {
   NS_LOG_FUNCTION (this);
   m_phy->Initialize ();
@@ -123,7 +123,7 @@ ComponentCarrierEnb::GetPhy ()
 }
 
 
-void 
+void
 ComponentCarrierEnb::SetPhy (Ptr<LteEnbPhy> s)
 {
   NS_LOG_FUNCTION (this);
@@ -136,7 +136,7 @@ ComponentCarrierEnb::GetMac ()
   NS_LOG_FUNCTION (this);
   return m_mac;
 }
-void 
+void
 ComponentCarrierEnb::SetMac (Ptr<LteEnbMac> s)
 {
   NS_LOG_FUNCTION (this);
@@ -150,7 +150,7 @@ ComponentCarrierEnb::GetFfrAlgorithm ()
   return m_ffrAlgorithm;
 }
 
-void 
+void
 ComponentCarrierEnb::SetFfrAlgorithm (Ptr<LteFfrAlgorithm> s)
 {
   NS_LOG_FUNCTION (this);

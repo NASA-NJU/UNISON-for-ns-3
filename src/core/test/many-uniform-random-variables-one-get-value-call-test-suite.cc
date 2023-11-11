@@ -48,10 +48,10 @@ public:
   /** Constructor. */
   ManyUniformRandomVariablesOneGetValueCallTestCase ();
   /** Destructor. */
-  virtual ~ManyUniformRandomVariablesOneGetValueCallTestCase ();
+  ~ManyUniformRandomVariablesOneGetValueCallTestCase () override;
 
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
 };
 
 ManyUniformRandomVariablesOneGetValueCallTestCase::ManyUniformRandomVariablesOneGetValueCallTestCase ()
@@ -62,7 +62,7 @@ ManyUniformRandomVariablesOneGetValueCallTestCase::~ManyUniformRandomVariablesOn
 {}
 
 void
-ManyUniformRandomVariablesOneGetValueCallTestCase::DoRun (void)
+ManyUniformRandomVariablesOneGetValueCallTestCase::DoRun ()
 {
   const double min = 0.0;
   const double max = 10.0;

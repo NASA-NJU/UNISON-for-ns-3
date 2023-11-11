@@ -37,13 +37,13 @@ class SimpleOfdmWimaxPhy;
 
 /**
  * \ingroup wimax
- * \brief SimpleOfdmWimaxChannel class 
+ * \brief SimpleOfdmWimaxChannel class
  */
 class SimpleOfdmWimaxChannel : public WimaxChannel
 {
 public:
-  SimpleOfdmWimaxChannel (void);
-  ~SimpleOfdmWimaxChannel (void);
+  SimpleOfdmWimaxChannel ();
+  ~SimpleOfdmWimaxChannel () override;
 
   /// PropModel enumeration
   enum PropModel
@@ -53,13 +53,13 @@ public:
     LOG_DISTANCE_PROPAGATION,
     COST231_PROPAGATION
   };
-  
+
   /**
    * Register this type.
    * \return The TypeId.
    */
-  static TypeId GetTypeId (void);
-  
+  static TypeId GetTypeId ();
+
   /**
    * \brief Creates a channel and sets the propagation model
    * \param propModel the propagation model to use
@@ -98,20 +98,20 @@ public:
   * \param stream first stream index to use
   * \return the number of stream indices assigned by this model
   */
-  int64_t AssignStreams (int64_t stream);
+  int64_t AssignStreams (int64_t stream) override;
 
 private:
   /**
    * Attach functiion
    * \param phy the phy layer
    */
-  void DoAttach (Ptr<WimaxPhy> phy);
+  void DoAttach (Ptr<WimaxPhy> phy) override;
   std::list<Ptr<SimpleOfdmWimaxPhy> > m_phyList; ///< phy list
   /**
    * Get number of devices function
    * \returns the number of devices
    */
-  std::size_t DoGetNDevices (void) const;
+  std::size_t DoGetNDevices () const override;
   /**
    * End send dummy block function
    * \param rxphy the Ptr<SimpleOfdmWimaxPhy>
@@ -123,7 +123,7 @@ private:
    * \param i the device index
    * \returns the device
    */
-  Ptr<NetDevice> DoGetDevice (std::size_t i) const;
+  Ptr<NetDevice> DoGetDevice (std::size_t i) const override;
   Ptr<PropagationLossModel> m_loss; ///< loss
 };
 

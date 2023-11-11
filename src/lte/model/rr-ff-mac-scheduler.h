@@ -69,25 +69,25 @@ public:
   /**
    * Destructor
    */
-  virtual ~RrFfMacScheduler ();
+  ~RrFfMacScheduler () override;
 
   // inherited from Object
-  virtual void DoDispose (void);
+  void DoDispose () override;
   /**
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   // inherited from FfMacScheduler
-  virtual void SetFfMacCschedSapUser (FfMacCschedSapUser* s);
-  virtual void SetFfMacSchedSapUser (FfMacSchedSapUser* s);
-  virtual FfMacCschedSapProvider* GetFfMacCschedSapProvider ();
-  virtual FfMacSchedSapProvider* GetFfMacSchedSapProvider ();
+  void SetFfMacCschedSapUser (FfMacCschedSapUser* s) override;
+  void SetFfMacSchedSapUser (FfMacSchedSapUser* s) override;
+  FfMacCschedSapProvider* GetFfMacCschedSapProvider () override;
+  FfMacSchedSapProvider* GetFfMacSchedSapProvider () override;
 
   // FFR SAPs
-  virtual void SetLteFfrSapProvider (LteFfrSapProvider* s);
-  virtual LteFfrSapUser* GetLteFfrSapUser ();
+  void SetLteFfrSapProvider (LteFfrSapProvider* s) override;
+  LteFfrSapUser* GetLteFfrSapUser () override;
 
   /// allow MemberCschedSapProvider<RrFfMacScheduler> class friend access
   friend class MemberCschedSapProvider<RrFfMacScheduler>;
@@ -224,9 +224,9 @@ private:
   static bool SortRlcBufferReq (FfMacSchedSapProvider::SchedDlRlcBufferReqParameters i,FfMacSchedSapProvider::SchedDlRlcBufferReqParameters j);
 
   /// Refresh DL CQI maps function
-  void RefreshDlCqiMaps (void);
+  void RefreshDlCqiMaps ();
   /// Refresh UL CQI maps function
-  void RefreshUlCqiMaps (void);
+  void RefreshUlCqiMaps ();
 
   /**
    * \brief Update DL RLC buffer info function
@@ -321,7 +321,7 @@ private:
   uint32_t m_cqiTimersThreshold; ///< # of TTIs for which a CQI can be considered valid
 
   std::map <uint16_t,uint8_t> m_uesTxMode; ///< txMode of the UEs
-  
+
 
 
   // HARQ attributes

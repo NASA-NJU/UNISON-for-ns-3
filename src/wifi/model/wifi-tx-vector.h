@@ -23,6 +23,7 @@
 #define WIFI_TX_VECTOR_H
 
 #include <list>
+#include <vector>
 #include "wifi-mode.h"
 #include "wifi-phy-common.h"
 #include "ns3/he-ru.h"
@@ -51,6 +52,18 @@ struct HeMuUserInfo
     */
   bool operator!= (const HeMuUserInfo& other) const;
 };
+
+/// A vector of subcarrier group
+using SubcarrierGroups = std::vector<HeRu::SubcarrierGroup>;
+
+/// Maximum number of HE-SIG-B content channels
+constexpr size_t WIFI_MAX_NUM_HE_SIGB_CONTENT_CHANNELS = 2;
+
+/// HE SIG-B Content Channels STA ID Allocation
+using ContentChannelAllocation = std::vector<std::vector<uint16_t>>;
+
+/// 8 bit RU_ALLOCATION per 20 MHz
+using RuAllocation = std::vector<uint8_t>;
 
 /**
  * This class mimics the TXVECTOR which is to be
@@ -129,7 +142,7 @@ public:
   /**
    * \returns whether mode has been initialized
    */
-  bool GetModeInitialized (void) const;
+  bool GetModeInitialized () const;
   /**
    * If this TX vector is associated with an SU PPDU, return the selected
    * payload transmission mode. If this TX vector is associated with an
@@ -159,12 +172,12 @@ public:
    *
    * \return the Modulation Class specified by this TXVECTOR
    */
-  WifiModulationClass GetModulationClass (void) const;
+  WifiModulationClass GetModulationClass () const;
 
   /**
    * \returns the transmission power level
    */
-  uint8_t GetTxPowerLevel (void) const;
+  uint8_t GetTxPowerLevel () const;
   /**
    * Sets the selected transmission power level
    *
@@ -174,7 +187,7 @@ public:
   /**
    * \returns the preamble type
    */
-  WifiPreamble GetPreambleType (void) const;
+  WifiPreamble GetPreambleType () const;
   /**
    * Sets the preamble type
    *
@@ -184,7 +197,7 @@ public:
   /**
    * \returns the channel width (in MHz)
    */
-  uint16_t GetChannelWidth (void) const;
+  uint16_t GetChannelWidth () const;
   /**
    * Sets the selected channelWidth (in MHz)
    *
@@ -194,7 +207,7 @@ public:
   /**
    * \returns the guard interval duration (in nanoseconds)
    */
-  uint16_t GetGuardInterval (void) const;
+  uint16_t GetGuardInterval () const;
   /**
   * Sets the guard interval duration (in nanoseconds)
   *
@@ -204,7 +217,7 @@ public:
   /**
    * \returns the number of TX antennas
    */
-  uint8_t GetNTx (void) const;
+  uint8_t GetNTx () const;
   /**
    * Sets the number of TX antennas
    *
@@ -224,7 +237,7 @@ public:
   /**
    * \returns the maximum number of Nss (namely if MU)
    */
-  uint8_t GetNssMax (void) const;
+  uint8_t GetNssMax () const;
   /**
    * Sets the number of Nss
    *
@@ -241,7 +254,7 @@ public:
   /**
    * \returns the number of extended spatial streams
    */
-  uint8_t GetNess (void) const;
+  uint8_t GetNess () const;
   /**
    * Sets the Ness number
    *
@@ -253,7 +266,7 @@ public:
    *  \returns true if this PSDU has A-MPDU aggregation,
    *           false otherwise.
    */
-  bool IsAggregation (void) const;
+  bool IsAggregation () const;
   /**
    * Sets if PSDU contains A-MPDU.
    *
@@ -266,7 +279,7 @@ public:
    * \returns true if STBC is used,
    *           false otherwise
    */
-  bool IsStbc (void) const;
+  bool IsStbc () const;
   /**
    * Sets if STBC is being used
    *
@@ -279,7 +292,7 @@ public:
    * \returns true if LDPC is used,
    *          false if BCC is used
    */
-  bool IsLdpc (void) const;
+  bool IsLdpc () const;
   /**
    * Sets if LDPC FEC coding is being used
    *
@@ -295,7 +308,7 @@ public:
    * Get the BSS color
    * \return the BSS color
    */
-  uint8_t GetBssColor (void) const;
+  uint8_t GetBssColor () const;
   /**
    * Set the LENGTH field of the L-SIG
    * \param length the LENGTH field of the L-SIG
@@ -305,7 +318,7 @@ public:
    * Get the LENGTH field of the L-SIG
    * \return the LENGTH field of the L-SIG
    */
-  uint16_t GetLength (void) const;
+  uint16_t GetLength () const;
   /**
    * The standard disallows certain combinations of WifiMode, number of
    * spatial streams, and channel widths.  This method can be used to
@@ -313,25 +326,25 @@ public:
    *
    * \return true if the WifiTxVector parameters are allowed by the standard
    */
-  bool IsValid (void) const;
+  bool IsValid () const;
    /**
    * Return true if this TX vector is used for a multi-user transmission.
    *
    * \return true if this TX vector is used for a multi-user transmission
    */
-  bool IsMu (void) const;
+  bool IsMu () const;
    /**
    * Return true if this TX vector is used for a downlink multi-user transmission.
    *
    * \return true if this TX vector is used for a downlink multi-user transmission
    */
-  bool IsDlMu (void) const;
+  bool IsDlMu () const;
    /**
    * Return true if this TX vector is used for an uplink multi-user transmission.
    *
    * \return true if this TX vector is used for an uplink multi-user transmission
    */
-  bool IsUlMu (void) const;
+  bool IsUlMu () const;
   /**
     * Get the RU specification for the STA-ID.
     * This is applicable only for MU.
@@ -370,14 +383,14 @@ public:
     *
     * \return a const reference to the map of HE MU user-specific information indexed by STA-ID
     */
-   const HeMuUserInfoMap& GetHeMuUserInfoMap (void) const;
+   const HeMuUserInfoMap& GetHeMuUserInfoMap () const;
    /**
     * Get a reference to the map HE MU user-specific transmission information indexed by STA-ID.
     * This is applicable only for HE MU.
     *
     * \return a reference to the map of HE MU user-specific information indexed by STA-ID
     */
-   HeMuUserInfoMap& GetHeMuUserInfoMap (void);
+   HeMuUserInfoMap& GetHeMuUserInfoMap ();
    /**
     * Get the number of RUs per HE-SIG-B content channel.
     * This is applicable only for MU. MU-MIMO (i.e. multiple stations
@@ -386,10 +399,65 @@ public:
     *
     * \return a pair containing the number of RUs in each HE-SIG-B content channel (resp. 1 and 2)
     */
-   std::pair<std::size_t, std::size_t> GetNumRusPerHeSigBContentChannel (void) const;
+   std::pair<std::size_t, std::size_t> GetNumRusPerHeSigBContentChannel () const;
 
+   /**
+    * Set the 20 MHz subchannels that are punctured.
+    *
+    * \param inactiveSubchannels the bitmap indexed by the 20 MHz subchannels in ascending order,
+    *        where each bit indicates whether the corresponding 20 MHz subchannel is punctured or not
+    *        within the transmission bandwidth
+    */
+   void SetInactiveSubchannels (const std::vector<bool>& inactiveSubchannels);
+   /**
+    * Get the 20 MHz subchannels that are punctured.
+    *
+    * \return the bitmap indexed by the 20 MHz subchannels in ascending order,
+    *         where each bit indicates whether the corresponding 20 MHz subchannel is punctured or not
+    *         within the transmission bandwidth
+    */
+   const std::vector<bool>& GetInactiveSubchannels () const;
+
+  /**
+   * Set the MCS used for SIG-B
+   * \param mode MCS used for SIG-B
+   */
+  void SetSigBMode (const WifiMode& mode);
+
+  /**
+   * Get MCS used for SIG-B
+   * \return MCS for SIG-B
+   */
+  WifiMode GetSigBMode () const;
+
+  /**
+   * Set RU Allocation of SIG-B common field
+   * \param ruAlloc 8 bit RU_ALLOCATION per 20 MHz
+   */
+  void SetRuAllocation (const RuAllocation& ruAlloc);
+
+  /**
+   * Get RU Allocation of SIG-B
+   * \return 8 bit RU_ALLOCATION per 20 MHz
+   */
+  const RuAllocation& GetRuAllocation () const;
+
+  /**
+   * Get the HE SIG-B content channel STA ID allocation
+   * IEEE 802.11ax-2021 27.3.11.8.2 HE-SIG-B content channels
+   * \return content channel allocation
+   */
+  ContentChannelAllocation GetContentChannelAllocation () const;
 
 private:
+  /**
+   * Derive the RU allocation from the TXVECTOR for which its RU allocation has not been set yet.
+   * This is valid only for allocations of RUs of the same size.
+   *
+   * \return the RU allocation
+   */
+  RuAllocation DeriveRuAllocation () const;
+
   WifiMode m_mode;               /**< The DATARATE parameter in Table 15-4.
                                  It is the value that will be passed
                                  to PMD_RATE.request */
@@ -415,6 +483,12 @@ private:
                                       indexed by station ID (STA-ID) corresponding
                                       to the 11 LSBs of the AID of the recipient STA
                                       This list shall be used only for HE MU */
+  std::vector<bool> m_inactiveSubchannels; /**< Bitmap of inactive subchannels used for preamble puncturing */
+
+  WifiMode m_sigBMcs; /**< MCS_SIG_B per Table 27-1 IEEE 802.11ax-2021 */
+
+  mutable RuAllocation m_ruAllocation; /**< RU allocations that are going to be carried
+                                            in SIG-B common field per Table 27-1 IEEE */
 };
 
 /**
@@ -425,7 +499,7 @@ private:
  *
  * \return ouput stream
  */
-std::ostream & operator << (std::ostream & os,const WifiTxVector &v);
+std::ostream & operator << (std::ostream & os, const WifiTxVector &v);
 
 } //namespace ns3
 

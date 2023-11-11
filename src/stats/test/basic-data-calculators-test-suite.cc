@@ -25,7 +25,8 @@
 
 using namespace ns3;
 
-const double TOLERANCE = 1e-14;
+// See issue #698 for discussion of this tolerance
+const double TOLERANCE = 1e-13;
 
 /**
  * \ingroup stats-tests
@@ -36,10 +37,10 @@ class OneIntegerTestCase : public TestCase
 {
 public:
   OneIntegerTestCase ();
-  virtual ~OneIntegerTestCase ();
+  ~OneIntegerTestCase () override;
 
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
 };
 
 OneIntegerTestCase::OneIntegerTestCase ()
@@ -53,7 +54,7 @@ OneIntegerTestCase::~OneIntegerTestCase ()
 }
 
 void
-OneIntegerTestCase::DoRun (void)
+OneIntegerTestCase::DoRun ()
 {
   MinMaxAvgTotalCalculator<int> calculator;
 
@@ -108,10 +109,10 @@ class FiveIntegersTestCase : public TestCase
 {
 public:
   FiveIntegersTestCase ();
-  virtual ~FiveIntegersTestCase ();
+  ~FiveIntegersTestCase () override;
 
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
 };
 
 FiveIntegersTestCase::FiveIntegersTestCase ()
@@ -125,7 +126,7 @@ FiveIntegersTestCase::~FiveIntegersTestCase ()
 }
 
 void
-FiveIntegersTestCase::DoRun (void)
+FiveIntegersTestCase::DoRun ()
 {
   MinMaxAvgTotalCalculator<int> calculator;
 
@@ -180,10 +181,10 @@ class FiveDoublesTestCase : public TestCase
 {
 public:
   FiveDoublesTestCase ();
-  virtual ~FiveDoublesTestCase ();
+  ~FiveDoublesTestCase () override;
 
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
 };
 
 FiveDoublesTestCase::FiveDoublesTestCase ()
@@ -197,7 +198,7 @@ FiveDoublesTestCase::~FiveDoublesTestCase ()
 }
 
 void
-FiveDoublesTestCase::DoRun (void)
+FiveDoublesTestCase::DoRun ()
 {
   MinMaxAvgTotalCalculator<double> calculator;
 

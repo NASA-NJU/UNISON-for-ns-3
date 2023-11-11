@@ -32,7 +32,7 @@ NS_LOG_COMPONENT_DEFINE ("Ipv6ListRouting");
 NS_OBJECT_ENSURE_REGISTERED (Ipv6ListRouting);
 
 TypeId
-Ipv6ListRouting::GetTypeId (void)
+Ipv6ListRouting::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::Ipv6ListRouting")
     .SetParent<Ipv6RoutingProtocol> ()
@@ -44,7 +44,7 @@ Ipv6ListRouting::GetTypeId (void)
 
 
 Ipv6ListRouting::Ipv6ListRouting ()
-  : m_ipv6 (0)
+  : m_ipv6 (nullptr)
 {
   NS_LOG_FUNCTION (this);
 }
@@ -55,7 +55,7 @@ Ipv6ListRouting::~Ipv6ListRouting ()
 }
 
 void
-Ipv6ListRouting::DoDispose (void)
+Ipv6ListRouting::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
   for (Ipv6RoutingProtocolList::iterator rprotoIter = m_routingProtocols.begin ();
@@ -64,10 +64,10 @@ Ipv6ListRouting::DoDispose (void)
       // Note:  Calling dispose on these protocols causes memory leak
       //        The routing protocols should not maintain a pointer to
       //        this object, so Dispose () shouldn't be necessary.
-      (*rprotoIter).second = 0;
+      (*rprotoIter).second = nullptr;
     }
   m_routingProtocols.clear ();
-  m_ipv6 = 0;
+  m_ipv6 = nullptr;
 }
 
 Ptr<Ipv6Route>
@@ -92,7 +92,7 @@ Ipv6ListRouting::RouteOutput (Ptr<Packet> p, const Ipv6Header &header, Ptr<NetDe
   NS_LOG_LOGIC ("Done checking " << GetTypeId ());
   NS_LOG_LOGIC ("");
   sockerr = Socket::ERROR_NOROUTETOHOST;
-  return 0;
+  return nullptr;
 }
 
 // Patterned after Linux ip_route_input and ip_route_input_slow
@@ -104,7 +104,7 @@ Ipv6ListRouting::RouteInput (Ptr<const Packet> p, const Ipv6Header &header, Ptr<
   NS_LOG_FUNCTION (p << header << idev);
   NS_LOG_LOGIC ("RouteInput logic for node: " << m_ipv6->GetObject<Node> ()->GetId ());
 
-  NS_ASSERT (m_ipv6 != 0);
+  NS_ASSERT (m_ipv6);
   // Check if input device supports IP
   NS_ASSERT (m_ipv6->GetInterfaceForDevice (idev) >= 0);
   Ipv6Address dst = header.GetDestination ();
@@ -230,7 +230,7 @@ void
 Ipv6ListRouting::SetIpv6 (Ptr<Ipv6> ipv6)
 {
   NS_LOG_FUNCTION (this << ipv6);
-  NS_ASSERT (m_ipv6 == 0);
+  NS_ASSERT (!m_ipv6);
   for (Ipv6RoutingProtocolList::const_iterator rprotoIter =
          m_routingProtocols.begin ();
        rprotoIter != m_routingProtocols.end ();
@@ -245,16 +245,16 @@ void
 Ipv6ListRouting::AddRoutingProtocol (Ptr<Ipv6RoutingProtocol> routingProtocol, int16_t priority)
 {
   NS_LOG_FUNCTION (this << routingProtocol->GetInstanceTypeId () << priority);
-  m_routingProtocols.push_back (std::make_pair (priority, routingProtocol));
+  m_routingProtocols.emplace_back (priority, routingProtocol);
   m_routingProtocols.sort ( Compare );
-  if (m_ipv6 != 0)
+  if (m_ipv6)
     {
       routingProtocol->SetIpv6 (m_ipv6);
     }
 }
 
 uint32_t
-Ipv6ListRouting::GetNRoutingProtocols (void) const
+Ipv6ListRouting::GetNRoutingProtocols () const
 {
   NS_LOG_FUNCTION (this);
   return m_routingProtocols.size ();
@@ -278,7 +278,7 @@ Ipv6ListRouting::GetRoutingProtocol (uint32_t index, int16_t& priority) const
           return (*rprotoIter).second;
         }
     }
-  return 0;
+  return nullptr;
 }
 
 bool

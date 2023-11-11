@@ -125,7 +125,7 @@ Ptr<const TraceSourceAccessor> MakeTraceSourceAccessor (T a);
 static inline
 Ptr<const TraceSourceAccessor> MakeEmptyTraceSourceAccessor ()
 {
-  return Ptr<const TraceSourceAccessor> (0);
+  return Ptr<const TraceSourceAccessor> (nullptr);
 }
 
 } // namespace ns3
@@ -152,40 +152,40 @@ DoMakeTraceSourceAccessor (SOURCE T::*a)
 {
   struct Accessor : public TraceSourceAccessor
   {
-    virtual bool ConnectWithoutContext (ObjectBase *obj, const CallbackBase &cb) const
+    bool ConnectWithoutContext (ObjectBase *obj, const CallbackBase &cb) const override
     {
       T *p = dynamic_cast<T*> (obj);
-      if (p == 0)
+      if (p == nullptr)
         {
           return false;
         }
       (p->*m_source).ConnectWithoutContext (cb);
       return true;
     }
-    virtual bool Connect (ObjectBase *obj, std::string context, const CallbackBase &cb) const
+    bool Connect (ObjectBase *obj, std::string context, const CallbackBase &cb) const override
     {
       T *p = dynamic_cast<T*> (obj);
-      if (p == 0)
+      if (p == nullptr)
         {
           return false;
         }
       (p->*m_source).Connect (cb, context);
       return true;
     }
-    virtual bool DisconnectWithoutContext (ObjectBase *obj, const CallbackBase &cb) const
+    bool DisconnectWithoutContext (ObjectBase *obj, const CallbackBase &cb) const override
     {
       T *p = dynamic_cast<T*> (obj);
-      if (p == 0)
+      if (p == nullptr)
         {
           return false;
         }
       (p->*m_source).DisconnectWithoutContext (cb);
       return true;
     }
-    virtual bool Disconnect (ObjectBase *obj, std::string context, const CallbackBase &cb) const
+    bool Disconnect (ObjectBase *obj, std::string context, const CallbackBase &cb) const override
     {
       T *p = dynamic_cast<T*> (obj);
-      if (p == 0)
+      if (p == nullptr)
         {
           return false;
         }

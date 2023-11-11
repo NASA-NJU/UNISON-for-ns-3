@@ -21,6 +21,7 @@
 #ifndef LTE_TEST_LINK_ADAPTATION_H
 #define LTE_TEST_LINK_ADAPTATION_H
 
+#include "ns3/lte-common.h"
 #include "ns3/test.h"
 
 
@@ -59,7 +60,7 @@ public:
    */
   LteLinkAdaptationTestCase (std::string name, double snrDb, double loss, uint16_t mcsIndex);
   LteLinkAdaptationTestCase ();
-  virtual ~LteLinkAdaptationTestCase ();
+  ~LteLinkAdaptationTestCase () override;
 
   /**
    * \brief DL scheduling function
@@ -68,7 +69,7 @@ public:
   void DlScheduling (DlSchedulingCallbackInfo dlInfo);
 
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
 
   double m_snrDb; ///< the SNR in dB
   double m_loss; ///< the loss

@@ -45,7 +45,7 @@ namespace ns3 {
 NS_LOG_COMPONENT_DEFINE ("FdReader");
 
 FdReader::FdReader ()
-  : m_fd (-1), m_readCallback (0), m_stop (false),
+  : m_fd (-1), m_stop (false),
     m_destroyEvent ()
 {
   NS_LOG_FUNCTION (this);
@@ -110,14 +110,14 @@ void FdReader::Start (int fd, Callback<void, uint8_t *, ssize_t> readCallback)
   m_readThread = std::thread (&FdReader::Run, this);
 }
 
-void FdReader::DestroyEvent (void)
+void FdReader::DestroyEvent ()
 {
   NS_LOG_FUNCTION (this);
   Stop ();
   this->Unref ();
 }
 
-void FdReader::Stop (void)
+void FdReader::Stop ()
 {
   NS_LOG_FUNCTION (this);
   m_stop = true;
@@ -160,7 +160,7 @@ void FdReader::Stop (void)
 }
 
 // This runs in a separate thread
-void FdReader::Run (void)
+void FdReader::Run ()
 {
   NS_LOG_FUNCTION (this);
   int nfds;
@@ -177,7 +177,7 @@ void FdReader::Run (void)
       int r;
       fd_set readfds = rfds;
 
-      r = select (nfds, &readfds, NULL, NULL, NULL);
+      r = select (nfds, &readfds, nullptr, nullptr, nullptr);
       if (r == -1 && errno != EINTR)
         {
           NS_FATAL_ERROR ("select() failed: " << std::strerror (errno));

@@ -67,7 +67,7 @@ NS_OBJECT_ENSURE_REGISTERED (TcpL4Protocol);
 const uint8_t TcpL4Protocol::PROT_NUMBER = 6;
 
 TypeId
-TcpL4Protocol::GetTypeId (void)
+TcpL4Protocol::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::TcpL4Protocol")
     .SetParent<IpL4Protocol> ()
@@ -122,9 +122,9 @@ TcpL4Protocol::NotifyNewAggregate ()
   Ptr<Ipv4> ipv4 = this->GetObject<Ipv4> ();
   Ptr<Ipv6> ipv6 = node->GetObject<Ipv6> ();
 
-  if (m_node == 0)
+  if (!m_node)
     {
-      if ((node != 0) && (ipv4 != 0 || ipv6 != 0))
+      if (node && (ipv4 || ipv6 ))
         {
           this->SetNode (node);
           Ptr<TcpSocketFactoryImpl> tcpFactory = CreateObject<TcpSocketFactoryImpl> ();
@@ -138,12 +138,12 @@ TcpL4Protocol::NotifyNewAggregate ()
   // need to keep track of whether we are connected to an IPv4 or
   // IPv6 lower layer and call the appropriate one.
 
-  if (ipv4 != 0 && m_downTarget.IsNull ())
+  if (ipv4 && m_downTarget.IsNull ())
     {
       ipv4->Insert (this);
       this->SetDownTarget (MakeCallback (&Ipv4::Send, ipv4));
     }
-  if (ipv6 != 0 && m_downTarget6.IsNull ())
+  if (ipv6 && m_downTarget6.IsNull ())
     {
       ipv6->Insert (this);
       this->SetDownTarget6 (MakeCallback (&Ipv6::Send, ipv6));
@@ -152,30 +152,30 @@ TcpL4Protocol::NotifyNewAggregate ()
 }
 
 int
-TcpL4Protocol::GetProtocolNumber (void) const
+TcpL4Protocol::GetProtocolNumber () const
 {
   return PROT_NUMBER;
 }
 
 void
-TcpL4Protocol::DoDispose (void)
+TcpL4Protocol::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
   m_sockets.clear ();
 
-  if (m_endPoints != 0)
+  if (m_endPoints != nullptr)
     {
       delete m_endPoints;
-      m_endPoints = 0;
+      m_endPoints = nullptr;
     }
 
-  if (m_endPoints6 != 0)
+  if (m_endPoints6 != nullptr)
     {
       delete m_endPoints6;
-      m_endPoints6 = 0;
+      m_endPoints6 = nullptr;
     }
 
-  m_node = 0;
+  m_node = nullptr;
   m_downTarget.Nullify ();
   m_downTarget6.Nullify ();
   IpL4Protocol::DoDispose ();
@@ -214,13 +214,13 @@ TcpL4Protocol::CreateSocket (TypeId congestionTypeId, TypeId recoveryTypeId)
 }
 
 Ptr<Socket>
-TcpL4Protocol::CreateSocket (void)
+TcpL4Protocol::CreateSocket ()
 {
   return CreateSocket (m_congestionTypeId, m_recoveryTypeId);
 }
 
 Ipv4EndPoint *
-TcpL4Protocol::Allocate (void)
+TcpL4Protocol::Allocate ()
 {
   NS_LOG_FUNCTION (this);
   return m_endPoints->Allocate ();
@@ -266,7 +266,7 @@ TcpL4Protocol::DeAllocate (Ipv4EndPoint *endPoint)
 }
 
 Ipv6EndPoint *
-TcpL4Protocol::Allocate6 (void)
+TcpL4Protocol::Allocate6 ()
 {
   NS_LOG_FUNCTION (this);
   return m_endPoints6->Allocate ();
@@ -319,14 +319,15 @@ TcpL4Protocol::ReceiveIcmp (Ipv4Address icmpSource, uint8_t icmpTtl,
 {
   NS_LOG_FUNCTION (this << icmpSource << (uint16_t) icmpTtl << (uint16_t) icmpType << (uint16_t) icmpCode << icmpInfo
                         << payloadSource << payloadDestination);
-  uint16_t src, dst;
+  uint16_t src;
+  uint16_t dst;
   src = payload[0] << 8;
   src |= payload[1];
   dst = payload[2] << 8;
   dst |= payload[3];
 
   Ipv4EndPoint *endPoint = m_endPoints->SimpleLookup (payloadSource, src, payloadDestination, dst);
-  if (endPoint != 0)
+  if (endPoint != nullptr)
     {
       endPoint->ForwardIcmp (icmpSource, icmpTtl, icmpType, icmpCode, icmpInfo);
     }
@@ -346,14 +347,15 @@ TcpL4Protocol::ReceiveIcmp (Ipv6Address icmpSource, uint8_t icmpTtl,
 {
   NS_LOG_FUNCTION (this << icmpSource << (uint16_t) icmpTtl << (uint16_t) icmpType << (uint16_t) icmpCode << icmpInfo
                         << payloadSource << payloadDestination);
-  uint16_t src, dst;
+  uint16_t src;
+  uint16_t dst;
   src = payload[0] << 8;
   src |= payload[1];
   dst = payload[2] << 8;
   dst |= payload[3];
 
   Ipv6EndPoint *endPoint = m_endPoints6->SimpleLookup (payloadSource, src, payloadDestination, dst);
-  if (endPoint != 0)
+  if (endPoint != nullptr)
     {
       endPoint->ForwardIcmp (icmpSource, icmpTtl, icmpType, icmpCode, icmpInfo);
     }
@@ -459,12 +461,13 @@ TcpL4Protocol::Receive (Ptr<Packet> packet,
 
   if (endPoints.empty ())
     {
-      if (this->GetObject<Ipv6L3Protocol> () != 0)
+      if (this->GetObject<Ipv6L3Protocol> ())
         {
           NS_LOG_LOGIC ("  No Ipv4 endpoints matched on TcpL4Protocol, trying Ipv6 " << this);
           Ptr<Ipv6Interface> fakeInterface;
           Ipv6Header ipv6Header;
-          Ipv6Address src, dst;
+          Ipv6Address src;
+          Ipv6Address dst;
 
           src = Ipv6Address::MakeIpv4MappedAddress (incomingIpHeader.GetSource ());
           dst = Ipv6Address::MakeIpv4MappedAddress (incomingIpHeader.GetDestination ());
@@ -578,7 +581,7 @@ TcpL4Protocol::SendPacketV4 (Ptr<Packet> packet, const TcpHeader &outgoing,
 
   Ptr<Ipv4> ipv4 =
     m_node->GetObject<Ipv4> ();
-  if (ipv4 != 0)
+  if (ipv4)
     {
       Ipv4Header header;
       header.SetSource (saddr);
@@ -586,14 +589,14 @@ TcpL4Protocol::SendPacketV4 (Ptr<Packet> packet, const TcpHeader &outgoing,
       header.SetProtocol (PROT_NUMBER);
       Socket::SocketErrno errno_;
       Ptr<Ipv4Route> route;
-      if (ipv4->GetRoutingProtocol () != 0)
+      if (ipv4->GetRoutingProtocol ())
         {
           route = ipv4->GetRoutingProtocol ()->RouteOutput (packet, header, oif, errno_);
         }
       else
         {
           NS_LOG_ERROR ("No IPV4 Routing Protocol");
-          route = 0;
+          route = nullptr;
         }
       m_downTarget (packet, saddr, daddr, PROT_NUMBER, route);
     }
@@ -632,7 +635,7 @@ TcpL4Protocol::SendPacketV6 (Ptr<Packet> packet, const TcpHeader &outgoing,
   packet->AddHeader (outgoingHeader);
 
   Ptr<Ipv6L3Protocol> ipv6 = m_node->GetObject<Ipv6L3Protocol> ();
-  if (ipv6 != 0)
+  if (ipv6)
     {
       Ipv6Header header;
       header.SetSource (saddr);
@@ -640,14 +643,14 @@ TcpL4Protocol::SendPacketV6 (Ptr<Packet> packet, const TcpHeader &outgoing,
       header.SetNextHeader (PROT_NUMBER);
       Socket::SocketErrno errno_;
       Ptr<Ipv6Route> route;
-      if (ipv6->GetRoutingProtocol () != 0)
+      if (ipv6->GetRoutingProtocol ())
         {
           route = ipv6->GetRoutingProtocol ()->RouteOutput (packet, header, oif, errno_);
         }
       else
         {
           NS_LOG_ERROR ("No IPV6 Routing Protocol");
-          route = 0;
+          route = nullptr;
         }
       m_downTarget6 (packet, saddr, daddr, PROT_NUMBER, route);
     }
@@ -749,7 +752,7 @@ TcpL4Protocol::SetDownTarget (IpL4Protocol::DownTargetCallback callback)
 }
 
 IpL4Protocol::DownTargetCallback
-TcpL4Protocol::GetDownTarget (void) const
+TcpL4Protocol::GetDownTarget () const
 {
   return m_downTarget;
 }
@@ -761,7 +764,7 @@ TcpL4Protocol::SetDownTarget6 (IpL4Protocol::DownTargetCallback6 callback)
 }
 
 IpL4Protocol::DownTargetCallback6
-TcpL4Protocol::GetDownTarget6 (void) const
+TcpL4Protocol::GetDownTarget6 () const
 {
   return m_downTarget6;
 }

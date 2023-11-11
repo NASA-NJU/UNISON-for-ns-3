@@ -27,10 +27,10 @@ namespace ns3 {
 /**
  * \ingroup mobility
  * \brief Hierarchical mobility model.
- * 
+ *
  * This model allows you to specify the position of a child object
  * relative to a parent object.
- * 
+ *
  * Basically this is a mobility model that combines two other mobility
  * models: a "parent" model and a "child" model.  The position of the
  * hierarchical model is always the vector sum of the parent + child
@@ -61,7 +61,7 @@ public:
    * Register this type with the TypeId system.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   HierarchicalMobilityModel ();
 
@@ -71,7 +71,7 @@ public:
    * Calling GetPosition() on the model returned by this method allows
    * one to access the position of the child relative to its parent.
    */
-  Ptr<MobilityModel> GetChild (void) const;
+  Ptr<MobilityModel> GetChild () const;
   /**
    * \return the parent mobility model.
    *
@@ -79,7 +79,7 @@ public:
    * one to access the position of the parent alone, which is used
    * as the reference position to which the child position is added.
    */
-  Ptr<MobilityModel> GetParent (void) const;
+  Ptr<MobilityModel> GetParent () const;
   /**
    * Sets the child mobility model to a new one, possibly replacing
    * an existing one.  If the child model is being replaced,
@@ -100,11 +100,11 @@ public:
   void SetParent (Ptr<MobilityModel> model);
 
 private:
-  virtual Vector DoGetPosition (void) const;
-  virtual void DoSetPosition (const Vector &position);
-  virtual Vector DoGetVelocity (void) const;
-  virtual void DoInitialize (void);
-  virtual int64_t DoAssignStreams (int64_t);
+  Vector DoGetPosition () const override;
+  void DoSetPosition (const Vector &position) override;
+  Vector DoGetVelocity () const override;
+  void DoInitialize () override;
+  int64_t DoAssignStreams (int64_t) override;
 
   /**
    * Callback for when parent mobility model course change occurs

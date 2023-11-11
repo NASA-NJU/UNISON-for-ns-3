@@ -31,8 +31,8 @@ NS_LOG_COMPONENT_DEFINE ("SimpleChannel");
 
 NS_OBJECT_ENSURE_REGISTERED (SimpleChannel);
 
-TypeId 
-SimpleChannel::GetTypeId (void)
+TypeId
+SimpleChannel::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::SimpleChannel")
     .SetParent<Channel> ()
@@ -85,7 +85,7 @@ SimpleChannel::Add (Ptr<SimpleNetDevice> device)
 }
 
 std::size_t
-SimpleChannel::GetNDevices (void) const
+SimpleChannel::GetNDevices () const
 {
   NS_LOG_FUNCTION (this);
   return m_devices.size ();

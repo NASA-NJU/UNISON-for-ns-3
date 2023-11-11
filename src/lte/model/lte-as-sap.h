@@ -34,7 +34,7 @@ namespace ns3 {
  * In particular, this class implements the
  * Provider part of the SAP, i.e., the methods exported by the
  * LteUeRrc and called by the EpcUeNas.
- * 
+ *
  */
 class LteAsSapProvider
 {
@@ -56,7 +56,7 @@ public:
    */
   virtual void StartCellSelection (uint32_t dlEarfcn) = 0;
 
-  /** 
+  /**
    * \brief Force the RRC entity to stay camped on a certain eNodeB.
    *
    * \param cellId the cell ID identifying the eNodeB
@@ -72,9 +72,9 @@ public:
    * attempt to connect at the earliest possible time (e.g. after it camps to a
    * suitable cell).
    */
-  virtual void Connect (void) = 0;
+  virtual void Connect () = 0;
 
-  /** 
+  /**
    * \brief Send a data packet.
    *
    * \param packet the packet
@@ -83,7 +83,7 @@ public:
   virtual void SendData (Ptr<Packet> packet, uint8_t bid) = 0;
 
 
-  /** 
+  /**
    * \brief Tell the RRC entity to release the connection.
    *
    */
@@ -95,38 +95,38 @@ public:
 /**
  * This class implements the Access Stratum (AS) Service Access Point
  * (SAP), i.e., the interface between the EpcUeNas and the LteUeRrc
- * In particular, this class implements the 
+ * In particular, this class implements the
  * User part of the SAP, i.e., the methods exported by the
  * EpcUeNas and called by the LteUeRrc.
- * 
+ *
  */
 class LteAsSapUser
 {
 public:
   virtual ~LteAsSapUser ();
 
-  /** 
+  /**
    * \brief Notify the NAS that RRC Connection Establishment was successful.
-   * 
+   *
    */
   virtual void NotifyConnectionSuccessful () = 0;
 
-  /** 
+  /**
    * \brief Notify the NAS that RRC Connection Establishment failed.
-   * 
+   *
    */
   virtual void NotifyConnectionFailed () = 0;
 
 
-  /** 
+  /**
    * Notify the NAS that RRC Connection was released
-   * 
+   *
    */
   virtual void NotifyConnectionReleased () = 0;
 
-  /** 
+  /**
    * receive a data packet
-   * 
+   *
    * \param packet the packet
    */
   virtual void RecvData (Ptr<Packet> packet) = 0;
@@ -139,7 +139,7 @@ public:
 /**
  * Template for the implementation of the LteAsSapProvider as a member
  * of an owner class of type C to which all methods are forwarded
- * 
+ *
  */
 template <class C>
 class MemberLteAsSapProvider : public LteAsSapProvider
@@ -153,12 +153,12 @@ public:
   MemberLteAsSapProvider (C* owner);
 
   // inherited from LteAsSapProvider
-  virtual void SetCsgWhiteList (uint32_t csgId);
-  virtual void StartCellSelection (uint32_t dlEarfcn);
-  virtual void ForceCampedOnEnb (uint16_t cellId, uint32_t dlEarfcn);
-  virtual void Connect (void);
-  virtual void SendData (Ptr<Packet> packet, uint8_t bid);
-  virtual void Disconnect ();
+  void SetCsgWhiteList (uint32_t csgId) override;
+  void StartCellSelection (uint32_t dlEarfcn) override;
+  void ForceCampedOnEnb (uint16_t cellId, uint32_t dlEarfcn) override;
+  void Connect () override;
+  void SendData (Ptr<Packet> packet, uint8_t bid) override;
+  void Disconnect () override;
 
 private:
   MemberLteAsSapProvider ();
@@ -198,7 +198,7 @@ MemberLteAsSapProvider<C>::ForceCampedOnEnb (uint16_t cellId, uint32_t dlEarfcn)
 }
 
 template <class C>
-void 
+void
 MemberLteAsSapProvider<C>::Connect ()
 {
   m_owner->DoConnect ();
@@ -212,7 +212,7 @@ MemberLteAsSapProvider<C>::SendData (Ptr<Packet> packet, uint8_t bid)
 }
 
 template <class C>
-void 
+void
 MemberLteAsSapProvider<C>::Disconnect ()
 {
   m_owner->DoDisconnect ();
@@ -222,7 +222,7 @@ MemberLteAsSapProvider<C>::Disconnect ()
 /**
  * Template for the implementation of the LteAsSapUser as a member
  * of an owner class of type C to which all methods are forwarded
- * 
+ *
  */
 template <class C>
 class MemberLteAsSapUser : public LteAsSapUser
@@ -236,10 +236,10 @@ public:
   MemberLteAsSapUser (C* owner);
 
   // inherited from LteAsSapUser
-  virtual void NotifyConnectionSuccessful ();
-  virtual void NotifyConnectionFailed ();
-  virtual void RecvData (Ptr<Packet> packet);
-  virtual void NotifyConnectionReleased ();
+  void NotifyConnectionSuccessful () override;
+  void NotifyConnectionFailed () override;
+  void RecvData (Ptr<Packet> packet) override;
+  void NotifyConnectionReleased () override;
 
 private:
   MemberLteAsSapUser ();
@@ -258,28 +258,28 @@ MemberLteAsSapUser<C>::MemberLteAsSapUser ()
 }
 
 template <class C>
-void 
+void
 MemberLteAsSapUser<C>::NotifyConnectionSuccessful ()
 {
   m_owner->DoNotifyConnectionSuccessful ();
 }
 
 template <class C>
-void 
+void
 MemberLteAsSapUser<C>::NotifyConnectionFailed ()
 {
   m_owner->DoNotifyConnectionFailed ();
 }
 
 template <class C>
-void 
+void
 MemberLteAsSapUser<C>::RecvData (Ptr<Packet> packet)
 {
   m_owner->DoRecvData (packet);
 }
 
 template <class C>
-void 
+void
 MemberLteAsSapUser<C>::NotifyConnectionReleased ()
 {
   m_owner->DoNotifyConnectionReleased ();

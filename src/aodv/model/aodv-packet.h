@@ -20,7 +20,7 @@
  *      tuned by Samir Das and Mahesh Marina, University of Cincinnati;
  *
  *      AODV-UU implementation by Erik Nordström of Uppsala University
- *      http://core.it.uu.se/core/index.php/AODV-UU
+ *      https://web.archive.org/web/20100527072022/http://core.it.uu.se/core/index.php/AODV-UU
  *
  * Authors: Elena Buchatskaia <borovkovaes@iitp.ru>
  *          Pavel Boyko <boyko@iitp.ru>
@@ -68,11 +68,11 @@ public:
    * \return the object TypeId
    */
   static TypeId GetTypeId ();
-  TypeId GetInstanceTypeId () const;
-  uint32_t GetSerializedSize () const;
-  void Serialize (Buffer::Iterator start) const;
-  uint32_t Deserialize (Buffer::Iterator start);
-  void Print (std::ostream &os) const;
+  TypeId GetInstanceTypeId () const override;
+  uint32_t GetSerializedSize () const override;
+  void Serialize (Buffer::Iterator start) const override;
+  uint32_t Deserialize (Buffer::Iterator start) override;
+  void Print (std::ostream &os) const override;
 
   /**
    * \returns the type
@@ -153,11 +153,11 @@ public:
    * \return the object TypeId
    */
   static TypeId GetTypeId ();
-  TypeId GetInstanceTypeId () const;
-  uint32_t GetSerializedSize () const;
-  void Serialize (Buffer::Iterator start) const;
-  uint32_t Deserialize (Buffer::Iterator start);
-  void Print (std::ostream &os) const;
+  TypeId GetInstanceTypeId () const override;
+  uint32_t GetSerializedSize () const override;
+  void Serialize (Buffer::Iterator start) const override;
+  uint32_t Deserialize (Buffer::Iterator start) override;
+  void Print (std::ostream &os) const override;
 
   // Fields
   /**
@@ -353,11 +353,11 @@ public:
    * \return the object TypeId
    */
   static TypeId GetTypeId ();
-  TypeId GetInstanceTypeId () const;
-  uint32_t GetSerializedSize () const;
-  void Serialize (Buffer::Iterator start) const;
-  uint32_t Deserialize (Buffer::Iterator start);
-  void Print (std::ostream &os) const;
+  TypeId GetInstanceTypeId () const override;
+  uint32_t GetSerializedSize () const override;
+  void Serialize (Buffer::Iterator start) const override;
+  uint32_t Deserialize (Buffer::Iterator start) override;
+  void Print (std::ostream &os) const override;
 
   // Fields
   /**
@@ -511,11 +511,11 @@ public:
    * \return the object TypeId
    */
   static TypeId GetTypeId ();
-  TypeId GetInstanceTypeId () const;
-  uint32_t GetSerializedSize () const;
-  void Serialize (Buffer::Iterator start) const;
-  uint32_t Deserialize (Buffer::Iterator start);
-  void Print (std::ostream &os) const;
+  TypeId GetInstanceTypeId () const override;
+  uint32_t GetSerializedSize () const override;
+  void Serialize (Buffer::Iterator start) const override;
+  uint32_t Deserialize (Buffer::Iterator start) override;
+  void Print (std::ostream &os) const override;
 
   /**
    * \brief Comparison operator
@@ -565,11 +565,11 @@ public:
    * \return the object TypeId
    */
   static TypeId GetTypeId ();
-  TypeId GetInstanceTypeId () const;
-  uint32_t GetSerializedSize () const;
-  void Serialize (Buffer::Iterator i) const;
-  uint32_t Deserialize (Buffer::Iterator start);
-  void Print (std::ostream &os) const;
+  TypeId GetInstanceTypeId () const override;
+  uint32_t GetSerializedSize () const override;
+  void Serialize (Buffer::Iterator i) const override;
+  uint32_t Deserialize (Buffer::Iterator start) override;
+  void Print (std::ostream &os) const override;
 
   // No delete flag
   /**

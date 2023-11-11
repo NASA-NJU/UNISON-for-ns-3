@@ -35,7 +35,7 @@ const static uint8_t oi_bytes_1609[5] = {0x00, 0x50, 0xC2, 0x4A, 0x40};
 const static OrganizationIdentifier oi_1609 = OrganizationIdentifier (oi_bytes_1609, 5);
 
 TypeId
-VsaManager::GetTypeId (void)
+VsaManager::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::VsaManager")
     .SetParent<Object> ()
@@ -45,27 +45,27 @@ VsaManager::GetTypeId (void)
   return tid;
 }
 
-VsaManager::VsaManager (void)
-  : m_device (0)
+VsaManager::VsaManager ()
+  : m_device (nullptr)
 {
   m_vsaReceived = MakeNullCallback<bool, Ptr<const Packet>,const Address &, uint32_t, uint32_t> ();
 }
 
-VsaManager::~VsaManager (void)
+VsaManager::~VsaManager ()
 {
 
 }
 
 void
-VsaManager::DoDispose (void)
+VsaManager::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
   RemoveAll ();
-  m_device = 0;
+  m_device = nullptr;
 }
 
 void
-VsaManager::DoInitialize (void)
+VsaManager::DoInitialize ()
 {
   std::map<uint32_t, Ptr<OcbWifiMac> > macs = m_device->GetMacs ();
   for (std::map<uint32_t, Ptr<OcbWifiMac> >::iterator i = macs.begin (); i != macs.end (); ++i)
@@ -128,7 +128,7 @@ VsaManager::DoSendVsa (enum VsaTransmitInterval  interval, uint32_t channel,
                        Ptr<Packet> vsc, OrganizationIdentifier oi, Mac48Address peer)
 {
   NS_LOG_FUNCTION (this << interval << channel << vsc << oi << peer);
-  NS_ASSERT (m_device != 0);
+  NS_ASSERT (m_device);
   Ptr<ChannelCoordinator> coordinator = m_device->GetChannelCoordinator ();
   Ptr<ChannelScheduler> scheduler = m_device->GetChannelScheduler ();
   Ptr<ChannelManager> manager = m_device->GetChannelManager ();
@@ -189,7 +189,7 @@ VsaManager::DoSendVsa (enum VsaTransmitInterval  interval, uint32_t channel,
 }
 
 void
-VsaManager::RemoveAll (void)
+VsaManager::RemoveAll ()
 {
   NS_LOG_FUNCTION (this);
   for (std::vector<VsaWork *>::iterator i = m_vsas.begin ();
@@ -199,7 +199,7 @@ VsaManager::RemoveAll (void)
         {
           (*i)->repeat.Cancel ();
         }
-      (*i)->vsc = 0;
+      (*i)->vsc = nullptr;
       delete (*i);
     }
   m_vsas.clear ();
@@ -218,7 +218,7 @@ VsaManager::RemoveByChannel (uint32_t channelNumber)
             {
               (*i)->repeat.Cancel ();
             }
-          (*i)->vsc = 0;
+          (*i)->vsc = nullptr;
           delete (*i);
           i = m_vsas.erase (i);
         }
@@ -243,7 +243,7 @@ VsaManager::RemoveByOrganizationIdentifier (const OrganizationIdentifier &oi)
             {
               (*i)->repeat.Cancel ();
             }
-          (*i)->vsc = 0;
+          (*i)->vsc = nullptr;
           delete (*i);
           i = m_vsas.erase (i);
         }

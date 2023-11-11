@@ -27,7 +27,7 @@ namespace ns3 {
 
 /**
  * \ingroup propagation
- * 
+ *
  * \brief Base class for the 3GPP propagation models
  */
 class ThreeGppPropagationLossModel : public PropagationLossModel
@@ -37,7 +37,7 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   /**
    * Constructor
@@ -47,7 +47,11 @@ public:
   /**
    * Destructor
    */
-  virtual ~ThreeGppPropagationLossModel () override;
+  ~ThreeGppPropagationLossModel () override;
+
+  // Delete copy constructor and assignment operator to avoid misuse
+  ThreeGppPropagationLossModel (const ThreeGppPropagationLossModel &) = delete;
+  ThreeGppPropagationLossModel &operator= (const ThreeGppPropagationLossModel &) = delete;
 
   /**
    * \brief Set the channel condition model used to determine the channel
@@ -60,7 +64,7 @@ public:
    * \brief Returns the associated channel condition model
    * \return the channel condition model
    */
-  Ptr<ChannelConditionModel> GetChannelConditionModel (void) const;
+  Ptr<ChannelConditionModel> GetChannelConditionModel () const;
 
   /**
    * \brief Set the central frequency of the model
@@ -72,22 +76,7 @@ public:
    * \brief Return the current central frequency
    * \return The current central frequency
    */
-  double GetFrequency (void) const;
-
-  /**
-   * \brief Copy constructor
-   *
-   * Defined and unimplemented to avoid misuse
-   */
-  ThreeGppPropagationLossModel (const ThreeGppPropagationLossModel &) = delete;
-
-  /**
-   * \brief Copy constructor
-   *
-   * Defined and unimplemented to avoid misuse
-   * \returns the ThreeGppPropagationLossModel instance
-   */
-  ThreeGppPropagationLossModel & operator = (const ThreeGppPropagationLossModel &) = delete;
+  double GetFrequency () const;
 
 private:
   /**
@@ -99,12 +88,12 @@ private:
    * \param b rx mobility model
    * \return the rx power in dBm
    */
-  virtual double DoCalcRxPower (double txPowerDbm,
+  double DoCalcRxPower (double txPowerDbm,
                                 Ptr<MobilityModel> a,
                                 Ptr<MobilityModel> b) const override;
 
-  virtual int64_t DoAssignStreams (int64_t stream) override;
-  
+  int64_t DoAssignStreams (int64_t stream) override;
+
   /**
    * \brief Computes the pathloss between a and b
    * \param cond the channel condition
@@ -128,6 +117,54 @@ private:
   virtual double GetLossLos (double distance2D, double distance3D, double hUt, double hBs) const = 0;
 
   /**
+   * \brief Returns the minimum of the two independently generated distances
+   *        according to the uniform distribution between the minimum and the maximum
+   *        value depending on the specific 3GPP scenario (UMa, UMi-Street Canyon, RMa),
+   *        i.e., between 0 and 25 m for UMa and UMi-Street Canyon, and between 0 and 10 m
+   *        for RMa.
+   *        According to 3GPP TR 38.901 this 2D−in distance shall be UT-specifically
+   *        generated. 2D−in distance is used for the O2I penetration losses
+   *        calculation according to 3GPP TR 38.901 7.4.3.
+   *        See GetO2iLowPenetrationLoss/GetO2iHighPenetrationLoss functions.
+   * \return Returns 02i 2D distance (in meters) used to calculate low/high losses.
+   */
+  virtual double GetO2iDistance2dIn () const = 0;
+
+  /**
+  * \brief Retrieves the o2i building penetration loss value by looking at m_o2iLossMap.
+  *        If not found or if the channel condition changed it generates a new
+  *        independent realization and stores it in the map, otherwise it calculates
+  *        a new value as defined in 3GPP TR 38.901 7.4.3.1.
+  *
+  *        Note that all child classes should implement this function to support
+  *        low losses calculation. As such, this function should be purely virtual.
+  *
+  * \param a tx mobility model (used for the key calculation)
+  * \param b rx mobility model (used for the key calculation)
+  * \param cond the LOS/NLOS channel condition
+  * \return o2iLoss
+  */
+  virtual double GetO2iLowPenetrationLoss (Ptr<MobilityModel> a, Ptr<MobilityModel> b,
+                                           ChannelCondition::LosConditionValue cond) const;
+
+  /**
+  * \brief Retrieves the o2i building penetration loss value by looking at m_o2iLossMap.
+  *        If not found or if the channel condition changed it generates a new
+  *        independent realization and stores it in the map, otherwise it calculates
+  *        a new value as defined in 3GPP TR 38.901 7.4.3.1.
+  *
+  *        Note that all child classes should implement this function to support
+  *        high losses calculation. As such, this function should be purely virtual.
+  *
+  * \param a tx mobility model (used for the key calculation)
+  * \param b rx mobility model (used for the key calculation)
+  * \param cond the LOS/NLOS channel condition
+  * \return o2iLoss
+  */
+  virtual double GetO2iHighPenetrationLoss (Ptr<MobilityModel> a, Ptr<MobilityModel> b,
+                                            ChannelCondition::LosConditionValue cond) const;
+
+  /**
    * \brief Computes the pathloss between a and b considering that the line of
    *        sight is obstructed
    * \param distance2D the 2D distance between tx and rx in meters
@@ -137,10 +174,10 @@ private:
    * \return pathloss value in dB
    */
   virtual double GetLossNlos (double distance2D, double distance3D, double hUt, double hBs) const = 0;
-  
+
   /**
    * \brief Computes the pathloss between a and b considering that the line of
-   *        sight is obstructed by a vehicle. By default it raises an error to 
+   *        sight is obstructed by a vehicle. By default it raises an error to
    *        avoid misuse.
    * \param distance2D the 2D distance between tx and rx in meters
    * \param distance3D the 3D distance between tx and rx in meters
@@ -215,8 +252,8 @@ private:
   static Vector GetVectorDifference (Ptr<MobilityModel> a, Ptr<MobilityModel> b);
 
 protected:
-  virtual void DoDispose () override; 
-  
+  void DoDispose () override;
+
   /**
   * \brief Computes the 2D distance between two 3D vectors
   * \param a the first 3D vector
@@ -228,6 +265,8 @@ protected:
   Ptr<ChannelConditionModel> m_channelConditionModel; //!< pointer to the channel condition model
   double m_frequency; //!< operating frequency in Hz
   bool m_shadowingEnabled; //!< enable/disable shadowing
+  bool m_enforceRanges; //!< strictly enforce TR 38.901 parameter ranges
+  bool m_buildingPenLossesEnabled; //!< enable/disable building penetration losses
   Ptr<NormalRandomVariable> m_normRandomVariable; //!< normal random variable
 
   /** Define a struct for the m_shadowingMap entries */
@@ -239,6 +278,21 @@ protected:
   };
 
   mutable std::unordered_map<uint32_t, ShadowingMapItem> m_shadowingMap; //!< map to store the shadowing values
+
+  /** Define a struct for the m_o2iLossMap entries */
+  struct O2iLossMapItem
+  {
+    double m_o2iLoss; //!< the o2i loss in dB
+    ChannelCondition::LosConditionValue m_condition; //!< the LOS/NLOS condition
+  };
+
+  mutable std::unordered_map<uint32_t, O2iLossMapItem> m_o2iLossMap; //!< map to store the o2i Loss values
+
+
+  Ptr<UniformRandomVariable> m_randomO2iVar1; //!< a uniform random variable for the calculation of the indoor loss, see TR38.901 Table 7.4.3-2
+  Ptr<UniformRandomVariable> m_randomO2iVar2; //!< a uniform random variable for the calculation of the indoor loss, see TR38.901 Table 7.4.3-2
+  Ptr<NormalRandomVariable> m_normalO2iLowLossVar; //!< a normal random variable for the calculation of 02i low loss, see TR38.901 Table 7.4.3-2
+  Ptr<NormalRandomVariable> m_normalO2iHighLossVar; //!< a normal random variable for the calculation of 02i high loss, see TR38.901 Table 7.4.3-2
 };
 
 /**
@@ -254,7 +308,7 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   /**
    * Constructor
@@ -264,22 +318,11 @@ public:
   /**
    * Destructor
    */
-  virtual ~ThreeGppRmaPropagationLossModel () override;
+  ~ThreeGppRmaPropagationLossModel () override;
 
-  /**
-   * \brief Copy constructor
-   *
-   * Defined and unimplemented to avoid misuse
-   */
+  // Delete copy constructor and assignment operator to avoid misuse
   ThreeGppRmaPropagationLossModel (const ThreeGppRmaPropagationLossModel &) = delete;
-
-  /**
-   * \brief Copy constructor
-   *
-   * Defined and unimplemented to avoid misuse
-   * \returns the ThreeGppRmaPropagationLossModel instance
-   */
-  ThreeGppRmaPropagationLossModel & operator = (const ThreeGppRmaPropagationLossModel &) = delete;
+  ThreeGppRmaPropagationLossModel &operator= (const ThreeGppRmaPropagationLossModel &) = delete;
 
 private:
   /**
@@ -291,7 +334,21 @@ private:
    * \param hBs the height of the BS in meters
    * \return pathloss value in dB
    */
-  virtual double GetLossLos (double distance2D, double distance3D, double hUt, double hBs) const override;
+  double GetLossLos (double distance2D, double distance3D, double hUt, double hBs) const override;
+
+  /**
+   * \brief Returns the minimum of the two independently generated distances
+   *        according to the uniform distribution between the minimum and the maximum
+   *        value depending on the specific 3GPP scenario (UMa, UMi-Street Canyon, RMa),
+   *        i.e., between 0 and 25 m for UMa and UMi-Street Canyon, and between 0 and 10 m
+   *        for RMa.
+   *        According to 3GPP TR 38.901 this 2D−in distance shall be UT-specifically
+   *        generated. 2D−in distance is used for the O2I penetration losses
+   *        calculation according to 3GPP TR 38.901 7.4.3.
+   *        See GetO2iLowPenetrationLoss/GetO2iHighPenetrationLoss functions.
+   * \return Returns 02i 2D distance (in meters) used to calculate low/high losses.
+   */
+  double GetO2iDistance2dIn () const override;
 
   /**
    * \brief Computes the pathloss between a and b considering that the line of
@@ -302,7 +359,7 @@ private:
    * \param hBs the height of the BS in meters
    * \return pathloss value in dB
    */
-  virtual double GetLossNlos (double distance2D, double distance3D, double hUt, double hBs) const override;
+  double GetLossNlos (double distance2D, double distance3D, double hUt, double hBs) const override;
 
   /**
    * \brief Returns the shadow fading standard deviation
@@ -311,14 +368,14 @@ private:
    * \param cond the LOS/NLOS channel condition
    * \return shadowing std in dB
    */
-  virtual double GetShadowingStd (Ptr<MobilityModel> a, Ptr<MobilityModel> b, ChannelCondition::LosConditionValue cond) const override;
+  double GetShadowingStd (Ptr<MobilityModel> a, Ptr<MobilityModel> b, ChannelCondition::LosConditionValue cond) const override;
 
   /**
    * \brief Returns the shadow fading correlation distance
    * \param cond the LOS/NLOS channel condition
    * \return shadowing correlation distance in meters
    */
-  virtual double GetShadowingCorrelationDistance (ChannelCondition::LosConditionValue cond) const override;
+  double GetShadowingCorrelationDistance (ChannelCondition::LosConditionValue cond) const override;
 
   /**
    * \brief Computes the PL1 formula for the RMa scenario
@@ -356,7 +413,7 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   /**
    * Constructor
@@ -366,25 +423,14 @@ public:
   /**
    * Destructor
    */
-  virtual ~ThreeGppUmaPropagationLossModel () override;
+  ~ThreeGppUmaPropagationLossModel () override;
 
-  /**
-   * \brief Copy constructor
-   *
-   * Defined and unimplemented to avoid misuse
-   */
+  // Delete copy constructor and assignment operator to avoid misuse
   ThreeGppUmaPropagationLossModel (const ThreeGppUmaPropagationLossModel &) = delete;
-
-  /**
-   * \brief Copy constructor
-   *
-   * Defined and unimplemented to avoid misuse
-   * \return the ThreeGppUmaPropagationLossModel instance
-   */
-  ThreeGppUmaPropagationLossModel & operator = (const ThreeGppUmaPropagationLossModel &) = delete;
+  ThreeGppUmaPropagationLossModel &operator= (const ThreeGppUmaPropagationLossModel &) = delete;
 
 private:
-  virtual int64_t DoAssignStreams (int64_t stream) override;
+  int64_t DoAssignStreams (int64_t stream) override;
 
   /**
    * \brief Computes the pathloss between a and b considering that the line of
@@ -396,6 +442,20 @@ private:
    * \return pathloss value in dB
    */
   double GetLossLos (double distance2D, double distance3D, double hUt, double hBs) const override;
+
+  /**
+   * \brief Returns the minimum of the two independently generated distances
+   *        according to the uniform distribution between the minimum and the maximum
+   *        value depending on the specific 3GPP scenario (UMa, UMi-Street Canyon, RMa),
+   *        i.e., between 0 and 25 m for UMa and UMi-Street Canyon, and between 0 and 10 m
+   *        for RMa.
+   *        According to 3GPP TR 38.901 this 2D−in distance shall be UT-specifically
+   *        generated. 2D−in distance is used for the O2I penetration losses
+   *        calculation according to 3GPP TR 38.901 7.4.3.
+   *        See GetO2iLowPenetrationLoss/GetO2iHighPenetrationLoss functions.
+   * \return Returns 02i 2D distance (in meters) used to calculate low/high losses.
+   */
+  double GetO2iDistance2dIn () const override;
 
   /**
    * \brief Computes the pathloss between a and b considering that the line of
@@ -415,14 +475,14 @@ private:
    * \param cond the LOS/NLOS channel condition
    * \return shadowing std in dB
    */
-  virtual double GetShadowingStd (Ptr<MobilityModel> a, Ptr<MobilityModel> b, ChannelCondition::LosConditionValue cond) const override;
+  double GetShadowingStd (Ptr<MobilityModel> a, Ptr<MobilityModel> b, ChannelCondition::LosConditionValue cond) const override;
 
   /**
    * \brief Returns the shadow fading correlation distance
    * \param cond the LOS/NLOS channel condition
    * \return shadowing correlation distance in meters
    */
-  virtual double GetShadowingCorrelationDistance (ChannelCondition::LosConditionValue cond) const override;
+  double GetShadowingCorrelationDistance (ChannelCondition::LosConditionValue cond) const override;
 
   /**
    * \brief Computes the breakpoint distance
@@ -449,7 +509,7 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   /**
    * Constructor
@@ -459,22 +519,11 @@ public:
   /**
    * Destructor
    */
-  virtual ~ThreeGppUmiStreetCanyonPropagationLossModel () override;
+  ~ThreeGppUmiStreetCanyonPropagationLossModel () override;
 
-  /**
-   * \brief Copy constructor
-   *
-   * Defined and unimplemented to avoid misuse
-   */
+  // Delete copy constructor and assignment operator to avoid misuse
   ThreeGppUmiStreetCanyonPropagationLossModel (const ThreeGppUmiStreetCanyonPropagationLossModel &) = delete;
-
-  /**
-   * \brief Copy constructor
-   *
-   * Defined and unimplemented to avoid misuse
-   * \return the ThreeGppUmiStreetCanyonPropagationLossModel instance
-   */
-  ThreeGppUmiStreetCanyonPropagationLossModel & operator = (const ThreeGppUmiStreetCanyonPropagationLossModel &) = delete;
+  ThreeGppUmiStreetCanyonPropagationLossModel &operator= (const ThreeGppUmiStreetCanyonPropagationLossModel &) = delete;
 
 private:
   /**
@@ -487,6 +536,20 @@ private:
    * \return pathloss value in dB
    */
   double GetLossLos (double distance2D, double distance3D, double hUt, double hBs) const override;
+
+  /**
+   * \brief Returns the minimum of the two independently generated distances
+   *        according to the uniform distribution between the minimum and the maximum
+   *        value depending on the specific 3GPP scenario (UMa, UMi-Street Canyon, RMa),
+   *        i.e., between 0 and 25 m for UMa and UMi-Street Canyon, and between 0 and 10 m
+   *        for RMa.
+   *        According to 3GPP TR 38.901 this 2D−in distance shall be UT-specifically
+   *        generated. 2D−in distance is used for the O2I penetration losses
+   *        calculation according to 3GPP TR 38.901 7.4.3.
+   *        See GetO2iLowPenetrationLoss/GetO2iHighPenetrationLoss functions.
+   * \return Returns 02i 2D distance (in meters) used to calculate low/high losses.
+   */
+   double GetO2iDistance2dIn () const override;
 
   /**
    * \brief Computes the pathloss between a and b considering that the line of
@@ -506,14 +569,14 @@ private:
    * \param cond the LOS/NLOS channel condition
    * \return shadowing std in dB
    */
-  virtual double GetShadowingStd (Ptr<MobilityModel> a, Ptr<MobilityModel> b, ChannelCondition::LosConditionValue cond) const override;
+  double GetShadowingStd (Ptr<MobilityModel> a, Ptr<MobilityModel> b, ChannelCondition::LosConditionValue cond) const override;
 
   /**
    * \brief Returns the shadow fading correlation distance
    * \param cond the LOS/NLOS channel condition
    * \return shadowing correlation distance in meters
    */
-  virtual double GetShadowingCorrelationDistance (ChannelCondition::LosConditionValue cond) const override;
+  double GetShadowingCorrelationDistance (ChannelCondition::LosConditionValue cond) const override;
 
   /**
    * \brief Computes the breakpoint distance
@@ -546,7 +609,7 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   /**
    * Constructor
@@ -556,22 +619,11 @@ public:
   /**
    * Destructor
    */
-  virtual ~ThreeGppIndoorOfficePropagationLossModel () override;
+  ~ThreeGppIndoorOfficePropagationLossModel () override;
 
-  /**
-   * \brief Copy constructor
-   *
-   * Defined and unimplemented to avoid misuse
-   */
+  // Delete copy constructor and assignment operator to avoid misuse
   ThreeGppIndoorOfficePropagationLossModel (const ThreeGppIndoorOfficePropagationLossModel &) = delete;
-
-  /**
-   * \brief Copy constructor
-   *
-   * Defined and unimplemented to avoid misuse
-   * \return the ThreeGppIndoorOfficePropagationLossModel instance
-   */
-  ThreeGppIndoorOfficePropagationLossModel & operator = (const ThreeGppIndoorOfficePropagationLossModel &) = delete;
+  ThreeGppIndoorOfficePropagationLossModel &operator= (const ThreeGppIndoorOfficePropagationLossModel &) = delete;
 
 private:
   /**
@@ -584,6 +636,20 @@ private:
    * \return pathloss value in dB
    */
   double GetLossLos (double distance2D, double distance3D, double hUt, double hBs) const override;
+
+  /**
+   * \brief Returns the minimum of the two independently generated distances
+   *        according to the uniform distribution between the minimum and the maximum
+   *        value depending on the specific 3GPP scenario (UMa, UMi-Street Canyon, RMa),
+   *        i.e., between 0 and 25 m for UMa and UMi-Street Canyon, and between 0 and 10 m
+   *        for RMa.
+   *        According to 3GPP TR 38.901 this 2D−in distance shall be UT-specifically
+   *        generated. 2D−in distance is used for the O2I penetration losses
+   *        calculation according to 3GPP TR 38.901 7.4.3.
+   *        See GetO2iLowPenetrationLoss/GetO2iHighPenetrationLoss functions.
+   * \return Returns 02i 2D distance (in meters) used to calculate low/high losses.
+   */
+   double GetO2iDistance2dIn () const override;
 
   /**
    * \brief Computes the pathloss between a and b considering that the line of
@@ -603,14 +669,14 @@ private:
    * \param cond the LOS/NLOS channel condition
    * \return shadowing std in dB
    */
-  virtual double GetShadowingStd (Ptr<MobilityModel> a, Ptr<MobilityModel> b, ChannelCondition::LosConditionValue cond) const override;
+  double GetShadowingStd (Ptr<MobilityModel> a, Ptr<MobilityModel> b, ChannelCondition::LosConditionValue cond) const override;
 
   /**
    * \brief Returns the shadow fading correlation distance
    * \param cond the LOS/NLOS channel condition
    * \return shadowing correlation distance in meters
    */
-  virtual double GetShadowingCorrelationDistance (ChannelCondition::LosConditionValue cond) const override;
+  double GetShadowingCorrelationDistance (ChannelCondition::LosConditionValue cond) const override;
 };
 
 } // namespace ns3

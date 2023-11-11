@@ -38,7 +38,7 @@ NS_LOG_COMPONENT_DEFINE ("RemSpectrumPhy");
 NS_OBJECT_ENSURE_REGISTERED (RemSpectrumPhy);
 
 RemSpectrumPhy::RemSpectrumPhy ()
-  : m_mobility (0),
+  : m_mobility (nullptr),
     m_referenceSignalPower (0),
     m_sumPower (0),
     m_active (true),
@@ -59,12 +59,12 @@ void
 RemSpectrumPhy::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
-  m_mobility = 0;
+  m_mobility = nullptr;
   SpectrumPhy::DoDispose ();
 }
 
 TypeId
-RemSpectrumPhy::GetTypeId (void)
+RemSpectrumPhy::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::RemSpectrumPhy")
     .SetParent<SpectrumPhy> ()
@@ -105,7 +105,7 @@ RemSpectrumPhy::GetMobility () const
 Ptr<NetDevice>
 RemSpectrumPhy::GetDevice () const
 {
-  return 0;
+  return nullptr;
 }
 
 Ptr<const SpectrumModel>
@@ -117,7 +117,7 @@ RemSpectrumPhy::GetRxSpectrumModel () const
 Ptr<Object>
 RemSpectrumPhy::GetAntenna () const
 {
-  return 0;
+  return nullptr;
 }
 
 
@@ -131,7 +131,7 @@ RemSpectrumPhy::StartRx (Ptr<SpectrumSignalParameters> params)
       if (m_useDataChannel)
         {
           Ptr<LteSpectrumSignalParametersDataFrame> lteDlDataRxParams = DynamicCast<LteSpectrumSignalParametersDataFrame> (params);
-          if (lteDlDataRxParams != 0)
+          if (lteDlDataRxParams)
             {
               NS_LOG_DEBUG ("StartRx data");
               double power = 0;
@@ -154,7 +154,7 @@ RemSpectrumPhy::StartRx (Ptr<SpectrumSignalParameters> params)
       else
         {
           Ptr<LteSpectrumSignalParametersDlCtrlFrame> lteDlCtrlRxParams = DynamicCast<LteSpectrumSignalParametersDlCtrlFrame> (params);
-          if (lteDlCtrlRxParams != 0)
+          if (lteDlCtrlRxParams)
             {
               NS_LOG_DEBUG ("StartRx control");
               double power = 0;

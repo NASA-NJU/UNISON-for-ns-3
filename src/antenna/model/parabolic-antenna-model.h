@@ -29,7 +29,7 @@ namespace ns3 {
 
 /**
  * \ingroup antenna
- * 
+ *
  * \brief  Antenna model based on a parabolic approximation of the main lobe radiation pattern.
  *
  * This class implements the parabolic model as described in some 3GPP document, e.g., R4-092042
@@ -54,7 +54,7 @@ public:
   static TypeId GetTypeId ();
 
   // inherited from AntennaModel
-  virtual double GetGainDb (Angles a);
+  double GetGainDb (Angles a) override;
 
 
   // attribute getters/setters

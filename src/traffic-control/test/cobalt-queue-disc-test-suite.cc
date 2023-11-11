@@ -50,18 +50,17 @@ public:
    * \param ecnCapable ECN capable
    */
   CobaltQueueDiscTestItem (Ptr<Packet> p, const Address & addr,uint16_t protocol, bool ecnCapable);
-  virtual ~CobaltQueueDiscTestItem ();
+  ~CobaltQueueDiscTestItem () override;
 
-  // Delete copy constructor and assignment operator to avoid misuse
+  // Delete default constructor, copy constructor and assignment operator to avoid misuse
+  CobaltQueueDiscTestItem () = delete;
   CobaltQueueDiscTestItem (const CobaltQueueDiscTestItem &) = delete;
   CobaltQueueDiscTestItem & operator = (const CobaltQueueDiscTestItem &) = delete;
 
-  virtual void AddHeader (void);
-  virtual bool Mark (void);
+  void AddHeader () override;
+  bool Mark () override;
 
 private:
-  CobaltQueueDiscTestItem ();
-
   bool m_ecnCapablePacket; ///< ECN capable packet?
 };
 
@@ -76,12 +75,12 @@ CobaltQueueDiscTestItem::~CobaltQueueDiscTestItem ()
 }
 
 void
-CobaltQueueDiscTestItem::AddHeader (void)
+CobaltQueueDiscTestItem::AddHeader ()
 {
 }
 
 bool
-CobaltQueueDiscTestItem::Mark (void)
+CobaltQueueDiscTestItem::Mark ()
 {
   if (m_ecnCapablePacket)
     {
@@ -105,7 +104,7 @@ public:
    * \param mode the mode
    */
   CobaltQueueDiscBasicEnqueueDequeue (QueueSizeUnit mode);
-  virtual void DoRun (void);
+  void DoRun () override;
 
   /**
    * Queue test size function
@@ -126,7 +125,7 @@ CobaltQueueDiscBasicEnqueueDequeue::CobaltQueueDiscBasicEnqueueDequeue (QueueSiz
 }
 
 void
-CobaltQueueDiscBasicEnqueueDequeue::DoRun (void)
+CobaltQueueDiscBasicEnqueueDequeue::DoRun ()
 {
   Ptr<CobaltQueueDisc> queue = CreateObject<CobaltQueueDisc> ();
 
@@ -154,7 +153,12 @@ CobaltQueueDiscBasicEnqueueDequeue::DoRun (void)
                          true, "Verify that we can actually set the attribute MaxSize");
   queue->Initialize ();
 
-  Ptr<Packet> p1, p2, p3, p4, p5, p6;
+  Ptr<Packet> p1;
+  Ptr<Packet> p2;
+  Ptr<Packet> p3;
+  Ptr<Packet> p4;
+  Ptr<Packet> p5;
+  Ptr<Packet> p6;
   p1 = Create<Packet> (pktSize);
   p2 = Create<Packet> (pktSize);
   p3 = Create<Packet> (pktSize);
@@ -181,37 +185,37 @@ CobaltQueueDiscBasicEnqueueDequeue::DoRun (void)
   Ptr<QueueDiscItem> item;
 
   item = queue->Dequeue ();
-  NS_TEST_ASSERT_MSG_EQ ((item != 0), true, "I want to remove the first packet");
+  NS_TEST_ASSERT_MSG_NE (item, nullptr, "I want to remove the first packet");
   NS_TEST_ASSERT_MSG_EQ (queue->GetCurrentSize ().GetValue (), 5 * modeSize, "There should be five packets in queue");
   NS_TEST_ASSERT_MSG_EQ (item->GetPacket ()->GetUid (), p1->GetUid (), "was this the first packet ?");
 
   item = queue->Dequeue ();
-  NS_TEST_ASSERT_MSG_EQ ((item != 0), true, "I want to remove the second packet");
+  NS_TEST_ASSERT_MSG_NE (item, nullptr, "I want to remove the second packet");
   NS_TEST_ASSERT_MSG_EQ (queue->GetCurrentSize ().GetValue (), 4 * modeSize, "There should be four packets in queue");
   NS_TEST_ASSERT_MSG_EQ (item->GetPacket ()->GetUid (), p2->GetUid (), "Was this the second packet ?");
 
   item = queue->Dequeue ();
-  NS_TEST_ASSERT_MSG_EQ ((item != 0), true, "I want to remove the third packet");
+  NS_TEST_ASSERT_MSG_NE (item, nullptr, "I want to remove the third packet");
   NS_TEST_ASSERT_MSG_EQ (queue->GetCurrentSize ().GetValue (), 3 * modeSize, "There should be three packets in queue");
   NS_TEST_ASSERT_MSG_EQ (item->GetPacket ()->GetUid (), p3->GetUid (), "Was this the third packet ?");
 
   item = queue->Dequeue ();
-  NS_TEST_ASSERT_MSG_EQ ((item != 0), true, "I want to remove the forth packet");
+  NS_TEST_ASSERT_MSG_NE (item, nullptr, "I want to remove the forth packet");
   NS_TEST_ASSERT_MSG_EQ (queue->GetCurrentSize ().GetValue (), 2 * modeSize, "There should be two packets in queue");
   NS_TEST_ASSERT_MSG_EQ (item->GetPacket ()->GetUid (), p4->GetUid (), "Was this the fourth packet ?");
 
   item = queue->Dequeue ();
-  NS_TEST_ASSERT_MSG_EQ ((item != 0), true, "I want to remove the fifth packet");
+  NS_TEST_ASSERT_MSG_NE (item, nullptr, "I want to remove the fifth packet");
   NS_TEST_ASSERT_MSG_EQ (queue->GetCurrentSize ().GetValue (), 1 * modeSize, "There should be one packet in queue");
   NS_TEST_ASSERT_MSG_EQ (item->GetPacket ()->GetUid (), p5->GetUid (), "Was this the fifth packet ?");
 
   item = queue->Dequeue ();
-  NS_TEST_ASSERT_MSG_EQ ((item != 0), true, "I want to remove the last packet");
+  NS_TEST_ASSERT_MSG_NE (item, nullptr, "I want to remove the last packet");
   NS_TEST_ASSERT_MSG_EQ (queue->GetCurrentSize ().GetValue (), 0 * modeSize, "There should be zero packet in queue");
   NS_TEST_ASSERT_MSG_EQ (item->GetPacket ()->GetUid (), p6->GetUid (), "Was this the sixth packet ?");
 
   item = queue->Dequeue ();
-  NS_TEST_ASSERT_MSG_EQ ((item == 0), true, "There are really no packets in queue");
+  NS_TEST_ASSERT_MSG_EQ (item, nullptr, "There are really no packets in queue");
 
   NS_TEST_ASSERT_MSG_EQ (queue->GetStats ().GetNDroppedPackets (CobaltQueueDisc::TARGET_EXCEEDED_DROP), 0, "There should be no packet drops according to Cobalt algorithm");
 }
@@ -226,7 +230,7 @@ class CobaltQueueDiscDropTest : public TestCase
 {
 public:
   CobaltQueueDiscDropTest ();
-  virtual void DoRun (void);
+  void DoRun () override;
   /**
    * Enqueue function
    * \param queue the queue disc
@@ -321,7 +325,7 @@ CobaltQueueDiscDropTest::Enqueue (Ptr<CobaltQueueDisc> queue, uint32_t size, uin
 }
 
 void
-CobaltQueueDiscDropTest::DoRun (void)
+CobaltQueueDiscDropTest::DoRun ()
 {
   RunDropTest (QueueSizeUnit::PACKETS);
   RunDropTest (QueueSizeUnit::BYTES);
@@ -343,7 +347,7 @@ public:
    * \param mode the mode
    */
   CobaltQueueDiscMarkTest (QueueSizeUnit mode);
-  virtual void DoRun (void);
+  void DoRun () override;
 
 private:
   /**
@@ -387,7 +391,7 @@ CobaltQueueDiscMarkTest::DropNextTracer ([[maybe_unused]] int64_t oldVal, [[mayb
 }
 
 void
-CobaltQueueDiscMarkTest::DoRun (void)
+CobaltQueueDiscMarkTest::DoRun ()
 {
   // Test is divided into 3 sub test cases:
   // 1) Packets are not ECN capable.
@@ -658,10 +662,10 @@ public:
    * \param mode the queue size unit mode
    */
   CobaltQueueDiscCeThresholdTest (QueueSizeUnit mode);
-  virtual ~CobaltQueueDiscCeThresholdTest ();
+  ~CobaltQueueDiscCeThresholdTest () override;
 
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
   /**
    * \brief Enqueue function
    * \param queue the queue disc
@@ -755,7 +759,7 @@ CobaltQueueDiscCeThresholdTest::DequeueWithDelay (Ptr<CobaltQueueDisc> queue, ui
 }
 
 void
-CobaltQueueDiscCeThresholdTest::DoRun (void)
+CobaltQueueDiscCeThresholdTest::DoRun ()
 {
   Ptr<CobaltQueueDisc> queue = CreateObject<CobaltQueueDisc> ();
   uint32_t pktSize = 1000;
@@ -828,10 +832,10 @@ public:
    * \param mode the queue size unit mode
    */
   CobaltQueueDiscEnhancedBlueTest (QueueSizeUnit mode);
-  virtual ~CobaltQueueDiscEnhancedBlueTest ();
+  ~CobaltQueueDiscEnhancedBlueTest () override;
 
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
   /**
    * Enqueue function
    * \param queue the queue disc
@@ -865,7 +869,7 @@ CobaltQueueDiscEnhancedBlueTest::~CobaltQueueDiscEnhancedBlueTest ()
 }
 
 void
-CobaltQueueDiscEnhancedBlueTest::DoRun (void)
+CobaltQueueDiscEnhancedBlueTest::DoRun ()
 
 {
   uint32_t pktSize = 1500;

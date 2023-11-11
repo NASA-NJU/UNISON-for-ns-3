@@ -32,7 +32,7 @@ class HistogramTestCase : public ns3::TestCase {
 private:
 public:
   HistogramTestCase ();
-  virtual void DoRun (void);
+  void DoRun () override;
 
 
 };
@@ -44,13 +44,13 @@ HistogramTestCase::HistogramTestCase ()
 
 
 void
-HistogramTestCase::DoRun (void)
+HistogramTestCase::DoRun ()
 {
   Histogram h0 (3.5);
   // Testing floating-point bin widths
   {
     for (int i=1; i <= 10; i++)
-      { 
+      {
         h0.AddValue (3.4);
       }
 

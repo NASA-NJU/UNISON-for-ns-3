@@ -49,12 +49,12 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   YansWifiChannel ();
-  virtual ~YansWifiChannel ();
+  ~YansWifiChannel () override;
 
-  std::size_t GetNDevices (void) const override;
+  std::size_t GetNDevices () const override;
   Ptr<NetDevice> GetDevice (std::size_t i) const override;
 
   /**
@@ -112,7 +112,7 @@ private:
    * \param ppdu the PPDU being sent
    * \param txPowerDbm the TX power associated to the packet being sent (dBm)
    */
-  static void Receive (Ptr<YansWifiPhy> receiver, Ptr<WifiPpdu> ppdu, double txPowerDbm);
+  static void Receive (Ptr<YansWifiPhy> receiver, Ptr<const WifiPpdu> ppdu, double txPowerDbm);
 
   PhyList m_phyList;                   //!< List of YansWifiPhys connected to this YansWifiChannel
   Ptr<PropagationLossModel> m_loss;    //!< Propagation loss model

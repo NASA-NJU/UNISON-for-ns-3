@@ -47,14 +47,14 @@ class SpectrumInterference : public Object
 {
 public:
   SpectrumInterference ();
-  virtual ~SpectrumInterference ();
+  ~SpectrumInterference () override;
 
   /**
    * Register this type.
    * \return The TypeId.
    */
-  static TypeId GetTypeId (void);
-  
+  static TypeId GetTypeId ();
+
   /**
    * Set the SpectrumErrorModel to be used.
    *
@@ -109,7 +109,7 @@ public:
 
 
 protected:
-  void DoDispose ();
+  void DoDispose () override;
 
 private:
 

@@ -46,7 +46,7 @@ class Ipv6Interface;
  * \ingroup udp
  *
  * \brief A sockets interface to UDP
- * 
+ *
  * This class subclasses ns3::UdpSocket, and provides a socket interface
  * to ns3's implementation of UDP.
  *
@@ -73,12 +73,12 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
   /**
    * Create an unbound udp socket.
    */
   UdpSocketImpl ();
-  virtual ~UdpSocketImpl ();
+  ~UdpSocketImpl () override;
 
   /**
    * \brief Set the associated node.
@@ -91,45 +91,45 @@ public:
    */
   void SetUdp (Ptr<UdpL4Protocol> udp);
 
-  virtual enum SocketErrno GetErrno (void) const;
-  virtual enum SocketType GetSocketType (void) const;
-  virtual Ptr<Node> GetNode (void) const;
-  virtual int Bind (void);
-  virtual int Bind6 (void);
-  virtual int Bind (const Address &address);
-  virtual int Close (void);
-  virtual int ShutdownSend (void);
-  virtual int ShutdownRecv (void);
-  virtual int Connect (const Address &address);
-  virtual int Listen (void);
-  virtual uint32_t GetTxAvailable (void) const;
-  virtual int Send (Ptr<Packet> p, uint32_t flags);
-  virtual int SendTo (Ptr<Packet> p, uint32_t flags, const Address &address);
-  virtual uint32_t GetRxAvailable (void) const;
-  virtual Ptr<Packet> Recv (uint32_t maxSize, uint32_t flags);
-  virtual Ptr<Packet> RecvFrom (uint32_t maxSize, uint32_t flags,
-                                Address &fromAddress);
-  virtual int GetSockName (Address &address) const; 
-  virtual int GetPeerName (Address &address) const;
-  virtual int MulticastJoinGroup (uint32_t interfaceIndex, const Address &groupAddress);
-  virtual int MulticastLeaveGroup (uint32_t interfaceIndex, const Address &groupAddress);
-  virtual void BindToNetDevice (Ptr<NetDevice> netdevice);
-  virtual bool SetAllowBroadcast (bool allowBroadcast);
-  virtual bool GetAllowBroadcast () const;
-  virtual void Ipv6JoinGroup (Ipv6Address address, Socket::Ipv6MulticastFilterMode filterMode, std::vector<Ipv6Address> sourceAddresses);
+  enum SocketErrno GetErrno () const override;
+  enum SocketType GetSocketType () const override;
+  Ptr<Node> GetNode () const override;
+  int Bind () override;
+  int Bind6 () override;
+  int Bind (const Address &address) override;
+  int Close () override;
+  int ShutdownSend () override;
+  int ShutdownRecv () override;
+  int Connect (const Address &address) override;
+  int Listen () override;
+  uint32_t GetTxAvailable () const override;
+  int Send (Ptr<Packet> p, uint32_t flags) override;
+  int SendTo (Ptr<Packet> p, uint32_t flags, const Address &address) override;
+  uint32_t GetRxAvailable () const override;
+  Ptr<Packet> Recv (uint32_t maxSize, uint32_t flags) override;
+  Ptr<Packet> RecvFrom (uint32_t maxSize, uint32_t flags,
+                                Address &fromAddress) override;
+  int GetSockName (Address &address) const override;
+  int GetPeerName (Address &address) const override;
+  int MulticastJoinGroup (uint32_t interfaceIndex, const Address &groupAddress) override;
+  int MulticastLeaveGroup (uint32_t interfaceIndex, const Address &groupAddress) override;
+  void BindToNetDevice (Ptr<NetDevice> netdevice) override;
+  bool SetAllowBroadcast (bool allowBroadcast) override;
+  bool GetAllowBroadcast () const override;
+  void Ipv6JoinGroup (Ipv6Address address, Socket::Ipv6MulticastFilterMode filterMode, std::vector<Ipv6Address> sourceAddresses) override;
 
 private:
-  // Attributes set through UdpSocket base class 
-  virtual void SetRcvBufSize (uint32_t size);
-  virtual uint32_t GetRcvBufSize (void) const;
-  virtual void SetIpMulticastTtl (uint8_t ipTtl);
-  virtual uint8_t GetIpMulticastTtl (void) const;
-  virtual void SetIpMulticastIf (int32_t ipIf);
-  virtual int32_t GetIpMulticastIf (void) const;
-  virtual void SetIpMulticastLoop (bool loop);
-  virtual bool GetIpMulticastLoop (void) const;
-  virtual void SetMtuDiscover (bool discover);
-  virtual bool GetMtuDiscover (void) const;
+  // Attributes set through UdpSocket base class
+  void SetRcvBufSize (uint32_t size) override;
+  uint32_t GetRcvBufSize () const override;
+  void SetIpMulticastTtl (uint8_t ipTtl) override;
+  uint8_t GetIpMulticastTtl () const override;
+  void SetIpMulticastIf (int32_t ipIf) override;
+  int32_t GetIpMulticastIf () const override;
+  void SetIpMulticastLoop (bool loop) override;
+  bool GetIpMulticastLoop () const override;
+  void SetMtuDiscover (bool discover) override;
+  bool GetMtuDiscover () const override;
 
 
   /**
@@ -143,7 +143,7 @@ private:
    * Finish the binding process
    * \returns 0 on success, -1 on failure
    */
-  int FinishBind (void);
+  int FinishBind ();
 
   /**
    * \brief Called by the L3 protocol when it received a packet to pass on to TCP.
@@ -171,7 +171,7 @@ private:
    * This is a callback function configured to m_endpoint in
    * SetupCallback(), invoked when the endpoint is destroyed.
    */
-  void Destroy (void);
+  void Destroy ();
 
   /**
    * \brief Kill this socket by zeroing its attributes (IPv6)
@@ -179,12 +179,12 @@ private:
    * This is a callback function configured to m_endpoint in
    * SetupCallback(), invoked when the endpoint is destroyed.
    */
-  void Destroy6 (void);
+  void Destroy6 ();
 
   /**
    * \brief Deallocate m_endPoint and m_endPoint6
    */
-  void DeallocateEndPoint (void);
+  void DeallocateEndPoint ();
 
   /**
    * \brief Send a packet

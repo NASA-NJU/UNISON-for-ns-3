@@ -56,7 +56,7 @@ NS_LOG_COMPONENT_DEFINE ("LteEnbNetDevice");
 
 NS_OBJECT_ENSURE_REGISTERED ( LteEnbNetDevice);
 
-TypeId LteEnbNetDevice::GetTypeId (void)
+TypeId LteEnbNetDevice::GetTypeId ()
 {
   static TypeId
     tid =
@@ -95,13 +95,13 @@ TypeId LteEnbNetDevice::GetTypeId (void)
     .AddAttribute ("UlBandwidth",
                    "Uplink Transmission Bandwidth Configuration in number of Resource Blocks",
                    UintegerValue (25),
-                   MakeUintegerAccessor (&LteEnbNetDevice::SetUlBandwidth, 
+                   MakeUintegerAccessor (&LteEnbNetDevice::SetUlBandwidth,
                                          &LteEnbNetDevice::GetUlBandwidth),
                    MakeUintegerChecker<uint8_t> ())
     .AddAttribute ("DlBandwidth",
                    "Downlink Transmission Bandwidth Configuration in number of Resource Blocks",
                    UintegerValue (25),
-                   MakeUintegerAccessor (&LteEnbNetDevice::SetDlBandwidth, 
+                   MakeUintegerAccessor (&LteEnbNetDevice::SetDlBandwidth,
                                          &LteEnbNetDevice::GetDlBandwidth),
                    MakeUintegerChecker<uint8_t> ())
     .AddAttribute ("CellId",
@@ -111,13 +111,13 @@ TypeId LteEnbNetDevice::GetTypeId (void)
                    MakeUintegerChecker<uint16_t> ())
     .AddAttribute ("DlEarfcn",
                    "Downlink E-UTRA Absolute Radio Frequency Channel Number (EARFCN) "
-                   "as per 3GPP 36.101 Section 5.7.3. ",
+                   "as per 3GPP 36.101 Section 5.7.3.",
                    UintegerValue (100),
                    MakeUintegerAccessor (&LteEnbNetDevice::m_dlEarfcn),
                    MakeUintegerChecker<uint32_t> (0, 262143))
     .AddAttribute ("UlEarfcn",
                    "Uplink E-UTRA Absolute Radio Frequency Channel Number (EARFCN) "
-                   "as per 3GPP 36.101 Section 5.7.3. ",
+                   "as per 3GPP 36.101 Section 5.7.3.",
                    UintegerValue (18100),
                    MakeUintegerAccessor (&LteEnbNetDevice::m_ulEarfcn),
                    MakeUintegerChecker<uint32_t> (0, 262143))
@@ -142,13 +142,13 @@ TypeId LteEnbNetDevice::GetTypeId (void)
 LteEnbNetDevice::LteEnbNetDevice ()
   : m_isConstructed (false),
     m_isConfigured (false),
-    m_anr (0),
-    m_componentCarrierManager(0)
+    m_anr (nullptr),
+    m_componentCarrierManager(nullptr)
 {
   NS_LOG_FUNCTION (this);
 }
 
-LteEnbNetDevice::~LteEnbNetDevice (void)
+LteEnbNetDevice::~LteEnbNetDevice ()
 {
   NS_LOG_FUNCTION (this);
 }
@@ -159,26 +159,26 @@ LteEnbNetDevice::DoDispose ()
   NS_LOG_FUNCTION (this);
 
   m_rrc->Dispose ();
-  m_rrc = 0;
+  m_rrc = nullptr;
 
   m_handoverAlgorithm->Dispose ();
-  m_handoverAlgorithm = 0;
+  m_handoverAlgorithm = nullptr;
 
-  if (m_anr != 0)
+  if (m_anr)
     {
       m_anr->Dispose ();
-      m_anr = 0;
+      m_anr = nullptr;
     }
   m_componentCarrierManager->Dispose();
-  m_componentCarrierManager = 0;
+  m_componentCarrierManager = nullptr;
   // ComponentCarrierEnb::DoDispose() will call DoDispose
   // of its PHY, MAC, FFR and scheduler instance
   for (uint32_t i = 0; i < m_ccMap.size (); i++)
     {
       m_ccMap.at (i)->Dispose ();
-      m_ccMap.at (i) = 0;
+      m_ccMap.at (i) = nullptr;
     }
-   
+
   LteNetDevice::DoDispose ();
 }
 
@@ -231,7 +231,8 @@ LteEnbNetDevice::GetCellIds () const
 {
   std::vector<uint16_t> cellIds;
 
-  for (auto &it: m_ccMap)
+  cellIds.reserve(m_ccMap.size());
+for (auto &it: m_ccMap)
     {
       cellIds.push_back (it.second->GetCellId ());
     }
@@ -250,12 +251,12 @@ LteEnbNetDevice::GetUlBandwidth () const
   return m_ulBandwidth;
 }
 
-void 
+void
 LteEnbNetDevice::SetUlBandwidth (uint16_t bw)
-{ 
+{
   NS_LOG_FUNCTION (this << bw);
   switch (bw)
-    { 
+    {
     case 6:
     case 15:
     case 25:
@@ -277,12 +278,12 @@ LteEnbNetDevice::GetDlBandwidth () const
   return m_dlBandwidth;
 }
 
-void 
+void
 LteEnbNetDevice::SetDlBandwidth (uint16_t bw)
 {
   NS_LOG_FUNCTION (this << uint16_t (bw));
   switch (bw)
-    { 
+    {
     case 6:
     case 15:
     case 25:
@@ -298,28 +299,28 @@ LteEnbNetDevice::SetDlBandwidth (uint16_t bw)
     }
 }
 
-uint32_t 
+uint32_t
 LteEnbNetDevice::GetDlEarfcn () const
 {
   return m_dlEarfcn;
 }
 
-void 
+void
 LteEnbNetDevice::SetDlEarfcn (uint32_t earfcn)
-{ 
+{
   NS_LOG_FUNCTION (this << earfcn);
   m_dlEarfcn = earfcn;
 }
 
-uint32_t 
+uint32_t
 LteEnbNetDevice::GetUlEarfcn () const
 {
   return m_ulEarfcn;
 }
 
-void 
+void
 LteEnbNetDevice::SetUlEarfcn (uint32_t earfcn)
-{ 
+{
   NS_LOG_FUNCTION (this << earfcn);
   m_ulEarfcn = earfcn;
 }
@@ -365,8 +366,8 @@ LteEnbNetDevice::SetCcMap (std::map< uint8_t, Ptr<ComponentCarrierBaseStation> >
   m_ccMap = ccm;
 }
 
-void 
-LteEnbNetDevice::DoInitialize (void)
+void
+LteEnbNetDevice::DoInitialize ()
 {
   NS_LOG_FUNCTION (this);
   m_isConstructed = true;
@@ -379,7 +380,7 @@ LteEnbNetDevice::DoInitialize (void)
   m_componentCarrierManager->Initialize();
   m_handoverAlgorithm->Initialize ();
 
-  if (m_anr != 0)
+  if (m_anr)
     {
       m_anr->Initialize ();
     }
@@ -400,7 +401,7 @@ LteEnbNetDevice::Send (Ptr<Packet> packet, const Address& dest, uint16_t protoco
 
 
 void
-LteEnbNetDevice::UpdateConfig (void)
+LteEnbNetDevice::UpdateConfig ()
 {
   NS_LOG_FUNCTION (this);
 

@@ -36,35 +36,35 @@ class LteRlcUm : public LteRlc
 {
 public:
   LteRlcUm ();
-  virtual ~LteRlcUm ();
+  ~LteRlcUm () override;
   /**
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
-  virtual void DoDispose ();
+  static TypeId GetTypeId ();
+  void DoDispose () override;
 
   /**
    * RLC SAP
    *
    * \param p packet
    */
-  virtual void DoTransmitPdcpPdu (Ptr<Packet> p);
+  void DoTransmitPdcpPdu (Ptr<Packet> p) override;
 
   /**
    * MAC SAP
    *
    * \param txOpParams the LteMacSapUser::TxOpportunityParameters
    */
-  virtual void DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txOpParams);
-  virtual void DoNotifyHarqDeliveryFailure ();
-  virtual void DoReceivePdu (LteMacSapUser::ReceivePduParameters rxPduParams);
+  void DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txOpParams) override;
+  void DoNotifyHarqDeliveryFailure () override;
+  void DoReceivePdu (LteMacSapUser::ReceivePduParameters rxPduParams) override;
 
 private:
   /// Expire reordering timer
-  void ExpireReorderingTimer (void);
+  void ExpireReorderingTimer ();
   /// Expire RBS timer
-  void ExpireRbsTimer (void);
+  void ExpireRbsTimer ();
 
   /**
    * Is inside reordering window function
@@ -75,7 +75,7 @@ private:
   bool IsInsideReorderingWindow (SequenceNumber10 seqNumber);
 
   /// Reassemble outside window
-  void ReassembleOutsideWindow (void);
+  void ReassembleOutsideWindow ();
   /**
    * Reassemble SN interval function
    *

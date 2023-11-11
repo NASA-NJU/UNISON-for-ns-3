@@ -50,7 +50,7 @@ NS_OBJECT_ENSURE_REGISTERED (IdealWifiManager);
 NS_LOG_COMPONENT_DEFINE ("IdealWifiManager");
 
 TypeId
-IdealWifiManager::GetTypeId (void)
+IdealWifiManager::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::IdealWifiManager")
     .SetParent<WifiRemoteStationManager> ()
@@ -112,7 +112,7 @@ IdealWifiManager::DoInitialize ()
 }
 
 void
-IdealWifiManager::BuildSnrThresholds (void)
+IdealWifiManager::BuildSnrThresholds ()
 {
   m_thresholds.clear ();
   WifiMode mode;
@@ -210,11 +210,11 @@ void
 IdealWifiManager::AddSnrThreshold (WifiTxVector txVector, double snr)
 {
   NS_LOG_FUNCTION (this << txVector.GetMode ().GetUniqueName () << txVector.GetChannelWidth () << snr);
-  m_thresholds.push_back (std::make_pair (snr, txVector));
+  m_thresholds.emplace_back (snr, txVector);
 }
 
 WifiRemoteStation *
-IdealWifiManager::DoCreateStation (void) const
+IdealWifiManager::DoCreateStation () const
 {
   NS_LOG_FUNCTION (this);
   IdealWifiRemoteStation *station = new IdealWifiRemoteStation ();
@@ -312,9 +312,9 @@ IdealWifiManager::DoReportFinalDataFailed (WifiRemoteStation *station)
 }
 
 WifiTxVector
-IdealWifiManager::DoGetDataTxVector (WifiRemoteStation *st)
+IdealWifiManager::DoGetDataTxVector (WifiRemoteStation *st, uint16_t allowedWidth)
 {
-  NS_LOG_FUNCTION (this << st);
+  NS_LOG_FUNCTION (this << st << allowedWidth);
   IdealWifiRemoteStation *station = static_cast<IdealWifiRemoteStation*> (st);
   //We search within the Supported rate set the mode with the
   //highest data rate for which the SNR threshold is smaller than m_lastSnr
@@ -325,7 +325,7 @@ IdealWifiManager::DoGetDataTxVector (WifiRemoteStation *st)
   uint64_t bestRate = 0;
   uint8_t selectedNss = 1;
   uint16_t guardInterval;
-  uint16_t channelWidth = std::min (GetChannelWidth (station), GetPhy ()->GetChannelWidth ());
+  uint16_t channelWidth = std::min (GetChannelWidth (station), allowedWidth);
   txVector.SetChannelWidth (channelWidth);
   if ((station->m_lastSnrCached != CACHE_INITIAL_VALUE) && (station->m_lastSnrObserved == station->m_lastSnrCached) && (channelWidth == station->m_lastChannelWidth))
     {

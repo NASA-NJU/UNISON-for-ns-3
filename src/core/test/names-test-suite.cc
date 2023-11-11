@@ -47,7 +47,7 @@ public:
    * Register this type.
    * \return The TypeId.
    */
-  static TypeId GetTypeId (void)
+  static TypeId GetTypeId ()
   {
     static TypeId tid = TypeId ("TestObject")
       .SetParent<Object> ()
@@ -72,7 +72,7 @@ public:
    * Register this type.
    * \return The TypeId.
    */
-  static TypeId GetTypeId (void)
+  static TypeId GetTypeId ()
   {
     static TypeId tid = TypeId ("AlternateTestObject")
       .SetParent<Object> ()
@@ -104,11 +104,11 @@ public:
   /** Constructor. */
   BasicAddTestCase ();
   /** Destructor. */
-  virtual ~BasicAddTestCase ();
+  ~BasicAddTestCase () override;
 
 private:
-  virtual void DoRun (void);
-  virtual void DoTeardown (void);
+  void DoRun () override;
+  void DoTeardown () override;
 };
 
 BasicAddTestCase::BasicAddTestCase ()
@@ -119,21 +119,21 @@ BasicAddTestCase::~BasicAddTestCase ()
 {}
 
 void
-BasicAddTestCase::DoTeardown (void)
+BasicAddTestCase::DoTeardown ()
 {
   Names::Clear ();
 }
 
 void
-BasicAddTestCase::DoRun (void)
+BasicAddTestCase::DoRun ()
 {
   std::string found;
 
   Ptr<TestObject> objectOne = CreateObject<TestObject> ();
-  Names::Add (Ptr<Object> (0, false), "Name One", objectOne);
+  Names::Add (Ptr<Object> (nullptr, false), "Name One", objectOne);
 
   Ptr<TestObject> objectTwo = CreateObject<TestObject> ();
-  Names::Add (Ptr<Object> (0, false), "Name Two", objectTwo);
+  Names::Add (Ptr<Object> (nullptr, false), "Name Two", objectTwo);
 
   Ptr<TestObject> childOfObjectOne = CreateObject<TestObject> ();
   Names::Add (objectOne, "Child", childOfObjectOne);
@@ -169,11 +169,11 @@ public:
   /** Constructor. */
   StringContextAddTestCase ();
   /** Destructor. */
-  virtual ~StringContextAddTestCase ();
+  ~StringContextAddTestCase () override;
 
 private:
-  virtual void DoRun (void);
-  virtual void DoTeardown (void);
+  void DoRun () override;
+  void DoTeardown () override;
 };
 
 StringContextAddTestCase::StringContextAddTestCase ()
@@ -185,13 +185,13 @@ StringContextAddTestCase::~StringContextAddTestCase ()
 {}
 
 void
-StringContextAddTestCase::DoTeardown (void)
+StringContextAddTestCase::DoTeardown ()
 {
   Names::Clear ();
 }
 
 void
-StringContextAddTestCase::DoRun (void)
+StringContextAddTestCase::DoRun ()
 {
   std::string found;
 
@@ -234,11 +234,11 @@ public:
   /** Constructor. */
   FullyQualifiedAddTestCase ();
   /** Destructor. */
-  virtual ~FullyQualifiedAddTestCase ();
+  ~FullyQualifiedAddTestCase () override;
 
 private:
-  virtual void DoRun (void);
-  virtual void DoTeardown (void);
+  void DoRun () override;
+  void DoTeardown () override;
 };
 
 FullyQualifiedAddTestCase::FullyQualifiedAddTestCase ()
@@ -250,13 +250,13 @@ FullyQualifiedAddTestCase::~FullyQualifiedAddTestCase ()
 {}
 
 void
-FullyQualifiedAddTestCase::DoTeardown (void)
+FullyQualifiedAddTestCase::DoTeardown ()
 {
   Names::Clear ();
 }
 
 void
-FullyQualifiedAddTestCase::DoRun (void)
+FullyQualifiedAddTestCase::DoRun ()
 {
   std::string found;
 
@@ -303,11 +303,11 @@ public:
   /** Constructor. */
   RelativeAddTestCase ();
   /** Destructor. */
-  virtual ~RelativeAddTestCase ();
+  ~RelativeAddTestCase () override;
 
 private:
-  virtual void DoRun (void);
-  virtual void DoTeardown (void);
+  void DoRun () override;
+  void DoTeardown () override;
 };
 
 RelativeAddTestCase::RelativeAddTestCase ()
@@ -319,13 +319,13 @@ RelativeAddTestCase::~RelativeAddTestCase ()
 {}
 
 void
-RelativeAddTestCase::DoTeardown (void)
+RelativeAddTestCase::DoTeardown ()
 {
   Names::Clear ();
 }
 
 void
-RelativeAddTestCase::DoRun (void)
+RelativeAddTestCase::DoRun ()
 {
   std::string found;
 
@@ -369,11 +369,11 @@ public:
   /** Constructor. */
   BasicRenameTestCase ();
   /** Destructor. */
-  virtual ~BasicRenameTestCase ();
+  ~BasicRenameTestCase () override;
 
 private:
-  virtual void DoRun (void);
-  virtual void DoTeardown (void);
+  void DoRun () override;
+  void DoTeardown () override;
 };
 
 BasicRenameTestCase::BasicRenameTestCase ()
@@ -384,18 +384,18 @@ BasicRenameTestCase::~BasicRenameTestCase ()
 {}
 
 void
-BasicRenameTestCase::DoTeardown (void)
+BasicRenameTestCase::DoTeardown ()
 {
   Names::Clear ();
 }
 
 void
-BasicRenameTestCase::DoRun (void)
+BasicRenameTestCase::DoRun ()
 {
   std::string found;
 
   Ptr<TestObject> objectOne = CreateObject<TestObject> ();
-  Names::Add (Ptr<Object> (0, false), "Name", objectOne);
+  Names::Add (Ptr<Object> (nullptr, false), "Name", objectOne);
 
   Ptr<TestObject> childOfObjectOne = CreateObject<TestObject> ();
   Names::Add (objectOne, "Child", childOfObjectOne);
@@ -403,7 +403,7 @@ BasicRenameTestCase::DoRun (void)
   found = Names::FindName (objectOne);
   NS_TEST_ASSERT_MSG_EQ (found, "Name", "Could not Names::Add and Names::FindName an Object");
 
-  Names::Rename (Ptr<Object> (0, false), "Name", "New Name");
+  Names::Rename (Ptr<Object> (nullptr, false), "Name", "New Name");
 
   found = Names::FindName (objectOne);
   NS_TEST_ASSERT_MSG_EQ (found, "New Name", "Could not Names::Rename an Object");
@@ -431,11 +431,11 @@ public:
   /** Constructor. */
   StringContextRenameTestCase ();
   /** Destructor. */
-  virtual ~StringContextRenameTestCase ();
+  ~StringContextRenameTestCase () override;
 
 private:
-  virtual void DoRun (void);
-  virtual void DoTeardown (void);
+  void DoRun () override;
+  void DoTeardown () override;
 };
 
 StringContextRenameTestCase::StringContextRenameTestCase ()
@@ -446,13 +446,13 @@ StringContextRenameTestCase::~StringContextRenameTestCase ()
 {}
 
 void
-StringContextRenameTestCase::DoTeardown (void)
+StringContextRenameTestCase::DoTeardown ()
 {
   Names::Clear ();
 }
 
 void
-StringContextRenameTestCase::DoRun (void)
+StringContextRenameTestCase::DoRun ()
 {
   std::string found;
 
@@ -493,11 +493,11 @@ public:
   /** Constructor. */
   FullyQualifiedRenameTestCase ();
   /** Destructor. */
-  virtual ~FullyQualifiedRenameTestCase ();
+  ~FullyQualifiedRenameTestCase () override;
 
 private:
-  virtual void DoRun (void);
-  virtual void DoTeardown (void);
+  void DoRun () override;
+  void DoTeardown () override;
 };
 
 FullyQualifiedRenameTestCase::FullyQualifiedRenameTestCase ()
@@ -508,13 +508,13 @@ FullyQualifiedRenameTestCase::~FullyQualifiedRenameTestCase ()
 {}
 
 void
-FullyQualifiedRenameTestCase::DoTeardown (void)
+FullyQualifiedRenameTestCase::DoTeardown ()
 {
   Names::Clear ();
 }
 
 void
-FullyQualifiedRenameTestCase::DoRun (void)
+FullyQualifiedRenameTestCase::DoRun ()
 {
   std::string found;
 
@@ -555,11 +555,11 @@ public:
   /** Constructor. */
   RelativeRenameTestCase ();
   /** Destructor. */
-  virtual ~RelativeRenameTestCase ();
+  ~RelativeRenameTestCase () override;
 
 private:
-  virtual void DoRun (void);
-  virtual void DoTeardown (void);
+  void DoRun () override;
+  void DoTeardown () override;
 };
 
 RelativeRenameTestCase::RelativeRenameTestCase ()
@@ -570,13 +570,13 @@ RelativeRenameTestCase::~RelativeRenameTestCase ()
 {}
 
 void
-RelativeRenameTestCase::DoTeardown (void)
+RelativeRenameTestCase::DoTeardown ()
 {
   Names::Clear ();
 }
 
 void
-RelativeRenameTestCase::DoRun (void)
+RelativeRenameTestCase::DoRun ()
 {
   std::string found;
 
@@ -617,11 +617,11 @@ public:
   /** Constructor. */
   FindPathTestCase ();
   /** Destructor. */
-  virtual ~FindPathTestCase ();
+  ~FindPathTestCase () override;
 
 private:
-  virtual void DoRun (void);
-  virtual void DoTeardown (void);
+  void DoRun () override;
+  void DoTeardown () override;
 };
 
 FindPathTestCase::FindPathTestCase ()
@@ -632,13 +632,13 @@ FindPathTestCase::~FindPathTestCase ()
 {}
 
 void
-FindPathTestCase::DoTeardown (void)
+FindPathTestCase::DoTeardown ()
 {
   Names::Clear ();
 }
 
 void
-FindPathTestCase::DoRun (void)
+FindPathTestCase::DoRun ()
 {
   std::string found;
 
@@ -672,11 +672,11 @@ public:
   /** Constructor. */
   BasicFindTestCase ();
   /** Destructor. */
-  virtual ~BasicFindTestCase ();
+  ~BasicFindTestCase () override;
 
 private:
-  virtual void DoRun (void);
-  virtual void DoTeardown (void);
+  void DoRun () override;
+  void DoTeardown () override;
 };
 
 BasicFindTestCase::BasicFindTestCase ()
@@ -687,13 +687,13 @@ BasicFindTestCase::~BasicFindTestCase ()
 {}
 
 void
-BasicFindTestCase::DoTeardown (void)
+BasicFindTestCase::DoTeardown ()
 {
   Names::Clear ();
 }
 
 void
-BasicFindTestCase::DoRun (void)
+BasicFindTestCase::DoRun ()
 {
   Ptr<TestObject> found;
 
@@ -709,10 +709,10 @@ BasicFindTestCase::DoRun (void)
   Ptr<TestObject> childOfObjectTwo = CreateObject<TestObject> ();
   Names::Add ("Name Two/Child", childOfObjectTwo);
 
-  found = Names::Find<TestObject> (Ptr<Object> (0, false), "Name One");
+  found = Names::Find<TestObject> (Ptr<Object> (nullptr, false), "Name One");
   NS_TEST_ASSERT_MSG_EQ (found, objectOne, "Could not find a previously named Object via object context");
 
-  found = Names::Find<TestObject> (Ptr<Object> (0, false), "Name Two");
+  found = Names::Find<TestObject> (Ptr<Object> (nullptr, false), "Name Two");
   NS_TEST_ASSERT_MSG_EQ (found, objectTwo, "Could not find a previously named Object via object context");
 
   found = Names::Find<TestObject> (objectOne, "Child");
@@ -736,11 +736,11 @@ public:
   /** Constructor. */
   StringContextFindTestCase ();
   /** Destructor. */
-  virtual ~StringContextFindTestCase ();
+  ~StringContextFindTestCase () override;
 
 private:
-  virtual void DoRun (void);
-  virtual void DoTeardown (void);
+  void DoRun () override;
+  void DoTeardown () override;
 };
 
 StringContextFindTestCase::StringContextFindTestCase ()
@@ -751,13 +751,13 @@ StringContextFindTestCase::~StringContextFindTestCase ()
 {}
 
 void
-StringContextFindTestCase::DoTeardown (void)
+StringContextFindTestCase::DoTeardown ()
 {
   Names::Clear ();
 }
 
 void
-StringContextFindTestCase::DoRun (void)
+StringContextFindTestCase::DoRun ()
 {
   Ptr<TestObject> found;
 
@@ -800,11 +800,11 @@ public:
   /** Constructor. */
   FullyQualifiedFindTestCase ();
   /** Destructor. */
-  virtual ~FullyQualifiedFindTestCase ();
+  ~FullyQualifiedFindTestCase () override;
 
 private:
-  virtual void DoRun (void);
-  virtual void DoTeardown (void);
+  void DoRun () override;
+  void DoTeardown () override;
 };
 
 FullyQualifiedFindTestCase::FullyQualifiedFindTestCase ()
@@ -815,13 +815,13 @@ FullyQualifiedFindTestCase::~FullyQualifiedFindTestCase ()
 {}
 
 void
-FullyQualifiedFindTestCase::DoTeardown (void)
+FullyQualifiedFindTestCase::DoTeardown ()
 {
   Names::Clear ();
 }
 
 void
-FullyQualifiedFindTestCase::DoRun (void)
+FullyQualifiedFindTestCase::DoRun ()
 {
   Ptr<TestObject> found;
 
@@ -864,11 +864,11 @@ public:
   /** Constructor. */
   RelativeFindTestCase ();
   /** Destructor. */
-  virtual ~RelativeFindTestCase ();
+  ~RelativeFindTestCase () override;
 
 private:
-  virtual void DoRun (void);
-  virtual void DoTeardown (void);
+  void DoRun () override;
+  void DoTeardown () override;
 };
 
 RelativeFindTestCase::RelativeFindTestCase ()
@@ -879,13 +879,13 @@ RelativeFindTestCase::~RelativeFindTestCase ()
 {}
 
 void
-RelativeFindTestCase::DoTeardown (void)
+RelativeFindTestCase::DoTeardown ()
 {
   Names::Clear ();
 }
 
 void
-RelativeFindTestCase::DoRun (void)
+RelativeFindTestCase::DoRun ()
 {
   Ptr<TestObject> found;
 
@@ -925,11 +925,11 @@ public:
   /** Constructor. */
   AlternateFindTestCase ();
   /** Destructor. */
-  virtual ~AlternateFindTestCase ();
+  ~AlternateFindTestCase () override;
 
 private:
-  virtual void DoRun (void);
-  virtual void DoTeardown (void);
+  void DoRun () override;
+  void DoTeardown () override;
 };
 
 AlternateFindTestCase::AlternateFindTestCase ()
@@ -940,13 +940,13 @@ AlternateFindTestCase::~AlternateFindTestCase ()
 {}
 
 void
-AlternateFindTestCase::DoTeardown (void)
+AlternateFindTestCase::DoTeardown ()
 {
   Names::Clear ();
 }
 
 void
-AlternateFindTestCase::DoRun (void)
+AlternateFindTestCase::DoRun ()
 {
   Ptr<TestObject> testObject = CreateObject<TestObject> ();
   Names::Add ("Test Object", testObject);
@@ -967,11 +967,11 @@ AlternateFindTestCase::DoRun (void)
 
 
   foundAlternateTestObject = Names::Find<AlternateTestObject> ("Test Object");
-  NS_TEST_ASSERT_MSG_EQ (foundAlternateTestObject, 0,
+  NS_TEST_ASSERT_MSG_EQ (foundAlternateTestObject, nullptr,
                          "Unexpectedly able to GetObject<AlternateTestObject> on a TestObject");
 
   foundTestObject = Names::Find<TestObject> ("Alternate Test Object");
-  NS_TEST_ASSERT_MSG_EQ (foundTestObject, 0,
+  NS_TEST_ASSERT_MSG_EQ (foundTestObject, nullptr,
                          "Unexpectedly able to GetObject<TestObject> on an AlternateTestObject");
 }
 

@@ -106,43 +106,43 @@ SuperframeField::SetAssocPermit (bool assocPermit)
 }
 
 uint8_t
-SuperframeField::GetBeaconOrder (void) const
+SuperframeField::GetBeaconOrder () const
 {
   return m_sspecBcnOrder;
 }
 
 uint8_t
-SuperframeField::GetFrameOrder (void) const
+SuperframeField::GetFrameOrder () const
 {
   return m_sspecSprFrmOrder;
 }
 
 uint8_t
-SuperframeField::GetFinalCapSlot (void) const
+SuperframeField::GetFinalCapSlot () const
 {
   return m_sspecFnlCapSlot;
 }
 
 bool
-SuperframeField::IsBattLifeExt (void) const
+SuperframeField::IsBattLifeExt () const
 {
   return m_sspecBatLifeExt;
 }
 
 bool
-SuperframeField::IsPanCoor (void) const
+SuperframeField::IsPanCoor () const
 {
   return m_sspecPanCoor;
 }
 
 bool
-SuperframeField::IsAssocPermit (void) const
+SuperframeField::IsAssocPermit () const
 {
   return m_sspecAssocPermit;
 }
 
 uint16_t
-SuperframeField::GetSuperframe (void) const
+SuperframeField::GetSuperframe () const
 {
   uint16_t superframe;
 
@@ -158,7 +158,7 @@ SuperframeField::GetSuperframe (void) const
 }
 
 uint32_t
-SuperframeField::GetSerializedSize (void) const
+SuperframeField::GetSerializedSize () const
 {
   return 2;  // 2 Octets (superframeSpec)
 }
@@ -205,7 +205,7 @@ GtsFields::GtsFields ()
 }
 
 uint8_t
-GtsFields::GetGtsSpecField (void) const
+GtsFields::GetGtsSpecField () const
 {
   uint8_t gtsSpecField;
 
@@ -217,7 +217,7 @@ GtsFields::GetGtsSpecField (void) const
 }
 
 uint8_t
-GtsFields::GetGtsDirectionField (void) const
+GtsFields::GetGtsDirectionField () const
 {
   uint8_t gtsDirectionField;
 
@@ -241,8 +241,14 @@ GtsFields::SetGtsDirectionField (uint8_t gtsDir)
                                               // Bit 7 (Reserved)
 }
 
+bool
+GtsFields::GetGtsPermit () const
+{
+  return m_gtsSpecPermit;
+}
+
 uint32_t
-GtsFields::GetSerializedSize (void) const
+GtsFields::GetSerializedSize () const
 {
   uint32_t size;
 
@@ -268,10 +274,10 @@ GtsFields::Serialize (Buffer::Iterator i) const
 
       for (int j = 0; j < m_gtsSpecDescCount; j++)
         {
-          WriteTo (i,m_gtsList[j].m_gtsDescDevShortAddr);
+          WriteTo (i, m_gtsList[j].m_gtsDescDevShortAddr);
 
-          gtsDescStartAndLenght = m_gtsList[j].m_gtsDescStartSlot & (0x0F);
-          gtsDescStartAndLenght = (m_gtsList[j].m_gtsDescLength << 4) & (0x0F);
+          gtsDescStartAndLenght = (m_gtsList[j].m_gtsDescStartSlot & 0x0F) | // GTS descriptor bits 16-19
+                                  (m_gtsList[j].m_gtsDescLength & 0xF0);     // GTS descriptor bits 20-23
 
           i.WriteU8 (gtsDescStartAndLenght);
         }
@@ -324,20 +330,20 @@ PendingAddrFields::PendingAddrFields ()
 
 
 uint8_t
-PendingAddrFields::GetNumShortAddr (void) const
+PendingAddrFields::GetNumShortAddr () const
 {
   return m_pndAddrSpecNumShortAddr;
 }
 
 
 uint8_t
-PendingAddrFields::GetNumExtAddr (void) const
+PendingAddrFields::GetNumExtAddr () const
 {
   return m_pndAddrSpecNumExtAddr;
 }
 
 uint8_t
-PendingAddrFields::GetPndAddrSpecField (void) const
+PendingAddrFields::GetPndAddrSpecField () const
 {
   uint8_t pndAddrSpecField;
 
@@ -422,7 +428,7 @@ PendingAddrFields::SetPndAddrSpecField (uint8_t pndAddrSpecField)
 
 
 uint32_t
-PendingAddrFields::GetSerializedSize (void) const
+PendingAddrFields::GetSerializedSize () const
 {
   uint32_t size;
 
@@ -476,6 +482,136 @@ operator << (std::ostream &os, const PendingAddrFields &pendingAddrFields)
 {
   os << " Num. Short Addr = "  << uint32_t  (pendingAddrFields.GetNumShortAddr ())
      << ", Num. Ext   Addr = "  << uint32_t  (pendingAddrFields.GetNumExtAddr ());
+  return os;
+}
+
+/***********************************************************
+ *              Capability Information Field
+ ***********************************************************/
+
+CapabilityField::CapabilityField ()
+{
+  m_deviceType = true;
+  m_powerSource = false;
+  m_receiverOnWhenIdle = true;
+  m_securityCap = false;
+  m_allocAddr = true;
+}
+
+uint32_t
+CapabilityField::GetSerializedSize () const
+{
+  return 1;
+}
+
+Buffer::Iterator
+CapabilityField::Serialize (Buffer::Iterator i) const
+{
+  uint8_t capability;
+
+  capability = 0;                                            //!< Bit 0 (reserved)
+  capability = (m_deviceType << 1) & (0x01 << 1);            //!< Bit 1
+  capability |= (m_powerSource << 2) & (0x01 << 2);          //!< Bit 2
+  capability |= (m_receiverOnWhenIdle << 3) & (0x01 << 3);   //!< Bit 3
+                                                             //!< Bit 4-5 (reserved)
+  capability |= (m_securityCap << 6) & (0x01 << 6);          //!< Bit 6
+  capability |= (m_allocAddr << 7) & (0x01 << 7);            //!< Bit 7
+  i.WriteU8 (capability);
+  return i;
+}
+
+Buffer::Iterator
+CapabilityField::Deserialize (Buffer::Iterator i)
+{
+  uint8_t capability = i.ReadU8 ();
+  //!< Bit 0 (reserved)
+  m_deviceType = (capability >> 1) & (0x01);          //!< Bit 1
+  m_powerSource = (capability >> 2) & (0x01);         //!< Bit 2
+  m_receiverOnWhenIdle = (capability >> 3) & (0x01);  //!< Bit 3
+                                                      //!< Bit 4-5 (reserved)
+  m_securityCap = (capability >> 6) & (0x01);         //!< Bit 6
+  m_allocAddr = (capability >> 7) & (0x01);           //!< Bit 7
+
+  return i;
+}
+
+bool
+CapabilityField::IsDeviceTypeFfd () const
+{
+  return m_deviceType;
+}
+
+bool
+CapabilityField::IsPowSrcAvailable () const
+{
+  return m_powerSource;
+}
+
+bool
+CapabilityField::IsReceiverOnWhenIdle () const
+{
+  return m_receiverOnWhenIdle;
+}
+
+
+bool
+CapabilityField::IsSecurityCapability () const
+{
+  return m_securityCap;
+}
+
+bool
+CapabilityField::IsShortAddrAllocOn () const
+{
+  return m_allocAddr;
+}
+
+void
+CapabilityField::SetFfdDevice (bool devType)
+{
+  m_deviceType = devType;
+}
+
+void
+CapabilityField::SetPowSrcAvailable (bool pow)
+{
+  m_powerSource = pow;
+}
+
+void
+CapabilityField::SetRxOnWhenIdle (bool rxIdle)
+{
+  m_receiverOnWhenIdle = rxIdle;
+}
+
+void
+CapabilityField::SetSecurityCap (bool sec)
+{
+  m_securityCap = sec;
+}
+
+void
+CapabilityField::SetShortAddrAllocOn (bool addrAlloc)
+{
+  m_allocAddr = addrAlloc;
+}
+
+/**
+ * output stream output operator
+ *
+ * \param os output stream
+ * \param capabilityField the Capability Information Field
+ *
+ * \returns output stream
+ */
+std::ostream &
+operator << (std::ostream &os, const CapabilityField &capabilityField)
+{
+  os << " FFD device capable = "  << bool  (capabilityField.IsDeviceTypeFfd ())
+     << ", Alternate Power Current Available  = "  << bool  (capabilityField.IsPowSrcAvailable ())
+     << ", Receiver On When Idle  = "  << bool  (capabilityField.IsReceiverOnWhenIdle ())
+     << ", Security Capable  = "  << bool  (capabilityField.IsSecurityCapability ())
+     << ", Coordinator Allocate Short Address  = "  << bool  (capabilityField.IsShortAddrAllocOn ());
   return os;
 }
 

@@ -42,19 +42,19 @@ protected:
   /// Constructor
   /// \param flowMonitor the FlowMonitor this probe is associated with
   FlowProbe (Ptr<FlowMonitor> flowMonitor);
-  virtual void DoDispose (void);
+  void DoDispose () override;
 
 public:
-  virtual ~FlowProbe ();
-  
+  ~FlowProbe () override;
+
   // Delete copy constructor and assignment operator to avoid misuse
   FlowProbe (FlowProbe const &) = delete;
   FlowProbe& operator= (FlowProbe const &) = delete;
 
   /// Register this type.
   /// \return The TypeId.
-  static TypeId GetTypeId (void);
-  
+  static TypeId GetTypeId ();
+
   /// Structure to hold the statistics of a flow
   struct FlowStats
   {

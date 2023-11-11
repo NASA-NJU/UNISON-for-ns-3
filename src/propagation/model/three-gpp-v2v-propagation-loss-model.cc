@@ -31,7 +31,7 @@ NS_LOG_COMPONENT_DEFINE ("ThreeGppV2vPropagationLossModel");
 NS_OBJECT_ENSURE_REGISTERED (ThreeGppV2vUrbanPropagationLossModel);
 
 TypeId
-ThreeGppV2vUrbanPropagationLossModel::GetTypeId (void)
+ThreeGppV2vUrbanPropagationLossModel::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::ThreeGppV2vUrbanPropagationLossModel")
     .SetParent<ThreeGppPropagationLossModel> ()
@@ -72,6 +72,14 @@ ThreeGppV2vUrbanPropagationLossModel::GetLossLos (double /* distance2D */, doubl
   double loss = 38.77 + 16.7 * log10 (distance3D) + 18.2 * log10 (m_frequency / 1e9);
 
   return loss;
+}
+
+double
+ThreeGppV2vUrbanPropagationLossModel::GetO2iDistance2dIn () const
+{
+  // TODO O2I car penetration loss (TR 38.901 7.4.3.2) not considered
+  NS_LOG_WARN ("O2I car penetration loss not yet implemented");
+  return 0;
 }
 
 double
@@ -195,12 +203,23 @@ ThreeGppV2vUrbanPropagationLossModel::GetShadowingCorrelationDistance (ChannelCo
   return correlationDistance;
 }
 
+int64_t
+ThreeGppV2vUrbanPropagationLossModel::DoAssignStreams (int64_t stream)
+{
+  NS_LOG_FUNCTION (this);
+
+  m_normRandomVariable->SetStream (stream);
+  m_uniformVar->SetStream (stream + 1);
+  m_logNorVar->SetStream (stream + 2);
+  return 3;
+}
+
 // ------------------------------------------------------------------------- //
 
 NS_OBJECT_ENSURE_REGISTERED (ThreeGppV2vHighwayPropagationLossModel);
 
 TypeId
-ThreeGppV2vHighwayPropagationLossModel::GetTypeId (void)
+ThreeGppV2vHighwayPropagationLossModel::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::ThreeGppV2vHighwayPropagationLossModel")
     .SetParent<ThreeGppV2vUrbanPropagationLossModel> ()

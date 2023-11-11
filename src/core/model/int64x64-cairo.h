@@ -201,7 +201,7 @@ public:
   /** Explicit bool conversion. */
   inline explicit operator bool () const
   {
-    return (_v != 0);
+    return (_v.hi != 0 || _v.lo != 0);
   }
 
   /**
@@ -241,7 +241,7 @@ public:
 
   /**
    * Truncate to an integer.
-   * Truncation is always toward zero, 
+   * Truncation is always toward zero,
    * \return The value truncated toward zero.
    */
   int64_t GetInt (void) const
@@ -308,10 +308,10 @@ private:
    *  \param [in] rhs Right hand argument
    *  \return The result of the operator.
    */
-  // *NS_CHECK_STYLE_OFF*
-  friend inline bool operator == (const int64x64_t & lhs, const int64x64_t & rhs) { return _cairo_int128_eq (lhs._v, rhs._v); };
-  friend inline bool operator <  (const int64x64_t & lhs, const int64x64_t & rhs) { return _cairo_int128_lt (lhs._v, rhs._v); };
-  friend inline bool operator >  (const int64x64_t & lhs, const int64x64_t & rhs) { return _cairo_int128_gt (lhs._v, rhs._v); };
+
+  friend inline bool operator == (const int64x64_t & lhs, const int64x64_t & rhs) { return _cairo_int128_eq (lhs._v, rhs._v); }
+  friend inline bool operator <  (const int64x64_t & lhs, const int64x64_t & rhs) { return _cairo_int128_lt (lhs._v, rhs._v); }
+  friend inline bool operator >  (const int64x64_t & lhs, const int64x64_t & rhs) { return _cairo_int128_gt (lhs._v, rhs._v); }
 
   friend inline int64x64_t & operator += (int64x64_t & lhs, const int64x64_t & rhs)
     {
@@ -333,7 +333,7 @@ private:
       lhs.Div (rhs);
       return lhs;
     };
-  // *NS_CHECK_STYLE_ON*
+
   /** @} */
 
   /**

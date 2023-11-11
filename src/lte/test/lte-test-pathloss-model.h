@@ -21,6 +21,7 @@
 #ifndef LTE_TEST_PATHLOSS_MODEL_H
 #define LTE_TEST_PATHLOSS_MODEL_H
 
+#include "ns3/lte-common.h"
 #include "ns3/spectrum-value.h"
 
 #include "ns3/test.h"
@@ -48,8 +49,8 @@ public:
  * \ingroup lte-test
  * \ingroup tests
  *
- * \brief  Tests that the BuildingPathlossModel works according to 
- * the expected theoretical values. Theoretical reference values 
+ * \brief  Tests that the BuildingPathlossModel works according to
+ * the expected theoretical values. Theoretical reference values
  * are obtained with the octave script src/lte/test/reference/lte_pathloss.m
  */
 class LtePathlossModelSystemTestCase : public TestCase
@@ -65,17 +66,17 @@ class LtePathlossModelSystemTestCase : public TestCase
    */
     LtePathlossModelSystemTestCase (std::string name, double snrDb, double dist, uint16_t mcsIndex);
     LtePathlossModelSystemTestCase ();
-    virtual ~LtePathlossModelSystemTestCase ();
-    
+    ~LtePathlossModelSystemTestCase () override;
+
   /**
    * \brief DL scheduling function
    * \param dlInfo the DL info
    */
     void DlScheduling (DlSchedulingCallbackInfo dlInfo);
-                       
+
   private:
-    virtual void DoRun (void);
-    
+    void DoRun () override;
+
     double m_snrDb; ///< the SNR in dB
     double m_distance; ///< the distance
     uint16_t m_mcsIndex; ///< the MCS index

@@ -50,7 +50,7 @@ constexpr int MAXTHREADS = 64;
 
 /**
  * \ingroup threaded-tests
- *  
+ *
  * \brief Check threaded event handling with various thread number, schedulers, and  simulator types.
  */
 class ThreadedSimulatorEventsTestCase : public TestCase
@@ -58,7 +58,7 @@ class ThreadedSimulatorEventsTestCase : public TestCase
 public:
   /**
    * Constructor.
-   * 
+   *
    * \param schedulerFactory The scheduler factory.
    * \param simulatorType The simulator type.
    * \param threads The number of threads.
@@ -85,7 +85,7 @@ public:
    */
   void EventD (int d);
   /**
-   * No-op function, records the thread that called it. 
+   * No-op function, records the thread that called it.
    * \param threadno The thread number.
    */
   void DoNothing (unsigned int threadno);
@@ -97,7 +97,7 @@ public:
   /**
    * End the thread execution.
    */
-  void End (void);
+  void End ();
   uint64_t m_a; //!< The value incremented when EventA is called.
   uint64_t m_b; //!< The value incremented when EventB is called.
   uint64_t m_c; //!< The value incremented when EventC is called.
@@ -111,9 +111,9 @@ public:
   std::list<std::thread> m_threadlist; //!< Thread list.
 
 private:
-  virtual void DoSetup (void);
-  virtual void DoRun (void);
-  virtual void DoTeardown (void);
+  void DoSetup () override;
+  void DoRun () override;
+  void DoTeardown () override;
 };
 
 ThreadedSimulatorEventsTestCase::ThreadedSimulatorEventsTestCase (ObjectFactory schedulerFactory, const std::string &simulatorType, unsigned int threads)
@@ -127,7 +127,7 @@ ThreadedSimulatorEventsTestCase::ThreadedSimulatorEventsTestCase (ObjectFactory 
 {}
 
 void
-ThreadedSimulatorEventsTestCase::End (void)
+ThreadedSimulatorEventsTestCase::End ()
 {
   m_stop = true;
   for (auto& thread : m_threadlist)
@@ -225,7 +225,7 @@ ThreadedSimulatorEventsTestCase::EventD (int d)
 }
 
 void
-ThreadedSimulatorEventsTestCase::DoSetup (void)
+ThreadedSimulatorEventsTestCase::DoSetup ()
 {
   if (!m_simulatorType.empty ())
     {
@@ -240,14 +240,14 @@ ThreadedSimulatorEventsTestCase::DoSetup (void)
         m_d = 0;
 }
 void
-ThreadedSimulatorEventsTestCase::DoTeardown (void)
+ThreadedSimulatorEventsTestCase::DoTeardown ()
 {
   m_threadlist.clear ();
 
   Config::SetGlobal ("SimulatorImplementationType", StringValue ("ns3::DefaultSimulatorImpl"));
 }
 void
-ThreadedSimulatorEventsTestCase::DoRun (void)
+ThreadedSimulatorEventsTestCase::DoRun ()
 {
   m_stop = false;
   Simulator::SetScheduler (m_schedulerFactory);
@@ -257,9 +257,8 @@ ThreadedSimulatorEventsTestCase::DoRun (void)
 
   for (unsigned int i = 0; i < m_threads; ++i)
     {
-      m_threadlist.push_back (
-        std::thread (&ThreadedSimulatorEventsTestCase::SchedulingThread,
-                     std::pair<ThreadedSimulatorEventsTestCase *, unsigned int> (this,i) ));
+      m_threadlist.emplace_back(&ThreadedSimulatorEventsTestCase::SchedulingThread,
+                     std::pair<ThreadedSimulatorEventsTestCase *, unsigned int> (this,i) );
     }
 
   Simulator::Run ();
@@ -273,7 +272,7 @@ ThreadedSimulatorEventsTestCase::DoRun (void)
 
 /**
  * \ingroup threaded-tests
- *  
+ *
  * \brief The threaded simulator Test Suite.
  */
 class ThreadedSimulatorTestSuite : public TestSuite
@@ -283,9 +282,7 @@ public:
     : TestSuite ("threaded-simulator")
   {
     std::string simulatorTypes[] = {
-#ifdef HAVE_RT
       "ns3::RealtimeSimulatorImpl",
-#endif
       "ns3::DefaultSimulatorImpl"
     };
     std::string schedulerTypes[] = {
@@ -294,7 +291,7 @@ public:
       "ns3::MapScheduler",
       "ns3::CalendarScheduler"
     };
-    unsigned int threadcounts[] = {
+    unsigned int threadCounts[] = {
       0,
       2,
       10,
@@ -302,14 +299,16 @@ public:
     };
     ObjectFactory factory;
 
-    for (unsigned int i = 0; i < (sizeof(simulatorTypes) / sizeof(simulatorTypes[0])); ++i)
+    for (auto &simulatorType : simulatorTypes)
       {
-        for (unsigned int j = 0; j < (sizeof(threadcounts) / sizeof(threadcounts[0])); ++j)
+        for (auto &schedulerType : schedulerTypes)
           {
-            for (unsigned int k = 0; k < (sizeof(schedulerTypes) / sizeof(schedulerTypes[0])); ++k)
+            for (auto &threadCount : threadCounts)
               {
-                factory.SetTypeId (schedulerTypes[k]);
-                AddTestCase (new ThreadedSimulatorEventsTestCase (factory, simulatorTypes[i], threadcounts[j]), TestCase::QUICK);
+                factory.SetTypeId (schedulerType);
+                AddTestCase (
+                    new ThreadedSimulatorEventsTestCase (factory, simulatorType, threadCount),
+                    TestCase::QUICK);
               }
           }
       }
@@ -317,4 +316,4 @@ public:
 };
 
 /// Static variable for test initialization.
-static ThreadedSimulatorTestSuite g_threadedSimulatorTestSuite; 
+static ThreadedSimulatorTestSuite g_threadedSimulatorTestSuite;

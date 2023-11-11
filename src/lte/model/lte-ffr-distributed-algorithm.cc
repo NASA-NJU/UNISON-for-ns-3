@@ -30,8 +30,8 @@ NS_OBJECT_ENSURE_REGISTERED (LteFfrDistributedAlgorithm);
 
 
 LteFfrDistributedAlgorithm::LteFfrDistributedAlgorithm ()
-  : m_ffrSapUser (0),
-    m_ffrRrcSapUser (0)
+  : m_ffrSapUser (nullptr),
+    m_ffrRrcSapUser (nullptr)
 {
   NS_LOG_FUNCTION (this);
   m_ffrSapProvider = new MemberLteFfrSapProvider<LteFfrDistributedAlgorithm> (this);
@@ -79,7 +79,7 @@ LteFfrDistributedAlgorithm::GetTypeId ()
                    MakeUintegerAccessor (&LteFfrDistributedAlgorithm::m_rsrpDifferenceThreshold),
                    MakeUintegerChecker<uint8_t> ())
     .AddAttribute ("CenterPowerOffset",
-                   "PdschConfigDedicated::Pa value for Edge Sub-band, default value dB0",
+                   "PdschConfigDedicated::Pa value for Center Sub-band, default value dB0",
                    UintegerValue (5),
                    MakeUintegerAccessor (&LteFfrDistributedAlgorithm::m_centerPowerOffset),
                    MakeUintegerChecker<uint8_t> ())
@@ -515,8 +515,8 @@ LteFfrDistributedAlgorithm::Calculate ()
               continue;
             }
 
-          servingCellMeasures = 0;
-          neighbourCellMeasures = 0;
+          servingCellMeasures = nullptr;
+          neighbourCellMeasures = nullptr;
 
           it2 = it1->second.find (m_cellId);
           if (it2 != it1->second.end ())
@@ -573,7 +573,7 @@ LteFfrDistributedAlgorithm::Calculate ()
               continue;
             }
 
-          for (uint8_t i = 0; i < rbgNum; i++)
+          for (uint16_t i = 0; i < rbgNum; i++)
             {
               metricA[i] += cellIt->second * rntpIt->second[i];
             }

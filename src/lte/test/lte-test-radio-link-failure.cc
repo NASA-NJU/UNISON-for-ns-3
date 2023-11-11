@@ -54,8 +54,8 @@ LteRadioLinkFailureTestSuite::LteRadioLinkFailureTestSuite ()
   std::vector<Time> checkConnectedList;
   Vector ueJumpAwayPosition;
 
-  uePositionList.push_back (Vector (10, 0, 0));
-  enbPositionList.push_back (Vector (0, 0, 0));
+  uePositionList.emplace_back(10, 0, 0);
+  enbPositionList.emplace_back(0, 0, 0);
   ueJumpAwayPosition = Vector (7000.0, 0.0, 0.0);
   // check before jumping
   checkConnectedList.push_back (Seconds (0.3));
@@ -82,7 +82,7 @@ LteRadioLinkFailureTestSuite::LteRadioLinkFailureTestSuite ()
   // Two eNBs: Ideal RRC PROTOCOL
 
   // We place the second eNB close to the position where the UE will jump
-  enbPositionList.push_back (Vector (7020, 0, 0));
+  enbPositionList.emplace_back(7020, 0, 0);
 
   AddTestCase (new LteRadioLinkFailureTestCase (2, 1, Seconds (2), true,
                                                 uePositionList, enbPositionList,
@@ -419,11 +419,11 @@ LteRadioLinkFailureTestCase::CheckConnected (Ptr<NetDevice> ueDevice, NetDeviceC
         }
     }
 
-  NS_TEST_ASSERT_MSG_NE (enbLteDevice, 0, "LTE eNB device not found");
+  NS_TEST_ASSERT_MSG_NE (enbLteDevice, nullptr, "LTE eNB device not found");
   Ptr<LteEnbRrc> enbRrc = enbLteDevice->GetRrc ();
   uint16_t rnti = ueRrc->GetRnti ();
   Ptr<UeManager> ueManager = enbRrc->GetUeManager (rnti);
-  NS_TEST_ASSERT_MSG_NE (ueManager, 0, "RNTI " << rnti << " not found in eNB");
+  NS_TEST_ASSERT_MSG_NE (ueManager, nullptr, "RNTI " << rnti << " not found in eNB");
 
   UeManager::State ueManagerState = ueManager->GetState ();
   NS_TEST_ASSERT_MSG_EQ (ueManagerState, UeManager::CONNECTED_NORMALLY, "Wrong UeManager state!");
@@ -511,7 +511,7 @@ LteRadioLinkFailureTestCase::CheckUeExistAtEnb (uint16_t rnti, Ptr<NetDevice> en
 {
   NS_LOG_FUNCTION (this << rnti);
   Ptr<LteEnbNetDevice> enbLteDevice = DynamicCast<LteEnbNetDevice> (enbDevice);
-  NS_ABORT_MSG_IF (enbLteDevice == nullptr, "LTE eNB device not found");
+  NS_ABORT_MSG_IF (!enbLteDevice, "LTE eNB device not found");
   Ptr<LteEnbRrc> enbRrc = enbLteDevice->GetRrc ();
   bool ueManagerFound = enbRrc->HasUeManager (rnti);
   return ueManagerFound;

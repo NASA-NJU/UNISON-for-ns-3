@@ -44,7 +44,7 @@ NS_LOG_COMPONENT_DEFINE ("DefaultSimulatorImpl");
 NS_OBJECT_ENSURE_REGISTERED (DefaultSimulatorImpl);
 
 TypeId
-DefaultSimulatorImpl::GetTypeId (void)
+DefaultSimulatorImpl::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::DefaultSimulatorImpl")
     .SetParent<SimulatorImpl> ()
@@ -74,7 +74,7 @@ DefaultSimulatorImpl::~DefaultSimulatorImpl ()
 }
 
 void
-DefaultSimulatorImpl::DoDispose (void)
+DefaultSimulatorImpl::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
   ProcessEventsWithContext ();
@@ -84,7 +84,7 @@ DefaultSimulatorImpl::DoDispose (void)
       Scheduler::Event next = m_events->RemoveNext ();
       next.impl->Unref ();
     }
-  m_events = 0;
+  m_events = nullptr;
   SimulatorImpl::DoDispose ();
 }
 void
@@ -109,7 +109,7 @@ DefaultSimulatorImpl::SetScheduler (ObjectFactory schedulerFactory)
   NS_LOG_FUNCTION (this << schedulerFactory);
   Ptr<Scheduler> scheduler = schedulerFactory.Create<Scheduler> ();
 
-  if (m_events != 0)
+  if (m_events)
     {
       while (!m_events->IsEmpty ())
         {
@@ -122,17 +122,17 @@ DefaultSimulatorImpl::SetScheduler (ObjectFactory schedulerFactory)
 
 // System ID for non-distributed simulation is always zero
 uint32_t
-DefaultSimulatorImpl::GetSystemId (void) const
+DefaultSimulatorImpl::GetSystemId () const
 {
   return 0;
 }
 
 void
-DefaultSimulatorImpl::ProcessOneEvent (void)
+DefaultSimulatorImpl::ProcessOneEvent ()
 {
   Scheduler::Event next = m_events->RemoveNext ();
 
-  PreEventHook (EventId (next.impl, next.key.m_ts, 
+  PreEventHook (EventId (next.impl, next.key.m_ts,
                          next.key.m_context, next.key.m_uid));
 
   NS_ASSERT (next.key.m_ts >= m_currentTs);
@@ -150,13 +150,13 @@ DefaultSimulatorImpl::ProcessOneEvent (void)
 }
 
 bool
-DefaultSimulatorImpl::IsFinished (void) const
+DefaultSimulatorImpl::IsFinished () const
 {
   return m_events->IsEmpty () || m_stop;
 }
 
 void
-DefaultSimulatorImpl::ProcessEventsWithContext (void)
+DefaultSimulatorImpl::ProcessEventsWithContext ()
 {
   if (m_eventsWithContextEmpty)
     {
@@ -186,7 +186,7 @@ DefaultSimulatorImpl::ProcessEventsWithContext (void)
 }
 
 void
-DefaultSimulatorImpl::Run (void)
+DefaultSimulatorImpl::Run ()
 {
   NS_LOG_FUNCTION (this);
   // Set the current threadId as the main threadId
@@ -205,7 +205,7 @@ DefaultSimulatorImpl::Run (void)
 }
 
 void
-DefaultSimulatorImpl::Stop (void)
+DefaultSimulatorImpl::Stop ()
 {
   NS_LOG_FUNCTION (this);
   m_stop = true;
@@ -296,7 +296,7 @@ DefaultSimulatorImpl::ScheduleDestroy (EventImpl *event)
 }
 
 Time
-DefaultSimulatorImpl::Now (void) const
+DefaultSimulatorImpl::Now () const
 {
   // Do not add function logging here, to avoid stack overflow
   return TimeStep (m_currentTs);
@@ -362,7 +362,7 @@ DefaultSimulatorImpl::IsExpired (const EventId &id) const
 {
   if (id.GetUid () == EventId::UID::DESTROY)
     {
-      if (id.PeekEventImpl () == 0
+      if (id.PeekEventImpl () == nullptr
           || id.PeekEventImpl ()->IsCancelled ())
         {
           return true;
@@ -377,7 +377,7 @@ DefaultSimulatorImpl::IsExpired (const EventId &id) const
         }
       return true;
     }
-  if (id.PeekEventImpl () == 0
+  if (id.PeekEventImpl () == nullptr
       || id.GetTs () < m_currentTs
       || (id.GetTs () == m_currentTs && id.GetUid () <= m_currentUid)
       || id.PeekEventImpl ()->IsCancelled ())
@@ -391,19 +391,19 @@ DefaultSimulatorImpl::IsExpired (const EventId &id) const
 }
 
 Time
-DefaultSimulatorImpl::GetMaximumSimulationTime (void) const
+DefaultSimulatorImpl::GetMaximumSimulationTime () const
 {
   return TimeStep (0x7fffffffffffffffLL);
 }
 
 uint32_t
-DefaultSimulatorImpl::GetContext (void) const
+DefaultSimulatorImpl::GetContext () const
 {
   return m_currentContext;
 }
 
 uint64_t
-DefaultSimulatorImpl::GetEventCount (void) const
+DefaultSimulatorImpl::GetEventCount () const
 {
   return m_eventCount;
 }

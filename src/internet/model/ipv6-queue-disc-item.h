@@ -44,7 +44,7 @@ public:
    */
   Ipv6QueueDiscItem (Ptr<Packet> p, const Address & addr, uint16_t protocol, const Ipv6Header & header);
 
-  virtual ~Ipv6QueueDiscItem ();
+  ~Ipv6QueueDiscItem () override;
 
   // Delete default constructor, copy constructor and assignment operator to avoid misuse
   Ipv6QueueDiscItem () = delete;
@@ -54,23 +54,23 @@ public:
   /**
    * \return the correct packet size (header plus payload).
    */
-  virtual uint32_t GetSize (void) const;
+  uint32_t GetSize () const override;
 
   /**
    * \return the header stored in this item..
    */
-  const Ipv6Header & GetHeader (void) const;
+  const Ipv6Header & GetHeader () const;
 
   /**
    * \brief Add the header to the packet
    */
-  virtual void AddHeader (void);
+  void AddHeader () override;
 
   /**
    * \brief Print the item contents.
    * \param os output stream in which the data should be printed.
    */
-  virtual void Print (std::ostream &os) const;
+  void Print (std::ostream &os) const override;
 
   /*
    * The values for the fields of the Ipv6 header are taken from m_header and
@@ -79,14 +79,14 @@ public:
    * to be called before the header is added to the packet (i.e., before the
    * packet is dequeued from the queue disc)
    */
-  virtual bool GetUint8Value (Uint8Values field, uint8_t &value) const;
+  bool GetUint8Value (Uint8Values field, uint8_t &value) const override;
 
   /**
-   * \brief Marks the packet by setting ECN_CE bits if the packet has 
+   * \brief Marks the packet by setting ECN_CE bits if the packet has
    * ECN_ECT0 or ECN_ECT1 set.  If ECN_CE is already set, returns true.
    * \return true if the method results in a marked packet, false otherwise
    */
-  virtual bool Mark (void);
+  bool Mark () override;
 
   /**
    * \brief Computes the hash of the packet's 5-tuple
@@ -98,7 +98,7 @@ public:
    * \param perturbation hash perturbation value
    * \return the hash of the packet's 5-tuple
    */
-  virtual uint32_t Hash (uint32_t perturbation) const;
+  uint32_t Hash (uint32_t perturbation) const override;
 
 private:
   Ipv6Header m_header;  //!< The IPv6 header.

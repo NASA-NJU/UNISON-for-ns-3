@@ -21,12 +21,16 @@
 #ifndef WIFI_MAC_H
 #define WIFI_MAC_H
 
-#include <set>
-#include <unordered_map>
 #include "wifi-standards.h"
 #include "wifi-remote-station-manager.h"
 #include "qos-utils.h"
 #include "ssid.h"
+#include <list>
+#include <memory>
+#include <optional>
+#include <set>
+#include <unordered_map>
+#include <vector>
 
 namespace ns3 {
 
@@ -37,13 +41,15 @@ class WifiPsdu;
 class MacRxMiddle;
 class MacTxMiddle;
 class WifiMacQueue;
-class WifiMacQueueItem;
+class WifiMpdu;
 class HtConfiguration;
 class VhtConfiguration;
 class HeConfiguration;
+class EhtConfiguration;
 class FrameExchangeManager;
 class ChannelAccessManager;
 class ExtendedCapabilities;
+class WifiMacQueueScheduler;
 
 /**
  * Enumeration for type of station
@@ -88,10 +94,14 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   WifiMac ();
-  virtual ~WifiMac ();
+  ~WifiMac () override;
+
+  // Delete copy constructor and assignment operator to avoid misuse
+  WifiMac (const WifiMac &) = delete;
+  WifiMac &operator= (const WifiMac &) = delete;
 
   /**
    * Sets the device this PHY is associated with.
@@ -104,21 +114,44 @@ public:
    *
    * \return the device this PHY is associated with
    */
-  Ptr<WifiNetDevice> GetDevice (void) const;
+  Ptr<WifiNetDevice> GetDevice () const;
 
   /**
-   * Get the Frame Exchange Manager
+   * Get the Frame Exchange Manager associated with the given link
    *
+   * \param linkId the ID of the given link
    * \return the Frame Exchange Manager
    */
-  Ptr<FrameExchangeManager> GetFrameExchangeManager (void) const;
+  Ptr<FrameExchangeManager> GetFrameExchangeManager (uint8_t linkId = SINGLE_LINK_OP_ID) const;
+
+  /**
+   * Get the Channel Access Manager associated with the given link
+   *
+   * \param linkId the ID of the given link
+   * \return the Channel Access Manager
+   */
+  Ptr<ChannelAccessManager> GetChannelAccessManager (uint8_t linkId = SINGLE_LINK_OP_ID) const;
+
+  /**
+   * Get the number of links (can be greater than 1 for 11be devices only).
+   *
+   * \return the number of links used by this MAC
+   */
+  uint8_t GetNLinks () const;
+  /**
+   * Get the ID of the link having the given MAC address, if any.
+   *
+   * \param address the given MAC address
+   * \return the ID of the link having the given MAC address, if any
+   */
+  virtual std::optional<uint8_t> GetLinkIdByAddress (const Mac48Address& address) const;
 
   /**
    * Accessor for the Txop object
    *
    * \return a smart pointer to Txop
    */
-  Ptr<Txop> GetTxop (void) const;
+  Ptr<Txop> GetTxop () const;
   /**
    * Accessor for a specified EDCA object
    *
@@ -143,6 +176,19 @@ public:
    */
   virtual Ptr<WifiMacQueue> GetTxopQueue (AcIndex ac) const;
 
+  /**
+   * Set the wifi MAC queue scheduler
+   *
+   * \param scheduler the wifi MAC queue scheduler
+   */
+  virtual void SetMacQueueScheduler (Ptr<WifiMacQueueScheduler> scheduler);
+  /**
+   * Get the wifi MAC queue scheduler
+   *
+   * \return the wifi MAC queue scheduler
+   */
+  Ptr<WifiMacQueueScheduler> GetMacQueueScheduler () const;
+
    /**
    * This method is invoked by a subclass to specify what type of
    * station it is implementing. This is something that the channel
@@ -156,7 +202,7 @@ public:
    *
    * \return the type of station.
    */
-  TypeOfStation GetTypeOfStation (void) const;
+  TypeOfStation GetTypeOfStation () const;
 
  /**
    * \param ssid the current SSID of this MAC layer.
@@ -169,7 +215,7 @@ public:
    * filtering on the incoming frame path may affect the overall
    * behavior.
    */
-  void SetPromisc (void);
+  void SetPromisc ();
   /**
    * Enable or disable CTS-to-self feature.
    *
@@ -181,23 +227,25 @@ public:
   /**
    * \return the MAC address associated to this MAC layer.
    */
-  Mac48Address GetAddress (void) const;
+  Mac48Address GetAddress () const;
   /**
    * \return the SSID which this MAC layer is going to try to stay in.
    */
-  Ssid GetSsid (void) const;
+  Ssid GetSsid () const;
   /**
    * \param address the current address of this MAC layer.
    */
   virtual void SetAddress (Mac48Address address);
   /**
-   * \return the BSSID of the network this device belongs to.
+   * \return the BSSID of the network the given link belongs to.
+   * \param linkId the ID of the given link
    */
-  Mac48Address GetBssid (void) const;
+  Mac48Address GetBssid (uint8_t linkId) const;
   /**
-   * \param bssid the BSSID of the network that this device belongs to.
+   * \param bssid the BSSID of the network that the given link belongs to.
+   * \param linkId the ID of the given link
    */
-  void SetBssid (Mac48Address bssid);
+  void SetBssid (Mac48Address bssid, uint8_t linkId);
 
   /**
    * Return true if packets can be forwarded to the given destination,
@@ -235,29 +283,35 @@ public:
    * This function returns true if sending from arbitrary address is supported,
    * false otherwise.
    */
-  virtual bool SupportsSendFrom (void) const;
+  virtual bool SupportsSendFrom () const;
 
   /**
-   * \param phy the physical layer attached to this MAC.
+   * \param phys the physical layers attached to this MAC.
    */
-  virtual void SetWifiPhy (Ptr<WifiPhy> phy);
+  virtual void SetWifiPhys (const std::vector<Ptr<WifiPhy>>& phys);
   /**
+   * \param linkId the index (starting at 0) of the PHY object to retrieve
    * \return the physical layer attached to this MAC
    */
-  Ptr<WifiPhy> GetWifiPhy (void) const;
+  Ptr<WifiPhy> GetWifiPhy (uint8_t linkId = SINGLE_LINK_OP_ID) const;
   /**
-   * Remove currently attached WifiPhy device from this MAC.
+   * Remove currently attached WifiPhy objects from this MAC.
    */
-  void ResetWifiPhy (void);
+  void ResetWifiPhys ();
 
   /**
    * \param stationManager the station manager attached to this MAC.
    */
   void SetWifiRemoteStationManager (Ptr<WifiRemoteStationManager> stationManager);
   /**
-   * \return the station manager attached to this MAC.
+   * \param stationManagers the station managers attached to this MAC.
    */
-  Ptr<WifiRemoteStationManager> GetWifiRemoteStationManager (void) const;
+  void SetWifiRemoteStationManagers (const std::vector<Ptr<WifiRemoteStationManager>>& stationManagers);
+  /**
+   * \param linkId the ID (starting at 0) of the link of the RemoteStationManager object to retrieve
+   * \return the remote station manager operating on the given link
+   */
+  Ptr<WifiRemoteStationManager> GetWifiRemoteStationManager (uint8_t linkId = 0) const;
 
   /**
    * This type defines the callback of a higher layer that a
@@ -287,9 +341,11 @@ public:
    */
 
   /**
-   * Notify that channel has been switched.
+   * Notify that channel on the given link has been switched.
+   *
+   * \param linkId the ID of the given link
    */
-  virtual void NotifyChannelSwitching (void);
+  virtual void NotifyChannelSwitching (uint8_t linkId);
 
   /**
    * \param packet the packet being enqueued
@@ -329,49 +385,64 @@ public:
   /**
    * \param standard the wifi standard to be configured
    *
-   * This method completes the configuration process for a requested PHY standard.
-   * Subclasses should implement this method to configure their DCF queues
-   * according to the requested standard.
+   * This method completes the configuration process for a requested PHY standard
+   * by creating the Frame Exchange Manager and the Channel Access Manager and
+   * configuring the PHY dependent parameters.
+   * This method can only be called after a configured PHY has been set.
    */
   virtual void ConfigureStandard (WifiStandard standard);
 
   /**
    * \return pointer to HtConfiguration if it exists
    */
-  Ptr<HtConfiguration> GetHtConfiguration (void) const;
+  Ptr<HtConfiguration> GetHtConfiguration () const;
   /**
    * \return pointer to VhtConfiguration if it exists
    */
-  Ptr<VhtConfiguration> GetVhtConfiguration (void) const;
+  Ptr<VhtConfiguration> GetVhtConfiguration () const;
   /**
    * \return pointer to HeConfiguration if it exists
    */
-  Ptr<HeConfiguration> GetHeConfiguration (void) const;
+  Ptr<HeConfiguration> GetHeConfiguration () const;
+  /**
+   * \return pointer to EhtConfiguration if it exists
+   */
+  Ptr<EhtConfiguration> GetEhtConfiguration () const;
 
   /**
    * Return the extended capabilities of the device.
    *
    * \return the extended capabilities that we support
    */
-  ExtendedCapabilities GetExtendedCapabilities (void) const;
+  ExtendedCapabilities GetExtendedCapabilities () const;
   /**
-   * Return the HT capabilities of the device.
+   * Return the HT capabilities of the device for the given link.
    *
+   * \param linkId the ID of the given link
    * \return the HT capabilities that we support
    */
-  HtCapabilities GetHtCapabilities (void) const;
+  HtCapabilities GetHtCapabilities (uint8_t linkId) const;
   /**
-   * Return the VHT capabilities of the device.
+   * Return the VHT capabilities of the device for the given link.
    *
+   * \param linkId the ID of the given link
    * \return the VHT capabilities that we support
    */
-  VhtCapabilities GetVhtCapabilities (void) const;
+  VhtCapabilities GetVhtCapabilities (uint8_t linkId) const;
   /**
-   * Return the HE capabilities of the device.
+   * Return the HE capabilities of the device for the given link.
    *
+   * \param linkId the ID of the given link
    * \return the HE capabilities that we support
    */
-  HeCapabilities GetHeCapabilities (void) const;
+  HeCapabilities GetHeCapabilities (uint8_t linkId) const;
+  /**
+   * Return the EHT capabilities of the device for the given link.
+   *
+   * \param linkId the ID of the given link
+   * \return the EHT capabilities that we support
+   */
+  EhtCapabilities GetEhtCapabilities (uint8_t linkId) const;
 
   /**
    * Return whether the device supports QoS.
@@ -380,17 +451,19 @@ public:
    */
   bool GetQosSupported () const;
   /**
-   * Return whether the device supports ERP.
+   * Return whether the device supports ERP on the given link.
    *
+   * \param linkId the ID of the given link
    * \return true if ERP is supported, false otherwise
    */
-  bool GetErpSupported () const;
+  bool GetErpSupported (uint8_t linkId) const;
   /**
-   * Return whether the device supports DSSS.
+   * Return whether the device supports DSSS on the given link.
    *
+   * \param linkId the ID of the given link
    * \return true if DSSS is supported, false otherwise
    */
-  bool GetDsssSupported () const;
+  bool GetDsssSupported (uint8_t linkId) const;
   /**
    * Return whether the device supports HT.
    *
@@ -398,17 +471,24 @@ public:
    */
   bool GetHtSupported () const;
   /**
-   * Return whether the device supports VHT.
+   * Return whether the device supports VHT on the given link.
    *
+   * \param linkId the ID of the given link.
    * \return true if VHT is supported, false otherwise
    */
-  bool GetVhtSupported () const;
+  bool GetVhtSupported (uint8_t linkId) const;
   /**
    * Return whether the device supports HE.
    *
    * \return true if HE is supported, false otherwise
    */
   bool GetHeSupported () const;
+  /**
+   * Return whether the device supports EHT.
+   *
+   * \return true if EHT is supported, false otherwise
+   */
+  bool GetEhtSupported () const;
 
   /**
    * Return the maximum A-MPDU size of the given Access Category.
@@ -458,37 +538,37 @@ protected:
   /**
    * \return whether the device supports short slot time capability.
    */
-  bool GetShortSlotTimeSupported (void) const;
+  bool GetShortSlotTimeSupported () const;
 
   /**
    * Accessor for the AC_VO channel access function
    *
    * \return a smart pointer to QosTxop
    */
-  Ptr<QosTxop> GetVOQueue (void) const;
+  Ptr<QosTxop> GetVOQueue () const;
   /**
    * Accessor for the AC_VI channel access function
    *
    * \return a smart pointer to QosTxop
    */
-  Ptr<QosTxop> GetVIQueue (void) const;
+  Ptr<QosTxop> GetVIQueue () const;
   /**
    * Accessor for the AC_BE channel access function
    *
    * \return a smart pointer to QosTxop
    */
-  Ptr<QosTxop> GetBEQueue (void) const;
+  Ptr<QosTxop> GetBEQueue () const;
   /**
    * Accessor for the AC_BK channel access function
    *
    * \return a smart pointer to QosTxop
    */
-  Ptr<QosTxop> GetBKQueue (void) const;
+  Ptr<QosTxop> GetBKQueue () const;
 
   /**
    * This method acts as the MacRxMiddle receive callback and is
-   * invoked to notify us that a frame has been received. The
-   * implementation is intended to capture logic that is going to be
+   * invoked to notify us that a frame has been received on the given link.
+   * The implementation is intended to capture logic that is going to be
    * common to all (or most) derived classes. Specifically, handling
    * of Block Ack management frames is dealt with here.
    *
@@ -496,9 +576,16 @@ protected:
    * classes so that they can perform their data handling before
    * invoking the base version.
    *
+   * The given link may be undefined in some cases (e.g., in case of
+   * QoS Data frames received in the context of a Block Ack agreement --
+   * because the BlockAckManager does not have to record the link each
+   * buffered MPDU has been received on); in such a cases, the value
+   * of <i>linkId</i> should be WIFI_LINKID_UNDEFINED.
+   *
    * \param mpdu the MPDU that has been received.
+   * \param linkId the ID of the given link
    */
-  virtual void Receive (Ptr<WifiMacQueueItem> mpdu);
+  virtual void Receive (Ptr<const WifiMpdu> mpdu, uint8_t linkId);
   /**
    * Forward the packet up to the device.
    *
@@ -514,44 +601,65 @@ protected:
    *
    * \param mpdu the MPDU containing the A-MSDU.
    */
-  virtual void DeaggregateAmsduAndForward (Ptr<WifiMacQueueItem> mpdu);
+  virtual void DeaggregateAmsduAndForward (Ptr<const WifiMpdu> mpdu);
+
+  /**
+   * Structure holding information specific to a single link. Here, the meaning of
+   * "link" is that of the 11be amendment which introduced multi-link devices. For
+   * previous amendments, only one link can be created. Therefore, "link" has not
+   * to be confused with the general concept of link for a NetDevice (used by the
+   * m_linkUp and m_linkDown callbacks).
+   */
+  struct LinkEntity
+  {
+    /// Destructor (a virtual method is needed to make this struct polymorphic)
+    virtual ~LinkEntity ();
+
+    uint8_t id;                                     //!< Link ID (starting at 0)
+    Ptr<WifiPhy> phy;                               //!< Wifi PHY object
+    Ptr<ChannelAccessManager> channelAccessManager; //!< channel access manager object
+    Ptr<FrameExchangeManager> feManager;            //!< Frame Exchange Manager object
+    Ptr<WifiRemoteStationManager> stationManager;   //!< Remote station manager (rate control, RTS/CTS/fragmentation thresholds etc.)
+    bool erpSupported {false};                      //!< set to \c true iff this WifiMac is to model 802.11g
+    bool dsssSupported {false};                     //!< set to \c true iff this WifiMac is to model 802.11b
+  };
+
+  /**
+   * Get a reference to the link associated with the given ID.
+   *
+   * \param linkId the given link ID
+   * \return a reference to the link associated with the given ID
+   */
+  LinkEntity& GetLink (uint8_t linkId) const;
 
   Ptr<MacRxMiddle> m_rxMiddle;                      //!< RX middle (defragmentation etc.)
   Ptr<MacTxMiddle> m_txMiddle;                      //!< TX middle (aggregation etc.)
-  Ptr<ChannelAccessManager> m_channelAccessManager; //!< channel access manager
-  Ptr<FrameExchangeManager> m_feManager;            //!< Frame Exchange Manager
-  Ptr<Txop> m_txop;                                 //!<  TXOP used for transmission of frames to non-QoS peers.
+  Ptr<Txop> m_txop;                                 //!< TXOP used for transmission of frames to non-QoS peers.
+  Ptr<WifiMacQueueScheduler> m_scheduler;           //!< wifi MAC queue scheduler
 
   Callback<void> m_linkUp;       //!< Callback when a link is up
   Callback<void> m_linkDown;     //!< Callback when a link is down
 
 
 private:
-  /// type conversion operator
-  WifiMac (const WifiMac&);
-  /**
-   * assignment operator
-   *
-   * \param mac the WifiMac to assign
-   * \returns the assigned value
-   */
-  WifiMac & operator= (const WifiMac& mac);
-
   /**
    * \param dcf the DCF to be configured
    * \param cwmin the minimum contention window for the DCF
    * \param cwmax the maximum contention window for the DCF
-   * \param isDsss flag to indicate whether PHY is DSSS or HR/DSSS
+   * \param isDsss vector of flags to indicate whether PHY is DSSS or HR/DSSS for every link
    * \param ac the access category for the DCF
    *
    * Configure the DCF with appropriate values depending on the given access category.
    */
-  void ConfigureDcf (Ptr<Txop> dcf, uint32_t cwmin, uint32_t cwmax, bool isDsss, AcIndex ac);
+  void ConfigureDcf (Ptr<Txop> dcf, uint32_t cwmin, uint32_t cwmax,
+                     std::list<bool> isDsss, AcIndex ac);
 
   /**
-   * Configure PHY dependent parameters such as CWmin and CWmax.
+   * Configure PHY dependent parameters such as CWmin and CWmax on the given link.
+   *
+   * \param linkId the ID of the given link
    */
-  void ConfigurePhyDependentParameters (void);
+  void ConfigurePhyDependentParameters (uint8_t linkId);
 
   /**
    * This method is a private utility invoked to configure the channel
@@ -566,21 +674,31 @@ private:
    * of the standard.
    *
    * \param standard the supported version of the standard
+   * \return the created Frame Exchange Manager
    */
-  void SetupFrameExchangeManager (WifiStandard standard);
+  Ptr<FrameExchangeManager> SetupFrameExchangeManager (WifiStandard standard);
 
   /**
-   * Enable or disable ERP support for the device.
+   * Create a LinkEntity object.
+   *
+   * \return a unique pointer to the created LinkEntity object
+   */
+  virtual std::unique_ptr<LinkEntity> CreateLinkEntity () const;
+
+  /**
+   * Enable or disable ERP support for the given link.
    *
    * \param enable whether ERP is supported
+   * \param linkId the ID of the given link
    */
-  void SetErpSupported (bool enable);
+  void SetErpSupported (bool enable, uint8_t linkId);
   /**
-   * Enable or disable DSSS support for the device.
+   * Enable or disable DSSS support for the given link.
    *
    * \param enable whether DSSS is supported
+   * \param linkId the ID of the given link
    */
-  void SetDsssSupported (bool enable);
+  void SetDsssSupported (bool enable, uint8_t linkId);
 
   /**
    * Set the block ack threshold for AC_VO.
@@ -646,16 +764,6 @@ private:
    * however.
    */
   bool m_qosSupported;
-  /**
-   * This Boolean is set \c true iff this WifiMac is to model
-   * 802.11g. It is exposed through the attribute system.
-   */
-  bool m_erpSupported;
-  /**
-   * This Boolean is set \c true iff this WifiMac is to model
-   * 802.11b. It is exposed through the attribute system.
-   */
-  bool m_dsssSupported;
 
   bool m_shortSlotTimeSupported; ///< flag whether short slot time is supported
   bool m_ctsToSelfSupported;     ///< flag indicating whether CTS-To-Self is supported
@@ -663,16 +771,15 @@ private:
   TypeOfStation m_typeOfStation; //!< the type of station
 
   Ptr<WifiNetDevice> m_device;                    //!< Pointer to the device
-  Ptr<WifiPhy> m_phy;                             //!< Wifi PHY
-  Ptr<WifiRemoteStationManager> m_stationManager; //!< Remote station manager (rate control, RTS/CTS/fragmentation thresholds etc.)
+  std::vector<std::unique_ptr<LinkEntity>> m_links; //!< vector of Link objects
 
   Mac48Address m_address; //!< MAC address of this station
   Ssid m_ssid;            //!< Service Set ID (SSID)
-  Mac48Address m_bssid;   //!< the BSSID
 
   /** This type defines a mapping between an Access Category index,
-  and a pointer to the corresponding channel access function */
-  typedef std::map<AcIndex, Ptr<QosTxop> > EdcaQueues;
+  and a pointer to the corresponding channel access function.
+  Access Categories are sorted in decreasing order of priority. */
+  typedef std::map<AcIndex, Ptr<QosTxop>, std::greater<AcIndex>> EdcaQueues;
 
   /** This is a map from Access Category index to the corresponding
   channel access function */
@@ -737,10 +844,10 @@ private:
    * \param reason the reason why the MPDU was dropped (\see WifiMacDropReason)
    * \param mpdu the dropped MPDU
    */
-  typedef void (* DroppedMpduCallback)(WifiMacDropReason reason, Ptr<const WifiMacQueueItem> mpdu);
+  typedef void (* DroppedMpduCallback)(WifiMacDropReason reason, Ptr<const WifiMpdu> mpdu);
 
   /// TracedCallback for MPDU drop events typedef
-  typedef TracedCallback<WifiMacDropReason, Ptr<const WifiMacQueueItem>> DroppedMpduTracedCallback;
+  typedef TracedCallback<WifiMacDropReason, Ptr<const WifiMpdu>> DroppedMpduTracedCallback;
 
   /**
    * This trace indicates that an MPDU was dropped for the given reason.
@@ -748,7 +855,7 @@ private:
   DroppedMpduTracedCallback m_droppedMpduCallback;
 
   /// TracedCallback for acked/nacked MPDUs typedef
-  typedef TracedCallback<Ptr<const WifiMacQueueItem>> MpduTracedCallback;
+  typedef TracedCallback<Ptr<const WifiMpdu>> MpduTracedCallback;
 
   MpduTracedCallback m_ackedMpduCallback;  ///< ack'ed MPDU callback
   MpduTracedCallback m_nackedMpduCallback; ///< nack'ed MPDU callback
@@ -760,11 +867,11 @@ private:
    * \param mpdu the MPDU whose response was not received before the timeout
    * \param txVector the TXVECTOR used to transmit the MPDU
    */
-  typedef void (* MpduResponseTimeoutCallback)(uint8_t reason, Ptr<const WifiMacQueueItem> mpdu,
+  typedef void (* MpduResponseTimeoutCallback)(uint8_t reason, Ptr<const WifiMpdu> mpdu,
                                                const WifiTxVector& txVector);
 
   /// TracedCallback for MPDU response timeout events typedef
-  typedef TracedCallback<uint8_t, Ptr<const WifiMacQueueItem>, const WifiTxVector&> MpduResponseTimeoutTracedCallback;
+  typedef TracedCallback<uint8_t, Ptr<const WifiMpdu>, const WifiTxVector&> MpduResponseTimeoutTracedCallback;
 
   /**
    * MPDU response timeout traced callback.

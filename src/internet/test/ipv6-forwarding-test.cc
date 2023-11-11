@@ -1,7 +1,7 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2013 Universita' di Firenze
- * 
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
  * published by the Free Software Foundation;
@@ -69,7 +69,7 @@ class Ipv6ForwardingTest : public TestCase
   void SendData (Ptr<Socket> socket, std::string to);
 
 public:
-  virtual void DoRun (void);
+  void DoRun () override;
   Ipv6ForwardingTest ();
 
   /**
@@ -113,7 +113,7 @@ Ipv6ForwardingTest::SendData (Ptr<Socket> socket, std::string to)
 }
 
 void
-Ipv6ForwardingTest::DoRun (void)
+Ipv6ForwardingTest::DoRun ()
 {
   // Create topology
 
@@ -196,7 +196,7 @@ Ipv6ForwardingTest::DoRun (void)
   NS_TEST_EXPECT_MSG_EQ (m_receivedPacket->GetSize (), 0, "IPv6 Forwarding off");
 
   m_receivedPacket->RemoveAllByteTags ();
-  m_receivedPacket = 0;
+  m_receivedPacket = nullptr;
 
   ipv6 = fwNode->GetObject<Ipv6> ();
   ipv6->SetAttribute("IpForward", BooleanValue (true));

@@ -38,9 +38,9 @@ namespace ns3 {
  * from a set of ns3::Waypoint objects.  Past waypoints are discarded
  * after the current simulation time greater than their time value.
  *
- * By default, the initial position of each object corresponds to the 
- * position of the first waypoint, and the initial velocity of each 
- * object is zero.  Upon reaching the last waypoint, object position 
+ * By default, the initial position of each object corresponds to the
+ * position of the first waypoint, and the initial velocity of each
+ * object is zero.  Upon reaching the last waypoint, object position
  * becomes static and velocity is zero.
  *
  * When a node is in between waypoint times, it moves with a constant
@@ -55,14 +55,14 @@ namespace ns3 {
  * no more waypoints in which case it will not change without user
  * intervention.
  *
- * The model has two attributes with methods that allow clients to get 
- * the next waypoint value (NextWaypoint) and the number of waypoints left 
+ * The model has two attributes with methods that allow clients to get
+ * the next waypoint value (NextWaypoint) and the number of waypoints left
  * (WaypointsLeft) beyond (but not including) the next waypoint.
  *
  * In addition, there are two attributes that govern model behavior.  The
  * first, LazyNotify, governs how the model calls the CourseChange trace.
  * By default, LazyNotify is false, which means that each time that a
- * waypoint time is hit, an Update() is forced and the CourseChange 
+ * waypoint time is hit, an Update() is forced and the CourseChange
  * callback will be called.  When LazyNotify is true, Update() is suppressed
  * at waypoint times, and CourseChange callbacks will only occur when
  * there later are actual calls to Update () (typically when calling
@@ -90,13 +90,13 @@ public:
    * Register this type with the TypeId system.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   /**
    * Create a path with no waypoints at location (0,0,0).
    */
   WaypointMobilityModel ();
-  virtual ~WaypointMobilityModel ();
+  ~WaypointMobilityModel () override;
 
   /**
    * \param waypoint waypoint to append to the object path.
@@ -113,14 +113,14 @@ public:
    * Get the waypoint that this object is traveling towards.
    * \returns The waypoint
    */
-  Waypoint GetNextWaypoint (void) const;
+  Waypoint GetNextWaypoint () const;
 
   /**
    * Get the number of waypoints left for this object, excluding
    * the next one.
    * \returns The number of waypoints left
    */
-  uint32_t WaypointsLeft (void) const;
+  uint32_t WaypointsLeft () const;
 
   /**
    * Clear any existing waypoints and set the current waypoint
@@ -128,7 +128,7 @@ public:
    * not required. After calling this function, adding waypoints
    * behaves as it would for a new object.
    */
-  void EndMobility (void);
+  void EndMobility ();
 
 private:
   friend class ::WaypointMobilityModelNotifyTest; // To allow Update() calls and access to m_current
@@ -136,28 +136,28 @@ private:
   /**
    * Update the underlying state corresponding to the stored waypoints
    */
-  virtual void Update (void) const;
+  virtual void Update () const;
   /**
    * \brief The dispose method.
-   * 
+   *
    * Subclasses must override this method.
    */
-  virtual void DoDispose (void);
+  void DoDispose () override;
   /**
    * \brief Get current position.
-   * \return A vector with the current position of the node.  
+   * \return A vector with the current position of the node.
    */
-  virtual Vector DoGetPosition (void) const;
+  Vector DoGetPosition () const override;
   /**
-   * \brief Sets a new position for the node  
+   * \brief Sets a new position for the node
    * \param position A vector to be added as the new position
    */
-  virtual void DoSetPosition (const Vector &position);
+  void DoSetPosition (const Vector &position) override;
   /**
    * \brief Returns the current velocity of a node
-   * \return The velocity vector of a node. 
+   * \return The velocity vector of a node.
    */
-  virtual Vector DoGetVelocity (void) const;
+  Vector DoGetVelocity () const override;
 
 protected:
   /**

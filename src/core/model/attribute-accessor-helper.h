@@ -175,15 +175,15 @@ public:
    * \param [in] val Generic AttributeValue, to upcast to \pname{U}.
    * \returns true if the member was set successfully.
    */
-  virtual bool Set (ObjectBase * object, const AttributeValue & val) const
+  bool Set (ObjectBase * object, const AttributeValue & val) const override
   {
     const U *value = dynamic_cast<const U *> (&val);
-    if (value == 0)
+    if (value == nullptr)
       {
         return false;
       }
     T *obj = dynamic_cast<T *> (object);
-    if (obj == 0)
+    if (obj == nullptr)
       {
         return false;
       }
@@ -202,15 +202,15 @@ public:
    * \param [out] val Generic AttributeValue, to upcast to \pname{U}.
    * \returns true if the member value could be retrieved successfully
    */
-  virtual bool Get (const ObjectBase * object, AttributeValue &val) const
+  bool Get (const ObjectBase * object, AttributeValue &val) const override
   {
     U *value = dynamic_cast<U *> (&val);
-    if (value == 0)
+    if (value == nullptr)
       {
         return false;
       }
     const T *obj = dynamic_cast<const T *> (object);
-    if (obj == 0)
+    if (obj == nullptr)
       {
         return false;
       }
@@ -271,7 +271,7 @@ DoMakeAccessorHelperOne (U T::*memberVariable)
     {}
 
   private:
-    virtual bool DoSet (T *object, const V *v) const
+    bool DoSet (T *object, const V *v) const override
     {
       typename AccessorTrait<U>::Result tmp;
       bool ok = v->GetAccessor (tmp);
@@ -282,16 +282,16 @@ DoMakeAccessorHelperOne (U T::*memberVariable)
       (object->*m_memberVariable) = tmp;
       return true;
     }
-    virtual bool DoGet (const T *object, V *v) const
+    bool DoGet (const T *object, V *v) const override
     {
       v->Set (object->*m_memberVariable);
       return true;
     }
-    virtual bool HasGetter (void) const
+    bool HasGetter () const override
     {
       return true;
     }
-    virtual bool HasSetter (void) const
+    bool HasSetter () const override
     {
       return true;
     }
@@ -317,7 +317,7 @@ DoMakeAccessorHelperOne (U T::*memberVariable)
 template <typename V, typename T, typename U>
 inline
 Ptr<const AttributeAccessor>
-DoMakeAccessorHelperOne (U (T::*getter)(void) const)
+DoMakeAccessorHelperOne (U (T::*getter)() const)
 {
   /* AttributeAccessor implementation with a class get functor method. */
   class MemberMethod : public AccessorHelper<T,V>
@@ -327,30 +327,30 @@ DoMakeAccessorHelperOne (U (T::*getter)(void) const)
      * Construct from a class get functor method.
      * \param [in] getter The class get functor method pointer.
      */
-    MemberMethod (U (T::*getter)(void) const)
+    MemberMethod (U (T::*getter)() const)
       : AccessorHelper<T,V> (),
         m_getter (getter)
     {}
 
   private:
-    virtual bool DoSet ([[maybe_unused]] T *object, [[maybe_unused]] const V *v) const
+    bool DoSet ([[maybe_unused]] T *object, [[maybe_unused]] const V *v) const override
     {
       return false;
     }
-    virtual bool DoGet (const T *object, V *v) const
+    bool DoGet (const T *object, V *v) const override
     {
       v->Set ((object->*m_getter)());
       return true;
     }
-    virtual bool HasGetter (void) const
+    bool HasGetter () const override
     {
       return true;
     }
-    virtual bool HasSetter (void) const
+    bool HasSetter () const override
     {
       return false;
     }
-    U (T::*m_getter)(void) const;  // The class get functor method pointer.
+    U (T::*m_getter)() const;  // The class get functor method pointer.
   };
   return Ptr<const AttributeAccessor> (new MemberMethod (getter), false);
 }
@@ -388,7 +388,7 @@ DoMakeAccessorHelperOne (void (T::*setter)(U))
     {}
 
   private:
-    virtual bool DoSet (T *object, const V *v) const
+    bool DoSet (T *object, const V *v) const override
     {
       typename AccessorTrait<U>::Result tmp;
       bool ok = v->GetAccessor (tmp);
@@ -399,15 +399,15 @@ DoMakeAccessorHelperOne (void (T::*setter)(U))
       (object->*m_setter)(tmp);
       return true;
     }
-    virtual bool DoGet ([[maybe_unused]] const T *object, [[maybe_unused]] V *v) const
+    bool DoGet ([[maybe_unused]] const T *object, [[maybe_unused]] V *v) const override
     {
       return false;
     }
-    virtual bool HasGetter (void) const
+    bool HasGetter () const override
     {
       return false;
     }
-    virtual bool HasSetter (void) const
+    bool HasSetter () const override
     {
       return true;
     }
@@ -438,7 +438,7 @@ template <typename W, typename T, typename U, typename V>
 inline
 Ptr<const AttributeAccessor>
 DoMakeAccessorHelperTwo (void (T::*setter)(U),
-                         V (T::*getter)(void) const)
+                         V (T::*getter)() const)
 {
   /*
    * AttributeAccessor implementation with class get functor and set method,
@@ -453,14 +453,14 @@ DoMakeAccessorHelperTwo (void (T::*setter)(U),
      * \param [in] getter The class get functor method pointer.
      */
     MemberMethod (void (T::*setter)(U),
-                  V (T::*getter)(void) const)
+                  V (T::*getter)() const)
       : AccessorHelper<T,W> (),
         m_setter (setter),
         m_getter (getter)
     {}
 
   private:
-    virtual bool DoSet (T *object, const W *v) const
+    bool DoSet (T *object, const W *v) const override
     {
       typename AccessorTrait<U>::Result tmp;
       bool ok = v->GetAccessor (tmp);
@@ -471,21 +471,21 @@ DoMakeAccessorHelperTwo (void (T::*setter)(U),
       (object->*m_setter)(tmp);
       return true;
     }
-    virtual bool DoGet (const T *object, W *v) const
+    bool DoGet (const T *object, W *v) const override
     {
       v->Set ((object->*m_getter)());
       return true;
     }
-    virtual bool HasGetter (void) const
+    bool HasGetter () const override
     {
       return true;
     }
-    virtual bool HasSetter (void) const
+    bool HasSetter () const override
     {
       return true;
     }
     void (T::*m_setter)(U);        // The class set method pointer, returning void.
-    V (T::*m_getter)(void) const;  // The class get functor method pointer.
+    V (T::*m_getter)() const;  // The class get functor method pointer.
   };
   return Ptr<const AttributeAccessor> (new MemberMethod (setter, getter), false);
 }
@@ -498,7 +498,7 @@ DoMakeAccessorHelperTwo (void (T::*setter)(U),
 template <typename W, typename T, typename U, typename V>
 inline
 Ptr<const AttributeAccessor>
-DoMakeAccessorHelperTwo (V (T::*getter)(void) const,
+DoMakeAccessorHelperTwo (V (T::*getter)() const,
                          void (T::*setter)(U))
 {
   return DoMakeAccessorHelperTwo<W> (setter, getter);
@@ -526,7 +526,7 @@ template <typename W, typename T, typename U, typename V>
 inline
 Ptr<const AttributeAccessor>
 DoMakeAccessorHelperTwo (bool (T::*setter)(U),
-                         V (T::*getter)(void) const)
+                         V (T::*getter)() const)
 {
   /*
    * AttributeAccessor implementation with class get functor and
@@ -541,14 +541,14 @@ DoMakeAccessorHelperTwo (bool (T::*setter)(U),
      * \param [in] getter The class get functor method pointer.
      */
     MemberMethod (bool (T::*setter)(U),
-                  V (T::*getter)(void) const)
+                  V (T::*getter)() const)
       : AccessorHelper<T,W> (),
         m_setter (setter),
         m_getter (getter)
     {}
 
   private:
-    virtual bool DoSet (T *object, const W *v) const
+    bool DoSet (T *object, const W *v) const override
     {
       typename AccessorTrait<U>::Result tmp;
       bool ok = v->GetAccessor (tmp);
@@ -559,21 +559,21 @@ DoMakeAccessorHelperTwo (bool (T::*setter)(U),
       ok = (object->*m_setter)(tmp);
       return ok;
     }
-    virtual bool DoGet (const T *object, W *v) const
+    bool DoGet (const T *object, W *v) const override
     {
       v->Set ((object->*m_getter)());
       return true;
     }
-    virtual bool HasGetter (void) const
+    bool HasGetter () const override
     {
       return true;
     }
-    virtual bool HasSetter (void) const
+    bool HasSetter () const override
     {
       return true;
     }
     bool (T::*m_setter)(U);        // The class set method pointer, returning bool.
-    V (T::*m_getter)(void) const;  // The class get functor method pointer.
+    V (T::*m_getter)() const;  // The class get functor method pointer.
   };
   return Ptr<const AttributeAccessor> (new MemberMethod (setter, getter), false);
 }
@@ -586,7 +586,7 @@ DoMakeAccessorHelperTwo (bool (T::*setter)(U),
 template <typename W, typename T, typename U, typename V>
 inline
 Ptr<const AttributeAccessor>
-DoMakeAccessorHelperTwo (V (T::*getter)(void) const,
+DoMakeAccessorHelperTwo (V (T::*getter)() const,
                          bool (T::*setter)(U))
 {
   return DoMakeAccessorHelperTwo<W> (setter, getter);

@@ -37,19 +37,19 @@ NS_LOG_COMPONENT_DEFINE ("CcHelper");
 
 NS_OBJECT_ENSURE_REGISTERED (CcHelper);
 
-CcHelper::CcHelper (void)
+CcHelper::CcHelper ()
 {
   NS_LOG_FUNCTION (this);
   m_ccFactory.SetTypeId (ComponentCarrier::GetTypeId ());
 }
 
 void
-CcHelper::DoInitialize (void)
+CcHelper::DoInitialize ()
 {
   NS_LOG_FUNCTION (this);
 }
 
-TypeId CcHelper::GetTypeId (void)
+TypeId CcHelper::GetTypeId ()
 {
   static TypeId
     tid =
@@ -87,7 +87,7 @@ TypeId CcHelper::GetTypeId (void)
   return tid;
 }
 
-CcHelper::~CcHelper (void)
+CcHelper::~CcHelper ()
 {
   NS_LOG_FUNCTION (this);
 }
@@ -99,7 +99,7 @@ CcHelper::DoDispose ()
   Object::DoDispose ();
 }
 
-void 
+void
 CcHelper::SetCcAttribute (std::string n, const AttributeValue &v)
 {
   NS_LOG_FUNCTION (this << n);
@@ -180,7 +180,7 @@ CcHelper::EquallySpacedCcs ()
   // Convert bandwidth from RBs to kHz
   uint32_t maxBandwidthKhz = LteSpectrumValueHelper::GetChannelBandwidth(maxBandwidthRb) / 1e3;
 
-  for (uint8_t i = 0; i < m_numberOfComponentCarriers; i++)
+  for (uint16_t i = 0; i < m_numberOfComponentCarriers; i++)
     {
       // Make sure we stay within the same band.
       if (LteSpectrumValueHelper::GetUplinkCarrierBand (ulEarfcn) !=
@@ -225,7 +225,7 @@ CcHelper::CreateSingleCc (uint16_t ulBandwidth, uint16_t dlBandwidth, uint32_t u
     {
       cc.SetUlEarfcn (ulEarfcn);
     }
-  else 
+  else
     {
       uint16_t ul = cc.GetUlEarfcn () + ulEarfcn;
       cc.SetUlEarfcn (ul);
@@ -234,7 +234,7 @@ CcHelper::CreateSingleCc (uint16_t ulBandwidth, uint16_t dlBandwidth, uint32_t u
     {
       cc.SetDlEarfcn (dlEarfcn);
     }
-  else 
+  else
     {
       uint16_t dl = cc.GetDlEarfcn () + dlEarfcn;
       cc.SetDlEarfcn (dl);

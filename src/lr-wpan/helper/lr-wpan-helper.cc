@@ -63,7 +63,7 @@ AsciiLrWpanMacTransmitSinkWithoutContext (
   *stream->GetStream () << "t " << Simulator::Now ().As (Time::S) << " " << *p << std::endl;
 }
 
-LrWpanHelper::LrWpanHelper (void)
+LrWpanHelper::LrWpanHelper ()
 {
   m_channel = CreateObject<SingleModelSpectrumChannel> ();
 
@@ -91,14 +91,14 @@ LrWpanHelper::LrWpanHelper (bool useMultiModelSpectrumChannel)
   m_channel->SetPropagationDelayModel (delayModel);
 }
 
-LrWpanHelper::~LrWpanHelper (void)
+LrWpanHelper::~LrWpanHelper ()
 {
   m_channel->Dispose ();
-  m_channel = 0;
+  m_channel = nullptr;
 }
 
 void
-LrWpanHelper::EnableLogComponents (void)
+LrWpanHelper::EnableLogComponents ()
 {
   LogComponentEnableAll (LOG_PREFIX_TIME);
   LogComponentEnableAll (LOG_PREFIX_FUNC);
@@ -193,7 +193,7 @@ LrWpanHelper::Install (NodeContainer c)
 
 
 Ptr<SpectrumChannel>
-LrWpanHelper::GetChannel (void)
+LrWpanHelper::GetChannel ()
 {
   return m_channel;
 }
@@ -251,7 +251,6 @@ LrWpanHelper::AssociateToPan (NetDeviceContainer c, uint16_t panId)
           id++;
         }
     }
-  return;
 }
 
 void
@@ -308,7 +307,6 @@ LrWpanHelper::AssociateToBeaconPan (NetDeviceContainer c, uint16_t panId, Mac16A
           id++;
         }
     }
-  return;
 }
 
 /**
@@ -337,7 +335,7 @@ LrWpanHelper::EnablePcapInternal (std::string prefix, Ptr<NetDevice> nd, bool pr
   // NetDevice type
   //
   Ptr<LrWpanNetDevice> device = nd->GetObject<LrWpanNetDevice> ();
-  if (device == 0)
+  if (!device)
     {
       NS_LOG_INFO ("LrWpanHelper::EnablePcapInternal(): Device " << device << " not of type ns3::LrWpanNetDevice");
       return;
@@ -381,7 +379,7 @@ LrWpanHelper::EnableAsciiInternal (
   std::ostringstream oss;
 
   Ptr<LrWpanNetDevice> device = nd->GetObject<LrWpanNetDevice> ();
-  if (device == 0)
+  if (!device)
     {
       NS_LOG_INFO ("LrWpanHelper::EnableAsciiInternal(): Device " << device << " not of type ns3::LrWpanNetDevice");
       return;
@@ -399,7 +397,7 @@ LrWpanHelper::EnableAsciiInternal (
   // since there will be one file per context and therefore the context would
   // be redundant.
   //
-  if (stream == 0)
+  if (!stream)
     {
       //
       // Set up an output stream object to deal with private ofstream copy

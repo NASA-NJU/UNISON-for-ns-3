@@ -37,7 +37,7 @@ NS_LOG_COMPONENT_DEFINE ("ConnectionManager");
 
 NS_OBJECT_ENSURE_REGISTERED (ConnectionManager);
 
-TypeId ConnectionManager::GetTypeId (void)
+TypeId ConnectionManager::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::ConnectionManager")
     .SetParent<Object> ()
@@ -45,17 +45,17 @@ TypeId ConnectionManager::GetTypeId (void)
   return tid;
 }
 
-ConnectionManager::ConnectionManager (void)
-  : m_cidFactory (0)
+ConnectionManager::ConnectionManager ()
+  : m_cidFactory (nullptr)
 {
 }
 
 void
-ConnectionManager::DoDispose (void)
+ConnectionManager::DoDispose ()
 {
 }
 
-ConnectionManager::~ConnectionManager (void)
+ConnectionManager::~ConnectionManager ()
 {
 }
 
@@ -153,7 +153,7 @@ ConnectionManager::GetConnection (Cid cid)
         }
     }
 
-  return 0;
+  return nullptr;
 }
 
 std::vector<Ptr<WimaxConnection> >
@@ -226,7 +226,7 @@ ConnectionManager::GetNPackets (Cid::Type type, ServiceFlow::SchedulingType sche
 }
 
 bool
-ConnectionManager::HasPackets (void) const
+ConnectionManager::HasPackets () const
 {
   std::vector<Ptr<WimaxConnection> >::const_iterator iter;
   for (iter = m_basicConnections.begin (); iter != m_basicConnections.end (); ++iter)

@@ -25,7 +25,6 @@
 #include "he-ru.h"
 #include "ns3/ctrl-headers.h"
 #include "ns3/ap-wifi-mac.h"
-#include "ns3/wifi-mac-queue.h"
 #include "ns3/wifi-tx-parameters.h"
 #include "ns3/wifi-remote-station-manager.h"
 #include <unordered_map>
@@ -54,9 +53,9 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
   MultiUserScheduler ();
-  virtual ~MultiUserScheduler ();
+  ~MultiUserScheduler () override;
 
   /// Enumeration of the possible transmission formats
   enum TxFormat
@@ -92,9 +91,11 @@ public:
    * \param initialFrame true if the frame being transmitted is the initial frame
    *                     of the TXOP. This is used to determine whether the TXOP
    *                     limit can be exceeded
+   * \param allowedWidth the allowed width in MHz for the next transmission
    * \return the format of the next transmission
    */
-  TxFormat NotifyAccessGranted (Ptr<QosTxop> edca, Time availableTime, bool initialFrame);
+  TxFormat NotifyAccessGranted (Ptr<QosTxop> edca, Time availableTime, bool initialFrame,
+                                uint16_t allowedWidth);
 
   /**
    * Get the information required to perform a DL MU transmission. Note
@@ -102,7 +103,7 @@ public:
    *
    * \return the information required to perform a DL MU transmission
    */
-  DlMuInfo& GetDlMuInfo (void);
+  DlMuInfo& GetDlMuInfo ();
 
   /**
    * Get the information required to solicit an UL MU transmission. Note
@@ -110,7 +111,7 @@ public:
    *
    * \return the information required to solicit an UL MU transmission
    */
-  UlMuInfo& GetUlMuInfo (void);
+  UlMuInfo& GetUlMuInfo ();
 
 protected:
   /**
@@ -118,7 +119,15 @@ protected:
    *
    * \return the station manager attached to the AP
    */
-  Ptr<WifiRemoteStationManager> GetWifiRemoteStationManager (void) const;
+  Ptr<WifiRemoteStationManager> GetWifiRemoteStationManager () const;
+
+  /**
+   * Get an MPDU containing the given Trigger Frame.
+   *
+   * \param trigger the given Trigger Frame
+   * \return an MPDU containing the given Trigger Frame
+   */
+  Ptr<WifiMpdu> GetTriggerFrame (const CtrlTriggerHeader& trigger) const;
 
   /**
    * Get the format of the last transmission, as determined by the last call
@@ -126,18 +135,31 @@ protected:
    *
    * \return the format of the last transmission
    */
-  TxFormat GetLastTxFormat (void) const;
+  TxFormat GetLastTxFormat () const;
 
-  void DoDispose (void) override;
-  void NotifyNewAggregate (void) override;
-  void DoInitialize (void) override;
+  /**
+   * Get the maximum size in bytes among the A-MPDUs containing QoS Null frames
+   * and solicited by the given (BSRP) Trigger Frame. For each station addressed
+   * by the Trigger Frame, the expected response is an A-MPDU containing as many
+   * QoS Null frames as the number of TIDs for which a BlockAck agreement has
+   * been established between the station and the AP.
+   *
+   * \param trigger the given Trigger Frame
+   * \return the maximum size in bytes among the A-MPDUs containing QoS Null frames
+   *         and solicited by the given Trigger Frame
+   */
+  uint32_t GetMaxSizeOfQosNullAmpdu (const CtrlTriggerHeader& trigger) const;
+
+  void DoDispose () override;
+  void NotifyNewAggregate () override;
+  void DoInitialize () override;
 
   Ptr<ApWifiMac> m_apMac;                //!< the AP wifi MAC
   Ptr<HeFrameExchangeManager> m_heFem;   //!< HE Frame Exchange Manager
   Ptr<QosTxop> m_edca;                   //!< the AC that gained channel access
   Time m_availableTime;                  //!< the time available for frame exchange
   bool m_initialFrame;                   //!< true if a TXOP is being started
-  uint32_t m_sizeOf8QosNull;             //!< size in bytes of 8 QoS Null frames
+  uint16_t m_allowedWidth;               //!< the allowed width in MHz for the current transmission
 
 private:
   /**
@@ -148,36 +170,48 @@ private:
   void SetWifiMac (Ptr<ApWifiMac> mac);
 
   /**
+   * Perform actions required on expiration of the channel access request timer,
+   * such as requesting channel access (if not requested already) and restarting
+   * the channel access request timer.
+   */
+  void AccessReqTimeout ();
+
+  /**
    * Select the format of the next transmission.
    *
    * \return the format of the next transmission
    */
-  virtual TxFormat SelectTxFormat (void) = 0;
+  virtual TxFormat SelectTxFormat () = 0;
 
   /**
    * Compute the information required to perform a DL MU transmission.
    *
    * \return the information required to perform a DL MU transmission
    */
-  virtual DlMuInfo ComputeDlMuInfo (void) = 0;
+  virtual DlMuInfo ComputeDlMuInfo () = 0;
 
   /**
    * Prepare the information required to solicit an UL MU transmission.
    *
    * \return the information required to solicit an UL MU transmission
    */
-  virtual UlMuInfo ComputeUlMuInfo (void) = 0;
+  virtual UlMuInfo ComputeUlMuInfo () = 0;
 
   /**
    * Ensure that the Trigger Frame returned in case of UL MU transmission is
    * correct. Currently, this method sets the CS Required, the AP Tx Power and
    * the UL Target Receive Power subfields.
    */
-  void CheckTriggerFrame (void);
+  void CheckTriggerFrame ();
 
-  TxFormat m_lastTxFormat {NO_TX};       //!< the format of last transmission
-  DlMuInfo m_dlInfo;                     //!< information required to perform a DL MU transmission
-  UlMuInfo m_ulInfo;                     //!< information required to solicit an UL MU transmission
+  TxFormat m_lastTxFormat {NO_TX};       ///< the format of last transmission
+  DlMuInfo m_dlInfo;                     ///< information required to perform a DL MU transmission
+  UlMuInfo m_ulInfo;                     ///< information required to solicit an UL MU transmission
+  EventId m_accessReqTimer;              ///< the timer controlling additional channel access requests
+  Time m_accessReqInterval;              ///< duration of the interval between channel access requests
+  AcIndex m_accessReqAc;                 ///< AC we request channel access for
+  bool m_restartTimerUponAccess;         ///< whether the channel access timer has to be restarted
+                                         ///< upon channel access
 };
 
 } //namespace ns3

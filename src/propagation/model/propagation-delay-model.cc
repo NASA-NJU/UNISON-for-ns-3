@@ -3,7 +3,7 @@
  * Copyright (c) 2005,2006,2007 INRIA
  *
  * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as 
+ * it under the terms of the GNU General Public License version 2 as
  * published by the Free Software Foundation;
  *
  * This program is distributed in the hope that it will be useful,
@@ -27,8 +27,8 @@ namespace ns3 {
 
 NS_OBJECT_ENSURE_REGISTERED (PropagationDelayModel);
 
-TypeId 
-PropagationDelayModel::GetTypeId (void)
+TypeId
+PropagationDelayModel::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::PropagationDelayModel")
     .SetParent<Object> ()
@@ -52,7 +52,7 @@ PropagationDelayModel::AssignStreams (int64_t stream)
 NS_OBJECT_ENSURE_REGISTERED (RandomPropagationDelayModel);
 
 TypeId
-RandomPropagationDelayModel::GetTypeId (void)
+RandomPropagationDelayModel::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::RandomPropagationDelayModel")
     .SetParent<PropagationDelayModel> ()
@@ -89,7 +89,7 @@ RandomPropagationDelayModel::DoAssignStreams (int64_t stream)
 NS_OBJECT_ENSURE_REGISTERED (ConstantSpeedPropagationDelayModel);
 
 TypeId
-ConstantSpeedPropagationDelayModel::GetTypeId (void)
+ConstantSpeedPropagationDelayModel::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::ConstantSpeedPropagationDelayModel")
     .SetParent<PropagationDelayModel> ()
@@ -119,7 +119,7 @@ ConstantSpeedPropagationDelayModel::SetSpeed (double speed)
   m_speed = speed;
 }
 double
-ConstantSpeedPropagationDelayModel::GetSpeed (void) const
+ConstantSpeedPropagationDelayModel::GetSpeed () const
 {
   return m_speed;
 }

@@ -62,13 +62,13 @@ public:
    */
   EnumValue (int value);
   void Set (int  value);
-  int Get (void) const;
+  int Get () const;
   template <typename T>
   bool GetAccessor (T & value) const;
 
-  virtual Ptr<AttributeValue> Copy (void) const;
-  virtual std::string SerializeToString (Ptr<const AttributeChecker> checker) const;
-  virtual bool DeserializeFromString (std::string value, Ptr<const AttributeChecker> checker);
+  Ptr<AttributeValue> Copy () const override;
+  std::string SerializeToString (Ptr<const AttributeChecker> checker) const override;
+  bool DeserializeFromString (std::string value, Ptr<const AttributeChecker> checker) override;
 
 private:
   int m_value;  //!< The stored integer value.
@@ -115,12 +115,12 @@ public:
   int GetValue (const std::string name) const;
 
   // Inherited
-  virtual bool Check (const AttributeValue &value) const;
-  virtual std::string GetValueTypeName (void) const;
-  virtual bool HasUnderlyingTypeInformation (void) const;
-  virtual std::string GetUnderlyingTypeInformation (void) const;
-  virtual Ptr<AttributeValue> Create (void) const;
-  virtual bool Copy (const AttributeValue &src, AttributeValue &dst) const;
+  bool Check (const AttributeValue &value) const override;
+  std::string GetValueTypeName () const override;
+  bool HasUnderlyingTypeInformation () const override;
+  std::string GetUnderlyingTypeInformation () const override;
+  Ptr<AttributeValue> Create () const override;
+  bool Copy (const AttributeValue &src, AttributeValue &dst) const override;
 
 private:
   /** Type for the pair value, name */

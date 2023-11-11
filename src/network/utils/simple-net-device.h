@@ -27,12 +27,11 @@
 #include "ns3/net-device.h"
 #include "ns3/data-rate.h"
 #include "ns3/event-id.h"
-
+#include "ns3/queue-fwd.h"
 #include "mac48-address.h"
 
 namespace ns3 {
 
-template <typename Item> class Queue;
 class SimpleChannel;
 class Node;
 class ErrorModel;
@@ -42,7 +41,7 @@ class ErrorModel;
  *
  * This device assumes 48-bit mac addressing; there is also the possibility to
  * add an ErrorModel if you want to force losses on the device.
- * 
+ *
  * The device can be installed on a node through the SimpleNetDeviceHelper.
  * In case of manual creation, the user is responsible for assigning an unique
  * address to the device.
@@ -58,11 +57,11 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
   SimpleNetDevice ();
 
   /**
-   * Receive a packet from a connected SimpleChannel.  The 
+   * Receive a packet from a connected SimpleChannel.  The
    * SimpleNetDevice receives packets from its connected channel
    * and then forwards them by calling its rx callback method
    *
@@ -72,11 +71,11 @@ public:
    * \param from address packet was sent from
    */
   void Receive (Ptr<Packet> packet, uint16_t protocol, Mac48Address to, Mac48Address from);
-  
+
   /**
-   * Attach a channel to this net device.  This will be the 
+   * Attach a channel to this net device.  This will be the
    * channel the net device sends on
-   * 
+   *
    * \param channel channel to assign to this net device
    *
    */
@@ -94,7 +93,7 @@ public:
    *
    * \returns Ptr to the queue.
    */
-  Ptr<Queue<Packet> > GetQueue (void) const;
+  Ptr<Queue<Packet> > GetQueue () const;
 
   /**
    * Attach a receive ErrorModel to the SimpleNetDevice.
@@ -108,35 +107,35 @@ public:
   void SetReceiveErrorModel (Ptr<ErrorModel> em);
 
   // inherited from NetDevice base class.
-  virtual void SetIfIndex (const uint32_t index);
-  virtual uint32_t GetIfIndex (void) const;
-  virtual Ptr<Channel> GetChannel (void) const;
-  virtual void SetAddress (Address address);
-  virtual Address GetAddress (void) const;
-  virtual bool SetMtu (const uint16_t mtu);
-  virtual uint16_t GetMtu (void) const;
-  virtual bool IsLinkUp (void) const;
-  virtual void AddLinkChangeCallback (Callback<void> callback);
-  virtual bool IsBroadcast (void) const;
-  virtual Address GetBroadcast (void) const;
-  virtual bool IsMulticast (void) const;
-  virtual Address GetMulticast (Ipv4Address multicastGroup) const;
-  virtual bool IsPointToPoint (void) const;
-  virtual bool IsBridge (void) const;
-  virtual bool Send (Ptr<Packet> packet, const Address& dest, uint16_t protocolNumber);
-  virtual bool SendFrom (Ptr<Packet> packet, const Address& source, const Address& dest, uint16_t protocolNumber);
-  virtual Ptr<Node> GetNode (void) const;
-  virtual void SetNode (Ptr<Node> node);
-  virtual bool NeedsArp (void) const;
-  virtual void SetReceiveCallback (NetDevice::ReceiveCallback cb);
+  void SetIfIndex (const uint32_t index) override;
+  uint32_t GetIfIndex () const override;
+  Ptr<Channel> GetChannel () const override;
+  void SetAddress (Address address) override;
+  Address GetAddress () const override;
+  bool SetMtu (const uint16_t mtu) override;
+  uint16_t GetMtu () const override;
+  bool IsLinkUp () const override;
+  void AddLinkChangeCallback (Callback<void> callback) override;
+  bool IsBroadcast () const override;
+  Address GetBroadcast () const override;
+  bool IsMulticast () const override;
+  Address GetMulticast (Ipv4Address multicastGroup) const override;
+  bool IsPointToPoint () const override;
+  bool IsBridge () const override;
+  bool Send (Ptr<Packet> packet, const Address& dest, uint16_t protocolNumber) override;
+  bool SendFrom (Ptr<Packet> packet, const Address& source, const Address& dest, uint16_t protocolNumber) override;
+  Ptr<Node> GetNode () const override;
+  void SetNode (Ptr<Node> node) override;
+  bool NeedsArp () const override;
+  void SetReceiveCallback (NetDevice::ReceiveCallback cb) override;
 
-  virtual Address GetMulticast (Ipv6Address addr) const;
+  Address GetMulticast (Ipv6Address addr) const override;
 
-  virtual void SetPromiscReceiveCallback (PromiscReceiveCallback cb);
-  virtual bool SupportsSendFrom (void) const;
+  void SetPromiscReceiveCallback (PromiscReceiveCallback cb) override;
+  bool SupportsSendFrom () const override;
 
 protected:
-  virtual void DoDispose (void);
+  void DoDispose () override;
 
 private:
   Ptr<SimpleChannel> m_channel; //!< the channel the device is connected to
@@ -150,7 +149,7 @@ private:
 
   /**
    * The trace source fired when the phy layer drops a packet it has received
-   * due to the error model being active.  Although SimpleNetDevice doesn't 
+   * due to the error model being active.  Although SimpleNetDevice doesn't
    * really have a Phy model, we choose this trace source name for alignment
    * with other trace sources.
    *
@@ -164,7 +163,7 @@ private:
    * FinishTransmission method at a time corresponding to the transmission
    * delay of the packet.
    */
-  void StartTransmission (void);
+  void StartTransmission ();
 
   /**
    * The FinishTransmission method is used internally to finish the process

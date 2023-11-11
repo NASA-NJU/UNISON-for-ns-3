@@ -43,12 +43,12 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   ComponentCarrier ();
 
-  virtual ~ComponentCarrier (void);
-  virtual void DoDispose (void);
+  ~ComponentCarrier () override;
+  void DoDispose () override;
 
   /**
    * \return the uplink bandwidth in RBs
@@ -136,7 +136,7 @@ public:
   void SetCsgIndication (bool csgIndication);
 
   /**
-   * \brief Set as primary carrier 
+   * \brief Set as primary carrier
    * \param primaryCarrier true to set as primary carrier
    */
   void SetAsPrimary (bool primaryCarrier);
@@ -173,7 +173,7 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   /**
    * \brief Constructor
@@ -183,7 +183,7 @@ public:
   /**
    * \brief ~ComponentCarrierBaseStation
    */
-  virtual ~ComponentCarrierBaseStation (void) override;
+  ~ComponentCarrierBaseStation () override;
 
   /**
    * Get cell identifier

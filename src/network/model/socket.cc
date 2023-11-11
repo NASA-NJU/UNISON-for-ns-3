@@ -34,7 +34,7 @@ NS_LOG_COMPONENT_DEFINE ("Socket");
 NS_OBJECT_ENSURE_REGISTERED (Socket);
 
 TypeId
-Socket::GetTypeId (void)
+Socket::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::Socket")
     .SetParent<Object> ()
@@ -42,7 +42,7 @@ Socket::GetTypeId (void)
   return tid;
 }
 
-Socket::Socket (void)
+Socket::Socket ()
   : m_manualIpTtl (false),
     m_ipRecvTos (false),
     m_ipRecvTtl (false),
@@ -52,7 +52,7 @@ Socket::Socket (void)
     m_ipv6RecvHopLimit (false)
 {
   NS_LOG_FUNCTION_NOARGS ();
-  m_boundnetdevice = 0;
+  m_boundnetdevice = nullptr;
   m_recvPktInfo = false;
 
   m_priority = 0;
@@ -72,11 +72,11 @@ Socket::CreateSocket (Ptr<Node> node, TypeId tid)
 {
   NS_LOG_FUNCTION (node << tid);
   Ptr<Socket> s;
-  NS_ASSERT (node != 0);
+  NS_ASSERT (node);
   Ptr<SocketFactory> socketFactory = node->GetObject<SocketFactory> (tid);
-  NS_ASSERT (socketFactory != 0);
+  NS_ASSERT (socketFactory);
   s = socketFactory->CreateSocket ();
-  NS_ASSERT (s != 0);
+  NS_ASSERT (s);
   return s;
 }
 
@@ -172,7 +172,7 @@ Socket::SendTo (const uint8_t* buf, uint32_t size, uint32_t flags,
 }
 
 Ptr<Packet>
-Socket::Recv (void)
+Socket::Recv ()
 {
   NS_LOG_FUNCTION (this);
   return Recv (std::numeric_limits<uint32_t>::max (), 0);
@@ -183,7 +183,7 @@ Socket::Recv (uint8_t* buf, uint32_t size, uint32_t flags)
 {
   NS_LOG_FUNCTION (this << &buf << size << flags);
   Ptr<Packet> p = Recv (size, flags); // read up to "size" bytes
-  if (p == 0)
+  if (!p)
     {
       return 0;
     }
@@ -204,7 +204,7 @@ Socket::RecvFrom (uint8_t* buf, uint32_t size, uint32_t flags,
 {
   NS_LOG_FUNCTION (this << &buf << size << flags << &fromAddress);
   Ptr<Packet> p = RecvFrom (size, flags, fromAddress);
-  if (p == 0)
+  if (!p)
     {
       return 0;
     }
@@ -214,7 +214,7 @@ Socket::RecvFrom (uint8_t* buf, uint32_t size, uint32_t flags,
 
 
 void
-Socket::NotifyConnectionSucceeded (void)
+Socket::NotifyConnectionSucceeded ()
 {
   NS_LOG_FUNCTION (this);
   if (!m_connectionSucceeded.IsNull ())
@@ -224,7 +224,7 @@ Socket::NotifyConnectionSucceeded (void)
 }
 
 void
-Socket::NotifyConnectionFailed (void)
+Socket::NotifyConnectionFailed ()
 {
   NS_LOG_FUNCTION (this);
   if (!m_connectionFailed.IsNull ())
@@ -234,7 +234,7 @@ Socket::NotifyConnectionFailed (void)
 }
 
 void
-Socket::NotifyNormalClose (void)
+Socket::NotifyNormalClose ()
 {
   NS_LOG_FUNCTION (this);
   if (!m_normalClose.IsNull ())
@@ -244,7 +244,7 @@ Socket::NotifyNormalClose (void)
 }
 
 void
-Socket::NotifyErrorClose (void)
+Socket::NotifyErrorClose ()
 {
   NS_LOG_FUNCTION (this);
   if (!m_errorClose.IsNull ())
@@ -302,7 +302,7 @@ Socket::NotifySend (uint32_t spaceAvailable)
 }
 
 void
-Socket::NotifyDataRecv (void)
+Socket::NotifyDataRecv ()
 {
   NS_LOG_FUNCTION (this);
   if (!m_receivedData.IsNull ())
@@ -312,7 +312,7 @@ Socket::NotifyDataRecv (void)
 }
 
 void
-Socket::DoDispose (void)
+Socket::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
   m_connectionSucceeded = MakeNullCallback<void,Ptr<Socket> > ();
@@ -330,7 +330,7 @@ void
 Socket::BindToNetDevice (Ptr<NetDevice> netdevice)
 {
   NS_LOG_FUNCTION (this << netdevice);
-  if (netdevice != 0)
+  if (netdevice)
     {
       bool found = false;
       for (uint32_t i = 0; i < GetNode ()->GetNDevices (); i++)
@@ -344,7 +344,6 @@ Socket::BindToNetDevice (Ptr<NetDevice> netdevice)
       NS_ASSERT_MSG (found, "Socket cannot be bound to a NetDevice not existing on the Node");
     }
   m_boundnetdevice = netdevice;
-  return;
 }
 
 Ptr<NetDevice>
@@ -368,19 +367,19 @@ bool Socket::IsRecvPktInfo () const
 }
 
 bool
-Socket::IsManualIpv6Tclass (void) const
+Socket::IsManualIpv6Tclass () const
 {
   return m_manualIpv6Tclass;
 }
 
 bool
-Socket::IsManualIpTtl (void) const
+Socket::IsManualIpTtl () const
 {
   return m_manualIpTtl;
 }
 
 bool
-Socket::IsManualIpv6HopLimit (void) const
+Socket::IsManualIpv6HopLimit () const
 {
   return m_manualIpv6HopLimit;
 }
@@ -393,7 +392,7 @@ Socket::SetPriority (uint8_t priority)
 }
 
 uint8_t
-Socket::GetPriority (void) const
+Socket::GetPriority () const
 {
   return m_priority;
 }
@@ -450,7 +449,7 @@ Socket::SetIpTos (uint8_t tos)
 }
 
 uint8_t
-Socket::GetIpTos (void) const
+Socket::GetIpTos () const
 {
   return m_ipTos;
 }
@@ -462,7 +461,7 @@ Socket::SetIpRecvTos (bool ipv4RecvTos)
 }
 
 bool
-Socket::IsIpRecvTos (void) const
+Socket::IsIpRecvTos () const
 {
   return m_ipRecvTos;
 }
@@ -492,7 +491,7 @@ Socket::SetIpv6Tclass (int tclass)
 }
 
 uint8_t
-Socket::GetIpv6Tclass (void) const
+Socket::GetIpv6Tclass () const
 {
   return m_ipv6Tclass;
 }
@@ -504,7 +503,7 @@ Socket::SetIpv6RecvTclass (bool ipv6RecvTclass)
 }
 
 bool
-Socket::IsIpv6RecvTclass (void) const
+Socket::IsIpv6RecvTclass () const
 {
   return m_ipv6RecvTclass;
 }
@@ -517,7 +516,7 @@ Socket::SetIpTtl (uint8_t ttl)
 }
 
 uint8_t
-Socket::GetIpTtl (void) const
+Socket::GetIpTtl () const
 {
   return m_ipTtl;
 }
@@ -529,7 +528,7 @@ Socket::SetIpRecvTtl (bool ipv4RecvTtl)
 }
 
 bool
-Socket::IsIpRecvTtl (void) const
+Socket::IsIpRecvTtl () const
 {
   return m_ipRecvTtl;
 }
@@ -542,7 +541,7 @@ Socket::SetIpv6HopLimit (uint8_t ipHopLimit)
 }
 
 uint8_t
-Socket::GetIpv6HopLimit (void) const
+Socket::GetIpv6HopLimit () const
 {
   return m_ipv6HopLimit;
 }
@@ -554,7 +553,7 @@ Socket::SetIpv6RecvHopLimit (bool ipv6RecvHopLimit)
 }
 
 bool
-Socket::IsIpv6RecvHopLimit (void) const
+Socket::IsIpv6RecvHopLimit () const
 {
   return m_ipv6RecvHopLimit;
 }
@@ -577,7 +576,7 @@ Socket::Ipv6JoinGroup (Ipv6Address address)
 }
 
 void
-Socket::Ipv6LeaveGroup (void)
+Socket::Ipv6LeaveGroup ()
 {
   NS_LOG_FUNCTION (this);
   if(m_ipv6MulticastGroupAddress.IsAny () )
@@ -608,7 +607,7 @@ SocketIpTtlTag::SetTtl (uint8_t ttl)
 }
 
 uint8_t
-SocketIpTtlTag::GetTtl (void) const
+SocketIpTtlTag::GetTtl () const
 {
   NS_LOG_FUNCTION (this);
   return m_ttl;
@@ -617,7 +616,7 @@ SocketIpTtlTag::GetTtl (void) const
 NS_OBJECT_ENSURE_REGISTERED (SocketIpTtlTag);
 
 TypeId
-SocketIpTtlTag::GetTypeId (void)
+SocketIpTtlTag::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::SocketIpTtlTag")
     .SetParent<Tag> ()
@@ -627,13 +626,13 @@ SocketIpTtlTag::GetTypeId (void)
   return tid;
 }
 TypeId
-SocketIpTtlTag::GetInstanceTypeId (void) const
+SocketIpTtlTag::GetInstanceTypeId () const
 {
   return GetTypeId ();
 }
 
 uint32_t
-SocketIpTtlTag::GetSerializedSize (void) const
+SocketIpTtlTag::GetSerializedSize () const
 {
   NS_LOG_FUNCTION (this);
   return 1;
@@ -668,7 +667,7 @@ SocketIpv6HopLimitTag::SetHopLimit (uint8_t hopLimit)
 }
 
 uint8_t
-SocketIpv6HopLimitTag::GetHopLimit (void) const
+SocketIpv6HopLimitTag::GetHopLimit () const
 {
   return m_hopLimit;
 }
@@ -676,7 +675,7 @@ SocketIpv6HopLimitTag::GetHopLimit (void) const
 NS_OBJECT_ENSURE_REGISTERED (SocketIpv6HopLimitTag);
 
 TypeId
-SocketIpv6HopLimitTag::GetTypeId (void)
+SocketIpv6HopLimitTag::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::SocketIpv6HopLimitTag")
     .SetParent<Tag> ()
@@ -686,13 +685,13 @@ SocketIpv6HopLimitTag::GetTypeId (void)
   return tid;
 }
 TypeId
-SocketIpv6HopLimitTag::GetInstanceTypeId (void) const
+SocketIpv6HopLimitTag::GetInstanceTypeId () const
 {
   return GetTypeId ();
 }
 
 uint32_t
-SocketIpv6HopLimitTag::GetSerializedSize (void) const
+SocketIpv6HopLimitTag::GetSerializedSize () const
 {
   return 1;
 }
@@ -717,19 +716,19 @@ SocketSetDontFragmentTag::SocketSetDontFragmentTag ()
   NS_LOG_FUNCTION (this);
 }
 void
-SocketSetDontFragmentTag::Enable (void)
+SocketSetDontFragmentTag::Enable ()
 {
   NS_LOG_FUNCTION (this);
   m_dontFragment = true;
 }
 void
-SocketSetDontFragmentTag::Disable (void)
+SocketSetDontFragmentTag::Disable ()
 {
   NS_LOG_FUNCTION (this);
   m_dontFragment = false;
 }
 bool
-SocketSetDontFragmentTag::IsEnabled (void) const
+SocketSetDontFragmentTag::IsEnabled () const
 {
   NS_LOG_FUNCTION (this);
   return m_dontFragment;
@@ -738,7 +737,7 @@ SocketSetDontFragmentTag::IsEnabled (void) const
 NS_OBJECT_ENSURE_REGISTERED (SocketSetDontFragmentTag);
 
 TypeId
-SocketSetDontFragmentTag::GetTypeId (void)
+SocketSetDontFragmentTag::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::SocketSetDontFragmentTag")
     .SetParent<Tag> ()
@@ -747,12 +746,12 @@ SocketSetDontFragmentTag::GetTypeId (void)
   return tid;
 }
 TypeId
-SocketSetDontFragmentTag::GetInstanceTypeId (void) const
+SocketSetDontFragmentTag::GetInstanceTypeId () const
 {
   return GetTypeId ();
 }
 uint32_t
-SocketSetDontFragmentTag::GetSerializedSize (void) const
+SocketSetDontFragmentTag::GetSerializedSize () const
 {
   NS_LOG_FUNCTION (this);
   return 1;
@@ -788,7 +787,7 @@ SocketIpTosTag::SetTos (uint8_t ipTos)
 }
 
 uint8_t
-SocketIpTosTag::GetTos (void) const
+SocketIpTosTag::GetTos () const
 {
   return m_ipTos;
 }
@@ -796,7 +795,7 @@ SocketIpTosTag::GetTos (void) const
 NS_OBJECT_ENSURE_REGISTERED (SocketIpTosTag);
 
 TypeId
-SocketIpTosTag::GetTypeId (void)
+SocketIpTosTag::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::SocketIpTosTag")
     .SetParent<Tag> ()
@@ -807,13 +806,13 @@ SocketIpTosTag::GetTypeId (void)
 }
 
 TypeId
-SocketIpTosTag::GetInstanceTypeId (void) const
+SocketIpTosTag::GetInstanceTypeId () const
 {
   return GetTypeId ();
 }
 
 uint32_t
-SocketIpTosTag::GetSerializedSize (void) const
+SocketIpTosTag::GetSerializedSize () const
 {
   return sizeof (uint8_t);
 }
@@ -847,7 +846,7 @@ SocketPriorityTag::SetPriority (uint8_t priority)
 }
 
 uint8_t
-SocketPriorityTag::GetPriority (void) const
+SocketPriorityTag::GetPriority () const
 {
   return m_priority;
 }
@@ -855,7 +854,7 @@ SocketPriorityTag::GetPriority (void) const
 NS_OBJECT_ENSURE_REGISTERED (SocketPriorityTag);
 
 TypeId
-SocketPriorityTag::GetTypeId (void)
+SocketPriorityTag::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::SocketPriorityTag")
     .SetParent<Tag> ()
@@ -866,13 +865,13 @@ SocketPriorityTag::GetTypeId (void)
 }
 
 TypeId
-SocketPriorityTag::GetInstanceTypeId (void) const
+SocketPriorityTag::GetInstanceTypeId () const
 {
   return GetTypeId ();
 }
 
 uint32_t
-SocketPriorityTag::GetSerializedSize (void) const
+SocketPriorityTag::GetSerializedSize () const
 {
   return sizeof (uint8_t);
 }
@@ -907,7 +906,7 @@ SocketIpv6TclassTag::SetTclass (uint8_t tclass)
 }
 
 uint8_t
-SocketIpv6TclassTag::GetTclass (void) const
+SocketIpv6TclassTag::GetTclass () const
 {
   return m_ipv6Tclass;
 }
@@ -915,7 +914,7 @@ SocketIpv6TclassTag::GetTclass (void) const
 NS_OBJECT_ENSURE_REGISTERED (SocketIpv6TclassTag);
 
 TypeId
-SocketIpv6TclassTag::GetTypeId (void)
+SocketIpv6TclassTag::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::SocketIpv6TclassTag")
     .SetParent<Tag> ()
@@ -926,13 +925,13 @@ SocketIpv6TclassTag::GetTypeId (void)
 }
 
 TypeId
-SocketIpv6TclassTag::GetInstanceTypeId (void) const
+SocketIpv6TclassTag::GetInstanceTypeId () const
 {
   return GetTypeId ();
 }
 
 uint32_t
-SocketIpv6TclassTag::GetSerializedSize (void) const
+SocketIpv6TclassTag::GetSerializedSize () const
 {
   return sizeof (uint8_t);
 }

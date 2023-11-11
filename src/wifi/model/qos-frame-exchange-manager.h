@@ -40,11 +40,11 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
   QosFrameExchangeManager ();
-  virtual ~QosFrameExchangeManager ();
+  ~QosFrameExchangeManager () override;
 
-  bool StartTransmission (Ptr<Txop> edca) override;
+  bool StartTransmission (Ptr<Txop> edca, uint16_t allowedWidth) override;
 
   /**
    * Recompute the protection and acknowledgment methods to use if the given MPDU
@@ -59,7 +59,7 @@ public:
    * \param availableTime the time limit on the frame exchange sequence
    * \return true if the given MPDU can be added to the frame being built
    */
-  bool TryAddMpdu (Ptr<const WifiMacQueueItem> mpdu, WifiTxParameters& txParams, Time availableTime) const;
+  bool TryAddMpdu (Ptr<const WifiMpdu> mpdu, WifiTxParameters& txParams, Time availableTime) const;
 
   /**
    * Check whether the given MPDU can be added to the frame being built (as described
@@ -71,7 +71,7 @@ public:
    * \param ppduDurationLimit the time limit on the PPDU transmission duration
    * \return true if the given MPDU can be added to the frame being built
    */
-  virtual bool IsWithinLimitsIfAddMpdu (Ptr<const WifiMacQueueItem> mpdu, const WifiTxParameters& txParams,
+  virtual bool IsWithinLimitsIfAddMpdu (Ptr<const WifiMpdu> mpdu, const WifiTxParameters& txParams,
                                         Time ppduDurationLimit) const;
 
   /**
@@ -93,7 +93,7 @@ public:
 protected:
   void DoDispose () override;
 
-  void ReceiveMpdu (Ptr<WifiMacQueueItem> mpdu, RxSignalInfo rxSignalInfo,
+  void ReceiveMpdu (Ptr<const WifiMpdu> mpdu, RxSignalInfo rxSignalInfo,
                     const WifiTxVector& txVector, bool inAmpdu) override;
   void PreProcessFrame (Ptr<const WifiPsdu> psdu, const WifiTxVector& txVector) override;
   Time GetFrameDurationId (const WifiMacHeader& header, uint32_t size,
@@ -103,9 +103,9 @@ protected:
                          Time response) const override;
   Time GetCtsToSelfDurationId (const WifiTxVector& ctsTxVector, Time txDuration,
                                Time response) const override;
-  void TransmissionSucceeded (void) override;
-  void TransmissionFailed (void) override;
-  void ForwardMpduDown (Ptr<WifiMacQueueItem> mpdu, WifiTxVector& txVector) override;
+  void TransmissionSucceeded () override;
+  void TransmissionFailed () override;
+  void ForwardMpduDown (Ptr<WifiMpdu> mpdu, WifiTxVector& txVector) override;
 
   /**
    * Request the FrameExchangeManager to start a frame exchange sequence.
@@ -138,7 +138,7 @@ protected:
    * If the carrier sense indicates that the medium is idle, continue the TXOP.
    * Otherwise, release the channel.
    */
-  void PifsRecovery (void);
+  void PifsRecovery ();
 
   /**
    * Send a CF-End frame to indicate the completion of the TXOP, provided that
@@ -146,7 +146,7 @@ protected:
    *
    * \return true if a CF-End frame was sent, false otherwise
    */
-  virtual bool SendCfEndIfNeeded (void);
+  virtual bool SendCfEndIfNeeded ();
 
   /**
    * Set the TXOP holder, if needed, based on the received frame
@@ -167,7 +167,7 @@ private:
    * Cancel the PIFS recovery event and have the EDCAF attempting PIFS recovery
    * release the channel.
    */
-  void CancelPifsRecovery (void);
+  void CancelPifsRecovery ();
 
   bool m_initialFrame;                       //!< true if transmitting the initial frame of a TXOP
   bool m_pifsRecovery;                       //!< true if performing a PIFS recovery after failure

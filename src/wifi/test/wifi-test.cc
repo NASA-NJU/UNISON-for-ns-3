@@ -53,6 +53,8 @@
 #include "ns3/frame-exchange-manager.h"
 #include "ns3/wifi-default-protection-manager.h"
 #include "ns3/wifi-default-ack-manager.h"
+#include "ns3/wifi-default-assoc-manager.h"
+#include "ns3/fcfs-wifi-queue-scheduler.h"
 
 using namespace ns3;
 
@@ -100,12 +102,12 @@ class WifiTest : public TestCase
 public:
   WifiTest ();
 
-  void DoRun (void) override;
+  void DoRun () override;
 
 
 private:
   /// Run one function
-  void RunOne (void);
+  void RunOne ();
   /**
    * Create one function
    * \param pos the position
@@ -140,11 +142,31 @@ WifiTest::CreateOne (Vector pos, Ptr<YansWifiChannel> channel)
 {
   Ptr<Node> node = CreateObject<Node> ();
   Ptr<WifiNetDevice> dev = CreateObject<WifiNetDevice> ();
+  node->AddDevice (dev);
+
+  auto mobility = CreateObject<ConstantPositionMobilityModel> ();
+  auto phy = CreateObject<YansWifiPhy> ();
+  Ptr<InterferenceHelper> interferenceHelper = CreateObject<InterferenceHelper> ();
+  phy->SetInterferenceHelper (interferenceHelper);
+  auto error = CreateObject<YansErrorRateModel> ();
+  phy->SetErrorRateModel (error);
+  phy->SetChannel (channel);
+  phy->SetDevice (dev);
+  phy->ConfigureStandard (WIFI_STANDARD_80211a);
+  dev->SetPhy (phy);
+  auto manager = m_manager.Create<WifiRemoteStationManager> ();
+  dev->SetRemoteStationManager (manager);
 
   Ptr<WifiMac> mac = m_mac.Create<WifiMac> ();
   mac->SetDevice (dev);
   mac->SetAddress (Mac48Address::Allocate ());
+  dev->SetMac (mac);
   mac->ConfigureStandard (WIFI_STANDARD_80211a);
+  if (mac->GetTypeOfStation () == STA)
+    {
+      StaticCast<StaWifiMac> (mac)->SetAssocManager (CreateObject<WifiDefaultAssocManager> ());
+    }
+  mac->SetMacQueueScheduler (CreateObject<FcfsWifiQueueScheduler> ());
   Ptr<FrameExchangeManager> fem = mac->GetFrameExchangeManager ();
   Ptr<WifiProtectionManager> protectionManager = CreateObject<WifiDefaultProtectionManager> ();
   protectionManager->SetWifiMac (mac);
@@ -153,29 +175,14 @@ WifiTest::CreateOne (Vector pos, Ptr<YansWifiChannel> channel)
   ackManager->SetWifiMac (mac);
   fem->SetAckManager (ackManager);
 
-  Ptr<ConstantPositionMobilityModel> mobility = CreateObject<ConstantPositionMobilityModel> ();
-  Ptr<YansWifiPhy> phy = CreateObject<YansWifiPhy> ();
-  Ptr<InterferenceHelper> interferenceHelper = CreateObject<InterferenceHelper> ();
-  phy->SetInterferenceHelper (interferenceHelper);
-  Ptr<ErrorRateModel> error = CreateObject<YansErrorRateModel> ();
-  phy->SetErrorRateModel (error);
-  phy->SetChannel (channel);
-  phy->SetDevice (dev);
-  phy->ConfigureStandard (WIFI_STANDARD_80211a);
-  Ptr<WifiRemoteStationManager> manager = m_manager.Create<WifiRemoteStationManager> ();
-
   mobility->SetPosition (pos);
   node->AggregateObject (mobility);
-  dev->SetMac (mac);
-  dev->SetPhy (phy);
-  dev->SetRemoteStationManager (manager);
-  node->AddDevice (dev);
 
   Simulator::Schedule (Seconds (1.0), &WifiTest::SendOnePacket, this, dev);
 }
 
 void
-WifiTest::RunOne (void)
+WifiTest::RunOne ()
 {
   Ptr<YansWifiChannel> channel = CreateObject<YansWifiChannel> ();
   Ptr<PropagationDelayModel> propDelay = m_propDelay.Create<PropagationDelayModel> ();
@@ -194,7 +201,7 @@ WifiTest::RunOne (void)
 }
 
 void
-WifiTest::DoRun (void)
+WifiTest::DoRun ()
 {
   m_mac.SetTypeId ("ns3::AdhocWifiMac");
   m_propDelay.SetTypeId ("ns3::ConstantSpeedPropagationDelayModel");
@@ -237,7 +244,7 @@ public:
   QosUtilsIsOldPacketTest () : TestCase ("QosUtilsIsOldPacket")
   {
   }
-  void DoRun (void) override
+  void DoRun () override
   {
     //startingSeq=0, seqNum=2047
     NS_TEST_EXPECT_MSG_EQ (QosUtilsIsOldPacket (0, 2047), false, "2047 is new in comparison to 0");
@@ -267,7 +274,7 @@ class InterferenceHelperSequenceTest : public TestCase
 public:
   InterferenceHelperSequenceTest ();
 
-  void DoRun (void) override;
+  void DoRun () override;
 
 
 private:
@@ -318,11 +325,28 @@ InterferenceHelperSequenceTest::CreateOne (Vector pos, Ptr<YansWifiChannel> chan
 {
   Ptr<Node> node = CreateObject<Node> ();
   Ptr<WifiNetDevice> dev = CreateObject<WifiNetDevice> ();
+  node->AddDevice (dev);
+
+  auto mobility = CreateObject<ConstantPositionMobilityModel> ();
+  auto phy = CreateObject<YansWifiPhy> ();
+  Ptr<InterferenceHelper> interferenceHelper = CreateObject<InterferenceHelper> ();
+  phy->SetInterferenceHelper (interferenceHelper);
+  auto error = CreateObject<YansErrorRateModel> ();
+  phy->SetErrorRateModel (error);
+  phy->SetChannel (channel);
+  phy->SetDevice (dev);
+  phy->SetMobility (mobility);
+  phy->ConfigureStandard (WIFI_STANDARD_80211a);
+  dev->SetPhy (phy);
+  auto manager = m_manager.Create<WifiRemoteStationManager> ();
+  dev->SetRemoteStationManager (manager);
 
   Ptr<WifiMac> mac = m_mac.Create<WifiMac> ();
   mac->SetDevice (dev);
   mac->SetAddress (Mac48Address::Allocate ());
+  dev->SetMac (mac);
   mac->ConfigureStandard (WIFI_STANDARD_80211a);
+  mac->SetMacQueueScheduler (CreateObject<FcfsWifiQueueScheduler> ());
   Ptr<FrameExchangeManager> fem = mac->GetFrameExchangeManager ();
   Ptr<WifiProtectionManager> protectionManager = CreateObject<WifiDefaultProtectionManager> ();
   protectionManager->SetWifiMac (mac);
@@ -331,30 +355,14 @@ InterferenceHelperSequenceTest::CreateOne (Vector pos, Ptr<YansWifiChannel> chan
   ackManager->SetWifiMac (mac);
   fem->SetAckManager (ackManager);
 
-  Ptr<ConstantPositionMobilityModel> mobility = CreateObject<ConstantPositionMobilityModel> ();
-  Ptr<YansWifiPhy> phy = CreateObject<YansWifiPhy> ();
-  Ptr<InterferenceHelper> interferenceHelper = CreateObject<InterferenceHelper> ();
-  phy->SetInterferenceHelper (interferenceHelper);
-  Ptr<ErrorRateModel> error = CreateObject<YansErrorRateModel> ();
-  phy->SetErrorRateModel (error);
-  phy->SetChannel (channel);
-  phy->SetDevice (dev);
-  phy->SetMobility (mobility);
-  phy->ConfigureStandard (WIFI_STANDARD_80211a);
-  Ptr<WifiRemoteStationManager> manager = m_manager.Create<WifiRemoteStationManager> ();
-
   mobility->SetPosition (pos);
   node->AggregateObject (mobility);
-  dev->SetMac (mac);
-  dev->SetPhy (phy);
-  dev->SetRemoteStationManager (manager);
-  node->AddDevice (dev);
 
   return node;
 }
 
 void
-InterferenceHelperSequenceTest::DoRun (void)
+InterferenceHelperSequenceTest::DoRun ()
 {
   m_mac.SetTypeId ("ns3::AdhocWifiMac");
   m_propDelay.SetTypeId ("ns3::ConstantSpeedPropagationDelayModel");
@@ -451,7 +459,7 @@ class DcfImmediateAccessBroadcastTestCase : public TestCase
 public:
   DcfImmediateAccessBroadcastTestCase ();
 
-  void DoRun (void) override;
+  void DoRun () override;
 
 
 private:
@@ -504,7 +512,7 @@ DcfImmediateAccessBroadcastTestCase::SendOnePacket (Ptr<WifiNetDevice> dev)
 }
 
 void
-DcfImmediateAccessBroadcastTestCase::DoRun (void)
+DcfImmediateAccessBroadcastTestCase::DoRun ()
 {
   m_mac.SetTypeId ("ns3::AdhocWifiMac");
   m_propDelay.SetTypeId ("ns3::ConstantSpeedPropagationDelayModel");
@@ -523,23 +531,6 @@ DcfImmediateAccessBroadcastTestCase::DoRun (void)
 
   Ptr<Node> txNode = CreateObject<Node> ();
   Ptr<WifiNetDevice> txDev = CreateObject<WifiNetDevice> ();
-  Ptr<WifiMac> txMac = m_mac.Create<WifiMac> ();
-  txMac->SetDevice (txDev);
-  txMac->ConfigureStandard (WIFI_STANDARD_80211a);
-  Ptr<FrameExchangeManager> fem = txMac->GetFrameExchangeManager ();
-  Ptr<WifiProtectionManager> protectionManager = CreateObject<WifiDefaultProtectionManager> ();
-  protectionManager->SetWifiMac (txMac);
-  fem->SetProtectionManager (protectionManager);
-  Ptr<WifiAckManager> ackManager = CreateObject<WifiDefaultAckManager> ();
-  ackManager->SetWifiMac (txMac);
-  fem->SetAckManager (ackManager);
-
-
-  //Fix the stream assignment to the Dcf Txop objects (backoffs)
-  //The below stream assignment will result in the Txop object
-  //using a backoff value of zero for this test when the
-  //Txop::EndTxNoAck() calls to StartBackoffNow()
-  AssignWifiRandomStreams (txMac, 23);
 
   Ptr<ConstantPositionMobilityModel> txMobility = CreateObject<ConstantPositionMobilityModel> ();
   Ptr<YansWifiPhy> txPhy = CreateObject<YansWifiPhy> ();
@@ -556,11 +547,29 @@ DcfImmediateAccessBroadcastTestCase::DoRun (void)
 
   txMobility->SetPosition (Vector (0.0, 0.0, 0.0));
   txNode->AggregateObject (txMobility);
-  txMac->SetAddress (Mac48Address::Allocate ());
-  txDev->SetMac (txMac);
   txDev->SetPhy (txPhy);
   txDev->SetRemoteStationManager (m_manager.Create<WifiRemoteStationManager> ());
   txNode->AddDevice (txDev);
+
+  auto txMac = m_mac.Create<WifiMac> ();
+  txMac->SetDevice (txDev);
+  txMac->SetAddress (Mac48Address::Allocate ());
+  txDev->SetMac (txMac);
+  txMac->ConfigureStandard (WIFI_STANDARD_80211a);
+  txMac->SetMacQueueScheduler (CreateObject<FcfsWifiQueueScheduler> ());
+  auto fem = txMac->GetFrameExchangeManager ();
+  auto protectionManager = CreateObject<WifiDefaultProtectionManager> ();
+  protectionManager->SetWifiMac (txMac);
+  fem->SetProtectionManager (protectionManager);
+  auto ackManager = CreateObject<WifiDefaultAckManager> ();
+  ackManager->SetWifiMac (txMac);
+  fem->SetAckManager (ackManager);
+
+  //Fix the stream assignment to the Dcf Txop objects (backoffs)
+  //The below stream assignment will result in the Txop object
+  //using a backoff value of zero for this test when the
+  //Txop::EndTxNoAck() calls to StartBackoffNow()
+  AssignWifiRandomStreams (txMac, 23);
 
   m_firstTransmissionTime = Seconds (0.0);
   m_secondTransmissionTime = Seconds (0.0);
@@ -605,9 +614,9 @@ class Bug730TestCase : public TestCase
 {
 public:
   Bug730TestCase ();
-  virtual ~Bug730TestCase ();
+  ~Bug730TestCase () override;
 
-  void DoRun (void) override;
+  void DoRun () override;
 
 
 private:
@@ -644,7 +653,7 @@ Bug730TestCase::Receive (std::string context, Ptr<const Packet> p, const Address
 
 
 void
-Bug730TestCase::DoRun (void)
+Bug730TestCase::DoRun ()
 {
   m_received = 0;
 
@@ -742,9 +751,9 @@ class QosFragmentationTestCase : public TestCase
 {
 public:
   QosFragmentationTestCase ();
-  virtual ~QosFragmentationTestCase ();
+  ~QosFragmentationTestCase () override;
 
-  void DoRun (void) override;
+  void DoRun () override;
 
 
 private:
@@ -801,7 +810,7 @@ QosFragmentationTestCase::Transmit (std::string context, Ptr<const Packet> p, do
 }
 
 void
-QosFragmentationTestCase::DoRun (void)
+QosFragmentationTestCase::DoRun ()
 {
   NodeContainer wifiStaNode;
   wifiStaNode.Create (1);
@@ -902,7 +911,7 @@ class SetChannelFrequencyTest : public TestCase
 public:
   SetChannelFrequencyTest ();
 
-  void DoRun (void) override;
+  void DoRun () override;
 
 
 private:
@@ -1331,9 +1340,9 @@ class Bug2222TestCase : public TestCase
 {
 public:
   Bug2222TestCase ();
-  virtual ~Bug2222TestCase ();
+  ~Bug2222TestCase () override;
 
-  void DoRun (void) override;
+  void DoRun () override;
 
 
 private:
@@ -1365,7 +1374,7 @@ Bug2222TestCase::TxDataFailedTrace (std::string context, Mac48Address adr)
 }
 
 void
-Bug2222TestCase::DoRun (void)
+Bug2222TestCase::DoRun ()
 {
   m_countInternalCollisions = 0;
 
@@ -1468,8 +1477,8 @@ class Bug2843TestCase : public TestCase
 {
 public:
   Bug2843TestCase ();
-  virtual ~Bug2843TestCase ();
-  void DoRun (void) override;
+  ~Bug2843TestCase () override;
+  void DoRun () override;
 
 private:
   /**
@@ -1550,7 +1559,7 @@ Bug2843TestCase::SendPacketBurst (uint8_t numPackets, Ptr<NetDevice> sourceDevic
 }
 
 void
-Bug2843TestCase::DoRun (void)
+Bug2843TestCase::DoRun ()
 {
   uint16_t channelWidth = 40; // at least 40 MHz expected here
 
@@ -1643,14 +1652,14 @@ class Bug2831TestCase : public TestCase
 {
 public:
   Bug2831TestCase ();
-  virtual ~Bug2831TestCase ();
-  void DoRun (void) override;
+  ~Bug2831TestCase () override;
+  void DoRun () override;
 
 private:
   /**
    * Function called to change the supported channel width at runtime
    */
-  void ChangeSupportedChannelWidth (void);
+  void ChangeSupportedChannelWidth ();
   /**
    * Callback triggered when a packet is received by the PHYs
    * \param context the context
@@ -1706,8 +1715,8 @@ Bug2831TestCase::RxCallback (std::string context, Ptr<const Packet> p, RxPowerWa
     {
       MgtBeaconHeader beacon;
       packet->RemoveHeader (beacon);
-      HtOperation htOperation = beacon.GetHtOperation ();
-      if (htOperation.GetStaChannelWidth () > 0)
+      const auto& htOperation = beacon.GetHtOperation ();
+      if (htOperation.has_value () && htOperation->GetStaChannelWidth () > 0)
         {
           m_countOperationalChannelWidth40++;
         }
@@ -1719,7 +1728,7 @@ Bug2831TestCase::RxCallback (std::string context, Ptr<const Packet> p, RxPowerWa
 }
 
 void
-Bug2831TestCase::DoRun (void)
+Bug2831TestCase::DoRun ()
 {
   Ptr<YansWifiChannel> channel = CreateObject<YansWifiChannel> ();
   ObjectFactory propDelay;
@@ -1731,9 +1740,30 @@ Bug2831TestCase::DoRun (void)
 
   Ptr<Node> apNode = CreateObject<Node> ();
   Ptr<WifiNetDevice> apDev = CreateObject<WifiNetDevice> ();
+  apNode->AddDevice (apDev);
   apDev->SetStandard (WIFI_STANDARD_80211ax);
   Ptr<HtConfiguration> apHtConfiguration = CreateObject<HtConfiguration> ();
   apDev->SetHtConfiguration (apHtConfiguration);
+  ObjectFactory manager;
+  manager.SetTypeId ("ns3::ConstantRateWifiManager");
+  apDev->SetRemoteStationManager (manager.Create<WifiRemoteStationManager> ());
+
+  auto apMobility = CreateObject<ConstantPositionMobilityModel> ();
+  apMobility->SetPosition (Vector (0.0, 0.0, 0.0));
+  apNode->AggregateObject (apMobility);
+
+  auto error = CreateObject<YansErrorRateModel> ();
+  m_apPhy = CreateObject<YansWifiPhy> ();
+  apDev->SetPhy (m_apPhy);
+  Ptr<InterferenceHelper> apInterferenceHelper = CreateObject<InterferenceHelper> ();
+  m_apPhy->SetInterferenceHelper (apInterferenceHelper);
+  m_apPhy->SetErrorRateModel (error);
+  m_apPhy->SetChannel (channel);
+  m_apPhy->SetMobility (apMobility);
+  m_apPhy->SetDevice (apDev);
+  m_apPhy->ConfigureStandard (WIFI_STANDARD_80211ax);
+  m_apPhy->SetOperatingChannel (WifiPhy::ChannelTuple {36, 20, (int)(WIFI_PHY_BAND_5GHZ), 0});
+
   ObjectFactory mac;
   mac.SetTypeId ("ns3::ApWifiMac");
   mac.Set ("EnableBeaconJitter", BooleanValue (false));
@@ -1741,7 +1771,9 @@ Bug2831TestCase::DoRun (void)
   Ptr<WifiMac> apMac = mac.Create<WifiMac> ();
   apMac->SetDevice (apDev);
   apMac->SetAddress (Mac48Address::Allocate ());
+  apDev->SetMac (apMac);
   apMac->ConfigureStandard (WIFI_STANDARD_80211ax);
+  apMac->SetMacQueueScheduler (CreateObject<FcfsWifiQueueScheduler> ());
   Ptr<FrameExchangeManager> fem = apMac->GetFrameExchangeManager ();
   Ptr<WifiProtectionManager> protectionManager = CreateObject<WifiDefaultProtectionManager> ();
   protectionManager->SetWifiMac (apMac);
@@ -1752,14 +1784,35 @@ Bug2831TestCase::DoRun (void)
 
   Ptr<Node> staNode = CreateObject<Node> ();
   Ptr<WifiNetDevice> staDev = CreateObject<WifiNetDevice> ();
+  staNode->AddDevice (staDev);
   staDev->SetStandard (WIFI_STANDARD_80211ax);
   Ptr<HtConfiguration> staHtConfiguration = CreateObject<HtConfiguration> ();
   staDev->SetHtConfiguration (staHtConfiguration);
+  staDev->SetRemoteStationManager (manager.Create<WifiRemoteStationManager> ());
+
+  Ptr<ConstantPositionMobilityModel> staMobility = CreateObject<ConstantPositionMobilityModel> ();
+  staMobility->SetPosition (Vector (1.0, 0.0, 0.0));
+  staNode->AggregateObject (staMobility);
+
+  m_staPhy = CreateObject<YansWifiPhy> ();
+  staDev->SetPhy (m_staPhy);
+  Ptr<InterferenceHelper> staInterferenceHelper = CreateObject<InterferenceHelper> ();
+  m_staPhy->SetInterferenceHelper (staInterferenceHelper);
+  m_staPhy->SetErrorRateModel (error);
+  m_staPhy->SetChannel (channel);
+  m_staPhy->SetMobility (staMobility);
+  m_staPhy->SetDevice (apDev);
+  m_staPhy->ConfigureStandard (WIFI_STANDARD_80211ax);
+  m_staPhy->SetOperatingChannel (WifiPhy::ChannelTuple {36, 20, (int)(WIFI_PHY_BAND_5GHZ), 0});
+
   mac.SetTypeId ("ns3::StaWifiMac");
-  Ptr<WifiMac> staMac = mac.Create<WifiMac> ();
+  auto staMac = mac.Create<WifiMac> ();
+  staDev->SetMac (staMac);
   staMac->SetDevice (staDev);
   staMac->SetAddress (Mac48Address::Allocate ());
   staMac->ConfigureStandard (WIFI_STANDARD_80211ax);
+  StaticCast<StaWifiMac> (staMac)->SetAssocManager (CreateObject<WifiDefaultAssocManager> ());
+  staMac->SetMacQueueScheduler (CreateObject<FcfsWifiQueueScheduler> ());
   fem = staMac->GetFrameExchangeManager ();
   protectionManager = CreateObject<WifiDefaultProtectionManager> ();
   protectionManager->SetWifiMac (staMac);
@@ -1767,48 +1820,6 @@ Bug2831TestCase::DoRun (void)
   ackManager = CreateObject<WifiDefaultAckManager> ();
   ackManager->SetWifiMac (staMac);
   fem->SetAckManager (ackManager);
-
-  Ptr<ConstantPositionMobilityModel> apMobility = CreateObject<ConstantPositionMobilityModel> ();
-  apMobility->SetPosition (Vector (0.0, 0.0, 0.0));
-  apNode->AggregateObject (apMobility);
-
-  m_apPhy = CreateObject<YansWifiPhy> ();
-  Ptr<InterferenceHelper> apInterferenceHelper = CreateObject<InterferenceHelper> ();
-  m_apPhy->SetInterferenceHelper (apInterferenceHelper);
-  Ptr<ErrorRateModel> apErrorModel = CreateObject<YansErrorRateModel> ();
-  m_apPhy->SetErrorRateModel (apErrorModel);
-  m_apPhy->SetChannel (channel);
-  m_apPhy->SetMobility (apMobility);
-  m_apPhy->SetDevice (apDev);
-  m_apPhy->ConfigureStandard (WIFI_STANDARD_80211ax);
-  m_apPhy->SetOperatingChannel (WifiPhy::ChannelTuple {36, 20, (int)(WIFI_PHY_BAND_5GHZ), 0});
-
-  Ptr<ConstantPositionMobilityModel> staMobility = CreateObject<ConstantPositionMobilityModel> ();
-  staMobility->SetPosition (Vector (1.0, 0.0, 0.0));
-  staNode->AggregateObject (staMobility);
-
-  m_staPhy = CreateObject<YansWifiPhy> ();
-  Ptr<InterferenceHelper> staInterferenceHelper = CreateObject<InterferenceHelper> ();
-  m_staPhy->SetInterferenceHelper (staInterferenceHelper);
-  Ptr<ErrorRateModel> staErrorModel = CreateObject<YansErrorRateModel> ();
-  m_staPhy->SetErrorRateModel (staErrorModel);
-  m_staPhy->SetChannel (channel);
-  m_staPhy->SetMobility (staMobility);
-  m_staPhy->SetDevice (apDev);
-  m_staPhy->ConfigureStandard (WIFI_STANDARD_80211ax);
-  m_staPhy->SetOperatingChannel (WifiPhy::ChannelTuple {36, 20, (int)(WIFI_PHY_BAND_5GHZ), 0});
-
-  apDev->SetMac (apMac);
-  apDev->SetPhy (m_apPhy);
-  ObjectFactory manager;
-  manager.SetTypeId ("ns3::ConstantRateWifiManager");
-  apDev->SetRemoteStationManager (manager.Create<WifiRemoteStationManager> ());
-  apNode->AddDevice (apDev);
-
-  staDev->SetMac (staMac);
-  staDev->SetPhy (m_staPhy);
-  staDev->SetRemoteStationManager (manager.Create<WifiRemoteStationManager> ());
-  staNode->AddDevice (staDev);
 
   Config::Connect ("/NodeList/*/DeviceList/*/$ns3::WifiNetDevice/Phy/$ns3::WifiPhy/PhyRxBegin", MakeCallback (&Bug2831TestCase::RxCallback, this));
 
@@ -1844,8 +1855,8 @@ class StaWifiMacScanningTestCase : public TestCase
 {
 public:
   StaWifiMacScanningTestCase ();
-  virtual ~StaWifiMacScanningTestCase ();
-  void DoRun (void) override;
+  ~StaWifiMacScanningTestCase () override;
+  void DoRun () override;
 
 private:
   /**
@@ -1928,7 +1939,8 @@ StaWifiMacScanningTestCase::Setup (bool nearestApBeaconGeneration, bool staActiv
   wifi.SetRemoteStationManager ("ns3::ConstantRateWifiManager");
 
   WifiMacHelper mac;
-  NetDeviceContainer apDevice, apDeviceNearest;
+  NetDeviceContainer apDevice;
+  NetDeviceContainer apDeviceNearest;
   mac.SetType ("ns3::ApWifiMac",
                "BeaconGeneration", BooleanValue (true));
   apDevice = wifi.Install (phy, mac, apNodes);
@@ -1966,7 +1978,7 @@ StaWifiMacScanningTestCase::Setup (bool nearestApBeaconGeneration, bool staActiv
 }
 
 void
-StaWifiMacScanningTestCase::DoRun (void)
+StaWifiMacScanningTestCase::DoRun ()
 {
   {
     NodeContainer nodes = Setup (false, false);
@@ -2036,8 +2048,8 @@ class Bug2470TestCase : public TestCase
 {
 public:
   Bug2470TestCase ();
-  virtual ~Bug2470TestCase ();
-  void DoRun (void) override;
+  ~Bug2470TestCase () override;
+  void DoRun () override;
 
 private:
   /**
@@ -2180,7 +2192,8 @@ Bug2470TestCase::RunSubtest (PointerValue apErrorModel, PointerValue staErrorMod
   RngSeedManager::SetRun (1);
   int64_t streamNumber = 200;
 
-  NodeContainer wifiApNode, wifiStaNode;
+  NodeContainer wifiApNode;
+  NodeContainer wifiStaNode;
   wifiApNode.Create (1);
   wifiStaNode.Create (1);
 
@@ -2235,7 +2248,7 @@ Bug2470TestCase::RunSubtest (PointerValue apErrorModel, PointerValue staErrorMod
 }
 
 void
-Bug2470TestCase::DoRun (void)
+Bug2470TestCase::DoRun ()
 {
   // Create ReceiveListErrorModel to corrupt ADDBA req packet. We use ReceiveListErrorModel
   // instead of ListErrorModel since packet UID is incremented between simulations. But
@@ -2324,8 +2337,8 @@ class Issue40TestCase : public TestCase
 {
 public:
   Issue40TestCase ();
-  virtual ~Issue40TestCase ();
-  void DoRun (void) override;
+  ~Issue40TestCase () override;
+  void DoRun () override;
 
 private:
   /**
@@ -2405,7 +2418,8 @@ Issue40TestCase::RunOne (bool useAmpdu)
   RngSeedManager::SetRun (1);
   int64_t streamNumber = 100;
 
-  NodeContainer wifiApNode, wifiStaNode;
+  NodeContainer wifiApNode;
+  NodeContainer wifiStaNode;
   wifiApNode.Create (1);
   wifiStaNode.Create (1);
 
@@ -2444,7 +2458,7 @@ Issue40TestCase::RunOne (bool useAmpdu)
 
   Config::Connect ("/NodeList/*/DeviceList/*/RemoteStationManager/MacTxFinalDataFailed", MakeCallback (&Issue40TestCase::TxFinalDataFailedCallback, this));
   Config::Connect ("/NodeList/*/DeviceList/*/$ns3::WifiNetDevice/Mac/$ns3::WifiMac/MacRx", MakeCallback (&Issue40TestCase::RxSuccessCallback, this));
-              
+
   Ptr<WaypointMobilityModel> staWaypointMobility = DynamicCast<WaypointMobilityModel>(wifiStaNode.Get(0)->GetObject<MobilityModel>());
   staWaypointMobility->AddWaypoint (Waypoint (Seconds(1.0), Vector (10.0, 0.0, 0.0)));
   staWaypointMobility->AddWaypoint (Waypoint (Seconds(1.5), Vector (50.0, 0.0, 0.0)));
@@ -2482,7 +2496,7 @@ Issue40TestCase::RunOne (bool useAmpdu)
 }
 
 void
-Issue40TestCase::DoRun (void)
+Issue40TestCase::DoRun ()
 {
   //Test without A-MPDU
   RunOne (false);
@@ -2508,8 +2522,8 @@ class Issue169TestCase : public TestCase
 {
 public:
   Issue169TestCase ();
-  virtual ~Issue169TestCase ();
-  void DoRun (void) override;
+  ~Issue169TestCase () override;
+  void DoRun () override;
 
 private:
   /**
@@ -2563,13 +2577,14 @@ Issue169TestCase::TxCallback (std::string context, WifiConstPsduMap psdus, WifiT
 }
 
 void
-Issue169TestCase::DoRun (void)
+Issue169TestCase::DoRun ()
 {
   RngSeedManager::SetSeed (1);
   RngSeedManager::SetRun (1);
   int64_t streamNumber = 100;
 
-  NodeContainer wifiApNode, wifiStaNode;
+  NodeContainer wifiApNode;
+  NodeContainer wifiStaNode;
   wifiApNode.Create (1);
   wifiStaNode.Create (1);
 
@@ -2638,8 +2653,8 @@ class IdealRateManagerChannelWidthTest : public TestCase
 {
 public:
   IdealRateManagerChannelWidthTest ();
-  virtual ~IdealRateManagerChannelWidthTest ();
-  void DoRun (void) override;
+  ~IdealRateManagerChannelWidthTest () override;
+  void DoRun () override;
 
 private:
   /**
@@ -2712,13 +2727,14 @@ IdealRateManagerChannelWidthTest::CheckLastSelectedMode (WifiMode expectedMode)
 }
 
 void
-IdealRateManagerChannelWidthTest::DoRun (void)
+IdealRateManagerChannelWidthTest::DoRun ()
 {
   RngSeedManager::SetSeed (1);
   RngSeedManager::SetRun (1);
   int64_t streamNumber = 100;
 
-  NodeContainer wifiApNode, wifiStaNode;
+  NodeContainer wifiApNode;
+  NodeContainer wifiStaNode;
   wifiApNode.Create (1);
   wifiStaNode.Create (1);
 
@@ -2792,8 +2808,8 @@ class IdealRateManagerMimoTest : public TestCase
 {
 public:
   IdealRateManagerMimoTest ();
-  virtual ~IdealRateManagerMimoTest ();
-  void DoRun (void) override;
+  ~IdealRateManagerMimoTest () override;
+  void DoRun () override;
 
 private:
   /**
@@ -2892,13 +2908,14 @@ IdealRateManagerMimoTest::CheckLastSelectedMode (WifiMode expectedMode)
 }
 
 void
-IdealRateManagerMimoTest::DoRun (void)
+IdealRateManagerMimoTest::DoRun ()
 {
   RngSeedManager::SetSeed (1);
   RngSeedManager::SetRun (1);
   int64_t streamNumber = 100;
 
-  NodeContainer wifiApNode, wifiStaNode;
+  NodeContainer wifiApNode;
+  NodeContainer wifiStaNode;
   wifiApNode.Create (1);
   wifiStaNode.Create (1);
 
@@ -3088,7 +3105,7 @@ private:
    * \returns true if data rates are the same, false otherwise
    */
   bool CheckDataRate (HeRu::RuType ruType, std::string mcs, uint8_t nss, uint16_t guardInterval, uint16_t expectedDataRate);
-  void DoRun (void) override;
+  void DoRun () override;
 };
 
 HeRuMcsDataRateTestCase::HeRuMcsDataRateTestCase ()
@@ -3118,7 +3135,7 @@ HeRuMcsDataRateTestCase::CheckDataRate (HeRu::RuType ruType, std::string mcs, ui
 }
 
 void
-HeRuMcsDataRateTestCase::DoRun (void)
+HeRuMcsDataRateTestCase::DoRun ()
 {
   bool retval = true;
 

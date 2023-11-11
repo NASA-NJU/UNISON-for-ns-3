@@ -18,7 +18,7 @@
 
 //
 // This example is designed to show the main features of an ns3::TimeProbe.
-// A test object is used to emit values through a trace source.  The 
+// A test object is used to emit values through a trace source.  The
 // example shows three ways to use a ns3::TimeProbe to hook the output
 // of this trace source (in addition to hooking the raw trace source).
 //
@@ -47,7 +47,7 @@ NS_LOG_COMPONENT_DEFINE ("TimeProbeExample");
 
 /**
  * This is our test object, an object that emits values according to
- * a Poisson arrival process.   It emits a traced Time value as a 
+ * a Poisson arrival process.   It emits a traced Time value as a
  * trace source; this takes the value of interarrival time
  */
 class Emitter : public Object
@@ -57,12 +57,12 @@ public:
    * Register this type.
    * \return The TypeId.
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
   Emitter ();
 private:
-  void DoInitialize (void);
+  void DoInitialize () override;
   /// Generate data.
-  void Emit (void);
+  void Emit ();
 
   TracedValue<Time> m_interval;  //!< Interarrival time between events.
   Time m_last;                   //!< Current interarrival time.
@@ -72,7 +72,7 @@ private:
 NS_OBJECT_ENSURE_REGISTERED (Emitter);
 
 TypeId
-Emitter::GetTypeId (void)
+Emitter::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::Emitter")
     .SetParent<Object> ()
@@ -86,7 +86,7 @@ Emitter::GetTypeId (void)
   return tid;
 }
 
-Emitter::Emitter (void)
+Emitter::Emitter ()
   : m_interval (Seconds (0)),
     m_last (Seconds (0))
 {
@@ -94,13 +94,13 @@ Emitter::Emitter (void)
 }
 
 void
-Emitter::DoInitialize (void)
+Emitter::DoInitialize ()
 {
   Simulator::Schedule (Seconds (m_var->GetValue ()), &Emitter::Emit, this);
 }
 
 void
-Emitter::Emit (void)
+Emitter::Emit ()
 {
   NS_LOG_DEBUG ("Emitting at " << Simulator::Now ().As (Time::S));
   m_interval = Simulator::Now () - m_last;

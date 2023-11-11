@@ -18,7 +18,7 @@
  * Author: Yufei Cheng   <yfcheng@ittc.ku.edu>
  *
  * James P.G. Sterbenz <jpgs@ittc.ku.edu>, director
- * ResiliNets Research Group  http://wiki.ittc.ku.edu/resilinets
+ * ResiliNets Research Group  https://resilinets.org/
  * Information and Telecommunication Technology Center (ITTC)
  * and Department of Electrical Engineering and Computer Science
  * The University of Kansas Lawrence, KS USA.
@@ -62,8 +62,8 @@ public:
    * \param exp expiration time
    * \param r Route
    */
-  DsrNetworkQueueEntry (Ptr<const Packet> pa = 0, Ipv4Address s = Ipv4Address (), Ipv4Address n = Ipv4Address (),
-                        Time exp = Simulator::Now (), Ptr<Ipv4Route> r = 0)
+  DsrNetworkQueueEntry (Ptr<const Packet> pa = nullptr, Ipv4Address s = Ipv4Address (), Ipv4Address n = Ipv4Address (),
+                        Time exp = Simulator::Now (), Ptr<Ipv4Route> r = nullptr)
     : m_packet (pa),
       m_srcAddr (s),
       m_nextHopAddr (n),
@@ -151,7 +151,7 @@ public:
    * Get inserted time stamp function
    * \returns the inserted time stamp
    */
-  Time GetInsertedTimeStamp (void) const
+  Time GetInsertedTimeStamp () const
   {
     return tstamp;
   }
@@ -181,7 +181,7 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   DsrNetworkQueue ();
   /**
@@ -192,7 +192,7 @@ public:
    * \param maxDelay Maximum entry lifetime in the queue
    */
   DsrNetworkQueue (uint32_t maxLen, Time maxDelay);
-  ~DsrNetworkQueue ();
+  ~DsrNetworkQueue () override;
 
   /**
    * Find the packet entry with a given next hop
@@ -248,17 +248,17 @@ public:
    *
    * \return the maximum queue size
    */
-  uint32_t GetMaxNetworkSize (void) const;
+  uint32_t GetMaxNetworkSize () const;
   /**
    * Return the maximum entry lifetime for this queue
    *
    * \return the maximum entry lifetime for this queue
    */
-  Time GetMaxNetworkDelay (void) const;
+  Time GetMaxNetworkDelay () const;
   /**
    * Clear the queue
    */
-  void Flush (void);
+  void Flush ();
 
   /**
    * Return the current queue entry
@@ -274,7 +274,7 @@ private:
   /**
    * Clean the queue by removing entries that exceeded lifetime.
    */
-  void Cleanup (void);
+  void Cleanup ();
   std::vector<DsrNetworkQueueEntry> m_dsrNetworkQueue; //!< Queue (vector) of entries
   uint32_t m_size; //!< Current queue size
   uint32_t m_maxSize; //!< Maximum queue size

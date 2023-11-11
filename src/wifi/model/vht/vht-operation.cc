@@ -26,8 +26,7 @@ VhtOperation::VhtOperation ()
   : m_channelWidth (0),
     m_channelCenterFrequencySegment0 (0),
     m_channelCenterFrequencySegment1 (0),
-    m_basicVhtMcsAndNssSet (0),
-    m_vhtSupported (0)
+    m_basicVhtMcsAndNssSet (0)
 {
 }
 
@@ -37,17 +36,9 @@ VhtOperation::ElementId () const
   return IE_VHT_OPERATION;
 }
 
-void
-VhtOperation::SetVhtSupported (uint8_t vhtSupported)
-{
-  m_vhtSupported = vhtSupported;
-}
-
-uint8_t
+uint16_t
 VhtOperation::GetInformationFieldSize () const
 {
-  //we should not be here if VHT is not supported
-  NS_ASSERT (m_vhtSupported > 0);
   return 5;
 }
 
@@ -90,64 +81,41 @@ VhtOperation::SetBasicVhtMcsAndNssSet (uint16_t basicVhtMcsAndNssSet)
 }
 
 uint8_t
-VhtOperation::GetChannelWidth (void) const
+VhtOperation::GetChannelWidth () const
 {
   return m_channelWidth;
 }
 
 uint8_t
-VhtOperation::GetChannelCenterFrequencySegment0 (void) const
+VhtOperation::GetChannelCenterFrequencySegment0 () const
 {
   return m_channelCenterFrequencySegment0;
 }
 
 uint8_t
-VhtOperation::GetChannelCenterFrequencySegment1 (void) const
+VhtOperation::GetChannelCenterFrequencySegment1 () const
 {
   return m_channelCenterFrequencySegment1;
 }
 
 uint16_t
-VhtOperation::GetBasicVhtMcsAndNssSet (void) const
+VhtOperation::GetBasicVhtMcsAndNssSet () const
 {
   return m_basicVhtMcsAndNssSet;
-}
-
-Buffer::Iterator
-VhtOperation::Serialize (Buffer::Iterator i) const
-{
-  if (m_vhtSupported < 1)
-    {
-      return i;
-    }
-  return WifiInformationElement::Serialize (i);
-}
-
-uint16_t
-VhtOperation::GetSerializedSize () const
-{
-  if (m_vhtSupported < 1)
-    {
-      return 0;
-    }
-  return WifiInformationElement::GetSerializedSize ();
 }
 
 void
 VhtOperation::SerializeInformationField (Buffer::Iterator start) const
 {
-  if (m_vhtSupported == 1)
-    {
-      //write the corresponding value for each bit
-      start.WriteU8 (GetChannelWidth ());
-      start.WriteU8 (GetChannelCenterFrequencySegment0 ());
-      start.WriteU8 (GetChannelCenterFrequencySegment1 ());
-      start.WriteU16 (GetBasicVhtMcsAndNssSet ());
-    }
+  //write the corresponding value for each bit
+  start.WriteU8 (GetChannelWidth ());
+  start.WriteU8 (GetChannelCenterFrequencySegment0 ());
+  start.WriteU8 (GetChannelCenterFrequencySegment1 ());
+  start.WriteU16 (GetBasicVhtMcsAndNssSet ());
 }
 
-uint8_t
-VhtOperation::DeserializeInformationField (Buffer::Iterator start, uint8_t length)
+uint16_t
+VhtOperation::DeserializeInformationField (Buffer::Iterator start, uint16_t length)
 {
   Buffer::Iterator i = start;
   uint8_t channelWidth = i.ReadU8 ();

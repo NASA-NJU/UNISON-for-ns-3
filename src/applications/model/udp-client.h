@@ -47,11 +47,11 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   UdpClient ();
 
-  virtual ~UdpClient ();
+  ~UdpClient () override;
 
   /**
    * \brief set the remote address and port
@@ -71,17 +71,17 @@ public:
   uint64_t GetTotalTx () const;
 
 protected:
-  virtual void DoDispose (void);
+  void DoDispose () override;
 
 private:
 
-  virtual void StartApplication (void);
-  virtual void StopApplication (void);
+  void StartApplication () override;
+  void StopApplication () override;
 
   /**
    * \brief Send a packet
    */
-  void Send (void);
+  void Send ();
 
   uint32_t m_count; //!< Maximum number of packets the application will send
   Time m_interval; //!< Packet inter-send time

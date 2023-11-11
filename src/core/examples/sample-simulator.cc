@@ -41,7 +41,7 @@ class MyModel
 {
 public:
   /** Start model execution by scheduling a HandleEvent. */
-  void Start (void);
+  void Start ();
 
 private:
   /**
@@ -53,7 +53,7 @@ private:
 };
 
 void
-MyModel::Start (void)
+MyModel::Start ()
 {
   Simulator::Schedule (Seconds (10.0),
                        &MyModel::HandleEvent,
@@ -72,7 +72,7 @@ MyModel::HandleEvent (double value)
  *
  * \param [in] model The MyModel object to start.
  */
-static void
+void
 ExampleFunction (MyModel *model)
 {
   std::cout << "ExampleFunction received event at "
@@ -83,16 +83,16 @@ ExampleFunction (MyModel *model)
 /**
  * Simple function event handler; this function is called randomly.
  */
-static void
-RandomFunction (void)
+void
+RandomFunction ()
 {
   std::cout << "RandomFunction received event at "
             << Simulator::Now ().GetSeconds () << "s" << std::endl;
 }
 
 /** Simple function event handler; the corresponding event is cancelled. */
-static void
-CancelledEvent (void)
+void
+CancelledEvent ()
 {
   std::cout << "I should never be called... " << std::endl;
 }
@@ -120,7 +120,7 @@ int main (int argc, char *argv[])
   Simulator::Schedule (Seconds (25.0),
     [] ()
     {
-      std::cout << "Code within a lambda expression at time " 
+      std::cout << "Code within a lambda expression at time "
                 << Simulator::Now ().As (Time::S)
                 << std::endl;
     });

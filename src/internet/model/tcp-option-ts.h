@@ -36,32 +36,32 @@ class TcpOptionTS : public TcpOption
 {
 public:
   TcpOptionTS ();
-  virtual ~TcpOptionTS ();
+  ~TcpOptionTS () override;
 
   /**
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
-  virtual TypeId GetInstanceTypeId (void) const;
+  static TypeId GetTypeId ();
+  TypeId GetInstanceTypeId () const override;
 
-  virtual void Print (std::ostream &os) const;
-  virtual void Serialize (Buffer::Iterator start) const;
-  virtual uint32_t Deserialize (Buffer::Iterator start);
+  void Print (std::ostream &os) const override;
+  void Serialize (Buffer::Iterator start) const override;
+  uint32_t Deserialize (Buffer::Iterator start) override;
 
-  virtual uint8_t GetKind (void) const;
-  virtual uint32_t GetSerializedSize (void) const;
+  uint8_t GetKind () const override;
+  uint32_t GetSerializedSize () const override;
 
   /**
    * \brief Get the timestamp stored in the Option
    * \return the timestamp
    */
-  uint32_t GetTimestamp (void) const;
+  uint32_t GetTimestamp () const;
   /**
    * \brief Get the timestamp echo stored in the Option
    * \return the timestamp echo
    */
-  uint32_t GetEcho (void) const;
+  uint32_t GetEcho () const;
   /**
    * \brief Set the timestamp stored in the Option
    * \param ts the timestamp

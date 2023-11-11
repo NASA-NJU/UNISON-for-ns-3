@@ -44,7 +44,7 @@ NS_LOG_COMPONENT_DEFINE ("Rip");
 NS_OBJECT_ENSURE_REGISTERED (Rip);
 
 Rip::Rip ()
-  : m_ipv4 (0), m_splitHorizonStrategy (Rip::POISON_REVERSE), m_initialized (false)
+  : m_ipv4 (nullptr), m_splitHorizonStrategy (Rip::POISON_REVERSE), m_initialized (false)
 {
   m_rng = CreateObject<UniformRandomVariable> ();
 }
@@ -54,7 +54,7 @@ Rip::~Rip ()
 }
 
 TypeId
-Rip::GetTypeId (void)
+Rip::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::Rip")
     .SetParent<Ipv4RoutingProtocol> ()
@@ -191,7 +191,7 @@ Ptr<Ipv4Route> Rip::RouteOutput (Ptr<Packet> p, const Ipv4Header &header, Ptr<Ne
   NS_LOG_FUNCTION (this << header << oif);
 
   Ipv4Address destination = header.GetDestination ();
-  Ptr<Ipv4Route> rtentry = 0;
+  Ptr<Ipv4Route> rtentry = nullptr;
 
   if (destination.IsMulticast ())
     {
@@ -222,7 +222,7 @@ bool Rip::RouteInput (Ptr<const Packet> p, const Ipv4Header &header, Ptr<const N
 {
   NS_LOG_FUNCTION (this << p << header << header.GetSource () << header.GetDestination () << idev);
 
-  NS_ASSERT (m_ipv4 != 0);
+  NS_ASSERT (m_ipv4);
   // Check if input device supports IP
   NS_ASSERT (m_ipv4->GetInterfaceForDevice (idev) >= 0);
   uint32_t iif = m_ipv4->GetInterfaceForDevice (idev);
@@ -277,7 +277,7 @@ bool Rip::RouteInput (Ptr<const Packet> p, const Ipv4Header &header, Ptr<const N
   NS_LOG_LOGIC ("Unicast destination");
   Ptr<Ipv4Route> rtentry = Lookup (header.GetDestination (), false);
 
-  if (rtentry != 0)
+  if (rtentry)
     {
       NS_LOG_LOGIC ("Found unicast destination - calling unicast callback");
       ucb (rtentry, p, header);  // unicast forwarding callback
@@ -470,7 +470,7 @@ void Rip::SetIpv4 (Ptr<Ipv4> ipv4)
 {
   NS_LOG_FUNCTION (this << ipv4);
 
-  NS_ASSERT (m_ipv4 == 0 && ipv4 != 0);
+  NS_ASSERT (!m_ipv4 && ipv4);
   uint32_t i = 0;
   m_ipv4 = ipv4;
 
@@ -513,7 +513,10 @@ void Rip::PrintRoutingTable (Ptr<OutputStreamWrapper> stream, Time::Unit unit) c
 
           if (status == RipRoutingTableEntry::RIP_VALID)
             {
-              std::ostringstream dest, gw, mask, flags;
+              std::ostringstream dest;
+              std::ostringstream gw;
+              std::ostringstream mask;
+              std::ostringstream flags;
               dest << route->GetDest ();
               *os << std::setw (16) << dest.str ();
               gw << route->GetGateway ();
@@ -574,9 +577,9 @@ void Rip::DoDispose ()
   m_unicastSocketList.clear ();
 
   m_multicastRecvSocket->Close ();
-  m_multicastRecvSocket = 0;
+  m_multicastRecvSocket = nullptr;
 
-  m_ipv4 = 0;
+  m_ipv4 = nullptr;
 
   Ipv4RoutingProtocol::DoDispose ();
 }
@@ -585,7 +588,7 @@ Ptr<Ipv4Route> Rip::Lookup (Ipv4Address dst, bool setSource, Ptr<NetDevice> inte
 {
   NS_LOG_FUNCTION (this << dst << interface);
 
-  Ptr<Ipv4Route> rtentry = 0;
+  Ptr<Ipv4Route> rtentry = nullptr;
   uint16_t longestMask = 0;
 
   /* when sending on local multicast, there have to be interface specified */
@@ -667,7 +670,7 @@ void Rip::AddNetworkRouteTo (Ipv4Address network, Ipv4Mask networkPrefix, Ipv4Ad
   route->SetRouteStatus (RipRoutingTableEntry::RIP_VALID);
   route->SetRouteChanged (true);
 
-  m_routes.push_back (std::make_pair (route, EventId ()));
+  m_routes.emplace_back (route, EventId ());
 }
 
 void Rip::AddNetworkRouteTo (Ipv4Address network, Ipv4Mask networkPrefix, uint32_t interface)
@@ -679,7 +682,7 @@ void Rip::AddNetworkRouteTo (Ipv4Address network, Ipv4Mask networkPrefix, uint32
   route->SetRouteStatus (RipRoutingTableEntry::RIP_VALID);
   route->SetRouteChanged (true);
 
-  m_routes.push_back (std::make_pair (route, EventId ()));
+  m_routes.emplace_back (route, EventId ());
 }
 
 void Rip::InvalidateRoute (RipRoutingTableEntry *route)
@@ -783,7 +786,6 @@ void Rip::Receive (Ptr<Socket> socket)
     {
       NS_LOG_LOGIC ("Ignoring message with unknown command: " << int (hdr.GetCommand ()));
     }
-  return;
 }
 
 void Rip::HandleRequests (RipHeader requestHdr, Ipv4Address senderAddress, uint16_t senderPort, uint32_t incomingInterface, uint8_t hopLimit)
@@ -1075,7 +1077,7 @@ void Rip::HandleResponses (RipHeader hdr, Ipv4Address senderAddress, uint32_t in
           route->SetRouteMetric (rteMetric);
           route->SetRouteStatus (RipRoutingTableEntry::RIP_VALID);
           route->SetRouteChanged (true);
-          m_routes.push_front (std::make_pair (route, EventId ()));
+          m_routes.emplace_front (route, EventId ());
           EventId invalidateEvent = Simulator::Schedule (m_timeoutDelay, &Rip::InvalidateRoute, this, route);
           (m_routes.begin ())->second = invalidateEvent;
           changed = true;
@@ -1362,7 +1364,7 @@ void RipRoutingTableEntry::SetRouteStatus (Status_e status)
     }
 }
 
-RipRoutingTableEntry::Status_e RipRoutingTableEntry::GetRouteStatus (void) const
+RipRoutingTableEntry::Status_e RipRoutingTableEntry::GetRouteStatus () const
 {
   return m_status;
 }
@@ -1372,7 +1374,7 @@ void RipRoutingTableEntry::SetRouteChanged (bool changed)
   m_changed = changed;
 }
 
-bool RipRoutingTableEntry::IsRouteChanged (void) const
+bool RipRoutingTableEntry::IsRouteChanged () const
 {
   return m_changed;
 }

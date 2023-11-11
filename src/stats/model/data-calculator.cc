@@ -45,7 +45,7 @@ DataCalculator::~DataCalculator()
 
 /* static */
 TypeId
-DataCalculator::GetTypeId (void)
+DataCalculator::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::DataCalculator")
     .SetParent<Object> ()
@@ -54,9 +54,9 @@ DataCalculator::GetTypeId (void)
     ;
   return tid;
 }
-  
+
 void
-DataCalculator::DoDispose (void)
+DataCalculator::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
 

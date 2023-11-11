@@ -79,7 +79,7 @@ using namespace ns3;
  * With RFC 6621 de-duplication enabled, one 1 packet
  * is received  while some number of duplicate relayed
  * packets are dropped by RFC 6621 at each node.
- * 
+ *
  * When RFC6621 is disabled, the original packet has TTL = 4.
  * Multiple packets are received at each node and several packets
  * are dropped due to TTL expiry at each node.
@@ -148,7 +148,7 @@ class Ipv4DeduplicationTest : public TestCase
   std::map<std::string, uint32_t> m_dropCountMap; //!< map of received packets (node name, counter)
 
 public:
-  virtual void DoRun (void);
+  void DoRun () override;
 
   /**
    * Constructor
@@ -176,7 +176,7 @@ public:
                 Ptr<Ipv4> ipv4, uint32_t interface);
 };
 
-const Time 
+const Time
 Ipv4DeduplicationTest::DELAY = MilliSeconds (1);
 
 Ipv4DeduplicationTest::Ipv4DeduplicationTest (bool enable, Time expire)
@@ -184,7 +184,7 @@ Ipv4DeduplicationTest::Ipv4DeduplicationTest (bool enable, Time expire)
   , m_mode (ENABLED)
   , m_expire (expire)
 {
-  if (!enable) 
+  if (!enable)
     {
       m_mode = DISABLED;
     }
@@ -279,7 +279,7 @@ Ipv4DeduplicationTest::MakeName (bool enabled, Time expire)
 }
 
 void
-Ipv4DeduplicationTest::DoRun (void)
+Ipv4DeduplicationTest::DoRun ()
 {
   // multicast target
   const std::string targetAddr = "239.192.100.1";
@@ -329,13 +329,13 @@ Ipv4DeduplicationTest::DoRun (void)
     {
       // route for forwarding
       staticRouting.AddMulticastRoute (*iter, Ipv4Address::GetAny (), targetAddr.c_str (), *diter, NetDeviceContainer (*diter));
-      
+
       // route for host
       // Use host routing entry according to note in Ipv4StaticRouting::RouteOutput:
       //// Note:  Multicast routes for outbound packets are stored in the
       //// normal unicast table.  An implication of this is that it is not
       //// possible to source multicast datagrams on multiple interfaces.
-      //// This is a well-known property of sockets implementation on 
+      //// This is a well-known property of sockets implementation on
       //// many Unix variants.
       //// So, we just log it and fall through to LookupStatic ()
       auto ipv4 = (*iter)->GetObject <Ipv4> ();
@@ -414,7 +414,7 @@ Ipv4DeduplicationTest::DoRun (void)
 // computed by forming the connectivity matrix C with 1's in
 // coordinates (row, column) where row and column nodes are connected.
 // Reception of packets with TTL n are v_(n-1) = v_n * C where
-// v_TTL = [1 0 0 0 0] (corresponding to nodes [A B C D E]).  
+// v_TTL = [1 0 0 0 0] (corresponding to nodes [A B C D E]).
 // The number of drops for each node is v_0 and the number of received
 // packets at each node is sum (v_TTL-1, ..., v_0).
 void
@@ -510,7 +510,7 @@ private:
 Ipv4DeduplicationTestSuite::Ipv4DeduplicationTestSuite ()
   : TestSuite ("ipv4-deduplication", UNIT)
 {
-  
+
   AddTestCase (new Ipv4DeduplicationTest (true), TestCase::QUICK);
   AddTestCase (new Ipv4DeduplicationTest (false), TestCase::QUICK);
   // degenerate case is enabled RFC but with too short an expiry
@@ -533,23 +533,23 @@ static Ipv4DeduplicationTestSuite g_ipv4DeduplicationTestSuite; //!< Static vari
  * every receiver.  The test outputs the number of
  * events that have been processed during the course
  * of the simulation.  Test runtime is also a metric.
- * 
- * The de-duplication cache entry expiration algorithm 
+ *
+ * The de-duplication cache entry expiration algorithm
  * has evolved from an event-per-expiry (EPE) algorithm to
  * a periodic event, batch purge (PBP) algorithm.  The
  * current metrics are taken from tests on the development
  * box.  Periodic batch purge period defaults to 1s.
- * 
+ *
  *        Events        Runtime
  *  EVE   656140          29s
  *  PBP   337420          29s
- * 
+ *
  */
 class Ipv4DeduplicationPerformanceTest : public TestCase
 {
   public:
-    Ipv4DeduplicationPerformanceTest (void);
-    virtual void DoRun (void);
+    Ipv4DeduplicationPerformanceTest ();
+    void DoRun () override;
   private:
     std::vector <Ptr<Socket> > m_sockets; //!< sockets in use
     std::vector <uint8_t> m_txPackets;  //!< transmitted packets for each socket
@@ -571,7 +571,7 @@ Ipv4DeduplicationPerformanceTest::Ipv4DeduplicationPerformanceTest ()
 }
 
 void
-Ipv4DeduplicationPerformanceTest::DoRun (void)
+Ipv4DeduplicationPerformanceTest::DoRun ()
 {
   // multicast target
   const std::string targetAddr = "239.192.100.1";
@@ -605,13 +605,13 @@ Ipv4DeduplicationPerformanceTest::DoRun (void)
     {
       // route for forwarding
       staticRouting.AddMulticastRoute (*iter, Ipv4Address::GetAny (), targetAddr.c_str (), *diter, NetDeviceContainer (*diter));
-      
+
       // route for host
       // Use host routing entry according to note in Ipv4StaticRouting::RouteOutput:
       //// Note:  Multicast routes for outbound packets are stored in the
       //// normal unicast table.  An implication of this is that it is not
       //// possible to source multicast datagrams on multiple interfaces.
-      //// This is a well-known property of sockets implementation on 
+      //// This is a well-known property of sockets implementation on
       //// many Unix variants.
       //// So, we just log it and fall through to LookupStatic ()
       auto ipv4 = (*iter)->GetObject <Ipv4> ();
@@ -621,7 +621,7 @@ Ipv4DeduplicationPerformanceTest::DoRun (void)
 
       ++diter;
     }
-  
+
 
   // Create the UDP sockets
   Ptr<UniformRandomVariable> jitter = CreateObjectWithAttributes <UniformRandomVariable> ("Max", DoubleValue (4));
@@ -633,7 +633,7 @@ Ipv4DeduplicationPerformanceTest::DoRun (void)
       m_txPackets.push_back (0);
     }
 
-  for (uint8_t i = 0; i<nodes.GetN (); i++)
+  for (uint32_t i = 0; i<nodes.GetN (); i++)
     {
       Simulator::ScheduleWithContext (m_sockets[i]->GetNode ()->GetId (),
                                       Seconds (4+jitter->GetValue ()),

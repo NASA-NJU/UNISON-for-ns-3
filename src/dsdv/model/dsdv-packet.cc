@@ -18,7 +18,7 @@
  * Author: Hemanth Narra <hemanth@ittc.ku.com>
  *
  * James P.G. Sterbenz <jpgs@ittc.ku.edu>, director
- * ResiliNets Research Group  http://wiki.ittc.ku.edu/resilinets
+ * ResiliNets Research Group  https://resilinets.org/
  * Information and Telecommunication Technology Center (ITTC)
  * and Department of Electrical Engineering and Computer Science
  * The University of Kansas Lawrence, KS USA.
@@ -49,7 +49,7 @@ DsdvHeader::~DsdvHeader ()
 }
 
 TypeId
-DsdvHeader::GetTypeId (void)
+DsdvHeader::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::dsdv::DsdvHeader")
     .SetParent<Header> ()

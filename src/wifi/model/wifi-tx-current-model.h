@@ -38,10 +38,10 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   WifiTxCurrentModel ();
-  virtual ~WifiTxCurrentModel ();
+  ~WifiTxCurrentModel () override;
 
   /**
    * \param txPowerDbm the nominal TX power in dBm
@@ -88,12 +88,12 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   LinearWifiTxCurrentModel ();
-  virtual ~LinearWifiTxCurrentModel ();
+  ~LinearWifiTxCurrentModel () override;
 
-  double CalcTxCurrent (double txPowerDbm) const;
+  double CalcTxCurrent (double txPowerDbm) const override;
 
 
 private:

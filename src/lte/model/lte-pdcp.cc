@@ -42,7 +42,7 @@ public:
   LtePdcpSpecificLteRlcSapUser (LtePdcp* pdcp);
 
   // Interface provided to lower RLC entity (implemented from LteRlcSapUser)
-  virtual void ReceivePdcpPdu (Ptr<Packet> p);
+  void ReceivePdcpPdu (Ptr<Packet> p) override;
 
 private:
   LtePdcpSpecificLteRlcSapUser ();
@@ -69,8 +69,8 @@ LtePdcpSpecificLteRlcSapUser::ReceivePdcpPdu (Ptr<Packet> p)
 NS_OBJECT_ENSURE_REGISTERED (LtePdcp);
 
 LtePdcp::LtePdcp ()
-  : m_pdcpSapUser (0),
-    m_rlcSapProvider (0),
+  : m_pdcpSapUser (nullptr),
+    m_rlcSapProvider (nullptr),
     m_rnti (0),
     m_lcid (0),
     m_txSequenceNumber (0),
@@ -87,7 +87,7 @@ LtePdcp::~LtePdcp ()
 }
 
 TypeId
-LtePdcp::GetTypeId (void)
+LtePdcp::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::LtePdcp")
     .SetParent<Object> ()
@@ -155,7 +155,7 @@ LtePdcp::GetLteRlcSapUser ()
   return m_rlcSapUser;
 }
 
-LtePdcp::Status 
+LtePdcp::Status
 LtePdcp::GetStatus ()
 {
   Status s;
@@ -164,7 +164,7 @@ LtePdcp::GetStatus ()
   return s;
 }
 
-void 
+void
 LtePdcp::SetStatus (Status s)
 {
   m_txSequenceNumber = s.txSn;

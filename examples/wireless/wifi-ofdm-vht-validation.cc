@@ -39,17 +39,18 @@ int main (int argc, char *argv[])
   std::ofstream yansfile ("yans-frame-success-rate-ac.plt");
   std::ofstream nistfile ("nist-frame-success-rate-ac.plt");
   std::ofstream tablefile ("table-frame-success-rate-ac.plt");
-  std::vector <std::string> modes;
 
-  modes.push_back ("VhtMcs0");
-  modes.push_back ("VhtMcs1");
-  modes.push_back ("VhtMcs2");
-  modes.push_back ("VhtMcs3");
-  modes.push_back ("VhtMcs4");
-  modes.push_back ("VhtMcs5");
-  modes.push_back ("VhtMcs6");
-  modes.push_back ("VhtMcs7");
-  modes.push_back ("VhtMcs8");
+  const std::vector<std::string> modes {
+    "VhtMcs0",
+    "VhtMcs1",
+    "VhtMcs2",
+    "VhtMcs3",
+    "VhtMcs4",
+    "VhtMcs5",
+    "VhtMcs6",
+    "VhtMcs7",
+    "VhtMcs8",
+  };
 
   CommandLine cmd (__FILE__);
   cmd.AddValue ("FrameSize", "The frame size in bytes", FrameSize);
@@ -156,4 +157,6 @@ set style increment user");
 
   tableplot.GenerateOutput (tablefile);
   tablefile.close ();
+
+  return 0;
 }

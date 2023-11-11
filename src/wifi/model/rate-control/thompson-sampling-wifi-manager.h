@@ -22,7 +22,7 @@
 #define THOMPSON_SAMPLING_WIFI_MANAGER_H
 
 #include "ns3/random-variable-stream.h"
-
+#include "ns3/traced-value.h"
 #include "ns3/wifi-remote-station-manager.h"
 
 namespace ns3 {
@@ -43,9 +43,9 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
   ThompsonSamplingWifiManager ();
-  virtual ~ThompsonSamplingWifiManager ();
+  ~ThompsonSamplingWifiManager () override;
 
   int64_t AssignStreams (int64_t stream) override;
 
@@ -65,7 +65,7 @@ private:
                               double rxSnr, double dataSnr, uint16_t dataChannelWidth, uint8_t dataNss) override;
   void DoReportFinalRtsFailed (WifiRemoteStation *station) override;
   void DoReportFinalDataFailed (WifiRemoteStation *station) override;
-  WifiTxVector DoGetDataTxVector (WifiRemoteStation *station) override;
+  WifiTxVector DoGetDataTxVector (WifiRemoteStation *station, uint16_t allowedWidth) override;
   WifiTxVector DoGetRtsTxVector (WifiRemoteStation *station) override;
 
   /**

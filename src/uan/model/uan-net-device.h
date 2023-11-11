@@ -56,23 +56,23 @@ public:
    * Register this type.
    * \return The TypeId.
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   /** Default constructor */
   UanNetDevice ();
   /** Dummy destructor, DoDispose. */
-  virtual ~UanNetDevice ();
+  ~UanNetDevice () override;
 
   /**
    * Set the MAC layer for this device.
-   * 
+   *
    * \param mac The MAC layer.
    */
   void SetMac (Ptr<UanMac> mac);
 
   /**
    * Set the Phy layer for this device.
-   *   
+   *
    * \param phy The PHY layer.
    */
   void SetPhy (Ptr<UanPhy> phy);
@@ -89,21 +89,21 @@ public:
    *
    * \return The MAC.
    */
-  Ptr<UanMac> GetMac (void) const;
+  Ptr<UanMac> GetMac () const;
 
   /**
    * Get the Phy used by this device.
    *
    * \return The Phy.
    */
-  Ptr<UanPhy> GetPhy (void) const;
+  Ptr<UanPhy> GetPhy () const;
 
   /**
    * Get the transducer associated with this device.
    *
    * \return The transducer.
    */
-  Ptr<UanTransducer> GetTransducer (void) const;
+  Ptr<UanTransducer> GetTransducer () const;
   /**
    * Set the transdcuer used by this device.
    *
@@ -112,7 +112,7 @@ public:
   void SetTransducer (Ptr<UanTransducer> trans);
 
   /** Clear all pointer references. */
-  void Clear (void);
+  void Clear ();
 
   /**
    * Set the Phy SLEEP mode.
@@ -122,30 +122,30 @@ public:
   void SetSleepMode (bool sleep);
 
   // Inherited methods
-  virtual void SetIfIndex (const uint32_t index);
-  virtual uint32_t GetIfIndex (void) const;
-  virtual Ptr<Channel> GetChannel (void) const;
-  virtual Address GetAddress (void) const;
-  virtual bool SetMtu (const uint16_t mtu);
-  virtual uint16_t GetMtu (void) const;
-  virtual bool IsLinkUp (void) const;
-  virtual bool IsBroadcast (void) const;
-  virtual Address GetBroadcast (void) const;
-  virtual bool IsMulticast (void) const;
-  virtual Address GetMulticast (Ipv4Address multicastGroup) const;
-  virtual Address GetMulticast (Ipv6Address addr) const;
-  virtual bool IsBridge (void) const;
-  virtual bool IsPointToPoint (void) const;
-  virtual bool Send (Ptr<Packet> packet, const Address& dest, uint16_t protocolNumber);
-  virtual bool SendFrom (Ptr<Packet> packet, const Address& source, const Address& dest, uint16_t protocolNumber);
-  virtual Ptr<Node> GetNode (void) const;
-  virtual void SetNode (Ptr<Node> node);
-  virtual bool NeedsArp (void) const;
-  virtual void SetReceiveCallback (NetDevice::ReceiveCallback cb);
-  virtual void SetPromiscReceiveCallback (PromiscReceiveCallback cb);
-  virtual bool SupportsSendFrom (void) const;
-  virtual void AddLinkChangeCallback (Callback<void> callback);
-  virtual void SetAddress (Address address);
+  void SetIfIndex (const uint32_t index) override;
+  uint32_t GetIfIndex () const override;
+  Ptr<Channel> GetChannel () const override;
+  Address GetAddress () const override;
+  bool SetMtu (const uint16_t mtu) override;
+  uint16_t GetMtu () const override;
+  bool IsLinkUp () const override;
+  bool IsBroadcast () const override;
+  Address GetBroadcast () const override;
+  bool IsMulticast () const override;
+  Address GetMulticast (Ipv4Address multicastGroup) const override;
+  Address GetMulticast (Ipv6Address addr) const override;
+  bool IsBridge () const override;
+  bool IsPointToPoint () const override;
+  bool Send (Ptr<Packet> packet, const Address& dest, uint16_t protocolNumber) override;
+  bool SendFrom (Ptr<Packet> packet, const Address& source, const Address& dest, uint16_t protocolNumber) override;
+  Ptr<Node> GetNode () const override;
+  void SetNode (Ptr<Node> node) override;
+  bool NeedsArp () const override;
+  void SetReceiveCallback (NetDevice::ReceiveCallback cb) override;
+  void SetPromiscReceiveCallback (PromiscReceiveCallback cb) override;
+  bool SupportsSendFrom () const override;
+  void AddLinkChangeCallback (Callback<void> callback) override;
+  void SetAddress (Address address) override;
 
   /**
    * Get the Tx mode index (Modulation type).
@@ -167,7 +167,7 @@ public:
    */
   typedef void (* RxTxTracedCallback)
     (Ptr<const Packet> packet, Mac8Address address);
-  
+
 private:
   /**
    * Forward the packet to a higher level, set with SetReceiveCallback.
@@ -177,9 +177,9 @@ private:
    * \param protocolNumber The layer 3 protocol number.
    */
   virtual void ForwardUp (Ptr<Packet> pkt, uint16_t protocolNumber, const Mac8Address &src);
-  
+
   /** \return The channel attached to this device. */
-  Ptr<UanChannel> DoGetChannel (void) const;
+  Ptr<UanChannel> DoGetChannel () const;
 
   Ptr<UanTransducer> m_trans;      //!< The Transducer attached to this device.
   Ptr<Node> m_node;                //!< The node hosting this device.
@@ -203,8 +203,8 @@ private:
   bool m_cleared;
 
 protected:
-  virtual void DoDispose (void);
-  virtual void DoInitialize (void);
+  void DoDispose () override;
+  void DoInitialize () override;
 };  // class UanNetDevice
 
 } // namespace ns3

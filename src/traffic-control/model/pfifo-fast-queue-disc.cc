@@ -32,7 +32,7 @@ NS_LOG_COMPONENT_DEFINE ("PfifoFastQueueDisc");
 
 NS_OBJECT_ENSURE_REGISTERED (PfifoFastQueueDisc);
 
-TypeId PfifoFastQueueDisc::GetTypeId (void)
+TypeId PfifoFastQueueDisc::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::PfifoFastQueueDisc")
     .SetParent<QueueDisc> ()
@@ -98,7 +98,7 @@ PfifoFastQueueDisc::DoEnqueue (Ptr<QueueDiscItem> item)
 }
 
 Ptr<QueueDiscItem>
-PfifoFastQueueDisc::DoDequeue (void)
+PfifoFastQueueDisc::DoDequeue ()
 {
   NS_LOG_FUNCTION (this);
 
@@ -106,20 +106,20 @@ PfifoFastQueueDisc::DoDequeue (void)
 
   for (uint32_t i = 0; i < GetNInternalQueues (); i++)
     {
-      if ((item = GetInternalQueue (i)->Dequeue ()) != 0)
+      if ((item = GetInternalQueue (i)->Dequeue ()))
         {
           NS_LOG_LOGIC ("Popped from band " << i << ": " << item);
           NS_LOG_LOGIC ("Number packets band " << i << ": " << GetInternalQueue (i)->GetNPackets ());
           return item;
         }
     }
-  
+
   NS_LOG_LOGIC ("Queue empty");
   return item;
 }
 
 Ptr<const QueueDiscItem>
-PfifoFastQueueDisc::DoPeek (void)
+PfifoFastQueueDisc::DoPeek ()
 {
   NS_LOG_FUNCTION (this);
 
@@ -127,7 +127,7 @@ PfifoFastQueueDisc::DoPeek (void)
 
   for (uint32_t i = 0; i < GetNInternalQueues (); i++)
     {
-      if ((item = GetInternalQueue (i)->Peek ()) != 0)
+      if ((item = GetInternalQueue (i)->Peek ()))
         {
           NS_LOG_LOGIC ("Peeked from band " << i << ": " << item);
           NS_LOG_LOGIC ("Number packets band " << i << ": " << GetInternalQueue (i)->GetNPackets ());
@@ -140,7 +140,7 @@ PfifoFastQueueDisc::DoPeek (void)
 }
 
 bool
-PfifoFastQueueDisc::CheckConfig (void)
+PfifoFastQueueDisc::CheckConfig ()
 {
   NS_LOG_FUNCTION (this);
   if (GetNQueueDiscClasses () > 0)
@@ -193,7 +193,7 @@ PfifoFastQueueDisc::CheckConfig (void)
 }
 
 void
-PfifoFastQueueDisc::InitializeParams (void)
+PfifoFastQueueDisc::InitializeParams ()
 {
   NS_LOG_FUNCTION (this);
 }

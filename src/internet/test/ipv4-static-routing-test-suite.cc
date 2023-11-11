@@ -48,7 +48,7 @@ class Ipv4StaticRoutingSlash32TestCase : public TestCase
 {
 public:
   Ipv4StaticRoutingSlash32TestCase ();
-  virtual ~Ipv4StaticRoutingSlash32TestCase ();
+  ~Ipv4StaticRoutingSlash32TestCase () override;
 
   Ptr<Packet> m_receivedPacket; //!< Received packet
 
@@ -72,7 +72,7 @@ public:
   void ReceivePkt (Ptr<Socket> socket);
 
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
 };
 
 // Add some help text to this case to describe what it is intended to test
@@ -120,7 +120,7 @@ Ipv4StaticRoutingSlash32TestCase::SendData (Ptr<Socket> socket, std::string to)
 // (a.a.a.a/32)A<--x.x.x.0/30-->B<--y.y.y.0/30-->C(c.c.c.c/32)
 //
 void
-Ipv4StaticRoutingSlash32TestCase::DoRun (void)
+Ipv4StaticRoutingSlash32TestCase::DoRun ()
 {
   Ptr<Node> nA = CreateObject<Node> ();
   Ptr<Node> nB = CreateObject<Node> ();
@@ -172,7 +172,7 @@ Ipv4StaticRoutingSlash32TestCase::DoRun (void)
   ipv4C->AddAddress (ifIndexC, ifInAddrC);
   ipv4C->SetMetric (ifIndexC, 1);
   ipv4C->SetUp (ifIndexC);
- 
+
   Ipv4StaticRoutingHelper ipv4RoutingHelper;
   // Create static routes from A to C
   Ptr<Ipv4StaticRouting> staticRoutingA = ipv4RoutingHelper.GetStaticRouting (ipv4A);

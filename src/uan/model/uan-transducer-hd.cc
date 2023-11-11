@@ -32,7 +32,7 @@ namespace ns3 {
 NS_LOG_COMPONENT_DEFINE ("UanTransducerHd");
 
 NS_OBJECT_ENSURE_REGISTERED (UanTransducerHd);
-  
+
 UanTransducerHd::UanTransducerHd ()
   : UanTransducer (),
     m_state (RX),
@@ -57,7 +57,7 @@ UanTransducerHd::Clear ()
   if (m_channel)
     {
       m_channel->Clear ();
-      m_channel = 0;
+      m_channel = nullptr;
     }
 
   UanPhyList::iterator it = m_phyList.begin ();
@@ -66,13 +66,13 @@ UanTransducerHd::Clear ()
       if (*it)
         {
           (*it)->Clear ();
-          *it = 0;
+          *it = nullptr;
         }
     }
   ArrivalList::iterator ait = m_arrivalList.begin ();
   for (; ait != m_arrivalList.end (); ait++)
     {
-      ait->GetPacket () = 0;
+      ait->GetPacket () = nullptr;
     }
   m_phyList.clear ();
   m_arrivalList.clear ();
@@ -109,20 +109,20 @@ UanTransducerHd::GetState () const
 
 
 bool
-UanTransducerHd::IsRx (void) const
+UanTransducerHd::IsRx () const
 {
   return m_state == RX;
 }
 
 bool
-UanTransducerHd::IsTx (void) const
+UanTransducerHd::IsTx () const
 {
   return m_state == TX;
 
 }
 
 const UanTransducer::ArrivalList &
-UanTransducerHd::GetArrivalList (void) const
+UanTransducerHd::GetArrivalList () const
 {
   return m_arrivalList;
 }
@@ -134,7 +134,7 @@ UanTransducerHd::SetRxGainDb (double gainDb)
 }
 
 double
-UanTransducerHd::GetRxGainDb (void)
+UanTransducerHd::GetRxGainDb ()
 {
   return m_rxGainDb;
 }
@@ -222,7 +222,7 @@ UanTransducerHd::Transmit (Ptr<UanPhy> src,
 }
 
 void
-UanTransducerHd::EndTx (void)
+UanTransducerHd::EndTx ()
 {
   NS_ASSERT (m_state == TX);
   m_state = RX;
@@ -236,7 +236,7 @@ UanTransducerHd::SetChannel (Ptr<UanChannel> chan)
 
 }
 Ptr<UanChannel>
-UanTransducerHd::GetChannel (void) const
+UanTransducerHd::GetChannel () const
 {
   return m_channel;
 }
@@ -247,7 +247,7 @@ UanTransducerHd::AddPhy (Ptr<UanPhy> phy)
 }
 
 const UanTransducer::UanPhyList &
-UanTransducerHd::GetPhyList (void) const
+UanTransducerHd::GetPhyList () const
 {
   return m_phyList;
 }

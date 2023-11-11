@@ -53,10 +53,10 @@ class UdpClientServerTestCase : public TestCase
 {
 public:
   UdpClientServerTestCase ();
-  virtual ~UdpClientServerTestCase ();
+  ~UdpClientServerTestCase () override;
 
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
 
 };
 
@@ -69,7 +69,7 @@ UdpClientServerTestCase::~UdpClientServerTestCase ()
 {
 }
 
-void UdpClientServerTestCase::DoRun (void)
+void UdpClientServerTestCase::DoRun ()
 {
   NodeContainer n;
   n.Create (2);
@@ -127,10 +127,10 @@ class UdpTraceClientServerTestCase : public TestCase
 {
 public:
   UdpTraceClientServerTestCase ();
-  virtual ~UdpTraceClientServerTestCase ();
+  ~UdpTraceClientServerTestCase () override;
 
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
 
 };
 
@@ -143,7 +143,7 @@ UdpTraceClientServerTestCase::~UdpTraceClientServerTestCase ()
 {
 }
 
-void UdpTraceClientServerTestCase::DoRun (void)
+void UdpTraceClientServerTestCase::DoRun ()
 {
   NodeContainer n;
   n.Create (2);
@@ -196,10 +196,10 @@ class PacketLossCounterTestCase : public TestCase
 {
 public:
   PacketLossCounterTestCase ();
-  virtual ~PacketLossCounterTestCase ();
+  ~PacketLossCounterTestCase () override;
 
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
 
 };
 
@@ -212,7 +212,7 @@ PacketLossCounterTestCase::~PacketLossCounterTestCase ()
 {
 }
 
-void PacketLossCounterTestCase::DoRun (void)
+void PacketLossCounterTestCase::DoRun ()
 {
   PacketLossCounter lossCounter (32);
   lossCounter.NotifyReceived (32); //out of order
@@ -271,10 +271,10 @@ class UdpEchoClientSetFillTestCase : public TestCase
 {
 public:
   UdpEchoClientSetFillTestCase ();
-  virtual ~UdpEchoClientSetFillTestCase ();
+  ~UdpEchoClientSetFillTestCase () override;
 
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
 
 };
 
@@ -287,7 +287,7 @@ UdpEchoClientSetFillTestCase::~UdpEchoClientSetFillTestCase ()
 {
 }
 
-void UdpEchoClientSetFillTestCase::DoRun (void)
+void UdpEchoClientSetFillTestCase::DoRun ()
 {
   NodeContainer nodes;
   nodes.Create (2);

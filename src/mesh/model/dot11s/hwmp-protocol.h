@@ -68,9 +68,15 @@ public:
    * \return the object TypeId
    */
   static TypeId GetTypeId ();
+
   HwmpProtocol ();
-  ~HwmpProtocol ();
-  void DoDispose ();
+  ~HwmpProtocol () override;
+
+  // Delete copy constructor and assignment operator to avoid misuse
+  HwmpProtocol (const HwmpProtocol &) = delete;
+  HwmpProtocol &operator= (const HwmpProtocol &) = delete;
+
+  void DoDispose () override;
 
   /**
    * \brief structure of unreachable destination - address and sequence number
@@ -93,7 +99,7 @@ public:
    * \returns true if route exists
    */
   bool RequestRoute (uint32_t  sourceIface, const Mac48Address source, const Mac48Address destination,
-                     Ptr<const Packet>  packet, uint16_t  protocolType, RouteReplyCallback  routeReply);
+                     Ptr<const Packet>  packet, uint16_t  protocolType, RouteReplyCallback  routeReply) override;
   /**
    * Clean HWMP packet tag from packet; only the packet parameter is used
    *
@@ -105,7 +111,7 @@ public:
    * \returns true if successful
    */
   bool RemoveRoutingStuff (uint32_t fromIface, const Mac48Address source,
-                           const Mac48Address destination, Ptr<Packet>  packet, uint16_t&  protocolType);
+                           const Mac48Address destination, Ptr<Packet>  packet, uint16_t&  protocolType) override;
   /**
    * \brief Install HWMP on given mesh point.
    * \param mp the MeshPointDevice
@@ -163,25 +169,13 @@ public:
    * \brief Get pointer to HWMP routing table
    * \return pointer to routing table
    */
-  Ptr<HwmpRtable> GetRoutingTable (void) const;
+  Ptr<HwmpRtable> GetRoutingTable () const;
 
 private:
   /// allow HwmpProtocolMac class friend access
   friend class HwmpProtocolMac;
 
-  virtual void DoInitialize ();
-
-  /**
-   * assignment operator
-   * \param hwmp the HWMP protocol to assign
-   * \returns the assigned value
-   */
-  HwmpProtocol& operator= (const HwmpProtocol & hwmp);
-  /**
-   * Copy constructor - defined but not implemented (on purpose)
-   * \param hwmp the HWMP protocol
-   */
-  HwmpProtocol (const HwmpProtocol & hwmp);
+  void DoInitialize () override;
 
   /**
    * \brief Structure of path error: IePerr and list of receivers:
@@ -454,7 +448,7 @@ private:
     /// constructor
     Statistics ();
   };
-  Statistics m_stats;  ///< statistics 
+  Statistics m_stats;  ///< statistics
 
   HwmpProtocolMacMap m_interfaces; ///< interfaces
   Mac48Address m_address; ///< address
@@ -484,7 +478,7 @@ private:
   Time m_randomStart;
   /// Packet Queue
   std::vector<QueuedPacket> m_rqueue;
-  
+
   /// \name HWMP-protocol parameters
   /// These are all Attributes
   ///@{
@@ -505,7 +499,7 @@ private:
   bool m_doFlag;                                  //!< Destination only HWMP flag
   bool m_rfFlag;                                  //!< Reply and forward flag
   ///@}
-  
+
   /// Random variable for random start time
   Ptr<UniformRandomVariable> m_coefficient; ///< coefficient
   Callback <std::vector<Mac48Address>, uint32_t> m_neighboursCallback; ///< neighbors callback

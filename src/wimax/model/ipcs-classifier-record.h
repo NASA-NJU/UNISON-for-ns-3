@@ -30,7 +30,7 @@ namespace ns3 {
 
 /**
  * \ingroup wimax
- * \brief IpcsClassifierRecord class 
+ * \brief IpcsClassifierRecord class
  */
 class IpcsClassifierRecord
 {
@@ -66,7 +66,7 @@ public:
    * \brief Creates a TLV from this classifier
    * \return the created TLV
    */
-  Tlv ToTlv (void) const;
+  Tlv ToTlv () const;
   /**
    * \brief add a new source ip address to the classifier
    * \param srcAddress the source ip address
@@ -121,15 +121,15 @@ public:
   /**
    * \return the cid associated with this classifier
    */
-  uint16_t GetCid (void) const;
+  uint16_t GetCid () const;
   /**
    * \return the priority of this classifier
    */
-  uint8_t GetPriority (void) const;
+  uint8_t GetPriority () const;
   /**
    * \return the index of this classifier
    */
-  uint16_t GetIndex (void) const;
+  uint16_t GetIndex () const;
   /**
    * \brief Set the cid associated to this classifier
    * \param cid the connection identifier
@@ -181,7 +181,7 @@ private:
     Ipv4Mask Mask; ///< net mask
   };
 
-  uint8_t m_priority; ///< priority 
+  uint8_t m_priority; ///< priority
   uint16_t m_index; ///< index
   uint8_t m_tosLow; ///< TOS low
   uint8_t m_tosHigh; ///< TOS high

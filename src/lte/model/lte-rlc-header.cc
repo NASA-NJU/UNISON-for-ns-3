@@ -93,7 +93,7 @@ LteRlcHeader::PushLengthIndicator (uint16_t lengthIndicator)
 
 
 uint8_t
-LteRlcHeader::PopExtensionBit (void)
+LteRlcHeader::PopExtensionBit ()
 {
   uint8_t extensionBit = m_extensionBits.front ();
   m_extensionBits.pop_front ();
@@ -102,7 +102,7 @@ LteRlcHeader::PopExtensionBit (void)
 }
 
 uint16_t
-LteRlcHeader::PopLengthIndicator (void)
+LteRlcHeader::PopLengthIndicator ()
 {
   uint16_t lengthIndicator = m_lengthIndicators.front ();
   m_lengthIndicators.pop_front ();
@@ -112,7 +112,7 @@ LteRlcHeader::PopLengthIndicator (void)
 
 
 TypeId
-LteRlcHeader::GetTypeId (void)
+LteRlcHeader::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::LteRlcHeader")
     .SetParent<Header> ()
@@ -123,7 +123,7 @@ LteRlcHeader::GetTypeId (void)
 }
 
 TypeId
-LteRlcHeader::GetInstanceTypeId (void) const
+LteRlcHeader::GetInstanceTypeId () const
 {
   return GetTypeId ();
 }
@@ -160,7 +160,7 @@ void LteRlcHeader::Print (std::ostream &os)  const
     }
 }
 
-uint32_t LteRlcHeader::GetSerializedSize (void) const
+uint32_t LteRlcHeader::GetSerializedSize () const
 {
   return m_headerLength;
 }
@@ -181,8 +181,10 @@ void LteRlcHeader::Serialize (Buffer::Iterator start) const
   while ( it1 != m_extensionBits.end () &&
           it2 != m_lengthIndicators.end () )
     {
-      uint16_t oddLi, evenLi;
-      uint8_t oddE, evenE;
+      uint16_t oddLi;
+      uint16_t evenLi;
+      uint8_t oddE;
+      uint8_t evenE;
 
       oddE = *it1;
       oddLi = *it2;
@@ -233,8 +235,10 @@ uint32_t LteRlcHeader::Deserialize (Buffer::Iterator start)
       return GetSerializedSize ();
     }
 
-  uint16_t oddLi, evenLi;
-  uint8_t oddE, evenE;
+  uint16_t oddLi;
+  uint16_t evenLi;
+  uint8_t oddE;
+  uint8_t evenE;
   bool moreLiFields = (extensionBit == E_LI_FIELDS_FOLLOWS);
 
   while (moreLiFields)

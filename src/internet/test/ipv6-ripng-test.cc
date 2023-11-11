@@ -1,7 +1,7 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2014 Universita' di Firenze
- * 
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
  * published by the Free Software Foundation;
@@ -70,7 +70,7 @@ class Ipv6RipngTest : public TestCase
   void SendData (Ptr<Socket> socket, std::string to);
 
 public:
-  virtual void DoRun (void);
+  void DoRun () override;
   Ipv6RipngTest ();
 
   /**
@@ -115,7 +115,7 @@ Ipv6RipngTest::SendData (Ptr<Socket> socket, std::string to)
 }
 
 void
-Ipv6RipngTest::DoRun (void)
+Ipv6RipngTest::DoRun ()
 {
   // Create topology
 
@@ -152,7 +152,8 @@ Ipv6RipngTest::DoRun (void)
   net1.Add (txDev);
 
   // Router A
-  Ptr<SimpleNetDevice> fwDev1routerA, fwDev2routerA;
+  Ptr<SimpleNetDevice> fwDev1routerA;
+  Ptr<SimpleNetDevice> fwDev2routerA;
   { // first interface
     fwDev1routerA = CreateObject<SimpleNetDevice> ();
     fwDev1routerA->SetAddress (Mac48Address ("00:00:00:00:00:02"));
@@ -168,7 +169,8 @@ Ipv6RipngTest::DoRun (void)
   net2.Add (fwDev2routerA);
 
   // Router B
-  Ptr<SimpleNetDevice> fwDev1routerB, fwDev2routerB;
+  Ptr<SimpleNetDevice> fwDev1routerB;
+  Ptr<SimpleNetDevice> fwDev2routerB;
   { // first interface
     fwDev1routerB = CreateObject<SimpleNetDevice> ();
     fwDev1routerB->SetAddress (Mac48Address ("00:00:00:00:00:04"));
@@ -184,7 +186,8 @@ Ipv6RipngTest::DoRun (void)
   net3.Add (fwDev2routerB);
 
   // Router C
-  Ptr<SimpleNetDevice> fwDev1routerC, fwDev2routerC;
+  Ptr<SimpleNetDevice> fwDev1routerC;
+  Ptr<SimpleNetDevice> fwDev2routerC;
   { // first interface
     fwDev1routerC = CreateObject<SimpleNetDevice> ();
     fwDev1routerC->SetAddress (Mac48Address ("00:00:00:00:00:06"));
@@ -293,7 +296,7 @@ class Ipv6RipngCountToInfinityTest : public TestCase
   void SendData (Ptr<Socket> socket, std::string to);
 
 public:
-  virtual void DoRun (void);
+  void DoRun () override;
   Ipv6RipngCountToInfinityTest ();
 
   /**
@@ -338,7 +341,7 @@ Ipv6RipngCountToInfinityTest::SendData (Ptr<Socket> socket, std::string to)
 }
 
 void
-Ipv6RipngCountToInfinityTest::DoRun (void)
+Ipv6RipngCountToInfinityTest::DoRun ()
 {
   // Create topology
 
@@ -382,7 +385,8 @@ Ipv6RipngCountToInfinityTest::DoRun (void)
   net1.Add (txDev);
 
   // Router A
-  Ptr<SimpleNetDevice> fwDev1routerA, fwDev2routerA;
+  Ptr<SimpleNetDevice> fwDev1routerA;
+  Ptr<SimpleNetDevice> fwDev2routerA;
   { // first interface
     fwDev1routerA = CreateObject<SimpleNetDevice> ();
     fwDev1routerA->SetAddress (Mac48Address ("00:00:00:00:00:02"));
@@ -398,7 +402,8 @@ Ipv6RipngCountToInfinityTest::DoRun (void)
   net2.Add (fwDev2routerA);
 
   // Router B
-  Ptr<SimpleNetDevice> fwDev1routerB, fwDev2routerB;
+  Ptr<SimpleNetDevice> fwDev1routerB;
+  Ptr<SimpleNetDevice> fwDev2routerB;
   { // first interface
     fwDev1routerB = CreateObject<SimpleNetDevice> ();
     fwDev1routerB->SetAddress (Mac48Address ("00:00:00:00:00:04"));
@@ -414,7 +419,8 @@ Ipv6RipngCountToInfinityTest::DoRun (void)
   net3.Add (fwDev2routerB);
 
   // Router C
-  Ptr<SimpleNetDevice> fwDev1routerC, fwDev2routerC;
+  Ptr<SimpleNetDevice> fwDev1routerC;
+  Ptr<SimpleNetDevice> fwDev2routerC;
   { // first interface
     fwDev1routerC = CreateObject<SimpleNetDevice> ();
     fwDev1routerC->SetAddress (Mac48Address ("00:00:00:00:00:06"));
@@ -506,7 +512,7 @@ class Ipv6RipngSplitHorizonStrategyTest : public TestCase
   RipNg::SplitHorizonType_e m_detectedStrategy; //!< Strategy detected.
 
 public:
-  virtual void DoRun (void);
+  void DoRun () override;
   /**
    * \brief Constructor.
    * \param strategy The SplitHorizon strategy.
@@ -569,7 +575,7 @@ void Ipv6RipngSplitHorizonStrategyTest::ReceivePktProbe (Ptr<Socket> socket)
 }
 
 void
-Ipv6RipngSplitHorizonStrategyTest::DoRun (void)
+Ipv6RipngSplitHorizonStrategyTest::DoRun ()
 {
   // Create topology
 
@@ -606,7 +612,8 @@ Ipv6RipngSplitHorizonStrategyTest::DoRun (void)
   net0.Add (silentDev);
 
   // Router A
-  Ptr<SimpleNetDevice> silentDevRouterA, fwDevRouterA;
+  Ptr<SimpleNetDevice> silentDevRouterA;
+  Ptr<SimpleNetDevice> fwDevRouterA;
   { // silent interface
     silentDevRouterA = CreateObject<SimpleNetDevice> ();
     silentDevRouterA->SetAddress (Mac48Address ("00:00:00:00:00:02"));

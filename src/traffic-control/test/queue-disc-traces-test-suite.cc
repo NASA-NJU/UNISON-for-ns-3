@@ -44,9 +44,9 @@ public:
    * \param addr the address
    */
   qdTestItem (Ptr<Packet> p, const Address & addr);
-  virtual ~qdTestItem ();
-  virtual void AddHeader (void);
-  virtual bool Mark (void);
+  ~qdTestItem () override;
+  void AddHeader () override;
+  bool Mark () override;
 };
 
 qdTestItem::qdTestItem (Ptr<Packet> p, const Address & addr)
@@ -59,12 +59,12 @@ qdTestItem::~qdTestItem ()
 }
 
 void
-qdTestItem::AddHeader (void)
+qdTestItem::AddHeader ()
 {
 }
 
 bool
-qdTestItem::Mark (void)
+qdTestItem::Mark ()
 {
   return false;
 }
@@ -83,11 +83,11 @@ public:
    * Constructor
    */
   TestChildQueueDisc ();
-  virtual ~TestChildQueueDisc ();
-  virtual bool DoEnqueue (Ptr<QueueDiscItem> item);
-  virtual Ptr<QueueDiscItem> DoDequeue (void);
-  virtual bool CheckConfig (void);
-  virtual void InitializeParams (void);
+  ~TestChildQueueDisc () override;
+  bool DoEnqueue (Ptr<QueueDiscItem> item) override;
+  Ptr<QueueDiscItem> DoDequeue () override;
+  bool CheckConfig () override;
+  void InitializeParams () override;
 
   // Reasons for dropping packets
   static constexpr const char* BEFORE_ENQUEUE = "Before enqueue";  //!< Drop before enqueue
@@ -116,7 +116,7 @@ TestChildQueueDisc::DoEnqueue (Ptr<QueueDiscItem> item)
 }
 
 Ptr<QueueDiscItem>
-TestChildQueueDisc::DoDequeue (void) 
+TestChildQueueDisc::DoDequeue ()
 {
   Ptr<QueueDiscItem> item = GetInternalQueue (0)->Dequeue ();
 
@@ -130,14 +130,14 @@ TestChildQueueDisc::DoDequeue (void)
 }
 
 bool
-TestChildQueueDisc::CheckConfig (void)
+TestChildQueueDisc::CheckConfig ()
 {
   AddInternalQueue (CreateObject<DropTailQueue<QueueDiscItem> > ());
   return true;
 }
 
 void
-TestChildQueueDisc::InitializeParams (void)
+TestChildQueueDisc::InitializeParams ()
 {
 }
 
@@ -155,11 +155,11 @@ public:
    * Constructor
    */
   TestParentQueueDisc ();
-  virtual ~TestParentQueueDisc ();
-  virtual bool DoEnqueue (Ptr<QueueDiscItem> item);
-  virtual Ptr<QueueDiscItem> DoDequeue (void);
-  virtual bool CheckConfig (void);
-  virtual void InitializeParams (void);
+  ~TestParentQueueDisc () override;
+  bool DoEnqueue (Ptr<QueueDiscItem> item) override;
+  Ptr<QueueDiscItem> DoDequeue () override;
+  bool CheckConfig () override;
+  void InitializeParams () override;
 };
 
 TestParentQueueDisc::TestParentQueueDisc ()
@@ -178,13 +178,13 @@ TestParentQueueDisc::DoEnqueue (Ptr<QueueDiscItem> item)
 }
 
 Ptr<QueueDiscItem>
-TestParentQueueDisc::DoDequeue (void) 
+TestParentQueueDisc::DoDequeue ()
 {
   return GetQueueDiscClass (0)->GetQueueDisc ()->Dequeue ();
 }
 
 bool
-TestParentQueueDisc::CheckConfig (void)
+TestParentQueueDisc::CheckConfig ()
 {
   Ptr<QueueDiscClass> c = CreateObject<QueueDiscClass> ();
   c->SetQueueDisc (CreateObject<TestChildQueueDisc> ());
@@ -193,7 +193,7 @@ TestParentQueueDisc::CheckConfig (void)
 }
 
 void
-TestParentQueueDisc::InitializeParams (void)
+TestParentQueueDisc::InitializeParams ()
 {
 }
 
@@ -326,7 +326,7 @@ class QueueDiscTracesTestCase : public TestCase
 {
 public:
   QueueDiscTracesTestCase ();
-  virtual void DoRun (void);
+  void DoRun () override;
 
   /**
    * Check that queued packets/bytes are consistent with what is expected
@@ -406,7 +406,7 @@ QueueDiscTracesTestCase::CheckDroppedAfterDequeue (Ptr<QueueDisc> qd, uint32_t n
 }
 
 void
-QueueDiscTracesTestCase::DoRun (void)
+QueueDiscTracesTestCase::DoRun ()
 {
   Address dest;
   uint32_t pktSizeUnit = 100;
@@ -418,7 +418,7 @@ QueueDiscTracesTestCase::DoRun (void)
 
   Ptr<QueueDisc> child = root->GetQueueDiscClass (0)->GetQueueDisc ();
 
-  NS_TEST_ASSERT_MSG_NE (child, 0, "The child queue disc has not been created");
+  NS_TEST_ASSERT_MSG_NE (child, nullptr, "The child queue disc has not been created");
 
   // Create counters and connect traces to the counters
   m_counter.emplace (root, TestCounter ());
@@ -464,7 +464,7 @@ QueueDiscTracesTestCase::DoRun (void)
   // of the child queue disc.
   item = root->Peek ();
 
-  NS_TEST_ASSERT_MSG_NE (item, 0, "A packet must have been returned");
+  NS_TEST_ASSERT_MSG_NE (item, nullptr, "A packet must have been returned");
   NS_TEST_ASSERT_MSG_EQ (item->GetSize (), pktSizeUnit * 3, "The peeked packet has not the expected size");
 
   CheckQueued (root, 2, pktSizeUnit * 7);
@@ -478,7 +478,7 @@ QueueDiscTracesTestCase::DoRun (void)
   // Peek again. Nothing changes.
   item = root->Peek ();
 
-  NS_TEST_ASSERT_MSG_NE (item, 0, "A packet must have been returned");
+  NS_TEST_ASSERT_MSG_NE (item, nullptr, "A packet must have been returned");
   NS_TEST_ASSERT_MSG_EQ (item->GetSize (), pktSizeUnit * 3, "The peeked packet has not the expected size");
 
   CheckQueued (root, 2, pktSizeUnit * 7);
@@ -492,7 +492,7 @@ QueueDiscTracesTestCase::DoRun (void)
   // Dequeue one packet. The root queue disc returns the previously peeked packet.
   item = root->Dequeue ();
 
-  NS_TEST_ASSERT_MSG_NE (item, 0, "A packet must have been returned");
+  NS_TEST_ASSERT_MSG_NE (item, nullptr, "A packet must have been returned");
   NS_TEST_ASSERT_MSG_EQ (item->GetSize (), pktSizeUnit * 3, "The dequeued packet has not the expected size");
 
   CheckQueued (root, 1, pktSizeUnit * 4);
@@ -506,7 +506,7 @@ QueueDiscTracesTestCase::DoRun (void)
   // Dequeue the last packet.
   item = root->Dequeue ();
 
-  NS_TEST_ASSERT_MSG_NE (item, 0, "A packet must have been returned");
+  NS_TEST_ASSERT_MSG_NE (item, nullptr, "A packet must have been returned");
   NS_TEST_ASSERT_MSG_EQ (item->GetSize (), pktSizeUnit * 4, "The dequeued packet has not the expected size");
 
   CheckQueued (root, 0, 0);
@@ -520,7 +520,7 @@ QueueDiscTracesTestCase::DoRun (void)
   // Peek a packet. No packet is left.
   item = root->Peek ();
 
-  NS_TEST_ASSERT_MSG_EQ (item, 0, "No packet must have been returned");
+  NS_TEST_ASSERT_MSG_EQ (item, nullptr, "No packet must have been returned");
 
   CheckQueued (root, 0, 0);
   CheckDroppedBeforeEnqueue (root, 1, pktSizeUnit * 5);
@@ -544,7 +544,7 @@ QueueDiscTracesTestCase::DoRun (void)
   // Dequeue one packet.
   item = root->Dequeue ();
 
-  NS_TEST_ASSERT_MSG_NE (item, 0, "A packet must have been returned");
+  NS_TEST_ASSERT_MSG_NE (item, nullptr, "A packet must have been returned");
   NS_TEST_ASSERT_MSG_EQ (item->GetSize (), pktSizeUnit, "The dequeued packet has not the expected size");
 
   CheckQueued (root, 0, 0);

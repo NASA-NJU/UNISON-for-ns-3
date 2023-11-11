@@ -65,7 +65,7 @@ public:
   /**
    * \brief Destructor.
    */
-  virtual ~Ipv6Interface ();
+  ~Ipv6Interface () override;
 
   // Delete copy constructor and assignment operator to avoid misuse
   Ipv6Interface (const Ipv6Interface &) = delete;
@@ -238,7 +238,7 @@ public:
    * \brief Get number of addresses on this IPv6 interface.
    * \return number of address
    */
-  uint32_t GetNAddresses (void) const;
+  uint32_t GetNAddresses () const;
 
   /**
    * \brief Remove an address from interface.
@@ -250,8 +250,8 @@ public:
   /**
    * \brief Remove the given Ipv6 address from the interface.
    * \param address The Ipv6 address to remove
-   * \returns The removed Ipv6 interface address 
-   * \returns The null interface address if the interface did not contain the 
+   * \returns The removed Ipv6 interface address
+   * \returns The null interface address if the interface did not contain the
    * address or if loopback address was passed as argument
    */
   Ipv6InterfaceAddress RemoveAddress (Ipv6Address address);
@@ -266,7 +266,7 @@ public:
   /**
    * \brief Update NS DAD packet UID of an interface address.
    * \param address IPv6 address
-   * \param uid packet UID 
+   * \param uid packet UID
    */
   void SetNsDadUid (Ipv6Address address, uint32_t uid);
 
@@ -275,12 +275,30 @@ public:
    */
   Ptr<NdiscCache> GetNdiscCache () const;
 
+  /**
+   * This callback is set when an address is removed from an interface with
+   * auto-generated Ndisc cache and it allow the neighbor cache helper to update
+   * neighbor's Ndisc cache
+   *
+   * \param removeAddressCallback Callback when remove an address.
+   */
+  void RemoveAddressCallback (Callback<void, Ptr<Ipv6Interface>, Ipv6InterfaceAddress> removeAddressCallback);
+
+  /**
+   * This callback is set when an address is added from an interface with
+   * auto-generated Ndisc cache and it allow the neighbor cache helper to update
+   * neighbor's Ndisc cache
+   *
+   * \param addAddressCallback Callback when remove an address.
+   */
+  void AddAddressCallback (Callback<void, Ptr<Ipv6Interface>, Ipv6InterfaceAddress> addAddressCallback);
+
 
 protected:
   /**
    * \brief Dispose this object.
    */
-  virtual void DoDispose ();
+  void DoDispose () override;
 
 private:
   /**
@@ -369,6 +387,10 @@ private:
    * Time between retransmission of NS.
    */
   uint16_t m_retransTimer;
+
+  Callback<void, Ptr<Ipv6Interface>, Ipv6InterfaceAddress> m_removeAddressCallback; //!< remove address callback
+
+  Callback<void, Ptr<Ipv6Interface>, Ipv6InterfaceAddress> m_addAddressCallback; //!< add address callback
 };
 
 } /* namespace ns3 */

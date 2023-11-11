@@ -44,13 +44,13 @@ void
 SpectrumChannel::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
-  m_propagationLoss = 0;
-  m_propagationDelay = 0;
-  m_spectrumPropagationLoss = 0;
+  m_propagationLoss = nullptr;
+  m_propagationDelay = nullptr;
+  m_spectrumPropagationLoss = nullptr;
 }
 
 TypeId
-SpectrumChannel::GetTypeId (void)
+SpectrumChannel::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::SpectrumChannel")
     .SetParent<Channel> ()
@@ -65,25 +65,25 @@ SpectrumChannel::GetTypeId (void)
                    "the computational load by not propagating signals "
                    "that are far beyond the interference range. Note that "
                    "the default value corresponds to considering all signals "
-                   "for reception. Tune this value with care. ",
+                   "for reception. Tune this value with care.",
                    DoubleValue (1.0e9),
                    MakeDoubleAccessor (&SpectrumChannel::m_maxLossDb),
                    MakeDoubleChecker<double> ())
 
     .AddAttribute ("PropagationLossModel",
                    "A pointer to the propagation loss model attached to this channel.",
-                   PointerValue (0),
+                   PointerValue (nullptr),
                    MakePointerAccessor (&SpectrumChannel::m_propagationLoss),
                    MakePointerChecker<PropagationLossModel> ())
 
     .AddTraceSource ("Gain",
                      "This trace is fired whenever a new path loss value "
                      "is calculated. The parameters to this trace are : "
-                     "Pointer to the mobility model of the transmitter"
-                     "Pointer to the mobility model of the receiver"
-                     "Tx antenna gain"
-                     "Rx antenna gain"
-                     "Propagation gain"
+                     "Pointer to the mobility model of the transmitter, "
+                     "Pointer to the mobility model of the receiver, "
+                     "Tx antenna gain, "
+                     "Rx antenna gain, "
+                     "Propagation gain, "
                      "Pathloss",
                      MakeTraceSourceAccessor (&SpectrumChannel::m_gainTrace),
                      "ns3::SpectrumChannel::GainTracedCallback")
@@ -99,12 +99,12 @@ SpectrumChannel::GetTypeId (void)
                      "AntennaModels and the PropagationLossModel. "
                      "In particular, note that SpectrumPropagationLossModel "
                      "(even if present) is never used to evaluate the "
-                     "loss value reported in this trace. ",
+                     "loss value reported in this trace.",
                      MakeTraceSourceAccessor (&SpectrumChannel::m_pathLossTrace),
                      "ns3::SpectrumChannel::LossTracedCallback")
 
     .AddTraceSource ("TxSigParams",
-                     "This trace is fired whenever a signal is transmitted."
+                     "This trace is fired whenever a signal is transmitted. "
                      "The sole parameter is a pointer to a copy of the "
                      "SpectrumSignalParameters provided by the transmitter.",
                      MakeTraceSourceAccessor (&SpectrumChannel::m_txSigParamsTrace),
@@ -150,19 +150,19 @@ SpectrumChannel::AddPhasedArraySpectrumPropagationLossModel (Ptr<PhasedArraySpec
 void
 SpectrumChannel::SetPropagationDelayModel (Ptr<PropagationDelayModel> delay)
 {
-  NS_ASSERT (m_propagationDelay == 0);
+  NS_ASSERT (!m_propagationDelay);
   m_propagationDelay = delay;
 }
 
 Ptr<SpectrumPropagationLossModel>
-SpectrumChannel::GetSpectrumPropagationLossModel (void)
+SpectrumChannel::GetSpectrumPropagationLossModel ()
 {
   NS_LOG_FUNCTION (this);
   return m_spectrumPropagationLoss;
 }
 
 Ptr<PhasedArraySpectrumPropagationLossModel>
-SpectrumChannel::GetPhasedArraySpectrumPropagationLossModel (void)
+SpectrumChannel::GetPhasedArraySpectrumPropagationLossModel ()
 {
   NS_LOG_FUNCTION (this);
   return m_phasedArraySpectrumPropagationLoss;

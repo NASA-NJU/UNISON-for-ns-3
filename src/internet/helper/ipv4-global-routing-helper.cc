@@ -36,7 +36,7 @@ Ipv4GlobalRoutingHelper::Ipv4GlobalRoutingHelper (const Ipv4GlobalRoutingHelper 
 }
 
 Ipv4GlobalRoutingHelper*
-Ipv4GlobalRoutingHelper::Copy (void) const
+Ipv4GlobalRoutingHelper::Copy () const
 {
   return new Ipv4GlobalRoutingHelper (*this);
 }
@@ -57,14 +57,14 @@ Ipv4GlobalRoutingHelper::Create (Ptr<Node> node) const
   return globalRouting;
 }
 
-void 
-Ipv4GlobalRoutingHelper::PopulateRoutingTables (void)
+void
+Ipv4GlobalRoutingHelper::PopulateRoutingTables ()
 {
   GlobalRouteManager::BuildGlobalRoutingDatabase ();
   GlobalRouteManager::InitializeRoutes ();
 }
-void 
-Ipv4GlobalRoutingHelper::RecomputeRoutingTables (void)
+void
+Ipv4GlobalRoutingHelper::RecomputeRoutingTables ()
 {
   GlobalRouteManager::DeleteGlobalRoutes ();
   GlobalRouteManager::BuildGlobalRoutingDatabase ();

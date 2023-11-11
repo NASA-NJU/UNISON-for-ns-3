@@ -20,7 +20,7 @@
  *      tuned by Samir Das and Mahesh Marina, University of Cincinnati;
  *
  *      AODV-UU implementation by Erik Nordström of Uppsala University
- *      http://core.it.uu.se/core/index.php/AODV-UU
+ *      https://web.archive.org/web/20100527072022/http://core.it.uu.se/core/index.php/AODV-UU
  *
  * Authors: Elena Buchatskaia <borovkovaes@iitp.ru>
  *          Pavel Boyko <boyko@iitp.ru>
@@ -71,7 +71,7 @@ public:
    * \param nextHop the IP address of the next hop
    * \param lifetime the lifetime of the entry
    */
-  RoutingTableEntry (Ptr<NetDevice> dev = 0,Ipv4Address dst = Ipv4Address (), bool vSeqNo = false, uint32_t seqNo = 0,
+  RoutingTableEntry (Ptr<NetDevice> dev = nullptr,Ipv4Address dst = Ipv4Address (), bool vSeqNo = false, uint32_t seqNo = 0,
                      Ipv4InterfaceAddress iface = Ipv4InterfaceAddress (), uint16_t  hops = 0,
                      Ipv4Address nextHop = Ipv4Address (), Time lifetime = Simulator::Now ());
 
@@ -352,11 +352,11 @@ private:
   /// Hop Count (number of hops needed to reach destination)
   uint16_t m_hops;
   /**
-  * \brief Expiration or deletion time of the route
-  *	Lifetime field in the routing table plays dual role:
-  *	for an active route it is the expiration time, and for an invalid route
-  *	it is the deletion time.
-  */
+   * \brief Expiration or deletion time of the route
+   * Lifetime field in the routing table plays dual role:
+   * for an active route it is the expiration time, and for an invalid route
+   * it is the deletion time.
+   */
   Time m_lifeTime;
   /** Ip route, include
    *   - destination address

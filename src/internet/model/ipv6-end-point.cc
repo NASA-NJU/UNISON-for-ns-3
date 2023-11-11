@@ -82,10 +82,9 @@ uint16_t Ipv6EndPoint::GetPeerPort ()
 void Ipv6EndPoint::BindToNetDevice (Ptr<NetDevice> netdevice)
 {
   m_boundnetdevice = netdevice;
-  return;
 }
 
-Ptr<NetDevice> Ipv6EndPoint::GetBoundNetDevice (void)
+Ptr<NetDevice> Ipv6EndPoint::GetBoundNetDevice ()
 {
   return m_boundnetdevice;
 }
@@ -119,7 +118,7 @@ void Ipv6EndPoint::ForwardUp (Ptr<Packet> p, Ipv6Header header, uint16_t port, P
     }
 }
 
-void Ipv6EndPoint::ForwardIcmp (Ipv6Address src, uint8_t ttl, uint8_t type, 
+void Ipv6EndPoint::ForwardIcmp (Ipv6Address src, uint8_t ttl, uint8_t type,
                                 uint8_t code, uint32_t info)
 {
   if (!m_icmpCallback.IsNull ())

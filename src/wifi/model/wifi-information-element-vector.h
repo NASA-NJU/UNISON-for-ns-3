@@ -40,7 +40,7 @@ class WifiInformationElementVector : public Header
 {
 public:
   WifiInformationElementVector ();
-  virtual ~WifiInformationElementVector ();
+  ~WifiInformationElementVector () override;
 
   /**
    * \brief Get the type ID.
@@ -60,7 +60,7 @@ public:
    */
   uint32_t Deserialize (Buffer::Iterator start) override;
   /**
-   * Deserialize a number of WifiInformationElements 
+   * Deserialize a number of WifiInformationElements
    *
    * The size of this Header should equal start.GetDistanceFrom (end).
    *

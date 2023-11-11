@@ -64,18 +64,30 @@ using namespace ns3;
 NS_LOG_COMPONENT_DEFINE ("WifiManagerExample");
 
 // 290K @ 20 MHz
-const double NOISE_DBM_Hz = -174.0;
-double noiseDbm = NOISE_DBM_Hz;
+const double NOISE_DBM_Hz = -174.0; //!< Default value for noise.
+double noiseDbm = NOISE_DBM_Hz;     //!< Value for noise.
 
-double g_intervalBytes = 0;
-uint64_t g_intervalRate = 0;
+double g_intervalBytes = 0;   //!< Bytes received in an interval.
+uint64_t g_intervalRate = 0;  //!< Rate in an interval.
 
+/**
+ * Packet received.
+ *
+ * \param pkt The packet.
+ * \param addr The sender address.
+ */
 void
 PacketRx (Ptr<const Packet> pkt, const Address &addr)
 {
   g_intervalBytes += pkt->GetSize ();
 }
 
+/**
+ * Rate changed.
+ *
+ * \param oldVal Old value.
+ * \param newVal New value.
+ */
 void
 RateChange (uint64_t oldVal, uint64_t newVal)
 {
@@ -133,6 +145,15 @@ struct StandardInfo
   double m_yMax;  ///< Y maximum
 };
 
+/**
+ * Change the signal model and report the rate.
+ *
+ * \param rssModel The new RSS model.
+ * \param step The step tp use.
+ * \param rss The RSS.
+ * \param rateDataset The rate dataset.
+ * \param actualDataset The actual dataset.
+ */
 void
 ChangeSignalAndReportRate (Ptr<FixedRssLossModel> rssModel, Step step, double rss, Gnuplot2dDataset& rateDataset, Gnuplot2dDataset& actualDataset)
 {
@@ -293,29 +314,33 @@ int main (int argc, char *argv[])
   // The first number is channel width, second is minimum SNR, third is maximum
   // SNR, fourth and fifth provide xrange axis limits, and sixth the yaxis
   // maximum
-  serverStandards.push_back (StandardInfo ("802.11a", WIFI_STANDARD_80211a, WIFI_PHY_BAND_5GHZ, 20, 3, 27, 0, 30, 60));
-  serverStandards.push_back (StandardInfo ("802.11b", WIFI_STANDARD_80211b, WIFI_PHY_BAND_2_4GHZ, 22, -5, 11, -6, 15, 15));
-  serverStandards.push_back (StandardInfo ("802.11g", WIFI_STANDARD_80211g, WIFI_PHY_BAND_2_4GHZ, 20, -5, 27, -6, 30, 60));
-  serverStandards.push_back (StandardInfo ("802.11n-5GHz", WIFI_STANDARD_80211n, WIFI_PHY_BAND_5GHZ,  serverChannelWidth, 3, 30, 0, 35, 80 * channelRateFactor));
-  serverStandards.push_back (StandardInfo ("802.11n-2.4GHz", WIFI_STANDARD_80211n, WIFI_PHY_BAND_2_4GHZ, serverChannelWidth, 3, 30, 0, 35, 80 * channelRateFactor));
-  serverStandards.push_back (StandardInfo ("802.11ac", WIFI_STANDARD_80211ac, WIFI_PHY_BAND_5GHZ, serverChannelWidth, 5, 50, 0, 55, 120 * channelRateFactor));
-  serverStandards.push_back (StandardInfo ("802.11p-10MHz", WIFI_STANDARD_80211p, WIFI_PHY_BAND_5GHZ, 10, 3, 27, 0, 30, 60));
-  serverStandards.push_back (StandardInfo ("802.11p-5MHz", WIFI_STANDARD_80211p, WIFI_PHY_BAND_5GHZ, 5, 3, 27, 0, 30, 60));
-  serverStandards.push_back (StandardInfo ("802.11ax-6GHz", WIFI_STANDARD_80211ax, WIFI_PHY_BAND_6GHZ, serverChannelWidth, 5, 55, 0, 60, 120 * channelRateFactor));
-  serverStandards.push_back (StandardInfo ("802.11ax-5GHz", WIFI_STANDARD_80211ax, WIFI_PHY_BAND_5GHZ, serverChannelWidth, 5, 55, 0, 60, 120 * channelRateFactor));
-  serverStandards.push_back (StandardInfo ("802.11ax-2.4GHz", WIFI_STANDARD_80211ax, WIFI_PHY_BAND_2_4GHZ, serverChannelWidth, 5, 55, 0, 60, 120 * channelRateFactor));
+  serverStandards = {
+    StandardInfo ("802.11a", WIFI_STANDARD_80211a, WIFI_PHY_BAND_5GHZ, 20, 3, 27, 0, 30, 60),
+    StandardInfo ("802.11b", WIFI_STANDARD_80211b, WIFI_PHY_BAND_2_4GHZ, 22, -5, 11, -6, 15, 15),
+    StandardInfo ("802.11g", WIFI_STANDARD_80211g, WIFI_PHY_BAND_2_4GHZ, 20, -5, 27, -6, 30, 60),
+    StandardInfo ("802.11n-5GHz", WIFI_STANDARD_80211n, WIFI_PHY_BAND_5GHZ,  serverChannelWidth, 3, 30, 0, 35, 80 * channelRateFactor),
+    StandardInfo ("802.11n-2.4GHz", WIFI_STANDARD_80211n, WIFI_PHY_BAND_2_4GHZ, serverChannelWidth, 3, 30, 0, 35, 80 * channelRateFactor),
+    StandardInfo ("802.11ac", WIFI_STANDARD_80211ac, WIFI_PHY_BAND_5GHZ, serverChannelWidth, 5, 50, 0, 55, 120 * channelRateFactor),
+    StandardInfo ("802.11p-10MHz", WIFI_STANDARD_80211p, WIFI_PHY_BAND_5GHZ, 10, 3, 27, 0, 30, 60),
+    StandardInfo ("802.11p-5MHz", WIFI_STANDARD_80211p, WIFI_PHY_BAND_5GHZ, 5, 3, 27, 0, 30, 60),
+    StandardInfo ("802.11ax-6GHz", WIFI_STANDARD_80211ax, WIFI_PHY_BAND_6GHZ, serverChannelWidth, 5, 55, 0, 60, 120 * channelRateFactor),
+    StandardInfo ("802.11ax-5GHz", WIFI_STANDARD_80211ax, WIFI_PHY_BAND_5GHZ, serverChannelWidth, 5, 55, 0, 60, 120 * channelRateFactor),
+    StandardInfo ("802.11ax-2.4GHz", WIFI_STANDARD_80211ax, WIFI_PHY_BAND_2_4GHZ, serverChannelWidth, 5, 55, 0, 60, 120 * channelRateFactor),
+  };
 
-  clientStandards.push_back (StandardInfo ("802.11a", WIFI_STANDARD_80211a, WIFI_PHY_BAND_5GHZ, 20, 3, 27, 0, 30, 60));
-  clientStandards.push_back (StandardInfo ("802.11b", WIFI_STANDARD_80211b, WIFI_PHY_BAND_2_4GHZ, 22, -5, 11, -6, 15, 15));
-  clientStandards.push_back (StandardInfo ("802.11g", WIFI_STANDARD_80211g, WIFI_PHY_BAND_2_4GHZ, 20, -5, 27, -6, 30, 60));
-  clientStandards.push_back (StandardInfo ("802.11n-5GHz", WIFI_STANDARD_80211n, WIFI_PHY_BAND_5GHZ,  clientChannelWidth, 3, 30, 0, 35, 80 * channelRateFactor));
-  clientStandards.push_back (StandardInfo ("802.11n-2.4GHz", WIFI_STANDARD_80211n, WIFI_PHY_BAND_2_4GHZ, clientChannelWidth, 3, 30, 0, 35, 80 * channelRateFactor));
-  clientStandards.push_back (StandardInfo ("802.11ac", WIFI_STANDARD_80211ac, WIFI_PHY_BAND_5GHZ, clientChannelWidth, 5, 50, 0, 55, 120 * channelRateFactor));
-  clientStandards.push_back (StandardInfo ("802.11p-10MHz", WIFI_STANDARD_80211p, WIFI_PHY_BAND_5GHZ, 10, 3, 27, 0, 30, 60));
-  clientStandards.push_back (StandardInfo ("802.11p-5MHz", WIFI_STANDARD_80211p, WIFI_PHY_BAND_5GHZ, 5, 3, 27, 0, 30, 60));
-  clientStandards.push_back (StandardInfo ("802.11ax-6GHz", WIFI_STANDARD_80211ax, WIFI_PHY_BAND_6GHZ, clientChannelWidth, 5, 55, 0, 60, 160 * channelRateFactor));
-  clientStandards.push_back (StandardInfo ("802.11ax-5GHz", WIFI_STANDARD_80211ax, WIFI_PHY_BAND_5GHZ, clientChannelWidth, 5, 55, 0, 60, 160 * channelRateFactor));
-  clientStandards.push_back (StandardInfo ("802.11ax-2.4GHz", WIFI_STANDARD_80211ax, WIFI_PHY_BAND_2_4GHZ, clientChannelWidth, 5, 55, 0, 60, 160 * channelRateFactor));
+  clientStandards = {
+    StandardInfo ("802.11a", WIFI_STANDARD_80211a, WIFI_PHY_BAND_5GHZ, 20, 3, 27, 0, 30, 60),
+    StandardInfo ("802.11b", WIFI_STANDARD_80211b, WIFI_PHY_BAND_2_4GHZ, 22, -5, 11, -6, 15, 15),
+    StandardInfo ("802.11g", WIFI_STANDARD_80211g, WIFI_PHY_BAND_2_4GHZ, 20, -5, 27, -6, 30, 60),
+    StandardInfo ("802.11n-5GHz", WIFI_STANDARD_80211n, WIFI_PHY_BAND_5GHZ,  clientChannelWidth, 3, 30, 0, 35, 80 * channelRateFactor),
+    StandardInfo ("802.11n-2.4GHz", WIFI_STANDARD_80211n, WIFI_PHY_BAND_2_4GHZ, clientChannelWidth, 3, 30, 0, 35, 80 * channelRateFactor),
+    StandardInfo ("802.11ac", WIFI_STANDARD_80211ac, WIFI_PHY_BAND_5GHZ, clientChannelWidth, 5, 50, 0, 55, 120 * channelRateFactor),
+    StandardInfo ("802.11p-10MHz", WIFI_STANDARD_80211p, WIFI_PHY_BAND_5GHZ, 10, 3, 27, 0, 30, 60),
+    StandardInfo ("802.11p-5MHz", WIFI_STANDARD_80211p, WIFI_PHY_BAND_5GHZ, 5, 3, 27, 0, 30, 60),
+    StandardInfo ("802.11ax-6GHz", WIFI_STANDARD_80211ax, WIFI_PHY_BAND_6GHZ, clientChannelWidth, 5, 55, 0, 60, 160 * channelRateFactor),
+    StandardInfo ("802.11ax-5GHz", WIFI_STANDARD_80211ax, WIFI_PHY_BAND_5GHZ, clientChannelWidth, 5, 55, 0, 60, 160 * channelRateFactor),
+    StandardInfo ("802.11ax-2.4GHz", WIFI_STANDARD_80211ax, WIFI_PHY_BAND_2_4GHZ, clientChannelWidth, 5, 55, 0, 60, 160 * channelRateFactor),
+  };
 
   for (std::vector<StandardInfo>::size_type i = 0; i != serverStandards.size (); i++)
     {
@@ -546,7 +571,9 @@ int main (int argc, char *argv[])
   gnuplot.AddDataset (rateDataset);
   gnuplot.AddDataset (actualDataset);
 
-  std::ostringstream xMinStr, xMaxStr, yMaxStr;
+  std::ostringstream xMinStr;
+  std::ostringstream xMaxStr;
+  std::ostringstream yMaxStr;
   std::string xRangeStr ("set xrange [");
   xMinStr << clientSelectedStandard.m_xMin;
   xRangeStr.append (xMinStr.str ());

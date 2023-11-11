@@ -37,10 +37,10 @@ class LrWpanPlmeAndPdInterfaceTestCase : public TestCase
 {
 public:
   LrWpanPlmeAndPdInterfaceTestCase ();
-  virtual ~LrWpanPlmeAndPdInterfaceTestCase ();
+  ~LrWpanPlmeAndPdInterfaceTestCase () override;
 
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
 
   /**
    * \brief Receives a PdData indication
@@ -71,7 +71,7 @@ LrWpanPlmeAndPdInterfaceTestCase::ReceivePdDataIndication (uint32_t psduLength,
 }
 
 void
-LrWpanPlmeAndPdInterfaceTestCase::DoRun (void)
+LrWpanPlmeAndPdInterfaceTestCase::DoRun ()
 {
   LogComponentEnableAll (LOG_PREFIX_FUNC);
   LogComponentEnable ("LrWpanPhy", LOG_LEVEL_ALL);

@@ -136,7 +136,7 @@ int main (int argc, char *argv[])
 
   // Set recovery algorithm and TCP variant
   Config::SetDefault ("ns3::TcpL4Protocol::RecoveryType", TypeIdValue (TypeId::LookupByName (recovery)));
-  if (tcpTypeId.compare ("ns3::TcpWestwoodPlus") == 0)
+  if (tcpTypeId == "ns3::TcpWestwoodPlus")
     {
       // TcpWestwoodPlus is not an actual TypeId name; we need TcpWestwood here
       Config::SetDefault ("ns3::TcpL4Protocol::SocketType", TypeIdValue (TcpWestwood::GetTypeId ()));
@@ -151,7 +151,9 @@ int main (int argc, char *argv[])
     }
 
   // Create nodes
-  NodeContainer leftNodes, rightNodes, routers;
+  NodeContainer leftNodes;
+  NodeContainer rightNodes;
+  NodeContainer routers;
   routers.Create (2);
   leftNodes.Create (1);
   rightNodes.Create (1);

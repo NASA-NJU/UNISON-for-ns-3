@@ -139,6 +139,8 @@ int main (int argc, char *argv[])
               oss << "VhtMcs" << mcs;
               wifi.SetRemoteStationManager ("ns3::ConstantRateWifiManager","DataMode", StringValue (oss.str ()),
                                             "ControlMode", StringValue (oss.str ()));
+              // Set guard interval
+              wifi.ConfigHtOptions ("ShortGuardIntervalSupported", BooleanValue (sgi));
 
               Ssid ssid = Ssid ("ns3-80211ac");
 
@@ -154,9 +156,6 @@ int main (int argc, char *argv[])
 
               NetDeviceContainer apDevice;
               apDevice = wifi.Install (phy, mac, wifiApNode);
-
-              // Set guard interval
-              Config::Set ("/NodeList/*/DeviceList/*/$ns3::WifiNetDevice/HtConfiguration/ShortGuardIntervalSupported", BooleanValue (sgi));
 
               // mobility.
               MobilityHelper mobility;
@@ -196,7 +195,7 @@ int main (int argc, char *argv[])
                   serverApp.Stop (Seconds (simulationTime + 1));
 
                   UdpClientHelper client (staNodeInterface.GetAddress (0), port);
-                  client.SetAttribute ("MaxPackets", UintegerValue (4294967295u));
+                  client.SetAttribute ("MaxPackets", UintegerValue (4294967295U));
                   client.SetAttribute ("Interval", TimeValue (Time ("0.00002"))); //packets/s
                   client.SetAttribute ("PacketSize", UintegerValue (payloadSize));
                   ApplicationContainer clientApp = client.Install (wifiApNode.Get (0));

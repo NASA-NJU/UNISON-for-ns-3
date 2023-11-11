@@ -52,7 +52,7 @@ public:
    * \brief Get the type ID.
    * \return The object TypeId.
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   BasicEnergyHarvester ();
 
@@ -65,7 +65,7 @@ public:
    */
   BasicEnergyHarvester (Time updateInterval);
 
-  virtual ~BasicEnergyHarvester ();
+  ~BasicEnergyHarvester () override;
 
   /**
    * \param updateInterval Energy harvesting update interval.
@@ -81,7 +81,7 @@ public:
    * This function returns the interval between each update of the value of the
    * power harvested by this energy harvester.
    */
-  Time GetHarvestedPowerUpdateInterval (void) const;
+  Time GetHarvestedPowerUpdateInterval () const;
 
   /**
    * \param stream Random variable stream number.
@@ -94,28 +94,28 @@ public:
 
 private:
   /// Defined in ns3::Object
-  void DoInitialize (void);
+  void DoInitialize () override;
 
   /// Defined in ns3::Object
-  void DoDispose (void);
+  void DoDispose () override;
 
   /**
    * Calculates harvested Power.
    */
-  void CalculateHarvestedPower (void);
+  void CalculateHarvestedPower ();
 
   /**
    * \returns m_harvestedPower The power currently provided by the Basic Energy Harvester.
    * Implements DoGetPower defined in EnergyHarvester.
    */
-  virtual double DoGetPower (void) const;
+  double DoGetPower () const override;
 
   /**
    * This function is called every m_energyHarvestingUpdateInterval in order to
    * update the amount of power that will be provided by the harvester in the
    * next interval.
    */
-  void UpdateHarvestedPower (void);
+  void UpdateHarvestedPower ();
 
 private:
 

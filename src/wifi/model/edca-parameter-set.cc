@@ -29,8 +29,7 @@ EdcaParameterSet::EdcaParameterSet ()
     m_acBE (0),
     m_acBK (0),
     m_acVI (0),
-    m_acVO (0),
-    m_qosSupported (0)
+    m_acVO (0)
 {
 }
 
@@ -38,18 +37,6 @@ WifiInformationElementId
 EdcaParameterSet::ElementId () const
 {
   return IE_EDCA_PARAMETER_SET;
-}
-
-void
-EdcaParameterSet::SetQosSupported (uint8_t qosSupported)
-{
-  m_qosSupported = qosSupported;
-}
-
-uint8_t
-EdcaParameterSet::IsQosSupported (void) const
-{
-  return ((m_acBE != 0) || (m_acBK != 0) || (m_acVI != 0) || (m_acVO != 0));
 }
 
 void
@@ -187,158 +174,134 @@ EdcaParameterSet::SetVoTxopLimit (uint16_t txop)
 }
 
 uint8_t
-EdcaParameterSet::GetQosInfo (void) const
+EdcaParameterSet::GetQosInfo () const
 {
   return m_qosInfo;
 }
 
 uint8_t
-EdcaParameterSet::GetBeAifsn (void) const
+EdcaParameterSet::GetBeAifsn () const
 {
   return (m_acBE & 0x0f);
 }
 
 uint32_t
-EdcaParameterSet::GetBeCWmin (void) const
+EdcaParameterSet::GetBeCWmin () const
 {
   uint8_t ECWmin = ((m_acBE >> 8) & 0x0f);
   return static_cast<uint32_t> (exp2 (ECWmin) - 1);
 }
 
 uint32_t
-EdcaParameterSet::GetBeCWmax (void) const
+EdcaParameterSet::GetBeCWmax () const
 {
   uint8_t ECWmax = ((m_acBE >> 12) & 0x0f);
   return static_cast<uint32_t> (exp2 (ECWmax) - 1);
 }
 
 uint16_t
-EdcaParameterSet::GetBeTxopLimit (void) const
+EdcaParameterSet::GetBeTxopLimit () const
 {
   return (m_acBE >> 16);
 }
 
 uint8_t
-EdcaParameterSet::GetBkAifsn (void) const
+EdcaParameterSet::GetBkAifsn () const
 {
   return (m_acBK & 0x0f);
 }
 
 uint32_t
-EdcaParameterSet::GetBkCWmin (void) const
+EdcaParameterSet::GetBkCWmin () const
 {
   uint8_t ECWmin = ((m_acBK >> 8) & 0x0f);
   return static_cast<uint32_t> (exp2 (ECWmin) - 1);
 }
 
 uint32_t
-EdcaParameterSet::GetBkCWmax (void) const
+EdcaParameterSet::GetBkCWmax () const
 {
   uint8_t ECWmax = ((m_acBK >> 12) & 0x0f);
   return static_cast<uint32_t> (exp2 (ECWmax) - 1);
 }
 
 uint16_t
-EdcaParameterSet::GetBkTxopLimit (void) const
+EdcaParameterSet::GetBkTxopLimit () const
 {
   return (m_acBK >> 16);
 }
 
 uint8_t
-EdcaParameterSet::GetViAifsn (void) const
+EdcaParameterSet::GetViAifsn () const
 {
   return (m_acVI & 0x0f);
 }
 
 uint32_t
-EdcaParameterSet::GetViCWmin (void) const
+EdcaParameterSet::GetViCWmin () const
 {
   uint8_t ECWmin = ((m_acVI >> 8) & 0x0f);
   return static_cast<uint32_t> (exp2 (ECWmin) - 1);
 }
 
 uint32_t
-EdcaParameterSet::GetViCWmax (void) const
+EdcaParameterSet::GetViCWmax () const
 {
   uint8_t ECWmax = ((m_acVI >> 12) & 0x0f);
   return static_cast<uint32_t> (exp2 (ECWmax) - 1);
 }
 
 uint16_t
-EdcaParameterSet::GetViTxopLimit (void) const
+EdcaParameterSet::GetViTxopLimit () const
 {
   return (m_acVI >> 16);
 }
 
 uint8_t
-EdcaParameterSet::GetVoAifsn (void) const
+EdcaParameterSet::GetVoAifsn () const
 {
   return (m_acVO & 0x0f);
 }
 
 uint32_t
-EdcaParameterSet::GetVoCWmin (void) const
+EdcaParameterSet::GetVoCWmin () const
 {
   uint8_t ECWmin = ((m_acVO >> 8) & 0x0f);
   return static_cast<uint32_t> (exp2 (ECWmin) - 1);
 }
 
 uint32_t
-EdcaParameterSet::GetVoCWmax (void) const
+EdcaParameterSet::GetVoCWmax () const
 {
   uint8_t ECWmax = ((m_acVO >> 12) & 0x0f);
   return static_cast<uint32_t> (exp2 (ECWmax) - 1);
 }
 
 uint16_t
-EdcaParameterSet::GetVoTxopLimit (void) const
+EdcaParameterSet::GetVoTxopLimit () const
 {
   return (m_acVO >> 16);
 }
 
-uint8_t
+uint16_t
 EdcaParameterSet::GetInformationFieldSize () const
 {
-  NS_ASSERT (m_qosSupported);
   return 18;
-}
-
-Buffer::Iterator
-EdcaParameterSet::Serialize (Buffer::Iterator i) const
-{
-  if (!m_qosSupported)
-    {
-      return i;
-    }
-  return WifiInformationElement::Serialize (i);
-}
-
-uint16_t
-EdcaParameterSet::GetSerializedSize () const
-{
-  if (!m_qosSupported)
-    {
-      return 0;
-    }
-  return WifiInformationElement::GetSerializedSize ();
 }
 
 void
 EdcaParameterSet::SerializeInformationField (Buffer::Iterator start) const
 {
-  if (m_qosSupported)
-    {
-      start.WriteU8 (GetQosInfo ());
-      start.WriteU8 (m_reserved);
-      start.WriteU32 (m_acBE);
-      start.WriteU32 (m_acBK);
-      start.WriteU32 (m_acVI);
-      start.WriteU32 (m_acVO);
-    }
+  start.WriteU8 (GetQosInfo ());
+  start.WriteU8 (m_reserved);
+  start.WriteU32 (m_acBE);
+  start.WriteU32 (m_acBK);
+  start.WriteU32 (m_acVI);
+  start.WriteU32 (m_acVO);
 }
 
-uint8_t
-EdcaParameterSet::DeserializeInformationField (Buffer::Iterator start, uint8_t length)
+uint16_t
+EdcaParameterSet::DeserializeInformationField (Buffer::Iterator start, uint16_t length)
 {
   Buffer::Iterator i = start;
   m_qosInfo = i.ReadU8 ();

@@ -38,7 +38,7 @@ DataOutputInterface::~DataOutputInterface()
 }
 /* static */
 TypeId
-DataOutputInterface::GetTypeId (void)
+DataOutputInterface::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::DataOutputInterface")
     .SetParent<Object> ()
@@ -47,7 +47,7 @@ DataOutputInterface::GetTypeId (void)
     ;
   return tid;
 }
-  
+
 void
 DataOutputInterface::DoDispose ()
 {

@@ -25,8 +25,14 @@ set(source_files
     model/channel-access-manager.cc
     model/ctrl-headers.cc
     model/edca-parameter-set.cc
+    model/eht/eht-capabilities.cc
+    model/eht/eht-configuration.cc
+    model/eht/eht-phy.cc
+    model/eht/eht-ppdu.cc
+    model/eht/multi-link-element.cc
     model/error-rate-model.cc
     model/extended-capabilities.cc
+    model/fcfs-wifi-queue-scheduler.cc
     model/frame-capture-model.cc
     model/frame-exchange-manager.cc
     model/he/constant-obss-pd-algorithm.cc
@@ -87,6 +93,7 @@ set(source_files
     model/rate-control/rrpaa-wifi-manager.cc
     model/rate-control/thompson-sampling-wifi-manager.cc
     model/recipient-block-ack-agreement.cc
+    model/reduced-neighbor-report.cc
     model/simple-frame-capture-model.cc
     model/snr-tag.cc
     model/spectrum-wifi-phy.cc
@@ -105,16 +112,21 @@ set(source_files
     model/vht/vht-ppdu.cc
     model/wifi-ack-manager.cc
     model/wifi-acknowledgment.cc
+    model/wifi-assoc-manager.cc
     model/wifi-default-ack-manager.cc
+    model/wifi-default-assoc-manager.cc
     model/wifi-default-protection-manager.cc
     model/wifi-information-element-vector.cc
     model/wifi-information-element.cc
     model/wifi-mac-header.cc
-    model/wifi-mac-queue-item.cc
+    model/wifi-mac-queue-container.cc
+    model/wifi-mac-queue-elem.cc
+    model/wifi-mac-queue-scheduler.cc
     model/wifi-mac-queue.cc
     model/wifi-mac-trailer.cc
     model/wifi-mac.cc
     model/wifi-mode.cc
+    model/wifi-mpdu.cc
     model/wifi-net-device.cc
     model/wifi-phy.cc
     model/wifi-phy-common.cc
@@ -159,8 +171,14 @@ set(header_files
     model/channel-access-manager.h
     model/ctrl-headers.h
     model/edca-parameter-set.h
+    model/eht/eht-capabilities.h
+    model/eht/eht-configuration.h
+    model/eht/eht-phy.h
+    model/eht/eht-ppdu.h
+    model/eht/multi-link-element.h
     model/error-rate-model.h
     model/extended-capabilities.h
+    model/fcfs-wifi-queue-scheduler.h
     model/frame-capture-model.h
     model/frame-exchange-manager.h
     model/he/constant-obss-pd-algorithm.h
@@ -221,6 +239,7 @@ set(header_files
     model/rate-control/rrpaa-wifi-manager.h
     model/rate-control/thompson-sampling-wifi-manager.h
     model/recipient-block-ack-agreement.h
+    model/reduced-neighbor-report.h
     model/reference/error-rate-tables.h
     model/simple-frame-capture-model.h
     model/snr-tag.h
@@ -240,17 +259,23 @@ set(header_files
     model/vht/vht-ppdu.h
     model/wifi-ack-manager.h
     model/wifi-acknowledgment.h
+    model/wifi-assoc-manager.h
     model/wifi-default-ack-manager.h
+    model/wifi-default-assoc-manager.h
     model/wifi-default-protection-manager.h
     model/wifi-information-element-vector.h
     model/wifi-information-element.h
     model/wifi-mac-header.h
-    model/wifi-mac-queue-item.h
+    model/wifi-mac-queue-container.h
+    model/wifi-mac-queue-elem.h
+    model/wifi-mac-queue-scheduler-impl.h
+    model/wifi-mac-queue-scheduler.h
     model/wifi-mac-queue.h
     model/wifi-mac-trailer.h
     model/wifi-mac.h
     model/wifi-mode.h
     model/wifi-mpdu-type.h
+    model/wifi-mpdu.h
     model/wifi-net-device.h
     model/wifi-phy-band.h
     model/wifi-phy-common.h
@@ -299,9 +324,13 @@ build_lib(
     test/spectrum-wifi-phy-test.cc
     test/tx-duration-test.cc
     test/wifi-aggregation-test.cc
+    test/wifi-dynamic-bw-op-test.cc
+    test/wifi-eht-info-elems-test.cc
     test/wifi-error-rate-models-test.cc
+    test/wifi-ie-fragment-test.cc
     test/wifi-mac-ofdma-test.cc
     test/wifi-mac-queue-test.cc
+    test/wifi-mlo-test.cc
     test/wifi-phy-ofdma-test.cc
     test/wifi-phy-reception-test.cc
     test/wifi-phy-thresholds-test.cc
@@ -310,4 +339,5 @@ build_lib(
     test/wifi-test.cc
     test/wifi-transmit-mask-test.cc
     test/wifi-txop-test.cc
+    test/wifi-phy-cca-test.cc
 )

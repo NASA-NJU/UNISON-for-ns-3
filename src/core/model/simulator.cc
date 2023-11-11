@@ -83,9 +83,9 @@ static GlobalValue g_schedTypeImpl = GlobalValue ("SchedulerType",
  * \brief Get the static SimulatorImpl instance.
  * \return The SimulatorImpl instance pointer.
  */
-static SimulatorImpl ** PeekImpl (void)
+static SimulatorImpl ** PeekImpl ()
 {
-  static SimulatorImpl *impl = 0;
+  static SimulatorImpl *impl = nullptr;
   return &impl;
 }
 
@@ -95,13 +95,13 @@ static SimulatorImpl ** PeekImpl (void)
  * \return The singleton pointer.
  * \see Simulator::GetImplementation()
  */
-static SimulatorImpl * GetImpl (void)
+static SimulatorImpl * GetImpl ()
 {
   SimulatorImpl **pimpl = PeekImpl ();
   /* Please, don't include any calls to logging macros in this function
    * or pay the price, that is, stack explosions.
    */
-  if (*pimpl == 0)
+  if (*pimpl == nullptr)
     {
       {
         ObjectFactory factory;
@@ -133,12 +133,12 @@ static SimulatorImpl * GetImpl (void)
 }
 
 void
-Simulator::Destroy (void)
+Simulator::Destroy ()
 {
   NS_LOG_FUNCTION_NOARGS ();
 
   SimulatorImpl **pimpl = PeekImpl ();
-  if (*pimpl == 0)
+  if (*pimpl == nullptr)
     {
       return;
     }
@@ -147,11 +147,11 @@ Simulator::Destroy (void)
    * legal), Simulator::GetImpl will trigger again an infinite recursion until
    * the stack explodes.
    */
-  LogSetTimePrinter (0);
-  LogSetNodePrinter (0);
+  LogSetTimePrinter (nullptr);
+  LogSetNodePrinter (nullptr);
   (*pimpl)->Destroy ();
   (*pimpl)->Unref ();
-  *pimpl = 0;
+  *pimpl = nullptr;
 }
 
 void
@@ -162,14 +162,14 @@ Simulator::SetScheduler (ObjectFactory schedulerFactory)
 }
 
 bool
-Simulator::IsFinished (void)
+Simulator::IsFinished ()
 {
   NS_LOG_FUNCTION_NOARGS ();
   return GetImpl ()->IsFinished ();
 }
 
 void
-Simulator::Run (void)
+Simulator::Run ()
 {
   NS_LOG_FUNCTION_NOARGS ();
   Time::ClearMarkedTimes ();
@@ -177,7 +177,7 @@ Simulator::Run (void)
 }
 
 void
-Simulator::Stop (void)
+Simulator::Stop ()
 {
   NS_LOG_FUNCTION_NOARGS ();
   NS_LOG_LOGIC ("stop");
@@ -192,7 +192,7 @@ Simulator::Stop (Time const &delay)
 }
 
 Time
-Simulator::Now (void)
+Simulator::Now ()
 {
   /* Please, don't include any calls to logging macros in this function
    * or pay the price, that is, stack explosions.
@@ -257,7 +257,7 @@ Simulator::DoScheduleDestroy (EventImpl *impl)
 void
 Simulator::Remove (const EventId &id)
 {
-  if (*PeekImpl () == 0)
+  if (*PeekImpl () == nullptr)
     {
       return;
     }
@@ -267,7 +267,7 @@ Simulator::Remove (const EventId &id)
 void
 Simulator::Cancel (const EventId &id)
 {
-  if (*PeekImpl () == 0)
+  if (*PeekImpl () == nullptr)
     {
       return;
     }
@@ -277,43 +277,43 @@ Simulator::Cancel (const EventId &id)
 bool
 Simulator::IsExpired (const EventId &id)
 {
-  if (*PeekImpl () == 0)
+  if (*PeekImpl () == nullptr)
     {
       return true;
     }
   return GetImpl ()->IsExpired (id);
 }
 
-Time Now (void)
+Time Now ()
 {
   return Simulator::Now ();
 }
 
 Time
-Simulator::GetMaximumSimulationTime (void)
+Simulator::GetMaximumSimulationTime ()
 {
   NS_LOG_FUNCTION_NOARGS ();
   return GetImpl ()->GetMaximumSimulationTime ();
 }
 
 uint32_t
-Simulator::GetContext (void)
+Simulator::GetContext ()
 {
   return GetImpl ()->GetContext ();
 }
 
 uint64_t
-Simulator::GetEventCount (void)
+Simulator::GetEventCount ()
 {
   return GetImpl ()->GetEventCount ();
 }
 
 uint32_t
-Simulator::GetSystemId (void)
+Simulator::GetSystemId ()
 {
   NS_LOG_FUNCTION_NOARGS ();
 
-  if (*PeekImpl () != 0)
+  if (*PeekImpl () != nullptr)
     {
       return GetImpl ()->GetSystemId ();
     }
@@ -327,7 +327,7 @@ void
 Simulator::SetImplementation (Ptr<SimulatorImpl> impl)
 {
   NS_LOG_FUNCTION (impl);
-  if (*PeekImpl () != 0)
+  if (*PeekImpl () != nullptr)
     {
       NS_FATAL_ERROR ("It is not possible to set the implementation after calling any Simulator:: function. Call Simulator::SetImplementation earlier or after Simulator::Destroy.");
     }
@@ -350,7 +350,7 @@ Simulator::SetImplementation (Ptr<SimulatorImpl> impl)
 }
 
 Ptr<SimulatorImpl>
-Simulator::GetImplementation (void)
+Simulator::GetImplementation ()
 {
   NS_LOG_FUNCTION_NOARGS ();
   return GetImpl ();

@@ -22,6 +22,7 @@
 #include "ns3/address.h"
 #include "ns3/assert.h"
 #include "ns3/log.h"
+#include "ns3/simulator.h"
 #include <iomanip>
 #include <iostream>
 #include <cstring>
@@ -56,6 +57,7 @@ AsciiToLowCase (char c)
     }
 }
 
+uint64_t Mac16Address::m_allocationIndex = 0;
 
 Mac16Address::Mac16Address ()
 {
@@ -130,26 +132,38 @@ Mac16Address::ConvertFrom (const Address &address)
   return retval;
 }
 Address
-Mac16Address::ConvertTo (void) const
+Mac16Address::ConvertTo () const
 {
   NS_LOG_FUNCTION (this);
   return Address (GetType (), m_address, 2);
 }
 
 Mac16Address
-Mac16Address::Allocate (void)
+Mac16Address::Allocate ()
 {
   NS_LOG_FUNCTION_NOARGS ();
-  static uint64_t id = 0;
-  id++;
+
+  if (m_allocationIndex == 0)
+    {
+      Simulator::ScheduleDestroy (Mac16Address::ResetAllocationIndex);
+    }
+
+  m_allocationIndex++;
   Mac16Address address;
-  address.m_address[0] = (id >> 8) & 0xff;
-  address.m_address[1] = (id >> 0) & 0xff;
+  address.m_address[0] = (m_allocationIndex >> 8) & 0xff;
+  address.m_address[1] = m_allocationIndex & 0xff;
   return address;
 }
 
+void
+Mac16Address::ResetAllocationIndex ()
+{
+  NS_LOG_FUNCTION_NOARGS ();
+  m_allocationIndex = 0;
+}
+
 uint8_t
-Mac16Address::GetType (void)
+Mac16Address::GetType ()
 {
   NS_LOG_FUNCTION_NOARGS ();
 
@@ -158,7 +172,7 @@ Mac16Address::GetType (void)
 }
 
 Mac16Address
-Mac16Address::GetBroadcast (void)
+Mac16Address::GetBroadcast ()
 {
   NS_LOG_FUNCTION_NOARGS ();
 
@@ -186,7 +200,7 @@ Mac16Address::GetMulticast (Ipv6Address address)
 }
 
 bool
-Mac16Address::IsBroadcast (void) const
+Mac16Address::IsBroadcast () const
 {
   NS_LOG_FUNCTION (this);
   if (m_address[0] == 0xff && m_address[1] == 0xff)
@@ -197,7 +211,7 @@ Mac16Address::IsBroadcast (void) const
 }
 
 bool
-Mac16Address::IsMulticast (void) const
+Mac16Address::IsMulticast () const
 {
   NS_LOG_FUNCTION (this);
   uint8_t val = m_address[0];
@@ -237,17 +251,17 @@ std::istream& operator>> (std::istream& is, Mac16Address & address)
     {
       std::string tmp;
       std::string::size_type next;
-      next = v.find (":", col);
+      next = v.find (':', col);
       if (next == std::string::npos)
         {
           tmp = v.substr (col, v.size ()-col);
-          address.m_address[i] = strtoul (tmp.c_str(), 0, 16);
+          address.m_address[i] = strtoul (tmp.c_str(), nullptr, 16);
           break;
         }
       else
         {
           tmp = v.substr (col, next-col);
-          address.m_address[i] = strtoul (tmp.c_str(), 0, 16);
+          address.m_address[i] = strtoul (tmp.c_str(), nullptr, 16);
           col = next + 1;
         }
     }

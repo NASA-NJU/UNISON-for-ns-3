@@ -35,8 +35,8 @@ namespace ns3 {
 class ThreeGppAntennaModel : public AntennaModel
 {
 public:
-  ThreeGppAntennaModel (void);
-  virtual ~ThreeGppAntennaModel (void) override;
+  ThreeGppAntennaModel ();
+  ~ThreeGppAntennaModel () override;
 
   /**
    * \brief Get the type ID.
@@ -45,7 +45,7 @@ public:
   static TypeId GetTypeId ();
 
   // inherited from AntennaModel
-  virtual double GetGainDb (Angles a) override;
+  double GetGainDb (Angles a) override;
 
   /**
    * Get the vertical beamwidth of the antenna element.

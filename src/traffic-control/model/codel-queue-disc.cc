@@ -19,8 +19,8 @@
  * Based on ns2 simulation code presented by Kathie Nichols
  *
  * This port based on linux kernel code by
- * Authors:	Dave Täht <d@taht.net>
- *		Eric Dumazet <edumazet@google.com>
+ * Authors: Dave Täht <d@taht.net>
+ *          Eric Dumazet <edumazet@google.com>
  *
  * Ported to ns-3 by: Andrew McGregor <andrewmcgr@gmail.com>
 */
@@ -56,7 +56,7 @@ static inline uint32_t ReciprocalDivide (uint32_t A, uint32_t R)
  * Returns the current time translated in CoDel time representation
  * \return the current time
  */
-static uint32_t CoDelGetTime (void)
+static uint32_t CoDelGetTime ()
 {
   Time time = Simulator::Now ();
   uint64_t ns = time.GetNanoSeconds ();
@@ -67,7 +67,7 @@ static uint32_t CoDelGetTime (void)
 
 NS_OBJECT_ENSURE_REGISTERED (CoDelQueueDisc);
 
-TypeId CoDelQueueDisc::GetTypeId (void)
+TypeId CoDelQueueDisc::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::CoDelQueueDisc")
     .SetParent<QueueDisc> ()
@@ -153,7 +153,7 @@ CoDelQueueDisc::NewtonStep (uint16_t recInvSqrt, uint32_t count)
   NS_LOG_FUNCTION_NOARGS ();
   uint32_t invsqrt = ((uint32_t) recInvSqrt) << REC_INV_SQRT_SHIFT;
   uint32_t invsqrt2 = ((uint64_t) invsqrt * invsqrt) >> 32;
-  uint64_t val = (3ll << 32) - ((uint64_t) count * invsqrt2);
+  uint64_t val = (3LL << 32) - ((uint64_t) count * invsqrt2);
 
   val >>= 2; /* avoid overflow */
   val = (val * invsqrt) >> (32 - 2 + 1);
@@ -232,7 +232,7 @@ CoDelQueueDisc::OkToDrop (Ptr<QueueDiscItem> item, uint32_t now)
 }
 
 Ptr<QueueDiscItem>
-CoDelQueueDisc::DoDequeue (void)
+CoDelQueueDisc::DoDequeue ()
 {
   NS_LOG_FUNCTION (this);
 
@@ -242,7 +242,7 @@ CoDelQueueDisc::DoDequeue (void)
       // Leave dropping state when queue is empty
       m_dropping = false;
       NS_LOG_LOGIC ("Queue empty");
-      return 0;
+      return nullptr;
     }
   uint32_t ldelay = Time2CoDel (Simulator::Now () - item->GetTimeStamp ());
   if (item && m_useL4s)
@@ -399,19 +399,19 @@ CoDelQueueDisc::DoDequeue (void)
 }
 
 Time
-CoDelQueueDisc::GetTarget (void)
+CoDelQueueDisc::GetTarget ()
 {
   return m_target;
 }
 
 Time
-CoDelQueueDisc::GetInterval (void)
+CoDelQueueDisc::GetInterval ()
 {
   return m_interval;
 }
 
 uint32_t
-CoDelQueueDisc::GetDropNext (void)
+CoDelQueueDisc::GetDropNext ()
 {
   return m_dropNext;
 }
@@ -447,7 +447,7 @@ CoDelQueueDisc::Time2CoDel (Time t)
 }
 
 bool
-CoDelQueueDisc::CheckConfig (void)
+CoDelQueueDisc::CheckConfig ()
 {
   NS_LOG_FUNCTION (this);
   if (GetNQueueDiscClasses () > 0)
@@ -479,7 +479,7 @@ CoDelQueueDisc::CheckConfig (void)
 }
 
 void
-CoDelQueueDisc::InitializeParams (void)
+CoDelQueueDisc::InitializeParams ()
 {
   NS_LOG_FUNCTION (this);
 }

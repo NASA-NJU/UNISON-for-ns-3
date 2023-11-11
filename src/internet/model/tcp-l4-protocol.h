@@ -58,7 +58,7 @@ class NetDevice;
 /**
  * \ingroup tcp
  * \brief TCP socket creation and multiplexing/demultiplexing
- * 
+ *
  * A single instance of this class is held by one instance of class Node.
  *
  * The creation of TcpSocket are handled in the method CreateSocket, which is
@@ -83,11 +83,11 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
   static const uint8_t PROT_NUMBER; //!< protocol number (0x6)
 
   TcpL4Protocol ();
-  virtual ~TcpL4Protocol ();
+  ~TcpL4Protocol () override;
 
   // Delete copy constructor and assignment operator to avoid misuse
   TcpL4Protocol (const TcpL4Protocol &) = delete;
@@ -107,7 +107,7 @@ public:
    * \return A smart Socket pointer to a TcpSocket allocated by this instance
    * of the TCP protocol
    */
-  Ptr<Socket> CreateSocket (void);
+  Ptr<Socket> CreateSocket ();
 
   /**
    * \brief Create a TCP socket using the specified congestion control algorithm TypeId
@@ -136,7 +136,7 @@ public:
    * \brief Allocate an IPv4 Endpoint
    * \return the Endpoint
    */
-  Ipv4EndPoint *Allocate (void);
+  Ipv4EndPoint *Allocate ();
   /**
    * \brief Allocate an IPv4 Endpoint
    * \param address address to use
@@ -174,7 +174,7 @@ public:
    * \brief Allocate an IPv6 Endpoint
    * \return the Endpoint
    */
-  Ipv6EndPoint *Allocate6 (void);
+  Ipv6EndPoint *Allocate6 ();
   /**
    * \brief Allocate an IPv6 Endpoint
    * \param address address to use
@@ -220,7 +220,7 @@ public:
    */
   void SendPacket (Ptr<Packet> pkt, const TcpHeader &outgoing,
                    const Address &saddr, const Address &daddr,
-                   Ptr<NetDevice> oif = 0) const;
+                   Ptr<NetDevice> oif = nullptr) const;
 
   /**
    * \brief Make a socket fully operational
@@ -251,30 +251,30 @@ public:
   void DeAllocate (Ipv6EndPoint *endPoint);
 
   // From IpL4Protocol
-  virtual enum IpL4Protocol::RxStatus Receive (Ptr<Packet> p,
+  enum IpL4Protocol::RxStatus Receive (Ptr<Packet> p,
                                                Ipv4Header const &incomingIpHeader,
-                                               Ptr<Ipv4Interface> incomingInterface);
-  virtual enum IpL4Protocol::RxStatus Receive (Ptr<Packet> p,
+                                               Ptr<Ipv4Interface> incomingInterface) override;
+  enum IpL4Protocol::RxStatus Receive (Ptr<Packet> p,
                                                Ipv6Header const &incomingIpHeader,
-                                               Ptr<Ipv6Interface> incomingInterface);
+                                               Ptr<Ipv6Interface> incomingInterface) override;
 
-  virtual void ReceiveIcmp (Ipv4Address icmpSource, uint8_t icmpTtl,
+  void ReceiveIcmp (Ipv4Address icmpSource, uint8_t icmpTtl,
                             uint8_t icmpType, uint8_t icmpCode, uint32_t icmpInfo,
                             Ipv4Address payloadSource,Ipv4Address payloadDestination,
-                            const uint8_t payload[8]);
-  virtual void ReceiveIcmp (Ipv6Address icmpSource, uint8_t icmpTtl,
+                            const uint8_t payload[8]) override;
+  void ReceiveIcmp (Ipv6Address icmpSource, uint8_t icmpTtl,
                             uint8_t icmpType, uint8_t icmpCode, uint32_t icmpInfo,
                             Ipv6Address payloadSource,Ipv6Address payloadDestination,
-                            const uint8_t payload[8]);
+                            const uint8_t payload[8]) override;
 
-  virtual void SetDownTarget (IpL4Protocol::DownTargetCallback cb);
-  virtual void SetDownTarget6 (IpL4Protocol::DownTargetCallback6 cb);
-  virtual int GetProtocolNumber (void) const;
-  virtual IpL4Protocol::DownTargetCallback GetDownTarget (void) const;
-  virtual IpL4Protocol::DownTargetCallback6 GetDownTarget6 (void) const;
+  void SetDownTarget (IpL4Protocol::DownTargetCallback cb) override;
+  void SetDownTarget6 (IpL4Protocol::DownTargetCallback6 cb) override;
+  int GetProtocolNumber () const override;
+  IpL4Protocol::DownTargetCallback GetDownTarget () const override;
+  IpL4Protocol::DownTargetCallback6 GetDownTarget6 () const override;
 
 protected:
-  virtual void DoDispose (void);
+  void DoDispose () override;
 
   /**
    * \brief Setup socket factory and callbacks when aggregated to a node
@@ -285,7 +285,7 @@ protected:
    * The aggregation is completed by setting the node in the TCP stack, link
    * it to the ipv4 or ipv6 stack and adding TCP socket factory to the node.
    */
-  virtual void NotifyNewAggregate ();
+  void NotifyNewAggregate () override;
 
   /**
    * \brief Get the tcp header of the incoming packet and checks its checksum if needed
@@ -339,7 +339,7 @@ private:
    */
   void SendPacketV4 (Ptr<Packet> pkt, const TcpHeader &outgoing,
                      const Ipv4Address &saddr, const Ipv4Address &daddr,
-                     Ptr<NetDevice> oif = 0) const;
+                     Ptr<NetDevice> oif = nullptr) const;
 
   /**
    * \brief Send a packet via TCP (IPv6)
@@ -352,7 +352,7 @@ private:
    */
   void SendPacketV6 (Ptr<Packet> pkt, const TcpHeader &outgoing,
                      const Ipv6Address &saddr, const Ipv6Address &daddr,
-                     Ptr<NetDevice> oif = 0) const;
+                     Ptr<NetDevice> oif = nullptr) const;
 };
 
 } // namespace ns3

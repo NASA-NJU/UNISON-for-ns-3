@@ -57,7 +57,7 @@ public:
  * \ingroup lte-test
  * \ingroup tests
  *
- * \brief Test SINR calculation in the downlink when power control is used. 
+ * \brief Test SINR calculation in the downlink when power control is used.
  * Test if the difference in power levels are corresponding to the estamated values.
  */
 class LteDownlinkPowerControlSpectrumValueTestCase : public TestCase
@@ -69,7 +69,7 @@ public:
  * \param name the reference name
  * \param earfcn the EARFCN
  * \param bw the bandwidth
- * \param powerTx 
+ * \param powerTx
  * \param powerTxMap
  * \param activeRbs
  * \param expected the expected Tx Power Spectral Density
@@ -78,10 +78,10 @@ public:
                                                 uint16_t earfcn, uint16_t bw, double powerTx,
                                                 std::map<int, double> powerTxMap, std::vector <int> activeRbs,
                                                 SpectrumValue& expected);
-  virtual ~LteDownlinkPowerControlSpectrumValueTestCase ();
+  ~LteDownlinkPowerControlSpectrumValueTestCase () override;
 
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
   Ptr<SpectrumValue> m_actual; ///< actual Tx Power Spectral Density
   Ptr<SpectrumValue> m_expected; ///< expected Tx Power Spectral Density
 
@@ -92,7 +92,7 @@ private:
  * \ingroup tests
  *
  * \brief Test SINR calculation in the downlink when the power control is used.
- * Test the power control by comparing the downlink data and ctrl power 
+ * Test the power control by comparing the downlink data and ctrl power
  * difference with the estimated value based on the specified change in power.
  */
 class LteDownlinkPowerControlTestCase : public TestCase
@@ -106,10 +106,10 @@ public:
  * \param name the reference name
  */
   LteDownlinkPowerControlTestCase (bool changePower, uint8_t pa, std::string name);
-  virtual ~LteDownlinkPowerControlTestCase ();
+  ~LteDownlinkPowerControlTestCase () override;
 
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
 
   bool m_changePdschConfigDedicated; ///< PDSCH config dedicated change
   LteRrcSap::PdschConfigDedicated m_pdschConfigDedicated; ///< PDSCH config dedicated
@@ -121,9 +121,9 @@ private:
  * \ingroup lte-test
  * \ingroup tests
  *
- * \brief Test if RRC connection reconfiguration messages are properly 
+ * \brief Test if RRC connection reconfiguration messages are properly
  * generated upon the change in the downlink power.
- * 
+ *
  */
 class LteDownlinkPowerControlRrcConnectionReconfigurationTestCase : public TestCase
 {
@@ -135,7 +135,7 @@ public:
    * \param name the reference name
    */
   LteDownlinkPowerControlRrcConnectionReconfigurationTestCase (bool useIdealRrc, std::string name);
-  virtual ~LteDownlinkPowerControlRrcConnectionReconfigurationTestCase ();
+  ~LteDownlinkPowerControlRrcConnectionReconfigurationTestCase () override;
 
   /**
    * \brief Connection Reconfiguration ENB
@@ -165,7 +165,7 @@ public:
    */
   void ChangePdschConfigDedicated (uint16_t rnti, uint8_t pa);
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
   bool m_useIdealRrc; ///< use ideal RRC?
 
   bool m_changePdschConfigDedicatedTriggered; ///< change PDSCH config dedicated triggered?

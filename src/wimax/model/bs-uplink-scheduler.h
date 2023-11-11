@@ -42,25 +42,25 @@ class ServiceFlowRecord;
 class UplinkScheduler : public Object
 {
 public:
-  UplinkScheduler (void);
+  UplinkScheduler ();
   /**
    * Constructor
    *
    * \param bs base station device
    */
   UplinkScheduler (Ptr<BaseStationNetDevice> bs);
-  virtual ~UplinkScheduler (void);
+  ~UplinkScheduler () override;
 
   /**
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   /**
    * \return the number of IR opps allocated
    */
-  virtual uint8_t GetNrIrOppsAllocated (void) const;
+  virtual uint8_t GetNrIrOppsAllocated () const;
   /**
    * \brief Set the number of IR opps allocated
    * \param nrIrOppsAllocated number of IR opps allocated
@@ -70,65 +70,65 @@ public:
   /**
    * \return true if the IR interval is allocated
    */
-  virtual bool GetIsIrIntrvlAllocated (void) const;
+  virtual bool GetIsIrIntrvlAllocated () const;
   /**
    * \brief Set if the IR interval is allocated
-   * \param isIrIntrvlAllocated 
+   * \param isIrIntrvlAllocated
    */
   virtual void SetIsIrIntrvlAllocated (bool isIrIntrvlAllocated);
 
   /**
    * \return true if the Inv IR interval is allocated
    */
-  virtual bool GetIsInvIrIntrvlAllocated (void) const;
+  virtual bool GetIsInvIrIntrvlAllocated () const;
   /**
    * \brief Set if the Inv IR interval is allocated
-   * \param isInvIrIntrvlAllocated 
+   * \param isInvIrIntrvlAllocated
    */
   virtual void SetIsInvIrIntrvlAllocated (bool isInvIrIntrvlAllocated);
 
   /**
    * \return uplink allocations
    */
-  virtual std::list<OfdmUlMapIe> GetUplinkAllocations (void) const;
+  virtual std::list<OfdmUlMapIe> GetUplinkAllocations () const;
 
   /**
    * \return the timestamp of the IR interval
    */
-  virtual Time GetTimeStampIrInterval (void);
+  virtual Time GetTimeStampIrInterval ();
   /**
    * \brief Set timestamp IR interval
-   * \param timeStampIrInterval 
+   * \param timeStampIrInterval
    */
   virtual void SetTimeStampIrInterval (Time timeStampIrInterval);
 
   /**
    * \return the DCD timestamp
    */
-  virtual Time GetDcdTimeStamp (void) const;
+  virtual Time GetDcdTimeStamp () const;
   /**
    * \brief Set DCD timestamp
-   * \param dcdTimeStamp 
+   * \param dcdTimeStamp
    */
   virtual void SetDcdTimeStamp (Time dcdTimeStamp);
 
   /**
    * \return the UCD timestamp
    */
-  virtual Time GetUcdTimeStamp (void) const;
+  virtual Time GetUcdTimeStamp () const;
   /**
    * \brief Set UCD timestamp
-   * \param ucdTimeStamp 
+   * \param ucdTimeStamp
    */
   virtual void SetUcdTimeStamp (Time ucdTimeStamp);
 
   /**
    * \return the base station device
    */
-  virtual Ptr<BaseStationNetDevice> GetBs (void);
+  virtual Ptr<BaseStationNetDevice> GetBs ();
   /**
    * \brief Set base station device
-   * \param bs 
+   * \param bs
    */
   virtual void SetBs (Ptr<BaseStationNetDevice> bs);
   /**
@@ -139,7 +139,7 @@ public:
   /**
    * \return the calculated allocation start time
    */
-  virtual uint32_t CalculateAllocationStartTime (void) = 0;
+  virtual uint32_t CalculateAllocationStartTime () = 0;
   /**
    * Add uplink allocation
    * \param ulMapIe the UL map IE
@@ -154,7 +154,7 @@ public:
   /**
    * Schedule function
    */
-  virtual void Schedule (void) = 0;
+  virtual void Schedule () = 0;
   /**
    * Service unsolicited grants function
    * \param ssRecord the SS record
@@ -222,11 +222,11 @@ public:
   /**
    * one time initialization function
    */
-  virtual void InitOnce (void) = 0;
+  virtual void InitOnce () = 0;
 
   /**
    * \brief Set requested bandwidth
-   * \param sfr service flow record 
+   * \param sfr service flow record
    */
   virtual void OnSetRequestedBandwidth (ServiceFlowRecord *sfr) = 0;
 

@@ -39,7 +39,7 @@ namespace ns3 {
  * While it is possible to generate a sample config file and lightly
  * edit it to change a couple of values, there are cases where this
  * process will not work because the same value on the same object
- * can appear multiple times in the same automatically-generated 
+ * can appear multiple times in the same automatically-generated
  * configuration file under different configuration paths.
  *
  * As such, the best way to use this class is to use it to generate
@@ -47,7 +47,7 @@ namespace ns3 {
  * file only the strictly necessary elements, and move these minimal
  * elements to a new configuration file which can then safely
  * be edited. Another option is to use the ns3::GtkConfigStore class
- * which will allow you to edit the parameters and will generate 
+ * which will allow you to edit the parameters and will generate
  * configuration files where all the instances of the same parameter
  * are changed.
  */
@@ -82,11 +82,11 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
-  virtual TypeId GetInstanceTypeId (void) const;
+  static TypeId GetTypeId ();
+  TypeId GetInstanceTypeId () const override;
 
   ConfigStore ();
-  ~ConfigStore ();
+  ~ConfigStore () override;
 
   /**
    * Set the mode of operation
@@ -112,11 +112,11 @@ public:
   /**
    * Configure the default values
    */
-  void ConfigureDefaults (void);
+  void ConfigureDefaults ();
   /**
    * Configure the attribute values
    */
-  void ConfigureAttributes (void);
+  void ConfigureAttributes ();
 
 private:
   enum Mode m_mode; ///< store mode

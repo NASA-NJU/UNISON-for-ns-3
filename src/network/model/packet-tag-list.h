@@ -121,7 +121,7 @@ class Tag;
  *       shared. This portion is copied before the #Remove or #Replace is
  *       performed.
  */
-class PacketTagList 
+class PacketTagList
 {
 public:
   /**
@@ -141,16 +141,16 @@ public:
    */
   struct TagData
   {
-    struct TagData * next;      /**< Pointer to next in list */
+    struct TagData * next; //!< Pointer to next in list
 #ifdef NS3_MTP
     AtomicCounter count;
 #else
-    uint32_t count;             /**< Number of incoming links */
+    uint32_t count;        //!< Number of incoming links
 #endif
-    TypeId tid;                 /**< Type of the tag serialized into #data */
-    uint32_t size;              /**< Size of the \c data buffer */
-    uint8_t data[1];            /**< Serialization buffer */
-  };  /* struct TagData */
+    TypeId tid;            //!< Type of the tag serialized into #data
+    uint32_t size;         //!< Size of the \c data buffer
+    uint8_t data[1];       //!< Serialization buffer
+  };
 
   /**
    * Create a new PacketTagList.
@@ -217,17 +217,17 @@ public:
   /**
    * Remove all tags from this list (up to the first merge).
    */
-  inline void RemoveAll (void);
+  inline void RemoveAll ();
   /**
    * \returns pointer to head of tag list
    */
-  const struct PacketTagList::TagData *Head (void) const;
+  const struct PacketTagList::TagData *Head () const;
   /**
    * Returns number of bytes required for packet serialization.
    *
    * \returns number of bytes required for packet serialization
    */
-  uint32_t GetSerializedSize (void) const;
+  uint32_t GetSerializedSize () const;
   /**
    * Serialize the tag list into a byte buffer.
    *
@@ -257,7 +257,7 @@ private:
    */
   static
   TagData * CreateTagData (size_t dataSize);
-  
+
   /**
    * Typedef of method function pointer for copy-on-write operations
    *
@@ -329,7 +329,7 @@ PacketTagList::PacketTagList ()
 PacketTagList::PacketTagList (PacketTagList const &o)
   : m_next (o.m_next)
 {
-  if (m_next != 0)
+  if (m_next != nullptr)
     {
       m_next->count++;
     }
@@ -339,13 +339,13 @@ PacketTagList &
 PacketTagList::operator = (PacketTagList const &o)
 {
   // self assignment
-  if (m_next == o.m_next) 
+  if (m_next == o.m_next)
     {
       return *this;
     }
   RemoveAll ();
   m_next = o.m_next;
-  if (m_next != 0) 
+  if (m_next != nullptr)
     {
       m_next->count++;
     }
@@ -358,10 +358,10 @@ PacketTagList::~PacketTagList ()
 }
 
 void
-PacketTagList::RemoveAll (void)
+PacketTagList::RemoveAll ()
 {
-  struct TagData *prev = 0;
-  for (struct TagData *cur = m_next; cur != 0; cur = cur->next)
+  struct TagData *prev = nullptr;
+  for (struct TagData *cur = m_next; cur != nullptr; cur = cur->next)
     {
       if (cur->count-- > 1) 
         {
@@ -370,19 +370,19 @@ PacketTagList::RemoveAll (void)
 #ifdef NS3_MTP
       std::atomic_thread_fence (std::memory_order_acquire);
 #endif
-      if (prev != 0) 
+      if (prev != nullptr) 
         {
           prev->~TagData ();
           std::free (prev);
         }
       prev = cur;
     }
-  if (prev != 0) 
+  if (prev != nullptr)
     {
       prev->~TagData ();
       std::free (prev);
     }
-  m_next = 0;
+  m_next = nullptr;
 }
 
 } // namespace ns3

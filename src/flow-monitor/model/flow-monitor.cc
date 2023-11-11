@@ -33,8 +33,8 @@ NS_LOG_COMPONENT_DEFINE ("FlowMonitor");
 
 NS_OBJECT_ENSURE_REGISTERED (FlowMonitor);
 
-TypeId 
-FlowMonitor::GetTypeId (void)
+TypeId
+FlowMonitor::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::FlowMonitor")
     .SetParent<Object> ()
@@ -73,8 +73,8 @@ FlowMonitor::GetTypeId (void)
   return tid;
 }
 
-TypeId 
-FlowMonitor::GetInstanceTypeId (void) const
+TypeId
+FlowMonitor::GetInstanceTypeId () const
 {
   return GetTypeId ();
 }
@@ -89,7 +89,7 @@ FlowMonitor::FlowMonitor ()
 }
 
 void
-FlowMonitor::DoDispose (void)
+FlowMonitor::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
   Simulator::Cancel (m_startEvent);
@@ -98,12 +98,12 @@ FlowMonitor::DoDispose (void)
       iter != m_classifiers.end ();
       iter ++)
     {
-      *iter = 0;
+      *iter = nullptr;
     }
   for (uint32_t i = 0; i < m_flowProbes.size (); i++)
     {
       m_flowProbes[i]->Dispose ();
-      m_flowProbes[i] = 0;
+      m_flowProbes[i] = nullptr;
     }
   Object::DoDispose ();
 }
@@ -259,7 +259,7 @@ FlowMonitor::ReportLastRx (Ptr<FlowProbe> probe, uint32_t flowId, uint32_t packe
           stats.jitterSum += jitter;
           stats.jitterHistogram.AddValue (jitter.GetSeconds ());
         }
-      else 
+      else
         {
           stats.jitterSum -= jitter;
           stats.jitterHistogram.AddValue (-jitter.GetSeconds ());

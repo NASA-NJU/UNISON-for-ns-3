@@ -27,8 +27,8 @@ namespace ns3 {
 
 NS_OBJECT_ENSURE_REGISTERED (MobilityModel);
 
-TypeId 
-MobilityModel::GetTypeId (void)
+TypeId
+MobilityModel::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::MobilityModel")
     .SetParent<Object> ()
@@ -44,7 +44,7 @@ MobilityModel::GetTypeId (void)
                    VectorValue (Vector (0.0, 0.0, 0.0)), // ignored initial value.
                    MakeVectorAccessor (&MobilityModel::GetVelocity),
                    MakeVectorChecker ())
-    .AddTraceSource ("CourseChange", 
+    .AddTraceSource ("CourseChange",
                      "The value of the position and/or velocity vector changed",
                      MakeTraceSourceAccessor (&MobilityModel::m_courseChangeTrace),
                      "ns3::MobilityModel::TracedCallback")
@@ -61,7 +61,7 @@ MobilityModel::~MobilityModel ()
 }
 
 Vector
-MobilityModel::GetPosition (void) const
+MobilityModel::GetPosition () const
 {
   return DoGetPosition ();
 }
@@ -79,18 +79,18 @@ MobilityModel::DoGetPositionWithReference (const Vector& referencePosition) cons
 }
 
 Vector
-MobilityModel::GetVelocity (void) const
+MobilityModel::GetVelocity () const
 {
   return DoGetVelocity ();
 }
 
-void 
+void
 MobilityModel::SetPosition (const Vector &position)
 {
   DoSetPosition (position);
 }
 
-double 
+double
 MobilityModel::GetDistanceFrom (Ptr<const MobilityModel> other) const
 {
   Vector oPosition = other->DoGetPosition ();
@@ -105,7 +105,7 @@ MobilityModel::GetRelativeSpeed (Ptr<const MobilityModel> other) const
 }
 
 void
-MobilityModel::NotifyCourseChange (void) const
+MobilityModel::NotifyCourseChange () const
 {
   m_courseChangeTrace (this);
 }

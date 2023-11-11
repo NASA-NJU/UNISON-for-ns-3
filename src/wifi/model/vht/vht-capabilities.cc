@@ -44,8 +44,7 @@ VhtCapabilities::VhtCapabilities ()
     m_rxAntennaPatternConsistency (0),
     m_txAntennaPatternConsistency (0),
     m_rxHighestSupportedLongGuardIntervalDataRate (0),
-    m_txHighestSupportedLongGuardIntervalDataRate (0),
-    m_vhtSupported (0)
+    m_txHighestSupportedLongGuardIntervalDataRate (0)
 {
   m_rxMcsMap.resize (8,0);
   m_txMcsMap.resize (8,0);
@@ -62,54 +61,23 @@ VhtCapabilities::ElementId () const
   return IE_VHT_CAPABILITIES;
 }
 
-void
-VhtCapabilities::SetVhtSupported (uint8_t vhtSupported)
-{
-  m_vhtSupported = vhtSupported;
-}
-
-uint8_t
+uint16_t
 VhtCapabilities::GetInformationFieldSize () const
 {
-  //we should not be here if vht is not supported
-  NS_ASSERT (m_vhtSupported > 0);
   return 12;
-}
-
-Buffer::Iterator
-VhtCapabilities::Serialize (Buffer::Iterator i) const
-{
-  if (m_vhtSupported < 1)
-    {
-      return i;
-    }
-  return WifiInformationElement::Serialize (i);
-}
-
-uint16_t
-VhtCapabilities::GetSerializedSize () const
-{
-  if (m_vhtSupported < 1)
-    {
-      return 0;
-    }
-  return WifiInformationElement::GetSerializedSize ();
 }
 
 void
 VhtCapabilities::SerializeInformationField (Buffer::Iterator start) const
 {
-  if (m_vhtSupported == 1)
-    {
-      //write the corresponding value for each bit
-      start.WriteHtolsbU32 (GetVhtCapabilitiesInfo ());
-      start.WriteHtolsbU64 (GetSupportedMcsAndNssSet ());
-    }
+  //write the corresponding value for each bit
+  start.WriteHtolsbU32 (GetVhtCapabilitiesInfo ());
+  start.WriteHtolsbU64 (GetSupportedMcsAndNssSet ());
 }
 
-uint8_t
+uint16_t
 VhtCapabilities::DeserializeInformationField (Buffer::Iterator start,
-                                              uint8_t length)
+                                              uint16_t length)
 {
   Buffer::Iterator i = start;
   uint32_t vhtinfo = i.ReadLsbtohU32 ();
@@ -267,7 +235,7 @@ VhtCapabilities::SetMaxAmpduLength (uint32_t maxampdulength)
 {
   for (uint8_t i = 0; i <= 7; i++)
     {
-      if ((1ul << (13 + i)) - 1 == maxampdulength)
+      if ((1UL << (13 + i)) - 1 == maxampdulength)
         {
           m_maxAmpduLengthExponent = i;
           return;
@@ -343,7 +311,7 @@ VhtCapabilities::SetTxHighestSupportedLgiDataRate (uint16_t supportedDatarate)
 }
 
 uint16_t
-VhtCapabilities::GetMaxMpduLength (void) const
+VhtCapabilities::GetMaxMpduLength () const
 {
   if (m_maxMpduLength == 0)
     {
@@ -385,9 +353,9 @@ VhtCapabilities::GetTxStbc () const
 }
 
 uint32_t
-VhtCapabilities::GetMaxAmpduLength (void) const
+VhtCapabilities::GetMaxAmpduLength () const
 {
-  return (1ul << (13 + m_maxAmpduLengthExponent)) - 1;
+  return (1UL << (13 + m_maxAmpduLengthExponent)) - 1;
 }
 
 bool

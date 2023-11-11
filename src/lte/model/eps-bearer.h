@@ -34,7 +34,7 @@ namespace ns3 {
  */
 struct GbrQosInformation
 {
-  /** 
+  /**
    * Default constructor, initializes member variables to zero or equivalent
    */
   GbrQosInformation ();
@@ -52,7 +52,7 @@ struct GbrQosInformation
  */
 struct AllocationRetentionPriority
 {
-  /** 
+  /**
    * Default constructor, initializes member variables to zero or equivalent
    */
   AllocationRetentionPriority ();
@@ -95,9 +95,9 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
-  virtual TypeId GetInstanceTypeId (void) const override;
+  TypeId GetInstanceTypeId () const override;
 
   /**
    * QoS Class Indicator. See 3GPP 23.203 Section 6.1.7.2 for standard values.
@@ -133,7 +133,7 @@ public:
 
   /**
    * Default constructor. QCI will be initialized to NGBR_VIDEO_TCP_DEFAULT
-   * 
+   *
    */
   EpsBearer ();
 
@@ -161,7 +161,7 @@ public:
   /**
     * \brief Deconstructor
     */
-  virtual ~EpsBearer () { }
+  ~EpsBearer () override { }
 
   /**
    * \brief SetRelease

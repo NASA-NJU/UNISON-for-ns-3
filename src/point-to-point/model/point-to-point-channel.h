@@ -37,7 +37,7 @@ class Packet;
  *
  * This class represents a very simple point to point channel.  Think full
  * duplex RS-232 or RS-422 with null modem and no handshaking.  There is no
- * multi-drop capability on this channel -- there can be a maximum of two 
+ * multi-drop capability on this channel -- there can be a maximum of two
  * point-to-point net devices connected.
  *
  * There are two "wires" in the channel.  The first device connected gets the
@@ -47,7 +47,7 @@ class Packet;
  * \see Attach
  * \see TransmitStart
  */
-class PointToPointChannel : public Channel 
+class PointToPointChannel : public Channel
 {
 public:
   /**
@@ -55,12 +55,12 @@ public:
    *
    * \return The TypeId for this class
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   /**
    * \brief Create a PointToPointChannel
    *
-   * By default, you get a channel that has an "infinitely" fast 
+   * By default, you get a channel that has an "infinitely" fast
    * transmission speed and zero delay.
    */
   PointToPointChannel ();
@@ -84,7 +84,7 @@ public:
    * \brief Get number of devices on this channel
    * \returns number of devices on this channel
    */
-  virtual std::size_t GetNDevices (void) const;
+  std::size_t GetNDevices () const override;
 
   /**
    * \brief Get PointToPointNetDevice corresponding to index i on this channel
@@ -98,25 +98,25 @@ public:
    * \param i Index number of the device requested
    * \returns Ptr to NetDevice requested
    */
-  virtual Ptr<NetDevice> GetDevice (std::size_t i) const;
+  Ptr<NetDevice> GetDevice (std::size_t i) const override;
 
 protected:
   /**
    * \brief Get the delay associated with this channel
    * \returns Time delay
    */
-  Time GetDelay (void) const;
+  Time GetDelay () const;
 
   /**
    * \brief Check to make sure the link is initialized
    * \returns true if initialized, asserts otherwise
    */
-  bool IsInitialized (void) const;
+  bool IsInitialized () const;
 
   /**
-   * \brief Get the net-device source 
+   * \brief Get the net-device source
    * \param i the link requested
-   * \returns Ptr to PointToPointNetDevice source for the 
+   * \returns Ptr to PointToPointNetDevice source for the
    * specified link
    */
   Ptr<PointToPointNetDevice> GetSource (uint32_t i) const;
@@ -124,7 +124,7 @@ protected:
   /**
    * \brief Get the net-device destination
    * \param i the link requested
-   * \returns Ptr to PointToPointNetDevice destination for 
+   * \returns Ptr to PointToPointNetDevice destination for
    * the specified link
    */
   Ptr<PointToPointNetDevice> GetDestination (uint32_t i) const;
@@ -144,7 +144,7 @@ protected:
     (Ptr<const Packet> packet,
      Ptr<NetDevice> txDevice, Ptr<NetDevice> rxDevice,
      Time duration, Time lastBitTime);
-                    
+
 private:
   /** Each point to point link has exactly two net devices. */
   static const std::size_t N_DEVICES = 2;
@@ -153,10 +153,10 @@ private:
   std::size_t        m_nDevices; //!< Devices of this channel
 
   /**
-   * The trace source for the packet transmission animation events that the 
+   * The trace source for the packet transmission animation events that the
    * device can fire.
    * Arguments to the callback are the packet, transmitting
-   * net device, receiving net device, transmission time and 
+   * net device, receiving net device, transmission time and
    * packet receipt time.
    *
    * \see class CallBackTraceSource
@@ -194,7 +194,7 @@ public:
     /** \brief Create the link, it will be in INITIALIZING state
      *
      */
-    Link() : m_state (INITIALIZING), m_src (0), m_dst (0) {}
+    Link() : m_state (INITIALIZING), m_src (nullptr), m_dst (nullptr) {}
 
     WireState                  m_state; //!< State of the link
     Ptr<PointToPointNetDevice> m_src;   //!< First NetDevice

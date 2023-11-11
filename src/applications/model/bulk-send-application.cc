@@ -39,11 +39,11 @@ NS_LOG_COMPONENT_DEFINE ("BulkSendApplication");
 NS_OBJECT_ENSURE_REGISTERED (BulkSendApplication);
 
 TypeId
-BulkSendApplication::GetTypeId (void)
+BulkSendApplication::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::BulkSendApplication")
     .SetParent<Application> ()
-    .SetGroupName("Applications") 
+    .SetGroupName("Applications")
     .AddConstructor<BulkSendApplication> ()
     .AddAttribute ("SendSize", "The amount of data to send each time.",
                    UintegerValue (512),
@@ -87,10 +87,10 @@ BulkSendApplication::GetTypeId (void)
 
 
 BulkSendApplication::BulkSendApplication ()
-  : m_socket (0),
+  : m_socket (nullptr),
     m_connected (false),
     m_totBytes (0),
-    m_unsentPacket (0)
+    m_unsentPacket (nullptr)
 {
   NS_LOG_FUNCTION (this);
 }
@@ -108,25 +108,25 @@ BulkSendApplication::SetMaxBytes (uint64_t maxBytes)
 }
 
 Ptr<Socket>
-BulkSendApplication::GetSocket (void) const
+BulkSendApplication::GetSocket () const
 {
   NS_LOG_FUNCTION (this);
   return m_socket;
 }
 
 void
-BulkSendApplication::DoDispose (void)
+BulkSendApplication::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
 
-  m_socket = 0;
-  m_unsentPacket = 0;
+  m_socket = nullptr;
+  m_unsentPacket = nullptr;
   // chain up
   Application::DoDispose ();
 }
 
 // Application Methods
-void BulkSendApplication::StartApplication (void) // Called at time specified by Start
+void BulkSendApplication::StartApplication () // Called at time specified by Start
 {
   NS_LOG_FUNCTION (this);
   Address from;
@@ -185,11 +185,11 @@ void BulkSendApplication::StartApplication (void) // Called at time specified by
     }
 }
 
-void BulkSendApplication::StopApplication (void) // Called at time specified by Stop
+void BulkSendApplication::StopApplication () // Called at time specified by Stop
 {
   NS_LOG_FUNCTION (this);
 
-  if (m_socket != 0)
+  if (m_socket)
     {
       m_socket->Close ();
       m_connected = false;
@@ -249,7 +249,7 @@ void BulkSendApplication::SendData (const Address &from, const Address &to)
         {
           m_totBytes += actual;
           m_txTrace (packet);
-          m_unsentPacket = 0;
+          m_unsentPacket = nullptr;
         }
       else if (actual == -1)
         {
@@ -291,7 +291,8 @@ void BulkSendApplication::ConnectionSucceeded (Ptr<Socket> socket)
   NS_LOG_FUNCTION (this << socket);
   NS_LOG_LOGIC ("BulkSendApplication Connection succeeded");
   m_connected = true;
-  Address from, to;
+  Address from;
+  Address to;
   socket->GetSockName (from);
   socket->GetPeerName (to);
   SendData (from, to);
@@ -309,7 +310,8 @@ void BulkSendApplication::DataSend (Ptr<Socket> socket, uint32_t)
 
   if (m_connected)
     { // Only send new data if the connection has completed
-      Address from, to;
+      Address from;
+      Address to;
       socket->GetSockName (from);
       socket->GetPeerName (to);
       SendData (from, to);

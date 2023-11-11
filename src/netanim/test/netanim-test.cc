@@ -55,10 +55,10 @@ public:
   /**
    * \brief Destructor.
    */
-  virtual
-  ~AbstractAnimationInterfaceTestCase ();
-  virtual void
-  DoRun (void);
+  
+  ~AbstractAnimationInterfaceTestCase () override;
+  void
+  DoRun () override;
 
 protected:
 
@@ -80,7 +80,7 @@ private:
 };
 
 AbstractAnimationInterfaceTestCase::AbstractAnimationInterfaceTestCase (std::string name) :
-  TestCase (name), m_anim (NULL), m_traceFileName ("netanim-test.xml")
+  TestCase (name), m_anim (nullptr), m_traceFileName ("netanim-test.xml")
 {
 }
 
@@ -90,7 +90,7 @@ AbstractAnimationInterfaceTestCase::~AbstractAnimationInterfaceTestCase ()
 }
 
 void
-AbstractAnimationInterfaceTestCase::DoRun (void)
+AbstractAnimationInterfaceTestCase::DoRun ()
 {
   PrepareNetwork ();
 
@@ -127,11 +127,11 @@ public:
 
 private:
 
-  virtual void
-  PrepareNetwork ();
+  void
+  PrepareNetwork () override;
 
-  virtual void
-  CheckLogic ();
+  void
+  CheckLogic () override;
 
 };
 
@@ -141,7 +141,7 @@ AnimationInterfaceTestCase::AnimationInterfaceTestCase () :
 }
 
 void
-AnimationInterfaceTestCase::PrepareNetwork (void)
+AnimationInterfaceTestCase::PrepareNetwork ()
 {
   m_nodes.Create (2);
   AnimationInterface::SetConstantPosition (m_nodes.Get (0), 0 , 10);
@@ -179,7 +179,7 @@ AnimationInterfaceTestCase::PrepareNetwork (void)
 }
 
 void
-AnimationInterfaceTestCase::CheckLogic (void)
+AnimationInterfaceTestCase::CheckLogic ()
 {
   NS_TEST_ASSERT_MSG_EQ (m_anim->GetTracePktCount (), 16, "Expected 16 packets traced");
 }
@@ -200,11 +200,11 @@ public:
 
 private:
 
-  virtual void
-  PrepareNetwork ();
+  void
+  PrepareNetwork () override;
 
-  virtual void
-  CheckLogic ();
+  void
+  CheckLogic () override;
 
   Ptr<BasicEnergySource> m_energySource; ///< energy source
   Ptr<SimpleDeviceEnergyModel> m_energyModel; ///< energy model
@@ -218,7 +218,7 @@ AnimationRemainingEnergyTestCase::AnimationRemainingEnergyTestCase () :
 }
 
 void
-AnimationRemainingEnergyTestCase::PrepareNetwork (void)
+AnimationRemainingEnergyTestCase::PrepareNetwork ()
 {
   m_energySource = CreateObject<BasicEnergySource>();
   m_energyModel = CreateObject<SimpleDeviceEnergyModel>();
@@ -238,7 +238,7 @@ AnimationRemainingEnergyTestCase::PrepareNetwork (void)
 }
 
 void
-AnimationRemainingEnergyTestCase::CheckLogic (void)
+AnimationRemainingEnergyTestCase::CheckLogic ()
 {
   const double remainingEnergy = m_energySource->GetRemainingEnergy ();
 

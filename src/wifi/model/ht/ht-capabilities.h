@@ -45,23 +45,6 @@ public:
 
   // Implementations of pure virtual methods of WifiInformationElement
   WifiInformationElementId ElementId () const override;
-  uint8_t GetInformationFieldSize () const override;
-  void SerializeInformationField (Buffer::Iterator start) const override;
-  uint8_t DeserializeInformationField (Buffer::Iterator start,
-                                       uint8_t length) override;
-  /* This information element is a bit special in that it is only
-     included if the STA is an HT STA. To support this we
-     override the Serialize and GetSerializedSize methods of
-     WifiInformationElement. */
-  Buffer::Iterator Serialize (Buffer::Iterator start) const override;
-  uint16_t GetSerializedSize () const override;
-
-  /**
-   * Set the HT supported field.
-   *
-   * \param htSupported the HT supported field
-   */
-  void SetHtSupported (uint8_t htSupported);
 
   /**
    * Set the HT Capabilities Info field in the HT Capabilities information element.
@@ -187,74 +170,74 @@ public:
    *
    * \return the HT Capabilities Info field in the HT Capabilities information element
    */
-  uint16_t GetHtCapabilitiesInfo (void) const;
+  uint16_t GetHtCapabilitiesInfo () const;
   /**
    * Return the A-MPDU Parameters field in the HT Capabilities information element.
    *
    * \return the A-MPDU Parameters field in the HT Capabilities information element
    */
-  uint8_t GetAmpduParameters (void) const;
+  uint8_t GetAmpduParameters () const;
   /**
    * Return the first 64 bytes of the Supported MCS Set field in the HT Capabilities information element.
    *
    * \return the first 64 bytes of the Supported MCS Set field in the HT Capabilities information element
    */
-  uint64_t GetSupportedMcsSet1 (void) const;
+  uint64_t GetSupportedMcsSet1 () const;
   /**
    * Return the last 64 bytes of the Supported MCS Set field in the HT Capabilities information element.
    *
    * \return the last 64 bytes of the Supported MCS Set field in the HT Capabilities information element
    */
-  uint64_t GetSupportedMcsSet2 (void) const;
+  uint64_t GetSupportedMcsSet2 () const;
   /**
    * Return the Extended HT Capabilities field in the HT Capabilities information element.
    *
    * \return the Extended HT Capabilities field in the HT Capabilities information element
    */
-  uint16_t GetExtendedHtCapabilities (void) const;
+  uint16_t GetExtendedHtCapabilities () const;
   /**
    * Return the Transmit Beamforming (TxBF) Capabilities field in the HT Capabilities information element.
    *
    * \return the Transmit Beamforming (TxBF) Capabilities field in the HT Capabilities information element
    */
-  uint32_t GetTxBfCapabilities (void) const;
+  uint32_t GetTxBfCapabilities () const;
   /**
    * Return the Antenna Selection (ASEL) Capabilities field in the HT Capabilities information element.
    *
    * \return the Antenna Selection (ASEL) Capabilities field in the HT Capabilities information element
    */
-  uint8_t GetAntennaSelectionCapabilities (void) const;
+  uint8_t GetAntennaSelectionCapabilities () const;
 
   /**
    * Return LDPC.
    *
    * \return the LDPC value
    */
-  uint8_t GetLdpc (void) const;
+  uint8_t GetLdpc () const;
   /**
    * Return the supported channel width.
    *
    * \return the supported channel width
    */
-  uint8_t GetSupportedChannelWidth (void) const;
+  uint8_t GetSupportedChannelWidth () const;
   /**
    * Return the short guard interval 20 value.
    *
    * \return the short guard interval 20 value
    */
-  uint8_t GetShortGuardInterval20 (void) const;
+  uint8_t GetShortGuardInterval20 () const;
   /**
    * Return the maximum A-MSDU length.
    *
    * \return the maximum A-MSDU length
    */
-  uint16_t GetMaxAmsduLength (void) const;
+  uint16_t GetMaxAmsduLength () const;
   /**
    * Return the maximum A-MPDU length.
    *
    * \return the maximum A-MPDU length
    */
-  uint32_t GetMaxAmpduLength (void) const;
+  uint32_t GetMaxAmpduLength () const;
   /**
    * Return the is MCS supported flag.
    *
@@ -268,10 +251,15 @@ public:
    *
    * \return the receive highest supported antennas
    */
-  uint8_t GetRxHighestSupportedAntennas (void) const;
+  uint8_t GetRxHighestSupportedAntennas () const;
 
 
 private:
+  uint16_t GetInformationFieldSize () const override;
+  void SerializeInformationField (Buffer::Iterator start) const override;
+  uint16_t DeserializeInformationField (Buffer::Iterator start,
+                                        uint16_t length) override;
+
   //HT Capabilities Info field
   uint8_t m_ldpc;                  ///< LDPC
   uint8_t m_supportedChannelWidth; ///< supported channel width
@@ -344,9 +332,6 @@ private:
   uint8_t m_rxASelCapable;                            ///< receive antenna selection capable
   uint8_t m_txSoundingPpdusCapable;                   ///< sounding PPDUS capable
   uint8_t m_reservedASel;                             ///< reserved ASEL
-
-  /// This is used to decide whether this element should be added to the frame or not
-  uint8_t m_htSupported;
 };
 
 /**

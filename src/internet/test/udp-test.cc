@@ -1,7 +1,7 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2007 Georgia Tech Research Corporation
- * 
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
  * published by the Free Software Foundation;
@@ -18,7 +18,7 @@
  * Author: Raj Bhattacharjea <raj.b@gatech.edu>
  */
 /**
- * This is the test code for udp-socket-impl.cc, it was moved out of udp-socket-impl.cc to 
+ * This is the test code for udp-socket-impl.cc, it was moved out of udp-socket-impl.cc to
  * be in an independent file for clarity purposes.
  */
 
@@ -69,7 +69,7 @@ class UdpSocketLoopbackTest : public TestCase
 {
 public:
   UdpSocketLoopbackTest ();
-  virtual void DoRun (void);
+  void DoRun () override;
 
   /**
    * \brief Receive a packet.
@@ -80,7 +80,7 @@ public:
 };
 
 UdpSocketLoopbackTest::UdpSocketLoopbackTest ()
-  : TestCase ("UDP loopback test") 
+  : TestCase ("UDP loopback test")
 {
 }
 
@@ -121,7 +121,7 @@ class Udp6SocketLoopbackTest : public TestCase
 {
 public:
   Udp6SocketLoopbackTest ();
-  virtual void DoRun (void);
+  void DoRun () override;
 
   /**
    * \brief Receive a packet.
@@ -132,7 +132,7 @@ public:
 };
 
 Udp6SocketLoopbackTest::Udp6SocketLoopbackTest ()
-  : TestCase ("UDP6 loopback test") 
+  : TestCase ("UDP6 loopback test")
 {
 }
 
@@ -182,13 +182,13 @@ class UdpSocketImplTest : public TestCase
    * \brief Get the TOS of the received packet.
    * \returns The TOS.
    */
-  uint32_t GetTos (void);
+  uint32_t GetTos ();
 
   /**
    * \brief Get the priority of the received packet.
    * \returns The priority.
    */
-  uint32_t GetPriority (void);
+  uint32_t GetPriority ();
 
   /**
    * \brief Send data.
@@ -214,7 +214,7 @@ class UdpSocketImplTest : public TestCase
   void SendData (Ptr<Socket> socket);
 
 public:
-  virtual void DoRun (void);
+  void DoRun () override;
   UdpSocketImplTest ();
 
   /**
@@ -236,7 +236,7 @@ public:
 };
 
 UdpSocketImplTest::UdpSocketImplTest ()
-  : TestCase ("UDP socket implementation") 
+  : TestCase ("UDP socket implementation")
 {
 }
 
@@ -259,17 +259,17 @@ void UdpSocketImplTest::ReceivePkt2 (Ptr<Socket> socket)
 void UdpSocketImplTest::SentPkt (Ptr<const QueueDiscItem> item)
 {
   Ptr<const Ipv4QueueDiscItem> ipv4Item = DynamicCast<const Ipv4QueueDiscItem> (item);
-  NS_TEST_EXPECT_MSG_NE (ipv4Item, 0, "no IPv4 packet");
+  NS_TEST_EXPECT_MSG_NE (ipv4Item, nullptr, "no IPv4 packet");
   Address addr;
   m_sentPacket = Create<Ipv4QueueDiscItem> (ipv4Item->GetPacket ()->Copy (), addr, 0, ipv4Item->GetHeader ());
 }
 
-uint32_t UdpSocketImplTest::GetTos (void)
+uint32_t UdpSocketImplTest::GetTos ()
 {
   return static_cast<uint32_t> (m_sentPacket->GetHeader ().GetTos ());
 }
 
-uint32_t UdpSocketImplTest::GetPriority (void)
+uint32_t UdpSocketImplTest::GetPriority ()
 {
   SocketPriorityTag priorityTag;
   bool found = m_sentPacket->GetPacket ()->PeekPacketTag (priorityTag);
@@ -310,7 +310,7 @@ UdpSocketImplTest::SendData (Ptr<Socket> socket)
 }
 
 void
-UdpSocketImplTest::DoRun (void)
+UdpSocketImplTest::DoRun ()
 {
   // Create topology
 
@@ -411,8 +411,8 @@ UdpSocketImplTest::DoRun (void)
   NS_TEST_EXPECT_MSG_EQ (m_receivedPacket->GetSize (), 0, "first socket should not receive it (it is bound specifically to the first interface's address");
   NS_TEST_EXPECT_MSG_EQ (m_receivedPacket2->GetSize (), 123, "trivial");
 
-  m_receivedPacket = 0;
-  m_receivedPacket2 = 0;
+  m_receivedPacket = nullptr;
+  m_receivedPacket2 = nullptr;
 
   // Simple Link-local multicast test
 
@@ -503,7 +503,7 @@ class Udp6SocketImplTest : public TestCase
   void SendDataTo (Ptr<Socket> socket, std::string to);
 
 public:
-  virtual void DoRun (void);
+  void DoRun () override;
   Udp6SocketImplTest ();
 
   /**
@@ -588,7 +588,7 @@ Udp6SocketImplTest::SendDataTo (Ptr<Socket> socket, std::string to)
 }
 
 void
-Udp6SocketImplTest::DoRun (void)
+Udp6SocketImplTest::DoRun ()
 {
   // Create topology
 

@@ -60,7 +60,7 @@ public:
    * Get the registered TypeId for this class.
    * \returns The TypeId.
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   /**
    * What to do when we can't maintain real time synchrony.
@@ -87,28 +87,28 @@ public:
   /** Constructor. */
   RealtimeSimulatorImpl ();
   /** Destructor. */
-  ~RealtimeSimulatorImpl ();
+  ~RealtimeSimulatorImpl () override;
 
   // Inherited from SimulatorImpl
-  virtual void Destroy ();
-  virtual bool IsFinished (void) const;
-  virtual void Stop (void);
-  virtual void Stop (const Time &delay);
-  virtual EventId Schedule (const Time &delay, EventImpl *event);
-  virtual void ScheduleWithContext (uint32_t context, const Time &delay, EventImpl *event);
-  virtual EventId ScheduleNow (EventImpl *event);
-  virtual EventId ScheduleDestroy (EventImpl *event);
-  virtual void Remove (const EventId &ev);
-  virtual void Cancel (const EventId &ev);
-  virtual bool IsExpired (const EventId &ev) const;
-  virtual void Run (void);
-  virtual Time Now (void) const;
-  virtual Time GetDelayLeft (const EventId &id) const;
-  virtual Time GetMaximumSimulationTime (void) const;
-  virtual void SetScheduler (ObjectFactory schedulerFactory);
-  virtual uint32_t GetSystemId (void) const;
-  virtual uint32_t GetContext (void) const;
-  virtual uint64_t GetEventCount (void) const;
+  void Destroy () override;
+  bool IsFinished () const override;
+  void Stop () override;
+  void Stop (const Time &delay) override;
+  EventId Schedule (const Time &delay, EventImpl *event) override;
+  void ScheduleWithContext (uint32_t context, const Time &delay, EventImpl *event) override;
+  EventId ScheduleNow (EventImpl *event) override;
+  EventId ScheduleDestroy (EventImpl *event) override;
+  void Remove (const EventId &ev) override;
+  void Cancel (const EventId &ev) override;
+  bool IsExpired (const EventId &ev) const override;
+  void Run () override;
+  Time Now () const override;
+  Time GetDelayLeft (const EventId &id) const override;
+  Time GetMaximumSimulationTime () const override;
+  void SetScheduler (ObjectFactory schedulerFactory) override;
+  uint32_t GetSystemId () const override;
+  uint32_t GetContext () const override;
+  uint64_t GetEventCount () const override;
 
   /** \copydoc ScheduleWithContext(uint32_t,const Time&,EventImpl*) */
   void ScheduleRealtimeWithContext (uint32_t context, const Time &delay, EventImpl *event);
@@ -136,7 +136,7 @@ public:
    * Get the current real time from the synchronizer.
    * \returns The current real time.
    */
-  Time RealtimeNow (void) const;
+  Time RealtimeNow () const;
 
   /**
    * Set the SynchronizationMode.
@@ -148,7 +148,7 @@ public:
    * Get the SynchronizationMode.
    * \returns The current SynchronizationMode.
    */
-  RealtimeSimulatorImpl::SynchronizationMode GetSynchronizationMode (void) const;
+  RealtimeSimulatorImpl::SynchronizationMode GetSynchronizationMode () const;
 
   /**
    * Set the fatal error threshold for SynchronizationMode SYNC_HARD_LIMIT.
@@ -163,28 +163,28 @@ public:
    *
    * \returns The hard limit threshold.
    */
-  Time GetHardLimit (void) const;
+  Time GetHardLimit () const;
 
 private:
   /**
    * Is the simulator running?
    * \returns \c true if we are running.
    */
-  bool Running (void) const;
+  bool Running () const;
   /**
    * Check that the Synchronizer is locked to the real time clock.
    * \return \c true if the Synchronizer is locked.
    */
-  bool Realtime (void) const;
+  bool Realtime () const;
   /**
    * Get the timestep of the next event.
    * \returns The timestep of the next event.
    */
-  uint64_t NextTs (void) const;
+  uint64_t NextTs () const;
   /** Process the next event. */
-  void ProcessOneEvent (void);
+  void ProcessOneEvent ();
   /** Destructor implementation. */
-  virtual void DoDispose (void);
+  void DoDispose () override;
 
   /** Container type for events to be run at destroy time. */
   typedef std::list<EventId> DestroyEvents;

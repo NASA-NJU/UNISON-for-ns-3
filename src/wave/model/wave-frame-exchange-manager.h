@@ -51,12 +51,12 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
   WaveFrameExchangeManager ();
-  virtual ~WaveFrameExchangeManager ();
+  ~WaveFrameExchangeManager () override;
 
   // Overridden from FrameExchangeManager
-  virtual bool StartTransmission (Ptr<Txop> dcf);
+  bool StartTransmission (Ptr<Txop> dcf, uint16_t allowedWidth) override;
 
   /**
    * \param device WaveNetDevice associated with WaveFrameExchangeManager
@@ -65,7 +65,7 @@ public:
 
 protected:
   // Overridden from FrameExchangeManager
-  virtual void DoDispose (void);
+  void DoDispose () override;
 
 private:
   /**
@@ -76,7 +76,7 @@ private:
    * \param item the item being asked for TXVECTOR
    * \return TXVECTOR for the given item
    */
-  virtual WifiTxVector GetDataTxVector (Ptr<const WifiMacQueueItem> item) const;
+  virtual WifiTxVector GetDataTxVector (Ptr<const WifiMpdu> item) const;
 
   Ptr<ChannelScheduler> m_scheduler;     ///< the channel scheduler
   Ptr<ChannelCoordinator> m_coordinator; ///< the channel coordinator

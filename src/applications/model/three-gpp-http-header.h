@@ -55,7 +55,7 @@ class Packet;
 class ThreeGppHttpHeader : public Header
 {
 public:
-  /// Creates an empty instance	.
+  /// Creates an empty instance.
   ThreeGppHttpHeader ();
 
   /**
@@ -65,13 +65,13 @@ public:
   static TypeId GetTypeId ();
 
   // Inherited from ObjectBase base class.
-  virtual TypeId GetInstanceTypeId () const;
+  TypeId GetInstanceTypeId () const override;
 
   // Inherited from Header base class.
-  virtual uint32_t GetSerializedSize () const;
-  virtual void Serialize (Buffer::Iterator start) const;
-  virtual uint32_t Deserialize (Buffer::Iterator start);
-  virtual void Print (std::ostream &os) const;
+  uint32_t GetSerializedSize () const override;
+  void Serialize (Buffer::Iterator start) const override;
+  uint32_t Deserialize (Buffer::Iterator start) override;
+  void Print (std::ostream &os) const override;
 
   /**
    * \return The string representation of the header.

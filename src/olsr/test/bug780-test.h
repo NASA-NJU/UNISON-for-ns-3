@@ -19,11 +19,15 @@
 #ifndef BUG780_TEST_H
 #define BUG780_TEST_H
 
+#include "ns3/ptr.h"
 #include "ns3/test.h"
 #include "ns3/nstime.h"
 #include "ns3/node-container.h"
 
 namespace ns3 {
+
+class Socket;
+
 namespace olsr {
 
 /**
@@ -36,13 +40,13 @@ class Bug780Test : public TestCase
 {
 public:
   Bug780Test ();
-  ~Bug780Test ();
+  ~Bug780Test () override;
 private:
   /// Total simulation time
   const Time m_time;
   /// Create & configure test network
   void CreateNodes ();
-  void DoRun ();
+  void DoRun () override;
   /// Send one ping
   void SendPing ();
   /**

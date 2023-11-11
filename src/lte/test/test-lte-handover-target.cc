@@ -92,7 +92,7 @@ public:
                              uint16_t sourceCellId, uint16_t targetCellId,
                              std::string handoverAlgorithmType);
 
-  virtual ~LteHandoverTargetTestCase ();
+  ~LteHandoverTargetTestCase () override;
 
   /**
    * \brief Triggers when an eNodeB starts a handover and then verifies that
@@ -122,13 +122,13 @@ private:
    * \brief Run a simulation of a micro-cell network using the parameters
    *        provided to the constructor function.
    */
-  virtual void DoRun ();
+  void DoRun () override;
 
   /**
    * \brief Called at the end of simulation and verifies that a handover has
    *        occurred in the simulation.
    */
-  virtual void DoTeardown ();
+  void DoTeardown () override;
 
   // simulation parameters
   Vector m_uePosition; ///< UE positions
@@ -155,7 +155,7 @@ LteHandoverTargetTestCase::LteHandoverTargetTestCase (std::string name, Vector u
     m_sourceCellId (sourceCellId),
     m_targetCellId (targetCellId),
     m_handoverAlgorithmType (handoverAlgorithmType),
-    m_sourceEnbDev (0),
+    m_sourceEnbDev (nullptr),
     m_hasHandoverOccurred (false)
 {
   NS_LOG_INFO (this << " name=" << name);
@@ -205,7 +205,7 @@ LteHandoverTargetTestCase::CellShutdownCallback ()
 {
   NS_LOG_FUNCTION (this);
 
-  if (m_sourceEnbDev != 0)
+  if (m_sourceEnbDev)
     {
       // set the Tx power to 1 dBm
       NS_ASSERT (m_sourceEnbDev->GetCellId () == m_sourceCellId);
@@ -351,7 +351,7 @@ LteHandoverTargetTestCase::DoRun ()
   // Get the source eNodeB
   Ptr<NetDevice> sourceEnb = enbDevs.Get (m_sourceCellId - 1);
   m_sourceEnbDev = sourceEnb->GetObject<LteEnbNetDevice> ();
-  NS_ASSERT (m_sourceEnbDev != 0);
+  NS_ASSERT (m_sourceEnbDev);
   NS_ASSERT (m_sourceEnbDev->GetCellId () == m_sourceCellId);
 
   // Attach UE to the source eNodeB

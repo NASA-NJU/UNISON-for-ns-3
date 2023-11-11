@@ -26,7 +26,7 @@
  * 2) By default, Minstrel applies the multi-rate retry (the core of Minstrel
  *    algorithm). Otherwise, please use ConstantRateWifiManager instead.
  *
- * http://linuxwireless.org/en/developers/Documentation/mac80211/RateControl/minstrel
+ * https://wireless.wiki.kernel.org/en/developers/documentation/mac80211/ratecontrol/minstrel
  */
 
 #include <iomanip>
@@ -47,14 +47,14 @@ NS_LOG_COMPONENT_DEFINE ("MinstrelWifiManager");
 NS_OBJECT_ENSURE_REGISTERED (MinstrelWifiManager);
 
 TypeId
-MinstrelWifiManager::GetTypeId (void)
+MinstrelWifiManager::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::MinstrelWifiManager")
     .SetParent<WifiRemoteStationManager> ()
     .SetGroupName ("Wifi")
     .AddConstructor<MinstrelWifiManager> ()
     .AddAttribute ("UpdateStatistics",
-                   "The interval between updating statistics table ",
+                   "The interval between updating statistics table",
                    TimeValue (Seconds (0.1)),
                    MakeTimeAccessor (&MinstrelWifiManager::m_updateStats),
                    MakeTimeChecker ())
@@ -173,7 +173,7 @@ MinstrelWifiManager::AddCalcTxTime (WifiMode mode, Time t)
 }
 
 WifiRemoteStation *
-MinstrelWifiManager::DoCreateStation (void) const
+MinstrelWifiManager::DoCreateStation () const
 {
   NS_LOG_FUNCTION (this);
   MinstrelWifiRemoteStation *station = new MinstrelWifiRemoteStation ();
@@ -640,7 +640,8 @@ MinstrelWifiManager::UpdateStats (MinstrelWifiRemoteStation *station)
   NS_LOG_DEBUG ("Attempt/success reset to 0");
 
   uint32_t max_tp = 0;
-  uint8_t index_max_tp = 0, index_max_tp2 = 0;
+  uint8_t index_max_tp = 0;
+  uint8_t index_max_tp2 = 0;
 
   //go find max throughput, second maximum throughput, high probability of success
   NS_LOG_DEBUG ("Finding the maximum throughput, second maximum throughput, and highest probability");
@@ -849,9 +850,9 @@ MinstrelWifiManager::UpdateRetry (MinstrelWifiRemoteStation *station)
 }
 
 WifiTxVector
-MinstrelWifiManager::DoGetDataTxVector (WifiRemoteStation *st)
+MinstrelWifiManager::DoGetDataTxVector (WifiRemoteStation *st, uint16_t allowedWidth)
 {
-  NS_LOG_FUNCTION (this << st);
+  NS_LOG_FUNCTION (this << st << allowedWidth);
   MinstrelWifiRemoteStation *station = static_cast<MinstrelWifiRemoteStation*> (st);
   return GetDataTxVector (station);
 }
@@ -1072,7 +1073,7 @@ MinstrelWifiManager::PrintTable (MinstrelWifiRemoteStation *station)
           station->m_statsFile << ' ';
         }
 
-      float tmpTh = rate.throughput / 100000.0f;
+      float tmpTh = rate.throughput / 100000.0F;
       station->m_statsFile << "   " <<
         std::setw (17) << GetSupported (station, i) << "  " <<
         std::setw (2) << i << "  " <<

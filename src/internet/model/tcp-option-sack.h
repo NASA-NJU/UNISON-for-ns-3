@@ -18,7 +18,7 @@
  *
  * Original Author: Adrian Sai-wah Tam <adrian.sw.tam@gmail.com>
  * Documentation, test cases: Truc Anh N. Nguyen   <annguyen@ittc.ku.edu>
- *                            ResiliNets Research Group   http://wiki.ittc.ku.edu/resilinets
+ *                            ResiliNets Research Group   https://resilinets.org/
  *                            The University of Kansas
  *                            James P.G. Sterbenz <jpgs@ittc.ku.edu>, director
  */
@@ -53,21 +53,21 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
-  virtual TypeId GetInstanceTypeId (void) const;
+  static TypeId GetTypeId ();
+  TypeId GetInstanceTypeId () const override;
 
   typedef std::pair<SequenceNumber32, SequenceNumber32> SackBlock; //!< SACK block definition
   typedef std::list<SackBlock> SackList;                           //!< SACK list definition
 
   TcpOptionSack ();
-  virtual ~TcpOptionSack ();
+  ~TcpOptionSack () override;
 
-  virtual void Print (std::ostream &os) const;
-  virtual void Serialize (Buffer::Iterator start) const;
-  virtual uint32_t Deserialize (Buffer::Iterator start);
+  void Print (std::ostream &os) const override;
+  void Serialize (Buffer::Iterator start) const override;
+  uint32_t Deserialize (Buffer::Iterator start) override;
 
-  virtual uint8_t GetKind (void) const;
-  virtual uint32_t GetSerializedSize (void) const;
+  uint8_t GetKind () const override;
+  uint32_t GetSerializedSize () const override;
 
   /**
    * \brief Add a SACK block
@@ -79,18 +79,18 @@ public:
    * \brief Count the total number of SACK blocks
    * \return the total number of SACK blocks
    */
-  uint32_t GetNumSackBlocks (void) const;
+  uint32_t GetNumSackBlocks () const;
 
   /**
    * \brief Clear the SACK list
    */
-  void ClearSackList (void);
+  void ClearSackList ();
 
   /**
    * \brief Get the SACK list
    * \return the SACK list
    */
-  SackList GetSackList (void) const;
+  SackList GetSackList () const;
 
   friend std::ostream & operator<< (std::ostream & os, TcpOptionSack const & sackOption);
 

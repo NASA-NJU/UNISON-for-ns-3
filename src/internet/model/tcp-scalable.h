@@ -21,7 +21,7 @@
  *          Amir Modarresi <amodarresi@ittc.ku.edu>
  *
  * James P.G. Sterbenz <jpgs@ittc.ku.edu>, director
- * ResiliNets Research Group  http://wiki.ittc.ku.edu/resilinets
+ * ResiliNets Research Group  https://resilinets.org/
  * Information and Telecommunication Technology Center (ITTC)
  * and Department of Electrical Engineering and Computer Science
  * The University of Kansas Lawrence, KS USA.
@@ -68,21 +68,21 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   /**
    * Create an unbound tcp socket.
    */
-  TcpScalable (void);
+  TcpScalable ();
 
   /**
    * \brief Copy constructor
    * \param sock the object to copy
    */
   TcpScalable (const TcpScalable& sock);
-  virtual ~TcpScalable (void);
+  ~TcpScalable () override;
 
-  virtual std::string GetName () const;
+  std::string GetName () const override;
 
   /**
    * \brief Get slow start threshold following Scalable principle (Equation 2)
@@ -92,10 +92,10 @@ public:
    *
    * \return the slow start threshold value
    */
-  virtual uint32_t GetSsThresh (Ptr<const TcpSocketState> tcb,
-                                uint32_t bytesInFlight);
+  uint32_t GetSsThresh (Ptr<const TcpSocketState> tcb,
+                                uint32_t bytesInFlight) override;
 
-  virtual Ptr<TcpCongestionOps> Fork ();
+  Ptr<TcpCongestionOps> Fork () override;
 
 protected:
   /**
@@ -104,8 +104,8 @@ protected:
    * \param tcb internal congestion state
    * \param segmentsAcked count of segments acked
    */
-  virtual void CongestionAvoidance (Ptr<TcpSocketState> tcb,
-                                    uint32_t segmentsAcked);
+  void CongestionAvoidance (Ptr<TcpSocketState> tcb,
+                                    uint32_t segmentsAcked) override;
 
 private:
   uint32_t m_ackCnt;               //!< Number of received ACK

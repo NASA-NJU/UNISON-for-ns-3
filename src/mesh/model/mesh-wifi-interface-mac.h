@@ -58,14 +58,14 @@ public:
   /// C-tor
   MeshWifiInterfaceMac ();
   /// D-tor
-  virtual ~MeshWifiInterfaceMac ();
+  ~MeshWifiInterfaceMac () override;
 
   // Inherited from WifiMac
-  virtual void  Enqueue (Ptr<Packet> packet, Mac48Address to, Mac48Address from);
-  virtual void  Enqueue (Ptr<Packet> packet, Mac48Address to);
-  virtual bool  SupportsSendFrom () const;
-  virtual void  SetLinkUpCallback (Callback<void> linkUp);
-  virtual bool CanForwardPacketsTo (Mac48Address to) const;
+  void  Enqueue (Ptr<Packet> packet, Mac48Address to, Mac48Address from) override;
+  void  Enqueue (Ptr<Packet> packet, Mac48Address to) override;
+  bool  SupportsSendFrom () const override;
+  void  SetLinkUpCallback (Callback<void> linkUp) override;
+  bool CanForwardPacketsTo (Mac48Address to) const override;
 
   /// \name Each mesh point interface must know the mesh point address
   ///@{
@@ -116,7 +116,7 @@ public:
   /**
    * Install plugin.
    *
-   * \param plugin 
+   * \param plugin
    *
    * \todo return unique ID to allow user to unregister plugins
    */
@@ -137,7 +137,7 @@ public:
   /**
    * Switch frequency channel.
    *
-   * \param new_id 
+   * \param new_id
    */
   void SwitchFrequencyChannel (uint16_t new_id);
 
@@ -151,7 +151,7 @@ public:
   /**
    * Check supported rates.
    *
-   * \param rates 
+   * \param rates
    * \return true if rates are supported
    */
   bool CheckSupportedRates (SupportedRates rates) const;
@@ -192,7 +192,7 @@ public:
    *
    * \param standard the WifiStandard being configured
    */
-  virtual void ConfigureStandard (enum WifiStandard standard);
+  void ConfigureStandard (enum WifiStandard standard) override;
   /**
    * \param cwMin the minimum contention window size
    * \param cwMax the maximum contention window size
@@ -200,7 +200,7 @@ public:
    * This method is called to set the minimum and the maximum
    * contention window size.
    */
-  virtual void ConfigureContentionWindow (uint32_t cwMin, uint32_t cwMax);
+  void ConfigureContentionWindow (uint32_t cwMin, uint32_t cwMax) override;
 
   /**
    * Assign a fixed random variable stream number to the random variables
@@ -216,8 +216,9 @@ private:
    * Frame receive handler
    *
    * \param mpdu the received MPDU
+   * \param linkId the ID of the link the frame was received over
    */
-  void Receive (Ptr<WifiMacQueueItem> mpdu);
+  void Receive (Ptr<const WifiMpdu> mpdu, uint8_t linkId) override;
   /**
    * Send frame. Frame is supposed to be tagged by routing information.
    *
@@ -237,12 +238,12 @@ private:
    */
   bool GetBeaconGeneration () const;
   /// Real d-tor
-  virtual void DoDispose ();
+  void DoDispose () override;
 
 private:
   typedef std::vector<Ptr<MeshWifiInterfaceMacPlugin> > PluginList; ///< PluginList typedef
 
-  virtual void DoInitialize ();
+  void DoInitialize () override;
 
   /// \name Mesh timing intervals
   ///@{
@@ -275,7 +276,7 @@ private:
     /**
      * Print statistics.
      *
-     * \param os 
+     * \param os
      */
     void Print (std::ostream & os) const;
     /// constructor

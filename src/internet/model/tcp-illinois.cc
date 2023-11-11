@@ -19,7 +19,7 @@
  *         Truc Anh N. Nguyen <annguyen@ittc.ku.edu>
  *
  * James P.G. Sterbenz <jpgs@ittc.ku.edu>, director
- * ResiliNets Research Group  http://wiki.ittc.ku.edu/resilinets
+ * ResiliNets Research Group  https://resilinets.org/
  * Information and Telecommunication Technology Center (ITTC)
  * and Department of Electrical Engineering and Computer Science
  * The University of Kansas Lawrence, KS USA.
@@ -37,7 +37,7 @@ NS_LOG_COMPONENT_DEFINE ("TcpIllinois");
 NS_OBJECT_ENSURE_REGISTERED (TcpIllinois);
 
 TypeId
-TcpIllinois::GetTypeId (void)
+TcpIllinois::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::TcpIllinois")
     .SetParent<TcpNewReno> ()
@@ -79,7 +79,7 @@ TcpIllinois::GetTypeId (void)
   return tid;
 }
 
-TcpIllinois::TcpIllinois (void)
+TcpIllinois::TcpIllinois ()
   : TcpNewReno (),
     m_sumRtt (Time (0)),
     m_cntRtt (0),
@@ -127,7 +127,7 @@ TcpIllinois::TcpIllinois (const TcpIllinois& sock)
   NS_LOG_FUNCTION (this);
 }
 
-TcpIllinois::~TcpIllinois (void)
+TcpIllinois::~TcpIllinois ()
 {
   NS_LOG_FUNCTION (this);
 }
@@ -303,7 +303,8 @@ TcpIllinois::CalculateBeta (double da, double dm)
 {
   NS_LOG_FUNCTION (this << da << dm);
 
-  double d2, d3;
+  double d2;
+  double d3;
 
   d2 = dm / 10;
   d3 = (8 * dm) / 10;
@@ -365,7 +366,7 @@ TcpIllinois::Reset (const SequenceNumber32 &nextTxSequence)
 }
 
 Ptr<TcpCongestionOps>
-TcpIllinois::Fork (void)
+TcpIllinois::Fork ()
 {
   NS_LOG_FUNCTION (this);
 

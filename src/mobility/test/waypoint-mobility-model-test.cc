@@ -46,7 +46,7 @@ public:
       lazyNotify (lazy)
   {
   }
-  virtual ~WaypointMobilityModelNotifyTest ()
+  ~WaypointMobilityModelNotifyTest () override
   {
   }
 
@@ -57,10 +57,10 @@ private:
   std::deque<Waypoint> waypoints; ///< waypoints
   bool lazyNotify; ///< lazy notify?
 private:
-  virtual void DoRun (void);
-  virtual void DoTeardown (void);
+  void DoRun () override;
+  void DoTeardown () override;
   /// Force updates
-  void ForceUpdates (void);
+  void ForceUpdates ();
   /**
    * Course change callback
    * \param model the mobility model
@@ -69,14 +69,14 @@ private:
 };
 
 void
-WaypointMobilityModelNotifyTest::DoTeardown (void)
+WaypointMobilityModelNotifyTest::DoTeardown ()
 {
   mobilityStack.clear();
   waypoints.clear();
 }
 
 void
-WaypointMobilityModelNotifyTest::DoRun (void)
+WaypointMobilityModelNotifyTest::DoRun ()
 {
   mobilityCount = 1;
   waypointCount = 100;
@@ -94,7 +94,7 @@ WaypointMobilityModelNotifyTest::DoRun (void)
       // Add this mobility model to the stack.
       mobilityStack.push_back (model);
       Simulator::Schedule (Seconds (0.0), &Object::Initialize, model);
-    } 
+    }
 
   Waypoint wpt (Seconds (0.0), Vector (0.0, 0.0, 0.0));
 
@@ -129,7 +129,7 @@ WaypointMobilityModelNotifyTest::DoRun (void)
   Simulator::Destroy ();
 }
 void
-WaypointMobilityModelNotifyTest::ForceUpdates (void)
+WaypointMobilityModelNotifyTest::ForceUpdates ()
 {
   std::vector<Ptr<MobilityModel> >::iterator i;
   for (i = mobilityStack.begin (); i != mobilityStack.end (); ++i)
@@ -174,7 +174,7 @@ public:
     : TestCase ("Check Waypoint Mobility Model waypoint add")
   {
   }
-  virtual ~WaypointMobilityModelAddWaypointTest ()
+  ~WaypointMobilityModelAddWaypointTest () override
   {
   }
 
@@ -184,8 +184,8 @@ private:
   uint32_t m_waypointCounter; ///< waypoint counter
   Waypoint m_nextWaypoint; ///< next waypoint
 private:
-  virtual void DoRun (void);
-  virtual void DoTeardown (void);
+  void DoRun () override;
+  void DoTeardown () override;
   /**
    * Course change calback
    * \param model the mobility model
@@ -195,13 +195,13 @@ private:
 
 
 void
-WaypointMobilityModelAddWaypointTest::DoTeardown (void)
+WaypointMobilityModelAddWaypointTest::DoTeardown ()
 {
-  m_mobilityModel = 0;
+  m_mobilityModel = nullptr;
 }
 
 void
-WaypointMobilityModelAddWaypointTest::DoRun (void)
+WaypointMobilityModelAddWaypointTest::DoRun ()
 {
   m_waypointCount = 10;
   m_waypointCounter = 1;

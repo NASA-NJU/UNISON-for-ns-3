@@ -51,7 +51,7 @@ NS_LOG_COMPONENT_DEFINE ("BaseStationNetDevice");
 
 NS_OBJECT_ENSURE_REGISTERED (BaseStationNetDevice);
 
-TypeId BaseStationNetDevice::GetTypeId (void)
+TypeId BaseStationNetDevice::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::BaseStationNetDevice")
 
@@ -187,7 +187,7 @@ TypeId BaseStationNetDevice::GetTypeId (void)
   return tid;
 }
 
-BaseStationNetDevice::BaseStationNetDevice (void)
+BaseStationNetDevice::BaseStationNetDevice ()
 {
   InitBaseStationNetDevice ();
 }
@@ -253,24 +253,24 @@ BaseStationNetDevice::BaseStationNetDevice (Ptr<Node> node,
   m_scheduler = bsScheduler;
 }
 
-BaseStationNetDevice::~BaseStationNetDevice (void)
+BaseStationNetDevice::~BaseStationNetDevice ()
 {
 }
 
 void
-BaseStationNetDevice::DoDispose (void)
+BaseStationNetDevice::DoDispose ()
 {
   delete m_cidFactory;
 
-  m_linkManager = 0;
-  m_ssManager = 0;
-  m_bsClassifier = 0;
-  m_serviceFlowManager = 0;
-  m_uplinkScheduler = 0;
-  m_cidFactory = 0;
-  m_ssManager = 0;
-  m_uplinkScheduler = 0;
-  m_scheduler = 0;
+  m_linkManager = nullptr;
+  m_ssManager = nullptr;
+  m_bsClassifier = nullptr;
+  m_serviceFlowManager = nullptr;
+  m_uplinkScheduler = nullptr;
+  m_cidFactory = nullptr;
+  m_ssManager = nullptr;
+  m_uplinkScheduler = nullptr;
+  m_scheduler = nullptr;
 
   WimaxNetDevice::DoDispose ();
 }
@@ -282,7 +282,7 @@ BaseStationNetDevice::SetBsClassifier (Ptr<IpcsClassifier> bsc)
 }
 
 Ptr<IpcsClassifier>
-BaseStationNetDevice::GetBsClassifier (void) const
+BaseStationNetDevice::GetBsClassifier () const
 {
   return m_bsClassifier;
 }
@@ -294,7 +294,7 @@ BaseStationNetDevice::SetInitialRangingInterval (Time initialRangInterval)
 }
 
 Time
-BaseStationNetDevice::GetInitialRangingInterval (void) const
+BaseStationNetDevice::GetInitialRangingInterval () const
 {
   return m_initialRangInterval;
 }
@@ -306,7 +306,7 @@ BaseStationNetDevice::SetDcdInterval (Time dcdInterval)
 }
 
 Time
-BaseStationNetDevice::GetDcdInterval (void) const
+BaseStationNetDevice::GetDcdInterval () const
 {
   return m_dcdInterval;
 }
@@ -318,7 +318,7 @@ BaseStationNetDevice::SetUcdInterval (Time ucdInterval)
 }
 
 Time
-BaseStationNetDevice::GetUcdInterval (void) const
+BaseStationNetDevice::GetUcdInterval () const
 {
   return m_ucdInterval;
 }
@@ -330,7 +330,7 @@ BaseStationNetDevice::SetIntervalT8 (Time interval)
 }
 
 Time
-BaseStationNetDevice::GetIntervalT8 (void) const
+BaseStationNetDevice::GetIntervalT8 () const
 {
   return m_intervalT8;
 }
@@ -342,7 +342,7 @@ BaseStationNetDevice::SetMaxRangingCorrectionRetries (uint8_t maxRangCorrectionR
 }
 
 uint8_t
-BaseStationNetDevice::GetMaxRangingCorrectionRetries (void) const
+BaseStationNetDevice::GetMaxRangingCorrectionRetries () const
 {
   return m_maxRangCorrectionRetries;
 }
@@ -354,7 +354,7 @@ BaseStationNetDevice::SetMaxInvitedRangRetries (uint8_t maxInvitedRangRetries)
 }
 
 uint8_t
-BaseStationNetDevice::GetMaxInvitedRangRetries (void) const
+BaseStationNetDevice::GetMaxInvitedRangRetries () const
 {
   return m_maxInvitedRangRetries;
 }
@@ -366,7 +366,7 @@ BaseStationNetDevice::SetRangReqOppSize (uint8_t rangReqOppSize)
 }
 
 uint8_t
-BaseStationNetDevice::GetRangReqOppSize (void) const
+BaseStationNetDevice::GetRangReqOppSize () const
 {
   return m_rangReqOppSize;
 }
@@ -378,7 +378,7 @@ BaseStationNetDevice::SetBwReqOppSize (uint8_t bwReqOppSize)
 }
 
 uint8_t
-BaseStationNetDevice::GetBwReqOppSize (void) const
+BaseStationNetDevice::GetBwReqOppSize () const
 {
   return m_bwReqOppSize;
 }
@@ -390,7 +390,7 @@ BaseStationNetDevice::SetNrDlSymbols (uint32_t nrDlSymbols)
 }
 
 uint32_t
-BaseStationNetDevice::GetNrDlSymbols (void) const
+BaseStationNetDevice::GetNrDlSymbols () const
 {
   return m_nrDlSymbols;
 }
@@ -402,43 +402,43 @@ BaseStationNetDevice::SetNrUlSymbols (uint32_t nrUlSymbols)
 }
 
 uint32_t
-BaseStationNetDevice::GetNrUlSymbols (void) const
+BaseStationNetDevice::GetNrUlSymbols () const
 {
   return m_nrUlSymbols;
 }
 
 uint32_t
-BaseStationNetDevice::GetNrDcdSent (void) const
+BaseStationNetDevice::GetNrDcdSent () const
 {
   return m_nrDcdSent;
 }
 
 uint32_t
-BaseStationNetDevice::GetNrUcdSent (void) const
+BaseStationNetDevice::GetNrUcdSent () const
 {
   return m_nrUcdSent;
 }
 
 Time
-BaseStationNetDevice::GetDlSubframeStartTime (void) const
+BaseStationNetDevice::GetDlSubframeStartTime () const
 {
   return m_dlSubframeStartTime;
 }
 
 Time
-BaseStationNetDevice::GetUlSubframeStartTime (void) const
+BaseStationNetDevice::GetUlSubframeStartTime () const
 {
   return m_ulSubframeStartTime;
 }
 
 uint8_t
-BaseStationNetDevice::GetRangingOppNumber (void) const
+BaseStationNetDevice::GetRangingOppNumber () const
 {
   return m_rangingOppNumber;
 }
 
 Ptr<SSManager>
-BaseStationNetDevice::GetSSManager (void) const
+BaseStationNetDevice::GetSSManager () const
 {
   return m_ssManager;
 }
@@ -450,7 +450,7 @@ BaseStationNetDevice::SetSSManager (Ptr<SSManager> ssm)
 }
 
 Ptr<BsServiceFlowManager>
-BaseStationNetDevice::GetServiceFlowManager (void) const
+BaseStationNetDevice::GetServiceFlowManager () const
 {
   return m_serviceFlowManager;
 }
@@ -462,7 +462,7 @@ BaseStationNetDevice::SetServiceFlowManager (Ptr<BsServiceFlowManager> sfm)
 }
 
 Ptr<UplinkScheduler>
-BaseStationNetDevice::GetUplinkScheduler (void) const
+BaseStationNetDevice::GetUplinkScheduler () const
 {
   return m_uplinkScheduler;
 }
@@ -474,7 +474,7 @@ BaseStationNetDevice::SetUplinkScheduler (Ptr<UplinkScheduler> uls)
 }
 
 Ptr<BSLinkManager>
-BaseStationNetDevice::GetLinkManager (void) const
+BaseStationNetDevice::GetLinkManager () const
 {
   return m_linkManager;
 }
@@ -491,25 +491,25 @@ BaseStationNetDevice::SetBSScheduler (Ptr<BSScheduler> bss)
   m_scheduler = bss;
 }
 Ptr<BSScheduler>
-BaseStationNetDevice::GetBSScheduler (void) const
+BaseStationNetDevice::GetBSScheduler () const
 {
   return m_scheduler;
 }
 
 Time
-BaseStationNetDevice::GetPsDuration (void) const
+BaseStationNetDevice::GetPsDuration () const
 {
   return m_psDuration;
 }
 
 Time
-BaseStationNetDevice::GetSymbolDuration (void) const
+BaseStationNetDevice::GetSymbolDuration () const
 {
   return m_symbolDuration;
 }
 
 void
-BaseStationNetDevice::Start (void)
+BaseStationNetDevice::Start ()
 {
   SetReceiveCallback ();
   GetConnectionManager ()->SetCidFactory (m_cidFactory);
@@ -531,12 +531,12 @@ BaseStationNetDevice::Start (void)
 }
 
 void
-BaseStationNetDevice::Stop (void)
+BaseStationNetDevice::Stop ()
 {
 }
 
 void
-BaseStationNetDevice::StartFrame (void)
+BaseStationNetDevice::StartFrame ()
 {
   //setting DL/UL subframe allocation for this frame
   uint32_t symbolsPerFrame = GetPhy ()->GetSymbolsPerFrame ();
@@ -551,7 +551,7 @@ BaseStationNetDevice::StartFrame (void)
 }
 
 void
-BaseStationNetDevice::StartDlSubFrame (void)
+BaseStationNetDevice::StartDlSubFrame ()
 {
   m_dlSubframeStartTime = Simulator::Now (); // same as m_frameStartTime
 
@@ -570,7 +570,7 @@ BaseStationNetDevice::StartDlSubFrame (void)
 }
 
 void
-BaseStationNetDevice::EndDlSubFrame (void)
+BaseStationNetDevice::EndDlSubFrame ()
 {
   m_nrDlFrames++;
   SetState (BS_STATE_TTG);
@@ -578,7 +578,7 @@ BaseStationNetDevice::EndDlSubFrame (void)
 }
 
 void
-BaseStationNetDevice::StartUlSubFrame (void)
+BaseStationNetDevice::StartUlSubFrame ()
 {
   m_ulSubframeStartTime = Simulator::Now ();
 
@@ -593,7 +593,7 @@ BaseStationNetDevice::StartUlSubFrame (void)
 }
 
 void
-BaseStationNetDevice::EndUlSubFrame (void)
+BaseStationNetDevice::EndUlSubFrame ()
 {
   m_nrUlFrames++;
   SetState (BS_STATE_RTG);
@@ -601,7 +601,7 @@ BaseStationNetDevice::EndUlSubFrame (void)
 }
 
 void
-BaseStationNetDevice::EndFrame (void)
+BaseStationNetDevice::EndFrame ()
 {
   StartFrame ();
 }
@@ -613,7 +613,7 @@ BaseStationNetDevice::DoSend (Ptr<Packet> packet,
                               uint16_t protocolNumber)
 {
   Ptr<PacketBurst> burst = Create<PacketBurst> ();
-  ServiceFlow *serviceFlow = 0;
+  ServiceFlow *serviceFlow = nullptr;
 
   NS_LOG_INFO ("BS (" << source << "):");
   NS_LOG_INFO ("\tSending packet...");
@@ -627,12 +627,12 @@ BaseStationNetDevice::DoSend (Ptr<Packet> packet,
       serviceFlow = m_bsClassifier->Classify (packet, GetServiceFlowManager (), ServiceFlow::SF_DIRECTION_DOWN);
     }
 
-  if (protocolNumber != 2048 || serviceFlow == 0)
+  if (protocolNumber != 2048 || serviceFlow == nullptr)
     {
       serviceFlow = *GetServiceFlowManager ()->GetServiceFlows (ServiceFlow::SF_TYPE_ALL).begin ();
     }
 
-  if (serviceFlow == 0)
+  if (serviceFlow == nullptr)
     {
       NS_LOG_INFO ("No Service Flow!!");
       m_bsTxDropTrace (packet);
@@ -661,7 +661,7 @@ BaseStationNetDevice::DoSend (Ptr<Packet> packet,
 bool
 BaseStationNetDevice::Enqueue (Ptr<Packet> packet, const MacHeaderType &hdrType, Ptr<WimaxConnection> connection)
 {
-  NS_ASSERT_MSG (connection != 0,
+  NS_ASSERT_MSG (connection,
                  "BS: Can not enqueue packet on the selected connection: the connection is not initialized");
 
   GenericMacHeader hdr;
@@ -684,7 +684,7 @@ BaseStationNetDevice::DoReceive (Ptr<Packet> packet)
   GrantManagementSubheader grantMgmntSubhdr;
   Mac48Address source;
   LlcSnapHeader llc;
-  Ptr<WimaxConnection> connection = 0;
+  Ptr<WimaxConnection> connection = nullptr;
   FragmentationSubheader fragSubhdr;
   bool fragmentation = false;  // it becomes true when there is a fragmentation subheader
 
@@ -878,10 +878,14 @@ BaseStationNetDevice::DoReceive (Ptr<Packet> packet)
 }
 
 void
-BaseStationNetDevice::CreateMapMessages (void)
+BaseStationNetDevice::CreateMapMessages ()
 {
-  Ptr<Packet> dlmap, ulmap;
-  bool sendDcd = false, sendUcd = false, updateDcd = false, updateUcd = false;
+  Ptr<Packet> dlmap;
+  Ptr<Packet> ulmap;
+  bool sendDcd = false;
+  bool sendUcd = false;
+  bool updateDcd = false;
+  bool updateUcd = false;
 
   uint16_t currentNrSsRegistered = m_ssManager->GetNRegisteredSSs ();
 
@@ -924,7 +928,8 @@ BaseStationNetDevice::CreateMapMessages (void)
 void
 BaseStationNetDevice::CreateDescriptorMessages (bool sendDcd, bool sendUcd)
 {
-  Ptr<Packet> dcd, ucd;
+  Ptr<Packet> dcd;
+  Ptr<Packet> ucd;
 
   if (sendDcd)
     {
@@ -956,7 +961,7 @@ BaseStationNetDevice::CreateDescriptorMessages (bool sendDcd, bool sendUcd)
  is broadcast burst with MAC management messages. The rest of the bursts contain data packets.
  */
 void
-BaseStationNetDevice::SendBursts (void)
+BaseStationNetDevice::SendBursts ()
 {
   Time txTime = Seconds (0);
   std::pair<OfdmDlMapIe*, Ptr<PacketBurst> > pair;
@@ -976,7 +981,7 @@ BaseStationNetDevice::SendBursts (void)
 
       if (cid != GetInitialRangingConnection ()->GetCid () && cid != GetBroadcastConnection ()->GetCid ())
         {
-          if (m_serviceFlowManager->GetServiceFlow (cid) != 0)
+          if (m_serviceFlowManager->GetServiceFlow (cid) != nullptr)
             {
               modulationType = GetBurstProfileManager ()->GetModulationType (diuc, WimaxNetDevice::DIRECTION_DOWNLINK);
             }
@@ -998,7 +1003,7 @@ BaseStationNetDevice::SendBursts (void)
 }
 
 Ptr<Packet>
-BaseStationNetDevice::CreateDlMap (void)
+BaseStationNetDevice::CreateDlMap ()
 {
   m_nrDlAllocations = 0;
 
@@ -1033,7 +1038,7 @@ BaseStationNetDevice::CreateDlMap (void)
 }
 
 Ptr<Packet>
-BaseStationNetDevice::CreateDcd (void)
+BaseStationNetDevice::CreateDcd ()
 {
   Dcd dcd;
   OfdmDcdChannelEncodings chnlEncodings;
@@ -1061,7 +1066,7 @@ BaseStationNetDevice::CreateDcd (void)
 }
 
 Ptr<Packet>
-BaseStationNetDevice::CreateUlMap (void)
+BaseStationNetDevice::CreateUlMap ()
 {
   m_ulAllocationNumber = 0;
   m_rangingOppNumber = 0;
@@ -1087,7 +1092,7 @@ BaseStationNetDevice::CreateUlMap (void)
 }
 
 Ptr<Packet>
-BaseStationNetDevice::CreateUcd (void)
+BaseStationNetDevice::CreateUcd ()
 {
   Ucd ucd;
   ucd.SetConfigurationChangeCount (m_ucdConfigChangeCount);
@@ -1149,7 +1154,7 @@ BaseStationNetDevice::SetUlBurstProfiles (Ucd *ucd)
 Ptr<WimaxConnection>
 BaseStationNetDevice::GetConnection (Cid cid)
 {
-  Ptr<WimaxConnection> connection = 0;
+  Ptr<WimaxConnection> connection = nullptr;
   if (cid.IsInitialRanging ())
     {
       return GetInitialRangingConnection ();
@@ -1163,12 +1168,12 @@ BaseStationNetDevice::GetConnection (Cid cid)
       connection = GetConnectionManager ()->GetConnection (cid);
     }
 
-  NS_ASSERT_MSG (connection != 0, "BS: Invalid connection=0");
+  NS_ASSERT_MSG (connection, "BS: Invalid connection=0");
   return connection;
 }
 
 void
-BaseStationNetDevice::MarkUplinkAllocations (void)
+BaseStationNetDevice::MarkUplinkAllocations ()
 {
   uint16_t symbolsToAllocation = 0;
   std::list<OfdmUlMapIe> uplinkAllocations = m_uplinkScheduler->GetUplinkAllocations ();
@@ -1201,7 +1206,7 @@ BaseStationNetDevice::MarkUplinkAllocationEnd (Time allocationEndTime, Cid cid, 
 }
 
 void
-BaseStationNetDevice::UplinkAllocationStart (void)
+BaseStationNetDevice::UplinkAllocationStart ()
 {
   m_ulAllocationNumber++;
 
@@ -1228,7 +1233,7 @@ BaseStationNetDevice::MarkRangingOppStart (Time rangingOppStartTime)
 }
 
 void
-BaseStationNetDevice::RangingOppStart (void)
+BaseStationNetDevice::RangingOppStart ()
 {
   m_rangingOppNumber++;
 

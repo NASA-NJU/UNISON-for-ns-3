@@ -72,7 +72,7 @@ public:
                      const std::string args = "");
 
   /** Destructor. */
-  virtual ~ExampleAsTestCase (void);
+  ~ExampleAsTestCase () override;
 
   /**
    * Customization point for more complicated patterns
@@ -80,7 +80,7 @@ public:
    *
    * \returns The string to be given to the `ns3 --command-template=` argument.
    */
-  virtual std::string GetCommandTemplate (void) const;
+  virtual std::string GetCommandTemplate () const;
 
   /**
    * Customization point for tests requiring post-processing of stdout.
@@ -91,10 +91,10 @@ public:
    *
    * \returns The string of post-processing commands
    */
-  virtual std::string GetPostProcessingCommand (void) const;
+  virtual std::string GetPostProcessingCommand () const;
 
   // Inherited
-  virtual void DoRun (void);
+  void DoRun () override;
 
 protected:
   std::string m_program;  /**< The program to run. */
@@ -114,7 +114,7 @@ protected:
  * methods is what criteria is used to for success.  Examples added to
  * `examples-to-run.py` will be run and the exit status checked
  * (non-zero indicates failure).  ExampleAsTestSuite adds checking of
- * output against a specified known "good" reference file.  
+ * output against a specified known "good" reference file.
  *
  * \warning If you are thinking about using this class, strongly
  * consider using a standard test instead.  The TestSuite class has
@@ -134,7 +134,7 @@ protected:
  * program is `mymodule/examples/mod-example.cc`.  First you should
  * create a test file `mymodule/test/mymodule-examples-test-suite.cc`
  * which looks like this:
- * 
+ *
  * \code{.cpp}
  * #include "ns3/example-as-test.h"
  * static ns3::ExampleAsTestSuite g_modExampleOne ("mymodule-example-mod-example-one", "mod-example", NS_TEST_SOURCEDIR, "--arg-one");
@@ -180,7 +180,7 @@ protected:
  *
  * This will run all `mymodule-example-...` tests and report whether they
  * produce output matching the reference files.
- * 
+ *
  * \par Writing good examples for testing
  *
  * When setting up an example for use by this class you should be very
@@ -191,7 +191,7 @@ protected:
  * verify and hard to keep up-to-date.  Output as little as needed for
  * the example and include only behavioral state that is important for
  * determining if the example has run correctly.
- * 
+ *
  */
 class ExampleAsTestSuite : public TestSuite
 {

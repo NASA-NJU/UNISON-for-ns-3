@@ -31,8 +31,8 @@ NS_LOG_COMPONENT_DEFINE ("BridgeChannel");
 
 NS_OBJECT_ENSURE_REGISTERED (BridgeChannel);
 
-TypeId 
-BridgeChannel::GetTypeId (void)
+TypeId
+BridgeChannel::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::BridgeChannel")
     .SetParent<Channel> ()
@@ -55,7 +55,7 @@ BridgeChannel::~BridgeChannel ()
   for (std::vector< Ptr<Channel> >::iterator iter = m_bridgedChannels.begin ();
        iter != m_bridgedChannels.end (); iter++)
     {
-      *iter = 0;
+      *iter = nullptr;
     }
   m_bridgedChannels.clear ();
 }
@@ -68,7 +68,7 @@ BridgeChannel::AddChannel (Ptr<Channel> bridgedChannel)
 }
 
 std::size_t
-BridgeChannel::GetNDevices (void) const
+BridgeChannel::GetNDevices () const
 {
   uint32_t ndevices = 0;
   for (std::vector< Ptr<Channel> >::const_iterator iter = m_bridgedChannels.begin ();
@@ -93,7 +93,7 @@ BridgeChannel::GetDevice (std::size_t i) const
         }
       ndevices += (*iter)->GetNDevices ();
     }
-  return NULL;
+  return nullptr;
 }
 
 

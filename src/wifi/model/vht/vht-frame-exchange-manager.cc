@@ -23,7 +23,7 @@
 #include "vht-frame-exchange-manager.h"
 
 #undef NS_LOG_APPEND_CONTEXT
-#define NS_LOG_APPEND_CONTEXT std::clog << "[mac=" << m_self << "] "
+#define NS_LOG_APPEND_CONTEXT std::clog << "[link=" << +m_linkId << "][mac=" << m_self << "] "
 
 namespace ns3 {
 
@@ -32,7 +32,7 @@ NS_LOG_COMPONENT_DEFINE ("VhtFrameExchangeManager");
 NS_OBJECT_ENSURE_REGISTERED (VhtFrameExchangeManager);
 
 TypeId
-VhtFrameExchangeManager::GetTypeId (void)
+VhtFrameExchangeManager::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::VhtFrameExchangeManager")
     .SetParent<HtFrameExchangeManager> ()
@@ -53,13 +53,13 @@ VhtFrameExchangeManager::~VhtFrameExchangeManager ()
 }
 
 Ptr<WifiPsdu>
-VhtFrameExchangeManager::GetWifiPsdu (Ptr<WifiMacQueueItem> mpdu, const WifiTxVector& txVector) const
+VhtFrameExchangeManager::GetWifiPsdu (Ptr<WifiMpdu> mpdu, const WifiTxVector& txVector) const
 {
   return Create<WifiPsdu> (mpdu, txVector.GetModulationClass () >= WIFI_MOD_CLASS_VHT);
 }
 
 uint32_t
-VhtFrameExchangeManager::GetPsduSize (Ptr<const WifiMacQueueItem> mpdu, const WifiTxVector& txVector) const
+VhtFrameExchangeManager::GetPsduSize (Ptr<const WifiMpdu> mpdu, const WifiTxVector& txVector) const
 {
   return (txVector.GetModulationClass () >= WIFI_MOD_CLASS_VHT
           ? MpduAggregator::GetSizeIfAggregated (mpdu->GetSize (), 0)

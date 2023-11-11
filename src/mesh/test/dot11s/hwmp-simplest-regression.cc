@@ -42,7 +42,7 @@ const char * const PREFIX = "hwmp-simplest-regression-test";
 
 
 HwmpSimplestRegressionTest::HwmpSimplestRegressionTest () : TestCase ("Simplest HWMP regression test"),
-                                                            m_nodes (0),
+                                                            m_nodes (nullptr),
                                                             m_time (Seconds (15)),
                                                             m_sentPktsCounter (0)
 {
@@ -67,7 +67,7 @@ HwmpSimplestRegressionTest::DoRun ()
 
   CheckResults ();
 
-  delete m_nodes, m_nodes = 0;
+  delete m_nodes, m_nodes = nullptr;
 }
 void
 HwmpSimplestRegressionTest::CreateNodes ()
@@ -91,7 +91,7 @@ HwmpSimplestRegressionTest::ResetPosition ()
 {
   Ptr<Object> object = m_nodes->Get (1);
   Ptr<MobilityModel> model = object->GetObject<MobilityModel> ();
-  if (model == 0)
+  if (!model)
     {
       return;
     }

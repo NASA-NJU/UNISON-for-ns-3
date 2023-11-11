@@ -33,7 +33,7 @@ namespace ns3 {
  *
  * \brief Helper class that adds ns3::Ipv6ListRouting objects
  *
- * This class is expected to be used in conjunction with 
+ * This class is expected to be used in conjunction with
  * ns3::InternetStackHelper::SetRoutingHelper
  */
 class Ipv6ListRoutingHelper : public Ipv6RoutingHelper
@@ -48,22 +48,25 @@ public:
   /**
    * \brief Destroy an Ipv6 Ipv6ListRoutingHelper.
    */
-  virtual ~Ipv6ListRoutingHelper ();
+  ~Ipv6ListRoutingHelper () override;
 
   /**
-   * \brief Construct an Ipv6ListRoutingHelper from another previously 
+   * \brief Construct an Ipv6ListRoutingHelper from another previously
    * initialized instance (Copy Constructor).
    * \param o object to be copied
    */
   Ipv6ListRoutingHelper (const Ipv6ListRoutingHelper &o);
 
+  // Delete assignment operator to avoid misuse
+  Ipv6ListRoutingHelper &operator= (const Ipv6ListRoutingHelper &) = delete;
+
   /**
-   * \returns pointer to clone of this Ipv6ListRoutingHelper 
-   * 
+   * \returns pointer to clone of this Ipv6ListRoutingHelper
+   *
    * This method is mainly for internal use by the other helpers;
    * clients are expected to free the dynamic memory allocated by this method
    */
-  Ipv6ListRoutingHelper* Copy (void) const;
+  Ipv6ListRoutingHelper* Copy () const override;
 
   /**
    * \param routing a routing helper
@@ -82,16 +85,8 @@ public:
    *
    * This method will be called by ns3::InternetStackHelper::Install
    */
-  virtual Ptr<Ipv6RoutingProtocol> Create (Ptr<Node> node) const;
+  Ptr<Ipv6RoutingProtocol> Create (Ptr<Node> node) const override;
 private:
-  /**
-   * \brief Assignment operator declared private and not implemented to disallow
-   * assignment and prevent the compiler from happily inserting its own.
-   * \param o object to copy from
-   * \returns a reference to the new object
-   */
-  Ipv6ListRoutingHelper &operator = (const Ipv6ListRoutingHelper &o);
-
   /**
    * \brief Container for pairs of Ipv6RoutingHelper pointer / priority.
    */

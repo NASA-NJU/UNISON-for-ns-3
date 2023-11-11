@@ -36,7 +36,7 @@ Timer::Timer ()
   : m_flags (CHECK_ON_DESTROY),
     m_delay (FemtoSeconds (0)),
     m_event (),
-    m_impl (0)
+    m_impl (nullptr)
 {
   NS_LOG_FUNCTION (this);
 }
@@ -45,7 +45,7 @@ Timer::Timer (enum DestroyPolicy destroyPolicy)
   : m_flags (destroyPolicy),
     m_delay (FemtoSeconds (0)),
     m_event (),
-    m_impl (0)
+    m_impl (nullptr)
 {
   NS_LOG_FUNCTION (this << destroyPolicy);
 }
@@ -78,13 +78,13 @@ Timer::SetDelay (const Time &time)
   m_delay = time;
 }
 Time
-Timer::GetDelay (void) const
+Timer::GetDelay () const
 {
   NS_LOG_FUNCTION (this);
   return m_delay;
 }
 Time
-Timer::GetDelayLeft (void) const
+Timer::GetDelayLeft () const
 {
   NS_LOG_FUNCTION (this);
   switch (GetState ())
@@ -106,37 +106,37 @@ Timer::GetDelayLeft (void) const
 }
 
 void
-Timer::Cancel (void)
+Timer::Cancel ()
 {
   NS_LOG_FUNCTION (this);
   m_event.Cancel ();
 }
 void
-Timer::Remove (void)
+Timer::Remove ()
 {
   NS_LOG_FUNCTION (this);
   m_event.Remove ();
 }
 bool
-Timer::IsExpired (void) const
+Timer::IsExpired () const
 {
   NS_LOG_FUNCTION (this);
   return !IsSuspended () && m_event.IsExpired ();
 }
 bool
-Timer::IsRunning (void) const
+Timer::IsRunning () const
 {
   NS_LOG_FUNCTION (this);
   return !IsSuspended () && m_event.IsRunning ();
 }
 bool
-Timer::IsSuspended (void) const
+Timer::IsSuspended () const
 {
   NS_LOG_FUNCTION (this);
   return (m_flags & TIMER_SUSPENDED) == TIMER_SUSPENDED;
 }
 enum Timer::State
-Timer::GetState (void) const
+Timer::GetState () const
 {
   NS_LOG_FUNCTION (this);
   if (IsRunning ())
@@ -155,7 +155,7 @@ Timer::GetState (void) const
 }
 
 void
-Timer::Schedule (void)
+Timer::Schedule ()
 {
   NS_LOG_FUNCTION (this);
   Schedule (m_delay);
@@ -165,7 +165,7 @@ void
 Timer::Schedule (Time delay)
 {
   NS_LOG_FUNCTION (this << delay);
-  NS_ASSERT (m_impl != 0);
+  NS_ASSERT (m_impl != nullptr);
   if (m_event.IsRunning ())
     {
       NS_FATAL_ERROR ("Event is still running while re-scheduling.");
@@ -174,7 +174,7 @@ Timer::Schedule (Time delay)
 }
 
 void
-Timer::Suspend (void)
+Timer::Suspend ()
 {
   NS_LOG_FUNCTION (this);
   NS_ASSERT (IsRunning ());
@@ -186,12 +186,12 @@ Timer::Suspend (void)
   else if (m_flags & REMOVE_ON_DESTROY)
     {
       m_event.Remove ();
-    } 
+    }
   m_flags |= TIMER_SUSPENDED;
 }
 
 void
-Timer::Resume (void)
+Timer::Resume ()
 {
   NS_LOG_FUNCTION (this);
   NS_ASSERT (m_flags & TIMER_SUSPENDED);

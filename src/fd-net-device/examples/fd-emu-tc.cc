@@ -31,11 +31,11 @@
  *   1 Gbps access incoming link     |             |           100 Mbps bottleneck outgoing link
  * -----------------------------------             -----------------------------------
  *
- * This example builds a node with two interfaces in emulation mode in 
- * either {raw, netmap}. The aim is to explore different qdiscs behaviours 
+ * This example builds a node with two interfaces in emulation mode in
+ * either {raw, netmap}. The aim is to explore different qdiscs behaviours
  * on the backlog of a device emulated bottleneck side.
  *
- * If you run emulation in netmap mode, you need before to load the 
+ * If you run emulation in netmap mode, you need before to load the
  * netmap.ko module.  The user is responsible for configuring and building
  * netmap separately.
  */
@@ -149,7 +149,7 @@ main (int argc, char *argv[])
   // address will have an Organizationally Unique Identifier (OUI) of zero.
   // The Internet Assigned Number Authority IANA
   //
-  //  http://www.iana.org/assignments/ethernet-numberslocalIp
+  //  https://www.iana.org/assignments/ieee-802-numbers/ieee-802-numbers.txt
   //
   // reports that this OUI is unassigned, and so should not conflict with
   // real hardware on your net.  It may raise all kinds of red flags in a
@@ -238,11 +238,11 @@ main (int argc, char *argv[])
   // Bottleneck link side
   TrafficControlHelper tch1;
 
-  if (queueDiscType.compare ("PfifoFast") == 0)
+  if (queueDiscType == "PfifoFast")
     {
       tch1.SetRootQueueDisc ("ns3::PfifoFastQueueDisc", "MaxSize", StringValue ("1000p"));
     }
-  else if (queueDiscType.compare ("ARED") == 0)
+  else if (queueDiscType == "ARED")
     {
       tch1.SetRootQueueDisc ("ns3::RedQueueDisc");
       Config::SetDefault ("ns3::RedQueueDisc::ARED", BooleanValue (true));
@@ -253,15 +253,15 @@ main (int argc, char *argv[])
       Config::SetDefault ("ns3::RedQueueDisc::MinTh", DoubleValue (83333));
       Config::SetDefault ("ns3::RedQueueDisc::MinTh", DoubleValue (250000));
     }
-  else if (queueDiscType.compare ("CoDel") == 0)
+  else if (queueDiscType == "CoDel")
     {
       tch1.SetRootQueueDisc ("ns3::CoDelQueueDisc");
     }
-  else if (queueDiscType.compare ("FqCoDel") == 0)
+  else if (queueDiscType == "FqCoDel")
     {
       tch1.SetRootQueueDisc ("ns3::FqCoDelQueueDisc");
     }
-  else if (queueDiscType.compare ("PIE") == 0)
+  else if (queueDiscType == "PIE")
     {
       tch1.SetRootQueueDisc ("ns3::PieQueueDisc");
       Config::SetDefault ("ns3::PieQueueDisc::MaxSize",

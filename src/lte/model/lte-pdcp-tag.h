@@ -41,8 +41,8 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId  GetTypeId (void);
-  virtual TypeId  GetInstanceTypeId (void) const;
+  static TypeId  GetTypeId ();
+  TypeId  GetInstanceTypeId () const override;
 
   /**
    * Create an empty PDCP tag
@@ -54,16 +54,16 @@ public:
    */
   PdcpTag (Time senderTimestamp);
 
-  virtual void  Serialize (TagBuffer i) const;
-  virtual void  Deserialize (TagBuffer i);
-  virtual uint32_t  GetSerializedSize () const;
-  virtual void Print (std::ostream &os) const;
+  void  Serialize (TagBuffer i) const override;
+  void  Deserialize (TagBuffer i) override;
+  uint32_t  GetSerializedSize () const override;
+  void Print (std::ostream &os) const override;
 
   /**
    * Get the instant when the PDCP delivers the PDU to the MAC SAP provider
    * @return the sender timestamp
    */
-  Time  GetSenderTimestamp (void) const;
+  Time  GetSenderTimestamp () const;
 
   /**
    * Set the sender timestamp

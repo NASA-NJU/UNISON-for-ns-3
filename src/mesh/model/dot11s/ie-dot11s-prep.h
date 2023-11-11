@@ -34,7 +34,7 @@ class IePrep : public WifiInformationElement
 {
 public:
   IePrep ();
-  ~IePrep ();
+  ~IePrep () override;
   /**
    * Set flags function
    * \param flags the flags to set
@@ -93,7 +93,7 @@ public:
   uint8_t GetHopcount () const;
   /**
    * Get TTL function
-   * \returns the TTL 
+   * \returns the TTL
    */
   uint32_t GetTtl () const;
   /**
@@ -136,11 +136,11 @@ public:
   void  IncrementMetric (uint32_t metric);
 
   // Inherited from WifiInformationElement
-  virtual WifiInformationElementId ElementId () const;
-  virtual void SerializeInformationField (Buffer::Iterator i) const;
-  virtual uint8_t DeserializeInformationField (Buffer::Iterator start, uint8_t length);
-  virtual uint8_t GetInformationFieldSize () const;
-  virtual void Print (std::ostream& os) const;
+  WifiInformationElementId ElementId () const override;
+  void SerializeInformationField (Buffer::Iterator i) const override;
+  uint16_t DeserializeInformationField (Buffer::Iterator start, uint16_t length) override;
+  uint16_t GetInformationFieldSize () const override;
+  void Print (std::ostream& os) const override;
 
 private:
   uint8_t  m_flags; ///< flags
@@ -149,7 +149,7 @@ private:
   Mac48Address m_destinationAddress; ///< destination address
   uint32_t m_destSeqNumber; ///< destination sequence number
   uint32_t m_lifetime; ///< lifetime
-  uint32_t m_metric; ///< metric 
+  uint32_t m_metric; ///< metric
   Mac48Address m_originatorAddress; ///< originator address
   uint32_t m_originatorSeqNumber; ///< originator sequence number
   /**

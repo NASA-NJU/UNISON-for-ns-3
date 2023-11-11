@@ -28,7 +28,7 @@ namespace ns3 {
 NS_LOG_COMPONENT_DEFINE ("TrickleTimer");
 
 TrickleTimer::TrickleTimer ()
-  : m_impl (0),
+  : m_impl (nullptr),
     m_timerExpiration (),
     m_intervalExpiration (),
     m_currentInterval (Time(0)),
@@ -44,7 +44,7 @@ TrickleTimer::TrickleTimer ()
 }
 
 TrickleTimer::TrickleTimer (Time minInterval, uint8_t doublings, uint16_t redundancy)
-  : m_impl (0),
+  : m_impl (nullptr),
     m_timerExpiration (),
     m_intervalExpiration (),
     m_currentInterval (Time(0)),
@@ -90,21 +90,21 @@ TrickleTimer::SetParameters (Time minInterval, uint8_t doublings, uint16_t redun
 }
 
 Time
-TrickleTimer::GetMinInterval (void) const
+TrickleTimer::GetMinInterval () const
 {
   NS_LOG_FUNCTION (this);
   return m_minInterval;
 }
 
 Time
-TrickleTimer::GetMaxInterval (void) const
+TrickleTimer::GetMaxInterval () const
 {
   NS_LOG_FUNCTION (this);
   return m_maxInterval;
 }
 
 uint8_t
-TrickleTimer::GetDoublings (void) const
+TrickleTimer::GetDoublings () const
 {
   NS_LOG_FUNCTION (this);
 
@@ -130,14 +130,14 @@ TrickleTimer::GetDoublings (void) const
 }
 
 uint16_t
-TrickleTimer::GetRedundancy (void) const
+TrickleTimer::GetRedundancy () const
 {
   NS_LOG_FUNCTION (this);
   return m_redundancy;
 }
 
 Time
-TrickleTimer::GetDelayLeft (void) const
+TrickleTimer::GetDelayLeft () const
 {
   NS_LOG_FUNCTION (this);
 
@@ -150,7 +150,7 @@ TrickleTimer::GetDelayLeft (void) const
 }
 
 Time
-TrickleTimer::GetIntervalLeft (void) const
+TrickleTimer::GetIntervalLeft () const
 {
   NS_LOG_FUNCTION (this);
 
@@ -187,8 +187,6 @@ TrickleTimer::Enable ()
 
   Time timerExpitation = m_uniRand->GetValue (0.5, 1) * m_currentInterval;
   m_timerExpiration = Simulator::Schedule (timerExpitation, &TrickleTimer::TimerExpire, this);
-
-  return;
 }
 
 void
@@ -223,8 +221,6 @@ TrickleTimer::Reset ()
 
   Time timerExpitation = m_uniRand->GetValue (0.5, 1) * m_currentInterval;
   m_timerExpiration = Simulator::Schedule (timerExpitation, &TrickleTimer::TimerExpire, this);
-
-  return;
 }
 
 void
@@ -239,7 +235,7 @@ TrickleTimer::Stop ()
 }
 
 void
-TrickleTimer::TimerExpire(void)
+TrickleTimer::TimerExpire()
 {
   NS_LOG_FUNCTION (this);
 
@@ -250,7 +246,7 @@ TrickleTimer::TimerExpire(void)
 }
 
 void
-TrickleTimer::IntervalExpire(void)
+TrickleTimer::IntervalExpire()
 {
   NS_LOG_FUNCTION (this);
 

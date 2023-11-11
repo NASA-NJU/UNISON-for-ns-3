@@ -40,13 +40,13 @@ NS_LOG_COMPONENT_DEFINE ("CsmaNetDevice");
 NS_OBJECT_ENSURE_REGISTERED (CsmaNetDevice);
 
 TypeId
-CsmaNetDevice::GetTypeId (void)
+CsmaNetDevice::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::CsmaNetDevice")
     .SetParent<NetDevice> ()
     .SetGroupName ("Csma")
     .AddConstructor<CsmaNetDevice> ()
-    .AddAttribute ("Address", 
+    .AddAttribute ("Address",
                    "The MAC address of this device.",
                    Mac48AddressValue (Mac48Address ("ff:ff:ff:ff:ff:ff")),
                    MakeMac48AddressAccessor (&CsmaNetDevice::m_address),
@@ -56,13 +56,13 @@ CsmaNetDevice::GetTypeId (void)
                    MakeUintegerAccessor (&CsmaNetDevice::SetMtu,
                                          &CsmaNetDevice::GetMtu),
                    MakeUintegerChecker<uint16_t> ())
-    .AddAttribute ("EncapsulationMode", 
+    .AddAttribute ("EncapsulationMode",
                    "The link-layer encapsulation type to use.",
                    EnumValue (DIX),
                    MakeEnumAccessor (&CsmaNetDevice::SetEncapsulationMode),
                    MakeEnumChecker (DIX, "Dix",
                                     LLC, "Llc"))
-    .AddAttribute ("SendEnable", 
+    .AddAttribute ("SendEnable",
                    "Enable or disable the transmitter section of the device.",
                    BooleanValue (true),
                    MakeBooleanAccessor (&CsmaNetDevice::m_sendEnable),
@@ -72,7 +72,7 @@ CsmaNetDevice::GetTypeId (void)
                    BooleanValue (true),
                    MakeBooleanAccessor (&CsmaNetDevice::m_receiveEnable),
                    MakeBooleanChecker ())
-    .AddAttribute ("ReceiveErrorModel", 
+    .AddAttribute ("ReceiveErrorModel",
                    "The receiver error model used to simulate packet loss",
                    PointerValue (),
                    MakePointerAccessor (&CsmaNetDevice::m_receiveErrorModel),
@@ -82,7 +82,7 @@ CsmaNetDevice::GetTypeId (void)
     // Transmit queueing discipline for the device which includes its own set
     // of trace hooks.
     //
-    .AddAttribute ("TxQueue", 
+    .AddAttribute ("TxQueue",
                    "A queue to use as the transmit queue in the device.",
                    PointerValue (),
                    MakePointerAccessor (&CsmaNetDevice::m_queue),
@@ -92,24 +92,24 @@ CsmaNetDevice::GetTypeId (void)
     // Trace sources at the "top" of the net device, where packets transition
     // to/from higher layers.
     //
-    .AddTraceSource ("MacTx", 
+    .AddTraceSource ("MacTx",
                      "Trace source indicating a packet has "
                      "arrived for transmission by this device",
                      MakeTraceSourceAccessor (&CsmaNetDevice::m_macTxTrace),
                      "ns3::Packet::TracedCallback")
-    .AddTraceSource ("MacTxDrop", 
+    .AddTraceSource ("MacTxDrop",
                      "Trace source indicating a packet has been "
                      "dropped by the device before transmission",
                      MakeTraceSourceAccessor (&CsmaNetDevice::m_macTxDropTrace),
                      "ns3::Packet::TracedCallback")
-    .AddTraceSource ("MacPromiscRx", 
+    .AddTraceSource ("MacPromiscRx",
                      "A packet has been received by this device, "
                      "has been passed up from the physical layer "
                      "and is being forwarded up the local protocol stack.  "
                      "This is a promiscuous trace,",
                      MakeTraceSourceAccessor (&CsmaNetDevice::m_macPromiscRxTrace),
                      "ns3::Packet::TracedCallback")
-    .AddTraceSource ("MacRx", 
+    .AddTraceSource ("MacRx",
                      "A packet has been received by this device, "
                      "has been passed up from the physical layer "
                      "and is being forwarded up the local protocol stack.  "
@@ -118,13 +118,13 @@ CsmaNetDevice::GetTypeId (void)
                      "ns3::Packet::TracedCallback")
 #if 0
     // Not currently implemented in this device
-    .AddTraceSource ("MacRxDrop", 
+    .AddTraceSource ("MacRxDrop",
                      "Trace source indicating a packet was received, "
                      "but dropped before being forwarded up the stack",
                      MakeTraceSourceAccessor (&CsmaNetDevice::m_macRxDropTrace),
                      "ns3::Packet::TracedCallback")
 #endif
-    .AddTraceSource ("MacTxBackoff", 
+    .AddTraceSource ("MacTxBackoff",
                      "Trace source indicating a packet has been "
                      "delayed by the CSMA backoff process",
                      MakeTraceSourceAccessor (&CsmaNetDevice::m_macTxBackoffTrace),
@@ -133,48 +133,48 @@ CsmaNetDevice::GetTypeId (void)
     // Trace sources at the "bottom" of the net device, where packets transition
     // to/from the channel.
     //
-    .AddTraceSource ("PhyTxBegin", 
+    .AddTraceSource ("PhyTxBegin",
                      "Trace source indicating a packet has "
                      "begun transmitting over the channel",
                      MakeTraceSourceAccessor (&CsmaNetDevice::m_phyTxBeginTrace),
                      "ns3::Packet::TracedCallback")
-    .AddTraceSource ("PhyTxEnd", 
+    .AddTraceSource ("PhyTxEnd",
                      "Trace source indicating a packet has been "
                      "completely transmitted over the channel",
                      MakeTraceSourceAccessor (&CsmaNetDevice::m_phyTxEndTrace),
                      "ns3::Packet::TracedCallback")
-    .AddTraceSource ("PhyTxDrop", 
+    .AddTraceSource ("PhyTxDrop",
                      "Trace source indicating a packet has been "
                      "dropped by the device during transmission",
                      MakeTraceSourceAccessor (&CsmaNetDevice::m_phyTxDropTrace),
                      "ns3::Packet::TracedCallback")
 #if 0
     // Not currently implemented in this device
-    .AddTraceSource ("PhyRxBegin", 
+    .AddTraceSource ("PhyRxBegin",
                      "Trace source indicating a packet has "
                      "begun being received by the device",
                      MakeTraceSourceAccessor (&CsmaNetDevice::m_phyRxBeginTrace),
                      "ns3::Packet::TracedCallback")
 #endif
-    .AddTraceSource ("PhyRxEnd", 
+    .AddTraceSource ("PhyRxEnd",
                      "Trace source indicating a packet has been "
                      "completely received by the device",
                      MakeTraceSourceAccessor (&CsmaNetDevice::m_phyRxEndTrace),
                      "ns3::Packet::TracedCallback")
-    .AddTraceSource ("PhyRxDrop", 
+    .AddTraceSource ("PhyRxDrop",
                      "Trace source indicating a packet has been "
                      "dropped by the device during reception",
                      MakeTraceSourceAccessor (&CsmaNetDevice::m_phyRxDropTrace),
                      "ns3::Packet::TracedCallback")
     //
-    // Trace sources designed to simulate a packet sniffer facility (tcpdump). 
+    // Trace sources designed to simulate a packet sniffer facility (tcpdump).
     //
-    .AddTraceSource ("Sniffer", 
+    .AddTraceSource ("Sniffer",
                      "Trace source simulating a non-promiscuous "
                      "packet sniffer attached to the device",
                      MakeTraceSourceAccessor (&CsmaNetDevice::m_snifferTrace),
                      "ns3::Packet::TracedCallback")
-    .AddTraceSource ("PromiscSniffer", 
+    .AddTraceSource ("PromiscSniffer",
                      "Trace source simulating a promiscuous "
                      "packet sniffer attached to the device",
                      MakeTraceSourceAccessor (&CsmaNetDevice::m_promiscSnifferTrace),
@@ -189,17 +189,17 @@ CsmaNetDevice::CsmaNetDevice ()
   NS_LOG_FUNCTION (this);
   m_txMachineState = READY;
   m_tInterframeGap = Seconds (0);
-  m_channel = 0;
+  m_channel = nullptr;
 
-  // 
-  // We would like to let the attribute system take care of initializing the 
+  //
+  // We would like to let the attribute system take care of initializing the
   // packet encapsulation stuff, but we also don't want to get caught up in
   // initialization order changes.  So we'll get the three problem variables
   // into a consistent state here before the attribute calls, and then depend
-  // on the semantics of the setters to preserve a consistent state.  This 
-  // really doesn't have to be the same set of values as the initial values 
+  // on the semantics of the setters to preserve a consistent state.  This
+  // really doesn't have to be the same set of values as the initial values
   // set by the attributes, but it does have to be a consistent set.  That is,
-  // you can just change the default encapsulation mode above without having 
+  // you can just change the default encapsulation mode above without having
   // to change it here.
   //
   m_encapMode = DIX;
@@ -208,16 +208,16 @@ CsmaNetDevice::CsmaNetDevice ()
 CsmaNetDevice::~CsmaNetDevice()
 {
   NS_LOG_FUNCTION_NOARGS ();
-  m_queue = 0;
+  m_queue = nullptr;
 }
 
 void
 CsmaNetDevice::DoDispose ()
 {
   NS_LOG_FUNCTION_NOARGS ();
-  m_channel = 0;
-  m_node = 0;
-  m_queue = 0;
+  m_channel = nullptr;
+  m_node = nullptr;
+  m_queue = nullptr;
   NetDevice::DoDispose ();
 }
 
@@ -233,7 +233,7 @@ CsmaNetDevice::SetEncapsulationMode (enum EncapsulationMode mode)
 }
 
 CsmaNetDevice::EncapsulationMode
-CsmaNetDevice::GetEncapsulationMode (void)
+CsmaNetDevice::GetEncapsulationMode ()
 {
   NS_LOG_FUNCTION_NOARGS ();
   return m_encapMode;
@@ -252,7 +252,7 @@ CsmaNetDevice::SetMtu (uint16_t mtu)
 }
 
 uint16_t
-CsmaNetDevice::GetMtu (void) const
+CsmaNetDevice::GetMtu () const
 {
   NS_LOG_FUNCTION_NOARGS ();
   return m_mtu;
@@ -274,14 +274,14 @@ CsmaNetDevice::SetReceiveEnable (bool receiveEnable)
 }
 
 bool
-CsmaNetDevice::IsSendEnabled (void)
+CsmaNetDevice::IsSendEnabled ()
 {
   NS_LOG_FUNCTION_NOARGS ();
   return m_sendEnable;
 }
 
 bool
-CsmaNetDevice::IsReceiveEnabled (void)
+CsmaNetDevice::IsReceiveEnabled ()
 {
   NS_LOG_FUNCTION_NOARGS ();
   return m_receiveEnable;
@@ -321,7 +321,7 @@ CsmaNetDevice::AddHeader (Ptr<Packet> p,   Mac48Address source,  Mac48Address de
   NS_LOG_LOGIC ("m_mtu = " << m_mtu);
 
   uint16_t lengthType = 0;
-  switch (m_encapMode) 
+  switch (m_encapMode)
     {
     case DIX:
       NS_LOG_LOGIC ("Encapsulating packet as DIX (type interpretation)");
@@ -333,8 +333,8 @@ CsmaNetDevice::AddHeader (Ptr<Packet> p,   Mac48Address source,  Mac48Address de
 
       //
       // All Ethernet frames must carry a minimum payload of 46 bytes.  We need
-      // to pad out if we don't have enough bytes.  These must be real bytes 
-      // since they will be written to pcap files and compared in regression 
+      // to pad out if we don't have enough bytes.  These must be real bytes
+      // since they will be written to pcap files and compared in regression
       // trace files.
       //
       if (p->GetSize () < 46)
@@ -345,7 +345,7 @@ CsmaNetDevice::AddHeader (Ptr<Packet> p,   Mac48Address source,  Mac48Address de
           p->AddAtEnd (padd);
         }
       break;
-    case LLC: 
+    case LLC:
       {
         NS_LOG_LOGIC ("Encapsulating packet as LLC (length interpretation)");
 
@@ -354,16 +354,16 @@ CsmaNetDevice::AddHeader (Ptr<Packet> p,   Mac48Address source,  Mac48Address de
         p->AddHeader (llc);
 
         //
-        // This corresponds to the length interpretation of the lengthType 
-        // field but with an LLC/SNAP header added to the payload as in 
+        // This corresponds to the length interpretation of the lengthType
+        // field but with an LLC/SNAP header added to the payload as in
         // IEEE 802.2
         //
         lengthType = p->GetSize ();
 
         //
-        // All Ethernet frames must carry a minimum payload of 46 bytes.  The 
+        // All Ethernet frames must carry a minimum payload of 46 bytes.  The
         // LLC SNAP header counts as part of this payload.  We need to padd out
-        // if we don't have enough bytes.  These must be real bytes since they 
+        // if we don't have enough bytes.  These must be real bytes since they
         // will be written to pcap files and compared in regression trace files.
         //
         if (p->GetSize () < 46)
@@ -420,12 +420,12 @@ CsmaNetDevice::ProcessHeader (Ptr<Packet> p, uint16_t & param)
     case DIX:
       param = header.GetLengthType ();
       break;
-    case LLC: 
+    case LLC:
       {
         LlcSnapHeader llc;
         p->RemoveHeader (llc);
         param = llc.GetType ();
-      } 
+      }
       break;
     case ILLEGAL:
     default:
@@ -437,15 +437,15 @@ CsmaNetDevice::ProcessHeader (Ptr<Packet> p, uint16_t & param)
 #endif
 
 void
-CsmaNetDevice::TransmitStart (void)
+CsmaNetDevice::TransmitStart ()
 {
   NS_LOG_FUNCTION_NOARGS ();
 
   //
-  // This function is called to start the process of transmitting a packet.  We 
+  // This function is called to start the process of transmitting a packet.  We
   // expect that the packet to transmit will be found in m_currentPkt.
   //
-  NS_ASSERT_MSG (m_currentPkt != 0, "CsmaNetDevice::TransmitStart(): m_currentPkt not set");
+  NS_ASSERT_MSG (m_currentPkt, "CsmaNetDevice::TransmitStart(): m_currentPkt not set");
 
   NS_LOG_LOGIC ("m_currentPkt = " << m_currentPkt);
   NS_LOG_LOGIC ("UID = " << m_currentPkt->GetUid ());
@@ -456,17 +456,17 @@ CsmaNetDevice::TransmitStart (void)
   if (IsSendEnabled () == false)
     {
       m_phyTxDropTrace (m_currentPkt);
-      m_currentPkt = 0;
+      m_currentPkt = nullptr;
       return;
     }
 
   //
-  // Somebody has called here telling us to start transmitting a packet.  They 
+  // Somebody has called here telling us to start transmitting a packet.  They
   // can only do this if the state machine is in the READY or BACKOFF state.
   // Specifically, if we are ready to start transmitting, we cannot already
   // be transmitting (i.e., BUSY)
   //
-  NS_ASSERT_MSG ((m_txMachineState == READY) || (m_txMachineState == BACKOFF), 
+  NS_ASSERT_MSG ((m_txMachineState == READY) || (m_txMachineState == BACKOFF),
                  "Must be READY to transmit. Tx state is: " << m_txMachineState);
 
   //
@@ -482,13 +482,13 @@ CsmaNetDevice::TransmitStart (void)
       m_txMachineState = BACKOFF;
 
       if (m_backoff.MaxRetriesReached ())
-        { 
+        {
           //
           // Too many retries, abort transmission of packet
           //
           TransmitAbort ();
-        } 
-      else 
+        }
+      else
         {
           m_macTxBackoffTrace (m_currentPkt);
 
@@ -499,8 +499,8 @@ CsmaNetDevice::TransmitStart (void)
 
           Simulator::Schedule (backoffTime, &CsmaNetDevice::TransmitStart, this);
         }
-    } 
-  else 
+    }
+  else
     {
       //
       // The channel is free, transmit the packet
@@ -510,10 +510,10 @@ CsmaNetDevice::TransmitStart (void)
         {
           NS_LOG_WARN ("Channel TransmitStart returns an error");
           m_phyTxDropTrace (m_currentPkt);
-          m_currentPkt = 0;
+          m_currentPkt = nullptr;
           m_txMachineState = READY;
-        } 
-      else 
+        }
+      else
         {
           //
           // Transmission succeeded, reset the backoff time parameters and
@@ -530,24 +530,24 @@ CsmaNetDevice::TransmitStart (void)
 }
 
 void
-CsmaNetDevice::TransmitAbort (void)
+CsmaNetDevice::TransmitAbort ()
 {
   NS_LOG_FUNCTION_NOARGS ();
 
   //
-  // When we started the process of transmitting the current packet, it was 
+  // When we started the process of transmitting the current packet, it was
   // placed in m_currentPkt.  So we had better find one there.
   //
-  NS_ASSERT_MSG (m_currentPkt != 0, "CsmaNetDevice::TransmitAbort(): m_currentPkt zero");
+  NS_ASSERT_MSG (m_currentPkt, "CsmaNetDevice::TransmitAbort(): m_currentPkt zero");
   NS_LOG_LOGIC ("m_currentPkt=" << m_currentPkt);
   NS_LOG_LOGIC ("Pkt UID is " << m_currentPkt->GetUid () << ")");
 
   m_phyTxDropTrace (m_currentPkt);
-  m_currentPkt = 0;
+  m_currentPkt = nullptr;
 
   NS_ASSERT_MSG (m_txMachineState == BACKOFF, "Must be in BACKOFF state to abort.  Tx state is: " << m_txMachineState);
 
-  // 
+  //
   // We're done with that one, so reset the backoff algorithm and ready the
   // transmit state machine.
   //
@@ -555,7 +555,7 @@ CsmaNetDevice::TransmitAbort (void)
   m_txMachineState = READY;
 
   //
-  // If there is another packet on the input queue, we need to start trying to 
+  // If there is another packet on the input queue, we need to start trying to
   // get that out.  If the queue is empty we just wait until someone puts one
   // in.
   //
@@ -566,7 +566,7 @@ CsmaNetDevice::TransmitAbort (void)
   else
     {
       Ptr<Packet> packet = m_queue->Dequeue ();
-      NS_ASSERT_MSG (packet != 0, "CsmaNetDevice::TransmitAbort(): IsEmpty false but no Packet on queue?");
+      NS_ASSERT_MSG (packet, "CsmaNetDevice::TransmitAbort(): IsEmpty false but no Packet on queue?");
       m_currentPkt = packet;
       m_snifferTrace (m_currentPkt);
       m_promiscSnifferTrace (m_currentPkt);
@@ -575,7 +575,7 @@ CsmaNetDevice::TransmitAbort (void)
 }
 
 void
-CsmaNetDevice::TransmitCompleteEvent (void)
+CsmaNetDevice::TransmitCompleteEvent ()
 {
   NS_LOG_FUNCTION_NOARGS ();
 
@@ -590,16 +590,16 @@ CsmaNetDevice::TransmitCompleteEvent (void)
   m_txMachineState = GAP;
 
   //
-  // When we started transmitting the current packet, it was placed in 
+  // When we started transmitting the current packet, it was placed in
   // m_currentPkt.  So we had better find one there.
   //
-  NS_ASSERT_MSG (m_currentPkt != 0, "CsmaNetDevice::TransmitCompleteEvent(): m_currentPkt zero");
+  NS_ASSERT_MSG (m_currentPkt, "CsmaNetDevice::TransmitCompleteEvent(): m_currentPkt zero");
   NS_LOG_LOGIC ("m_currentPkt=" << m_currentPkt);
   NS_LOG_LOGIC ("Pkt UID is " << m_currentPkt->GetUid () << ")");
 
-  m_channel->TransmitEnd (); 
+  m_channel->TransmitEnd ();
   m_phyTxEndTrace (m_currentPkt);
-  m_currentPkt = 0;
+  m_currentPkt = nullptr;
 
   NS_LOG_LOGIC ("Schedule TransmitReadyEvent in " << m_tInterframeGap.As (Time::S));
 
@@ -607,7 +607,7 @@ CsmaNetDevice::TransmitCompleteEvent (void)
 }
 
 void
-CsmaNetDevice::TransmitReadyEvent (void)
+CsmaNetDevice::TransmitReadyEvent ()
 {
   NS_LOG_FUNCTION_NOARGS ();
 
@@ -620,10 +620,10 @@ CsmaNetDevice::TransmitReadyEvent (void)
   m_txMachineState = READY;
 
   //
-  // We expect that the packet we had been transmitting was cleared when the 
+  // We expect that the packet we had been transmitting was cleared when the
   // TransmitCompleteEvent() was executed.
   //
-  NS_ASSERT_MSG (m_currentPkt == 0, "CsmaNetDevice::TransmitReadyEvent(): m_currentPkt nonzero");
+  NS_ASSERT_MSG (!m_currentPkt, "CsmaNetDevice::TransmitReadyEvent(): m_currentPkt nonzero");
 
   //
   // Get the next packet from the queue for transmitting
@@ -635,7 +635,7 @@ CsmaNetDevice::TransmitReadyEvent (void)
   else
     {
       Ptr<Packet> packet = m_queue->Dequeue ();
-      NS_ASSERT_MSG (packet != 0, "CsmaNetDevice::TransmitReadyEvent(): IsEmpty false but no Packet on queue?");
+      NS_ASSERT_MSG (packet, "CsmaNetDevice::TransmitReadyEvent(): IsEmpty false but no Packet on queue?");
       m_currentPkt = packet;
       m_snifferTrace (m_currentPkt);
       m_promiscSnifferTrace (m_currentPkt);
@@ -680,7 +680,7 @@ void
 CsmaNetDevice::SetReceiveErrorModel (Ptr<ErrorModel> em)
 {
   NS_LOG_FUNCTION (em);
-  m_receiveErrorModel = em; 
+  m_receiveErrorModel = em;
 }
 
 void
@@ -692,7 +692,7 @@ CsmaNetDevice::Receive (Ptr<Packet> packet, Ptr<CsmaNetDevice> senderDevice)
   //
   // We never forward up packets that we sent.  Real devices don't do this since
   // their receivers are disabled during send, so we don't.
-  // 
+  //
   if (senderDevice == this)
     {
       return;
@@ -704,7 +704,7 @@ CsmaNetDevice::Receive (Ptr<Packet> packet, Ptr<CsmaNetDevice> senderDevice)
   //
   m_phyRxEndTrace (packet);
 
-  // 
+  //
   // Only receive if the send side of net device is enabled
   //
   if (IsReceiveEnabled () == false)
@@ -749,8 +749,8 @@ CsmaNetDevice::Receive (Ptr<Packet> packet, Ptr<CsmaNetDevice> senderDevice)
 
   uint16_t protocol;
   //
-  // If the length/type is less than 1500, it corresponds to a length 
-  // interpretation packet.  In this case, it is an 802.3 packet and 
+  // If the length/type is less than 1500, it corresponds to a length
+  // interpretation packet.  In this case, it is an 802.3 packet and
   // will also have an 802.2 LLC header.  If greater than 1500, we
   // find the protocol number (Ethernet type) directly.
   //
@@ -795,9 +795,9 @@ CsmaNetDevice::Receive (Ptr<Packet> packet, Ptr<CsmaNetDevice> senderDevice)
       packetType = PACKET_OTHERHOST;
     }
 
-  // 
+  //
   // For all kinds of packetType we receive, we hit the promiscuous sniffer
-  // hook and pass a copy up to the promiscuous callback.  Pass a copy to 
+  // hook and pass a copy up to the promiscuous callback.  Pass a copy to
   // make sure that nobody messes with our packet.
   //
   m_promiscSnifferTrace (originalPacket);
@@ -821,14 +821,14 @@ CsmaNetDevice::Receive (Ptr<Packet> packet, Ptr<CsmaNetDevice> senderDevice)
 }
 
 Ptr<Queue<Packet> >
-CsmaNetDevice::GetQueue (void) const 
-{ 
+CsmaNetDevice::GetQueue () const
+{
   NS_LOG_FUNCTION_NOARGS ();
   return m_queue;
 }
 
 void
-CsmaNetDevice::NotifyLinkUp (void)
+CsmaNetDevice::NotifyLinkUp ()
 {
   NS_LOG_FUNCTION_NOARGS ();
   m_linkUp = true;
@@ -843,14 +843,14 @@ CsmaNetDevice::SetIfIndex (const uint32_t index)
 }
 
 uint32_t
-CsmaNetDevice::GetIfIndex (void) const
+CsmaNetDevice::GetIfIndex () const
 {
   NS_LOG_FUNCTION_NOARGS ();
   return m_ifIndex;
 }
 
 Ptr<Channel>
-CsmaNetDevice::GetChannel (void) const
+CsmaNetDevice::GetChannel () const
 {
   NS_LOG_FUNCTION_NOARGS ();
   return m_channel;
@@ -864,14 +864,14 @@ CsmaNetDevice::SetAddress (Address address)
 }
 
 Address
-CsmaNetDevice::GetAddress (void) const
+CsmaNetDevice::GetAddress () const
 {
   NS_LOG_FUNCTION_NOARGS ();
   return m_address;
 }
 
 bool
-CsmaNetDevice::IsLinkUp (void) const
+CsmaNetDevice::IsLinkUp () const
 {
   NS_LOG_FUNCTION_NOARGS ();
   return m_linkUp;
@@ -885,21 +885,21 @@ CsmaNetDevice::AddLinkChangeCallback (Callback<void> callback)
 }
 
 bool
-CsmaNetDevice::IsBroadcast (void) const
+CsmaNetDevice::IsBroadcast () const
 {
   NS_LOG_FUNCTION_NOARGS ();
   return true;
 }
 
 Address
-CsmaNetDevice::GetBroadcast (void) const
+CsmaNetDevice::GetBroadcast () const
 {
   NS_LOG_FUNCTION_NOARGS ();
   return Mac48Address ("ff:ff:ff:ff:ff:ff");
 }
 
 bool
-CsmaNetDevice::IsMulticast (void) const
+CsmaNetDevice::IsMulticast () const
 {
   NS_LOG_FUNCTION_NOARGS ();
   return true;
@@ -923,14 +923,14 @@ CsmaNetDevice::GetMulticast (Ipv4Address multicastGroup) const
 }
 
 bool
-CsmaNetDevice::IsPointToPoint (void) const
+CsmaNetDevice::IsPointToPoint () const
 {
   NS_LOG_FUNCTION_NOARGS ();
   return false;
 }
 
 bool
-CsmaNetDevice::IsBridge (void) const
+CsmaNetDevice::IsBridge () const
 {
   NS_LOG_FUNCTION_NOARGS ();
   return false;
@@ -968,7 +968,7 @@ CsmaNetDevice::SendFrom (Ptr<Packet> packet, const Address& src, const Address& 
   m_macTxTrace (packet);
 
   //
-  // Place the packet to be sent on the send queue.  Note that the 
+  // Place the packet to be sent on the send queue.  Note that the
   // queue may fire a drop trace, but we will too.
   //
   if (m_queue->Enqueue (packet) == false)
@@ -982,12 +982,12 @@ CsmaNetDevice::SendFrom (Ptr<Packet> packet, const Address& src, const Address& 
   // the transmission will be started when the current packet finished
   // transmission (see TransmitCompleteEvent)
   //
-  if (m_txMachineState == READY) 
+  if (m_txMachineState == READY)
     {
       if (m_queue->IsEmpty () == false)
         {
           Ptr<Packet> packet = m_queue->Dequeue ();
-          NS_ASSERT_MSG (packet != 0, "CsmaNetDevice::SendFrom(): IsEmpty false but no Packet on queue?");
+          NS_ASSERT_MSG (packet, "CsmaNetDevice::SendFrom(): IsEmpty false but no Packet on queue?");
           m_currentPkt = packet;
           m_promiscSnifferTrace (m_currentPkt);
           m_snifferTrace (m_currentPkt);
@@ -998,7 +998,7 @@ CsmaNetDevice::SendFrom (Ptr<Packet> packet, const Address& src, const Address& 
 }
 
 Ptr<Node>
-CsmaNetDevice::GetNode (void) const
+CsmaNetDevice::GetNode () const
 {
   NS_LOG_FUNCTION_NOARGS ();
   return m_node;
@@ -1013,7 +1013,7 @@ CsmaNetDevice::SetNode (Ptr<Node> node)
 }
 
 bool
-CsmaNetDevice::NeedsArp (void) const
+CsmaNetDevice::NeedsArp () const
 {
   NS_LOG_FUNCTION_NOARGS ();
   return true;

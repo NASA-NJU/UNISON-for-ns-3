@@ -17,7 +17,7 @@
  *
  * Author: Marco Miozzo  <marco.miozzo@cttc.es>,
  *         Nicola Baldo <nbaldo@cttc.es>
- * 
+ *
  */
 #include "ns3/log.h"
 #include "ns3/double.h"
@@ -34,7 +34,7 @@ NS_LOG_COMPONENT_DEFINE ("ItuR1411LosPropagationLossModel");
 NS_OBJECT_ENSURE_REGISTERED (ItuR1411LosPropagationLossModel);
 
 TypeId
-ItuR1411LosPropagationLossModel::GetTypeId (void)
+ItuR1411LosPropagationLossModel::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::ItuR1411LosPropagationLossModel")
     .SetParent<PropagationLossModel> ()
@@ -94,7 +94,7 @@ ItuR1411LosPropagationLossModel::SetFrequency (double freq)
 }
 
 
-double 
+double
 ItuR1411LosPropagationLossModel::DoCalcRxPower (double txPowerDbm,
 						Ptr<MobilityModel> a,
 						Ptr<MobilityModel> b) const

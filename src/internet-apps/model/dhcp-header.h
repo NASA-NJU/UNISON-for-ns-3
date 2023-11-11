@@ -25,7 +25,10 @@
 #ifndef DHCP_HEADER_H
 #define DHCP_HEADER_H
 
+#include "ns3/address.h"
+#include "ns3/buffer.h"
 #include "ns3/header.h"
+#include "ns3/ipv4-address.h"
 
 namespace ns3 {
 
@@ -85,7 +88,7 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   /**
    * \brief Constructor
@@ -95,7 +98,7 @@ public:
   /**
    * \brief Destructor
    */
-  ~DhcpHeader ();
+  ~DhcpHeader () override;
 
   /// BOOTP options
   enum Options
@@ -131,7 +134,7 @@ public:
    * \brief Return the type of DHCP message
    * \return The type of message
    */
-  uint8_t GetType (void) const;
+  uint8_t GetType () const;
 
   /**
    * \brief Set the hardware information
@@ -150,7 +153,7 @@ public:
    * \brief Get the transaction id
    * \return The transaction id
    */
-  uint32_t GetTran (void) const;
+  uint32_t GetTran () const;
 
   /**
    * \brief Set the time when message is sent
@@ -180,7 +183,7 @@ public:
    *
    * \return Address of the client
    */
-  Address GetChaddr (void);
+  Address GetChaddr ();
 
   /**
    * \brief Set the IPv4Address of the client
@@ -192,7 +195,7 @@ public:
    * \brief Get the IPv4Address of the client
    * \return IPv4Address of the client
    */
-  Ipv4Address GetYiaddr (void) const;
+  Ipv4Address GetYiaddr () const;
 
   /**
    * \brief Set the DHCP server information
@@ -204,7 +207,7 @@ public:
    * \brief Get the information about the DHCP server
    * \return IPv4Address of DHCP server
    */
-  Ipv4Address GetDhcps (void) const;
+  Ipv4Address GetDhcps () const;
 
   /**
    * \brief Set the Ipv4Address requested by the client
@@ -216,7 +219,7 @@ public:
    * \brief Get the IPv4Address requested by the client
    * \return IPv4Address requested by the client
    */
-  Ipv4Address GetReq (void) const;
+  Ipv4Address GetReq () const;
 
   /**
    * \brief Set the mask of the IPv4Address
@@ -228,7 +231,7 @@ public:
    * \brief Return the mask of the network
    * \return 32 bit mask
    */
-  uint32_t GetMask (void) const;
+  uint32_t GetMask () const;
 
   /**
    * \brief Set the Ipv4Address of gateway to be used
@@ -240,7 +243,7 @@ public:
    * \brief Return the Ipv4Address of gateway to be used
    * \return The Ipv4Address of the gateway
    */
-  Ipv4Address GetRouter (void) const;
+  Ipv4Address GetRouter () const;
 
   /**
    * \brief Set the lease time of the IPv4Address
@@ -252,7 +255,7 @@ public:
    * \brief Return the lease time of the IPv4Address
    * \return 32 bit time
    */
-  uint32_t GetLease (void) const;
+  uint32_t GetLease () const;
 
   /**
    * \brief Set the Renewal time of the IPv4Address
@@ -264,7 +267,7 @@ public:
    * \brief Return the Renewal time of the address
    * \return 32 bit time
    */
-  uint32_t GetRenew (void) const;
+  uint32_t GetRenew () const;
 
   /**
    * \brief Set the Rebind time of the IPv4Address
@@ -276,7 +279,7 @@ public:
    * \brief Return the Rebind time of the address
    * \return 32 bit time
    */
-  uint32_t GetRebind (void) const;
+  uint32_t GetRebind () const;
 
   /**
    * \brief Reset the BOOTP options
@@ -284,11 +287,11 @@ public:
   void ResetOpt ();
 
 private:
-  virtual TypeId GetInstanceTypeId (void) const;
-  virtual void Print (std::ostream &os) const;
-  virtual uint32_t GetSerializedSize (void) const;
-  virtual void Serialize (Buffer::Iterator start) const;
-  virtual uint32_t Deserialize (Buffer::Iterator start);
+  TypeId GetInstanceTypeId () const override;
+  void Print (std::ostream &os) const override;
+  uint32_t GetSerializedSize () const override;
+  void Serialize (Buffer::Iterator start) const override;
+  uint32_t Deserialize (Buffer::Iterator start) override;
 
   uint8_t m_op;                          //!< The DHCP Message type
   uint8_t m_bootp;                       //!< The BOOTP Message type

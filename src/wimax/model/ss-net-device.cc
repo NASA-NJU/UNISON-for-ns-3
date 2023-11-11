@@ -54,7 +54,7 @@ Time SubscriberStationNetDevice::GetDefaultLostDlMapInterval ()
 }
 
 TypeId
-SubscriberStationNetDevice::GetTypeId (void)
+SubscriberStationNetDevice::GetTypeId ()
 {
   static TypeId
     tid =
@@ -208,7 +208,7 @@ SubscriberStationNetDevice::GetTypeId (void)
   return tid;
 }
 
-SubscriberStationNetDevice::SubscriberStationNetDevice (void)
+SubscriberStationNetDevice::SubscriberStationNetDevice ()
 {
 
   InitSubscriberStationNetDevice ();
@@ -216,7 +216,7 @@ SubscriberStationNetDevice::SubscriberStationNetDevice (void)
 }
 
 void
-SubscriberStationNetDevice::InitSubscriberStationNetDevice (void)
+SubscriberStationNetDevice::InitSubscriberStationNetDevice ()
 {
   m_lostDlMapInterval = MilliSeconds (500);
   m_lostUlMapInterval = MilliSeconds (500);
@@ -243,8 +243,8 @@ SubscriberStationNetDevice::InitSubscriberStationNetDevice (void)
   m_areManagementConnectionsAllocated = false;
   m_areServiceFlowsAllocated = false;
 
-  m_basicConnection = 0;
-  m_primaryConnection = 0;
+  m_basicConnection = nullptr;
+  m_primaryConnection = nullptr;
 
   m_dlBurstProfile = new OfdmDlBurstProfile ();
   m_ulBurstProfile = new OfdmUlBurstProfile ();
@@ -261,24 +261,24 @@ SubscriberStationNetDevice::SubscriberStationNetDevice (Ptr<Node> node, Ptr<Wima
   this->SetPhy (phy);
 }
 
-SubscriberStationNetDevice::~SubscriberStationNetDevice (void)
+SubscriberStationNetDevice::~SubscriberStationNetDevice ()
 {
 }
 
 void
-SubscriberStationNetDevice::DoDispose (void)
+SubscriberStationNetDevice::DoDispose ()
 {
   delete m_dlBurstProfile;
   delete m_ulBurstProfile;
-  m_scheduler = 0;
-  m_serviceFlowManager = 0;
-  m_basicConnection = 0;
-  m_primaryConnection = 0;
-  m_classifier = 0;
-  m_dlBurstProfile = 0;
-  m_ulBurstProfile = 0;
+  m_scheduler = nullptr;
+  m_serviceFlowManager = nullptr;
+  m_basicConnection = nullptr;
+  m_primaryConnection = nullptr;
+  m_classifier = nullptr;
+  m_dlBurstProfile = nullptr;
+  m_ulBurstProfile = nullptr;
 
-  m_linkManager = 0;
+  m_linkManager = nullptr;
 
   m_asciiTxQueueEnqueueCb.Nullify ();
   m_asciiTxQueueDequeueCb.Nullify ();
@@ -294,7 +294,7 @@ SubscriberStationNetDevice::SetLostDlMapInterval (Time lostDlMapInterval)
 }
 
 Time
-SubscriberStationNetDevice::GetLostDlMapInterval (void) const
+SubscriberStationNetDevice::GetLostDlMapInterval () const
 {
   return m_lostDlMapInterval;
 }
@@ -306,7 +306,7 @@ SubscriberStationNetDevice::SetLostUlMapInterval (Time lostUlMapInterval)
 }
 
 Time
-SubscriberStationNetDevice::GetLostUlMapInterval (void) const
+SubscriberStationNetDevice::GetLostUlMapInterval () const
 {
   return m_lostUlMapInterval;
 }
@@ -318,7 +318,7 @@ SubscriberStationNetDevice::SetMaxDcdInterval (Time maxDcdInterval)
 }
 
 Time
-SubscriberStationNetDevice::GetMaxDcdInterval (void) const
+SubscriberStationNetDevice::GetMaxDcdInterval () const
 {
   return m_maxDcdInterval;
 }
@@ -330,7 +330,7 @@ SubscriberStationNetDevice::SetMaxUcdInterval (Time maxUcdInterval)
 }
 
 Time
-SubscriberStationNetDevice::GetMaxUcdInterval (void) const
+SubscriberStationNetDevice::GetMaxUcdInterval () const
 {
   return m_maxUcdInterval;
 }
@@ -342,7 +342,7 @@ SubscriberStationNetDevice::SetIntervalT1 (Time interval)
 }
 
 Time
-SubscriberStationNetDevice::GetIntervalT1 (void) const
+SubscriberStationNetDevice::GetIntervalT1 () const
 {
   return m_intervalT1;
 }
@@ -354,7 +354,7 @@ SubscriberStationNetDevice::SetIntervalT2 (Time interval)
 }
 
 Time
-SubscriberStationNetDevice::GetIntervalT2 (void) const
+SubscriberStationNetDevice::GetIntervalT2 () const
 {
   return m_intervalT2;
 }
@@ -366,7 +366,7 @@ SubscriberStationNetDevice::SetIntervalT3 (Time interval)
 }
 
 Time
-SubscriberStationNetDevice::GetIntervalT3 (void) const
+SubscriberStationNetDevice::GetIntervalT3 () const
 {
   return m_intervalT3;
 }
@@ -378,7 +378,7 @@ SubscriberStationNetDevice::SetIntervalT7 (Time interval)
 }
 
 Time
-SubscriberStationNetDevice::GetIntervalT7 (void) const
+SubscriberStationNetDevice::GetIntervalT7 () const
 {
   return m_intervalT7;
 }
@@ -390,7 +390,7 @@ SubscriberStationNetDevice::SetIntervalT12 (Time interval)
 }
 
 Time
-SubscriberStationNetDevice::GetIntervalT12 (void) const
+SubscriberStationNetDevice::GetIntervalT12 () const
 {
   return m_intervalT12;
 }
@@ -402,7 +402,7 @@ SubscriberStationNetDevice::SetIntervalT20 (Time interval)
 }
 
 Time
-SubscriberStationNetDevice::GetIntervalT20 (void) const
+SubscriberStationNetDevice::GetIntervalT20 () const
 {
   return m_intervalT20;
 }
@@ -414,7 +414,7 @@ SubscriberStationNetDevice::SetIntervalT21 (Time interval)
 }
 
 Time
-SubscriberStationNetDevice::GetIntervalT21 (void) const
+SubscriberStationNetDevice::GetIntervalT21 () const
 {
   return m_intervalT21;
 }
@@ -426,7 +426,7 @@ SubscriberStationNetDevice::SetMaxContentionRangingRetries (uint8_t maxContentio
 }
 
 uint8_t
-SubscriberStationNetDevice::GetMaxContentionRangingRetries (void) const
+SubscriberStationNetDevice::GetMaxContentionRangingRetries () const
 {
   return m_maxContentionRangingRetries;
 }
@@ -459,7 +459,7 @@ SubscriberStationNetDevice::SetBasicConnection (Ptr<WimaxConnection> basicConnec
 }
 
 Ptr<WimaxConnection>
-SubscriberStationNetDevice::GetBasicConnection (void) const
+SubscriberStationNetDevice::GetBasicConnection () const
 {
   return m_basicConnection;
 }
@@ -493,19 +493,19 @@ SubscriberStationNetDevice::SetPrimaryConnection (Ptr<WimaxConnection> primaryCo
 }
 
 Ptr<WimaxConnection>
-SubscriberStationNetDevice::GetPrimaryConnection (void) const
+SubscriberStationNetDevice::GetPrimaryConnection () const
 {
   return m_primaryConnection;
 }
 
 Cid
-SubscriberStationNetDevice::GetBasicCid (void) const
+SubscriberStationNetDevice::GetBasicCid () const
 {
   return m_basicConnection->GetCid ();
 }
 
 Cid
-SubscriberStationNetDevice::GetPrimaryCid (void) const
+SubscriberStationNetDevice::GetPrimaryCid () const
 {
   return m_primaryConnection->GetCid ();
 }
@@ -517,7 +517,7 @@ SubscriberStationNetDevice::SetModulationType (WimaxPhy::ModulationType modulati
 }
 
 WimaxPhy::ModulationType
-SubscriberStationNetDevice::GetModulationType (void) const
+SubscriberStationNetDevice::GetModulationType () const
 {
   return m_modulationType;
 }
@@ -529,7 +529,7 @@ SubscriberStationNetDevice::SetAreManagementConnectionsAllocated (bool areManage
 }
 
 bool
-SubscriberStationNetDevice::GetAreManagementConnectionsAllocated (void) const
+SubscriberStationNetDevice::GetAreManagementConnectionsAllocated () const
 {
   return m_areManagementConnectionsAllocated;
 }
@@ -541,13 +541,13 @@ SubscriberStationNetDevice::SetAreServiceFlowsAllocated (bool areServiceFlowsAll
 }
 
 bool
-SubscriberStationNetDevice::GetAreServiceFlowsAllocated (void) const
+SubscriberStationNetDevice::GetAreServiceFlowsAllocated () const
 {
   return m_areServiceFlowsAllocated;
 }
 
 Ptr<SSScheduler>
-SubscriberStationNetDevice::GetScheduler (void) const
+SubscriberStationNetDevice::GetScheduler () const
 {
   return m_scheduler;
 }
@@ -559,7 +559,7 @@ SubscriberStationNetDevice::SetScheduler (Ptr<SSScheduler> scheduler)
 }
 
 bool
-SubscriberStationNetDevice::HasServiceFlows (void) const
+SubscriberStationNetDevice::HasServiceFlows () const
 {
   return GetServiceFlowManager ()->GetServiceFlows (ServiceFlow::SF_TYPE_ALL).size () > 0;
 }
@@ -578,7 +578,7 @@ SubscriberStationNetDevice::SetIpcsPacketClassifier (Ptr<IpcsClassifier> classif
 }
 
 Ptr<SSLinkManager>
-SubscriberStationNetDevice::GetLinkManager (void) const
+SubscriberStationNetDevice::GetLinkManager () const
 {
   return m_linkManager;
 }
@@ -590,7 +590,7 @@ SubscriberStationNetDevice::SetLinkManager (Ptr<SSLinkManager> linkManager)
 }
 
 Ptr<SsServiceFlowManager>
-SubscriberStationNetDevice::GetServiceFlowManager (void) const
+SubscriberStationNetDevice::GetServiceFlowManager () const
 {
   return m_serviceFlowManager;
 }
@@ -602,7 +602,7 @@ SubscriberStationNetDevice::SetServiceFlowManager (Ptr<SsServiceFlowManager> sfm
 }
 
 void
-SubscriberStationNetDevice::Start (void)
+SubscriberStationNetDevice::Start ()
 {
   SetReceiveCallback ();
 
@@ -615,7 +615,7 @@ SubscriberStationNetDevice::Start (void)
 }
 
 void
-SubscriberStationNetDevice::Stop (void)
+SubscriberStationNetDevice::Stop ()
 {
   SetState (SS_STATE_STOPPED);
 }
@@ -644,7 +644,7 @@ SubscriberStationNetDevice::DoSend (Ptr<Packet> packet,
   NS_LOG_INFO ("\t\tPacket Size:  " << packet->GetSize () );
   NS_LOG_INFO ("\t\tProtocol:    " << protocolNumber );
 
-  ServiceFlow *serviceFlow = 0;
+  ServiceFlow *serviceFlow = nullptr;
 
   if (IsRegistered ())
     {
@@ -670,7 +670,7 @@ SubscriberStationNetDevice::DoSend (Ptr<Packet> packet,
       serviceFlow = m_classifier->Classify (packet, GetServiceFlowManager (), ServiceFlow::SF_DIRECTION_UP);
     }
 
-  if ((protocolNumber != 2048) || (serviceFlow == NULL))
+  if ((protocolNumber != 2048) || (serviceFlow == nullptr))
     {
       serviceFlow = *GetServiceFlowManager ()->GetServiceFlows (ServiceFlow::SF_TYPE_ALL).begin ();
       NS_LOG_INFO ("\tNo service flows matches...using the default one.");
@@ -706,7 +706,7 @@ SubscriberStationNetDevice::Enqueue (Ptr<Packet> packet,
                                      const MacHeaderType &hdrType,
                                      Ptr<WimaxConnection> connection)
 {
-  NS_ASSERT_MSG (connection != 0, "SS: Can not enqueue the packet: the selected connection is nor initialized");
+  NS_ASSERT_MSG (connection, "SS: Can not enqueue the packet: the selected connection is nor initialized");
 
   GenericMacHeader hdr;
 
@@ -960,7 +960,7 @@ SubscriberStationNetDevice::DoReceive (Ptr<Packet> packet)
               NS_FATAL_ERROR ("Invalid management message type");
             }
         }
-      else if (GetInitialRangingConnection () != 0 && cid == GetInitialRangingConnection ()->GetCid () && !fragmentation)
+      else if (GetInitialRangingConnection () && cid == GetInitialRangingConnection ()->GetCid () && !fragmentation)
         {
           m_traceSSRx (packet, GetMacAddress (), cid);
           packet->RemoveHeader (msgType);
@@ -979,7 +979,7 @@ SubscriberStationNetDevice::DoReceive (Ptr<Packet> packet)
               NS_LOG_ERROR ("Invalid management message type");
             }
         }
-      else if (m_basicConnection != 0 && cid == m_basicConnection->GetCid () && !fragmentation)
+      else if (m_basicConnection && cid == m_basicConnection->GetCid () && !fragmentation)
         {
           m_traceSSRx (packet, GetMacAddress (), cid);
           packet->RemoveHeader (msgType);
@@ -998,7 +998,7 @@ SubscriberStationNetDevice::DoReceive (Ptr<Packet> packet)
               NS_LOG_ERROR ("Invalid management message type");
             }
         }
-      else if (m_primaryConnection != 0 && cid == m_primaryConnection->GetCid () && !fragmentation)
+      else if (m_primaryConnection && cid == m_primaryConnection->GetCid () && !fragmentation)
         {
           m_traceSSRx (packet, GetMacAddress (), cid);
           packet->RemoveHeader (msgType);
@@ -1200,7 +1200,7 @@ SubscriberStationNetDevice::ProcessUlMap (const UlMap &ulmap)
 
             {
 
-              Ptr<WimaxConnection> connection = NULL;
+              Ptr<WimaxConnection> connection = nullptr;
               Simulator::Schedule (timeToAllocation,
                                    &SubscriberStationNetDevice::SendBurst,
                                    this,
@@ -1305,7 +1305,7 @@ SubscriberStationNetDevice::ProcessUcd (const Ucd &ucd)
 /*temporarily assuming registered if ranging is complete,
  shall actually consider the registration step also */
 bool
-SubscriberStationNetDevice::IsRegistered (void) const
+SubscriberStationNetDevice::IsRegistered () const
 {
   return GetState () >= SS_STATE_REGISTERED;
 }

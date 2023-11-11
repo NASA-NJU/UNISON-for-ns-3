@@ -28,7 +28,7 @@
 #include "ns3/packet.h"
 #include "ns3/dsss-phy.h"
 #include "ns3/erp-ofdm-phy.h"
-#include "ns3/he-phy.h" //includes OFDM, HT, and VHT
+#include "ns3/eht-phy.h" //includes OFDM, HT, VHT and HE
 #include <numeric>
 
 using namespace ns3;
@@ -45,8 +45,8 @@ class TxDurationTest : public TestCase
 {
 public:
   TxDurationTest ();
-  virtual ~TxDurationTest ();
-  void DoRun (void) override;
+  ~TxDurationTest () override;
+  void DoRun () override;
 
 
 private:
@@ -81,19 +81,20 @@ private:
   bool CheckTxDuration (uint32_t size, WifiMode payloadMode, uint16_t channelWidth, uint16_t guardInterval, WifiPreamble preamble, Time knownDuration);
 
   /**
-   * Check if the overall Tx duration returned by WifiPhy for a HE MU PPDU
+   * Check if the overall Tx duration returned by WifiPhy for a MU PPDU
    * corresponds to a known value
    *
    * @param sizes the list of PSDU sizes for each station in octets
    * @param userInfos the list of HE MU specific user transmission parameters
    * @param channelWidth the channel width used for the transmission (in MHz)
    * @param guardInterval the guard interval duration used for the transmission (in nanoseconds)
+   * @param preamble the WifiPreamble used for the transmission
    * @param knownDuration the known duration value of the transmission
    *
    * @return true if values correspond, false otherwise
    */
-  static bool CheckHeMuTxDuration (std::list<uint32_t> sizes, std::list<HeMuUserInfo> userInfos,
-                                   uint16_t channelWidth, uint16_t guardInterval,
+  static bool CheckMuTxDuration (std::list<uint32_t> sizes, std::list<HeMuUserInfo> userInfos,
+                                   uint16_t channelWidth, uint16_t guardInterval, WifiPreamble preamble,
                                    Time knownDuration);
 
   /**
@@ -134,37 +135,31 @@ TxDurationTest::CheckPayloadDuration (uint32_t size, WifiMode payloadMode, uint1
   txVector.SetNss (1);
   txVector.SetStbc (0);
   txVector.SetNess (0);
-  WifiPhyBand band = WIFI_PHY_BAND_2_4GHZ;
+  std::list<WifiPhyBand> testedBands;
   Ptr<YansWifiPhy> phy = CreateObject<YansWifiPhy> ();
-  if (payloadMode.GetModulationClass () == WIFI_MOD_CLASS_OFDM
-      || payloadMode.GetModulationClass () == WIFI_MOD_CLASS_HT
-      || payloadMode.GetModulationClass () == WIFI_MOD_CLASS_VHT
-      || payloadMode.GetModulationClass () == WIFI_MOD_CLASS_HE)
+  if (payloadMode.GetModulationClass () >= WIFI_MOD_CLASS_OFDM)
     {
-      band = WIFI_PHY_BAND_5GHZ;
+      testedBands.push_back (WIFI_PHY_BAND_5GHZ);
     }
-  Time calculatedDuration = phy->GetPayloadDuration (size, txVector, band);
-  if (calculatedDuration != knownDuration)
+  if (payloadMode.GetModulationClass () >= WIFI_MOD_CLASS_HE)
     {
-      std::cerr << "size=" << size
-                << " mode=" << payloadMode
-                << " channelWidth=" << channelWidth
-                << " guardInterval=" << guardInterval
-                << " datarate=" << payloadMode.GetDataRate (channelWidth, guardInterval, 1)
-                << " known=" << knownDuration
-                << " calculated=" << calculatedDuration
-                << std::endl;
-      return false;
+      testedBands.push_back (WIFI_PHY_BAND_6GHZ);
     }
-  if (payloadMode.GetModulationClass () == WIFI_MOD_CLASS_HT || payloadMode.GetModulationClass () == WIFI_MOD_CLASS_HE)
+  if (payloadMode.GetModulationClass () != WIFI_MOD_CLASS_VHT)
     {
-      //Durations vary depending on frequency; test also 2.4 GHz (bug 1971)
-      band = WIFI_PHY_BAND_2_4GHZ;
-      calculatedDuration = phy->GetPayloadDuration (size, txVector, band);
-      knownDuration += MicroSeconds (6);
+      testedBands.push_back (WIFI_PHY_BAND_2_4GHZ);
+    }
+  for (auto & testedBand : testedBands)
+    {
+      if ((testedBand == WIFI_PHY_BAND_2_4GHZ) && (payloadMode.GetModulationClass () >= WIFI_MOD_CLASS_OFDM))
+        {
+          knownDuration += MicroSeconds (6); //2.4 GHz band should be at the end of the bands to test
+        }
+      Time calculatedDuration = phy->GetPayloadDuration (size, txVector, testedBand);
       if (calculatedDuration != knownDuration)
         {
           std::cerr << "size=" << size
+                    << " band=" << testedBand
                     << " mode=" << payloadMode
                     << " channelWidth=" << channelWidth
                     << " guardInterval=" << guardInterval
@@ -189,45 +184,35 @@ TxDurationTest::CheckTxDuration (uint32_t size, WifiMode payloadMode, uint16_t c
   txVector.SetNss (1);
   txVector.SetStbc (0);
   txVector.SetNess (0);
-  WifiPhyBand band = WIFI_PHY_BAND_2_4GHZ;
+  std::list<WifiPhyBand> testedBands;
   Ptr<YansWifiPhy> phy = CreateObject<YansWifiPhy> ();
-  if (payloadMode.GetModulationClass () == WIFI_MOD_CLASS_OFDM
-      || payloadMode.GetModulationClass () == WIFI_MOD_CLASS_HT
-      || payloadMode.GetModulationClass () == WIFI_MOD_CLASS_VHT
-      || payloadMode.GetModulationClass () == WIFI_MOD_CLASS_HE)
+  if (payloadMode.GetModulationClass () >= WIFI_MOD_CLASS_OFDM)
     {
-      band = WIFI_PHY_BAND_5GHZ;
+      testedBands.push_back (WIFI_PHY_BAND_5GHZ);
     }
-  Time calculatedDuration = phy->CalculateTxDuration (size, txVector, band);
-  Time calculatedDurationUsingList = CalculateTxDurationUsingList (std::list<uint32_t> {size}, std::list<uint16_t> {SU_STA_ID},
-                                                                   txVector, band);
-  if (calculatedDuration != knownDuration || calculatedDuration != calculatedDurationUsingList)
+  if (payloadMode.GetModulationClass () >= WIFI_MOD_CLASS_HE)
     {
-      std::cerr << "size=" << size
-                << " mode=" << payloadMode
-                << " channelWidth=" << +channelWidth
-                << " guardInterval=" << guardInterval
-                << " datarate=" << payloadMode.GetDataRate (channelWidth, guardInterval, 1)
-                << " preamble=" << preamble
-                << " known=" << knownDuration
-                << " calculated=" << calculatedDuration
-                << " calculatedUsingList=" << calculatedDurationUsingList
-                << std::endl;
-      return false;
+      testedBands.push_back (WIFI_PHY_BAND_6GHZ);
     }
-  if (payloadMode.GetModulationClass () == WIFI_MOD_CLASS_HT || payloadMode.GetModulationClass () == WIFI_MOD_CLASS_HE)
+  if (payloadMode.GetModulationClass () != WIFI_MOD_CLASS_VHT)
     {
-      //Durations vary depending on frequency; test also 2.4 GHz (bug 1971)
-      band = WIFI_PHY_BAND_2_4GHZ;
-      calculatedDuration = phy->CalculateTxDuration (size, txVector, band);
-      calculatedDurationUsingList = CalculateTxDurationUsingList (std::list<uint32_t> {size}, std::list<uint16_t> {SU_STA_ID},
-                                                                  txVector, band);
-      knownDuration += MicroSeconds (6);
+      testedBands.push_back (WIFI_PHY_BAND_2_4GHZ);
+    }
+  for (auto & testedBand : testedBands)
+    {
+      if ((testedBand == WIFI_PHY_BAND_2_4GHZ) && (payloadMode.GetModulationClass () >= WIFI_MOD_CLASS_OFDM))
+        {
+          knownDuration += MicroSeconds (6); //2.4 GHz band should be at the end of the bands to test
+        }
+      Time calculatedDuration = phy->CalculateTxDuration (size, txVector, testedBand);
+      Time calculatedDurationUsingList = CalculateTxDurationUsingList (std::list<uint32_t> {size}, std::list<uint16_t> {SU_STA_ID},
+                                                                       txVector, testedBand);
       if (calculatedDuration != knownDuration || calculatedDuration != calculatedDurationUsingList)
         {
           std::cerr << "size=" << size
+                    << " band=" << testedBand
                     << " mode=" << payloadMode
-                    << " channelWidth=" << channelWidth
+                    << " channelWidth=" << +channelWidth
                     << " guardInterval=" << guardInterval
                     << " datarate=" << payloadMode.GetDataRate (channelWidth, guardInterval, 1)
                     << " preamble=" << preamble
@@ -242,9 +227,9 @@ TxDurationTest::CheckTxDuration (uint32_t size, WifiMode payloadMode, uint16_t c
 }
 
 bool
-TxDurationTest::CheckHeMuTxDuration (std::list<uint32_t> sizes, std::list<HeMuUserInfo> userInfos,
-                                     uint16_t channelWidth, uint16_t guardInterval,
-                                     Time knownDuration)
+TxDurationTest::CheckMuTxDuration (std::list<uint32_t> sizes, std::list<HeMuUserInfo> userInfos,
+                                   uint16_t channelWidth, uint16_t guardInterval, WifiPreamble preamble,
+                                   Time knownDuration)
 {
   NS_ASSERT (sizes.size () == userInfos.size () && sizes.size () > 1);
   NS_ABORT_MSG_IF (channelWidth < std::accumulate (std::begin (userInfos), std::end (userInfos), 0,
@@ -252,25 +237,29 @@ TxDurationTest::CheckHeMuTxDuration (std::list<uint32_t> sizes, std::list<HeMuUs
                                                    { return prevBw + HeRu::GetBandwidth (info.ru.GetRuType ()); }),
                    "Cannot accommodate all the RUs in the provided band"); //MU-MIMO (for which allocations use the same RU) is not supported
   WifiTxVector txVector;
-  txVector.SetPreambleType (WIFI_PREAMBLE_HE_MU);
+  txVector.SetPreambleType (preamble);
   txVector.SetChannelWidth (channelWidth);
   txVector.SetGuardInterval (guardInterval);
   txVector.SetStbc (0);
   txVector.SetNess (0);
   std::list<uint16_t> staIds;
+
   uint16_t staId = 1;
   for (const auto & userInfo : userInfos)
-    {
-      txVector.SetHeMuUserInfo (staId, userInfo);
-      staIds.push_back (staId++);
-    }
+  {
+    txVector.SetHeMuUserInfo (staId, userInfo);
+    staIds.push_back (staId++);
+  }
+  txVector.SetSigBMode (VhtPhy::GetVhtMcs0 ());
+  txVector.SetRuAllocation ({192, 192});
+
   Ptr<YansWifiPhy> phy = CreateObject<YansWifiPhy> ();
-  std::list<WifiPhyBand> testedBands {WIFI_PHY_BAND_5GHZ, WIFI_PHY_BAND_2_4GHZ}; //Durations vary depending on frequency; test also 2.4 GHz (bug 1971)
+  std::list<WifiPhyBand> testedBands {WIFI_PHY_BAND_5GHZ, WIFI_PHY_BAND_6GHZ, WIFI_PHY_BAND_2_4GHZ}; //Durations vary depending on frequency; test also 2.4 GHz (bug 1971)
   for (auto & testedBand : testedBands)
     {
       if (testedBand == WIFI_PHY_BAND_2_4GHZ)
         {
-          knownDuration += MicroSeconds (6);
+          knownDuration += MicroSeconds (6); //2.4 GHz band should be at the end of the bands to test
         }
       Time calculatedDuration = NanoSeconds (0);
       uint32_t longuestSize = 0;
@@ -325,7 +314,7 @@ TxDurationTest::CalculateTxDurationUsingList (std::list<uint32_t> sizes, std::li
 }
 
 void
-TxDurationTest::DoRun (void)
+TxDurationTest::DoRun ()
 {
   bool retval = true;
 
@@ -538,23 +527,37 @@ TxDurationTest::DoRun (void)
 
   //802.11ax MU durations
   retval = retval
-    && CheckHeMuTxDuration (std::list<uint32_t> {1536,
-                                                 1536},
-                            std::list<HeMuUserInfo> { {{HeRu::RU_242_TONE, 1, true}, HePhy::GetHeMcs0 (), 1},
-                                                      {{HeRu::RU_242_TONE, 2, true}, HePhy::GetHeMcs0 (), 1} },
-                            40, 800, NanoSeconds (1493600)) //equivalent to HE_SU for 20 MHz with 2 extra HE-SIG-B (i.e. 8 us)
-  && CheckHeMuTxDuration (std::list<uint32_t> {1536,
-                                               1536},
-                          std::list<HeMuUserInfo> { {{HeRu::RU_242_TONE, 1, true}, HePhy::GetHeMcs1 (), 1},
-                                                    {{HeRu::RU_242_TONE, 2, true}, HePhy::GetHeMcs0 (), 1} },
-                          40, 800, NanoSeconds (1493600)) //shouldn't change if first PSDU is shorter
-  && CheckHeMuTxDuration (std::list<uint32_t> {1536,
-                                               76},
+    && CheckMuTxDuration (std::list<uint32_t> {1536, 1536},
                           std::list<HeMuUserInfo> { {{HeRu::RU_242_TONE, 1, true}, HePhy::GetHeMcs0 (), 1},
                                                     {{HeRu::RU_242_TONE, 2, true}, HePhy::GetHeMcs0 (), 1} },
-                          40, 800, NanoSeconds (1493600));
+                          40, 800, WIFI_PREAMBLE_HE_MU, NanoSeconds (1493600)) //equivalent to HE_SU for 20 MHz with 2 extra HE-SIG-B (i.e. 8 us)
+    && CheckMuTxDuration (std::list<uint32_t> {1536, 1536},
+                          std::list<HeMuUserInfo> { {{HeRu::RU_242_TONE, 1, true}, HePhy::GetHeMcs1 (), 1},
+                                                    {{HeRu::RU_242_TONE, 2, true}, HePhy::GetHeMcs0 (), 1} },
+                          40, 800, WIFI_PREAMBLE_HE_MU, NanoSeconds (1493600)) //shouldn't change if first PSDU is shorter
+    && CheckMuTxDuration (std::list<uint32_t> {1536, 76},
+                          std::list<HeMuUserInfo> { {{HeRu::RU_242_TONE, 1, true}, HePhy::GetHeMcs0 (), 1},
+                                                    {{HeRu::RU_242_TONE, 2, true}, HePhy::GetHeMcs0 (), 1} },
+                          40, 800, WIFI_PREAMBLE_HE_MU, NanoSeconds (1493600));
 
   NS_TEST_EXPECT_MSG_EQ (retval, true, "an 802.11ax MU duration failed");
+
+  //802.11be MU durations
+  retval = retval
+    && CheckMuTxDuration (std::list<uint32_t> {1536, 1536},
+                          std::list<HeMuUserInfo> { {{HeRu::RU_242_TONE, 1, true}, EhtPhy::GetEhtMcs0 (), 1},
+                                                    {{HeRu::RU_242_TONE, 2, true}, EhtPhy::GetEhtMcs0 (), 1} },
+                          40, 800, WIFI_PREAMBLE_EHT_MU, NanoSeconds (1493600)) //equivalent to 802.11ax MU
+    && CheckMuTxDuration (std::list<uint32_t> {1536, 1536},
+                          std::list<HeMuUserInfo> { {{HeRu::RU_242_TONE, 1, true}, EhtPhy::GetEhtMcs1 (), 1},
+                                                    {{HeRu::RU_242_TONE, 2, true}, EhtPhy::GetEhtMcs0 (), 1} },
+                          40, 800, WIFI_PREAMBLE_EHT_MU, NanoSeconds (1493600)) //shouldn't change if first PSDU is shorter
+    && CheckMuTxDuration (std::list<uint32_t> {1536, 76},
+                          std::list<HeMuUserInfo> { {{HeRu::RU_242_TONE, 1, true}, EhtPhy::GetEhtMcs0 (), 1},
+                                                    {{HeRu::RU_242_TONE, 2, true}, EhtPhy::GetEhtMcs0 (), 1} },
+                          40, 800, WIFI_PREAMBLE_EHT_MU, NanoSeconds (1493600));
+
+  NS_TEST_EXPECT_MSG_EQ (retval, true, "an 802.11be MU duration failed");
 
   Simulator::Destroy ();
 }
@@ -569,8 +572,8 @@ class HeSigBDurationTest : public TestCase
 {
 public:
   HeSigBDurationTest ();
-  virtual ~HeSigBDurationTest ();
-  void DoRun (void) override;
+  ~HeSigBDurationTest () override;
+  void DoRun () override;
 
 private:
   /**
@@ -613,7 +616,7 @@ HeSigBDurationTest::BuildTxVector (uint16_t bw, std::list <HeMuUserInfo> userInf
 }
 
 void
-HeSigBDurationTest::DoRun (void)
+HeSigBDurationTest::DoRun ()
 {
   const auto & hePhy = WifiPhy::GetStaticPhyEntity(WIFI_MOD_CLASS_HE);
 
@@ -622,6 +625,8 @@ HeSigBDurationTest::DoRun (void)
   userInfos.push_back ({{HeRu::RU_106_TONE, 1, true}, HePhy::GetHeMcs11 (), 1});
   userInfos.push_back ({{HeRu::RU_106_TONE, 2, true}, HePhy::GetHeMcs10 (), 4});
   WifiTxVector txVector = BuildTxVector (20, userInfos);
+  txVector.SetSigBMode (VhtPhy::GetVhtMcs5 ());
+  txVector.SetRuAllocation ({96});
   NS_TEST_EXPECT_MSG_EQ (hePhy->GetSigMode (WIFI_PPDU_FIELD_SIG_B, txVector), VhtPhy::GetVhtMcs5 (), "HE-SIG-B should be sent at MCS 5");
   std::pair<std::size_t, std::size_t> numUsersPerCc = txVector.GetNumRusPerHeSigBContentChannel ();
   NS_TEST_EXPECT_MSG_EQ (numUsersPerCc.first, 2, "Both users should be on HE-SIG-B content channel 1");
@@ -634,6 +639,8 @@ HeSigBDurationTest::DoRun (void)
   userInfos.push_back ({{HeRu::RU_52_TONE, 7, true}, HePhy::GetHeMcs5 (), 3});
   userInfos.push_back ({{HeRu::RU_52_TONE, 8, true}, HePhy::GetHeMcs6 (), 2});
   txVector = BuildTxVector (40, userInfos);
+  txVector.SetSigBMode (VhtPhy::GetVhtMcs4 ());
+  txVector.SetRuAllocation ({96, 112});
   NS_TEST_EXPECT_MSG_EQ (hePhy->GetSigMode (WIFI_PPDU_FIELD_SIG_B, txVector), VhtPhy::GetVhtMcs4 (), "HE-SIG-B should be sent at MCS 4");
   numUsersPerCc = txVector.GetNumRusPerHeSigBContentChannel ();
   NS_TEST_EXPECT_MSG_EQ (numUsersPerCc.first, 2, "Two users should be on HE-SIG-B content channel 1");
@@ -641,8 +648,10 @@ HeSigBDurationTest::DoRun (void)
   NS_TEST_EXPECT_MSG_EQ (hePhy->GetDuration (WIFI_PPDU_FIELD_SIG_B, txVector), MicroSeconds (4), "HE-SIG-B should only last one OFDM symbol");
 
   //40 MHz band, odd number of users per HE-SIG-B content channel
-  userInfos.push_back ({{HeRu::RU_26_TONE, 13, true}, HePhy::GetHeMcs3 (), 1});
+  userInfos.push_back ({{HeRu::RU_26_TONE, 14, true}, HePhy::GetHeMcs3 (), 1});
   txVector = BuildTxVector (40, userInfos);
+  txVector.SetSigBMode (VhtPhy::GetVhtMcs3 ());
+  txVector.SetRuAllocation ({96, 15});
   NS_TEST_EXPECT_MSG_EQ (hePhy->GetSigMode (WIFI_PPDU_FIELD_SIG_B, txVector), VhtPhy::GetVhtMcs3 (), "HE-SIG-B should be sent at MCS 3");
   numUsersPerCc = txVector.GetNumRusPerHeSigBContentChannel ();
   NS_TEST_EXPECT_MSG_EQ (numUsersPerCc.first, 2, "Two users should be on HE-SIG-B content channel 1");
@@ -653,6 +662,8 @@ HeSigBDurationTest::DoRun (void)
   userInfos.push_back ({{HeRu::RU_242_TONE, 3, true}, HePhy::GetHeMcs1 (), 1});
   userInfos.push_back ({{HeRu::RU_242_TONE, 4, true}, HePhy::GetHeMcs4 (), 1});
   txVector = BuildTxVector (80, userInfos);
+  txVector.SetSigBMode (VhtPhy::GetVhtMcs1 ());
+  txVector.SetRuAllocation ({96, 15, 192, 192});
   NS_TEST_EXPECT_MSG_EQ (hePhy->GetSigMode (WIFI_PPDU_FIELD_SIG_B, txVector), VhtPhy::GetVhtMcs1 (), "HE-SIG-B should be sent at MCS 1");
   numUsersPerCc = txVector.GetNumRusPerHeSigBContentChannel ();
   NS_TEST_EXPECT_MSG_EQ (numUsersPerCc.first, 3, "Three users should be on HE-SIG-B content channel 1");
@@ -662,6 +673,8 @@ HeSigBDurationTest::DoRun (void)
   //160 MHz band
   userInfos.push_back ({{HeRu::RU_996_TONE, 1, false}, HePhy::GetHeMcs1 (), 1});
   txVector = BuildTxVector (160, userInfos);
+  txVector.SetSigBMode (VhtPhy::GetVhtMcs1 ());
+  txVector.SetRuAllocation ({96, 15, 192, 192, 208, 208, 208, 208});
   NS_TEST_EXPECT_MSG_EQ (hePhy->GetSigMode (WIFI_PPDU_FIELD_SIG_B, txVector), VhtPhy::GetVhtMcs1 (), "HE-SIG-B should be sent at MCS 1");
   numUsersPerCc = txVector.GetNumRusPerHeSigBContentChannel ();
   NS_TEST_EXPECT_MSG_EQ (numUsersPerCc.first, 4, "Four users should be on HE-SIG-B content channel 1");
@@ -679,8 +692,8 @@ class PhyHeaderSectionsTest : public TestCase
 {
 public:
   PhyHeaderSectionsTest ();
-  virtual ~PhyHeaderSectionsTest ();
-  void DoRun (void) override;
+  ~PhyHeaderSectionsTest () override;
+  void DoRun () override;
 
 
 private:
@@ -708,7 +721,7 @@ void
 PhyHeaderSectionsTest::CheckPhyHeaderSections (PhyEntity::PhyHeaderSections obtained,
                                                PhyEntity::PhyHeaderSections expected)
 {
-  NS_TEST_EXPECT_MSG_EQ (obtained.size (), expected.size (), "The expected map size (" << expected.size () << ") was not obtained (" << obtained.size () << ")");
+  NS_ASSERT_MSG (obtained.size () == expected.size (), "The expected map size (" << expected.size () << ") was not obtained (" << obtained.size () << ")");
 
   auto itObtained = obtained.begin ();
   auto itExpected = expected.begin ();
@@ -732,7 +745,7 @@ PhyHeaderSectionsTest::CheckPhyHeaderSections (PhyEntity::PhyHeaderSections obta
 }
 
 void
-PhyHeaderSectionsTest::DoRun (void)
+PhyHeaderSectionsTest::DoRun ()
 {
   Time ppduStart = Seconds (1.0);
   Ptr<PhyEntity> phyEntity;
@@ -953,6 +966,8 @@ PhyHeaderSectionsTest::DoRun (void)
 
   // -> HE MU format
   txVector.SetPreambleType (WIFI_PREAMBLE_HE_MU);
+  txVector.SetSigBMode (sigBMode);
+  txVector.SetRuAllocation ({96});
   sections[WIFI_PPDU_FIELD_SIG_A] = { { ppduStart + MicroSeconds (24),
                                         ppduStart + MicroSeconds (32) },
                                       sigAMode };
@@ -964,6 +979,51 @@ PhyHeaderSectionsTest::DoRun (void)
                                          sigBMode };
   CheckPhyHeaderSections (phyEntity->GetPhyHeaderSections (txVector, ppduStart), sections);
   txVector.SetChannelWidth (160); //shouldn't have any impact
+  txVector.SetRuAllocation ({96, 113, 113, 113, 113, 113, 113, 113});
+
+  CheckPhyHeaderSections (phyEntity->GetPhyHeaderSections (txVector, ppduStart), sections);
+
+  // ==================================================================================
+  // 11be (EHT)
+  sections.erase (WIFI_PPDU_FIELD_SIG_A); // FIXME: do we keep using seperate type for 11be?
+  sections.erase (WIFI_PPDU_FIELD_SIG_B); // FIXME: do we keep using seperate type for 11be?
+  phyEntity = Create<EhtPhy> ();
+  txVector.SetChannelWidth (20);
+  txVector.SetNss (2); //EHT-LTF duration assumed to be always 8 us for the time being (see note in HePhy::GetTrainingDuration)
+  txVector.SetMode (EhtPhy::GetEhtMcs9 ());
+  userInfoMap = { { 1, { {HeRu::RU_106_TONE, 1, true}, EhtPhy::GetEhtMcs4 (), 2 } },
+                  { 2, { {HeRu::RU_106_TONE, 1, true}, EhtPhy::GetEhtMcs9 (), 1 } } };
+  WifiMode uSigMode = EhtPhy::GetVhtMcs0 ();
+  WifiMode ehtSigMode = EhtPhy::GetVhtMcs4 (); //because of first user info map
+
+  // -> EHT TB format
+  txVector.SetPreambleType (WIFI_PREAMBLE_EHT_TB);
+  txVector.SetHeMuUserInfo (1, userInfoMap.at (1));
+  txVector.SetHeMuUserInfo (2, userInfoMap.at (2));
+  sections[WIFI_PPDU_FIELD_U_SIG] = { { ppduStart + MicroSeconds (24),
+                                        ppduStart + MicroSeconds (32) },
+                                      uSigMode };
+  sections[WIFI_PPDU_FIELD_TRAINING] = { { ppduStart + MicroSeconds (32),
+                                           ppduStart + MicroSeconds (56) }, // 1 EHT-STF (@ 8 us) + 2 EHT-LTFs (@ 8 us)
+                                         uSigMode };
+  CheckPhyHeaderSections (phyEntity->GetPhyHeaderSections (txVector, ppduStart), sections);
+
+  // -> EHT MU format
+  txVector.SetPreambleType (WIFI_PREAMBLE_EHT_MU);
+  txVector.SetRuAllocation ({96});
+  sections[WIFI_PPDU_FIELD_U_SIG] = { { ppduStart + MicroSeconds (24),
+                                        ppduStart + MicroSeconds (32) },
+                                      uSigMode };
+  sections[WIFI_PPDU_FIELD_EHT_SIG] = { { ppduStart + MicroSeconds (32),
+                                        ppduStart + MicroSeconds (36) }, // only one symbol
+                                       ehtSigMode };
+  sections[WIFI_PPDU_FIELD_TRAINING] = { { ppduStart + MicroSeconds (36),
+                                           ppduStart + MicroSeconds (56) }, // 1 HE-STF (@ 4 us) + 2 HE-LTFs (@ 8 us)
+                                         ehtSigMode };
+  CheckPhyHeaderSections (phyEntity->GetPhyHeaderSections (txVector, ppduStart), sections);
+  txVector.SetChannelWidth (160); //shouldn't have any impact
+  txVector.SetRuAllocation ({96, 113, 113, 113, 113, 113, 113, 113});
+
   CheckPhyHeaderSections (phyEntity->GetPhyHeaderSections (txVector, ppduStart), sections);
 }
 

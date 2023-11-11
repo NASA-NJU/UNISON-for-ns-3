@@ -42,18 +42,15 @@ public:
     : m_scheduler (scheduler)
   {
   }
-  virtual ~CoordinationListener ()
-  {
-  }
-  virtual void NotifyCchSlotStart (Time duration)
+  void NotifyCchSlotStart (Time duration) override
   {
     m_scheduler->NotifyCchSlotStart (duration);
   }
-  virtual void NotifySchSlotStart (Time duration)
+  void NotifySchSlotStart (Time duration) override
   {
     m_scheduler->NotifySchSlotStart (duration);
   }
-  virtual void NotifyGuardSlotStart (Time duration, bool cchi)
+  void NotifyGuardSlotStart (Time duration, bool cchi) override
   {
     m_scheduler->NotifyGuardSlotStart (duration, cchi);
   }
@@ -62,7 +59,7 @@ private:
 };
 
 TypeId
-DefaultChannelScheduler::GetTypeId (void)
+DefaultChannelScheduler::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::DefaultChannelScheduler")
     .SetParent<ChannelScheduler> ()
@@ -78,7 +75,7 @@ DefaultChannelScheduler::DefaultChannelScheduler ()
     m_channelAccess (NoAccess),
     m_waitChannelNumber (0),
     m_waitExtend (0),
-    m_coordinationListener (0)
+    m_coordinationListener (nullptr)
 {
   NS_LOG_FUNCTION (this);
 }
@@ -88,20 +85,20 @@ DefaultChannelScheduler::~DefaultChannelScheduler ()
 }
 
 void
-DefaultChannelScheduler::DoInitialize (void)
+DefaultChannelScheduler::DoInitialize ()
 {
   NS_LOG_FUNCTION (this);
   ChannelScheduler::DoInitialize ();
 }
 
 void
-DefaultChannelScheduler::DoDispose (void)
+DefaultChannelScheduler::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
-  m_coordinator = 0;
-  if (m_coordinationListener != 0)
+  m_coordinator = nullptr;
+  if (m_coordinationListener)
     {
-      m_coordinationListener = 0;
+      m_coordinationListener = nullptr;
     }
   if (!m_waitEvent.IsExpired ())
     {
@@ -111,7 +108,7 @@ DefaultChannelScheduler::DoDispose (void)
     {
       m_waitEvent.Cancel ();
     }
-  m_phy = 0;
+  m_phy = nullptr;
   ChannelScheduler::DoDispose ();
 }
 
@@ -325,7 +322,7 @@ DefaultChannelScheduler::AssignExtendedAccess (uint32_t channelNumber, uint32_t 
 }
 
 bool
-DefaultChannelScheduler::AssignDefaultCchAccess (void)
+DefaultChannelScheduler::AssignDefaultCchAccess ()
 {
   NS_LOG_FUNCTION (this);
   if (m_channelAccess == DefaultCchAccess)
@@ -369,7 +366,7 @@ DefaultChannelScheduler::SwitchToNextChannel (uint32_t curChannelNumber, uint32_
   // first make current MAC entity in sleep mode.
   curMacEntity->Suspend ();
   // second unattached current MAC entity from single PHY device
-  curMacEntity->ResetWifiPhy ();
+  curMacEntity->ResetWifiPhys ();
   // third switch PHY device from current channel to next channel;
   m_phy->SetOperatingChannel (WifiPhy::ChannelTuple {nextChannelNumber, 0, WIFI_PHY_BAND_5GHZ, 0});
   // four attach next MAC entity to single PHY device

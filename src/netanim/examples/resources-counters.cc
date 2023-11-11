@@ -28,7 +28,7 @@
 
 using namespace ns3;
 
-AnimationInterface * pAnim = 0;
+AnimationInterface * pAnim = nullptr;
 
 /// RGB struture
 struct rgb {
@@ -64,7 +64,7 @@ void modify ()
   pAnim->UpdateLinkDescription (1, 9, oss.str ());
   pAnim->UpdateLinkDescription (1, 10, oss.str ());
   pAnim->UpdateLinkDescription (1, 11, oss.str ());
-  
+
   // Every update change the node description for node 2
   std::ostringstream node0Oss;
   node0Oss << "-----Node:" << Simulator::Now ().GetSeconds ();
@@ -75,21 +75,31 @@ void modify ()
   pAnim->UpdateNodeImage (3, currentResourceId);
   size *= 1.1;
   if (size > 20)
-    size = 1;
+    {
+      size = 1;
+    }
   pAnim->UpdateNodeSize (3, 10, 10);
   if (currentResourceId == resourceId1)
-    currentResourceId = resourceId2;
+    {
+      currentResourceId = resourceId2;
+    }
   else
-    currentResourceId = resourceId1;    
+    {
+      currentResourceId = resourceId1;
+    }
 
   // Every update change the color for node 4
   static uint32_t index = 0;
   index++;
-  if (index == 3) 
-    index = 0;
+  if (index == 3)
+    {
+      index = 0;
+    }
   struct rgb color = colors[index];
   for (uint32_t nodeId = 4; nodeId < 12; ++nodeId)
-    pAnim->UpdateNodeColor (nodeId, color.r, color.g, color.b); 
+    {
+      pAnim->UpdateNodeColor (nodeId, color.r, color.g, color.b);
+    }
 
   // Update Node Counter for node 0 and node 5, use some random number between 0 to 1000 for value
   Ptr <UniformRandomVariable> rv = CreateObject<UniformRandomVariable> ();
@@ -100,10 +110,11 @@ void modify ()
   pAnim->UpdateNodeCounter (nodeCounterIdDouble1, 5, rv->GetValue (100.0, 200.0));
   pAnim->UpdateNodeCounter (nodeCounterIdDouble2, 5, rv->GetValue (300.0, 400.0));
 
-  if (Simulator::Now ().GetSeconds () < 10) // This is important or the simulation
-    // will run endlessly
-    Simulator::Schedule (Seconds (0.1), modify);
-
+  if (Simulator::Now ().GetSeconds () < 10)
+    { // This is important or the simulation
+      // will run endlessly
+      Simulator::Schedule (Seconds (0.1), modify);
+    }
 }
 
 int main (int argc, char *argv[])
@@ -153,9 +164,9 @@ int main (int argc, char *argv[])
   d.BoundingBox (1, 1, 100, 100);
   // Install on/off app on all right side nodes
   OnOffHelper clientHelper ("ns3::UdpSocketFactory", Address ());
-  clientHelper.SetAttribute 
+  clientHelper.SetAttribute
     ("OnTime", StringValue ("ns3::UniformRandomVariable[Min=0.|Max=1.]"));
-  clientHelper.SetAttribute 
+  clientHelper.SetAttribute
     ("OffTime", StringValue ("ns3::UniformRandomVariable[Min=0.|Max=1.]"));
   ApplicationContainer clientApps;
 
@@ -174,7 +185,7 @@ int main (int argc, char *argv[])
 
 
   // Create the animation object and configure for specified output
-  pAnim = new AnimationInterface (animFile); 
+  pAnim = new AnimationInterface (animFile);
   // Provide the absolute path to the resource
   resourceId1 = pAnim->AddResource ("/Users/john/ns3/netanim-3.105/ns-3-logo1.png");
   resourceId2 = pAnim->AddResource ("/Users/john/ns3/netanim-3.105/ns-3-logo2.png");
@@ -187,7 +198,7 @@ int main (int argc, char *argv[])
   nodeCounterIdDouble2 = pAnim->AddNodeCounter ("Double Counter 2", AnimationInterface::DOUBLE_COUNTER);
 
   Simulator::Schedule (Seconds (0.1), modify);
-  
+
   // Set up the actual simulation
   Ipv4GlobalRoutingHelper::PopulateRoutingTables ();
 

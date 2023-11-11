@@ -54,19 +54,19 @@ MatchContainer::MatchContainer (const std::vector<Ptr<Object> > &objects,
   NS_LOG_FUNCTION (this << &objects << &contexts << path);
 }
 MatchContainer::Iterator
-MatchContainer::Begin (void) const
+MatchContainer::Begin () const
 {
   NS_LOG_FUNCTION (this);
   return m_objects.begin ();
 }
 MatchContainer::Iterator
-MatchContainer::End (void) const
+MatchContainer::End () const
 {
   NS_LOG_FUNCTION (this);
   return m_objects.end ();
 }
 std::size_t
-MatchContainer::GetN (void) const
+MatchContainer::GetN () const
 {
   NS_LOG_FUNCTION (this);
   return m_objects.size ();
@@ -84,7 +84,7 @@ MatchContainer::GetMatchedPath (uint32_t i) const
   return m_contexts[i];
 }
 std::string
-MatchContainer::GetPath (void) const
+MatchContainer::GetPath () const
 {
   NS_LOG_FUNCTION (this);
   return m_path;
@@ -230,7 +230,7 @@ ArrayMatcher::Matches (std::size_t i) const
       return true;
     }
   std::string::size_type tmp;
-  tmp = m_element.find ("|");
+  tmp = m_element.find ('|');
   if (tmp != std::string::npos)
     {
       std::string left = m_element.substr (0, tmp - 0);
@@ -250,9 +250,9 @@ ArrayMatcher::Matches (std::size_t i) const
       NS_LOG_DEBUG ("Array " << i << " does not match " << m_element);
       return false;
     }
-  std::string::size_type leftBracket = m_element.find ("[");
-  std::string::size_type rightBracket = m_element.find ("]");
-  std::string::size_type dash = m_element.find ("-");
+  std::string::size_type leftBracket = m_element.find ('[');
+  std::string::size_type rightBracket = m_element.find (']');
+  std::string::size_type dash = m_element.find ('-');
   if (leftBracket == 0 && rightBracket == m_element.size () - 1
       && dash > leftBracket && dash < rightBracket)
     {
@@ -321,7 +321,7 @@ public:
 
 private:
   /** Ensure the Config path starts and ends with a '/'. */
-  void Canonicalize (void);
+  void Canonicalize ();
   /**
    * Parse the next element in the Config path.
    *
@@ -348,7 +348,7 @@ private:
    *
    * \returns The current Config path.
    */
-  std::string GetResolvedPath (void) const;
+  std::string GetResolvedPath () const;
   /**
    * Handle one found object.
    *
@@ -375,18 +375,18 @@ Resolver::~Resolver ()
   NS_LOG_FUNCTION (this);
 }
 void
-Resolver::Canonicalize (void)
+Resolver::Canonicalize ()
 {
   NS_LOG_FUNCTION (this);
 
   // ensure that we start and end with a '/'
-  std::string::size_type tmp = m_path.find ("/");
+  std::string::size_type tmp = m_path.find ('/');
   if (tmp != 0)
     {
       // no slash at start
       m_path = "/" + m_path;
     }
-  tmp = m_path.find_last_of ("/");
+  tmp = m_path.find_last_of ('/');
   if (tmp != (m_path.size () - 1))
     {
       // no slash at end
@@ -403,7 +403,7 @@ Resolver::Resolve (Ptr<Object> root)
 }
 
 std::string
-Resolver::GetResolvedPath (void) const
+Resolver::GetResolvedPath () const
 {
   NS_LOG_FUNCTION (this);
 
@@ -428,8 +428,8 @@ void
 Resolver::DoResolve (std::string path, Ptr<Object> root)
 {
   NS_LOG_FUNCTION (this << path << root);
-  NS_ASSERT ((path.find ("/")) == 0);
-  std::string::size_type next = path.find ("/", 1);
+  NS_ASSERT ((path.find ('/')) == 0);
+  std::string::size_type next = path.find ('/', 1);
 
   if (next == std::string::npos)
     {
@@ -457,7 +457,7 @@ Resolver::DoResolve (std::string path, Ptr<Object> root)
   // the root of the "/Names" namespace, so we just ignore it and move on to
   // the next segment.
   //
-  if (root == 0)
+  if (!root)
     {
       std::string::size_type offset = path.find ("/Names");
       if (offset == 0)
@@ -492,11 +492,11 @@ Resolver::DoResolve (std::string path, Ptr<Object> root)
   // a path that is not in the "/Names" namespace.  We will have previously
   // found any matches, so we just bail out.
   //
-  if (root == 0)
+  if (!root)
     {
       return;
     }
-  std::string::size_type dollarPos = item.find ("$");
+  std::string::size_type dollarPos = item.find ('$');
   if (dollarPos == 0)
     {
       // This is a call to GetObject
@@ -504,7 +504,7 @@ Resolver::DoResolve (std::string path, Ptr<Object> root)
       NS_LOG_DEBUG ("GetObject=" << tidString << " on path=" << GetResolvedPath ());
       TypeId tid = TypeId::LookupByName (tidString);
       Ptr<Object> object = root->GetObject<Object> (tid);
-      if (object == 0)
+      if (!object)
         {
           NS_LOG_DEBUG ("GetObject (" << tidString << ") failed on path=" << GetResolvedPath ());
           return;
@@ -534,13 +534,13 @@ Resolver::DoResolve (std::string path, Ptr<Object> root)
                 }
               // attempt to cast to a pointer checker.
               const PointerChecker *pChecker = dynamic_cast<const PointerChecker *> (PeekPointer (info.checker));
-              if (pChecker != 0)
+              if (pChecker != nullptr)
                 {
                   NS_LOG_DEBUG ("GetAttribute(ptr)=" << info.name << " on path=" << GetResolvedPath ());
                   PointerValue pValue;
                   root->GetAttribute (info.name, pValue);
                   Ptr<Object> object = pValue.Get<Object> ();
-                  if (object == 0)
+                  if (!object)
                     {
                       NS_LOG_ERROR ("Requested object name=\"" << item <<
                                     "\" exists on path=\"" << GetResolvedPath () << "\""
@@ -555,7 +555,7 @@ Resolver::DoResolve (std::string path, Ptr<Object> root)
               // attempt to cast to an object vector.
               const ObjectPtrContainerChecker *vectorChecker =
                 dynamic_cast<const ObjectPtrContainerChecker *> (PeekPointer (info.checker));
-              if (vectorChecker != 0)
+              if (vectorChecker != nullptr)
                 {
                   NS_LOG_DEBUG ("GetAttribute(vector)=" << info.name << " on path=" << GetResolvedPath () << pathLeft);
                   foundMatch = true;
@@ -586,8 +586,8 @@ Resolver::DoArrayResolve (std::string path, const ObjectPtrContainerValue &conta
 {
   NS_LOG_FUNCTION (this << path << &container);
   NS_ASSERT (path != "");
-  NS_ASSERT ((path.find ("/")) == 0);
-  std::string::size_type next = path.find ("/", 1);
+  NS_ASSERT ((path.find ('/')) == 0);
+  std::string::size_type next = path.find ('/', 1);
   if (next == std::string::npos)
     {
       return;
@@ -640,7 +640,7 @@ public:
   void UnregisterRootNamespaceObject (Ptr<Object> obj);
 
   /** \copydoc ns3::Config::GetRootNamespaceObjectN() */
-  std::size_t GetRootNamespaceObjectN (void) const;
+  std::size_t GetRootNamespaceObjectN () const;
   /** \copydoc ns3::Config::GetRootNamespaceObject() */
   Ptr<Object> GetRootNamespaceObject (std::size_t i) const;
 
@@ -667,7 +667,7 @@ ConfigImpl::ParsePath (std::string path, std::string *root, std::string *leaf) c
 {
   NS_LOG_FUNCTION (this << path << root << leaf);
 
-  std::string::size_type slash = path.find_last_of ("/");
+  std::string::size_type slash = path.find_last_of ('/');
   NS_ASSERT (slash != std::string::npos);
   *root = path.substr (0, slash);
   *leaf = path.substr (slash + 1, path.size () - (slash + 1));
@@ -679,7 +679,8 @@ ConfigImpl::Set (std::string path, const AttributeValue &value)
 {
   NS_LOG_FUNCTION (this << path << &value);
 
-  std::string root, leaf;
+  std::string root;
+  std::string leaf;
   ParsePath (path, &root, &leaf);
   MatchContainer container = LookupMatches (root);
   container.Set (leaf, value);
@@ -689,7 +690,8 @@ ConfigImpl::SetFailSafe (std::string path, const AttributeValue &value)
 {
   NS_LOG_FUNCTION (this << path << &value);
 
-  std::string root, leaf;
+  std::string root;
+  std::string leaf;
   ParsePath (path, &root, &leaf);
   MatchContainer container = LookupMatches (root);
   return container.SetFailSafe (leaf, value);
@@ -698,7 +700,8 @@ bool
 ConfigImpl::ConnectWithoutContextFailSafe (std::string path, const CallbackBase &cb)
 {
   NS_LOG_FUNCTION (this << path << &cb);
-  std::string root, leaf;
+  std::string root;
+  std::string leaf;
   ParsePath (path, &root, &leaf);
   MatchContainer container = LookupMatches (root);
   return container.ConnectWithoutContextFailSafe (leaf, cb);
@@ -707,12 +710,13 @@ void
 ConfigImpl::DisconnectWithoutContext (std::string path, const CallbackBase &cb)
 {
   NS_LOG_FUNCTION (this << path << &cb);
-  std::string root, leaf;
+  std::string root;
+  std::string leaf;
   ParsePath (path, &root, &leaf);
   MatchContainer container = LookupMatches (root);
   if (container.GetN () == 0)
     {
-      std::size_t lastFwdSlash = root.rfind ("/");
+      std::size_t lastFwdSlash = root.rfind ('/');
       NS_LOG_WARN ("Failed to disconnect " << leaf
                                            << ", the Requested object name = " << root.substr (lastFwdSlash + 1)
                                            << " does not exits on path " << root.substr (0, lastFwdSlash));
@@ -724,7 +728,8 @@ ConfigImpl::ConnectFailSafe (std::string path, const CallbackBase &cb)
 {
   NS_LOG_FUNCTION (this << path << &cb);
 
-  std::string root, leaf;
+  std::string root;
+  std::string leaf;
   ParsePath (path, &root, &leaf);
   MatchContainer container = LookupMatches (root);
   return container.ConnectFailSafe (leaf, cb);
@@ -734,12 +739,13 @@ ConfigImpl::Disconnect (std::string path, const CallbackBase &cb)
 {
   NS_LOG_FUNCTION (this << path << &cb);
 
-  std::string root, leaf;
+  std::string root;
+  std::string leaf;
   ParsePath (path, &root, &leaf);
   MatchContainer container = LookupMatches (root);
   if (container.GetN () == 0)
     {
-      std::size_t lastFwdSlash = root.rfind ("/");
+      std::size_t lastFwdSlash = root.rfind ('/');
       NS_LOG_WARN ("Failed to disconnect " << leaf
                                            << ", the Requested object name = " << root.substr (lastFwdSlash + 1)
                                            << " does not exits on path " << root.substr (0, lastFwdSlash));
@@ -758,7 +764,7 @@ public:
       : Resolver (path)
     {
     }
-    virtual void DoOne (Ptr<Object> object, std::string path)
+    void DoOne (Ptr<Object> object, std::string path) override
     {
       m_objects.push_back (object);
       m_contexts.push_back (path);
@@ -776,7 +782,7 @@ public:
   // the root pointer zeroed indicates to the resolver that it should start
   // looking at the root of the "/Names" namespace during this go.
   //
-  resolver.Resolve (0);
+  resolver.Resolve (nullptr);
 
   return MatchContainer (resolver.m_objects, resolver.m_contexts, path);
 }
@@ -804,7 +810,7 @@ ConfigImpl::UnregisterRootNamespaceObject (Ptr<Object> obj)
 }
 
 std::size_t
-ConfigImpl::GetRootNamespaceObjectN (void) const
+ConfigImpl::GetRootNamespaceObjectN () const
 {
   NS_LOG_FUNCTION (this);
   return m_roots.size ();
@@ -817,7 +823,7 @@ ConfigImpl::GetRootNamespaceObject (std::size_t i) const
 }
 
 
-void Reset (void)
+void Reset ()
 {
   NS_LOG_FUNCTION_NOARGS ();
   // First, let's reset the initial value of every attribute
@@ -878,7 +884,7 @@ bool SetDefaultFailSafe (std::string fullName, const AttributeValue &value)
       if (tmp.name == paramName)
         {
           Ptr<AttributeValue> v = tmp.checker->CreateValidValue (value);
-          if (v == 0)
+          if (!v)
             {
               return false;
             }
@@ -955,7 +961,7 @@ void UnregisterRootNamespaceObject (Ptr<Object> obj)
   ConfigImpl::Get ()->UnregisterRootNamespaceObject (obj);
 }
 
-std::size_t GetRootNamespaceObjectN (void)
+std::size_t GetRootNamespaceObjectN ()
 {
   NS_LOG_FUNCTION_NOARGS ();
   return ConfigImpl::Get ()->GetRootNamespaceObjectN ();

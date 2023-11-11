@@ -182,14 +182,14 @@ For example, this code configures a node with 3 antennas that supports 2 spatial
   WifiMacHelper mac;
 
   mac.SetType ("ns3::StaWifiMac",
-	       "Ssid", SsidValue (ssid),
-	       "ActiveProbing", BooleanValue (false));
+               "Ssid", SsidValue (ssid),
+               "ActiveProbing", BooleanValue (false));
 
   NetDeviceContainer staDevice;
   staDevice = wifi.Install (phy, mac, wifiStaNode);
 
   mac.SetType ("ns3::ApWifiMac",
-	       "Ssid", SsidValue (ssid));
+               "Ssid", SsidValue (ssid));
 
   NetDeviceContainer apDevice;
   apDevice = wifi.Install (phy, mac, wifiApNode);
@@ -313,7 +313,7 @@ Following are a few examples to clarify these rules:
   WifiHelper wifi;
   wifi.SetStandard (WIFI_STANDARD_80211ac);
   YansWifiPhyHelper phyHelper;
-  phyHelper.Set ("ChannelSettings", StringValue ("{58, 0, WIFI_PHY_BAND_5GHZ, 0}"));
+  phyHelper.Set ("ChannelSettings", StringValue ("{58, 0, BAND_5GHZ, 0}"));
   // channel width unspecified
   // -> it is set to 80 MHz (width of channel 58)
 
@@ -322,7 +322,7 @@ Following are a few examples to clarify these rules:
   WifiHelper wifi;
   wifi.SetStandard (WIFI_STANDARD_80211n);
   YansWifiPhyHelper phyHelper;
-  phyHelper.Set ("ChannelSettings", StringValue ("{0, 40, WIFI_PHY_BAND_5GHZ, 0}"));
+  phyHelper.Set ("ChannelSettings", StringValue ("{0, 40, BAND_5GHZ, 0}"));
   // channel number unspecified
   // -> it is set to channel 38 (first 40 MHz channel in the 5GHz band)
 
@@ -331,7 +331,7 @@ Following are a few examples to clarify these rules:
   WifiHelper wifi;
   wifi.SetStandard (WIFI_STANDARD_80211ax);
   YansWifiPhyHelper phyHelper;
-  phyHelper.Set ("ChannelSettings", StringValue ("{0, 0, WIFI_PHY_BAND_2_4GHZ, 0}"));
+  phyHelper.Set ("ChannelSettings", StringValue ("{0, 0, BAND_2_4GHZ, 0}"));
   // both channel number and width unspecified
   // -> width set to 20 MHz (default width for 802.11ax in the 2.4 GHZ band)
   // -> channel number set to 1 (first 20 MHz channel in the 2.4 GHz band)
@@ -341,7 +341,7 @@ Following are a few examples to clarify these rules:
   WifiHelper wifi;
   wifi.SetStandard (WIFI_STANDARD_80211a);
   YansWifiPhyHelper phyHelper;
-  phyHelper.Set ("ChannelSettings", StringValue ("{0, 0, WIFI_PHY_BAND_UNSPECIFIED, 0}"));
+  phyHelper.Set ("ChannelSettings", StringValue ("{0, 0, BAND_UNSPECIFIED, 0}"));
   // band, channel number and width unspecified
   // -> band is set to WIFI_PHY_BAND_5GHZ (default band for 802.11a)
   // -> width set to 20 MHz (default width for 802.11a in the 5 GHZ band)
@@ -799,12 +799,24 @@ attributes for 802.11ax devices.
  Ptr<HeConfiguration> heConfiguration = wnd->GetHeConfiguration ();
  heConfiguration->SetGuardInterval (NanoSeconds (1600));
 
- 802.11ax allows extended compressed Block ACKs containing a 256-bits bitmap, making possible transmissions of A-MPDUs containing up to 256 MPDUs,
- depending on the negotiated buffer size. In order to configure the buffer size of an 802.11ax device, the following line of code could be used::
+802.11ax allows extended compressed Block ACKs containing a 256-bits bitmap, making
+possible transmissions of A-MPDUs containing up to 256 MPDUs, depending on the
+negotiated buffer size. In order to configure the buffer size of an 802.11ax device,
+the following line of code could be used::
 
  heConfiguration->SetMpduBufferSize (256);
 
- For transmitting large MPDUs, it might also be needed to increase the maximum aggregation size (see above).
+For transmitting large MPDUs, it might also be needed to increase the maximum
+aggregation size (see above).
+
+When using UL MU transmissions, solicited TB PPDUs can arrive at the AP with a
+different delay, due to the different propagation delay from the various stations.
+In real systems, late TB PPDUs cause a variable amount of interference depending on
+the receiver's sensitivity. This phenomenon can be modeled through the
+``ns3::HeConfiguration::MaxTbPpduDelay`` attribute, which defines the maximum delay
+with which a TB PPDU can arrive with respect to the first TB PPDU in order to be
+decoded properly. TB PPDUs arriving after more than ``MaxTbPpduDelay`` since the
+first TB PPDU are discarded and considered as interference.
 
 Mobility configuration
 ======================
@@ -896,7 +908,7 @@ Each node is equipped with 802.11b Wi-Fi device::
   wifiChannel.SetPropagationDelay ("ns3::ConstantSpeedPropagationDelayModel");
   wifiChannel.AddPropagationLoss ("ns3::LogDistancePropagationLossModel",
                                   "Exponent", DoubleValue (3.0),
-				  "ReferenceLoss", DoubleValue (40.0459));
+                                  "ReferenceLoss", DoubleValue (40.0459));
   wifiPhy.SetChannel (wifiChannel.Create ());
 
   // Add a non-QoS upper mac, and disable rate control

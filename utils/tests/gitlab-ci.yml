@@ -8,7 +8,6 @@
 # As per Gitlab documentation, extends supports multi-level inheritance,
 # however it is not recommended to use more than three levels.
 
-
 # Any scheduled pipeline should define a variable, named "RELEASE", that
 # indicates what this script is run for. Allowed values, for the moment,
 # are "daily" and "weekly" to denote a daily (or weekly) job.
@@ -18,12 +17,11 @@
 # documentation jobs each time that a commit is done. We use a different
 # configuration, still in definition. It will be in the documentation.
 
-
 stages:
   - build
   - test
+  - code-linting
   - documentation
-
 
 ###################### BUILD STAGE #############################################
 
@@ -53,63 +51,59 @@ stages:
     key: "ccache-$CI_JOB_NAME"
     paths:
       - $CCACHE_BASEDIR_VALUE/
+    when: "always"
   timeout: 12h
   variables:
     CCACHE_BASEDIR_VALUE: ns-3-ccache-storage
 
 # Defines the per-commit jobs. They are executed for any branch
-per-commit-compile-debug:
+.base-per-commit-compile:
   extends: .base-build
   except:
     variables:
-      - $PYBINDGEN == "True"
+      - $CPPYY == "True"
       - $RELEASE == "weekly"
       - $RELEASE == "daily"
   image: archlinux
+  before_script:
+    - pacman-key --init
+    - pacman -Syu --noconfirm
+      base-devel gcc clang cmake ninja ccache
+      python
+      boost gsl gtk3
+
+per-commit-clang-debug:
+  extends: .base-per-commit-compile
   variables:
-    COMPILER: g++
     MODE: debug
-  before_script:
-    - pacman -Syu --noconfirm
-    - pacman -Sy base-devel python ccache gsl gtk3 boost ninja cmake --noconfirm
+    COMPILER: clang++
 
-per-commit-compile-default:
-  extends: .base-build
-  except:
-    variables:
-      - $PYBINDGEN == "True"
-      - $RELEASE == "weekly"
-      - $RELEASE == "daily"
-  image: archlinux
+per-commit-gcc-debug:
+  extends: .base-per-commit-compile
   variables:
+    MODE: debug
     COMPILER: g++
+
+per-commit-gcc-default:
+  extends: .base-per-commit-compile
+  variables:
     MODE: default
-  before_script:
-    - pacman -Syu --noconfirm
-    - pacman -Sy base-devel python ccache gsl gtk3 boost ninja cmake --noconfirm
-
-per-commit-compile-optimized:
-  extends: .base-build
-  except:
-    variables:
-      - $PYBINDGEN == "True"
-      - $RELEASE == "weekly"
-      - $RELEASE == "daily"
-  image: archlinux
-  variables:
     COMPILER: g++
+
+per-commit-gcc-optimized:
+  extends: .base-per-commit-compile
+  variables:
     MODE: optimized
-  before_script:
-    - pacman -Syu --noconfirm
-    - pacman -Sy base-devel python ccache gsl gtk3 boost ninja cmake --noconfirm
+    COMPILER: g++
 
 # Weekly jobs for other distribution and compilers
 include:
-  - 'utils/tests/gitlab-ci-alpine.yml'
-  - 'utils/tests/gitlab-ci-ubuntu.yml'
-  - 'utils/tests/gitlab-ci-fedora.yml'
-  - 'utils/tests/gitlab-ci-gcc.yml'
-  - 'utils/tests/gitlab-ci-clang.yml'
-  - 'utils/tests/gitlab-ci-test.yml'
-  - 'utils/tests/gitlab-ci-doc.yml'
-  - 'utils/tests/gitlab-ci-pybindgen.yml'
+  - "utils/tests/gitlab-ci-alpine.yml"
+  - "utils/tests/gitlab-ci-ubuntu.yml"
+  - "utils/tests/gitlab-ci-fedora.yml"
+  - "utils/tests/gitlab-ci-gcc.yml"
+  - "utils/tests/gitlab-ci-clang.yml"
+  - "utils/tests/gitlab-ci-test.yml"
+  - "utils/tests/gitlab-ci-code-linting.yml"
+  - "utils/tests/gitlab-ci-doc.yml"
+  - "utils/tests/gitlab-ci-cppyy.yml"

@@ -66,28 +66,55 @@ using namespace ns3;
 
 NS_LOG_COMPONENT_DEFINE ("BenchmarkQueueDiscs");
 
+/**
+ * Print the queue limitis.
+ *
+ * \param stream The ouput stream.
+ * \param oldVal Old value.
+ * \param newVal New value.
+ */
 void
 LimitsTrace (Ptr<OutputStreamWrapper> stream, uint32_t oldVal, uint32_t newVal)
 {
   *stream->GetStream () << Simulator::Now ().GetSeconds () << " " << newVal << std::endl;
 }
 
+/**
+ * Print the bytes in the queue.
+ *
+ * \param stream The ouput stream.
+ * \param oldVal Old value.
+ * \param newVal New value.
+ */
 void
 BytesInQueueTrace (Ptr<OutputStreamWrapper> stream, uint32_t oldVal, uint32_t newVal)
 {
   *stream->GetStream () << Simulator::Now ().GetSeconds () << " " << newVal << std::endl;
 }
 
+/**
+ * Sample and print the queue goodput.
+ *
+ * \param app The Tx app.
+ * \param stream The ouput stream.
+ * \param period The sampling period.
+ */
 static void
-GoodputSampling (std::string fileName, ApplicationContainer app, Ptr<OutputStreamWrapper> stream, float period)
+GoodputSampling (ApplicationContainer app, Ptr<OutputStreamWrapper> stream, float period)
 {
-  Simulator::Schedule (Seconds (period), &GoodputSampling, fileName, app, stream, period);
+  Simulator::Schedule (Seconds (period), &GoodputSampling, app, stream, period);
   double goodput;
   uint64_t totalPackets = DynamicCast<PacketSink> (app.Get (0))->GetTotalRx ();
   goodput = totalPackets * 8 / (Simulator::Now ().GetSeconds () * 1024); // Kbit/s
   *stream->GetStream () << Simulator::Now ().GetSeconds () << " " << goodput << std::endl;
 }
 
+/**
+ * Print the ping RTT.
+ *
+ * \param context The context.
+ * \param rtt The RTT.
+ */
 static void PingRtt (std::string context, Time rtt)
 {
   std::cout << context << "=" << rtt.GetMilliSeconds () << " ms" << std::endl;
@@ -105,7 +132,7 @@ int main (int argc, char *argv[])
   std::string flowsDatarate = "20Mbps";
   uint32_t flowsPacketsSize = 1000;
 
-  float startTime = 0.1f; // in s
+  float startTime = 0.1F; // in s
   float simDuration = 60;
   float samplingPeriod = 1;
 
@@ -126,7 +153,9 @@ int main (int argc, char *argv[])
   float stopTime = startTime + simDuration;
 
   // Create nodes
-  NodeContainer n1, n2, n3;
+  NodeContainer n1;
+  NodeContainer n2;
+  NodeContainer n3;
   n1.Create (1);
   n2.Create (1);
   n3.Create (1);
@@ -152,37 +181,37 @@ int main (int argc, char *argv[])
   // Bottleneck link traffic control configuration
   TrafficControlHelper tchBottleneck;
 
-  if (queueDiscType.compare ("PfifoFast") == 0)
+  if (queueDiscType == "PfifoFast")
     {
       tchBottleneck.SetRootQueueDisc ("ns3::PfifoFastQueueDisc", "MaxSize",
                                       QueueSizeValue (QueueSize (QueueSizeUnit::PACKETS, queueDiscSize)));
     }
-  else if (queueDiscType.compare ("ARED") == 0)
+  else if (queueDiscType == "ARED")
     {
       tchBottleneck.SetRootQueueDisc ("ns3::RedQueueDisc");
       Config::SetDefault ("ns3::RedQueueDisc::ARED", BooleanValue (true));
       Config::SetDefault ("ns3::RedQueueDisc::MaxSize",
                           QueueSizeValue (QueueSize (QueueSizeUnit::PACKETS, queueDiscSize)));
     }
-  else if (queueDiscType.compare ("CoDel") == 0)
+  else if (queueDiscType == "CoDel")
     {
       tchBottleneck.SetRootQueueDisc ("ns3::CoDelQueueDisc");
       Config::SetDefault ("ns3::CoDelQueueDisc::MaxSize",
                           QueueSizeValue (QueueSize (QueueSizeUnit::PACKETS, queueDiscSize)));
     }
-  else if (queueDiscType.compare ("FqCoDel") == 0)
+  else if (queueDiscType == "FqCoDel")
     {
       tchBottleneck.SetRootQueueDisc ("ns3::FqCoDelQueueDisc");
       Config::SetDefault ("ns3::FqCoDelQueueDisc::MaxSize",
                           QueueSizeValue (QueueSize (QueueSizeUnit::PACKETS, queueDiscSize)));
     }
-  else if (queueDiscType.compare ("PIE") == 0)
+  else if (queueDiscType == "PIE")
     {
       tchBottleneck.SetRootQueueDisc ("ns3::PieQueueDisc");
       Config::SetDefault ("ns3::PieQueueDisc::MaxSize",
                           QueueSizeValue (QueueSize (QueueSizeUnit::PACKETS, queueDiscSize)));
     }
-  else if (queueDiscType.compare ("prio") == 0)
+  else if (queueDiscType == "prio")
     {
       uint16_t handle = tchBottleneck.SetRootQueueDisc ("ns3::PrioQueueDisc", "Priomap",
                                                         StringValue ("0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1"));
@@ -242,7 +271,9 @@ int main (int argc, char *argv[])
   // Flows configuration
   // Bidirectional TCP streams with ping like flent tcp_bidirectional test.
   uint16_t port = 7;
-  ApplicationContainer uploadApp, downloadApp, sourceApps;
+  ApplicationContainer uploadApp;
+  ApplicationContainer downloadApp;
+  ApplicationContainer sourceApps;
   // Configure and install upload flow
   Address addUp (InetSocketAddress (Ipv4Address::GetAny (), port));
   PacketSinkHelper sinkHelperUp ("ns3::TcpSocketFactory", addUp);
@@ -289,10 +320,10 @@ int main (int argc, char *argv[])
   sourceApps.Stop (Seconds (stopTime - 0.1));
 
   Ptr<OutputStreamWrapper> uploadGoodputStream = ascii.CreateFileStream (queueDiscType + "-upGoodput.txt");
-  Simulator::Schedule (Seconds (samplingPeriod), &GoodputSampling, queueDiscType + "-upGoodput.txt", uploadApp,
+  Simulator::Schedule (Seconds (samplingPeriod), &GoodputSampling, uploadApp,
                        uploadGoodputStream, samplingPeriod);
   Ptr<OutputStreamWrapper> downloadGoodputStream = ascii.CreateFileStream (queueDiscType + "-downGoodput.txt");
-  Simulator::Schedule (Seconds (samplingPeriod), &GoodputSampling, queueDiscType + "-downGoodput.txt", downloadApp,
+  Simulator::Schedule (Seconds (samplingPeriod), &GoodputSampling, downloadApp,
                        downloadGoodputStream, samplingPeriod);
 
   // Flow monitor

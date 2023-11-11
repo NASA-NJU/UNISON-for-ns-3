@@ -44,7 +44,7 @@ public:
    * Construct a EmuFdNetDeviceHelper.
    */
   EmuFdNetDeviceHelper ();
-  virtual ~EmuFdNetDeviceHelper ()
+  ~EmuFdNetDeviceHelper () override
   {}
 
   /**
@@ -52,7 +52,7 @@ public:
    *
    * \returns The device name of this device.
    */
-  std::string GetDeviceName (void);
+  std::string GetDeviceName ();
 
   /**
    * Set the device name of this device.
@@ -76,7 +76,7 @@ protected:
    * \param node The node to install the device in
    * \returns A container holding the added net device.
    */
-  Ptr<NetDevice> InstallPriv (Ptr<Node> node) const;
+  Ptr<NetDevice> InstallPriv (Ptr<Node> node) const override;
 
   /**
    * Sets a file descriptor on the FileDescriptorNetDevice.
@@ -89,7 +89,7 @@ protected:
    * socket.  We do this to avoid having the entire simulation running as root.
    * \return the rawSocket number
    */
-  virtual int CreateFileDescriptor (void) const;
+  virtual int CreateFileDescriptor () const;
 
   /**
    * The Unix/Linux name of the underlying device (e.g., eth0)

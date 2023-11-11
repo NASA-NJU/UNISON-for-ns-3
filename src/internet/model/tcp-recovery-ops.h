@@ -64,7 +64,7 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   /**
    * \brief Constructor
@@ -80,7 +80,7 @@ public:
   /**
    * \brief Deconstructor
    */
-  virtual ~TcpRecoveryOps ();
+  ~TcpRecoveryOps () override;
 
   /**
    * \brief Get the name of the recovery algorithm
@@ -162,7 +162,7 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   /**
    * \brief Constructor
@@ -178,18 +178,18 @@ public:
   /**
    * \brief Constructor
    */
-  virtual ~TcpClassicRecovery () override;
+  ~TcpClassicRecovery () override;
 
-  virtual std::string GetName () const override;
+  std::string GetName () const override;
 
-  virtual void EnterRecovery (Ptr<TcpSocketState> tcb, uint32_t dupAckCount,
+  void EnterRecovery (Ptr<TcpSocketState> tcb, uint32_t dupAckCount,
                               uint32_t unAckDataCount, uint32_t deliveredBytes) override;
 
-  virtual void DoRecovery (Ptr<TcpSocketState> tcb, uint32_t deliveredBytes) override;
+  void DoRecovery (Ptr<TcpSocketState> tcb, uint32_t deliveredBytes) override;
 
-  virtual void ExitRecovery (Ptr<TcpSocketState> tcb) override;
+  void ExitRecovery (Ptr<TcpSocketState> tcb) override;
 
-  virtual Ptr<TcpRecoveryOps> Fork () override;
+  Ptr<TcpRecoveryOps> Fork () override;
 };
 
 } // namespace ns3

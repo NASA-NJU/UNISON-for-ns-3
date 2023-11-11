@@ -41,7 +41,7 @@ NS_LOG_COMPONENT_DEFINE ("Ns3TcpNoDelayTest");
 
 /**
  * \ingroup system-tests-tcp
- * 
+ *
  * \brief Tests of Nagle's algorithm and the TCP no delay option.
  */
 class Ns3TcpNoDelayTestCase : public TestCase
@@ -49,14 +49,14 @@ class Ns3TcpNoDelayTestCase : public TestCase
 public:
   /**
    * Constructor.
-   * 
+   *
    * \param noDelay Enable or disable TCP no delay option.
    */
   Ns3TcpNoDelayTestCase (bool noDelay);
-  virtual ~Ns3TcpNoDelayTestCase () {}
+  ~Ns3TcpNoDelayTestCase () override {}
 
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
   bool m_noDelay;       //!< Enable or disable TCP no delay option.
   bool m_writeResults;  //!< True if write PCAP files.
 
@@ -79,14 +79,14 @@ Ns3TcpNoDelayTestCase::Ns3TcpNoDelayTestCase (bool noDelay)
 {
 }
 
-void 
+void
 Ns3TcpNoDelayTestCase::SinkRx (std::string, Ptr<const Packet> p, const Address &)
 {
   m_responses.Add (p->GetSize ());
 }
 
 void
-Ns3TcpNoDelayTestCase::DoRun (void)
+Ns3TcpNoDelayTestCase::DoRun ()
 {
   uint16_t sinkPort = 50000;
   double sinkStopTime = 8;  // sec; will trigger Socket::Close
@@ -146,11 +146,11 @@ Ns3TcpNoDelayTestCase::DoRun (void)
   m_inputs.Add (536);
   m_inputs.Add (536);
 
-  // Write one byte after 10 ms to ensure that some data is outstanding 
+  // Write one byte after 10 ms to ensure that some data is outstanding
   // and the window is big enough
   Simulator::Schedule (Seconds (2.010), &SocketWriter::Write, socketWriter, 1);
 
-  // If Nagle is not enabled, i.e. no delay is on, add an input for a 1-byte 
+  // If Nagle is not enabled, i.e. no delay is on, add an input for a 1-byte
   // packet to be received
   if (m_noDelay)
     {
@@ -205,7 +205,7 @@ Ns3TcpNoDelayTestCase::DoRun (void)
 
 /**
  * \ingroup system-tests-tcp
- * 
+ *
  * TCP Nagle's algorithm and the TCP no delay option TestSuite.
  */
 class Ns3TcpNoDelayTestSuite : public TestSuite

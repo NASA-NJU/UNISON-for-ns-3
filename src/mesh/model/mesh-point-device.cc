@@ -71,9 +71,9 @@ MeshPointDevice::MeshPointDevice () :
 MeshPointDevice::~MeshPointDevice ()
 {
   NS_LOG_FUNCTION (this);
-  m_node = 0;
-  m_channel = 0;
-  m_routingProtocol = 0;
+  m_node = nullptr;
+  m_channel = nullptr;
+  m_routingProtocol = nullptr;
 }
 
 void
@@ -82,12 +82,12 @@ MeshPointDevice::DoDispose ()
   NS_LOG_FUNCTION (this);
   for (std::vector<Ptr<NetDevice> >::iterator iter = m_ifaces.begin (); iter != m_ifaces.end (); iter++)
     {
-      *iter = 0;
+      *iter = nullptr;
     }
   m_ifaces.clear ();
-  m_node = 0;
-  m_channel = 0;
-  m_routingProtocol = 0;
+  m_node = nullptr;
+  m_channel = nullptr;
+  m_routingProtocol = nullptr;
   NetDevice::DoDispose ();
 
 }
@@ -121,7 +121,7 @@ MeshPointDevice::ReceiveFromDevice (Ptr<NetDevice> incomingPort, Ptr<const Packe
           Time forwardingDelay = GetForwardingDelay ();
           NS_LOG_DEBUG ("Forwarding broadcast from " << src48 << " to " << dst48
             << " with delay " << forwardingDelay.As (Time::US));
-          Simulator::Schedule (forwardingDelay, &MeshPointDevice::Forward, this, incomingPort, packet, protocol, src48, dst48); 
+          Simulator::Schedule (forwardingDelay, &MeshPointDevice::Forward, this, incomingPort, packet, protocol, src48, dst48);
         }
       return;
     }
@@ -139,8 +139,8 @@ MeshPointDevice::ReceiveFromDevice (Ptr<NetDevice> incomingPort, Ptr<const Packe
   else
     {
       Time forwardingDelay = GetForwardingDelay ();
-      Simulator::Schedule (forwardingDelay, &MeshPointDevice::Forward, this, incomingPort, packet->Copy (), protocol, src48, dst48); 
-      NS_LOG_DEBUG ("Forwarding unicast from " << src48 << " to " << dst48 
+      Simulator::Schedule (forwardingDelay, &MeshPointDevice::Forward, this, incomingPort, packet->Copy (), protocol, src48, dst48);
+      NS_LOG_DEBUG ("Forwarding unicast from " << src48 << " to " << dst48
         << " with delay " << forwardingDelay.As (Time::US));
     }
 }
@@ -360,7 +360,7 @@ MeshPointDevice::GetInterface (uint32_t n) const
         }
     }
   NS_FATAL_ERROR ("Mesh point interface is not found by index");
-  return 0;
+  return nullptr;
 }
 std::vector<Ptr<NetDevice> >
 MeshPointDevice::GetInterfaces () const
@@ -388,12 +388,12 @@ MeshPointDevice::AddInterface (Ptr<NetDevice> iface)
       m_address = Mac48Address::ConvertFrom (iface->GetAddress ());
     }
   Ptr<WifiNetDevice> wifiNetDev = iface->GetObject<WifiNetDevice> ();
-  if (wifiNetDev == 0)
+  if (!wifiNetDev)
     {
       NS_FATAL_ERROR ("Device is not a WiFi NIC: cannot be used as a mesh point interface.");
     }
   Ptr<MeshWifiInterfaceMac> ifaceMac = wifiNetDev->GetMac ()->GetObject<MeshWifiInterfaceMac> ();
-  if (ifaceMac == 0)
+  if (!ifaceMac)
     {
       NS_FATAL_ERROR (
         "WiFi device doesn't have correct MAC installed: cannot be used as a mesh point interface.");

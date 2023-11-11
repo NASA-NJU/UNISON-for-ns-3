@@ -37,7 +37,7 @@ int BsmApplication::wavePort = 9080;
 NS_OBJECT_ENSURE_REGISTERED (BsmApplication);
 
 TypeId
-BsmApplication::GetTypeId (void)
+BsmApplication::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::BsmApplication")
     .SetParent<Application> ()
@@ -48,16 +48,16 @@ BsmApplication::GetTypeId (void)
 }
 
 BsmApplication::BsmApplication ()
-  : m_waveBsmStats (0),
+  : m_waveBsmStats (nullptr),
     m_txSafetyRangesSq (),
     m_TotalSimTime (Seconds (10)),
     m_wavePacketSize (200),
     m_numWavePackets (1),
     m_waveInterval (MilliSeconds (100)),
     m_gpsAccuracyNs (10000),
-    m_adhocTxInterfaces (0),
-    m_nodesMoving (0),
-    m_unirv (0),
+    m_adhocTxInterfaces (nullptr),
+    m_nodesMoving (nullptr),
+    m_unirv (nullptr),
     m_nodeId (0),
     m_chAccessMode (0),
     m_txMaxDelay (MilliSeconds (10)),
@@ -72,7 +72,7 @@ BsmApplication::~BsmApplication ()
 }
 
 void
-BsmApplication::DoDispose (void)
+BsmApplication::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
 
@@ -236,7 +236,7 @@ BsmApplication::GenerateWaveTraffic (Ptr<Socket> socket, uint32_t pktSize,
       int txNodeId = sendingNodeId;
       Ptr<Node> txNode = GetNode (txNodeId);
       Ptr<MobilityModel> txPosition = txNode->GetObject<MobilityModel> ();
-      NS_ASSERT (txPosition != 0);
+      NS_ASSERT (txPosition);
 
       int senderMoving = m_nodesMoving->at (txNodeId);
       if (senderMoving != 0)
@@ -263,7 +263,7 @@ BsmApplication::GenerateWaveTraffic (Ptr<Socket> socket, uint32_t pktSize,
               if (rxNodeId != txNodeId)
                 {
                   Ptr<MobilityModel> rxPosition = rxNode->GetObject<MobilityModel> ();
-                  NS_ASSERT (rxPosition != 0);
+                  NS_ASSERT (rxPosition);
                   // confirm that the receiving node
                   // has also started moving in the scenario
                   // if it has not started moving, then
@@ -348,7 +348,7 @@ void BsmApplication::HandleReceivedBsmPacket (Ptr<Node> txNode,
   m_waveBsmStats->IncRxPktCount ();
 
   Ptr<MobilityModel> rxPosition = rxNode->GetObject<MobilityModel> ();
-  NS_ASSERT (rxPosition != 0);
+  NS_ASSERT (rxPosition);
   // confirm that the receiving node
   // has also started moving in the scenario
   // if it has not started moving, then

@@ -63,9 +63,9 @@ public:
    * \brief Constructor
    */
   Issue211Test ();
-  virtual ~Issue211Test ();
+  ~Issue211Test () override;
 
-  virtual void DoRun (void);
+  void DoRun () override;
 
 private:
   /**
@@ -103,7 +103,7 @@ Issue211Test::CalcThroughput (Ptr<UdpServer> server)
 }
 
 void
-Issue211Test::DoRun (void)
+Issue211Test::DoRun ()
 {
   Time simulationTime (Seconds (6.0));
   Time moveAwayTime (Seconds (2.0));
@@ -185,7 +185,7 @@ Issue211Test::DoRun (void)
   serverApp.Stop (warmup + simulationTime);
 
   UdpClientHelper client (staNodeInterface.GetAddress (0), port);
-  client.SetAttribute ("MaxPackets", UintegerValue (4294967295u));
+  client.SetAttribute ("MaxPackets", UintegerValue (4294967295U));
   client.SetAttribute ("Interval", TimeValue (MilliSeconds (1)));
   client.SetAttribute ("PacketSize", UintegerValue (m_payloadSize));  // 16 Mb/s
   ApplicationContainer clientApp = client.Install (wifiApNode.Get (0));

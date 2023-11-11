@@ -56,7 +56,7 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   TcpSocketMsgBase () : TcpSocketBase ()
   {
@@ -130,13 +130,13 @@ public:
   void SetUpdateRttHistoryCb (UpdateRttCallback cb);
 
 protected:
-  virtual void ReceivedAck (Ptr<Packet> packet, const TcpHeader& tcpHeader);
-  virtual void ReTxTimeout (void);
-  virtual Ptr<TcpSocketBase> Fork (void);
-  virtual void CompleteFork (Ptr<Packet> p, const TcpHeader& tcpHeader,
-                             const Address& fromAddress, const Address& toAddress);
-  virtual void UpdateRttHistory (const SequenceNumber32 &seq, uint32_t sz,
-                                 bool isRetransmission);
+  void ReceivedAck (Ptr<Packet> packet, const TcpHeader& tcpHeader) override;
+  void ReTxTimeout () override;
+  Ptr<TcpSocketBase> Fork () override;
+  void CompleteFork (Ptr<Packet> p, const TcpHeader& tcpHeader,
+                             const Address& fromAddress, const Address& toAddress) override;
+  void UpdateRttHistory (const SequenceNumber32 &seq, uint32_t sz,
+                                 bool isRetransmission) override;
 
 private:
   AckManagementCb m_rcvAckCb;       //!< Receive ACK callback.
@@ -172,7 +172,7 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   TcpSocketSmallAcks ()
     : TcpSocketMsgBase (),
@@ -204,8 +204,8 @@ public:
   }
 
 protected:
-  virtual void SendEmptyPacket (uint8_t flags);
-  Ptr<TcpSocketBase> Fork (void);
+  void SendEmptyPacket (uint8_t flags) override;
+  Ptr<TcpSocketBase> Fork () override;
 
   uint32_t m_bytesToAck;            //!< Number of bytes to be ACKed.
   uint32_t m_bytesLeftToBeAcked;    //!< Number of bytes to be ACKed left.
@@ -265,7 +265,7 @@ public:
    * \param desc description of the test
    */
   TcpGeneralTest (const std::string &desc);
-  ~TcpGeneralTest ();
+  ~TcpGeneralTest () override;
 
   /**
    * \brief Used as parameter of methods, specifies on what node
@@ -370,22 +370,22 @@ protected:
    *
    * \see ConfigureEnvironment
    */
-  virtual void DoRun (void);
+  void DoRun () override;
 
   /**
    * \brief Change the configuration of the environment
    */
-  virtual void ConfigureEnvironment (void);
+  virtual void ConfigureEnvironment ();
 
   /**
    * \brief Change the configuration of the socket properties
    */
-  virtual void ConfigureProperties (void);
+  virtual void ConfigureProperties ();
 
   /**
    * \brief Teardown the TCP test
    */
-  virtual void DoTeardown (void);
+  void DoTeardown () override;
 
   /**
    * \brief Scheduled at 0.0, SENDER starts the connection to RECEIVER
@@ -609,7 +609,7 @@ protected:
 
   /**
    * \brief Enable or disable pacing in the TCP socket
-   * 
+   *
    * \param who socket
    * \param pacing Boolean to enable or disable pacing
    */
@@ -617,7 +617,7 @@ protected:
 
   /**
    * \brief Enable or disable pacing of the initial window
-   * 
+   *
    * \param who socket
    * \param paceWindow Boolean to enable or disable pacing of initial window
    */

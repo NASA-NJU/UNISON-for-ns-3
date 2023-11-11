@@ -55,11 +55,11 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   LteUeMac ();
-  virtual ~LteUeMac ();
-  virtual void DoDispose (void);
+  ~LteUeMac () override;
+  void DoDispose () override;
 
   /**
    * \brief TracedCallback signature for RA response timeout events
@@ -78,7 +78,7 @@ public:
   * \brief Get the LTE MAC SAP provider
   * \return a pointer to the LTE MAC SAP provider
   */
-  LteMacSapProvider*  GetLteMacSapProvider (void);
+  LteMacSapProvider*  GetLteMacSapProvider ();
   /**
   * \brief Set the LTE UE CMAC SAP user
   * \param s the LTE UE CMAC SAP User
@@ -88,8 +88,8 @@ public:
   * \brief Get the LTE CMAC SAP provider
   * \return a pointer to the LTE CMAC SAP provider
   */
-  LteUeCmacSapProvider*  GetLteUeCmacSapProvider (void);
-  
+  LteUeCmacSapProvider*  GetLteUeCmacSapProvider ();
+
   /**
   * \brief Set the component carried ID
   * \param index the component carrier ID
@@ -107,7 +107,7 @@ public:
   * \param s a pointer to the PHY SAP Provider
   */
   void SetLteUePhySapProvider (LteUePhySapProvider* s);
-  
+
   /**
   * \brief Forwarded from LteUePhySapUser: trigger the start from a new frame
   *
@@ -209,7 +209,7 @@ private:
   * \param msg the LTE control message
   */
   void DoReceiveLteControlMessage (Ptr<LteControlMessage> msg);
-  
+
   // internal methods
   /// Randomly select and send RA preamble function
   void RandomlySelectAndSendRaPreamble ();
@@ -234,9 +234,9 @@ private:
   */
   void RaResponseTimeout (bool contention);
   /// Send report buffer status
-  void SendReportBufferStatus (void);
+  void SendReportBufferStatus ();
   /// Refresh HARQ processes packet buffer function
-  void RefreshHarqProcessesPacketBuffer (void);
+  void RefreshHarqProcessesPacketBuffer ();
 
   /// component carrier Id --> used to address sap
   uint8_t m_componentCarrierId;
@@ -259,13 +259,13 @@ private:
 
   LteUePhySapProvider* m_uePhySapProvider; ///< UE Phy SAP provider
   LteUePhySapUser* m_uePhySapUser; ///< UE Phy SAP user
-  
+
   std::map <uint8_t, LteMacSapProvider::ReportBufferStatusParameters> m_ulBsrReceived; ///< BSR received from RLC (the last one)
-  
-  
+
+
   Time m_bsrPeriodicity; ///< BSR periodicity
   Time m_bsrLast; ///< BSR last
-  
+
   bool m_freshUlBsr; ///< true when a BSR has been received in the last TTI
 
   uint8_t m_harqProcessId; ///< HARQ process ID

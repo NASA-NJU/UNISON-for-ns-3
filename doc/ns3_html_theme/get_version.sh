@@ -29,7 +29,7 @@
 # If both a and b are true, we're building for public urls.
 # (The newer update-docs script (through ns3) sets
 # NS3_WWW_URLS=public explicitly.)
-# 
+#
 # The repo version is either a tag name or a commit (short) id.
 #
 # If we're building for nsnam.org, and at a tag, we use just
@@ -56,15 +56,15 @@ function say
 function usage
 {
     cat <<-EOF
-	Usage:  $me [-p]              normal versioning
-	        $me [-n] [-d] [-t]    test options
-	  -p  build public urls, NS3_WWW_URLS=public is an alternative
+    Usage:  $me [-p]              normal versioning
+            $me [-n] [-d] [-t]    test options
+      -p  build public urls, NS3_WWW_URLS=public is an alternative
 
-	Testing options:
-	  -n  pretend we are on nsnam.org
-	  -d  pretend we are in the automated build directory
-	  -t  pretend we are at a repo tag
-	    
+    Testing options:
+      -n  pretend we are on nsnam.org
+      -d  pretend we are in the automated build directory
+      -t  pretend we are at a repo tag
+
 EOF
     exit 1
 }
@@ -79,16 +79,16 @@ tag=0
 
 while getopts :pndth option ; do
     case $option in
-	(p)  public=1 ;;
-	(n)  nsnam=1  ;;
+    (p)  public=1 ;;
+    (n)  nsnam=1  ;;
 
-	(d)  daily=1  ;;
+    (d)  daily=1  ;;
 
-	(t)  tag=1    ;;
+    (t)  tag=1    ;;
 
-	(h)  usage ;;
-	(:)  say "Missing argument to -$OPTARG" ; usage ;;
-	(\?) say "Invalid option: -$OPTARG"     ; usage ;;
+    (h)  usage ;;
+    (:)  say "Missing argument to -$OPTARG" ; usage ;;
+    (\?) say "Invalid option: -$OPTARG"     ; usage ;;
     esac
 done
 
@@ -159,11 +159,11 @@ else
         changes=1
     fi
     if [ $changes ] ; then
-	say "beyond latest tag, last commit: $version, dirty"
-	dirty="(+)"
+        say "beyond latest tag, last commit: $version, dirty"
+        dirty="(+)"
     else
-	say "beyond latest tag, last commit: $version, clean"
-	dirty=
+        say "beyond latest tag, last commit: $version, clean"
+        dirty=
     fi
 fi
 
@@ -172,24 +172,24 @@ if [ $PUBLIC -eq 1 ]; then
     echo "//  public urls"                                   >> $outf
     # Generate URL relative to server root
     echo "var ns3_host = \"/\";"                             >> $outf
-    
+
     if [ $distance -eq 1 ]; then
-	# Like "http://www.nsnam.org/ns-3-14"
-	vers_href="https://www.nsnam.org/ns-3-${version#ns-3.}"
-	vers_href="<a href=\\\"$vers_href\\\">$version$dirty</a>"
-	
-	echo "var ns3_version = \"Release $vers_href\";"     >> $outf
-	echo "var ns3_release = \"docs/release/${version#ns-}/\";" >> $outf
+        # Like "http://www.nsnam.org/ns-3-14"
+        vers_href="https://www.nsnam.org/ns-3-${version#ns-3.}"
+        vers_href="<a href=\\\"$vers_href\\\">$version$dirty</a>"
+
+        echo "var ns3_version = \"Release $vers_href\";"     >> $outf
+        echo "var ns3_release = \"docs/release/${version#ns-}/\";" >> $outf
     else
-	vers_href="https://gitlab.com/nsnam/ns-3-dev/commits/$version"
-	version="<a href=\\\"$vers_href\\\">$version$dirty</a>"
-	
-	echo "var ns3_version = \"ns-3-dev @ $version\";"    >> $outf
-	echo "var ns3_release = \"docs/\";" >> $outf
+        vers_href="https://gitlab.com/nsnam/ns-3-dev/commits/$version"
+        version="<a href=\\\"$vers_href\\\">$version$dirty</a>"
+
+        echo "var ns3_version = \"ns-3-dev @ $version\";"    >> $outf
+        echo "var ns3_release = \"docs/\";" >> $outf
     fi
     echo "var ns3_local = \"\";"                             >> $outf
     echo "var ns3_doxy  = \"doxygen/\";"                     >> $outf
-    
+
 else
     repo=`basename $PWD`
     echo "// ns3_version.js:  automatically generated"       >  $outf
@@ -207,7 +207,7 @@ fi
 cd doc 2>&1 >/dev/null
 for d in {manual,models,tutorial}/build/{single,}html/_static/ ; do
     if [ ! -d $d ]; then
-	mkdir -p $d
+        mkdir -p $d
     fi
     cp ns3_html_theme/static/ns3_version.js $d
 done

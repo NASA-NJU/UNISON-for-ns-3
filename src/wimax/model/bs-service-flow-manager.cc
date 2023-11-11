@@ -50,13 +50,13 @@ BsServiceFlowManager::BsServiceFlowManager (Ptr<BaseStationNetDevice> device)
   m_inuseScheduleDsaRspCid = Cid::InitialRanging ();
 }
 
-BsServiceFlowManager::~BsServiceFlowManager (void)
+BsServiceFlowManager::~BsServiceFlowManager ()
 {
 }
 
 /* static */
 TypeId
-BsServiceFlowManager::GetTypeId (void)
+BsServiceFlowManager::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::BsServiceFlowManager")
     .SetParent<ServiceFlowManager> ()
@@ -67,7 +67,7 @@ BsServiceFlowManager::GetTypeId (void)
 }
 
 void
-BsServiceFlowManager::DoDispose (void)
+BsServiceFlowManager::DoDispose ()
 {
   ServiceFlowManager::DoDispose ();
 }
@@ -79,13 +79,13 @@ BsServiceFlowManager::SetMaxDsaRspRetries (uint8_t maxDsaRspRetries)
 }
 
 uint8_t
-BsServiceFlowManager::GetMaxDsaRspRetries (void) const
+BsServiceFlowManager::GetMaxDsaRspRetries () const
 {
   return m_maxDsaRspRetries;
 }
 
 EventId
-BsServiceFlowManager::GetDsaAckTimeoutEvent (void) const
+BsServiceFlowManager::GetDsaAckTimeoutEvent () const
 {
   return m_dsaAckTimeoutEvent;
 }
@@ -132,7 +132,7 @@ BsServiceFlowManager::ScheduleDsaRsp (ServiceFlow *serviceFlow, Cid cid)
   Ptr<BaseStationNetDevice> bs = m_device->GetObject<BaseStationNetDevice> ();
 
   SSRecord *ssRecord = bs->GetSSManager ()->GetSSRecord (cid);
-  if (ssRecord == 0)
+  if (ssRecord == nullptr)
     {
       NS_LOG_INFO ("SS not registered with the BS CID:" << cid);
       return;
@@ -232,7 +232,7 @@ BsServiceFlowManager::AddMulticastServiceFlow (ServiceFlow  sf, enum WimaxPhy::M
   serviceFlow->SetType (ServiceFlow::SF_TYPE_ACTIVE);
   serviceFlow->SetIsMulticast (true);
   serviceFlow->SetModulation (modulation);
-  bs->GetUplinkScheduler ()->SetupServiceFlow (0, serviceFlow);
+  bs->GetUplinkScheduler ()->SetupServiceFlow (nullptr, serviceFlow);
 }
 
 void

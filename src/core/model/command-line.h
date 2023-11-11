@@ -156,19 +156,19 @@ namespace ns3 {
  * Here is the output from a few runs of that program:
  *
  * \verbatim
-   $ ./ns3 run="command-line-example"
+   $ ./ns3 run "command-line-example"
    intArg:   1
    boolArg:  false
    strArg:   "strArg default"
    cbArg:    "cbArg default"
 
-   $ ./ns3 run="command-line-example --intArg=2 --boolArg --strArg=Hello --cbArg=World"
+   $ ./ns3 run "command-line-example --intArg=2 --boolArg --strArg=Hello --cbArg=World"
    intArg:   2
    boolArg:  true
    strArg:   "Hello"
    cbArg:    "World"
 
-   $ ./ns3 run="command-line-example --help"
+   $ ./ns3 run "command-line-example --help"
    ns3-dev-command-line-example-debug [Program Arguments] [General Arguments]
 
    CommandLine example program.
@@ -229,7 +229,7 @@ class CommandLine
 {
 public:
   /** Constructor */
-  CommandLine (void);
+  CommandLine ();
   /**
    * Construct and register the source file name.
    * This would typically be called by
@@ -346,7 +346,7 @@ public:
    *
    * \returns the number of non-option arguments found.
    */
-  std::size_t GetNExtraNonOptions (void) const;
+  std::size_t GetNExtraNonOptions () const;
 
   /**
    * Parse the program arguments
@@ -454,9 +454,9 @@ private:
   {
   public:
     // Inherited
-    virtual bool Parse (const std::string value);
-    bool HasDefault () const;
-    std::string GetDefault () const;
+    bool Parse (const std::string value) override;
+    bool HasDefault () const override;
+    std::string GetDefault () const override;
 
     T *m_valuePtr;            /**< Pointer to the POD location */
     std::string m_default;    /**< String representation of default value */
@@ -470,9 +470,9 @@ private:
   {
   public:
     // Inherited
-    bool Parse (const std::string value);
-    bool HasDefault (void) const;
-    std::string GetDefault (void) const;
+    bool Parse (const std::string value) override;
+    bool HasDefault () const override;
+    std::string GetDefault () const override;
 
     std::string m_value;     /**< The argument value. */
   };  // class StringItem
@@ -485,8 +485,8 @@ private:
   {
   public:
     // Inherited
-    bool HasDefault (void) const;
-    std::string GetDefault (void) const;
+    bool HasDefault () const override;
+    std::string GetDefault () const override;
 
     /**
      * Parse from a string.
@@ -494,7 +494,7 @@ private:
      * \param [in] value The string representation
      * \return \c true if parsing the value succeeded
      */
-    virtual bool Parse (const std::string value);
+    bool Parse (const std::string value) override;
     ns3::Callback<bool, std::string> m_callback;  /**< The Callback */
     std::string m_default;  /**< The default value, as a string, if it exists. */
   };  // class CallbackItem
@@ -580,13 +580,13 @@ private:
    */
   void Copy (const CommandLine &cmd);
   /** Remove all arguments, Usage(), name */
-  void Clear (void);
+  void Clear ();
   /**
    * Append usage message in Doxygen format to the file indicated
    * by the NS_COMMANDLINE_INTROSPECTION environment variable.
    * This is typically only called once, by Parse().
    */
-  void PrintDoxygenUsage (void) const;
+  void PrintDoxygenUsage () const;
 
   typedef std::vector<Item *> Items;    /**< Argument list container */
   Items m_options;                      /**< The list of option arguments */

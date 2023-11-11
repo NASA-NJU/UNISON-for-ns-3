@@ -31,13 +31,13 @@ namespace ns3 {
 NS_LOG_COMPONENT_DEFINE ("OfdmPpdu");
 
 OfdmPpdu::OfdmPpdu (Ptr<const WifiPsdu> psdu, const WifiTxVector& txVector,
-                    WifiPhyBand band, uint64_t uid,
-                    bool instantiateLSig /* = true */)
-  : WifiPpdu (psdu, txVector, uid),
+                    uint16_t txCenterFreq, WifiPhyBand band,
+                    uint64_t uid, bool instantiateLSig /* = true */)
+  : WifiPpdu (psdu, txVector, txCenterFreq, uid),
     m_band (band),
     m_channelWidth (txVector.GetChannelWidth ())
 {
-  NS_LOG_FUNCTION (this << psdu << txVector << band << uid);
+  NS_LOG_FUNCTION (this << psdu << txVector << txCenterFreq << band << uid);
   if (instantiateLSig)
     {
       m_lSig.SetRate (txVector.GetMode ().GetDataRate (txVector), m_channelWidth);
@@ -50,7 +50,7 @@ OfdmPpdu::~OfdmPpdu ()
 }
 
 WifiTxVector
-OfdmPpdu::DoGetTxVector (void) const
+OfdmPpdu::DoGetTxVector () const
 {
   WifiTxVector txVector;
   txVector.SetPreambleType (m_preamble);
@@ -62,7 +62,7 @@ OfdmPpdu::DoGetTxVector (void) const
 }
 
 Time
-OfdmPpdu::GetTxDuration (void) const
+OfdmPpdu::GetTxDuration () const
 {
   Time ppduDuration = Seconds (0);
   const WifiTxVector& txVector = GetTxVector ();
@@ -71,9 +71,9 @@ OfdmPpdu::GetTxDuration (void) const
 }
 
 Ptr<WifiPpdu>
-OfdmPpdu::Copy (void) const
+OfdmPpdu::Copy () const
 {
-  return Create<OfdmPpdu> (GetPsdu (), GetTxVector (), m_band, m_uid);
+  return Create<OfdmPpdu> (GetPsdu (), GetTxVector (), m_txCenterFreq, m_band, m_uid);
 }
 
 OfdmPpdu::LSigHeader::LSigHeader ()
@@ -87,7 +87,7 @@ OfdmPpdu::LSigHeader::~LSigHeader ()
 }
 
 TypeId
-OfdmPpdu::LSigHeader::GetTypeId (void)
+OfdmPpdu::LSigHeader::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::LSigHeader")
     .SetParent<Header> ()
@@ -98,7 +98,7 @@ OfdmPpdu::LSigHeader::GetTypeId (void)
 }
 
 TypeId
-OfdmPpdu::LSigHeader::GetInstanceTypeId (void) const
+OfdmPpdu::LSigHeader::GetInstanceTypeId () const
 {
   return GetTypeId ();
 }
@@ -111,7 +111,7 @@ OfdmPpdu::LSigHeader::Print (std::ostream &os) const
 }
 
 uint32_t
-OfdmPpdu::LSigHeader::GetSerializedSize (void) const
+OfdmPpdu::LSigHeader::GetSerializedSize () const
 {
   return 3;
 }
@@ -222,7 +222,7 @@ OfdmPpdu::LSigHeader::SetLength (uint16_t length)
 }
 
 uint16_t
-OfdmPpdu::LSigHeader::GetLength (void) const
+OfdmPpdu::LSigHeader::GetLength () const
 {
   return m_length;
 }

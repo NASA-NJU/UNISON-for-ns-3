@@ -32,7 +32,7 @@
 
 
 namespace ns3 {
-  
+
 /**
  * Utility class to record the difference between two wall-clock times.
  */
@@ -40,36 +40,36 @@ class SystemWallClockTimestamp
 {
 public:
   /** Constructor */
-  SystemWallClockTimestamp (void);
+  SystemWallClockTimestamp ();
 
   /** Record the current wall-clock time and delta since the last stamp(). */
-  void Stamp (void);
+  void Stamp ();
 
   /**
    * Get the last time stamp as a string.
    * \return The last time stamp.
    */
-  std::string ToString (void) const;
+  std::string ToString () const;
 
   /**
    * Get the last recorded raw value.
    * \returns The last time stamp recorded.
    */
-  std::time_t GetLast (void) const;
+  std::time_t GetLast () const;
 
   /**
    * Get the last recorded interval.
    * \returns The interval between the last two time stamps.
    */
-  std::time_t GetInterval (void) const;
-  
+  std::time_t GetInterval () const;
+
 private:
 
   /** The last time stamp. */
   std::time_t m_last;
-  
+
   /** Difference between the two previous time stamps. */
-  std::time_t m_diff;    
+  std::time_t m_diff;
 
 };  // class SystemWallClockTimestamp
 

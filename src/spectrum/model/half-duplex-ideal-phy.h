@@ -73,14 +73,14 @@ namespace ns3 {
  * - the signal propagation
  *
  * This PHY model supports a single antenna model instance which is
- * used for both transmission and reception.  
+ * used for both transmission and reception.
  */
 class HalfDuplexIdealPhy : public SpectrumPhy
 {
 
 public:
   HalfDuplexIdealPhy ();
-  virtual ~HalfDuplexIdealPhy ();
+  ~HalfDuplexIdealPhy () override;
 
   /**
    *  PHY states
@@ -96,17 +96,17 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   // inherited from SpectrumPhy
-  void SetChannel (Ptr<SpectrumChannel> c);
-  void SetMobility (Ptr<MobilityModel> m);
-  void SetDevice (Ptr<NetDevice> d);
-  Ptr<MobilityModel> GetMobility () const;
-  Ptr<NetDevice> GetDevice () const;
-  Ptr<const SpectrumModel> GetRxSpectrumModel () const;
-  Ptr<Object> GetAntenna () const;
-  void StartRx (Ptr<SpectrumSignalParameters> params);
+  void SetChannel (Ptr<SpectrumChannel> c) override;
+  void SetMobility (Ptr<MobilityModel> m) override;
+  void SetDevice (Ptr<NetDevice> d) override;
+  Ptr<MobilityModel> GetMobility () const override;
+  Ptr<NetDevice> GetDevice () const override;
+  Ptr<const SpectrumModel> GetRxSpectrumModel () const override;
+  Ptr<Object> GetAntenna () const override;
+  void StartRx (Ptr<SpectrumSignalParameters> params) override;
 
 
   /**
@@ -182,15 +182,15 @@ public:
    */
   void SetGenericPhyRxEndOkCallback (GenericPhyRxEndOkCallback c);
 
-  /** 
+  /**
    * set the AntennaModel to be used
-   * 
+   *
    * \param a the Antenna Model
    */
   void SetAntenna (Ptr<AntennaModel> a);
 
 private:
-  virtual void DoDispose (void);
+  void DoDispose () override;
 
   /**
    * Change the PHY state

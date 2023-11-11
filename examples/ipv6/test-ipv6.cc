@@ -29,7 +29,7 @@ using namespace ns3;
 
 NS_LOG_COMPONENT_DEFINE ("TestIpv6");
 
-int 
+int
 main (int argc, char *argv[])
 {
   LogComponentEnable ("TestIpv6", LOG_LEVEL_ALL);
@@ -66,5 +66,7 @@ main (int argc, char *argv[])
       Ipv6Address ipv6address = Ipv6Address::MakeAutoconfiguredAddress (m_addresses[i], prefix2);
       NS_LOG_INFO ("address = " << ipv6address);
     }
+
+  return 0;
 }
 

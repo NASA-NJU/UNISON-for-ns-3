@@ -56,19 +56,19 @@ public:
    *
    * \returns An iterator to the first Object.
    */
-  Iterator Begin (void) const;
+  Iterator Begin () const;
   /**
    * Get an iterator to the _past-the-end_ Object.
    *
    * \returns An iterator to the _past-the-end_ Object.
    */
-  Iterator End (void) const;
+  Iterator End () const;
   /**
    * Get the number of Objects.
    *
    * \returns The number of objects.
    */
-  std::size_t GetN (void) const;
+  std::size_t GetN () const;
   /**
    * Get a specific Object.
    *
@@ -82,7 +82,7 @@ public:
    *
    * \returns A copy of this container.
    */
-  virtual Ptr<AttributeValue> Copy (void) const;
+  Ptr<AttributeValue> Copy () const override;
   /**
    * Serialize each of the Object pointers to a string.
    *
@@ -91,7 +91,7 @@ public:
    * \param [in] checker The checker to use (currently not used.)
    * \returns The string form of the Objects.
    */
-  virtual std::string SerializeToString (Ptr<const AttributeChecker> checker) const;
+  std::string SerializeToString (Ptr<const AttributeChecker> checker) const override;
   /**
    * Deserialize from a string. (Not implemented; raises a fatal error.)
    *
@@ -99,7 +99,7 @@ public:
    * \param [in] checker The checker to use.
    * \returns \c true.
    */
-  virtual bool DeserializeFromString (std::string value, Ptr<const AttributeChecker> checker);
+  bool DeserializeFromString (std::string value, Ptr<const AttributeChecker> checker) override;
 
 private:
   /** ObjectPtrContainerAccessor::Get() needs access. */
@@ -126,7 +126,7 @@ private:
 template <typename T, typename U, typename INDEX>
 Ptr<const AttributeAccessor>
 MakeObjectPtrContainerAccessor (Ptr<U> (T::*get)(INDEX) const,
-                                INDEX (T::*getN)(void) const);
+                                INDEX (T::*getN)() const);
 
 /**
  * \ingroup attribute_ObjectPtrContainer
@@ -145,7 +145,7 @@ MakeObjectPtrContainerAccessor (Ptr<U> (T::*get)(INDEX) const,
  */
 template <typename T, typename U, typename INDEX>
 Ptr<const AttributeAccessor>
-MakeObjectPtrContainerAccessor (INDEX (T::*getN)(void) const,
+MakeObjectPtrContainerAccessor (INDEX (T::*getN)() const,
                                 Ptr<U> (T::*get)(INDEX) const);
 
 class ObjectPtrContainerChecker : public AttributeChecker
@@ -155,11 +155,11 @@ public:
    * Get the TypeId of the container class type.
    * \returns The class TypeId.
    */
-  virtual TypeId GetItemTypeId (void) const = 0;
+  virtual TypeId GetItemTypeId () const = 0;
 };
 
 template <typename T>
-Ptr<const AttributeChecker> MakeObjectPtrContainerChecker (void);
+Ptr<const AttributeChecker> MakeObjectPtrContainerChecker ();
 
 } // namespace ns3
 
@@ -177,35 +177,35 @@ template <typename T>
 class ObjectPtrContainerChecker : public ns3::ObjectPtrContainerChecker
 {
 public:
-  virtual TypeId GetItemTypeId (void) const
+  TypeId GetItemTypeId () const override
   {
     return T::GetTypeId ();
   }
-  virtual bool Check (const AttributeValue &value) const
+  bool Check (const AttributeValue &value) const override
   {
-    return dynamic_cast<const ObjectPtrContainerValue *> (&value) != 0;
+    return dynamic_cast<const ObjectPtrContainerValue *> (&value) != nullptr;
   }
-  virtual std::string GetValueTypeName (void) const
+  std::string GetValueTypeName () const override
   {
     return "ns3::ObjectPtrContainerValue";
   }
-  virtual bool HasUnderlyingTypeInformation (void) const
+  bool HasUnderlyingTypeInformation () const override
   {
     return true;
   }
-  virtual std::string GetUnderlyingTypeInformation (void) const
+  std::string GetUnderlyingTypeInformation () const override
   {
     return "ns3::Ptr< " + T::GetTypeId ().GetName () + " >";
   }
-  virtual Ptr<AttributeValue> Create (void) const
+  Ptr<AttributeValue> Create () const override
   {
     return ns3::Create<ObjectPtrContainerValue> ();
   }
-  virtual bool Copy (const AttributeValue &source, AttributeValue &destination) const
+  bool Copy (const AttributeValue &source, AttributeValue &destination) const override
   {
     const ObjectPtrContainerValue *src = dynamic_cast<const ObjectPtrContainerValue *> (&source);
     ObjectPtrContainerValue *dst = dynamic_cast<ObjectPtrContainerValue *> (&destination);
-    if (src == 0 || dst == 0)
+    if (src == nullptr || dst == nullptr)
       {
         return false;
       }
@@ -224,10 +224,10 @@ public:
 class ObjectPtrContainerAccessor : public AttributeAccessor
 {
 public:
-  virtual bool Set (ObjectBase * object, const AttributeValue &value) const;
-  virtual bool Get (const ObjectBase * object, AttributeValue &value) const;
-  virtual bool HasGetter (void) const;
-  virtual bool HasSetter (void) const;
+  bool Set (ObjectBase * object, const AttributeValue &value) const override;
+  bool Get (const ObjectBase * object, AttributeValue &value) const override;
+  bool HasGetter () const override;
+  bool HasSetter () const override;
 
 private:
   /**
@@ -252,28 +252,28 @@ private:
 template <typename T, typename U, typename INDEX>
 Ptr<const AttributeAccessor>
 MakeObjectPtrContainerAccessor (Ptr<U> (T::*get)(INDEX) const,
-                                INDEX (T::*getN)(void) const)
+                                INDEX (T::*getN)() const)
 {
   struct MemberGetters : public ObjectPtrContainerAccessor
   {
-    virtual bool DoGetN (const ObjectBase *object, std::size_t *n) const
+    bool DoGetN (const ObjectBase *object, std::size_t *n) const override
     {
       const T *obj = dynamic_cast<const T *> (object);
-      if (obj == 0)
+      if (obj == nullptr)
         {
           return false;
         }
       *n = (obj->*m_getN)();
       return true;
     }
-    virtual Ptr<Object> DoGet (const ObjectBase *object, std::size_t i, std::size_t *index) const
+    Ptr<Object> DoGet (const ObjectBase *object, std::size_t i, std::size_t *index) const override
     {
       const T *obj = static_cast<const T *> (object);
       *index = i;
       return (obj->*m_get)(i);
     }
     Ptr<U> (T::*m_get)(INDEX) const;
-    INDEX (T::*m_getN)(void) const;
+    INDEX (T::*m_getN)() const;
   } *spec = new MemberGetters ();
   spec->m_get = get;
   spec->m_getN = getN;
@@ -282,14 +282,14 @@ MakeObjectPtrContainerAccessor (Ptr<U> (T::*get)(INDEX) const,
 
 template <typename T, typename U, typename INDEX>
 Ptr<const AttributeAccessor>
-MakeObjectPtrContainerAccessor (INDEX (T::*getN)(void) const,
+MakeObjectPtrContainerAccessor (INDEX (T::*getN)() const,
                                 Ptr<U> (T::*get)(INDEX) const)
 {
   return MakeObjectPtrContainerAccessor (get, getN);
 }
 
 template <typename T>
-Ptr<const AttributeChecker> MakeObjectPtrContainerChecker (void)
+Ptr<const AttributeChecker> MakeObjectPtrContainerChecker ()
 {
   return Create<internal::ObjectPtrContainerChecker<T> > ();
 }

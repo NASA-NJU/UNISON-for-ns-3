@@ -45,7 +45,7 @@ namespace ns3 {
  *
  * A new address class defined by a user needs to:
  *   - allocate a type id with Address::Register
- *   - provide a method to convert his new address to an Address 
+ *   - provide a method to convert his new address to an Address
  *     instance. This method is typically a member method named ConvertTo:
  *     Address MyAddress::ConvertTo (void) const;
  *   - provide a method to convert an Address instance back to
@@ -87,7 +87,7 @@ namespace ns3 {
  *
  * \see attribute_Address
  */
-class Address 
+class Address
 {
 public:
   /**
@@ -135,12 +135,12 @@ public:
    * through the default constructor and it was never
    * re-initialized.
    */
-  bool IsInvalid (void) const;
+  bool IsInvalid () const;
   /**
    * \brief Get the length of the underlying address.
    * \returns the length of the underlying address.
    */
-  uint8_t GetLength (void) const;
+  uint8_t GetLength () const;
   /**
    * \brief Copy the address bytes into a buffer.
    * \param buffer buffer to copy the address bytes to.
@@ -155,7 +155,7 @@ public:
    * Copies the type to buffer[0], the length of the address internal buffer
    * to buffer[1] and copies the internal buffer starting at buffer[2].  len
    * must be at least the size of the internal buffer plus a byte for the type
-   * and a byte for the length. 
+   * and a byte for the length.
    */
   uint32_t CopyAllTo (uint8_t *buffer, uint8_t len) const;
   /**
@@ -165,7 +165,7 @@ public:
    * \param len length of buffer
    * \returns the number of bytes copied.
    *
-   * Copy the address bytes from buffer into to the internal buffer of this 
+   * Copy the address bytes from buffer into to the internal buffer of this
    * address instance.
    */
   uint32_t CopyFrom (const uint8_t *buffer, uint8_t len);
@@ -195,7 +195,7 @@ public:
    *
    * This method checks that the types are _exactly_ equal.
    * This method is really used only by the PacketSocketAddress
-   * and there is little point in using it otherwise so, 
+   * and there is little point in using it otherwise so,
    * you have been warned: DO NOT USE THIS METHOD.
    */
   bool IsMatchingType (uint8_t type) const;
@@ -203,14 +203,14 @@ public:
    * Allocate a new type id for a new type of address.
    * \returns a new type id.
    */
-  static uint8_t Register (void);
+  static uint8_t Register ();
   /**
    * Get the number of bytes needed to serialize the underlying Address
-   * Typically, this is GetLength () + 2 
+   * Typically, this is GetLength () + 2
    *
    * \returns the number of bytes required for an Address in serialized form
    */
-  uint32_t GetSerializedSize (void) const;
+  uint32_t GetSerializedSize () const;
   /**
    * Serialize this address in host byte order to a byte buffer
    *
@@ -219,7 +219,7 @@ public:
   void Serialize (TagBuffer buffer) const;
   /**
    * \param buffer buffer to read address from
-   * 
+   *
    * The input address buffer is expected to be in host byte order format.
    */
   void Deserialize (TagBuffer buffer);

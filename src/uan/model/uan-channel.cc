@@ -66,7 +66,7 @@ UanChannel::GetTypeId ()
 
 UanChannel::UanChannel ()
   : Channel (),
-    m_prop (0),
+    m_prop (nullptr),
     m_cleared (false)
 {
 }
@@ -89,24 +89,24 @@ UanChannel::Clear ()
       if (it->first)
         {
           it->first->Clear ();
-          it->first = 0;
+          it->first = nullptr;
         }
       if (it->second)
         {
           it->second->Clear ();
-          it->second = 0;
+          it->second = nullptr;
         }
     }
   m_devList.clear ();
   if (m_prop)
     {
       m_prop->Clear ();
-      m_prop = 0;
+      m_prop = nullptr;
     }
   if (m_noise)
     {
       m_noise->Clear ();
-      m_noise = 0;
+      m_noise = nullptr;
     }
 
 }
@@ -140,14 +140,14 @@ void
 UanChannel::AddDevice (Ptr<UanNetDevice> dev, Ptr<UanTransducer> trans)
 {
   NS_LOG_DEBUG ("Adding dev/trans pair number " << m_devList.size ());
-  m_devList.push_back (std::make_pair (dev, trans));
+  m_devList.emplace_back (dev, trans);
 }
 
 void
 UanChannel::TxPacket (Ptr<UanTransducer> src, Ptr<Packet> packet,
                       double txPowerDb, UanTxMode txMode)
 {
-  Ptr<MobilityModel> senderMobility = 0;
+  Ptr<MobilityModel> senderMobility = nullptr;
 
   NS_LOG_DEBUG ("Channel scheduling");
   for (UanDeviceList::const_iterator i = m_devList.begin (); i
@@ -160,7 +160,7 @@ UanChannel::TxPacket (Ptr<UanTransducer> src, Ptr<Packet> packet,
           break;
         }
     }
-  NS_ASSERT (senderMobility != 0);
+  NS_ASSERT (senderMobility);
   uint32_t j = 0;
   UanDeviceList::const_iterator i = m_devList.begin ();
   for (; i != m_devList.end (); i++)

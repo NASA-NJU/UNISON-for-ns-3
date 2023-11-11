@@ -49,34 +49,34 @@ public:
    */
   LteTestUePhy (Ptr<LteSpectrumPhy> dlPhy, Ptr<LteSpectrumPhy> ulPhy);
 
-  virtual ~LteTestUePhy ();
+  ~LteTestUePhy () override;
 
-  virtual void DoDispose ();
+  void DoDispose () override;
   /**
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   /**
    * \brief Queue the MAC PDU to be sent
    * \param p the MAC PDU to sent
    */
-  virtual void DoSendMacPdu (Ptr<Packet> p);
+  void DoSendMacPdu (Ptr<Packet> p) override;
 
   /**
    * \brief Create the PSD for the TX
    * \return the pointer to the PSD
    */
-  virtual Ptr<SpectrumValue> CreateTxPowerSpectralDensity ();
+  Ptr<SpectrumValue> CreateTxPowerSpectralDensity () override;
 
-  virtual void GenerateCtrlCqiReport (const SpectrumValue& sinr);
-  
-  virtual void GenerateDataCqiReport (const SpectrumValue& sinr);
+  void GenerateCtrlCqiReport (const SpectrumValue& sinr) override;
 
-  virtual void ReportInterference (const SpectrumValue& interf);
+  void GenerateDataCqiReport (const SpectrumValue& sinr) override;
 
-  virtual void ReportRsReceivedPower (const SpectrumValue& power);
+  void ReportInterference (const SpectrumValue& interf) override;
+
+  void ReportRsReceivedPower (const SpectrumValue& power) override;
 
   /**
    * \brief Reeive LTE Control Message

@@ -52,7 +52,7 @@ public:
     NLOSv, //!< Non Line of Sight due to a vehicle
     LC_ND //!< Los condition not defined
   };
-  
+
   /**
    * Possible values for Outdoor to Indoor condition.
    */
@@ -65,28 +65,41 @@ public:
   };
 
   /**
+   * Possible values for Low-High Penetration Loss condition.
+   */
+  enum O2iLowHighConditionValue
+  {
+    LOW, //!< Low Penetration Losses
+    HIGH, //!< High Penetration Losses
+    LH_O2I_ND //!< Low-High Penetration Losses not defined
+  };
+
+  /**
    * Get the type ID.
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   /**
    * Constructor for the ChannelCondition class
    */
   ChannelCondition ();
-  
+
   /**
    * Constructor for the ChannelCondition class
    * \param losCondition the LOS condition value
    * \param o2iCondition the O2I condition value (by default is set to O2O)
+   * \param o2iLowHighCondition the O2I Low-High Building Penetration loss condition value (by default is set to LOW)
    */
-  ChannelCondition (LosConditionValue losCondition, O2iConditionValue o2iCondition = O2O);
+  ChannelCondition (LosConditionValue losCondition,
+                    O2iConditionValue o2iCondition = O2O,
+                    O2iLowHighConditionValue o2iLowHighCondition = LOW);
 
   /**
    * Destructor for the ChannelCondition class
    */
-  virtual ~ChannelCondition ();
+  ~ChannelCondition () override;
 
   /**
    * Get the LosConditionValue contaning the information about the LOS/NLOS
@@ -103,7 +116,7 @@ public:
    * \param losCondition the LosConditionValue
    */
   void SetLosCondition (LosConditionValue losCondition);
-  
+
   /**
    * Get the O2iConditionValue contaning the information about the O2I
    * state of the channel
@@ -119,53 +132,69 @@ public:
    * \param o2iCondition the O2iConditionValue
    */
   void SetO2iCondition (O2iConditionValue o2iCondition);
-  
+
+  /**
+   * Get the O2iLowHighConditionValue contaning the information about the O2I
+   * building penetration losses (low or high)
+   *
+   * \return the O2iLowHighConditionValue
+   */
+  O2iLowHighConditionValue GetO2iLowHighCondition () const;
+
+  /**
+   * Set the O2iLowHighConditionValue contaning the information about the O2I
+   * building penetration losses (low or high)
+   *
+   * \param o2iLowHighCondition the O2iLowHighConditionValue
+   */
+  void SetO2iLowHighCondition (O2iLowHighConditionValue o2iLowHighCondition);
+
   /**
    * Return true if the channel condition is LOS
    *
    * \return true if the channel condition is LOS
    */
   bool IsLos () const;
-  
+
   /**
    * Return true if the channel condition is NLOS
    *
-   * It does not consider the case in which the LOS path is obstructed by a 
-   * vehicle. This case is represented as a separate channel condition (NLOSv), 
+   * It does not consider the case in which the LOS path is obstructed by a
+   * vehicle. This case is represented as a separate channel condition (NLOSv),
    * use the method IsNlosv instead.
    *
    * \return true if the channel condition is NLOS
    */
   bool IsNlos () const;
-  
+
   /**
    * Return true if the channel condition is NLOSv
    *
    * \return true if the channel condition is NLOSv
    */
   bool IsNlosv () const;
-  
+
   /**
    * Return true if the channel is outdoor-to-indoor
    *
    * \return true if the channel is outdoor-to-indoor
    */
   bool IsO2i () const;
-  
+
   /**
    * Return true if the channel is outdoor-to-outdoor
    *
    * \return true if the channel is outdoor-to-outdoor
    */
   bool IsO2o () const;
-  
+
   /**
    * Return true if the channel is indoor-to-indoor
    *
    * \return true if the channel is indoor-to-indoor
    */
   bool IsI2i () const;
-  
+
   /**
    * Return true if this instance is equivalent to the one passed as argument
    *
@@ -178,12 +207,13 @@ public:
 private:
   LosConditionValue m_losCondition; //!< contains the information about the LOS state of the channel
   O2iConditionValue m_o2iCondition; //!< contains the information about the O2I state of the channel
-  
-  /** 
+  O2iLowHighConditionValue m_o2iLowHighCondition; //!< contains the information about the O2I low-high building penetration losses
+
+  /**
    * Prints a LosConditionValue to output
    * \param os the output stream
    * \param cond the LosConditionValue
-   * 
+   *
    * \return a reference to the output stream
    */
   friend std::ostream& operator<< (std::ostream& os, LosConditionValue cond);
@@ -206,7 +236,7 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   /**
    * Constructor for the ChannelConditionModel class
@@ -216,11 +246,14 @@ public:
   /**
    * Destructor for the ChannelConditionModel class
    */
-  virtual ~ChannelConditionModel ();
+  ~ChannelConditionModel () override;
+
+  // Delete copy constructor and assignment operator to avoid misuse
+  ChannelConditionModel (const ChannelConditionModel &) = delete;
+  ChannelConditionModel &operator= (const ChannelConditionModel &) = delete;
 
   /**
    * Computes the condition of the channel between a and b
-
    *
    * \param a mobility model
    * \param b mobility model
@@ -238,21 +271,6 @@ public:
    * \return the number of stream indices assigned by this model
    */
   virtual int64_t AssignStreams (int64_t stream) = 0;
-
-  /**
-  * \brief Copy constructor
-  *
-  * Defined and unimplemented to avoid misuse
-  */
-  ChannelConditionModel (const ChannelConditionModel&) = delete;
-
-  /**
-  * \brief Copy constructor
-  *
-  * Defined and unimplemented to avoid misuse
-  * \returns the ChannelConditionModel instance
-  */
-  ChannelConditionModel &operator = (const ChannelConditionModel &) = delete;
 };
 
 /**
@@ -268,7 +286,7 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   /**
    * Constructor
@@ -278,7 +296,11 @@ public:
   /**
    * Destructor
    */
-  virtual ~AlwaysLosChannelConditionModel ();
+  ~AlwaysLosChannelConditionModel () override;
+
+  // Delete copy constructor and assignment operator to avoid misuse
+  AlwaysLosChannelConditionModel (const AlwaysLosChannelConditionModel &) = delete;
+  AlwaysLosChannelConditionModel &operator= (const AlwaysLosChannelConditionModel &) = delete;
 
   /**
    * Computes the condition of the channel between a and b, that will be always LoS
@@ -287,22 +309,7 @@ public:
    * \param b mobility model
    * \return the condition of the channel between a and b, that will be always LoS
    */
-  virtual Ptr<ChannelCondition> GetChannelCondition (Ptr<const MobilityModel> a, Ptr<const MobilityModel> b) const override;
-
-  /**
-  * \brief Copy constructor
-  *
-  * Defined and unimplemented to avoid misuse
-  */
-  AlwaysLosChannelConditionModel (const AlwaysLosChannelConditionModel&) = delete;
-
-  /**
-  * \brief Copy constructor
-  *
-  * Defined and unimplemented to avoid misuse
-  * \returns a copy of the object
-  */
-  AlwaysLosChannelConditionModel &operator = (const AlwaysLosChannelConditionModel &) = delete;
+  Ptr<ChannelCondition> GetChannelCondition (Ptr<const MobilityModel> a, Ptr<const MobilityModel> b) const override;
 
   /**
    * If this  model uses objects of type RandomVariableStream,
@@ -313,7 +320,7 @@ public:
    * \param stream the offset used to set the stream numbers
    * \return the number of stream indices assigned by this model
    */
-  virtual int64_t AssignStreams (int64_t stream) override;
+  int64_t AssignStreams (int64_t stream) override;
 };
 
 /**
@@ -329,7 +336,7 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   /**
    * Constructor
@@ -339,7 +346,11 @@ public:
   /**
    * Destructor
    */
-  virtual ~NeverLosChannelConditionModel ();
+  ~NeverLosChannelConditionModel () override;
+
+  // Delete copy constructor and assignment operator to avoid misuse
+  NeverLosChannelConditionModel (const NeverLosChannelConditionModel &) = delete;
+  NeverLosChannelConditionModel &operator= (const NeverLosChannelConditionModel &) = delete;
 
   /**
    * Computes the condition of the channel between a and b, that will be always non-LoS
@@ -348,22 +359,7 @@ public:
    * \param b mobility model
    * \return the condition of the channel between a and b, that will be always non-LoS
    */
-  virtual Ptr<ChannelCondition> GetChannelCondition (Ptr<const MobilityModel> a, Ptr<const MobilityModel> b) const override;
-
-  /**
-  * \brief Copy constructor
-  *
-  * Defined and unimplemented to avoid misuse
-  */
-  NeverLosChannelConditionModel (const NeverLosChannelConditionModel&) = delete;
-
-  /**
-  * \brief Copy constructor
-  *
-  * Defined and unimplemented to avoid misuse
-  * \returns a copy of the object
-  */
-  NeverLosChannelConditionModel &operator = (const NeverLosChannelConditionModel &) = delete;
+  Ptr<ChannelCondition> GetChannelCondition (Ptr<const MobilityModel> a, Ptr<const MobilityModel> b) const override;
 
   /**
    * If this  model uses objects of type RandomVariableStream,
@@ -374,7 +370,7 @@ public:
    * \param stream the offset used to set the stream numbers
    * \return the number of stream indices assigned by this model
    */
-  virtual int64_t AssignStreams (int64_t stream) override;
+  int64_t AssignStreams (int64_t stream) override;
 };
 
 /**
@@ -390,17 +386,21 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   /**
-   * Constructor 
+   * Constructor
    */
   NeverLosVehicleChannelConditionModel ();
 
   /**
-   * Destructor 
+   * Destructor
    */
-  virtual ~NeverLosVehicleChannelConditionModel ();
+  ~NeverLosVehicleChannelConditionModel () override;
+
+  // Delete copy constructor and assignment operator to avoid misuse
+  NeverLosVehicleChannelConditionModel (const NeverLosVehicleChannelConditionModel &) = delete;
+  NeverLosVehicleChannelConditionModel &operator= (const NeverLosVehicleChannelConditionModel &) = delete;
 
   /**
    * Computes the condition of the channel between a and b, that will be always NLOSv
@@ -409,22 +409,7 @@ public:
    * \param b mobility model
    * \return the condition of the channel between a and b, that will be always NLOSv
    */
-  virtual Ptr<ChannelCondition> GetChannelCondition (Ptr<const MobilityModel> a, Ptr<const MobilityModel> b) const override;
-
-  /**
-  * \brief Copy constructor
-  *
-  * Defined and unimplemented to avoid misuse
-  */
-  NeverLosVehicleChannelConditionModel (const NeverLosVehicleChannelConditionModel&) = delete;
-
-  /**
-  * \brief Copy constructor
-  *
-  * Defined and unimplemented to avoid misuse
-  * \returns a copy of the object
-  */
-  NeverLosVehicleChannelConditionModel &operator = (const NeverLosVehicleChannelConditionModel &) = delete;
+  Ptr<ChannelCondition> GetChannelCondition (Ptr<const MobilityModel> a, Ptr<const MobilityModel> b) const override;
 
   /**
    * If this  model uses objects of type RandomVariableStream,
@@ -435,7 +420,7 @@ public:
    * \param stream the offset used to set the stream numbers
    * \return the number of stream indices assigned by this model
    */
-  virtual int64_t AssignStreams (int64_t stream) override;
+  int64_t AssignStreams (int64_t stream) override;
 };
 
 /**
@@ -452,7 +437,7 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   /**
    * Constructor for the ThreeGppRmaChannelConditionModel class
@@ -462,20 +447,20 @@ public:
   /**
    * Destructor for the ThreeGppRmaChannelConditionModel class
    */
-  virtual ~ThreeGppChannelConditionModel () override;
+  ~ThreeGppChannelConditionModel () override;
 
   /**
    * \brief Retrieve the condition of the channel between a and b.
    *
-   * If the channel condition does not exists, the method computes it by calling 
-   * ComputeChannelCondition and stores it in a local cache, that will be updated 
+   * If the channel condition does not exists, the method computes it by calling
+   * ComputeChannelCondition and stores it in a local cache, that will be updated
    * following the "UpdatePeriod" parameter.
    *
    * \param a mobility model
    * \param b mobility model
    * \return the condition of the channel between a and b
    */
-  virtual Ptr<ChannelCondition> GetChannelCondition (Ptr<const MobilityModel> a, Ptr<const MobilityModel> b) const override;
+  Ptr<ChannelCondition> GetChannelCondition (Ptr<const MobilityModel> a, Ptr<const MobilityModel> b) const override;
 
   /**
    * If this  model uses objects of type RandomVariableStream,
@@ -486,11 +471,11 @@ public:
    * \param stream the offset used to set the stream numbers
    * \return the number of stream indices assigned by this model
    */
-  virtual int64_t AssignStreams (int64_t stream) override;
+  int64_t AssignStreams (int64_t stream) override;
 
 protected:
-  virtual void DoDispose () override;
-  
+  void DoDispose () override;
+
   /**
    * Determine the density of vehicles in a V2V scenario.
    */
@@ -509,12 +494,12 @@ protected:
   * \return the 2D distance between a and b
   */
   static double Calculate2dDistance (const Vector &a, const Vector &b);
-  
+
   Ptr<UniformRandomVariable> m_uniformVar; //!< uniform random variable
 
 private:
   /**
-  * This method computes the channel condition based on a probabilistic model 
+  * This method computes the channel condition based on a probabilistic model
   * that is specific for the scenario of interest
   *
   * \param a tx mobility model
@@ -522,7 +507,7 @@ private:
   * \return the channel condition
   */
   Ptr<ChannelCondition> ComputeChannelCondition (Ptr<const MobilityModel> a, Ptr<const MobilityModel> b) const;
-  
+
   /**
    * Compute the LOS probability.
    *
@@ -531,7 +516,16 @@ private:
    * \return the LOS probability
    */
   virtual double ComputePlos (Ptr<const MobilityModel> a, Ptr<const MobilityModel> b) const = 0;
-  
+
+  /**
+   * Determines whether the channel condition is O2I or O2O
+   *
+   * \param a tx mobility model
+   * \param b rx mobility model
+   * \return the O2I channelcondition
+   */
+  virtual ChannelCondition::O2iConditionValue ComputeO2i (Ptr<const MobilityModel> a, Ptr<const MobilityModel> b) const;
+
   /**
    * Compute the NLOS probability. By default returns 1 - PLOS
    *
@@ -560,6 +554,13 @@ private:
 
   std::unordered_map<uint32_t, Item> m_channelConditionMap; //!< map to store the channel conditions
   Time m_updatePeriod; //!< the update period for the channel condition
+
+  double m_o2iThreshold {0}; //!< the threshold for determing what is the ratio of channels with O2I
+  double m_o2iLowLossThreshold {0}; //!< the threshold for determing what is the ratio of low - high O2I building penetration losses
+  double m_linkO2iConditionToAntennaHeight {false}; //!< the indicator that determines whether the O2I/O2O condition is determined based on the UE height
+  Ptr<UniformRandomVariable> m_uniformVarO2i; //!< uniform random variable that is used for the generation of the O2i conditions
+  Ptr<UniformRandomVariable> m_uniformO2iLowHighLossVar; //!< a uniform random variable for the calculation of the low/high losses, see TR38.901 Table 7.4.3-2
+
 };
 
 /**
@@ -578,7 +579,7 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   /**
    * Constructor for the ThreeGppRmaChannelConditionModel class
@@ -588,7 +589,7 @@ public:
   /**
    * Destructor for the ThreeGppRmaChannelConditionModel class
    */
-  virtual ~ThreeGppRmaChannelConditionModel () override;
+  ~ThreeGppRmaChannelConditionModel () override;
 
 private:
   /**
@@ -599,7 +600,7 @@ private:
    * \param b rx mobility model
    * \return the LOS probability
    */
-  virtual double ComputePlos (Ptr<const MobilityModel> a, Ptr<const MobilityModel> b) const override;
+  double ComputePlos (Ptr<const MobilityModel> a, Ptr<const MobilityModel> b) const override;
 };
 
 /**
@@ -618,7 +619,7 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   /**
    * Constructor for the ThreeGppUmaChannelConditionModel class
@@ -628,7 +629,7 @@ public:
   /**
    * Destructor for the ThreeGppUmaChannelConditionModel class
    */
-  virtual ~ThreeGppUmaChannelConditionModel () override;
+  ~ThreeGppUmaChannelConditionModel () override;
 
 private:
   /**
@@ -639,7 +640,7 @@ private:
    * \param b rx mobility model
    * \return the LOS probability
    */
-  virtual double ComputePlos (Ptr<const MobilityModel> a, Ptr<const MobilityModel> b) const override;
+  double ComputePlos (Ptr<const MobilityModel> a, Ptr<const MobilityModel> b) const override;
 };
 
 /**
@@ -658,7 +659,7 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   /**
    * Constructor for the ThreeGppUmiStreetCanyonChannelConditionModel class
@@ -668,7 +669,7 @@ public:
   /**
    * Destructor for the ThreeGppUmiStreetCanyonChannelConditionModel class
    */
-  virtual ~ThreeGppUmiStreetCanyonChannelConditionModel () override;
+  ~ThreeGppUmiStreetCanyonChannelConditionModel () override;
 
 private:
   /**
@@ -679,7 +680,7 @@ private:
    * \param b rx mobility model
    * \return the LOS probability
    */
-  virtual double ComputePlos (Ptr<const MobilityModel> a, Ptr<const MobilityModel> b) const override;
+  double ComputePlos (Ptr<const MobilityModel> a, Ptr<const MobilityModel> b) const override;
 };
 
 /**
@@ -698,7 +699,7 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   /**
    * Constructor for the ThreeGppIndoorMixedOfficeChannelConditionModel class
@@ -708,7 +709,7 @@ public:
   /**
    * Destructor for the ThreeGppIndoorMixedOfficeChannelConditionModel class
    */
-  virtual ~ThreeGppIndoorMixedOfficeChannelConditionModel () override;
+  ~ThreeGppIndoorMixedOfficeChannelConditionModel () override;
 
 private:
   /**
@@ -719,7 +720,7 @@ private:
    * \param b rx mobility model
    * \return the LOS probability
    */
-  virtual double ComputePlos (Ptr<const MobilityModel> a, Ptr<const MobilityModel> b) const override;
+  double ComputePlos (Ptr<const MobilityModel> a, Ptr<const MobilityModel> b) const override;
 };
 
 /**
@@ -738,7 +739,7 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   /**
    * Constructor for the ThreeGppIndoorOpenOfficeChannelConditionModel class
@@ -748,7 +749,7 @@ public:
   /**
    * Destructor for the ThreeGppIndoorOpenOfficeChannelConditionModel class
    */
-  virtual ~ThreeGppIndoorOpenOfficeChannelConditionModel () override;
+  ~ThreeGppIndoorOpenOfficeChannelConditionModel () override;
 
 private:
   /**
@@ -759,7 +760,7 @@ private:
    * \param b rx mobility model
    * \return the LOS probability
    */
-  virtual double ComputePlos (Ptr<const MobilityModel> a, Ptr<const MobilityModel> b) const override;
+  double ComputePlos (Ptr<const MobilityModel> a, Ptr<const MobilityModel> b) const override;
 };
 
 } // end ns3 namespace

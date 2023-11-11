@@ -42,30 +42,30 @@ class BenchHeader : public Header
 public:
   BenchHeader ();
   /**
-   * Returns true if the header has been deserialized and the 
+   * Returns true if the header has been deserialized and the
    * deserialization was correct.  If Deserialize() has not yet been
    * called on the header, will return false.
    *
    * \returns true if success, false if failed or if deserialization not tried
    */
-  bool IsOk (void) const;
+  bool IsOk () const;
 
   /**
    * Register this type.
    * \return The TypeId.
    */
-  static TypeId GetTypeId (void);
-  virtual TypeId GetInstanceTypeId (void) const;
-  virtual void Print (std::ostream &os) const;
-  virtual uint32_t GetSerializedSize (void) const;
-  virtual void Serialize (Buffer::Iterator start) const;
-  virtual uint32_t Deserialize (Buffer::Iterator start);
+  static TypeId GetTypeId ();
+  TypeId GetInstanceTypeId () const override;
+  void Print (std::ostream &os) const override;
+  uint32_t GetSerializedSize () const override;
+  void Serialize (Buffer::Iterator start) const override;
+  uint32_t Deserialize (Buffer::Iterator start) override;
 private:
   /**
    * Get type name function
    * \returns the type name string
    */
-  static std::string GetTypeName (void);
+  static std::string GetTypeName ();
   bool m_ok; ///< variable to track whether deserialization succeeded
 };
 
@@ -75,15 +75,15 @@ BenchHeader<N>::BenchHeader ()
 {}
 
 template <int N>
-bool 
-BenchHeader<N>::IsOk (void) const
+bool
+BenchHeader<N>::IsOk () const
 {
   return m_ok;
 }
 
 template <int N>
-std::string 
-BenchHeader<N>::GetTypeName (void)
+std::string
+BenchHeader<N>::GetTypeName ()
 {
   std::ostringstream oss;
   oss << "ns3::BenchHeader<" << N << ">";
@@ -91,8 +91,8 @@ BenchHeader<N>::GetTypeName (void)
 }
 
 template <int N>
-TypeId 
-BenchHeader<N>::GetTypeId (void)
+TypeId
+BenchHeader<N>::GetTypeId ()
 {
   static TypeId tid = TypeId (GetTypeName ())
     .SetParent<Header> ()
@@ -103,26 +103,26 @@ BenchHeader<N>::GetTypeId (void)
   return tid;
 }
 template <int N>
-TypeId 
-BenchHeader<N>::GetInstanceTypeId (void) const
+TypeId
+BenchHeader<N>::GetInstanceTypeId () const
 {
   return GetTypeId ();
 }
 
 template <int N>
-void 
+void
 BenchHeader<N>::Print (std::ostream &os) const
 {
   NS_ASSERT (false);
 }
 template <int N>
-uint32_t 
-BenchHeader<N>::GetSerializedSize (void) const
+uint32_t
+BenchHeader<N>::GetSerializedSize () const
 {
   return N;
 }
 template <int N>
-void 
+void
 BenchHeader<N>::Serialize (Buffer::Iterator start) const
 {
   start.WriteU8 (N, N);
@@ -151,7 +151,7 @@ public:
    * Get the bench tag name.
    * \return the name.
    */
-  static std::string GetName (void) {
+  static std::string GetName () {
     std::ostringstream oss;
     oss << "anon::BenchTag<" << N << ">";
     return oss.str ();
@@ -160,7 +160,7 @@ public:
    * Register this type.
    * \return The TypeId.
    */
-  static TypeId GetTypeId (void) {
+  static TypeId GetTypeId () {
     static TypeId tid = TypeId (GetName ())
       .SetParent<Tag> ()
       .SetGroupName ("Utils")
@@ -169,25 +169,25 @@ public:
       ;
     return tid;
   }
-  virtual TypeId GetInstanceTypeId (void) const {
+  TypeId GetInstanceTypeId () const override {
     return GetTypeId ();
   }
-  virtual uint32_t GetSerializedSize (void) const {
+  uint32_t GetSerializedSize () const override {
     return N;
   }
-  virtual void Serialize (TagBuffer buf) const {
+  void Serialize (TagBuffer buf) const override {
     for (uint32_t i = 0; i < N; ++i)
       {
         buf.WriteU8 (N);
       }
   }
-  virtual void Deserialize (TagBuffer buf) {
+  void Deserialize (TagBuffer buf) override {
     for (uint32_t i = 0; i < N; ++i)
       {
         buf.ReadU8 ();
       }
   }
-  virtual void Print (std::ostream &os) const {
+  void Print (std::ostream &os) const override {
     os << "N=" << N;
   }
   BenchTag ()
@@ -195,7 +195,7 @@ public:
 };
 
 
-static void 
+static void
 benchD (uint32_t n)
 {
   BenchHeader<25> ipv4;
@@ -219,7 +219,7 @@ benchD (uint32_t n)
 
 
 
-static void 
+static void
 benchA (uint32_t n)
 {
   BenchHeader<25> ipv4;
@@ -239,7 +239,7 @@ benchA (uint32_t n)
   NS_ASSERT_MSG (ipv4.IsOk () == true, "IsOk() should be true after deserialization");
 }
 
-static void 
+static void
 benchB (uint32_t n)
 {
   BenchHeader<25> ipv4;
@@ -260,7 +260,7 @@ C2 (Ptr<Packet> p)
   p->RemoveHeader (udp);
 }
 
-static void 
+static void
 C1 (Ptr<Packet> p)
 {
   BenchHeader<25> ipv4;

@@ -22,7 +22,7 @@ namespace ns3 {
 
 NS_OBJECT_ENSURE_REGISTERED (ConstantAccelerationMobilityModel);
 
-TypeId ConstantAccelerationMobilityModel::GetTypeId (void)
+TypeId ConstantAccelerationMobilityModel::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::ConstantAccelerationMobilityModel")
     .SetParent<MobilityModel> ()
@@ -40,7 +40,7 @@ ConstantAccelerationMobilityModel::~ConstantAccelerationMobilityModel ()
 }
 
 inline Vector
-ConstantAccelerationMobilityModel::DoGetVelocity (void) const
+ConstantAccelerationMobilityModel::DoGetVelocity () const
 {
   double t = (Simulator::Now () - m_baseTime).GetSeconds ();
   return Vector (m_baseVelocity.x + m_acceleration.x*t,
@@ -49,7 +49,7 @@ ConstantAccelerationMobilityModel::DoGetVelocity (void) const
 }
 
 inline Vector
-ConstantAccelerationMobilityModel::DoGetPosition (void) const
+ConstantAccelerationMobilityModel::DoGetPosition () const
 {
   double t = (Simulator::Now () - m_baseTime).GetSeconds ();
   double half_t_square = t*t*0.5;
@@ -58,7 +58,7 @@ ConstantAccelerationMobilityModel::DoGetPosition (void) const
                  m_basePosition.z + m_baseVelocity.z*t + m_acceleration.z*half_t_square);
 }
 
-void 
+void
 ConstantAccelerationMobilityModel::DoSetPosition (const Vector &position)
 {
   m_baseVelocity = DoGetVelocity ();
@@ -67,7 +67,7 @@ ConstantAccelerationMobilityModel::DoSetPosition (const Vector &position)
   NotifyCourseChange ();
 }
 
-void 
+void
 ConstantAccelerationMobilityModel::SetVelocityAndAcceleration (const Vector &velocity,
                                                                const Vector &acceleration)
 {

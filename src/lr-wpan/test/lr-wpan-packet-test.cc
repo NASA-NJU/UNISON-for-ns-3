@@ -41,10 +41,10 @@ class LrWpanPacketTestCase : public TestCase
 {
 public:
   LrWpanPacketTestCase ();
-  virtual ~LrWpanPacketTestCase ();
+  ~LrWpanPacketTestCase () override;
 
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
 };
 
 LrWpanPacketTestCase::LrWpanPacketTestCase ()
@@ -57,7 +57,7 @@ LrWpanPacketTestCase::~LrWpanPacketTestCase ()
 }
 
 void
-LrWpanPacketTestCase::DoRun (void)
+LrWpanPacketTestCase::DoRun ()
 {
 
   LrWpanMacHeader macHdr (LrWpanMacHeader::LRWPAN_MAC_BEACON, 0);        //sequence number set to 0

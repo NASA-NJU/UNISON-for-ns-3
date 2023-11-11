@@ -27,7 +27,7 @@
 
 namespace ns3 {
 
-/** 
+/**
  * The length in octects of the LLC/SNAP header
  */
 static const uint16_t LLC_SNAP_HEADER_LENGTH = 8;
@@ -39,7 +39,7 @@ static const uint16_t LLC_SNAP_HEADER_LENGTH = 8;
  *
  * For a list of EtherTypes, see http://www.iana.org/assignments/ieee-802-numbers/ieee-802-numbers.xhtml
  */
-class LlcSnapHeader : public Header 
+class LlcSnapHeader : public Header
 {
 public:
   LlcSnapHeader ();
@@ -53,18 +53,18 @@ public:
    * \brief Return the Ethertype.
    * \return Ethertype
    */
-  uint16_t GetType (void);
+  uint16_t GetType ();
 
   /**
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
-  virtual TypeId GetInstanceTypeId (void) const;
-  virtual void Print (std::ostream &os) const;
-  virtual uint32_t GetSerializedSize (void) const;
-  virtual void Serialize (Buffer::Iterator start) const;
-  virtual uint32_t Deserialize (Buffer::Iterator start);
+  static TypeId GetTypeId ();
+  TypeId GetInstanceTypeId () const override;
+  void Print (std::ostream &os) const override;
+  uint32_t GetSerializedSize () const override;
+  void Serialize (Buffer::Iterator start) const override;
+  uint32_t Deserialize (Buffer::Iterator start) override;
 private:
   uint16_t m_etherType; //!< the Ethertype
 };

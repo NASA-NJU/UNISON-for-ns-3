@@ -35,7 +35,7 @@ NS_LOG_COMPONENT_DEFINE ("LteTestEntities");
 /////////////////////////////////////////////////////////////////////
 
 TypeId
-LteTestRrc::GetTypeId (void)
+LteTestRrc::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::LteTestRrc")
     .SetParent<Object> ()
@@ -85,14 +85,14 @@ LteTestRrc::SetLtePdcpSapProvider (LtePdcpSapProvider* s)
 }
 
 LtePdcpSapUser*
-LteTestRrc::GetLtePdcpSapUser (void)
+LteTestRrc::GetLtePdcpSapUser ()
 {
   return m_pdcpSapUser;
 }
 
 
 std::string
-LteTestRrc::GetDataReceived (void)
+LteTestRrc::GetDataReceived ()
 {
   NS_LOG_FUNCTION (this);
   return m_receivedData;
@@ -100,42 +100,42 @@ LteTestRrc::GetDataReceived (void)
 
 // Stats
 uint32_t
-LteTestRrc::GetTxPdus (void)
+LteTestRrc::GetTxPdus ()
 {
   NS_LOG_FUNCTION (this << m_txPdus);
   return m_txPdus;
 }
 
 uint32_t
-LteTestRrc::GetTxBytes (void)
+LteTestRrc::GetTxBytes ()
 {
   NS_LOG_FUNCTION (this << m_txBytes);
   return m_txBytes;
 }
 
 uint32_t
-LteTestRrc::GetRxPdus (void)
+LteTestRrc::GetRxPdus ()
 {
   NS_LOG_FUNCTION (this << m_rxPdus);
   return m_rxPdus;
 }
 
 uint32_t
-LteTestRrc::GetRxBytes (void)
+LteTestRrc::GetRxBytes ()
 {
   NS_LOG_FUNCTION (this << m_rxBytes);
   return m_rxBytes;
 }
 
 Time
-LteTestRrc::GetTxLastTime (void)
+LteTestRrc::GetTxLastTime ()
 {
   NS_LOG_FUNCTION (this << m_txLastTime);
   return m_txLastTime;
 }
 
 Time
-LteTestRrc::GetRxLastTime (void)
+LteTestRrc::GetRxLastTime ()
 {
   NS_LOG_FUNCTION (this << m_rxLastTime);
   return m_rxLastTime;
@@ -203,14 +203,14 @@ LteTestRrc::Start ()
   p.rnti = 1111;
   p.lcid = 222;
   p.pdcpSdu = Create<Packet> (m_pduSize);
-  
+
   bool haveContext = false;
   Ptr<Node> node;
-  if (m_device != 0)
+  if (m_device)
     {
       node = m_device->GetNode ();
-      if (node != 0)
-        {                    
+      if (node)
+        {
           haveContext = true;
         }
     }
@@ -257,7 +257,7 @@ LteTestRrc::SendData (Time at, std::string dataToSend)
 /////////////////////////////////////////////////////////////////////
 
 TypeId
-LteTestPdcp::GetTypeId (void)
+LteTestPdcp::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::LteTestPdcp")
     .SetParent<Object> ()
@@ -293,14 +293,14 @@ LteTestPdcp::SetLteRlcSapProvider (LteRlcSapProvider* s)
 }
 
 LteRlcSapUser*
-LteTestPdcp::GetLteRlcSapUser (void)
+LteTestPdcp::GetLteRlcSapUser ()
 {
   return m_rlcSapUser;
 }
 
 
 std::string
-LteTestPdcp::GetDataReceived (void)
+LteTestPdcp::GetDataReceived ()
 {
   NS_LOG_FUNCTION (this);
 
@@ -357,7 +357,7 @@ LteTestPdcp::SendData (Time time, std::string dataToSend)
 /////////////////////////////////////////////////////////////////////
 
 TypeId
-LteTestMac::GetTypeId (void)
+LteTestMac::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::LteTestMac")
     .SetParent<Object> ()
@@ -370,10 +370,10 @@ LteTestMac::GetTypeId (void)
 LteTestMac::LteTestMac ()
 {
   NS_LOG_FUNCTION (this);
-  m_device = 0;
+  m_device = nullptr;
   m_macSapProvider = new EnbMacMemberLteMacSapProvider<LteTestMac> (this);
-  m_macSapUser = 0;
-  m_macLoopback = 0;
+  m_macSapUser = nullptr;
+  m_macLoopback = nullptr;
   m_pdcpHeaderPresent = false;
   m_rlcHeaderType = UM_RLC_HEADER;
   m_txOpportunityMode = MANUAL_MODE;
@@ -406,7 +406,7 @@ LteTestMac::DoDispose ()
 //   delete m_cschedSapUser;
 //   delete m_enbPhySapUser;
 
-  m_device = 0;
+  m_device = nullptr;
 }
 
 void
@@ -422,7 +422,7 @@ LteTestMac::SetLteMacSapUser (LteMacSapUser* s)
 }
 
 LteMacSapProvider*
-LteTestMac::GetLteMacSapProvider (void)
+LteTestMac::GetLteMacSapProvider ()
 {
   return m_macSapProvider;
 }
@@ -434,7 +434,7 @@ LteTestMac::SetLteMacLoopback (Ptr<LteTestMac> s)
 }
 
 std::string
-LteTestMac::GetDataReceived (void)
+LteTestMac::GetDataReceived ()
 {
   NS_LOG_FUNCTION (this);
   return m_receivedData;
@@ -442,28 +442,28 @@ LteTestMac::GetDataReceived (void)
 
 // Stats
 uint32_t
-LteTestMac::GetTxPdus (void)
+LteTestMac::GetTxPdus ()
 {
   NS_LOG_FUNCTION (this << m_txPdus);
   return m_txPdus;
 }
 
 uint32_t
-LteTestMac::GetTxBytes (void)
+LteTestMac::GetTxBytes ()
 {
   NS_LOG_FUNCTION (this << m_txBytes);
   return m_txBytes;
 }
 
 uint32_t
-LteTestMac::GetRxPdus (void)
+LteTestMac::GetRxPdus ()
 {
   NS_LOG_FUNCTION (this << m_rxPdus);
   return m_rxPdus;
 }
 
 uint32_t
-LteTestMac::GetRxBytes (void)
+LteTestMac::GetRxBytes ()
 {
   NS_LOG_FUNCTION (this << m_rxBytes);
   return m_rxBytes;
@@ -476,11 +476,11 @@ LteTestMac::SendTxOpportunity (Time time, uint32_t bytes)
   NS_LOG_FUNCTION (this << time << bytes);
   bool haveContext = false;
   Ptr<Node> node;
-  if (m_device != 0)
+  if (m_device)
     {
       node = m_device->GetNode ();
-      if (node != 0)
-        {                    
+      if (node)
+        {
           haveContext = true;
         }
     }
@@ -500,7 +500,7 @@ LteTestMac::SendTxOpportunity (Time time, uint32_t bytes)
     {
       Simulator::Schedule (time, &LteMacSapUser::NotifyTxOpportunity, m_macSapUser, txOpParmas);
     }
-    
+
   if (m_txOpportunityMode == RANDOM_MODE)
   {
     if (m_txOppTime != Seconds (0))
@@ -628,7 +628,7 @@ LteTestMac::DoReportBufferStatus (LteMacSapProvider::ReportBufferStatusParameter
       for (std::list<EventId>::iterator it = m_nextTxOppList.begin ();
            it != m_nextTxOppList.end ();
            ++it)
-        {          
+        {
           it->Cancel ();
         }
       m_nextTxOppList.clear ();
@@ -644,7 +644,7 @@ LteTestMac::DoReportBufferStatus (LteMacSapProvider::ReportBufferStatusParameter
       txOpParmas.lcid = params.lcid;
       while (size > 0)
         {
-          EventId e = Simulator::Schedule (time, 
+          EventId e = Simulator::Schedule (time,
                                            &LteMacSapUser::NotifyTxOpportunity,
                                            m_macSapUser, txOpParmas);
           m_nextTxOppList.push_back (e);
@@ -682,7 +682,7 @@ LteTestMac::Receive (Ptr<NetDevice> nd, Ptr<const Packet> p, uint16_t protocol, 
 NS_OBJECT_ENSURE_REGISTERED (EpcTestRrc);
 
 EpcTestRrc::EpcTestRrc ()
-  : m_s1SapProvider (0)
+  : m_s1SapProvider (nullptr)
 {
   NS_LOG_FUNCTION (this);
   m_s1SapUser = new MemberEpcEnbS1SapUser<EpcTestRrc> (this);
@@ -703,7 +703,7 @@ EpcTestRrc::DoDispose ()
 }
 
 TypeId
-EpcTestRrc::GetTypeId (void)
+EpcTestRrc::GetTypeId ()
 {
   NS_LOG_FUNCTION ("EpcTestRrc::GetTypeId");
   static TypeId tid = TypeId ("ns3::EpcTestRrc")
@@ -712,14 +712,14 @@ EpcTestRrc::GetTypeId (void)
   ;
   return tid;
 }
-void 
+void
 EpcTestRrc::SetS1SapProvider (EpcEnbS1SapProvider * s)
 {
   m_s1SapProvider = s;
 }
 
-  
-EpcEnbS1SapUser* 
+
+EpcEnbS1SapUser*
 EpcTestRrc::GetS1SapUser ()
 {
   return m_s1SapUser;
@@ -731,13 +731,13 @@ EpcTestRrc::DoInitialContextSetupRequest (EpcEnbS1SapUser::InitialContextSetupRe
 
 }
 
-void 
+void
 EpcTestRrc::DoDataRadioBearerSetupRequest (EpcEnbS1SapUser::DataRadioBearerSetupRequestParameters request)
 {
 
 }
-  
-void 
+
+void
 EpcTestRrc::DoPathSwitchRequestAcknowledge (EpcEnbS1SapUser::PathSwitchRequestAcknowledgeParameters params)
 {
 

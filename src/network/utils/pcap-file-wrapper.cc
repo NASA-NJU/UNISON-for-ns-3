@@ -29,8 +29,8 @@ NS_LOG_COMPONENT_DEFINE ("PcapFileWrapper");
 
 NS_OBJECT_ENSURE_REGISTERED (PcapFileWrapper);
 
-TypeId 
-PcapFileWrapper::GetTypeId (void)
+TypeId
+PcapFileWrapper::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::PcapFileWrapper")
     .SetParent<Object> ()
@@ -59,31 +59,31 @@ PcapFileWrapper::PcapFileWrapper ()
 PcapFileWrapper::~PcapFileWrapper ()
 {
   NS_LOG_FUNCTION (this);
-  Close ();   
+  Close ();
 }
 
-bool 
-PcapFileWrapper::Fail (void) const
+bool
+PcapFileWrapper::Fail () const
 {
   NS_LOG_FUNCTION (this);
   return m_file.Fail ();
 }
 
-bool 
-PcapFileWrapper::Eof (void) const
+bool
+PcapFileWrapper::Eof () const
 {
   NS_LOG_FUNCTION (this);
   return m_file.Eof ();
 }
-void 
-PcapFileWrapper::Clear (void)
+void
+PcapFileWrapper::Clear ()
 {
   NS_LOG_FUNCTION (this);
   m_file.Clear ();
 }
 
 void
-PcapFileWrapper::Close (void)
+PcapFileWrapper::Close ()
 {
   NS_LOG_FUNCTION (this);
   m_file.Close ();
@@ -108,11 +108,11 @@ PcapFileWrapper::Init (uint32_t dataLinkType, uint32_t snapLen, int32_t tzCorrec
   if (snapLen != std::numeric_limits<uint32_t>::max ())
     {
       m_file.Init (dataLinkType, snapLen, tzCorrection, false, m_nanosecMode);
-    } 
+    }
   else
     {
       m_file.Init (dataLinkType, m_snapLen, tzCorrection, false, m_nanosecMode);
-    } 
+    }
 }
 
 void
@@ -175,7 +175,7 @@ PcapFileWrapper::Write (Time t, uint8_t const *buffer, uint32_t length)
     }
 }
 
-Ptr<Packet> 
+Ptr<Packet>
 PcapFileWrapper::Read (Time &t)
 {
   uint32_t tsSec;
@@ -190,7 +190,7 @@ PcapFileWrapper::Read (Time &t)
 
   if (m_file.Fail())
     {
-      return 0;
+      return nullptr;
     }
 
   if (m_file.IsNanoSecMode())
@@ -207,49 +207,49 @@ PcapFileWrapper::Read (Time &t)
 }
 
 uint32_t
-PcapFileWrapper::GetMagic (void)
+PcapFileWrapper::GetMagic ()
 {
   NS_LOG_FUNCTION (this);
   return m_file.GetMagic ();
 }
 
 uint16_t
-PcapFileWrapper::GetVersionMajor (void)
+PcapFileWrapper::GetVersionMajor ()
 {
   NS_LOG_FUNCTION (this);
   return m_file.GetVersionMajor ();
 }
 
 uint16_t
-PcapFileWrapper::GetVersionMinor (void)
+PcapFileWrapper::GetVersionMinor ()
 {
   NS_LOG_FUNCTION (this);
   return m_file.GetVersionMinor ();
 }
 
 int32_t
-PcapFileWrapper::GetTimeZoneOffset (void)
+PcapFileWrapper::GetTimeZoneOffset ()
 {
   NS_LOG_FUNCTION (this);
   return m_file.GetTimeZoneOffset ();
 }
 
 uint32_t
-PcapFileWrapper::GetSigFigs (void)
+PcapFileWrapper::GetSigFigs ()
 {
   NS_LOG_FUNCTION (this);
   return m_file.GetSigFigs ();
 }
 
 uint32_t
-PcapFileWrapper::GetSnapLen (void)
+PcapFileWrapper::GetSnapLen ()
 {
   NS_LOG_FUNCTION (this);
   return m_file.GetSnapLen ();
 }
 
 uint32_t
-PcapFileWrapper::GetDataLinkType (void)
+PcapFileWrapper::GetDataLinkType ()
 {
   NS_LOG_FUNCTION (this);
   return m_file.GetDataLinkType ();

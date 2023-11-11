@@ -54,7 +54,7 @@ class NoOpComponentCarrierManager : public LteEnbComponentCarrierManager
 public:
 
   NoOpComponentCarrierManager ();
-  virtual ~NoOpComponentCarrierManager ();
+  ~NoOpComponentCarrierManager () override;
   /**
    * \brief Get the type ID.
    * \return the object TypeId
@@ -63,9 +63,9 @@ public:
 
 protected:
   // Inherited methods
-  virtual void DoInitialize ();
-  virtual void DoDispose ();
-  virtual void DoReportUeMeas (uint16_t rnti, LteRrcSap::MeasResults measResults);
+  void DoInitialize () override;
+  void DoDispose () override;
+  void DoReportUeMeas (uint16_t rnti, LteRrcSap::MeasResults measResults) override;
   /**
    * \brief Add UE.
    * \param rnti the RNTI
@@ -86,7 +86,7 @@ protected:
    * \param lcid the LCID
    * \param lcGroup the LC group
    * \param msu the MSU
-   * \returns std::vector<LteCcmRrcSapProvider::LcsConfig> 
+   * \returns std::vector<LteCcmRrcSapProvider::LcsConfig>
    */
   virtual std::vector<LteCcmRrcSapProvider::LcsConfig> DoSetupDataRadioBearer (EpsBearer bearer, uint8_t bearerId, uint16_t rnti, uint8_t lcid, uint8_t lcGroup, LteMacSapUser* msu);
   /**
@@ -167,7 +167,7 @@ class RrComponentCarrierManager : public NoOpComponentCarrierManager
 public:
 
   RrComponentCarrierManager ();
-  virtual ~RrComponentCarrierManager () override;
+  ~RrComponentCarrierManager () override;
   /**
    * \brief Get the type ID.
    * \return the object TypeId
@@ -177,9 +177,9 @@ public:
 protected:
 
   // Inherited methods
-  virtual void DoReportBufferStatus (LteMacSapProvider::ReportBufferStatusParameters params) override;
-  virtual void DoUlReceiveMacCe (MacCeListElement_s bsr, uint8_t componentCarrierId) override;
-  virtual void DoUlReceiveSr (uint16_t rnti, uint8_t componentCarrierId) override;
+  void DoReportBufferStatus (LteMacSapProvider::ReportBufferStatusParameters params) override;
+  void DoUlReceiveMacCe (MacCeListElement_s bsr, uint8_t componentCarrierId) override;
+  void DoUlReceiveSr (uint16_t rnti, uint8_t componentCarrierId) override;
 
 private:
   uint8_t m_lastCcIdForSr {0}; //!< Last CCID to which a SR was routed

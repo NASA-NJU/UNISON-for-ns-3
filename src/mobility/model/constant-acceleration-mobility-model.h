@@ -28,20 +28,20 @@ namespace ns3 {
  *
  * \brief Mobility model for which the current acceleration does not change once it has been set and until it is set again explicitly to a new value.
  */
-class ConstantAccelerationMobilityModel : public MobilityModel 
+class ConstantAccelerationMobilityModel : public MobilityModel
 {
 public:
   /**
    * Register this type with the TypeId system.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
   /**
    * Create position located at coordinates (0,0,0) with
    * speed (0,0,0).
    */
   ConstantAccelerationMobilityModel ();
-  virtual ~ConstantAccelerationMobilityModel ();
+  ~ConstantAccelerationMobilityModel () override;
   /**
    * Set the model's velocity and acceleration
    * \param velocity the velocity (m/s)
@@ -50,9 +50,9 @@ public:
   void SetVelocityAndAcceleration (const Vector &velocity, const Vector &acceleration);
 
 private:
-  virtual Vector DoGetPosition (void) const;
-  virtual void DoSetPosition (const Vector &position);
-  virtual Vector DoGetVelocity (void) const;
+  Vector DoGetPosition () const override;
+  void DoSetPosition (const Vector &position) override;
+  Vector DoGetVelocity () const override;
 
   Time m_baseTime;  //!< the base time
   Vector m_basePosition; //!< the base position

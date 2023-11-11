@@ -18,7 +18,7 @@
  * Author: Truc Anh N. Nguyen <annguyen@ittc.ku.edu>
  *
  * James P.G. Sterbenz <jpgs@ittc.ku.edu>, director
- * ResiliNets Research Group  http://wiki.ittc.ku.edu/resilinets
+ * ResiliNets Research Group  https://resilinets.org/
  * Information and Telecommunication Technology Center (ITTC)
  * and Department of Electrical Engineering and Computer Science
  * The University of Kansas Lawrence, KS USA.
@@ -69,21 +69,21 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   /**
    * Create an unbound tcp socket.
    */
-  TcpVegas (void);
+  TcpVegas ();
 
   /**
    * \brief Copy constructor
    * \param sock the object to copy
    */
   TcpVegas (const TcpVegas& sock);
-  virtual ~TcpVegas (void);
+  ~TcpVegas () override;
 
-  virtual std::string GetName () const;
+  std::string GetName () const override;
 
   /**
    * \brief Compute RTTs needed to execute Vegas algorithm
@@ -100,8 +100,8 @@ public:
    * \param rtt last RTT
    *
    */
-  virtual void PktsAcked (Ptr<TcpSocketState> tcb, uint32_t segmentsAcked,
-                          const Time& rtt);
+  void PktsAcked (Ptr<TcpSocketState> tcb, uint32_t segmentsAcked,
+                          const Time& rtt) override;
 
   /**
    * \brief Enable/disable Vegas algorithm depending on the congestion state
@@ -111,8 +111,8 @@ public:
    * \param tcb internal congestion state
    * \param newState new congestion state to which the TCP is going to switch
    */
-  virtual void CongestionStateSet (Ptr<TcpSocketState> tcb,
-                                   const TcpSocketState::TcpCongState_t newState);
+  void CongestionStateSet (Ptr<TcpSocketState> tcb,
+                                   const TcpSocketState::TcpCongState_t newState) override;
 
   /**
    * \brief Adjust cwnd following Vegas linear increase/decrease algorithm
@@ -120,7 +120,7 @@ public:
    * \param tcb internal congestion state
    * \param segmentsAcked count of segments ACKed
    */
-  virtual void IncreaseWindow (Ptr<TcpSocketState> tcb, uint32_t segmentsAcked);
+  void IncreaseWindow (Ptr<TcpSocketState> tcb, uint32_t segmentsAcked) override;
 
   /**
    * \brief Get slow start threshold following Vegas principle
@@ -130,10 +130,10 @@ public:
    *
    * \return the slow start threshold value
    */
-  virtual uint32_t GetSsThresh (Ptr<const TcpSocketState> tcb,
-                                uint32_t bytesInFlight);
+  uint32_t GetSsThresh (Ptr<const TcpSocketState> tcb,
+                                uint32_t bytesInFlight) override;
 
-  virtual Ptr<TcpCongestionOps> Fork ();
+  Ptr<TcpCongestionOps> Fork () override;
 
 protected:
 private:

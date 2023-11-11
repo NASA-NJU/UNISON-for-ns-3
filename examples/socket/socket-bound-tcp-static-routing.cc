@@ -20,7 +20,7 @@
          Destination host (10.20.1.2)
                  |
                  | 10.20.1.0/24
-              DSTRTR 
+              DSTRTR
   10.10.1.0/24 /   \  10.10.2.0/24
               / \
            Rtr1    Rtr2
@@ -61,7 +61,7 @@ void BindSock (Ptr<Socket> sock, Ptr<NetDevice> netdev);
 void srcSocketRecv (Ptr<Socket> socket);
 void dstSocketRecv (Ptr<Socket> socket);
 
-int 
+int
 main (int argc, char *argv[])
 {
 
@@ -131,7 +131,7 @@ main (int argc, char *argv[])
   staticRoutingRtr1->AddHostRouteTo (Ipv4Address ("10.20.1.2"), Ipv4Address ("10.10.1.2"), 2);
   staticRoutingRtr2->AddHostRouteTo (Ipv4Address ("10.20.1.2"), Ipv4Address ("10.10.2.2"), 2);
 
-  // Two routes to same destination - setting separate metrics. 
+  // Two routes to same destination - setting separate metrics.
   // You can switch these to see how traffic gets diverted via different routes
   staticRoutingSrc->AddHostRouteTo (Ipv4Address ("10.20.1.2"), Ipv4Address ("10.1.1.2"), 1,5);
   staticRoutingSrc->AddHostRouteTo (Ipv4Address ("10.20.1.2"), Ipv4Address ("10.1.2.2"), 2,10);
@@ -178,11 +178,11 @@ main (int argc, char *argv[])
   Simulator::Schedule (Seconds (2.0),&BindSock, srcSocket3, SrcToRtr2);
   Simulator::Schedule (Seconds (2.1),&StartFlow, srcSocket3, dstaddr, dstport);
   // Fourth again as normal (goes via Rtr1)
-  Simulator::Schedule (Seconds (3.0),&BindSock, srcSocket4, Ptr<NetDevice>(0));
+  Simulator::Schedule (Seconds (3.0),&BindSock, srcSocket4, Ptr<NetDevice>(nullptr));
   Simulator::Schedule (Seconds (3.1),&StartFlow, srcSocket4, dstaddr, dstport);
-  // If you uncomment what's below, it results in ASSERT failing since you can't 
+  // If you uncomment what's below, it results in ASSERT failing since you can't
   // bind to a socket not existing on a node
-  // Simulator::Schedule(Seconds(4.0),&BindSock, srcSocket, dDstRtrdDst.Get(0)); 
+  // Simulator::Schedule(Seconds(4.0),&BindSock, srcSocket, dDstRtrdDst.Get(0));
   Simulator::Run ();
   Simulator::Destroy ();
 
@@ -192,7 +192,6 @@ main (int argc, char *argv[])
 void BindSock (Ptr<Socket> sock, Ptr<NetDevice> netdev)
 {
   sock->BindToNetDevice (netdev);
-  return;
 }
 
 void StartFlow (Ptr<Socket> localSocket,

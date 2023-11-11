@@ -47,25 +47,25 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   Channel ();
-  virtual ~Channel ();
+  ~Channel () override;
 
   /**
    * \returns the unique id of this channel
-   * 
+   *
    * This unique id happens to be also the index of the Channel into
-   * the ChannelList. 
+   * the ChannelList.
    */
-  uint32_t GetId (void) const;
+  uint32_t GetId () const;
 
   /**
    * \returns the number of NetDevices connected to this Channel.
    *
    * This method must be implemented by subclasses.
    */
-  virtual std::size_t GetNDevices (void) const = 0;
+  virtual std::size_t GetNDevices () const = 0;
   /**
    * \param i index of NetDevice to retrieve
    * \returns one of the NetDevices connected to this channel.

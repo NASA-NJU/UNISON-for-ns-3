@@ -57,16 +57,16 @@ EnvDictionary (std::string key)
   if (dict.size () == 0)
     {
       const char *envVar = getenv ("NS_ATTRIBUTE_DEFAULT");
-      if (envVar != 0 && std::strlen (envVar) > 0)
+      if (envVar != nullptr && std::strlen (envVar) > 0)
         {
           std::string env = envVar;
           std::string::size_type cur = 0;
           std::string::size_type next = 0;
           while (next != std::string::npos)
             {
-              next = env.find (";", cur);
+              next = env.find (';', cur);
               std::string tmp = std::string (env, cur, next - cur);
-              std::string::size_type equal = tmp.find ("=");
+              std::string::size_type equal = tmp.find ('=');
               if (equal != std::string::npos)
                 {
                   std::string name = tmp.substr (0, equal);
@@ -96,7 +96,7 @@ EnvDictionary (std::string key)
 }
 
 } // unnamed namespace
-  
+
 
 /**
  * Ensure the TypeId for ObjectBase gets fully configured
@@ -107,7 +107,7 @@ EnvDictionary (std::string key)
  * \return The TypeId for ObjectBase.
  */
 static TypeId
-GetObjectIid (void)
+GetObjectIid ()
 {
   NS_LOG_FUNCTION_NOARGS ();
   TypeId tid = TypeId ("ns3::ObjectBase");
@@ -117,7 +117,7 @@ GetObjectIid (void)
 }
 
 TypeId
-ObjectBase::GetTypeId (void)
+ObjectBase::GetTypeId ()
 {
   NS_LOG_FUNCTION_NOARGS ();
   static TypeId tid = GetObjectIid ();
@@ -130,7 +130,7 @@ ObjectBase::~ObjectBase ()
 }
 
 void
-ObjectBase::NotifyConstructionCompleted (void)
+ObjectBase::NotifyConstructionCompleted ()
 {
   NS_LOG_FUNCTION (this);
 }
@@ -154,7 +154,7 @@ ObjectBase::NotifyConstructionCompleted (void)
 #else
 #define LOG_WHERE_VALUE(where, value)
 #endif
-  
+
 void
 ObjectBase::ConstructSelf (const AttributeConstructionList &attributes)
 {
@@ -164,7 +164,7 @@ ObjectBase::ConstructSelf (const AttributeConstructionList &attributes)
   do    // Do this tid and all parents
     {
       // loop over all attributes in object type
-      NS_LOG_DEBUG ("construct tid=" << tid.GetName () << 
+      NS_LOG_DEBUG ("construct tid=" << tid.GetName () <<
                     ", params=" << tid.GetAttributeN ());
       for (uint32_t i = 0; i < tid.GetAttributeN (); i++)
         {
@@ -177,12 +177,12 @@ ObjectBase::ConstructSelf (const AttributeConstructionList &attributes)
 
           LOG_WHERE_VALUE (where, value);
           // See if this attribute should not be set here in the
-          // constructor. 
+          // constructor.
           if (!(info.flags & TypeId::ATTR_CONSTRUCT))
             {
               // Handle this attribute if it should not be
               // set here.
-              if (value == 0)
+              if (!value)
                 {
                   // Skip this attribute if it's not in the
                   // AttributeConstructionList.
@@ -227,7 +227,7 @@ ObjectBase::ConstructSelf (const AttributeConstructionList &attributes)
               NS_LOG_DEBUG ("construct \"" << tid.GetName () << "::" <<
                             info.name << "\" from " << where);
             }
-          
+
         }  // for i attributes
       tid = tid.GetParent ();
     }
@@ -244,7 +244,7 @@ ObjectBase::DoSet (Ptr<const AttributeAccessor> accessor,
 {
   NS_LOG_FUNCTION (this << accessor << checker << &value);
   Ptr<AttributeValue> v = checker->CreateValidValue (value);
-  if (v == 0)
+  if (!v)
     {
       return false;
     }
@@ -311,7 +311,7 @@ ObjectBase::GetAttribute (std::string name, AttributeValue &value) const
       return;
     }
   StringValue *str = dynamic_cast<StringValue *> (&value);
-  if (str == 0)
+  if (str == nullptr)
     {
       NS_FATAL_ERROR ("Attribute name=" << name << " tid=" << tid.GetName () << ": input value is not a string");
     }
@@ -346,7 +346,7 @@ ObjectBase::GetAttributeFailSafe (std::string name, AttributeValue &value) const
       return true;
     }
   StringValue *str = dynamic_cast<StringValue *> (&value);
-  if (str == 0)
+  if (str == nullptr)
     {
       return false;
     }
@@ -366,7 +366,7 @@ ObjectBase::TraceConnectWithoutContext (std::string name, const CallbackBase &cb
   NS_LOG_FUNCTION (this << name << &cb);
   TypeId tid = GetInstanceTypeId ();
   Ptr<const TraceSourceAccessor> accessor = tid.LookupTraceSourceByName (name);
-  if (accessor == 0)
+  if (!accessor)
     {
       return false;
     }
@@ -379,7 +379,7 @@ ObjectBase::TraceConnect (std::string name, std::string context, const CallbackB
   NS_LOG_FUNCTION (this << name << context << &cb);
   TypeId tid = GetInstanceTypeId ();
   Ptr<const TraceSourceAccessor> accessor = tid.LookupTraceSourceByName (name);
-  if (accessor == 0)
+  if (!accessor)
     {
       return false;
     }
@@ -392,7 +392,7 @@ ObjectBase::TraceDisconnectWithoutContext (std::string name, const CallbackBase 
   NS_LOG_FUNCTION (this << name << &cb);
   TypeId tid = GetInstanceTypeId ();
   Ptr<const TraceSourceAccessor> accessor = tid.LookupTraceSourceByName (name);
-  if (accessor == 0)
+  if (!accessor)
     {
       return false;
     }
@@ -405,7 +405,7 @@ ObjectBase::TraceDisconnect (std::string name, std::string context, const Callba
   NS_LOG_FUNCTION (this << name << context << &cb);
   TypeId tid = GetInstanceTypeId ();
   Ptr<const TraceSourceAccessor> accessor = tid.LookupTraceSourceByName (name);
-  if (accessor == 0)
+  if (!accessor)
     {
       return false;
     }

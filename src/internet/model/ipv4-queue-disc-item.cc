@@ -38,11 +38,11 @@ Ipv4QueueDiscItem::~Ipv4QueueDiscItem ()
   NS_LOG_FUNCTION (this);
 }
 
-uint32_t Ipv4QueueDiscItem::GetSize (void) const
+uint32_t Ipv4QueueDiscItem::GetSize () const
 {
   NS_LOG_FUNCTION (this);
   Ptr<Packet> p = GetPacket ();
-  NS_ASSERT (p != 0);
+  NS_ASSERT (p);
   uint32_t ret = p->GetSize ();
   if (!m_headerAdded)
     {
@@ -52,18 +52,18 @@ uint32_t Ipv4QueueDiscItem::GetSize (void) const
 }
 
 const Ipv4Header&
-Ipv4QueueDiscItem::GetHeader (void) const
+Ipv4QueueDiscItem::GetHeader () const
 {
   return m_header;
 }
 
-void Ipv4QueueDiscItem::AddHeader (void)
+void Ipv4QueueDiscItem::AddHeader ()
 {
   NS_LOG_FUNCTION (this);
 
   NS_ASSERT_MSG (!m_headerAdded, "The header has been already added to the packet");
   Ptr<Packet> p = GetPacket ();
-  NS_ASSERT (p != 0);
+  NS_ASSERT (p);
   p->AddHeader (m_header);
   m_headerAdded = true;
 }
@@ -83,7 +83,7 @@ Ipv4QueueDiscItem::Print (std::ostream& os) const
 }
 
 bool
-Ipv4QueueDiscItem::Mark (void)
+Ipv4QueueDiscItem::Mark ()
 {
   NS_LOG_FUNCTION (this);
   if (!m_headerAdded && m_header.GetEcn () != Ipv4Header::ECN_NotECT)

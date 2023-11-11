@@ -20,8 +20,14 @@
 
 #include "mac8-address.h"
 #include "ns3/address.h"
+#include "ns3/simulator.h"
+#include "ns3/log.h"
 
 namespace ns3 {
+
+NS_LOG_COMPONENT_DEFINE ("Mac8Address");
+
+uint8_t Mac8Address::m_allocationIndex = 0;
 
 Mac8Address::Mac8Address ()
 {
@@ -38,14 +44,14 @@ Mac8Address::~Mac8Address ()
 }
 
 uint8_t
-Mac8Address::GetType (void)
+Mac8Address::GetType ()
 {
   static uint8_t type = Address::Register ();
   return type;
 }
 
 Address
-Mac8Address::ConvertTo (void) const
+Mac8Address::ConvertTo () const
 {
   return Address (GetType (), &m_address, 1);
 }
@@ -88,18 +94,32 @@ Mac8Address::GetBroadcast ()
 {
   return Mac8Address (255);
 }
+
 Mac8Address
 Mac8Address::Allocate ()
 {
-  static uint8_t nextAllocated = 0;
+  NS_LOG_FUNCTION_NOARGS ();
 
-  uint8_t address = nextAllocated++;
-  if (nextAllocated == 255)
+  if (m_allocationIndex == 0)
     {
-      nextAllocated = 0;
+      Simulator::ScheduleDestroy (Mac8Address::ResetAllocationIndex);
+    }
+
+  uint8_t address = m_allocationIndex++;
+  if (m_allocationIndex == 255)
+    {
+      m_allocationIndex = 0;
     }
 
   return Mac8Address (address);
+}
+
+void
+Mac8Address::ResetAllocationIndex ()
+{
+  NS_LOG_FUNCTION_NOARGS ();
+
+  m_allocationIndex = 0;
 }
 
 bool

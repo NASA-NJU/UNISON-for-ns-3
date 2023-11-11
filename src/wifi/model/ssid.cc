@@ -69,7 +69,7 @@ Ssid::IsEqual (const Ssid& o) const
 }
 
 bool
-Ssid::IsBroadcast (void) const
+Ssid::IsBroadcast () const
 {
   if (m_ssid[0] == 0)
     {
@@ -79,7 +79,7 @@ Ssid::IsBroadcast (void) const
 }
 
 char *
-Ssid::PeekString (void) const
+Ssid::PeekString () const
 {
   //It is safe to return a pointer to the buffer because it is
   //guaranteed to be zero-terminated.
@@ -92,7 +92,7 @@ Ssid::ElementId () const
   return IE_SSID;
 }
 
-uint8_t
+uint16_t
 Ssid::GetInformationFieldSize () const
 {
   return m_length;
@@ -105,9 +105,9 @@ Ssid::SerializeInformationField (Buffer::Iterator start) const
   start.Write (m_ssid, m_length);
 }
 
-uint8_t
+uint16_t
 Ssid::DeserializeInformationField (Buffer::Iterator start,
-                                   uint8_t length)
+                                   uint16_t length)
 {
   m_length = length;
   NS_ASSERT (m_length <= 32);
@@ -129,7 +129,7 @@ operator >> (std::istream &is, Ssid &ssid)
 {
   std::string str;
   is >> str;
-  ssid = Ssid (str.c_str ());
+  ssid = Ssid (str);
   return is;
 }
 

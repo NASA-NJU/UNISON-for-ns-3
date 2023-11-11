@@ -46,7 +46,7 @@ private:
    */
   void EnsureWrittenBytes (Buffer b, uint32_t n, uint8_t array[]);
 public:
-  virtual void DoRun (void);
+  void DoRun () override;
   BufferTest ();
 };
 
@@ -60,7 +60,7 @@ BufferTest::EnsureWrittenBytes (Buffer b, uint32_t n, uint8_t array[])
 {
   bool success = true;
   uint8_t *expected = array;
-  uint8_t const*got;
+  const uint8_t* got;
   got = b.PeekData ();
   for (uint32_t j = 0; j < n; j++)
     {
@@ -103,7 +103,7 @@ BufferTest::EnsureWrittenBytes (Buffer b, uint32_t n, uint8_t array[])
   }
 
 void
-BufferTest::DoRun (void)
+BufferTest::DoRun ()
 {
   Buffer buffer;
   Buffer::Iterator i;
@@ -170,19 +170,19 @@ BufferTest::DoRun (void)
   Buffer buff64;
   buff64.AddAtStart (8);
   i = buff64.Begin ();
-  i.WriteU64 (0x0123456789ABCDEFllu);
+  i.WriteU64 (0x0123456789ABCDEFLLU);
   i = buff64.Begin ();
-  NS_TEST_ASSERT_MSG_EQ (i.ReadU64 (), 0x0123456789abcdefllu, "Could not read expected value");
+  NS_TEST_ASSERT_MSG_EQ (i.ReadU64 (), 0x0123456789abcdefLLU, "Could not read expected value");
   i = buff64.Begin ();
-  i.WriteHtolsbU64 (0x0123456789ABCDEFllu);
+  i.WriteHtolsbU64 (0x0123456789ABCDEFLLU);
   ENSURE_WRITTEN_BYTES (buff64, 8, 0xef, 0xcd, 0xab, 0x89, 0x67, 0x45, 0x23, 0x01);
   i = buff64.Begin ();
-  NS_TEST_ASSERT_MSG_EQ (i.ReadLsbtohU64 (), 0x0123456789abcdefllu, "Could not read expected value");
+  NS_TEST_ASSERT_MSG_EQ (i.ReadLsbtohU64 (), 0x0123456789abcdefLLU, "Could not read expected value");
   i = buff64.Begin ();
-  i.WriteHtonU64 (0x0123456789ABCDEFllu);
+  i.WriteHtonU64 (0x0123456789ABCDEFLLU);
   ENSURE_WRITTEN_BYTES (buff64, 8, 0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef);
   i = buff64.Begin ();
-  NS_TEST_ASSERT_MSG_EQ (i.ReadNtohU64 (), 0x0123456789abcdefllu, "could not read expected value");
+  NS_TEST_ASSERT_MSG_EQ (i.ReadNtohU64 (), 0x0123456789abcdefLLU, "could not read expected value");
 
   // test self-assignment
   {
@@ -304,7 +304,9 @@ BufferTest::DoRun (void)
     {
       Buffer::Iterator iter = inputBuffer.Begin ();
       for (uint32_t i = 0; i < actualSize; i++)
-        iter.WriteU8 (static_cast<uint8_t> (bytesRng->GetValue ()));
+        {
+          iter.WriteU8 (static_cast<uint8_t> (bytesRng->GetValue ()));
+        }
     }
 
     outputBuffer.AddAtEnd (chunkSize);
@@ -355,12 +357,12 @@ BufferTest::DoRun (void)
   i.Write ((const uint8_t*)ct.c_str (), ct.size ());
   uint32_t sizeBuffer = buffer.GetSize ();
   NS_TEST_ASSERT_MSG_EQ (sizeBuffer, ct.size(), "Buffer bad size");
-  uint8_t const* evilBuffer = buffer.PeekData ();
+  const uint8_t* evilBuffer = buffer.PeekData ();
   NS_TEST_ASSERT_MSG_NE( evilBuffer, 0, "Buffer PeekData failed");
   uint8_t *cBuf = (uint8_t*) malloc ( sizeBuffer );
   uint32_t copyLen = buffer.CopyData (cBuf, sizeBuffer);
   NS_TEST_ASSERT_MSG_EQ (copyLen, sizeBuffer, "CopyData return bad size");
-  for (uint8_t i=0; i < sizeBuffer ; i++ )
+  for (uint32_t i = 0; i < sizeBuffer; i++)
     {
       NS_TEST_ASSERT_MSG_EQ ( cBuf [i], *(((const uint8_t*)ct.c_str ()) + i), "Bad buffer copied data");
       NS_TEST_ASSERT_MSG_EQ ( evilBuffer [i], cBuf [i] , "Bad buffer peeked");

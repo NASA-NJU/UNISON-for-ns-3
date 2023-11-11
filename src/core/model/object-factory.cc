@@ -48,14 +48,8 @@ ObjectFactory::SetTypeId (std::string tid)
   NS_LOG_FUNCTION (this << tid);
   m_tid = TypeId::LookupByName (tid);
 }
-void
-ObjectFactory::SetTypeId (const char *tid)
-{
-  NS_LOG_FUNCTION (this << tid);
-  m_tid = TypeId::LookupByName (tid);
-}
 bool
-ObjectFactory::IsTypeIdSet (void) const
+ObjectFactory::IsTypeIdSet () const
 {
   if (m_tid.GetUid () != 0)
     {
@@ -79,7 +73,7 @@ ObjectFactory::DoSet (const std::string &name, const AttributeValue &value)
       return;
     }
   Ptr<AttributeValue> v = info.checker->CreateValidValue (value);
-  if (v == 0)
+  if (!v)
     {
       NS_FATAL_ERROR ("Invalid value for attribute set (" << name << ") on " << m_tid.GetName ());
       return;
@@ -88,20 +82,20 @@ ObjectFactory::DoSet (const std::string &name, const AttributeValue &value)
 }
 
 TypeId
-ObjectFactory::GetTypeId (void) const
+ObjectFactory::GetTypeId () const
 {
   NS_LOG_FUNCTION (this);
   return m_tid;
 }
 
 Ptr<Object>
-ObjectFactory::Create (void) const
+ObjectFactory::Create () const
 {
   NS_LOG_FUNCTION (this);
   Callback<ObjectBase *> cb = m_tid.GetConstructor ();
   ObjectBase *base = cb ();
   Object *derived = dynamic_cast<Object *> (base);
-  NS_ASSERT (derived != 0);
+  NS_ASSERT (derived != nullptr);
   derived->SetTypeId (m_tid);
   derived->Construct (m_parameters);
   Ptr<Object> object = Ptr<Object> (derived, false);
@@ -127,9 +121,10 @@ std::istream & operator >> (std::istream &is, ObjectFactory &factory)
 {
   std::string v;
   is >> v;
-  std::string::size_type lbracket, rbracket;
-  lbracket = v.find ("[");
-  rbracket = v.find ("]");
+  std::string::size_type lbracket;
+  std::string::size_type rbracket;
+  lbracket = v.find ('[');
+  rbracket = v.find (']');
   if (lbracket == std::string::npos && rbracket == std::string::npos)
     {
       factory.SetTypeId (v);
@@ -148,7 +143,7 @@ std::istream & operator >> (std::istream &is, ObjectFactory &factory)
   cur = 0;
   while (cur != parameters.size ())
     {
-      std::string::size_type equal = parameters.find ("=", cur);
+      std::string::size_type equal = parameters.find ('=', cur);
       if (equal == std::string::npos)
         {
           is.setstate (std::ios_base::failbit);
@@ -165,7 +160,7 @@ std::istream & operator >> (std::istream &is, ObjectFactory &factory)
             }
           else
             {
-              std::string::size_type next = parameters.find ("|", cur);
+              std::string::size_type next = parameters.find ('|', cur);
               std::string value;
               if (next == std::string::npos)
                 {

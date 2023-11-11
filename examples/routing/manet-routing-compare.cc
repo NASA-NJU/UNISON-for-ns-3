@@ -18,7 +18,7 @@
  * Author: Justin Rohrer <rohrej@ittc.ku.edu>
  *
  * James P.G. Sterbenz <jpgs@ittc.ku.edu>, director
- * ResiliNets Research Group  http://wiki.ittc.ku.edu/resilinets
+ * ResiliNets Research Group  https://resilinets.org/
  * Information and Telecommunication Technology Center (ITTC)
  * and Department of Electrical Engineering and Computer Science
  * The University of Kansas Lawrence, KS USA.
@@ -85,7 +85,7 @@ NS_LOG_COMPONENT_DEFINE ("manet-routing-compare");
 
 /**
  * Routing experiment class.
- * 
+ *
  * It handles the creation and run of an experiment.
  */
 class RoutingExperiment
@@ -246,6 +246,8 @@ main (int argc, char *argv[])
   double txp = 7.5;
 
   experiment.Run (nSinks, txp, CSVfileName);
+
+  return 0;
 }
 
 void

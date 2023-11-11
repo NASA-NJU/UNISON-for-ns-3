@@ -42,18 +42,18 @@ NS_LOG_COMPONENT_DEFINE ("Ns3SocketTest");
 
 /**
  * \ingroup system-tests-tcp
- * 
- * \brief Tests of TCP implementations from the application/socket perspective 
+ *
+ * \brief Tests of TCP implementations from the application/socket perspective
  * using point-to-point links.
  */
 class Ns3TcpSocketTestCaseP2P : public TestCase
 {
 public:
   Ns3TcpSocketTestCaseP2P ();
-  virtual ~Ns3TcpSocketTestCaseP2P () {}
+  ~Ns3TcpSocketTestCaseP2P () override {}
 
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
   bool m_writeResults;  //!< True if write PCAP files.
 
   /**
@@ -74,14 +74,14 @@ Ns3TcpSocketTestCaseP2P::Ns3TcpSocketTestCaseP2P ()
 {
 }
 
-void 
+void
 Ns3TcpSocketTestCaseP2P::SinkRx (std::string path, Ptr<const Packet> p, const Address &address)
 {
   m_responses.Add (p->GetSize ());
 }
 
 void
-Ns3TcpSocketTestCaseP2P::DoRun (void)
+Ns3TcpSocketTestCaseP2P::DoRun ()
 {
   uint16_t sinkPort = 50000;
   double sinkStopTime = 40;  // sec; will trigger Socket::Close
@@ -159,18 +159,18 @@ Ns3TcpSocketTestCaseP2P::DoRun (void)
 
 /**
  * \ingroup system-tests-tcp
- * 
- * \brief Tests of TCP implementations from the application/socket perspective 
+ *
+ * \brief Tests of TCP implementations from the application/socket perspective
  * using CSMA links.
  */
 class Ns3TcpSocketTestCaseCsma : public TestCase
 {
 public:
   Ns3TcpSocketTestCaseCsma ();
-  virtual ~Ns3TcpSocketTestCaseCsma () {}
+  ~Ns3TcpSocketTestCaseCsma () override {}
 
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
   bool m_writeResults;  //!< True if write PCAP files.
 
   /**
@@ -191,14 +191,14 @@ Ns3TcpSocketTestCaseCsma::Ns3TcpSocketTestCaseCsma ()
 {
 }
 
-void 
+void
 Ns3TcpSocketTestCaseCsma::SinkRx (std::string path, Ptr<const Packet> p, const Address &address)
 {
   m_responses.Add (p->GetSize ());
 }
 
 void
-Ns3TcpSocketTestCaseCsma::DoRun (void)
+Ns3TcpSocketTestCaseCsma::DoRun ()
 {
   uint16_t sinkPort = 50000;
   double sinkStopTime = 40;  // sec; will trigger Socket::Close
@@ -283,7 +283,7 @@ Ns3TcpSocketTestCaseCsma::DoRun (void)
 
 /**
  * \ingroup system-tests-tcp
- * 
+ *
  * TCP implementations from the application/socket perspective TestSuite.
  */
 class Ns3TcpSocketTestSuite : public TestSuite

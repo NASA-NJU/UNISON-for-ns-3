@@ -83,10 +83,10 @@ AssignWifiRandomStreams (Ptr<WifiMac> mac, int64_t stream)
 class OcbWifiMacTestCase : public TestCase
 {
 public:
-  OcbWifiMacTestCase (void);
-  virtual ~OcbWifiMacTestCase (void);
+  OcbWifiMacTestCase ();
+  ~OcbWifiMacTestCase () override;
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
 
   /**
    * MAC associate function
@@ -125,7 +125,7 @@ private:
   void AdvancePosition (Ptr<Node> node);
 
   /// Pre random configuration function
-  void PreRandomConfiguration (void);
+  void PreRandomConfiguration ();
   /**
    * Configure AP STA mode function
    * \param static_node the static node
@@ -165,12 +165,12 @@ private:
   NodeContainer nodes; ///< the nodes
 };
 
-OcbWifiMacTestCase::OcbWifiMacTestCase (void)
+OcbWifiMacTestCase::OcbWifiMacTestCase ()
   : TestCase ("Association time: Ap+Sta mode vs Adhoc mode vs Ocb mode")
 {
 }
 
-OcbWifiMacTestCase::~OcbWifiMacTestCase (void)
+OcbWifiMacTestCase::~OcbWifiMacTestCase ()
 {
 }
 

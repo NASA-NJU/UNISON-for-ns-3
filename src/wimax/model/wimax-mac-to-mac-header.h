@@ -36,7 +36,7 @@ class WimaxMacToMacHeader : public Header
 {
 public:
   WimaxMacToMacHeader ();
-  ~WimaxMacToMacHeader ();
+  ~WimaxMacToMacHeader () override;
   /**
    * Constructor
    *
@@ -48,17 +48,17 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
-  virtual TypeId GetInstanceTypeId (void) const;
-  uint32_t GetSerializedSize (void) const;
-  void Serialize (Buffer::Iterator start) const;
-  uint32_t Deserialize (Buffer::Iterator start);
+  static TypeId GetTypeId ();
+  TypeId GetInstanceTypeId () const override;
+  uint32_t GetSerializedSize () const override;
+  void Serialize (Buffer::Iterator start) const override;
+  uint32_t Deserialize (Buffer::Iterator start) override;
   /**
    * Get size of length field
    * \returns the size of length field
    */
-  uint8_t GetSizeOfLen (void) const;
-  virtual void Print (std::ostream &os) const;
+  uint8_t GetSizeOfLen () const;
+  void Print (std::ostream &os) const override;
 private:
   uint32_t m_len; ///< length
 };

@@ -108,7 +108,7 @@ int main (int argc, char** argv)
 
   NetDeviceContainer tmp4;
   tmp4.Add (d2.Get (1)); /* n1 */
-  Ipv6InterfaceContainer iic2 = ipv6.AssignWithoutAddress (tmp4); 
+  Ipv6InterfaceContainer iic2 = ipv6.AssignWithoutAddress (tmp4);
   iic2.Add (iicr2);
 
   /* radvd configuration */
@@ -152,5 +152,7 @@ int main (int argc, char** argv)
   Simulator::Run ();
   Simulator::Destroy ();
   NS_LOG_INFO ("Done.");
+
+  return 0;
 }
 

@@ -23,6 +23,7 @@
 #include "ns3/log.h"
 #include "three-gpp-channel-model.h"
 #include "three-gpp-spectrum-propagation-loss-model.h"
+#include "spectrum-signal-parameters.h"
 #include "ns3/net-device.h"
 #include "ns3/node.h"
 #include "ns3/double.h"
@@ -56,13 +57,13 @@ ThreeGppSpectrumPropagationLossModel::DoDispose ()
 }
 
 TypeId
-ThreeGppSpectrumPropagationLossModel::GetTypeId (void)
+ThreeGppSpectrumPropagationLossModel::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::ThreeGppSpectrumPropagationLossModel")
     .SetParent<PhasedArraySpectrumPropagationLossModel> ()
     .SetGroupName ("Spectrum")
     .AddConstructor<ThreeGppSpectrumPropagationLossModel> ()
-    .AddAttribute("ChannelModel", 
+    .AddAttribute("ChannelModel",
                   "The channel model. It needs to implement the MatrixBasedChannelModel interface",
                   StringValue("ns3::ThreeGppChannelModel"),
                   MakePointerAccessor (&ThreeGppSpectrumPropagationLossModel::SetChannelModel,
@@ -227,7 +228,7 @@ ThreeGppSpectrumPropagationLossModel::CalcBeamformingGain (Ptr<SpectrumValue> tx
                                        + (sin (zod [cIndex] * M_PI / 180) * cos (aod [cIndex] * M_PI / 180) * sSpeed.x
                                        + sin (zod [cIndex] * M_PI / 180) * sin (aod [cIndex] * M_PI / 180) * sSpeed.y
                                        + cos (zod [cIndex] * M_PI / 180) * sSpeed.z) + 2 * alpha * D);
-      doppler.push_back (std::complex<double> (cos (tempDoppler), sin (tempDoppler)));
+      doppler.emplace_back(cos (tempDoppler), sin (tempDoppler));
     }
 
   NS_ASSERT (numCluster <= doppler.size());
@@ -264,7 +265,8 @@ ThreeGppSpectrumPropagationLossModel::GetLongTerm (Ptr<const MatrixBasedChannelM
 
   // check if the channel matrix was generated considering a as the s-node and
   // b as the u-node or viceversa
-  PhasedArrayModel::ComplexVector sW, uW;
+  PhasedArrayModel::ComplexVector sW;
+  PhasedArrayModel::ComplexVector uW;
   if (!channelMatrix->IsReverse (aPhasedArrayModel->GetId (), bPhasedArrayModel->GetId ()))
   {
     sW = aPhasedArrayModel->GetBeamformingVector ();
@@ -322,7 +324,7 @@ ThreeGppSpectrumPropagationLossModel::GetLongTerm (Ptr<const MatrixBasedChannelM
 }
 
 Ptr<SpectrumValue>
-ThreeGppSpectrumPropagationLossModel::DoCalcRxPowerSpectralDensity (Ptr<const SpectrumValue> txPsd,
+ThreeGppSpectrumPropagationLossModel::DoCalcRxPowerSpectralDensity (Ptr<const SpectrumSignalParameters> params,
                                                                     Ptr<const MobilityModel> a,
                                                                     Ptr<const MobilityModel> b,
                                                                     Ptr<const PhasedArrayModel> aPhasedArrayModel,
@@ -335,7 +337,7 @@ ThreeGppSpectrumPropagationLossModel::DoCalcRxPowerSpectralDensity (Ptr<const Sp
   NS_ASSERT (aId != bId);
   NS_ASSERT_MSG (a->GetDistanceFrom (b) > 0.0, "The position of a and b devices cannot be the same");
 
-  Ptr<SpectrumValue> rxPsd = Copy<SpectrumValue> (txPsd);
+  Ptr<SpectrumValue> rxPsd = Copy<SpectrumValue> (params->psd);
 
   // retrieve the antenna of device a
   NS_ASSERT_MSG (aPhasedArrayModel, "Antenna not found for node " << aId);

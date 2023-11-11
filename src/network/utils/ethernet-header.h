@@ -49,7 +49,7 @@ enum ethernet_header_t {
  * the packet. Eventually the class will be improved to also support
  * VLAN tags in packet headers.
  */
-class EthernetHeader : public Header 
+class EthernetHeader : public Header
 {
 public:
 
@@ -83,19 +83,19 @@ public:
   /**
    * \return The size of the payload in bytes
    */
-  uint16_t GetLengthType (void) const;
+  uint16_t GetLengthType () const;
   /**
    * \return The type of packet (only basic Ethernet is currently supported)
    */
-  ethernet_header_t GetPacketType (void) const;
+  ethernet_header_t GetPacketType () const;
   /**
    * \return The source address of this packet
    */
-  Mac48Address GetSource (void) const;
+  Mac48Address GetSource () const;
   /**
    * \return The destination address of this packet
    */
-  Mac48Address GetDestination (void) const;
+  Mac48Address GetDestination () const;
   /**
    * \return The value of the PreambleSfd field
    */
@@ -109,12 +109,12 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
-  virtual TypeId GetInstanceTypeId (void) const;
-  virtual void Print (std::ostream &os) const;
-  virtual uint32_t GetSerializedSize (void) const;
-  virtual void Serialize (Buffer::Iterator start) const;
-  virtual uint32_t Deserialize (Buffer::Iterator start);
+  static TypeId GetTypeId ();
+  TypeId GetInstanceTypeId () const override;
+  void Print (std::ostream &os) const override;
+  uint32_t GetSerializedSize () const override;
+  void Serialize (Buffer::Iterator start) const override;
+  uint32_t Deserialize (Buffer::Iterator start) override;
 private:
   static const int PREAMBLE_SIZE = 8; //!< size of the preamble_sfd header field
   static const int LENGTH_SIZE = 2;   //!< size of the length_type header field

@@ -1,7 +1,7 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2016 Universita' di Firenze
- * 
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
  * published by the Free Software Foundation;
@@ -71,7 +71,7 @@ class Ipv4RipTest : public TestCase
   void SendData (Ptr<Socket> socket, std::string to);
 
 public:
-  virtual void DoRun (void);
+  void DoRun () override;
   Ipv4RipTest ();
 
   /**
@@ -116,7 +116,7 @@ Ipv4RipTest::SendData (Ptr<Socket> socket, std::string to)
 }
 
 void
-Ipv4RipTest::DoRun (void)
+Ipv4RipTest::DoRun ()
 {
   // Create topology
 
@@ -153,7 +153,8 @@ Ipv4RipTest::DoRun (void)
   net1.Add (txDev);
 
   // Router A
-  Ptr<SimpleNetDevice> fwDev1routerA, fwDev2routerA;
+  Ptr<SimpleNetDevice> fwDev1routerA;
+  Ptr<SimpleNetDevice> fwDev2routerA;
   { // first interface
     fwDev1routerA = CreateObject<SimpleNetDevice> ();
     fwDev1routerA->SetAddress (Mac48Address ("00:00:00:00:00:02"));
@@ -169,7 +170,8 @@ Ipv4RipTest::DoRun (void)
   net2.Add (fwDev2routerA);
 
   // Router B
-  Ptr<SimpleNetDevice> fwDev1routerB, fwDev2routerB;
+  Ptr<SimpleNetDevice> fwDev1routerB;
+  Ptr<SimpleNetDevice> fwDev2routerB;
   { // first interface
     fwDev1routerB = CreateObject<SimpleNetDevice> ();
     fwDev1routerB->SetAddress (Mac48Address ("00:00:00:00:00:04"));
@@ -185,7 +187,8 @@ Ipv4RipTest::DoRun (void)
   net3.Add (fwDev2routerB);
 
   // Router C
-  Ptr<SimpleNetDevice> fwDev1routerC, fwDev2routerC;
+  Ptr<SimpleNetDevice> fwDev1routerC;
+  Ptr<SimpleNetDevice> fwDev2routerC;
   { // first interface
     fwDev1routerC = CreateObject<SimpleNetDevice> ();
     fwDev1routerC->SetAddress (Mac48Address ("00:00:00:00:00:06"));
@@ -293,7 +296,7 @@ class Ipv4RipCountToInfinityTest : public TestCase
   void SendData (Ptr<Socket> socket, std::string to);
 
 public:
-  virtual void DoRun (void);
+  void DoRun () override;
   Ipv4RipCountToInfinityTest ();
 
   /**
@@ -338,7 +341,7 @@ Ipv4RipCountToInfinityTest::SendData (Ptr<Socket> socket, std::string to)
 }
 
 void
-Ipv4RipCountToInfinityTest::DoRun (void)
+Ipv4RipCountToInfinityTest::DoRun ()
 {
   // Create topology
 
@@ -382,7 +385,8 @@ Ipv4RipCountToInfinityTest::DoRun (void)
   net1.Add (txDev);
 
   // Router A
-  Ptr<SimpleNetDevice> fwDev1routerA, fwDev2routerA;
+  Ptr<SimpleNetDevice> fwDev1routerA;
+  Ptr<SimpleNetDevice> fwDev2routerA;
   { // first interface
     fwDev1routerA = CreateObject<SimpleNetDevice> ();
     fwDev1routerA->SetAddress (Mac48Address ("00:00:00:00:00:02"));
@@ -398,7 +402,8 @@ Ipv4RipCountToInfinityTest::DoRun (void)
   net2.Add (fwDev2routerA);
 
   // Router B
-  Ptr<SimpleNetDevice> fwDev1routerB, fwDev2routerB;
+  Ptr<SimpleNetDevice> fwDev1routerB;
+  Ptr<SimpleNetDevice> fwDev2routerB;
   { // first interface
     fwDev1routerB = CreateObject<SimpleNetDevice> ();
     fwDev1routerB->SetAddress (Mac48Address ("00:00:00:00:00:04"));
@@ -414,7 +419,8 @@ Ipv4RipCountToInfinityTest::DoRun (void)
   net3.Add (fwDev2routerB);
 
   // Router C
-  Ptr<SimpleNetDevice> fwDev1routerC, fwDev2routerC;
+  Ptr<SimpleNetDevice> fwDev1routerC;
+  Ptr<SimpleNetDevice> fwDev2routerC;
   { // first interface
     fwDev1routerC = CreateObject<SimpleNetDevice> ();
     fwDev1routerC->SetAddress (Mac48Address ("00:00:00:00:00:06"));
@@ -508,7 +514,7 @@ class Ipv4RipSplitHorizonStrategyTest : public TestCase
   Rip::SplitHorizonType_e m_detectedStrategy; //!< Strategy detected.
 
 public:
-  virtual void DoRun (void);
+  void DoRun () override;
 
   /**
    * \brief Constructor.
@@ -573,7 +579,7 @@ void Ipv4RipSplitHorizonStrategyTest::ReceivePktProbe (Ptr<Socket> socket)
 }
 
 void
-Ipv4RipSplitHorizonStrategyTest::DoRun (void)
+Ipv4RipSplitHorizonStrategyTest::DoRun ()
 {
   // Create topology
 
@@ -610,7 +616,8 @@ Ipv4RipSplitHorizonStrategyTest::DoRun (void)
   net0.Add (silentDev);
 
   // Router A
-  Ptr<SimpleNetDevice> silentDevRouterA, fwDevRouterA;
+  Ptr<SimpleNetDevice> silentDevRouterA;
+  Ptr<SimpleNetDevice> fwDevRouterA;
   { // silent interface
     silentDevRouterA = CreateObject<SimpleNetDevice> ();
     silentDevRouterA->SetAddress (Mac48Address ("00:00:00:00:00:02"));

@@ -32,12 +32,12 @@ Dot11sMeshCapability::Dot11sMeshCapability () :
 uint8_t
 Dot11sMeshCapability::GetSerializedSize () const
 {
-  return 1; 
+  return 1;
 }
-uint8_t  
-Dot11sMeshCapability::GetUint8 () const  //IEEE 802.11-2012 8.4.2.100.8 Mesh Capability 
+uint8_t
+Dot11sMeshCapability::GetUint8 () const  //IEEE 802.11-2012 8.4.2.100.8 Mesh Capability
 {
-  uint8_t result = 0;  
+  uint8_t result = 0;
   if (acceptPeerLinks)
     {
       result |= 1 << 0; //The Accepting Additional Mesh Peerings subfield is set to 1 if the mesh STA is willing to establish additional mesh peerings   with other mesh STAs and set to 0 otherwise
@@ -104,7 +104,7 @@ IeConfiguration::IeConfiguration () :
     SYNC_NEIGHBOUR_OFFSET), m_APId (AUTH_NULL), m_neighbors (0)
 {
 }
-uint8_t
+uint16_t
 IeConfiguration::GetInformationFieldSize () const
 {
    return 0   // Version
@@ -132,8 +132,8 @@ IeConfiguration::SerializeInformationField (Buffer::Iterator i) const
   i.WriteU8 (m_neighbors << 1);
   m_meshCap.Serialize (i);
 }
-uint8_t
-IeConfiguration::DeserializeInformationField (Buffer::Iterator i, uint8_t length)
+uint16_t
+IeConfiguration::DeserializeInformationField (Buffer::Iterator i, uint16_t length)
 {
   Buffer::Iterator start = i;
   // Active Path Selection Protocol ID:

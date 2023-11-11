@@ -20,6 +20,7 @@
 #include "channel-condition-model.h"
 #include "ns3/log.h"
 #include "ns3/double.h"
+#include "ns3/boolean.h"
 #include "ns3/mobility-model.h"
 #include <cmath>
 #include "ns3/node.h"
@@ -33,7 +34,7 @@ NS_LOG_COMPONENT_DEFINE ("ChannelConditionModel");
 NS_OBJECT_ENSURE_REGISTERED (ChannelCondition);
 
 TypeId
-ChannelCondition::GetTypeId (void)
+ChannelCondition::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::ChannelCondition")
     .SetParent<Object> ()
@@ -44,13 +45,17 @@ ChannelCondition::GetTypeId (void)
 
 ChannelCondition::ChannelCondition ()
   : m_losCondition (LosConditionValue::LC_ND),
-    m_o2iCondition (O2iConditionValue::O2I_ND)
+    m_o2iCondition (O2iConditionValue::O2I_ND),
+    m_o2iLowHighCondition (O2iLowHighConditionValue::LH_O2I_ND)
 {}
 
-ChannelCondition::ChannelCondition (ChannelCondition::LosConditionValue losCondition, ChannelCondition::O2iConditionValue o2iCondition)
+ChannelCondition::ChannelCondition (ChannelCondition::LosConditionValue losCondition,
+                                    ChannelCondition::O2iConditionValue o2iCondition,
+                                    ChannelCondition::O2iLowHighConditionValue o2iLowHighCondition)
 {
   m_losCondition = losCondition;
   m_o2iCondition = o2iCondition;
+  m_o2iLowHighCondition = o2iLowHighCondition;
 }
 
 ChannelCondition::~ChannelCondition ()
@@ -78,6 +83,18 @@ void
 ChannelCondition::SetO2iCondition (O2iConditionValue o2iCondition)
 {
   m_o2iCondition = o2iCondition;
+}
+
+ChannelCondition::O2iLowHighConditionValue
+ChannelCondition::GetO2iLowHighCondition () const
+{
+  return m_o2iLowHighCondition;
+}
+
+void
+ChannelCondition::SetO2iLowHighCondition (O2iLowHighConditionValue o2iLowHighCondition)
+{
+  m_o2iLowHighCondition = o2iLowHighCondition;
 }
 
 bool
@@ -144,7 +161,7 @@ std::ostream& operator<< (std::ostream& os, ChannelCondition::LosConditionValue 
 NS_OBJECT_ENSURE_REGISTERED (ChannelConditionModel);
 
 TypeId
-ChannelConditionModel::GetTypeId (void)
+ChannelConditionModel::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::ChannelConditionModel")
     .SetParent<Object> ()
@@ -164,7 +181,7 @@ ChannelConditionModel::~ChannelConditionModel ()
 NS_OBJECT_ENSURE_REGISTERED (AlwaysLosChannelConditionModel);
 
 TypeId
-AlwaysLosChannelConditionModel::GetTypeId (void)
+AlwaysLosChannelConditionModel::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::AlwaysLosChannelConditionModel")
     .SetParent<Object> ()
@@ -200,7 +217,7 @@ AlwaysLosChannelConditionModel::AssignStreams (int64_t stream)
 NS_OBJECT_ENSURE_REGISTERED (NeverLosChannelConditionModel);
 
 TypeId
-NeverLosChannelConditionModel::GetTypeId (void)
+NeverLosChannelConditionModel::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::NeverLosChannelConditionModel")
     .SetParent<Object> ()
@@ -236,7 +253,7 @@ NeverLosChannelConditionModel::AssignStreams (int64_t stream)
 NS_OBJECT_ENSURE_REGISTERED (NeverLosVehicleChannelConditionModel);
 
 TypeId
-NeverLosVehicleChannelConditionModel::GetTypeId (void)
+NeverLosVehicleChannelConditionModel::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::NeverLosVehicleChannelConditionModel")
     .SetParent<ChannelConditionModel> ()
@@ -273,15 +290,33 @@ NeverLosVehicleChannelConditionModel::AssignStreams (int64_t /* stream */)
 NS_OBJECT_ENSURE_REGISTERED (ThreeGppChannelConditionModel);
 
 TypeId
-ThreeGppChannelConditionModel::GetTypeId (void)
+ThreeGppChannelConditionModel::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::ThreeGppChannelConditionModel")
     .SetParent<ChannelConditionModel> ()
     .SetGroupName ("Propagation")
-    .AddAttribute ("UpdatePeriod", "Specifies the time period after which the channel condition is recomputed. If set to 0, the channel condition is never updated.",
+    .AddAttribute ("UpdatePeriod", "Specifies the time period after which the channel "
+                   "condition is recomputed. If set to 0, the channel condition is never updated.",
                    TimeValue (MilliSeconds (0)),
                    MakeTimeAccessor (&ThreeGppChannelConditionModel::m_updatePeriod),
                    MakeTimeChecker ())
+    .AddAttribute ("O2iThreshold", "Specifies what will be the ratio of O2I channel "
+                   "conditions. Default value is 0 that corresponds to 0 O2I losses.",
+                    DoubleValue (0.0),
+                    MakeDoubleAccessor (&ThreeGppChannelConditionModel::m_o2iThreshold),
+                    MakeDoubleChecker <double> (0, 1))
+    .AddAttribute ("O2iLowLossThreshold", "Specifies what will be the ratio of O2I "
+                   "low - high penetration losses. Default value is 1.0 meaning that"
+                   "all losses will be low",
+                   DoubleValue (1.0),
+                   MakeDoubleAccessor (&ThreeGppChannelConditionModel::m_o2iLowLossThreshold),
+                   MakeDoubleChecker <double> (0, 1))
+    .AddAttribute ("LinkO2iConditionToAntennaHeight", "Specifies whether the O2I condition will "
+                   "be determined based on the UE height, i.e. if the UE height is 1.5 then it is O2O, "
+                   "otherwise it is O2I.",
+                   BooleanValue (false),
+                   MakeBooleanAccessor (&ThreeGppChannelConditionModel::m_linkO2iConditionToAntennaHeight),
+                   MakeBooleanChecker())
   ;
   return tid;
 }
@@ -292,6 +327,9 @@ ThreeGppChannelConditionModel::ThreeGppChannelConditionModel ()
   m_uniformVar = CreateObject<UniformRandomVariable> ();
   m_uniformVar->SetAttribute ("Min", DoubleValue (0));
   m_uniformVar->SetAttribute ("Max", DoubleValue (1));
+
+  m_uniformVarO2i = CreateObject<UniformRandomVariable> ();
+  m_uniformO2iLowHighLossVar = CreateObject <UniformRandomVariable> ();
 }
 
 ThreeGppChannelConditionModel::~ThreeGppChannelConditionModel ()
@@ -351,6 +389,39 @@ ThreeGppChannelConditionModel::GetChannelCondition (Ptr<const MobilityModel> a,
   return cond;
 }
 
+ChannelCondition::O2iConditionValue
+ThreeGppChannelConditionModel::ComputeO2i ([[maybe_unused]] Ptr<const MobilityModel> a,
+                                           [[maybe_unused]] Ptr<const MobilityModel> b) const
+{
+  double o2iProb = m_uniformVarO2i->GetValue (0, 1);
+
+  if (m_linkO2iConditionToAntennaHeight)
+    {
+      if (std::min (a->GetPosition().z, b->GetPosition().z) == 1.5)
+        {
+          return ChannelCondition::O2iConditionValue::O2O;
+        }
+      else
+        {
+          return ChannelCondition::O2iConditionValue::O2I;
+        }
+    }
+  else
+    {
+      if (o2iProb < m_o2iThreshold)
+        {
+          NS_LOG_INFO ("Return O2i condition ....");
+          return ChannelCondition::O2iConditionValue::O2I;
+        }
+      else
+        {
+          NS_LOG_INFO ("Return O2o condition ....");
+          return ChannelCondition::O2iConditionValue::O2O;
+        }
+    }
+}
+
+
 Ptr<ChannelCondition>
 ThreeGppChannelConditionModel::ComputeChannelCondition (Ptr<const MobilityModel> a,
                                                         Ptr<const MobilityModel> b) const
@@ -384,6 +455,27 @@ ThreeGppChannelConditionModel::ComputeChannelCondition (Ptr<const MobilityModel>
       cond->SetLosCondition (ChannelCondition::LosConditionValue::NLOSv);
     }
 
+  cond->SetO2iCondition (ComputeO2i (a, b));
+
+  if (cond->GetO2iCondition () == ChannelCondition::O2iConditionValue::O2I)
+    {
+      // Since we have O2I penetration losses, we should choose based on the
+      // threshold if it will be low or high penetration losses
+      // (see TR38.901 Table 7.4.3)
+      double o2iLowHighLossProb = m_uniformO2iLowHighLossVar->GetValue (0, 1);
+      ChannelCondition::O2iLowHighConditionValue lowHighLossCondition;
+
+      if (o2iLowHighLossProb < m_o2iLowLossThreshold)
+        {
+          lowHighLossCondition = ChannelCondition::O2iLowHighConditionValue::LOW;
+        }
+      else
+        {
+          lowHighLossCondition = ChannelCondition::O2iLowHighConditionValue::HIGH;
+        }
+      cond->SetO2iLowHighCondition (lowHighLossCondition);
+    }
+
   return cond;
 }
 
@@ -400,7 +492,10 @@ int64_t
 ThreeGppChannelConditionModel::AssignStreams (int64_t stream)
 {
   m_uniformVar->SetStream (stream);
-  return 1;
+  m_uniformVarO2i->SetStream (stream + 1);
+  m_uniformO2iLowHighLossVar->SetStream (stream + 2);
+
+  return 3;
 }
 
 double
@@ -432,7 +527,7 @@ ThreeGppChannelConditionModel::GetKey (Ptr<const MobilityModel> a, Ptr<const Mob
 NS_OBJECT_ENSURE_REGISTERED (ThreeGppRmaChannelConditionModel);
 
 TypeId
-ThreeGppRmaChannelConditionModel::GetTypeId (void)
+ThreeGppRmaChannelConditionModel::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::ThreeGppRmaChannelConditionModel")
     .SetParent<ThreeGppChannelConditionModel> ()
@@ -478,7 +573,7 @@ ThreeGppRmaChannelConditionModel::ComputePlos (Ptr<const MobilityModel> a,
 NS_OBJECT_ENSURE_REGISTERED (ThreeGppUmaChannelConditionModel);
 
 TypeId
-ThreeGppUmaChannelConditionModel::GetTypeId (void)
+ThreeGppUmaChannelConditionModel::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::ThreeGppUmaChannelConditionModel")
     .SetParent<ThreeGppChannelConditionModel> ()
@@ -546,7 +641,7 @@ ThreeGppUmaChannelConditionModel::ComputePlos (Ptr<const MobilityModel> a,
 NS_OBJECT_ENSURE_REGISTERED (ThreeGppUmiStreetCanyonChannelConditionModel);
 
 TypeId
-ThreeGppUmiStreetCanyonChannelConditionModel::GetTypeId (void)
+ThreeGppUmiStreetCanyonChannelConditionModel::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::ThreeGppUmiStreetCanyonChannelConditionModel")
     .SetParent<ThreeGppChannelConditionModel> ()
@@ -599,7 +694,7 @@ ThreeGppUmiStreetCanyonChannelConditionModel::ComputePlos (Ptr<const MobilityMod
 NS_OBJECT_ENSURE_REGISTERED (ThreeGppIndoorMixedOfficeChannelConditionModel);
 
 TypeId
-ThreeGppIndoorMixedOfficeChannelConditionModel::GetTypeId (void)
+ThreeGppIndoorMixedOfficeChannelConditionModel::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::ThreeGppIndoorMixedOfficeChannelConditionModel")
     .SetParent<ThreeGppChannelConditionModel> ()
@@ -656,7 +751,7 @@ ThreeGppIndoorMixedOfficeChannelConditionModel::ComputePlos (Ptr<const MobilityM
 NS_OBJECT_ENSURE_REGISTERED (ThreeGppIndoorOpenOfficeChannelConditionModel);
 
 TypeId
-ThreeGppIndoorOpenOfficeChannelConditionModel::GetTypeId (void)
+ThreeGppIndoorOpenOfficeChannelConditionModel::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::ThreeGppIndoorOpenOfficeChannelConditionModel")
     .SetParent<ThreeGppChannelConditionModel> ()

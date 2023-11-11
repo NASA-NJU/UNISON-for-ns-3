@@ -27,8 +27,8 @@ namespace ns3 {
 
 NS_LOG_COMPONENT_DEFINE ("Ipv4RawSocketFactoryImpl");
 
-Ptr<Socket> 
-Ipv4RawSocketFactoryImpl::CreateSocket (void)
+Ptr<Socket>
+Ipv4RawSocketFactoryImpl::CreateSocket ()
 {
   NS_LOG_FUNCTION (this);
   Ptr<Ipv4> ipv4 = GetObject<Ipv4> ();

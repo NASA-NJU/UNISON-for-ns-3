@@ -38,22 +38,6 @@ public:
 
   // Implementations of pure virtual methods of WifiInformationElement
   WifiInformationElementId ElementId () const override;
-  uint8_t GetInformationFieldSize () const override;
-  void SerializeInformationField (Buffer::Iterator start) const override;
-  uint8_t DeserializeInformationField (Buffer::Iterator start, uint8_t length) override;
-  /* This information element is a bit special in that it is only
-     included if the STA is an VHT STA. To support this we
-     override the Serialize and GetSerializedSize methods of
-     WifiInformationElement. */
-  Buffer::Iterator Serialize (Buffer::Iterator start) const override;
-  uint16_t GetSerializedSize () const override;
-
-  /**
-   * Set the VHT supported field.
-   *
-   * \param vhtSupported the VHT supported field
-   */
-  void SetVhtSupported (uint8_t vhtSupported);
 
   /**
    * Set the VHT Capabilities Info field in the VHT Capabilities information element.
@@ -136,7 +120,7 @@ public:
    *
    * \return the maximum MPDU length in bytes
    */
-  uint16_t GetMaxMpduLength (void) const;
+  uint16_t GetMaxMpduLength () const;
   /**
    * Get the supported channel width set.
    *
@@ -220,10 +204,14 @@ public:
    *
    * \return the maximum A-MPDU length in bytes
    */
-  uint32_t GetMaxAmpduLength (void) const;
+  uint32_t GetMaxAmpduLength () const;
 
 
 private:
+  uint16_t GetInformationFieldSize () const override;
+  void SerializeInformationField (Buffer::Iterator start) const override;
+  uint16_t DeserializeInformationField (Buffer::Iterator start, uint16_t length) override;
+
   //Capabilities Info fields
   uint8_t m_maxMpduLength;               ///< maximum MPDU length
   uint8_t m_supportedChannelWidthSet;    ///< supported channel width set
@@ -250,9 +238,6 @@ private:
   uint16_t m_rxHighestSupportedLongGuardIntervalDataRate; ///< receive highest supported long guard interval data rate
   std::vector<uint8_t> m_txMcsMap;                        ///< transmit MCS map
   uint16_t m_txHighestSupportedLongGuardIntervalDataRate; ///< transmit highest supported long guard interval data rate
-
-  /// This is used to decide if this element should be added to the frame or not
-  uint8_t m_vhtSupported;
 };
 
 /**

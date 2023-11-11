@@ -3,7 +3,7 @@
  * Copyright (c) 2009 University of Washington
  *
  * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as 
+ * it under the terms of the GNU General Public License version 2 as
  * published by the Free Software Foundation;
  *
  * This program is distributed in the hope that it will be useful,
@@ -30,7 +30,7 @@ namespace ns3
 {
 
 NS_LOG_COMPONENT_DEFINE ("UanMacAloha");
-  
+
 NS_OBJECT_ENSURE_REGISTERED (UanMacAloha);
 
 UanMacAloha::UanMacAloha ()
@@ -54,7 +54,7 @@ UanMacAloha::Clear ()
   if (m_phy)
     {
       m_phy->Clear ();
-      m_phy = 0;
+      m_phy = nullptr;
     }
 }
 
@@ -66,7 +66,7 @@ UanMacAloha::DoDispose ()
 }
 
 TypeId
-UanMacAloha::GetTypeId (void)
+UanMacAloha::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::UanMacAloha")
     .SetParent<UanMac> ()
@@ -97,7 +97,9 @@ UanMacAloha::Enqueue (Ptr<Packet> packet, uint16_t protocolNumber, const Address
       return true;
     }
   else
-    return false;
+    {
+      return false;
+    }
 }
 
 void

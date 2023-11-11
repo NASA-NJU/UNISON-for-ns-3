@@ -98,6 +98,7 @@ set(header_files
     model/tag-buffer.h
     model/tag.h
     model/trailer.h
+    test/header-serialization-test.h
     utils/address-utils.h
     utils/bit-deserializer.h
     utils/bit-serializer.h
@@ -135,6 +136,7 @@ set(header_files
     utils/pcap-file-wrapper.h
     utils/pcap-file.h
     utils/pcap-test.h
+    utils/queue-fwd.h
     utils/queue-item.h
     utils/queue-limits.h
     utils/queue-size.h

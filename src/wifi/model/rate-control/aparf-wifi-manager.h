@@ -36,7 +36,7 @@ struct AparfWifiRemoteStation;
  * in IEEE 802.11 wireless LANs</i> by Chevillat, P.; Jelitto, J.
  * and Truong, H. L. in International Journal of Wireless Information
  * Networks, Springer, 2005, 12, 123-145.
- * http://www.cs.mun.ca/~yzchen/papers/papers/rate_adaptation/80211_dynamic_rate_power_adjustment_chevillat_j2005.pdf
+ * https://web.archive.org/web/20170810111231/http://www.cs.mun.ca/~yzchen/papers/papers/rate_adaptation/80211_dynamic_rate_power_adjustment_chevillat_j2005.pdf
  *
  * This RAA does not support HT modes and will error
  * exit if the user tries to configure this RAA with a Wi-Fi MAC
@@ -49,9 +49,9 @@ public:
    * Register this type.
    * \return The object TypeId.
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
   AparfWifiManager ();
-  virtual ~AparfWifiManager ();
+  ~AparfWifiManager () override;
 
   void SetupPhy (const Ptr<WifiPhy> phy) override;
 
@@ -67,8 +67,8 @@ public:
 
 
 private:
-  void DoInitialize (void) override;
-  WifiRemoteStation * DoCreateStation (void) const override;
+  void DoInitialize () override;
+  WifiRemoteStation * DoCreateStation () const override;
   void DoReportRxOk (WifiRemoteStation *station,
                      double rxSnr, WifiMode txMode) override;
   void DoReportRtsFailed (WifiRemoteStation *station) override;
@@ -79,7 +79,7 @@ private:
                        double dataSnr, uint16_t dataChannelWidth, uint8_t dataNss) override;
   void DoReportFinalRtsFailed (WifiRemoteStation *station) override;
   void DoReportFinalDataFailed (WifiRemoteStation *station) override;
-  WifiTxVector DoGetDataTxVector (WifiRemoteStation *station) override;
+  WifiTxVector DoGetDataTxVector (WifiRemoteStation *station, uint16_t allowedWidth) override;
   WifiTxVector DoGetRtsTxVector (WifiRemoteStation *station) override;
 
   /** Check for initializations.

@@ -80,7 +80,7 @@ Ipv6EndPoint* Ipv6EndPointDemux::Allocate ()
   if (port == 0)
     {
       NS_LOG_WARN ("Ephemeral port allocation failed.");
-      return 0;
+      return nullptr;
     }
   Ipv6EndPoint *endPoint = new Ipv6EndPoint (Ipv6Address::GetAny (), port);
   m_endPoints.push_back (endPoint);
@@ -95,7 +95,7 @@ Ipv6EndPoint* Ipv6EndPointDemux::Allocate (Ipv6Address address)
   if (port == 0)
     {
       NS_LOG_WARN ("Ephemeral port allocation failed.");
-      return 0;
+      return nullptr;
     }
   Ipv6EndPoint *endPoint = new Ipv6EndPoint (address, port);
   m_endPoints.push_back (endPoint);
@@ -113,10 +113,10 @@ Ipv6EndPoint* Ipv6EndPointDemux::Allocate (Ptr<NetDevice> boundNetDevice, uint16
 Ipv6EndPoint* Ipv6EndPointDemux::Allocate (Ptr<NetDevice> boundNetDevice, Ipv6Address address, uint16_t port)
 {
   NS_LOG_FUNCTION (this << boundNetDevice << address << port);
-  if (LookupLocal (boundNetDevice, address, port) || LookupLocal (0, address, port))
+  if (LookupLocal (boundNetDevice, address, port) || LookupLocal (nullptr, address, port))
     {
       NS_LOG_WARN ("Duplicated endpoint.");
-      return 0;
+      return nullptr;
     }
   Ipv6EndPoint *endPoint = new Ipv6EndPoint (address, port);
   m_endPoints.push_back (endPoint);
@@ -135,10 +135,10 @@ Ipv6EndPoint* Ipv6EndPointDemux::Allocate (Ptr<NetDevice> boundNetDevice,
           (*i)->GetLocalAddress () == localAddress &&
           (*i)->GetPeerPort () == peerPort &&
           (*i)->GetPeerAddress () == peerAddress &&
-          ((*i)->GetBoundNetDevice () == boundNetDevice || (*i)->GetBoundNetDevice () == 0))
+          ((*i)->GetBoundNetDevice () == boundNetDevice || !(*i)->GetBoundNetDevice ()))
         {
           NS_LOG_WARN ("Duplicated endpoint.");
-          return 0;
+          return nullptr;
         }
     }
   Ipv6EndPoint *endPoint = new Ipv6EndPoint (localAddress, localPort);
@@ -279,10 +279,22 @@ Ipv6EndPointDemux::EndPoints Ipv6EndPointDemux::Lookup (Ipv6Address daddr, uint1
 
   // Here we find the most exact match
   EndPoints retval;
-  if (!retval4.empty ()) retval = retval4;
-  else if (!retval3.empty ()) retval = retval3;
-  else if (!retval2.empty ()) retval = retval2;
-  else retval = retval1;
+  if (!retval4.empty ())
+    {
+      retval = retval4;
+    }
+  else if (!retval3.empty ())
+    {
+      retval = retval3;
+    }
+  else if (!retval2.empty ())
+    {
+      retval = retval2;
+    }
+  else
+    {
+      retval = retval1;
+    }
 
   NS_ABORT_MSG_IF (retval.size () > 1, "Too many endpoints - perhaps you created too many sockets without binding them to different NetDevices.");
   return retval;  // might be empty if no matches
@@ -291,7 +303,7 @@ Ipv6EndPointDemux::EndPoints Ipv6EndPointDemux::Lookup (Ipv6Address daddr, uint1
 Ipv6EndPoint* Ipv6EndPointDemux::SimpleLookup (Ipv6Address dst, uint16_t dport, Ipv6Address src, uint16_t sport)
 {
   uint32_t genericity = 3;
-  Ipv6EndPoint *generic = 0;
+  Ipv6EndPoint *generic = nullptr;
 
   for (EndPointsI i = m_endPoints.begin (); i != m_endPoints.end (); i++)
     {

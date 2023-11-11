@@ -21,6 +21,8 @@
 #ifndef LTE_TEST_RLC_UM_TRANSMITTER_H
 #define LTE_TEST_RLC_UM_TRANSMITTER_H
 
+#include "ns3/nstime.h"
+#include "ns3/ptr.h"
 #include "ns3/test.h"
 
 namespace ns3 {
@@ -28,6 +30,7 @@ namespace ns3 {
 class LteTestRrc;
 class LteTestMac;
 class LteTestPdcp;
+class LteRlc;
 
 }
 
@@ -49,9 +52,9 @@ class LteRlcUmTransmitterTestSuite : public TestSuite
  * \ingroup lte-test
  * \ingroup tests
  *
- * \brief Test case used by LteRlcUmTransmitterOneSduTestCase to create topology 
- * and to implement functionalities and check if data received corresponds to 
- * data sent. 
+ * \brief Test case used by LteRlcUmTransmitterOneSduTestCase to create topology
+ * and to implement functionalities and check if data received corresponds to
+ * data sent.
  */
 class LteRlcUmTransmitterTestCase : public TestCase
 {
@@ -63,7 +66,7 @@ class LteRlcUmTransmitterTestCase : public TestCase
      */
     LteRlcUmTransmitterTestCase (std::string name);
     LteRlcUmTransmitterTestCase ();
-    virtual ~LteRlcUmTransmitterTestCase ();
+    ~LteRlcUmTransmitterTestCase () override;
 
     /**
      * Check data received function
@@ -74,7 +77,7 @@ class LteRlcUmTransmitterTestCase : public TestCase
     void CheckDataReceived (Time time, std::string shouldReceived, std::string assertMsg);
 
   protected:
-    virtual void DoRun (void);
+    void DoRun () override;
 
     Ptr<LteTestPdcp> txPdcp; ///< the transmit PDCP
     Ptr<LteRlc> txRlc; ///< the RLC
@@ -106,10 +109,10 @@ class LteRlcUmTransmitterOneSduTestCase : public LteRlcUmTransmitterTestCase
      */
     LteRlcUmTransmitterOneSduTestCase (std::string name);
     LteRlcUmTransmitterOneSduTestCase ();
-    virtual ~LteRlcUmTransmitterOneSduTestCase ();
+    ~LteRlcUmTransmitterOneSduTestCase () override;
 
   private:
-    virtual void DoRun (void);
+    void DoRun () override;
 
 };
 
@@ -129,10 +132,10 @@ class LteRlcUmTransmitterSegmentationTestCase : public LteRlcUmTransmitterTestCa
      */
     LteRlcUmTransmitterSegmentationTestCase (std::string name);
     LteRlcUmTransmitterSegmentationTestCase ();
-    virtual ~LteRlcUmTransmitterSegmentationTestCase ();
+    ~LteRlcUmTransmitterSegmentationTestCase () override;
 
   private:
-    virtual void DoRun (void);
+    void DoRun () override;
 
 };
 
@@ -152,10 +155,10 @@ class LteRlcUmTransmitterConcatenationTestCase : public LteRlcUmTransmitterTestC
      */
     LteRlcUmTransmitterConcatenationTestCase (std::string name);
     LteRlcUmTransmitterConcatenationTestCase ();
-    virtual ~LteRlcUmTransmitterConcatenationTestCase ();
+    ~LteRlcUmTransmitterConcatenationTestCase () override;
 
   private:
-    virtual void DoRun (void);
+    void DoRun () override;
 
 };
 
@@ -175,10 +178,10 @@ class LteRlcUmTransmitterReportBufferStatusTestCase : public LteRlcUmTransmitter
      */
     LteRlcUmTransmitterReportBufferStatusTestCase (std::string name);
     LteRlcUmTransmitterReportBufferStatusTestCase ();
-    virtual ~LteRlcUmTransmitterReportBufferStatusTestCase ();
+    ~LteRlcUmTransmitterReportBufferStatusTestCase () override;
 
   private:
-    virtual void DoRun (void);
+    void DoRun () override;
 
 };
 

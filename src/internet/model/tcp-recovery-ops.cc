@@ -32,7 +32,7 @@ NS_LOG_COMPONENT_DEFINE ("TcpRecoveryOps");
 NS_OBJECT_ENSURE_REGISTERED (TcpRecoveryOps);
 
 TypeId
-TcpRecoveryOps::GetTypeId (void)
+TcpRecoveryOps::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::TcpRecoveryOps")
     .SetParent<Object> ()
@@ -67,7 +67,7 @@ TcpRecoveryOps::UpdateBytesSent (uint32_t bytesSent)
 NS_OBJECT_ENSURE_REGISTERED (TcpClassicRecovery);
 
 TypeId
-TcpClassicRecovery::GetTypeId (void)
+TcpClassicRecovery::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::TcpClassicRecovery")
     .SetParent<TcpRecoveryOps> ()
@@ -77,7 +77,7 @@ TcpClassicRecovery::GetTypeId (void)
   return tid;
 }
 
-TcpClassicRecovery::TcpClassicRecovery (void) : TcpRecoveryOps ()
+TcpClassicRecovery::TcpClassicRecovery () : TcpRecoveryOps ()
 {
   NS_LOG_FUNCTION (this);
 }
@@ -88,14 +88,14 @@ TcpClassicRecovery::TcpClassicRecovery (const TcpClassicRecovery& sock)
   NS_LOG_FUNCTION (this);
 }
 
-TcpClassicRecovery::~TcpClassicRecovery (void)
+TcpClassicRecovery::~TcpClassicRecovery ()
 {
   NS_LOG_FUNCTION (this);
 }
 
 void
 TcpClassicRecovery::EnterRecovery (Ptr<TcpSocketState> tcb, uint32_t dupAckCount,
-                                   [[maybe_unused]] uint32_t unAckDataCount, 
+                                   [[maybe_unused]] uint32_t unAckDataCount,
                                    [[maybe_unused]] uint32_t deliveredBytes)
 {
   NS_LOG_FUNCTION (this << tcb << dupAckCount << unAckDataCount);

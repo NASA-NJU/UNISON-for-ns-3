@@ -141,8 +141,9 @@ LteLinkAdaptationTestCase::LteLinkAdaptationTestCase (std::string name, double s
     m_loss (loss),
     m_mcsIndex (mcsIndex)
 {
-  std::ostringstream sstream1, sstream2;
-  sstream1 << " snr=" << snrDb 
+  std::ostringstream sstream1;
+  std::ostringstream sstream2;
+  sstream1 << " snr=" << snrDb
            << " mcs=" << mcsIndex;
 
   NS_LOG_INFO ("Creating LteLinkAdaptationTestCase: " + sstream1.str ());
@@ -153,7 +154,7 @@ LteLinkAdaptationTestCase::~LteLinkAdaptationTestCase ()
 }
 
 void
-LteLinkAdaptationTestCase::DoRun (void)
+LteLinkAdaptationTestCase::DoRun ()
 {
   Config::Reset ();
   Config::SetDefault ("ns3::LteAmc::AmcModel", EnumValue (LteAmc::PiroEW2010));

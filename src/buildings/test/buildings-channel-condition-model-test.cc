@@ -33,7 +33,7 @@ NS_LOG_COMPONENT_DEFINE ("BuildingsChannelConditionModelsTest");
 /**
  * \ingroup building-test
  * \ingroup tests
- * 
+ *
  * Test case for the class BuildingsChannelConditionModel. It checks if the
  * channel condition is correctly determined when a building is deployed in the
  * scenario
@@ -49,13 +49,13 @@ public:
   /**
    * Destructor
    */
-  virtual ~BuildingsChannelConditionModelTestCase ();
+  ~BuildingsChannelConditionModelTestCase () override;
 
 private:
   /**
    * Builds the simulation scenario and perform the tests
    */
-  virtual void DoRun (void);
+  void DoRun () override;
 
   /**
    * Struct containing the parameters for each test
@@ -80,7 +80,7 @@ BuildingsChannelConditionModelTestCase::~BuildingsChannelConditionModelTestCase 
 }
 
 void
-BuildingsChannelConditionModelTestCase::DoRun (void)
+BuildingsChannelConditionModelTestCase::DoRun ()
 {
   TestVector testVector;
 

@@ -19,10 +19,10 @@
  */
 
 #include "ns3/log.h"
-#include "ns3/sequence-number.h"
 #include "ns3/packet.h"
+#include "ns3/sequence-number.h"
 #include "mac-rx-middle.h"
-#include "wifi-mac-queue-item.h"
+#include "wifi-mpdu.h"
 
 namespace ns3 {
 
@@ -66,7 +66,7 @@ public:
    * \return true if we are de-fragmenting packets,
    *         false otherwise
    */
-  bool IsDeFragmenting (void) const
+  bool IsDeFragmenting () const
   {
     return m_defragmenting;
   }
@@ -142,7 +142,7 @@ public:
    *
    * \return the last sequence control
    */
-  uint16_t GetLastSequenceControl (void) const
+  uint16_t GetLastSequenceControl () const
   {
     return m_lastSequenceControl;
   }
@@ -200,7 +200,7 @@ MacRxMiddle::Lookup (const WifiMacHeader *hdr)
     {
       /* only for QoS data non-broadcast frames */
       originator = m_qosOriginatorStatus[std::make_pair (source, hdr->GetQosTid ())];
-      if (originator == 0)
+      if (originator == nullptr)
         {
           originator = new OriginatorRxStatus ();
           m_qosOriginatorStatus[std::make_pair (source, hdr->GetQosTid ())] = originator;
@@ -214,7 +214,7 @@ MacRxMiddle::Lookup (const WifiMacHeader *hdr)
        * see section 7.1.3.4.1
        */
       originator = m_originatorStatus[source];
-      if (originator == 0)
+      if (originator == nullptr)
         {
           originator = new OriginatorRxStatus ();
           m_originatorStatus[source] = originator;
@@ -257,7 +257,7 @@ MacRxMiddle::HandleFragments (Ptr<const Packet> packet, const WifiMacHeader *hdr
             {
               NS_LOG_DEBUG ("non-ordered fragment");
             }
-          return 0;
+          return nullptr;
         }
       else
         {
@@ -273,7 +273,7 @@ MacRxMiddle::HandleFragments (Ptr<const Packet> packet, const WifiMacHeader *hdr
           else
             {
               NS_LOG_DEBUG ("non-ordered fragment");
-              return 0;
+              return nullptr;
             }
         }
     }
@@ -286,7 +286,7 @@ MacRxMiddle::HandleFragments (Ptr<const Packet> packet, const WifiMacHeader *hdr
                         ", size=" << packet->GetSize ());
           originator->AccumulateFirstFragment (packet);
           originator->SetSequenceControl (hdr->GetSequenceControl ());
-          return 0;
+          return nullptr;
         }
       else
         {
@@ -296,9 +296,9 @@ MacRxMiddle::HandleFragments (Ptr<const Packet> packet, const WifiMacHeader *hdr
 }
 
 void
-MacRxMiddle::Receive (Ptr<WifiMacQueueItem> mpdu)
+MacRxMiddle::Receive (Ptr<const WifiMpdu> mpdu, uint8_t linkId)
 {
-  NS_LOG_FUNCTION (*mpdu);
+  NS_LOG_FUNCTION (*mpdu << +linkId);
   const WifiMacHeader* hdr = &mpdu->GetHeader ();
   NS_ASSERT (hdr->IsData () || hdr->IsMgt ());
 
@@ -326,7 +326,7 @@ MacRxMiddle::Receive (Ptr<WifiMacQueueItem> mpdu)
       return;
     }
   Ptr<const Packet> aggregate = HandleFragments (mpdu->GetPacket (), hdr, originator);
-  if (aggregate == 0)
+  if (!aggregate)
     {
       return;
     }
@@ -339,7 +339,7 @@ MacRxMiddle::Receive (Ptr<WifiMacQueueItem> mpdu)
     }
   if (aggregate == mpdu->GetPacket ())
     {
-      m_callback (mpdu);
+      m_callback (mpdu, linkId);
     }
   else
     {
@@ -347,7 +347,7 @@ MacRxMiddle::Receive (Ptr<WifiMacQueueItem> mpdu)
       // A-MSDUs saves us the time to deaggregate the A-MSDU in MSDUs (which are
       // kept separate in the received mpdu) and allows us to pass the originally
       // transmitted packets (i.e., with the same UID) to the receiver.
-      m_callback (Create<WifiMacQueueItem> (aggregate, *hdr));
+      m_callback (Create<WifiMpdu> (aggregate, *hdr), linkId);
     }
 }
 

@@ -49,12 +49,12 @@ public:
    */
   static TypeId GetTypeId ();
   Uinteger32Probe ();
-  virtual ~Uinteger32Probe ();
+  ~Uinteger32Probe () override;
 
   /**
    * \return the most recent value
    */
-  uint32_t GetValue (void) const;
+  uint32_t GetValue () const;
 
   /**
    * \param value set the traced uint32_t to a new value
@@ -76,7 +76,7 @@ public:
    * \param obj ns3::Object to connect to
    * \return true if the trace source was successfully connected
    */
-  virtual bool ConnectByObject (std::string traceSource, Ptr<Object> obj);
+  bool ConnectByObject (std::string traceSource, Ptr<Object> obj) override;
 
   /**
    * \brief connect to a trace source provided by a config path
@@ -86,7 +86,7 @@ public:
    * Note, if an invalid path is provided, the probe will not be connected
    * to anything.
    */
-  virtual void ConnectByPath (std::string path);
+  void ConnectByPath (std::string path) override;
 
 private:
   /**

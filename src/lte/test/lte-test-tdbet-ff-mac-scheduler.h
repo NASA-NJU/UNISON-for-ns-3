@@ -34,11 +34,11 @@ using namespace ns3;
  * \ingroup lte-test
  * \ingroup tests
  *
- * \brief This system test program creates different test cases with a single eNB and 
- * several UEs, all having the same Radio Bearer specification. In each test 
- * case, the UEs see the same SINR from the eNB; different test cases are 
- * implemented obtained by using different SINR values and different numbers of 
- * UEs. The test consists on checking that the obtained throughput performance 
+ * \brief This system test program creates different test cases with a single eNB and
+ * several UEs, all having the same Radio Bearer specification. In each test
+ * case, the UEs see the same SINR from the eNB; different test cases are
+ * implemented obtained by using different SINR values and different numbers of
+ * UEs. The test consists on checking that the obtained throughput performance
  * is equal among users is consistent with the definition of blind equal throughput
  * scheduling
  */
@@ -55,7 +55,7 @@ public:
    * \param errorModelEnabled indicates whether the error model is enabled
    */
   LenaTdBetFfMacSchedulerTestCase1 (uint16_t nUser, double dist, double thrRefDl, double thrRefUl,bool errorModelEnabled);
-  virtual ~LenaTdBetFfMacSchedulerTestCase1 ();
+  ~LenaTdBetFfMacSchedulerTestCase1 () override;
 
 private:
   /**
@@ -65,7 +65,7 @@ private:
    * \returns the name string
    */
   static std::string BuildNameString (uint16_t nUser, double dist);
-  virtual void DoRun (void);
+  void DoRun () override;
   uint16_t m_nUser; ///< number of UE nodes
   double m_dist; ///< the distance between UE nodes and eNodeB
   double m_thrRefDl; ///< the DL throughput reference
@@ -92,7 +92,7 @@ public:
    * \param errorModelEnabled indicates whether the error model is enabled
    */
   LenaTdBetFfMacSchedulerTestCase2 (std::vector<double> dist, std::vector<uint32_t> achievableRateDl, std::vector<uint32_t> estThrTdBetUl, bool errorModelEnabled);
-  virtual ~LenaTdBetFfMacSchedulerTestCase2 ();
+  ~LenaTdBetFfMacSchedulerTestCase2 () override;
 
 private:
   /**
@@ -102,7 +102,7 @@ private:
    * \returns the name string
    */
   static std::string BuildNameString (uint16_t nUser, std::vector<double> dist);
-  virtual void DoRun (void);
+  void DoRun () override;
   uint16_t m_nUser; ///< number of UE nodes
   std::vector<double> m_dist; ///< the distance between nodes
   std::vector<uint32_t> m_achievableRateDl; ///< DL achievable rate

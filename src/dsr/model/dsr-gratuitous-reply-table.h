@@ -18,7 +18,7 @@
  * Author: Yufei Cheng   <yfcheng@ittc.ku.edu>
  *
  * James P.G. Sterbenz <jpgs@ittc.ku.edu>, director
- * ResiliNets Research Group  http://wiki.ittc.ku.edu/resilinets
+ * ResiliNets Research Group  https://resilinets.org/
  * Information and Telecommunication Technology Center (ITTC)
  * and Department of Electrical Engineering and Computer Science
  * The University of Kansas Lawrence, KS USA.
@@ -79,7 +79,7 @@ public:
   static TypeId GetTypeId ();
 
   DsrGraReply ();
-  virtual ~DsrGraReply ();
+  ~DsrGraReply () override;
 
   /// Set the gratuitous reply table size
   /// \param g The gratuitous reply table size

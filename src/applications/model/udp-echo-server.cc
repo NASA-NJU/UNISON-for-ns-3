@@ -1,7 +1,7 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright 2007 University of Washington
- * 
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
  * published by the Free Software Foundation;
@@ -39,7 +39,7 @@ NS_LOG_COMPONENT_DEFINE ("UdpEchoServerApplication");
 NS_OBJECT_ENSURE_REGISTERED (UdpEchoServer);
 
 TypeId
-UdpEchoServer::GetTypeId (void)
+UdpEchoServer::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::UdpEchoServer")
     .SetParent<Application> ()
@@ -67,23 +67,23 @@ UdpEchoServer::UdpEchoServer ()
 UdpEchoServer::~UdpEchoServer()
 {
   NS_LOG_FUNCTION (this);
-  m_socket = 0;
-  m_socket6 = 0;
+  m_socket = nullptr;
+  m_socket6 = nullptr;
 }
 
 void
-UdpEchoServer::DoDispose (void)
+UdpEchoServer::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
   Application::DoDispose ();
 }
 
-void 
-UdpEchoServer::StartApplication (void)
+void
+UdpEchoServer::StartApplication ()
 {
   NS_LOG_FUNCTION (this);
 
-  if (m_socket == 0)
+  if (!m_socket)
     {
       TypeId tid = TypeId::LookupByName ("ns3::UdpSocketFactory");
       m_socket = Socket::CreateSocket (GetNode (), tid);
@@ -107,7 +107,7 @@ UdpEchoServer::StartApplication (void)
         }
     }
 
-  if (m_socket6 == 0)
+  if (!m_socket6)
     {
       TypeId tid = TypeId::LookupByName ("ns3::UdpSocketFactory");
       m_socket6 = Socket::CreateSocket (GetNode (), tid);
@@ -135,24 +135,24 @@ UdpEchoServer::StartApplication (void)
   m_socket6->SetRecvCallback (MakeCallback (&UdpEchoServer::HandleRead, this));
 }
 
-void 
+void
 UdpEchoServer::StopApplication ()
 {
   NS_LOG_FUNCTION (this);
 
-  if (m_socket != 0) 
+  if (m_socket)
     {
       m_socket->Close ();
       m_socket->SetRecvCallback (MakeNullCallback<void, Ptr<Socket> > ());
     }
-  if (m_socket6 != 0) 
+  if (m_socket6)
     {
       m_socket6->Close ();
       m_socket6->SetRecvCallback (MakeNullCallback<void, Ptr<Socket> > ());
     }
 }
 
-void 
+void
 UdpEchoServer::HandleRead (Ptr<Socket> socket)
 {
   NS_LOG_FUNCTION (this << socket);

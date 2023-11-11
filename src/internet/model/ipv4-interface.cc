@@ -38,16 +38,16 @@ NS_LOG_COMPONENT_DEFINE ("Ipv4Interface");
 
 NS_OBJECT_ENSURE_REGISTERED (Ipv4Interface);
 
-TypeId 
-Ipv4Interface::GetTypeId (void)
+TypeId
+Ipv4Interface::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::Ipv4Interface")
     .SetParent<Object> ()
     .SetGroupName ("Internet")
     .AddAttribute ("ArpCache",
                    "The arp cache for this ipv4 interface",
-                   PointerValue (0),
-                   MakePointerAccessor (&Ipv4Interface::SetArpCache, 
+                   PointerValue (nullptr),
+                   MakePointerAccessor (&Ipv4Interface::SetArpCache,
                                         &Ipv4Interface::GetArpCache),
                    MakePointerChecker<ArpCache> ())
   ;
@@ -55,19 +55,19 @@ Ipv4Interface::GetTypeId (void)
   return tid;
 }
 
-/** 
+/**
  * By default, Ipv4 interface are created in the "down" state
- *  with no IP addresses.  Before becoming usable, the user must 
+ *  with no IP addresses.  Before becoming usable, the user must
  * invoke SetUp on them once an Ipv4 address and mask have been set.
  */
-Ipv4Interface::Ipv4Interface () 
+Ipv4Interface::Ipv4Interface ()
   : m_ifup (false),
     m_forwarding (true),
     m_metric (1),
-    m_node (0), 
-    m_device (0),
-    m_tc (0),
-    m_cache (0)
+    m_node (nullptr),
+    m_device (nullptr),
+    m_tc (nullptr),
+    m_cache (nullptr)
 {
   NS_LOG_FUNCTION (this);
 }
@@ -78,17 +78,17 @@ Ipv4Interface::~Ipv4Interface ()
 }
 
 void
-Ipv4Interface::DoDispose (void)
+Ipv4Interface::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
-  m_node = 0;
-  m_device = 0;
-  m_tc = 0;
-  m_cache = 0;
+  m_node = nullptr;
+  m_device = nullptr;
+  m_tc = nullptr;
+  m_cache = nullptr;
   Object::DoDispose ();
 }
 
-void 
+void
 Ipv4Interface::SetNode (Ptr<Node> node)
 {
   NS_LOG_FUNCTION (this << node);
@@ -96,7 +96,7 @@ Ipv4Interface::SetNode (Ptr<Node> node)
   DoSetup ();
 }
 
-void 
+void
 Ipv4Interface::SetDevice (Ptr<NetDevice> device)
 {
   NS_LOG_FUNCTION (this << device);
@@ -112,10 +112,10 @@ Ipv4Interface::SetTrafficControl (Ptr<TrafficControlLayer> tc)
 }
 
 void
-Ipv4Interface::DoSetup (void)
+Ipv4Interface::DoSetup ()
 {
   NS_LOG_FUNCTION (this);
-  if (m_node == 0 || m_device == 0)
+  if (!m_node || !m_device)
     {
       return;
     }
@@ -128,7 +128,7 @@ Ipv4Interface::DoSetup (void)
 }
 
 Ptr<NetDevice>
-Ipv4Interface::GetDevice (void) const
+Ipv4Interface::GetDevice () const
 {
   NS_LOG_FUNCTION (this);
   return m_device;
@@ -142,7 +142,7 @@ Ipv4Interface::SetMetric (uint16_t metric)
 }
 
 uint16_t
-Ipv4Interface::GetMetric (void) const
+Ipv4Interface::GetMetric () const
 {
   NS_LOG_FUNCTION (this);
   return m_metric;
@@ -163,46 +163,46 @@ Ipv4Interface::GetArpCache () const
 }
 
 /**
- * These are IP interface states and may be distinct from 
+ * These are IP interface states and may be distinct from
  * NetDevice states, such as found in real implementations
  * (where the device may be down but IP interface state is still up).
  */
-bool 
-Ipv4Interface::IsUp (void) const
+bool
+Ipv4Interface::IsUp () const
 {
   NS_LOG_FUNCTION (this);
   return m_ifup;
 }
 
-bool 
-Ipv4Interface::IsDown (void) const
+bool
+Ipv4Interface::IsDown () const
 {
   NS_LOG_FUNCTION (this);
   return !m_ifup;
 }
 
-void 
-Ipv4Interface::SetUp (void)
+void
+Ipv4Interface::SetUp ()
 {
   NS_LOG_FUNCTION (this);
   m_ifup = true;
 }
 
-void 
-Ipv4Interface::SetDown (void)
+void
+Ipv4Interface::SetDown ()
 {
   NS_LOG_FUNCTION (this);
   m_ifup = false;
 }
 
-bool 
-Ipv4Interface::IsForwarding (void) const
+bool
+Ipv4Interface::IsForwarding () const
 {
   NS_LOG_FUNCTION (this);
   return m_forwarding;
 }
 
-void 
+void
 Ipv4Interface::SetForwarding (bool val)
 {
   NS_LOG_FUNCTION (this << val);
@@ -227,9 +227,9 @@ Ipv4Interface::Send (Ptr<Packet> p, const Ipv4Header & hdr, Ipv4Address dest)
       p->AddHeader (hdr);
       m_device->Send (p, m_device->GetBroadcast (), Ipv4L3Protocol::PROT_NUMBER);
       return;
-    } 
+    }
 
-  NS_ASSERT (m_tc != 0);
+  NS_ASSERT (m_tc);
 
   // is this packet aimed at a local interface ?
   for (Ipv4InterfaceAddressListCI i = m_ifaddrs.begin (); i != m_ifaddrs.end (); ++i)
@@ -299,7 +299,7 @@ Ipv4Interface::Send (Ptr<Packet> p, const Ipv4Header & hdr, Ipv4Address dest)
 }
 
 uint32_t
-Ipv4Interface::GetNAddresses (void) const
+Ipv4Interface::GetNAddresses () const
 {
   NS_LOG_FUNCTION (this);
   return m_ifaddrs.size ();
@@ -310,6 +310,10 @@ Ipv4Interface::AddAddress (Ipv4InterfaceAddress addr)
 {
   NS_LOG_FUNCTION (this << addr);
   m_ifaddrs.push_back (addr);
+  if (!m_addAddressCallback.IsNull ())
+    {
+      m_addAddressCallback(this, addr);
+    }
   return true;
 }
 
@@ -331,7 +335,7 @@ Ipv4Interface::GetAddress (uint32_t index) const
     }
   else
     {
-      NS_FATAL_ERROR ("index " << index << " out of bounds");  
+      NS_FATAL_ERROR ("index " << index << " out of bounds");
     }
   Ipv4InterfaceAddress addr;
   return (addr);  // quiet compiler
@@ -353,6 +357,10 @@ Ipv4Interface::RemoveAddress (uint32_t index)
         {
           Ipv4InterfaceAddress addr = *i;
           m_ifaddrs.erase (i);
+          if (!m_removeAddressCallback.IsNull ())
+            {
+              m_removeAddressCallback(this, addr);
+            }
           return addr;
         }
       ++tmp;
@@ -380,10 +388,28 @@ Ipv4Interface::RemoveAddress(Ipv4Address address)
         {
           Ipv4InterfaceAddress ifAddr = *it;
           m_ifaddrs.erase(it);
+          if (!m_removeAddressCallback.IsNull ())
+            {
+              m_removeAddressCallback(this, ifAddr);
+            }
           return ifAddr;
         }
     }
   return Ipv4InterfaceAddress();
+}
+
+void
+Ipv4Interface::RemoveAddressCallback (Callback<void, Ptr<Ipv4Interface>, Ipv4InterfaceAddress> removeAddressCallback)
+{
+  NS_LOG_FUNCTION (this << &removeAddressCallback);
+  m_removeAddressCallback = removeAddressCallback;
+}
+
+void
+Ipv4Interface::AddAddressCallback (Callback<void, Ptr<Ipv4Interface>, Ipv4InterfaceAddress> addAddressCallback)
+{
+  NS_LOG_FUNCTION (this << &addAddressCallback);
+  m_addAddressCallback = addAddressCallback;
 }
 
 } // namespace ns3

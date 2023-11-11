@@ -20,7 +20,7 @@
 
 #include "ns3/log.h"
 #include "wifi-tx-timer.h"
-#include "wifi-mac-queue-item.h"
+#include "wifi-mpdu.h"
 #include "wifi-tx-vector.h"
 #include "wifi-psdu.h"
 
@@ -40,7 +40,7 @@ WifiTxTimer::WifiTxTimer ()
 WifiTxTimer::~WifiTxTimer ()
 {
   m_timeoutEvent.Cancel ();
-  m_impl = 0;
+  m_impl = nullptr;
 }
 
 void
@@ -68,7 +68,7 @@ WifiTxTimer::Reschedule (const Time& delay)
 }
 
 void
-WifiTxTimer::Expire (void)
+WifiTxTimer::Expire ()
 {
   NS_LOG_FUNCTION (this);
   Time now = Simulator::Now ();
@@ -84,7 +84,7 @@ WifiTxTimer::Expire (void)
 }
 
 WifiTxTimer::Reason
-WifiTxTimer::GetReason (void) const
+WifiTxTimer::GetReason () const
 {
   NS_ASSERT (IsRunning ());
   return m_reason;
@@ -118,21 +118,21 @@ case WAIT_ ## x: \
 }
 
 bool
-WifiTxTimer::IsRunning (void) const
+WifiTxTimer::IsRunning () const
 {
   return m_timeoutEvent.IsRunning ();
 }
 
 void
-WifiTxTimer::Cancel (void)
+WifiTxTimer::Cancel ()
 {
   NS_LOG_FUNCTION (this << GetReasonString (m_reason));
   m_timeoutEvent.Cancel ();
-  m_impl = 0;
+  m_impl = nullptr;
 }
 
 Time
-WifiTxTimer::GetDelayLeft (void) const
+WifiTxTimer::GetDelayLeft () const
 {
   return Simulator::GetDelayLeft (m_timeoutEvent);
 }
@@ -144,7 +144,7 @@ WifiTxTimer::SetMpduResponseTimeoutCallback (MpduResponseTimeout callback) const
 }
 
 void
-WifiTxTimer::FeedTraceSource (Ptr<WifiMacQueueItem> item, WifiTxVector txVector)
+WifiTxTimer::FeedTraceSource (Ptr<WifiMpdu> item, WifiTxVector txVector)
 {
   if (!m_mpduResponseTimeoutCallback.IsNull ())
     {

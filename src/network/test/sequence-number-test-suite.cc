@@ -44,7 +44,7 @@ class SequenceNumberTestObj : public Object
 
 public:
 
-  SequenceNumberTestObj () 
+  SequenceNumberTestObj ()
   {
     m_testTracedSequenceNumber = SequenceNumber32 (0);
   }
@@ -53,7 +53,7 @@ public:
    * \brief Get the type ID.
    * \return The object TypeId.
    */
-  static TypeId GetTypeId (void)
+  static TypeId GetTypeId ()
   {
     static TypeId tid = TypeId ("ns3::SequenceNumberTestObj")
       .SetParent<Object> ()
@@ -66,7 +66,7 @@ public:
     return tid;
   }
 
-  TypeId GetInstanceTypeId (void) const
+  TypeId GetInstanceTypeId () const override
   {
     return GetTypeId ();
   }
@@ -101,8 +101,8 @@ class SequenceNumberTestCase : public TestCase
 public:
 
   SequenceNumberTestCase ();
-  virtual ~SequenceNumberTestCase ();
-  virtual void DoRun (void);
+  ~SequenceNumberTestCase () override;
+  void DoRun () override;
 };
 
 SequenceNumberTestCase::SequenceNumberTestCase ()
@@ -123,13 +123,14 @@ SequenceNumberTestCase::SequenceNumberTracer (SequenceNumber32 oldval, SequenceN
   m_newval = newval;
 }
 
-void SequenceNumberTestCase::DoRun (void)
+void SequenceNumberTestCase::DoRun ()
 {
 #define SEQ_TEST_ASSERT_EQUAL(a,b) NS_TEST_ASSERT_MSG_EQ (a,b, "foo")
 #define SEQ_TEST_ASSERT(a) NS_TEST_ASSERT_MSG_EQ (bool(a), true, "foo")
 
   {
-    SequenceNumber32 num1 (3), num2 (5);
+    SequenceNumber32 num1 (3);
+    SequenceNumber32 num2 (5);
     uint32_t value;
 
     value = (num1 + num2).GetValue ();
@@ -153,7 +154,9 @@ void SequenceNumberTestCase::DoRun (void)
   }
 
   {
-    SequenceNumber16 num1 (60900), num2 (5), num3 (10000);
+    SequenceNumber16 num1 (60900);
+    SequenceNumber16 num2 (5);
+    SequenceNumber16 num3 (10000);
 
     SEQ_TEST_ASSERT (num1 == num1);
 
@@ -218,7 +221,7 @@ class SequenceNumberTestSuite : public TestSuite
 {
 public:
   SequenceNumberTestSuite ()
-    : TestSuite ("sequence-number", UNIT) 
+    : TestSuite ("sequence-number", UNIT)
   {
     AddTestCase (new SequenceNumberTestCase (), TestCase::QUICK);
   }

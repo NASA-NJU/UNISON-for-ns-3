@@ -25,7 +25,7 @@
  * When topology is created, UDP ping is installed to opposite corners
  * by diagonals. packet size of the UDP ping and interval between two
  * successive packets is configurable.
- * 
+ *
  *  m_xSize * step
  *  |<--------->|
  *   step
@@ -55,15 +55,15 @@
  * horizontal and vertical hops.  If the step size is reduced to 35m, then
  * the shortest path will be on the diagonal hops.  If the step size is reduced
  * to 17m or less, then the source will be able to reach the sink directly
- * without any mesh hops (for the default 3x3 mesh depicted above). 
+ * without any mesh hops (for the default 3x3 mesh depicted above).
  *
  * The position allocator will lay out the nodes in the following order
  * (corresponding to Node ID and to the diagram above):
  *
  * 6 - 7 - 8
- * |   |   | 
+ * |   |   |
  * 3 - 4 - 5
- * |   |   | 
+ * |   |   |
  * 0 - 1 - 2
  *
  *  See also MeshTest::Configure to read more about configurable
@@ -87,20 +87,30 @@ using namespace ns3;
 NS_LOG_COMPONENT_DEFINE ("MeshExample");
 
 // Declaring these variables outside of main() for use in trace sinks
-uint32_t g_udpTxCount = 0;
-uint32_t g_udpRxCount = 0;
+uint32_t g_udpTxCount = 0;  //!< Rx packet counter.
+uint32_t g_udpRxCount = 0;  //!< Tx packet counter.
 
+/**
+ * Transmission trace sink.
+ *
+ * \param p The sent packet.
+ */
 void
 TxTrace (Ptr<const Packet> p)
 {
-  NS_LOG_DEBUG ("Sent " << p->GetSize () << " bytes");  
+  NS_LOG_DEBUG ("Sent " << p->GetSize () << " bytes");
   g_udpTxCount++;
 }
 
+/**
+ * Reception trace sink,
+ *
+ * \param p The received packet.
+ */
 void
 RxTrace (Ptr<const Packet> p)
 {
-  NS_LOG_DEBUG ("Received " << p->GetSize () << " bytes");  
+  NS_LOG_DEBUG ("Received " << p->GetSize () << " bytes");
   g_udpRxCount++;
 }
 
@@ -203,7 +213,7 @@ MeshTest::Configure (int argc, char *argv[])
 }
 void
 MeshTest::CreateNodes ()
-{ 
+{
   /*
    * Create m_ySize*m_xSize stations to form a grid topology
    */
@@ -255,7 +265,9 @@ MeshTest::CreateNodes ()
   mobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
   mobility.Install (nodes);
   if (m_pcap)
-    wifiPhy.EnablePcapAll (std::string ("mp"));
+    {
+      wifiPhy.EnablePcapAll (std::string ("mp"));
+    }
   if (m_ascii)
     {
       AsciiTraceHelper ascii;
@@ -327,7 +339,7 @@ MeshTest::Report ()
 int
 main (int argc, char *argv[])
 {
-  MeshTest t; 
+  MeshTest t;
   t.Configure (argc, argv);
   return t.Run ();
 }

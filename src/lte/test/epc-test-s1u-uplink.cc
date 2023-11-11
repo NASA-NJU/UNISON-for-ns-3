@@ -72,7 +72,7 @@ public:
    * \return the object TypeId
    */
   static TypeId
-  GetTypeId (void);
+  GetTypeId ();
 
   EpsBearerTagUdpClient ();
   /**
@@ -83,7 +83,7 @@ public:
    */
   EpsBearerTagUdpClient (uint16_t rnti, uint8_t bid);
 
-  virtual ~EpsBearerTagUdpClient ();
+  ~EpsBearerTagUdpClient () override;
 
   /**
    * \brief set the remote address and port
@@ -93,11 +93,11 @@ public:
   void SetRemote (Ipv4Address ip, uint16_t port);
 
 protected:
-  virtual void DoDispose (void);
+  void DoDispose () override;
 
 private:
-  virtual void StartApplication (void);
-  virtual void StopApplication (void);
+  void StartApplication () override;
+  void StopApplication () override;
 
   /**
    * \brief Schedule transmit function
@@ -105,7 +105,7 @@ private:
    */
   void ScheduleTransmit (Time dt);
   /// Send function
-  void Send (void);
+  void Send ();
 
   uint32_t m_count; ///< maximum number of packets to send
   Time m_interval; ///< the time between packets
@@ -125,7 +125,7 @@ private:
 
 
 TypeId
-EpsBearerTagUdpClient::GetTypeId (void)
+EpsBearerTagUdpClient::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::EpsBearerTagUdpClient")
     .SetParent<Application> ()
@@ -163,7 +163,7 @@ EpsBearerTagUdpClient::EpsBearerTagUdpClient ()
 {
   NS_LOG_FUNCTION_NOARGS ();
   m_sent = 0;
-  m_socket = 0;
+  m_socket = nullptr;
   m_sendEvent = EventId ();
 }
 
@@ -173,7 +173,7 @@ EpsBearerTagUdpClient::EpsBearerTagUdpClient (uint16_t rnti, uint8_t bid)
 {
   NS_LOG_FUNCTION_NOARGS ();
   m_sent = 0;
-  m_socket = 0;
+  m_socket = nullptr;
   m_sendEvent = EventId ();
 }
 
@@ -190,18 +190,18 @@ EpsBearerTagUdpClient::SetRemote (Ipv4Address ip, uint16_t port)
 }
 
 void
-EpsBearerTagUdpClient::DoDispose (void)
+EpsBearerTagUdpClient::DoDispose ()
 {
   NS_LOG_FUNCTION_NOARGS ();
   Application::DoDispose ();
 }
 
 void
-EpsBearerTagUdpClient::StartApplication (void)
+EpsBearerTagUdpClient::StartApplication ()
 {
   NS_LOG_FUNCTION_NOARGS ();
 
-  if (m_socket == 0)
+  if (!m_socket)
     {
       TypeId tid = TypeId::LookupByName ("ns3::UdpSocketFactory");
       m_socket = Socket::CreateSocket (GetNode (), tid);
@@ -221,7 +221,7 @@ EpsBearerTagUdpClient::StopApplication ()
 }
 
 void
-EpsBearerTagUdpClient::Send (void)
+EpsBearerTagUdpClient::Send ()
 {
   NS_LOG_FUNCTION_NOARGS ();
   NS_ASSERT (m_sendEvent.IsExpired ());
@@ -318,10 +318,10 @@ public:
    * \param v the list of UE lists
    */
   EpcS1uUlTestCase (std::string name, std::vector<EnbUlTestData> v);
-  virtual ~EpcS1uUlTestCase ();
+  ~EpcS1uUlTestCase () override;
 
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
   std::vector<EnbUlTestData> m_enbUlTestData; ///< ENB UL test data
 };
 
@@ -408,7 +408,7 @@ EpcS1uUlTestCase::DoRun ()
 
       // Plug test RRC entity
       Ptr<EpcEnbApplication> enbApp = enb->GetApplication (0)->GetObject<EpcEnbApplication> ();
-      NS_ASSERT_MSG (enbApp != 0, "cannot retrieve EpcEnbApplication");
+      NS_ASSERT_MSG (enbApp, "cannot retrieve EpcEnbApplication");
       Ptr<EpcTestRrc> rrc = CreateObject<EpcTestRrc> ();
       enb->AggregateObject (rrc);
       rrc->SetS1SapProvider (enbApp->GetS1SapProvider ());

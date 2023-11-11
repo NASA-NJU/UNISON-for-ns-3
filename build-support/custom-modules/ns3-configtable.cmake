@@ -118,6 +118,10 @@ macro(write_configtable)
   string(APPEND out
          "Build directory               : ${CMAKE_OUTPUT_DIRECTORY}\n"
   )
+
+  string(APPEND out "Build version embedding       : ")
+  check_on_or_off("${NS3_ENABLE_BUILD_VERSION}" "${ENABLE_BUILD_VERSION}")
+
   string(APPEND out "BRITE Integration             : ")
   check_on_or_off("ON" "${NS3_BRITE}")
 
@@ -163,16 +167,8 @@ macro(write_configtable)
   string(APPEND out "PyViz visualizer              : ")
   check_on_or_off("${NS3_VISUALIZER}" "${ENABLE_VISUALIZER}")
 
-  string(APPEND out "Python API Scanning Support   : ")
-  check_on_or_off(
-    "${NS3_SCAN_PYTHON_BINDINGS}" "${ENABLE_SCAN_PYTHON_BINDINGS}"
-  )
-
   string(APPEND out "Python Bindings               : ")
   check_on_or_off("${NS3_PYTHON_BINDINGS}" "${ENABLE_PYTHON_BINDINGS}")
-
-  string(APPEND out "Real Time Simulator           : ")
-  check_on_or_off("${NS3_REALTIME}" "${ENABLE_REALTIME}")
 
   string(APPEND out "SQLite support                : ")
   check_on_or_off("${NS3_SQLITE}" "${ENABLE_SQLITE}")

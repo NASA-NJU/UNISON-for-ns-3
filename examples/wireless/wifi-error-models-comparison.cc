@@ -111,7 +111,7 @@ int main (int argc, char *argv[])
             }
           tabledataset.Add (snr, 1 - ps);
         }
-      
+
       if (tableErrorModelEnabled)
         {
           std::stringstream ss;
@@ -165,4 +165,6 @@ set yrange [0.0001:1]\n";
 
   plot.GenerateOutput (errormodelfile);
   errormodelfile.close ();
+
+  return 0;
 }

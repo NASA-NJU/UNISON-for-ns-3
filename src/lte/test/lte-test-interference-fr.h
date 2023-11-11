@@ -33,8 +33,8 @@ using namespace ns3;
  * \ingroup lte-test
  * \ingroup tests
  *
- * \brief Test suite for the interference test when using different 
- * frequency reuse algorithms.Check if the interfence values correspond to 
+ * \brief Test suite for the interference test when using different
+ * frequency reuse algorithms.Check if the interfence values correspond to
  * theoretical values.
  */
 class LteInterferenceFrTestSuite : public TestSuite
@@ -48,7 +48,7 @@ public:
  * \ingroup lte-test
  * \ingroup tests
  *
- * \brief Lte interference test when using hard frequency reuse algorithm. Check 
+ * \brief Lte interference test when using hard frequency reuse algorithm. Check
  * if the interfence values correspond to theoretical values.
  */
 class LteInterferenceHardFrTestCase : public TestCase
@@ -64,10 +64,10 @@ public:
    * \param ulSinr the UL SINR
    */
   LteInterferenceHardFrTestCase (std::string name, double d1, double d2, double dlSinr, double ulSinr);
-  virtual ~LteInterferenceHardFrTestCase ();
+  ~LteInterferenceHardFrTestCase () override;
 
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
 
   double m_d1; ///< distance between UE and ENB
   double m_d2; ///< distance between UE and other ENB
@@ -98,10 +98,10 @@ public:
   LteInterferenceStrictFrTestCase (std::string name, double d1, double d2,
                                    double commonDlSinr, double commonUlSinr, double edgeDlSinr, double edgeUlSinr,
                                    uint32_t rspqThreshold);
-  virtual ~LteInterferenceStrictFrTestCase ();
+  ~LteInterferenceStrictFrTestCase () override;
 
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
 
   double m_d1; ///< distance between UE and ENB
   double m_d2; ///< distance between UE and other ENB

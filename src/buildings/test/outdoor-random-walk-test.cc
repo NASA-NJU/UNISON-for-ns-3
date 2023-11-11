@@ -36,7 +36,7 @@ NS_LOG_COMPONENT_DEFINE ("OutdoorRandomWalkTest");
 /**
  * \ingroup building-test
  * \ingroup tests
- * 
+ *
  * Test case for the class OutdoorRandomWalkTestCase. It checks if the
  * positions visited by the user are outside buildings
  */
@@ -44,10 +44,10 @@ class OutdoorRandomWalkTestCase : public TestCase
 {
 public:
   OutdoorRandomWalkTestCase ();
-  virtual ~OutdoorRandomWalkTestCase ();
+  ~OutdoorRandomWalkTestCase () override;
 
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
 
   /**
    * Check that the position is the expected one
@@ -76,7 +76,7 @@ OutdoorRandomWalkTestCase::CheckPositionOutdoor (Ptr<RandomWalk2dOutdoorMobility
 }
 
 void
-OutdoorRandomWalkTestCase::DoRun (void)
+OutdoorRandomWalkTestCase::DoRun ()
 {
   // create a grid of buildings
   double buildingSizeX = 100; // m
@@ -149,7 +149,7 @@ OutdoorRandomWalkTestCase::DoRun (void)
 /**
  * \ingroup building-test
  * \ingroup tests
- * 
+ *
  * Test suite for the buildings channel condition model
  */
 class OutdoorRandomWalkTestSuite : public TestSuite

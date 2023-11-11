@@ -71,7 +71,7 @@ class Ipv4ForwardingTest : public TestCase
   void SendData (Ptr<Socket> socket, std::string to);
 
 public:
-  virtual void DoRun (void);
+  void DoRun () override;
   Ipv4ForwardingTest ();
 
   /**
@@ -112,7 +112,7 @@ Ipv4ForwardingTest::SendData (Ptr<Socket> socket, std::string to)
 }
 
 void
-Ipv4ForwardingTest::DoRun (void)
+Ipv4ForwardingTest::DoRun ()
 {
   // Create topology
 
@@ -139,7 +139,8 @@ Ipv4ForwardingTest::DoRun (void)
   Ptr<Node> fwNode = CreateObject<Node> ();
 
   internet.Install (fwNode);
-  Ptr<SimpleNetDevice> fwDev1, fwDev2;
+  Ptr<SimpleNetDevice> fwDev1;
+  Ptr<SimpleNetDevice> fwDev2;
   { // first interface
     fwDev1 = CreateObject<SimpleNetDevice> ();
     fwDev1->SetAddress (Mac48Address::ConvertFrom (Mac48Address::Allocate ()));
@@ -206,7 +207,7 @@ Ipv4ForwardingTest::DoRun (void)
   NS_TEST_EXPECT_MSG_EQ (m_receivedPacket->GetSize (), 123, "IPv4 Forwarding on");
 
   m_receivedPacket->RemoveAllByteTags ();
-  m_receivedPacket = 0;
+  m_receivedPacket = nullptr;
 
   Ptr<Ipv4> ipv4 = fwNode->GetObject<Ipv4> ();
   ipv4->SetAttribute("IpForward", BooleanValue (false));

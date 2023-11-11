@@ -51,7 +51,7 @@ public:
 
 
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
 
   double m_a; //!< angle in degrees
   double m_b; //!< expected angle in radians
@@ -104,7 +104,7 @@ public:
 
 
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
 
   double m_a; //!< angle in radians
   double m_b; //!< expected angle in degrees
@@ -137,7 +137,7 @@ RadiansToDegreesTestCase::DoRun ()
 /**
  * \ingroup tests
  *
- * \brief TestSuite: degree to radians (and viceversa) conversions 
+ * \brief TestSuite: degree to radians (and viceversa) conversions
  */
 class DegreesRadiansTestSuite : public TestSuite
 {

@@ -64,16 +64,16 @@ public:
    */
   LteEnbPhy (Ptr<LteSpectrumPhy> dlPhy, Ptr<LteSpectrumPhy> ulPhy);
 
-  virtual ~LteEnbPhy ();
+  ~LteEnbPhy () override;
 
   /**
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
   // inherited from Object
-  virtual void DoInitialize (void);
-  virtual void DoDispose (void);
+  void DoInitialize () override;
+  void DoDispose () override;
 
 
   /**
@@ -133,7 +133,7 @@ public:
   /**
    * \returns the TTI delay between MAC and channel
    */
-  uint8_t GetMacChDelay (void) const;
+  uint8_t GetMacChDelay () const;
 
   /**
    * \return a pointer to the LteSpectrumPhy instance relative to the downlink
@@ -148,7 +148,7 @@ public:
 
   /**
    * \brief set the resource blocks (a.k.a. sub channels) to be used in the downlink for transmission
-   * 
+   *
    * \param mask a vector of integers, if the i-th value is j it means
    * that the j-th resource block is used for transmission in the
    * downlink. If there is no i such that the value of the i-th
@@ -167,13 +167,13 @@ public:
    */
   void SetDownlinkSubChannelsWithPowerAllocation (std::vector<int> mask);
   /**
-   * 
+   *
    * \return  a vector of integers, if the i-th value is j it means
    * that the j-th resource block is used for transmission in the
    * downlink. If there is no i such that the value of the i-th
    * element is j, it means that RB j is not used.
    */
-  std::vector<int> GetDownlinkSubChannels (void);
+  std::vector<int> GetDownlinkSubChannels ();
 
 
   /**
@@ -189,7 +189,7 @@ public:
    * \brief Create the PSD for TX
    * \returns the PSD
    */
-  virtual Ptr<SpectrumValue> CreateTxPowerSpectralDensity ();
+  Ptr<SpectrumValue> CreateTxPowerSpectralDensity () override;
 
   /**
    * \brief Create the PSD for TX with power allocation for each RB
@@ -246,25 +246,25 @@ public:
   /**
   * \returns the list of UL-CQI to be processed
   */
-  std::list<UlDciLteControlMessage> DequeueUlDci (void);
+  std::list<UlDciLteControlMessage> DequeueUlDci ();
 
 
   /**
    * \brief Start a LTE frame
    */
-  void StartFrame (void);
+  void StartFrame ();
   /**
    * \brief Start a LTE sub frame
    */
-  void StartSubFrame (void);
+  void StartSubFrame ();
   /**
    * \brief End a LTE sub frame
    */
-  void EndSubFrame (void);
+  void EndSubFrame ();
   /**
    * \brief End a LTE frame
    */
-  void EndFrame (void);
+  void EndFrame ();
 
   /**
    * \brief PhySpectrum received a new PHY-PDU
@@ -279,10 +279,10 @@ public:
   virtual void ReceiveLteControlMessageList (std::list<Ptr<LteControlMessage> > msgList);
 
   // inherited from LtePhy
-  virtual void GenerateCtrlCqiReport (const SpectrumValue& sinr);
-  virtual void GenerateDataCqiReport (const SpectrumValue& sinr);
-  virtual void ReportInterference (const SpectrumValue& interf);
-  virtual void ReportRsReceivedPower (const SpectrumValue& power);
+  void GenerateCtrlCqiReport (const SpectrumValue& sinr) override;
+  void GenerateDataCqiReport (const SpectrumValue& sinr) override;
+  void ReportInterference (const SpectrumValue& interf) override;
+  void ReportRsReceivedPower (const SpectrumValue& power) override;
 
 
 
@@ -385,7 +385,7 @@ private:
   void DoSetSystemInformationBlockType1 (LteRrcSap::SystemInformationBlockType1 sib1);
 
   // LteEnbPhySapProvider forwarded methods
-  void DoSendMacPdu (Ptr<Packet> p);
+  void DoSendMacPdu (Ptr<Packet> p) override;
   /**
    * Send LTE Control Message function
    *

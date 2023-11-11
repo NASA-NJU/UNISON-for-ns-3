@@ -37,8 +37,8 @@ public:
   TcpRxBufferTestCase ();
 
 private:
-  virtual void DoRun (void);
-  virtual void DoTeardown (void);
+  void DoRun () override;
+  void DoTeardown () override;
 
   /**
    * \brief Test the SACK list update.

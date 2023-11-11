@@ -37,7 +37,7 @@ namespace ns3 {
 class simpleOfdmSendParam
 {
 public:
-  simpleOfdmSendParam (void);
+  simpleOfdmSendParam ();
   /**
    * Constructor
    *
@@ -48,7 +48,7 @@ public:
    * \param modulationType modulation type
    * \param direction the direction
    * \param rxPowerDbm receive power
-   */ 
+   */
   simpleOfdmSendParam (const bvec &fecBlock, uint32_t burstSize,
                        bool isFirstBlock, uint64_t Frequency,
                        WimaxPhy::ModulationType modulationType, uint8_t direction,
@@ -63,12 +63,12 @@ public:
    * \param direction the direction
    * \param rxPowerDbm receive power
    * \param burst packet burst object
-   */ 
+   */
   simpleOfdmSendParam (uint32_t burstSize,
                        bool isFirstBlock, uint64_t Frequency,
                        WimaxPhy::ModulationType modulationType, uint8_t direction,
                        double rxPowerDbm, Ptr<PacketBurst> burst);
-  ~simpleOfdmSendParam (void);
+  ~simpleOfdmSendParam ();
   /**
    * \brief sent the fec block to send
    * \param fecBlock the fec block to send
@@ -102,35 +102,35 @@ public:
   /**
    * \return the fec block
    */
-  bvec GetFecBlock (void);
+  bvec GetFecBlock ();
   /**
    * \return the burst size
    */
-  uint32_t GetBurstSize (void);
+  uint32_t GetBurstSize ();
   /**
    * \return true if this fec block is the first one in the burst, false otherwise
    */
-  bool GetIsFirstBlock (void);
+  bool GetIsFirstBlock ();
   /**
    * \return the frequency on which the fec block is sent/received
    */
-  uint64_t GetFrequency (void);
+  uint64_t GetFrequency ();
   /**
    * \return the modulation type used to send this fec block
    */
-  WimaxPhy::ModulationType GetModulationType (void);
+  WimaxPhy::ModulationType GetModulationType ();
   /**
    * \return the direction on which this fec block was sent. UP or DOWN
    */
-  uint8_t GetDirection (void);
+  uint8_t GetDirection ();
   /**
    * \return the Received power
    */
-  double GetRxPowerDbm (void);
+  double GetRxPowerDbm ();
   /**
    * \return the received burst
    */
-  Ptr<PacketBurst> GetBurst (void);
+  Ptr<PacketBurst> GetBurst ();
 
 private:
   bvec m_fecBlock; ///< FEC block

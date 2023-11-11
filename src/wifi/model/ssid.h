@@ -48,10 +48,6 @@ public:
 
   // Implementations of pure virtual methods of WifiInformationElement
   WifiInformationElementId ElementId () const override;
-  uint8_t GetInformationFieldSize () const override;
-  void SerializeInformationField (Buffer::Iterator start) const override;
-  uint8_t DeserializeInformationField (Buffer::Iterator start,
-                                       uint8_t length) override;
 
   /**
    * Check if the two SSIDs are equal.
@@ -68,17 +64,22 @@ public:
    * \return true if the SSID is broadcast,
    *         false otherwise
    */
-  bool IsBroadcast (void) const;
+  bool IsBroadcast () const;
 
   /**
    * Peek the SSID.
    *
    * \return a pointer to SSID string
    */
-  char* PeekString (void) const;
+  char* PeekString () const;
 
 
 private:
+  uint16_t GetInformationFieldSize () const override;
+  void SerializeInformationField (Buffer::Iterator start) const override;
+  uint16_t DeserializeInformationField (Buffer::Iterator start,
+                                        uint16_t length) override;
+
   uint8_t m_ssid[33]; //!< Raw SSID value
   uint8_t m_length;   //!< Length of the SSID
 };

@@ -38,10 +38,10 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   ThresholdPreambleDetectionModel ();
-  ~ThresholdPreambleDetectionModel ();
+  ~ThresholdPreambleDetectionModel () override;
 
   /**
    * This method returns whether the preamble detection was successful.

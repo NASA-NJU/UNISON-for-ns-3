@@ -72,7 +72,7 @@ public:
   /**
    * \param address a polymorphic address
    * \returns a new Mac64Address from the polymorphic address
-   * 
+   *
    * This function performs a type check and asserts if the
    * type of the input address is not compatible with an
    * Mac64Address.
@@ -85,22 +85,38 @@ public:
   static bool IsMatchingType (const Address &address);
   /**
    * Allocate a new Mac64Address.
-   * \returns newly allocated mac64Address   
+   * \returns newly allocated mac64Address
    */
-  static Mac64Address Allocate (void);
+  static Mac64Address Allocate ();
+
+  /**
+   * Reset the Mac64Address allocation index.
+   *
+   * This function resets (to zero) the global integer
+   * that is used for unique address allocation.
+   * It is automatically called whenever
+   * \code
+   * SimulatorDestroy ();
+   * \endcode
+   * is called.  It may also be optionally called
+   * by user code if there is a need to force a reset
+   * of this allocation index.
+   */
+  static void ResetAllocationIndex ();
+
 private:
   /**
    * \returns a new Address instance
    *
    * Convert an instance of this class to a polymorphic Address instance.
    */
-  Address ConvertTo (void) const;
+  Address ConvertTo () const;
 
   /**
    * \brief Return the Type of address.
    * \return type of address
    */
-  static uint8_t GetType (void);
+  static uint8_t GetType ();
 
   /**
    * \brief Equal to operator.
@@ -147,6 +163,7 @@ private:
    */
   friend std::istream& operator>> (std::istream& is, Mac64Address & address);
 
+  static uint64_t m_allocationIndex; //!< Address allocation index
   uint8_t m_address[8]; //!< address value
 };
 

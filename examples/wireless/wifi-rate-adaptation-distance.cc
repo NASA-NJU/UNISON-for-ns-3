@@ -67,7 +67,6 @@
 #include "ns3/mobility-model.h"
 
 using namespace ns3;
-using namespace std;
 
 NS_LOG_COMPONENT_DEFINE ("RateAdaptationDistance");
 
@@ -254,40 +253,17 @@ int main (int argc, char *argv[])
                        "Ssid", SsidValue (ssid));
       wifiApDevices.Add (wifi.Install (wifiPhy, wifiMac, wifiApNodes.Get (0)));
     }
-  else if (standard == "802.11n-2.4GHz" || standard == "802.11n-5GHz")
+  else if (standard == "802.11n-2.4GHz" || standard == "802.11n-5GHz" || standard == "802.11ac")
     {
-      if (standard == "802.11n-2.4GHz")
+      if (standard == "802.11n-2.4GHz" || standard == "802.11n-5GHz")
         {
           wifi.SetStandard (WIFI_STANDARD_80211n);
         }
-      else if (standard == "802.11n-5GHz")
+      else if (standard == "802.11ac")
         {
-          wifi.SetStandard (WIFI_STANDARD_80211n);
+          wifi.SetStandard (WIFI_STANDARD_80211ac);
         }
 
-      WifiMacHelper wifiMac;
-
-      //Configure the STA node
-      wifi.SetRemoteStationManager (staManager, "RtsCtsThreshold", UintegerValue (rtsThreshold));
-
-      Ssid ssid = Ssid ("AP");
-      wifiMac.SetType ("ns3::StaWifiMac",
-                       "Ssid", SsidValue (ssid));
-      wifiStaDevices.Add (wifi.Install (wifiPhy, wifiMac, wifiStaNodes.Get (0)));
-
-      //Configure the AP node
-      wifi.SetRemoteStationManager (apManager, "RtsCtsThreshold", UintegerValue (rtsThreshold));
-
-      ssid = Ssid ("AP");
-      wifiMac.SetType ("ns3::ApWifiMac",
-                       "Ssid", SsidValue (ssid));
-      wifiApDevices.Add (wifi.Install (wifiPhy, wifiMac, wifiApNodes.Get (0)));
-
-      Config::Set ("/NodeList/*/DeviceList/*/$ns3::WifiNetDevice/Mac/BE_MaxAmpduSize", UintegerValue (BeMaxAmpduSize));
-    }
-  else if (standard == "802.11ac")
-    {
-      wifi.SetStandard (WIFI_STANDARD_80211ac);
       WifiMacHelper wifiMac;
 
       //Configure the STA node
@@ -374,7 +350,7 @@ int main (int argc, char *argv[])
   Simulator::Run ();
 
   std::ofstream outfile (("throughput-" + outputFileName + ".plt").c_str ());
-  Gnuplot gnuplot = Gnuplot (("throughput-" + outputFileName + ".eps").c_str (), "Throughput");
+  Gnuplot gnuplot = Gnuplot ("throughput-" + outputFileName + ".eps", "Throughput");
   gnuplot.SetTerminal ("post eps color enhanced");
   gnuplot.SetLegend ("Time (seconds)", "Throughput (Mb/s)");
   gnuplot.SetTitle ("Throughput (AP to STA) vs time");

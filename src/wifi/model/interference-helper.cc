@@ -51,36 +51,36 @@ Event::Event (Ptr<const WifiPpdu> ppdu, const WifiTxVector& txVector, Time durat
 
 Event::~Event ()
 {
-  m_ppdu = 0;
+  m_ppdu = nullptr;
   m_rxPowerW.clear ();
 }
 
 Ptr<const WifiPpdu>
-Event::GetPpdu (void) const
+Event::GetPpdu () const
 {
   return m_ppdu;
 }
 
 Time
-Event::GetStartTime (void) const
+Event::GetStartTime () const
 {
   return m_startTime;
 }
 
 Time
-Event::GetEndTime (void) const
+Event::GetEndTime () const
 {
   return m_endTime;
 }
 
 Time
-Event::GetDuration (void) const
+Event::GetDuration () const
 {
   return m_endTime - m_startTime;
 }
 
 double
-Event::GetRxPowerW (void) const
+Event::GetRxPowerW () const
 {
   NS_ASSERT (m_rxPowerW.size () > 0);
   //The total RX power corresponds to the maximum over all the bands
@@ -100,13 +100,13 @@ Event::GetRxPowerW (WifiSpectrumBand band) const
 }
 
 const RxPowerWattPerChannelBand&
-Event::GetRxPowerWPerBand (void) const
+Event::GetRxPowerWPerBand () const
 {
   return m_rxPowerW;
 }
 
 const WifiTxVector&
-Event::GetTxVector (void) const
+Event::GetTxVector () const
 {
   return m_txVector;
 }
@@ -149,11 +149,11 @@ InterferenceHelper::NiChange::NiChange (double power, Ptr<Event> event)
 
 InterferenceHelper::NiChange::~NiChange ()
 {
-  m_event = 0;
+  m_event = nullptr;
 }
 
 double
-InterferenceHelper::NiChange::GetPower (void) const
+InterferenceHelper::NiChange::GetPower () const
 {
   return m_power;
 }
@@ -165,7 +165,7 @@ InterferenceHelper::NiChange::AddPower (double power)
 }
 
 Ptr<Event>
-InterferenceHelper::NiChange::GetEvent (void) const
+InterferenceHelper::NiChange::GetEvent () const
 {
   return m_event;
 }
@@ -176,7 +176,7 @@ InterferenceHelper::NiChange::GetEvent (void) const
  ****************************************************************/
 
 InterferenceHelper::InterferenceHelper ()
-  : m_errorRateModel (0),
+  : m_errorRateModel (nullptr),
     m_numRxAntennas (1),
     m_rxing (false)
 {
@@ -189,7 +189,7 @@ InterferenceHelper::~InterferenceHelper ()
 }
 
 TypeId
-InterferenceHelper::GetTypeId (void)
+InterferenceHelper::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::InterferenceHelper")
     .SetParent<ns3::Object> ()
@@ -200,11 +200,11 @@ InterferenceHelper::GetTypeId (void)
 }
 
 void
-InterferenceHelper::DoDispose (void)
+InterferenceHelper::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
   RemoveBands ();
-  m_errorRateModel = 0;
+  m_errorRateModel = nullptr;
 }
 
 Ptr<Event>
@@ -224,12 +224,12 @@ InterferenceHelper::AddForeignSignal (Time duration, RxPowerWattPerChannelBand& 
   hdr.SetType (WIFI_MAC_QOSDATA);
   hdr.SetQosTid (0);
   Ptr<WifiPpdu> fakePpdu = Create<WifiPpdu> (Create<WifiPsdu> (Create<Packet> (0), hdr),
-                                             WifiTxVector ());
+                                             WifiTxVector (), 0);
   Add (fakePpdu, WifiTxVector (), duration, rxPowerW);
 }
 
 void
-InterferenceHelper::RemoveBands(void)
+InterferenceHelper::RemoveBands()
 {
   NS_LOG_FUNCTION (this);
   for (auto it : m_niChangesPerBand)
@@ -249,7 +249,7 @@ InterferenceHelper::AddBand (WifiSpectrumBand band)
   auto result = m_niChangesPerBand.insert ({band, niChanges});
   NS_ASSERT (result.second);
   // Always have a zero power noise event in the list
-  AddNiChangeEvent (Time (0), NiChange (0.0, 0), result.first);
+  AddNiChangeEvent (Time (0), NiChange (0.0, nullptr), result.first);
   m_firstPowerPerBand.insert ({band, 0.0});
 }
 
@@ -266,7 +266,7 @@ InterferenceHelper::SetErrorRateModel (const Ptr<ErrorRateModel> rate)
 }
 
 Ptr<ErrorRateModel>
-InterferenceHelper::GetErrorRateModel (void) const
+InterferenceHelper::GetErrorRateModel () const
 {
   return m_errorRateModel;
 }
@@ -301,7 +301,7 @@ void
 InterferenceHelper::AppendEvent (Ptr<Event> event, bool isStartOfdmaRxing)
 {
   NS_LOG_FUNCTION (this << event << isStartOfdmaRxing);
-  for (auto const& it : event->GetRxPowerWPerBand ())
+  for (const auto& it : event->GetRxPowerWPerBand ())
     {
       WifiSpectrumBand band = it.first;
       auto niIt = m_niChangesPerBand.find (band);
@@ -338,7 +338,7 @@ InterferenceHelper::UpdateEvent (Ptr<Event> event, const RxPowerWattPerChannelBa
 {
   NS_LOG_FUNCTION (this << event);
   //This is called for UL MU events, in order to scale power as long as UL MU PPDUs arrive
-  for (auto const& it : rxPower)
+  for (const auto& it : rxPower)
     {
       WifiSpectrumBand band = it.first;
       auto niIt = m_niChangesPerBand.find (band);
@@ -395,7 +395,10 @@ InterferenceHelper::CalculateNoiseInterferenceW (Ptr<Event> event, NiChangesPerB
     }
   it = niIt->second.find (event->GetStartTime ());
   NS_ASSERT (it != niIt->second.end ());
-  for (; it != niIt->second.end () && it->second.GetEvent () != event; ++it);
+  for (; it != niIt->second.end () && it->second.GetEvent () != event; ++it)
+    {
+      ;
+    }
   NiChanges ni;
   ni.emplace (event->GetStartTime (), NiChange (0, event));
   while (++it != niIt->second.end () && it->second.GetEvent () != event)
@@ -448,7 +451,8 @@ InterferenceHelper::CalculatePayloadPer (Ptr<const Event> event, uint16_t channe
   Time previous = j->first;
   WifiMode payloadMode = event->GetTxVector ().GetMode (staId);
   Time phyPayloadStart = j->first;
-  if (event->GetPpdu ()->GetType () != WIFI_PPDU_TYPE_UL_MU) //j->first corresponds to the start of the UL-OFDMA payload
+  if (event->GetPpdu ()->GetType () != WIFI_PPDU_TYPE_UL_MU &&
+      event->GetPpdu ()->GetType () != WIFI_PPDU_TYPE_DL_MU) //j->first corresponds to the start of the OFDMA payload
     {
       phyPayloadStart = j->first + WifiPhy::CalculatePhyPreambleAndHeaderDuration (event->GetTxVector ());
     }
@@ -608,23 +612,23 @@ InterferenceHelper::CalculatePhyHeaderSnrPer (Ptr<Event> event, uint16_t channel
                              noiseInterferenceW,
                              channelWidth,
                              1);
-  
+
   /* calculate the SNIR at the start of the PHY header and accumulate
    * all SNIR changes in the SNIR vector.
    */
   double per = CalculatePhyHeaderPer (event, &ni, channelWidth, band, header);
-  
+
   return PhyEntity::SnrPer (snr, per);
 }
 
 void
-InterferenceHelper::EraseEvents (void)
+InterferenceHelper::EraseEvents ()
 {
   for (auto niIt = m_niChangesPerBand.begin(); niIt != m_niChangesPerBand.end(); ++niIt)
     {
       niIt->second.clear ();
       // Always have a zero power noise event in the list
-      AddNiChangeEvent (Time (0), NiChange (0.0, 0), niIt);
+      AddNiChangeEvent (Time (0), NiChange (0.0, nullptr), niIt);
       m_firstPowerPerBand.at (niIt->first) = 0.0;
     }
   m_rxing = false;

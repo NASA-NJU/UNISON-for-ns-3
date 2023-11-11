@@ -57,7 +57,7 @@ public:
                          uint32_t testCase, std::string testName);
 
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
 
   /**
    * Send an application packet
@@ -173,13 +173,13 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   MimicCongControl ()
   {
   }
 
-  virtual bool HasCongControl () const
+  bool HasCongControl () const override
   {
     return true;
   }
@@ -187,7 +187,7 @@ public:
 };
 
 TypeId
-MimicCongControl::GetTypeId (void)
+MimicCongControl::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::MimicCongControl")
     .SetParent<TcpNewReno> ()
@@ -226,13 +226,13 @@ protected:
    * \param node sender node pointer
    * \return the socket to be installed in the sender
    */
-  virtual Ptr<TcpSocketMsgBase> CreateSenderSocket (Ptr<Node> node);
+  Ptr<TcpSocketMsgBase> CreateSenderSocket (Ptr<Node> node) override;
 
   /**
    * \brief Create a receiver error model.
    * \returns The receiver error model.
    */
-  virtual Ptr<ErrorModel> CreateReceiverErrorModel ();
+  Ptr<ErrorModel> CreateReceiverErrorModel () override;
 
   /**
    * \brief Receive a packet.
@@ -240,14 +240,14 @@ protected:
    * \param h The TCP header.
    * \param who Who the socket belongs to (sender or receiver).
    */
-  virtual void Rx (const Ptr<const Packet> p, const TcpHeader&h, SocketWho who);
+  void Rx (const Ptr<const Packet> p, const TcpHeader&h, SocketWho who) override;
 
   /**
    * \brief Track the bytes in flight.
    * \param oldValue previous value.
    * \param newValue actual value.
    */
-  virtual void BytesInFlightTrace (uint32_t oldValue, uint32_t newValue);
+  void BytesInFlightTrace (uint32_t oldValue, uint32_t newValue) override;
 
   /**
    * \brief Called when a packet is dropped.
@@ -260,24 +260,24 @@ protected:
   /**
    * \brief Configure the test.
    */
-  void ConfigureEnvironment ();
+  void ConfigureEnvironment () override;
 
   /**
    * \brief Do the final checks.
    */
-  void FinalChecks ();
+  void FinalChecks () override;
 
   /**
    * \brief Track the rate value of TcpRateLinux.
    * \param rate updated value of TcpRate.
    */
-  virtual void RateUpdatedTrace (const TcpRateLinux::TcpRateConnection &rate);
+  void RateUpdatedTrace (const TcpRateLinux::TcpRateConnection &rate) override;
 
   /**
    * \brief Track the rate sample value of TcpRateLinux.
    * \param sample updated value of TcpRateSample.
    */
-  virtual void RateSampleUpdatedTrace (const TcpRateLinux::TcpRateSample &sample);
+  void RateSampleUpdatedTrace (const TcpRateLinux::TcpRateSample &sample) override;
 
 private:
   Ptr<MimicCongControl>        m_congCtl;     //!< Dummy congestion control.
@@ -421,8 +421,8 @@ public:
   TcpRateLinuxWithBufferTest (uint32_t segmentSize, std::string desc);
 
 private:
-  virtual void DoRun (void);
-  virtual void DoTeardown (void);
+  void DoRun () override;
+  void DoTeardown () override;
 
   /**
    * \brief Track the rate value of TcpRateLinux.

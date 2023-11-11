@@ -37,13 +37,13 @@ class HtConfiguration : public Object
 {
 public:
   HtConfiguration ();
-  virtual ~HtConfiguration ();
+  ~HtConfiguration () override;
 
   /**
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   /**
    * Enable or disable SGI support.
@@ -58,7 +58,7 @@ public:
    * \return true if SGI is supported,
    *         false otherwise.
    */
-  bool GetShortGuardIntervalSupported (void) const;
+  bool GetShortGuardIntervalSupported () const;
   /**
    * Enable or disable LDPC support.
    *
@@ -72,12 +72,25 @@ public:
    * \return true if LDPC is supported,
    *         false otherwise.
    */
-  bool GetLdpcSupported (void) const;
+  bool GetLdpcSupported () const;
+  /**
+   * Enable or disable 40 MHz operation support.
+   *
+   * \param enable true if both 20 MHz and 40 MHz operation is to be supported,
+   *               false if only 20 MHz operation is to be supported
+   */
+  void Set40MHzOperationSupported (bool enable);
+  /**
+   * \return true if both 20 MHz and 40 MHz operation is supported, false if
+   *         only 20 MHz operation is supported
+   */
+  bool Get40MHzOperationSupported () const;
 
 
 private:
   bool m_sgiSupported;        ///< flag whether short guard interval is supported
   bool m_ldpcSupported;       ///< flag whether LDPC coding is supported
+  bool m_40MHzSupported;      ///< whether 40 MHz operation is supported
 };
 
 } //namespace ns3

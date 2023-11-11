@@ -40,7 +40,7 @@ HtConfiguration::~HtConfiguration ()
 }
 
 TypeId
-HtConfiguration::GetTypeId (void)
+HtConfiguration::GetTypeId ()
 {
   static ns3::TypeId tid = ns3::TypeId ("ns3::HtConfiguration")
     .SetParent<Object> ()
@@ -58,6 +58,12 @@ HtConfiguration::GetTypeId (void)
                    MakeBooleanAccessor (&HtConfiguration::GetLdpcSupported,
                                         &HtConfiguration::SetLdpcSupported),
                    MakeBooleanChecker ())
+    .AddAttribute ("Support40MHzOperation",
+                   "Whether or not 40 MHz operation is to be supported.",
+                   BooleanValue (true),
+                   MakeBooleanAccessor (&HtConfiguration::Get40MHzOperationSupported,
+                                        &HtConfiguration::Set40MHzOperationSupported),
+                   MakeBooleanChecker ())
     ;
     return tid;
 }
@@ -70,7 +76,7 @@ HtConfiguration::SetShortGuardIntervalSupported (bool enable)
 }
 
 bool
-HtConfiguration::GetShortGuardIntervalSupported (void) const
+HtConfiguration::GetShortGuardIntervalSupported () const
 {
   return m_sgiSupported;
 }
@@ -83,9 +89,22 @@ HtConfiguration::SetLdpcSupported (bool enable)
 }
 
 bool
-HtConfiguration::GetLdpcSupported (void) const
+HtConfiguration::GetLdpcSupported () const
 {
   return m_ldpcSupported;
+}
+
+void
+HtConfiguration::Set40MHzOperationSupported (bool enable)
+{
+  NS_LOG_FUNCTION (this << enable);
+  m_40MHzSupported = enable;
+}
+
+bool
+HtConfiguration::Get40MHzOperationSupported () const
+{
+  return m_40MHzSupported;
 }
 
 } //namespace ns3

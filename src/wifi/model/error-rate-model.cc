@@ -26,7 +26,7 @@ namespace ns3 {
 
 NS_OBJECT_ENSURE_REGISTERED (ErrorRateModel);
 
-TypeId ErrorRateModel::GetTypeId (void)
+TypeId ErrorRateModel::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::ErrorRateModel")
     .SetParent<Object> ()
@@ -39,7 +39,9 @@ double
 ErrorRateModel::CalculateSnr (const WifiTxVector& txVector, double ber) const
 {
   //This is a very simple binary search.
-  double low, high, precision;
+  double low;
+  double high;
+  double precision;
   low = 1e-25;
   high = 1e25;
   precision = 2e-12;
@@ -86,7 +88,7 @@ ErrorRateModel::GetChunkSuccessRate (WifiMode mode, const WifiTxVector& txVector
 }
 
 bool
-ErrorRateModel::IsAwgn (void) const
+ErrorRateModel::IsAwgn () const
 {
   return true;
 }

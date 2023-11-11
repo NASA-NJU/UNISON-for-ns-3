@@ -51,17 +51,15 @@ public:
    * \param addr the address
    */
   TbfQueueDiscTestItem (Ptr<Packet> p, const Address & addr);
-  virtual ~TbfQueueDiscTestItem ();
+  ~TbfQueueDiscTestItem () override;
 
-  // Delete copy constructor and assignment operator to avoid misuse
+  // Delete default constructor, copy constructor and assignment operator to avoid misuse
+  TbfQueueDiscTestItem () = delete;
   TbfQueueDiscTestItem (const TbfQueueDiscTestItem &) = delete;
   TbfQueueDiscTestItem & operator = (const TbfQueueDiscTestItem &) = delete;
 
-  virtual void AddHeader (void);
-  virtual bool Mark (void);
-
-private:
-  TbfQueueDiscTestItem ();
+  void AddHeader () override;
+  bool Mark () override;
 };
 
 TbfQueueDiscTestItem::TbfQueueDiscTestItem (Ptr<Packet> p, const Address & addr)
@@ -74,12 +72,12 @@ TbfQueueDiscTestItem::~TbfQueueDiscTestItem ()
 }
 
 void
-TbfQueueDiscTestItem::AddHeader (void)
+TbfQueueDiscTestItem::AddHeader ()
 {
 }
 
 bool
-TbfQueueDiscTestItem::Mark (void)
+TbfQueueDiscTestItem::Mark ()
 {
   return false;
 }
@@ -94,7 +92,7 @@ class TbfQueueDiscTestCase : public TestCase
 {
 public:
   TbfQueueDiscTestCase ();
-  virtual void DoRun (void);
+  void DoRun () override;
 private:
   /**
    * Enqueue function
@@ -165,7 +163,11 @@ TbfQueueDiscTestCase::RunTbfTest (QueueSizeUnit mode)
 
   Address dest;
 
-  Ptr<Packet> p1, p2, p3, p4, p5;
+  Ptr<Packet> p1;
+  Ptr<Packet> p2;
+  Ptr<Packet> p3;
+  Ptr<Packet> p4;
+  Ptr<Packet> p5;
   p1 = Create<Packet> (pktSize);
   p2 = Create<Packet> (pktSize);
   p3 = Create<Packet> (pktSize);
@@ -189,28 +191,28 @@ TbfQueueDiscTestCase::RunTbfTest (QueueSizeUnit mode)
   Ptr<QueueDiscItem> item;
   NS_TEST_ASSERT_MSG_EQ (queue->GetFirstBucketTokens (), burst, "The first token bucket should be full");
   item = queue->Dequeue ();
-  NS_TEST_ASSERT_MSG_EQ ((item != 0), true, "I want to remove the first packet");
+  NS_TEST_ASSERT_MSG_NE (item, nullptr, "I want to remove the first packet");
   NS_TEST_ASSERT_MSG_EQ (queue->GetCurrentSize ().GetValue (), 3 * modeSize, "There should be three packets in there");
   NS_TEST_ASSERT_MSG_EQ (item->GetPacket ()->GetUid (), p1->GetUid (), "was this the first packet ?");
   NS_TEST_ASSERT_MSG_EQ (queue->GetFirstBucketTokens (), burst - (1 * pktSize),
                          "The number of tokens in the first bucket should be one pktSize lesser");
 
   item = queue->Dequeue ();
-  NS_TEST_ASSERT_MSG_EQ ((item != 0), true, "I want to remove the second packet");
+  NS_TEST_ASSERT_MSG_NE (item, nullptr, "I want to remove the second packet");
   NS_TEST_ASSERT_MSG_EQ (queue->GetCurrentSize ().GetValue (), 2 * modeSize, "There should be two packets in there");
   NS_TEST_ASSERT_MSG_EQ (item->GetPacket ()->GetUid (), p2->GetUid (), "Was this the second packet ?");
   NS_TEST_ASSERT_MSG_EQ (queue->GetFirstBucketTokens (), burst - (2 * pktSize),
                          "The number of tokens in the first bucket should be two pktSizes lesser");
 
   item = queue->Dequeue ();
-  NS_TEST_ASSERT_MSG_EQ ((item != 0), true, "I want to remove the third packet");
+  NS_TEST_ASSERT_MSG_NE (item, nullptr, "I want to remove the third packet");
   NS_TEST_ASSERT_MSG_EQ (queue->GetCurrentSize ().GetValue (), 1 * modeSize, "There should be one packet in there");
   NS_TEST_ASSERT_MSG_EQ (item->GetPacket ()->GetUid (), p3->GetUid (), "Was this the third packet ?");
   NS_TEST_ASSERT_MSG_EQ (queue->GetFirstBucketTokens (), burst - (3 * pktSize),
                          "The number of tokens in the first bucket should be three pktSizes lesser");
 
   item = queue->Dequeue ();
-  NS_TEST_ASSERT_MSG_EQ ((item != 0), true, "I want to remove the fourth packet");
+  NS_TEST_ASSERT_MSG_NE (item, nullptr, "I want to remove the fourth packet");
   NS_TEST_ASSERT_MSG_EQ (queue->GetCurrentSize ().GetValue (), 0 * modeSize, "There should be zero packet in there");
   NS_TEST_ASSERT_MSG_EQ (item->GetPacket ()->GetUid (), p4->GetUid (), "Was this the fourth packet ?");
   NS_TEST_ASSERT_MSG_EQ (queue->GetFirstBucketTokens (), burst - (4 * pktSize),
@@ -425,11 +427,11 @@ void
 TbfQueueDiscTestCase::DequeueAndCheck (Ptr<TbfQueueDisc> queue, bool flag, std::string printStatement)
 {
   Ptr<QueueDiscItem> item = queue->Dequeue ();
-  NS_TEST_EXPECT_MSG_EQ ((item != 0), flag, printStatement);
+  NS_TEST_EXPECT_MSG_EQ ((item != nullptr), flag, printStatement);
 }
 
 void
-TbfQueueDiscTestCase::DoRun (void)
+TbfQueueDiscTestCase::DoRun ()
 {
   RunTbfTest (QueueSizeUnit::PACKETS);
   RunTbfTest (QueueSizeUnit::BYTES);

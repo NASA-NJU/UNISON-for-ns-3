@@ -32,7 +32,7 @@
 #include "ns3/energy-source-container.h"
 
 namespace ns3 {
-    
+
 class EnergySource;
 
 /**
@@ -48,11 +48,11 @@ public:
    * \brief Get the type ID.
    * \return The object TypeId.
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   EnergyHarvester ();
 
-  virtual ~EnergyHarvester ();
+  ~EnergyHarvester () override;
 
   /**
    * \brief Sets pointer to node containing this EnergyHarvester.
@@ -67,7 +67,7 @@ public:
    * When a subclass needs to get access to the underlying node base class to
    * print the nodeId for example, it can invoke this method.
    */
-  Ptr<Node> GetNode (void) const;
+  Ptr<Node> GetNode () const;
 
   /**
    * \param source Pointer to energy source to which this EnergyHarvester is
@@ -84,7 +84,7 @@ public:
    * When a subclass needs to get access to the connected energy source,
    * it can invoke this method.
    */
-  Ptr<EnergySource> GetEnergySource (void) const;
+  Ptr<EnergySource> GetEnergySource () const;
 
   /**
    * \returns Amount of power currently provided by the harvester.
@@ -92,14 +92,14 @@ public:
    * This method is called by the energy source connected to the harvester in order
    * to determine the amount of energy that the harvester provided since last update.
    */
-  double GetPower (void) const;
+  double GetPower () const;
 
 private:
   /**
    *
    * Defined in ns3::Object
    */
-  virtual void DoDispose (void);
+  void DoDispose () override;
 
   /**
    * This method is called by the GetPower method and it needs to be implemented by the
@@ -108,10 +108,10 @@ private:
    *
    * This method should be used to connect the logic behind the particular implementation
    * of the energy harvester with the energy source.
-   * 
+   *
    * \returns Amount of power currently provided by the harvester.
    */
-  virtual double DoGetPower (void) const;
+  virtual double DoGetPower () const;
 
 private:
   /**
@@ -130,7 +130,7 @@ private:
 protected:
 
 };
-    
+
 } // namespace ns3
 
 #endif /* defined(ENERGY_HARVESTER_H) */

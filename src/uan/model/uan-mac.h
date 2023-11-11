@@ -22,13 +22,11 @@
 #define UAN_MAC_H
 
 #include "ns3/address.h"
+#include "ns3/mac8-address.h"
+#include "ns3/nstime.h"
 #include "ns3/object.h"
 #include "ns3/packet.h"
-
-#include "ns3/address.h"
-#include "ns3/nstime.h"
 #include "ns3/ptr.h"
-#include "ns3/mac8-address.h"
 
 namespace ns3 {
 
@@ -55,14 +53,14 @@ public:
    * Register this type.
    * \return The TypeId.
    */
-   static TypeId GetTypeId (void);
+   static TypeId GetTypeId ();
 
   /**
    * Get the MAC Address.
    *
    * \return MAC Address.
    */
-  virtual Address GetAddress (void);
+  virtual Address GetAddress ();
 
   /**
    * Set the address.
@@ -82,7 +80,7 @@ public:
   virtual bool Enqueue (Ptr<Packet> pkt, uint16_t protocolNumber, const Address &dest) = 0;
   /**
    * Set the callback to forward packets up to higher layers.
-   * 
+   *
    * \param cb The callback.
    * \pname{packet} The packet.
    * \pname{address} The source address.
@@ -104,10 +102,10 @@ public:
    *
    * \return The broadcast address.
    */
-  virtual Address GetBroadcast (void) const;
+  virtual Address GetBroadcast () const;
 
   /** Clears all pointer references. */
-  virtual void Clear (void) = 0;
+  virtual void Clear () = 0;
 
  /**
   * Assign a fixed random variable stream number to the random variables

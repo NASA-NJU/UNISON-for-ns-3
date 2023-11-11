@@ -35,6 +35,11 @@
 #include <map>
 
 // ns3 includes
+#ifdef __WIN32__
+#include "ns3/bs-net-device.h"
+#include "ns3/csma-net-device.h"
+#include "ns3/wave-net-device.h"
+#endif
 #include "ns3/animation-interface.h"
 #include "ns3/channel.h"
 #include "ns3/config.h"
@@ -73,12 +78,12 @@ static bool initialized = false; //!< Initialization flag
 // Public methods
 
 AnimationInterface::AnimationInterface (const std::string fn)
-  : m_f (0),
-    m_routingF (0),
+  : m_f (nullptr),
+    m_routingF (nullptr),
     m_mobilityPollInterval (Seconds (0.25)),
     m_outputFileName (fn),
     gAnimUid (0),
-    m_writeCallback (0),
+    m_writeCallback (nullptr),
     m_started (false),
     m_enablePacketMetadata (false),
     m_startTime (Seconds (0)),
@@ -92,6 +97,29 @@ AnimationInterface::AnimationInterface (const std::string fn)
 {
   initialized = true;
   StartAnimation ();
+
+#ifdef __WIN32__
+  /**
+   * Shared libraries are handled differently on Windows and
+   * need to be explicitly loaded via LoadLibrary("library.dll").
+   *
+   * Otherwise, static import libraries .dll.a/.lib (MinGW/MSVC)
+   * can be linked to the executables to perform the loading of
+   * their respective .dll implicitly during static initialization.
+   *
+   * The .dll.a/.lib however, only gets linked if we instantiate at
+   * least one symbol exported by the .dll.
+   *
+   * To ensure TypeIds from the Csma, Uan, Wave, Wifi and Wimax
+   * modules are registered during runtime, we need to instantiate
+   * at least one symbol exported by each of these module libraries.
+   */
+  static BaseStationNetDevice b;
+  static CsmaNetDevice c;
+  static WifiNetDevice w;
+  static UanNetDevice u;
+  static WaveNetDevice wv;
+#endif
 }
 
 AnimationInterface::~AnimationInterface ()
@@ -283,7 +311,7 @@ AnimationInterface::SetAnimWriteCallback (AnimWriteCallback cb)
 void
 AnimationInterface::ResetAnimWriteCallback ()
 {
-  m_writeCallback = 0;
+  m_writeCallback = nullptr;
 }
 
 void
@@ -298,7 +326,7 @@ AnimationInterface::SetConstantPosition (Ptr <Node> n, double x, double y, doubl
 {
   NS_ASSERT (n);
   Ptr<ConstantPositionMobilityModel> loc =  n->GetObject<ConstantPositionMobilityModel> ();
-  if (loc == 0)
+  if (!loc)
     {
       loc = CreateObject<ConstantPositionMobilityModel> ();
       n->AggregateObject (loc);
@@ -562,11 +590,12 @@ const std::vector<std::string>
 AnimationInterface::GetElementsFromContext (const std::string& context) const
 {
   std::vector <std::string> elements;
-  std::size_t pos1 = 0, pos2;
+  std::size_t pos1 = 0;
+  std::size_t pos2;
   while (pos1 != context.npos)
     {
-      pos1 = context.find ("/",pos1);
-      pos2 = context.find ("/",pos1 + 1);
+      pos1 = context.find ('/',pos1);
+      pos2 = context.find ('/',pos1 + 1);
       elements.push_back (context.substr (pos1 + 1,pos2 - (pos1 + 1)));
       pos1 = pos2;
       pos2 = context.npos;
@@ -935,7 +964,7 @@ AnimationInterface::WifiPhyRxBeginTrace (std::string context, Ptr<const Packet> 
         }
       Ptr <Node> txNode = NodeList::GetNode (m_macToNodeIdMap[oss.str ()]);
       UpdatePosition (txNode);
-      AnimPacketInfo pktInfo (0, Simulator::Now (), m_macToNodeIdMap[oss.str ()]);
+      AnimPacketInfo pktInfo (nullptr, Simulator::Now (), m_macToNodeIdMap[oss.str ()]);
       AddPendingPacket (AnimationInterface::WIFI, animUid, pktInfo);
       NS_LOG_WARN ("WifiPhyRxBegin: unknown Uid, but we are adding a wifi packet");
     }
@@ -1060,7 +1089,7 @@ AnimationInterface::WavePhyRxBeginTrace (std::string context, Ptr<const Packet> 
         }
       Ptr <Node> txNode = NodeList::GetNode (m_macToNodeIdMap[oss.str ()]);
       UpdatePosition (txNode);
-      AnimPacketInfo pktInfo (0, Simulator::Now (), m_macToNodeIdMap[oss.str ()]);
+      AnimPacketInfo pktInfo (nullptr, Simulator::Now (), m_macToNodeIdMap[oss.str ()]);
       AddPendingPacket (AnimationInterface::WAVE, animUid, pktInfo);
       NS_LOG_WARN ("WavePhyRxBegin: unknown Uid, but we are adding a wave packet");
     }
@@ -1337,7 +1366,7 @@ AnimationInterface::PurgePendingPackets (AnimationInterface::ProtocolType protoc
 AnimationInterface::AnimUidPacketInfoMap *
 AnimationInterface::ProtocolTypeToPendingPackets (AnimationInterface::ProtocolType protocolType)
 {
-  AnimUidPacketInfoMap * pendingPackets = 0;
+  AnimUidPacketInfoMap * pendingPackets = nullptr;
   switch (protocolType)
     {
     case AnimationInterface::WIFI:
@@ -1474,7 +1503,7 @@ AnimationInterface::StopAnimation (bool onlyAnimation)
       // Terminate the anim element
       WriteXmlClose ("anim");
       std::fclose (m_f);
-      m_f = 0;
+      m_f = nullptr;
     }
   if (onlyAnimation)
     {
@@ -1484,7 +1513,7 @@ AnimationInterface::StopAnimation (bool onlyAnimation)
     {
       WriteXmlClose ("anim", true);
       std::fclose (m_routingF);
-      m_routingF = 0;
+      m_routingF = nullptr;
     }
 }
 
@@ -1658,44 +1687,44 @@ AnimationInterface::ConnectCallbacks ()
                            MakeCallback (&AnimationInterface::UanPhyGenRxTrace, this));
   Config::ConnectFailSafe ("/NodeList/*/$ns3::BasicEnergySource/RemainingEnergy",
                            MakeCallback (&AnimationInterface::RemainingEnergyTrace, this));
-  
+
   ConnectLte ();
-  
+
   Config::ConnectFailSafe ("/NodeList/*/$ns3::Ipv4L3Protocol/Tx",
                            MakeCallback (&AnimationInterface::Ipv4TxTrace, this));
   Config::ConnectFailSafe ("/NodeList/*/$ns3::Ipv4L3Protocol/Rx",
                            MakeCallback (&AnimationInterface::Ipv4RxTrace, this));
   Config::ConnectFailSafe ("/NodeList/*/$ns3::Ipv4L3Protocol/Drop",
                            MakeCallback (&AnimationInterface::Ipv4DropTrace, this));
-  
+
   // Queue Enqueues
-  
+
   Config::ConnectFailSafe ("/NodeList/*/DeviceList/*/$ns3::AlohaNoackNetDevice/Queue/Enqueue",
                            MakeCallback (&AnimationInterface::EnqueueTrace, this));
   Config::ConnectFailSafe ("/NodeList/*/DeviceList/*/$ns3::CsmaNetDevice/TxQueue/Enqueue",
                            MakeCallback (&AnimationInterface::EnqueueTrace, this));
   Config::ConnectFailSafe ("/NodeList/*/DeviceList/*/$ns3::PointToPointNetDevice/TxQueue/Enqueue",
                            MakeCallback (&AnimationInterface::EnqueueTrace, this));
-  
+
   // Queue Dequeues
-  
+
   Config::ConnectFailSafe ("/NodeList/*/DeviceList/*/$ns3::AlohaNoackNetDevice/Queue/Dequeue",
                            MakeCallback (&AnimationInterface::DequeueTrace, this));
   Config::ConnectFailSafe ("/NodeList/*/DeviceList/*/$ns3::CsmaNetDevice/TxQueue/Dequeue",
                            MakeCallback (&AnimationInterface::DequeueTrace, this));
   Config::ConnectFailSafe ("/NodeList/*/DeviceList/*/$ns3::PointToPointNetDevice/TxQueue/Dequeue",
                            MakeCallback (&AnimationInterface::DequeueTrace, this));
-  
+
   // Queue Drops
-  
+
   Config::ConnectFailSafe ("/NodeList/*/DeviceList/*/$ns3::AlohaNoackNetDevice/Queue/Drop",
                            MakeCallback (&AnimationInterface::QueueDropTrace, this));
   Config::ConnectFailSafe ("/NodeList/*/DeviceList/*/$ns3::CsmaNetDevice/TxQueue/Drop",
                            MakeCallback (&AnimationInterface::QueueDropTrace, this));
   Config::ConnectFailSafe ("/NodeList/*/DeviceList/*/$ns3::PointToPointNetDevice/TxQueue/Drop",
                            MakeCallback (&AnimationInterface::QueueDropTrace, this));
-  
-  
+
+
   // Wifi Mac
   Config::ConnectFailSafe ("/NodeList/*/DeviceList/*/$ns3::WifiNetDevice/Mac/MacTx",
                            MakeCallback (&AnimationInterface::WifiMacTxTrace, this));
@@ -1705,13 +1734,13 @@ AnimationInterface::ConnectCallbacks ()
                            MakeCallback (&AnimationInterface::WifiMacRxTrace, this));
   Config::ConnectFailSafe ("/NodeList/*/DeviceList/*/$ns3::WifiNetDevice/Mac/MacRxDrop",
                            MakeCallback (&AnimationInterface::WifiMacRxDropTrace, this));
-  
+
   // Wifi Phy
   Config::ConnectFailSafe ("/NodeList/*/DeviceList/*/$ns3::WifiNetDevice/Phy/PhyTxDrop",
                            MakeCallback (&AnimationInterface::WifiPhyTxDropTrace, this));
   Config::ConnectFailSafe ("/NodeList/*/DeviceList/*/$ns3::WifiNetDevice/Phy/PhyRxDrop",
                            MakeCallback (&AnimationInterface::WifiPhyRxDropTrace, this));
-  
+
   // LrWpan
   Config::ConnectFailSafe ("NodeList/*/DeviceList/*/$ns3::LrWpanNetDevice/Phy/PhyTxBegin",
                            MakeCallback (&AnimationInterface::LrWpanPhyTxBeginTrace, this));
@@ -1725,7 +1754,7 @@ AnimationInterface::ConnectCallbacks ()
                            MakeCallback (&AnimationInterface::LrWpanMacRxTrace, this));
   Config::ConnectFailSafe ("/NodeList/*/DeviceList/*/$ns3::LrWpanNetDevice/Mac/MacRxDrop",
                            MakeCallback (&AnimationInterface::LrWpanMacRxDropTrace, this));
-  
+
   // Wave
   Config::ConnectFailSafe ("/NodeList/*/DeviceList/*/$ns3::WaveNetDevice/PhyEntities/*/$ns3::WifiPhy/PhyTxBegin",
                            MakeCallback (&AnimationInterface::WavePhyTxBeginTrace, this));
@@ -2115,7 +2144,7 @@ AnimationInterface::SetOutputFile (const std::string& fn, bool routing)
     }
 
   NS_LOG_INFO ("Creating new trace file:" << fn.c_str ());
-  FILE * f = 0;
+  FILE * f = nullptr;
   f = std::fopen (fn.c_str (), "w");
   if (!f)
     {
@@ -2132,7 +2161,6 @@ AnimationInterface::SetOutputFile (const std::string& fn, bool routing)
       m_f = f;
       m_outputFileName = fn;
     }
-  return;
 }
 
 void
@@ -2268,7 +2296,7 @@ AnimationInterface::TrackIpv4RoutePaths ()
       Ipv4Header header;
       header.SetDestination (Ipv4Address (trackElement.destination.c_str ()));
       Socket::SocketErrno sockerr;
-      Ptr <Ipv4Route> rt = rp->RouteOutput (pkt, header, 0, sockerr);
+      Ptr <Ipv4Route> rt = rp->RouteOutput (pkt, header, nullptr, sockerr);
       Ipv4RoutePathElements rpElements;
       if (!rt)
         {
@@ -2396,7 +2424,7 @@ AnimationInterface::RecursiveIpv4RoutePathSearch (std::string from, std::string 
   Ipv4Header header;
   header.SetDestination (Ipv4Address (to.c_str ()));
   Socket::SocketErrno sockerr;
-  Ptr <Ipv4Route> rt = rp->RouteOutput (pkt, header, 0, sockerr);
+  Ptr <Ipv4Route> rt = rp->RouteOutput (pkt, header, nullptr, sockerr);
   if (!rt)
     {
       return;
@@ -2751,7 +2779,7 @@ AnimationInterface::AnimXmlElement::AddAttribute (std::string attribute, T value
   std::ostringstream oss;
   oss << std::setprecision (10);
   oss << value;
-  std::string attributeString = attribute.c_str ();
+  std::string attributeString = attribute;
   if (xmlEscape)
     {
       attributeString += "=\"";
@@ -2855,7 +2883,7 @@ AnimationInterface::AnimXmlElement::ToString (bool autoClose)
 /***** AnimByteTag *****/
 
 TypeId
-AnimByteTag::GetTypeId (void)
+AnimByteTag::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::AnimByteTag")
     .SetParent<Tag> ()
@@ -2866,13 +2894,13 @@ AnimByteTag::GetTypeId (void)
 }
 
 TypeId
-AnimByteTag::GetInstanceTypeId (void) const
+AnimByteTag::GetInstanceTypeId () const
 {
   return GetTypeId ();
 }
 
 uint32_t
-AnimByteTag::GetSerializedSize (void) const
+AnimByteTag::GetSerializedSize () const
 {
   return sizeof (uint64_t);
 }
@@ -2902,13 +2930,13 @@ AnimByteTag::Set (uint64_t AnimUid)
 }
 
 uint64_t
-AnimByteTag::Get (void) const
+AnimByteTag::Get () const
 {
   return m_AnimUid;
 }
 
 AnimationInterface::AnimPacketInfo::AnimPacketInfo ()
-  : m_txnd (0),
+  : m_txnd (nullptr),
     m_txNodeId (0),
     m_fbTx (0),
     m_lbTx (0),

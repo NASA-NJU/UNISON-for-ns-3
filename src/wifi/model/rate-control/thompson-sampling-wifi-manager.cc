@@ -68,7 +68,7 @@ NS_OBJECT_ENSURE_REGISTERED (ThompsonSamplingWifiManager);
 NS_LOG_COMPONENT_DEFINE ("ThompsonSamplingWifiManager");
 
 TypeId
-ThompsonSamplingWifiManager::GetTypeId (void)
+ThompsonSamplingWifiManager::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::ThompsonSamplingWifiManager")
     .SetParent<WifiRemoteStationManager> ()
@@ -307,15 +307,15 @@ ThompsonSamplingWifiManager::GetModeGuardInterval (WifiRemoteStation *st, WifiMo
 }
 
 WifiTxVector
-ThompsonSamplingWifiManager::DoGetDataTxVector (WifiRemoteStation *st)
+ThompsonSamplingWifiManager::DoGetDataTxVector (WifiRemoteStation *st, uint16_t allowedWidth)
 {
-  NS_LOG_FUNCTION (this << st);
+  NS_LOG_FUNCTION (this << st << allowedWidth);
   InitializeStation (st);
   auto station = static_cast<ThompsonSamplingWifiRemoteStation *> (st);
 
   auto &stats = station->m_mcsStats.at (station->m_nextMode);
   WifiMode mode = stats.mode;
-  uint16_t channelWidth = std::min (stats.channelWidth, GetPhy ()->GetChannelWidth ());
+  uint16_t channelWidth = std::min (stats.channelWidth, allowedWidth);
   uint8_t nss = stats.nss;
   uint16_t guardInterval = GetModeGuardInterval (st, mode);
 

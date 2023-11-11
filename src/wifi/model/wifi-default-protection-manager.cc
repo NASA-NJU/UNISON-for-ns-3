@@ -20,9 +20,9 @@
 
 #include "ns3/log.h"
 #include "wifi-default-protection-manager.h"
-#include "wifi-tx-parameters.h"
-#include "wifi-mac-queue-item.h"
 #include "wifi-mac.h"
+#include "wifi-mpdu.h"
+#include "wifi-tx-parameters.h"
 
 
 namespace ns3 {
@@ -32,7 +32,7 @@ NS_LOG_COMPONENT_DEFINE ("WifiDefaultProtectionManager");
 NS_OBJECT_ENSURE_REGISTERED (WifiDefaultProtectionManager);
 
 TypeId
-WifiDefaultProtectionManager::GetTypeId (void)
+WifiDefaultProtectionManager::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::WifiDefaultProtectionManager")
     .SetParent<WifiProtectionManager> ()
@@ -53,7 +53,7 @@ WifiDefaultProtectionManager::~WifiDefaultProtectionManager ()
 }
 
 std::unique_ptr<WifiProtection>
-WifiDefaultProtectionManager::TryAddMpdu (Ptr<const WifiMacQueueItem> mpdu,
+WifiDefaultProtectionManager::TryAddMpdu (Ptr<const WifiMpdu> mpdu,
                                           const WifiTxParameters& txParams)
 {
   NS_LOG_FUNCTION (this << *mpdu << &txParams);
@@ -77,7 +77,7 @@ WifiDefaultProtectionManager::TryAddMpdu (Ptr<const WifiMacQueueItem> mpdu,
   // If we are adding a second PSDU to a DL MU PPDU, switch to no protection
   // (until MU-RTS is implemented)
   if (txParams.m_txVector.IsDlMu () && txParams.GetPsduInfoMap ().size () == 1
-      && txParams.GetPsduInfo (mpdu->GetHeader ().GetAddr1 ()) == nullptr)
+      && !txParams.GetPsduInfo (mpdu->GetHeader ().GetAddr1 ()))
     {
       return std::unique_ptr<WifiProtection> (new WifiNoProtection);
     }
@@ -108,7 +108,7 @@ WifiDefaultProtectionManager::TryAddMpdu (Ptr<const WifiMacQueueItem> mpdu,
 }
 
 std::unique_ptr<WifiProtection>
-WifiDefaultProtectionManager::TryAggregateMsdu (Ptr<const WifiMacQueueItem> msdu,
+WifiDefaultProtectionManager::TryAggregateMsdu (Ptr<const WifiMpdu> msdu,
                                                 const WifiTxParameters& txParams)
 {
   NS_LOG_FUNCTION (this << *msdu << &txParams);
@@ -158,21 +158,21 @@ WifiDefaultProtectionManager::GetPsduProtection (const WifiMacHeader& hdr, uint3
     }
 
   // check if RTS/CTS is needed
-  if (m_mac->GetWifiRemoteStationManager ()->NeedRts (hdr, size))
+  if (GetWifiRemoteStationManager ()->NeedRts (hdr, size))
     {
       WifiRtsCtsProtection* protection = new WifiRtsCtsProtection;
-      protection->rtsTxVector = m_mac->GetWifiRemoteStationManager ()->GetRtsTxVector (hdr.GetAddr1 ());
-      protection->ctsTxVector = m_mac->GetWifiRemoteStationManager ()->GetCtsTxVector (hdr.GetAddr1 (),
+      protection->rtsTxVector = GetWifiRemoteStationManager ()->GetRtsTxVector (hdr.GetAddr1 ());
+      protection->ctsTxVector = GetWifiRemoteStationManager ()->GetCtsTxVector (hdr.GetAddr1 (),
                                                                                        protection->rtsTxVector.GetMode ());
       return std::unique_ptr<WifiProtection> (protection);
     }
 
   // check if CTS-to-Self is needed
-  if (m_mac->GetWifiRemoteStationManager ()->GetUseNonErpProtection ()
-      && m_mac->GetWifiRemoteStationManager ()->NeedCtsToSelf (txVector))
+  if (GetWifiRemoteStationManager ()->GetUseNonErpProtection ()
+      && GetWifiRemoteStationManager ()->NeedCtsToSelf (txVector))
     {
       WifiCtsToSelfProtection* protection = new WifiCtsToSelfProtection;
-      protection->ctsTxVector = m_mac->GetWifiRemoteStationManager ()->GetCtsToSelfTxVector ();
+      protection->ctsTxVector = GetWifiRemoteStationManager ()->GetCtsToSelfTxVector ();
       return std::unique_ptr<WifiProtection> (protection);
     }
 

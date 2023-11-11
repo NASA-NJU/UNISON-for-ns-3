@@ -90,21 +90,21 @@ EthernetTrailer::SetFcs (uint32_t fcs)
 }
 
 uint32_t
-EthernetTrailer::GetFcs (void) const
+EthernetTrailer::GetFcs () const
 {
   NS_LOG_FUNCTION (this);
   return m_fcs;
 }
 
 uint32_t
-EthernetTrailer::GetTrailerSize (void) const
+EthernetTrailer::GetTrailerSize () const
 {
   NS_LOG_FUNCTION (this);
   return GetSerializedSize ();
 }
 
-TypeId 
-EthernetTrailer::GetTypeId (void)
+TypeId
+EthernetTrailer::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::EthernetTrailer")
     .SetParent<Trailer> ()
@@ -113,19 +113,19 @@ EthernetTrailer::GetTypeId (void)
   ;
   return tid;
 }
-TypeId 
-EthernetTrailer::GetInstanceTypeId (void) const
+TypeId
+EthernetTrailer::GetInstanceTypeId () const
 {
   return GetTypeId ();
 }
-void 
+void
 EthernetTrailer::Print (std::ostream &os) const
 {
   NS_LOG_FUNCTION (this << &os);
   os << "fcs=" << m_fcs;
 }
-uint32_t 
-EthernetTrailer::GetSerializedSize (void) const
+uint32_t
+EthernetTrailer::GetSerializedSize () const
 {
   NS_LOG_FUNCTION (this);
   return 4;

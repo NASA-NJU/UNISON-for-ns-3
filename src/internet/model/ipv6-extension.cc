@@ -116,7 +116,7 @@ uint8_t Ipv6Extension::ProcessOptions (Ptr<Packet>& packet,
       optionType = *(data + processedSize);
       ipv6Option = ipv6OptionDemux->GetOption (optionType);
 
-      if (ipv6Option == 0)
+      if (!ipv6Option)
         {
           optionType >>= 6;
           switch (optionType)
@@ -326,7 +326,7 @@ void Ipv6ExtensionFragment::DoDispose ()
 
   for (MapFragments_t::iterator it = m_fragments.begin (); it != m_fragments.end (); it++)
     {
-      it->second = 0;
+      it->second = nullptr;
     }
 
   m_fragments.clear ();
@@ -552,21 +552,21 @@ void Ipv6ExtensionFragment::GetFragments (Ptr<Packet> packet, Ipv6Header ipv6Hea
             {
               Ipv6ExtensionHopByHopHeader * p =
                 dynamic_cast<Ipv6ExtensionHopByHopHeader *> (it->first);
-              NS_ASSERT (p != 0);
+              NS_ASSERT (p != nullptr);
               fragment->AddHeader (*p);
             }
           else if (it->second == Ipv6Header::IPV6_EXT_ROUTING)
             {
               Ipv6ExtensionLooseRoutingHeader * p =
                 dynamic_cast<Ipv6ExtensionLooseRoutingHeader *> (it->first);
-              NS_ASSERT (p != 0);
+              NS_ASSERT (p != nullptr);
               fragment->AddHeader (*p);
             }
           else if (it->second == Ipv6Header::IPV6_EXT_DESTINATION)
             {
               Ipv6ExtensionDestinationHeader * p =
                 dynamic_cast<Ipv6ExtensionDestinationHeader *> (it->first);
-              NS_ASSERT (p != 0);
+              NS_ASSERT (p != nullptr);
               fragment->AddHeader (*p);
             }
         }
@@ -635,7 +635,7 @@ Ipv6ExtensionFragment::FragmentsTimeoutsListI_t Ipv6ExtensionFragment::SetTimeou
   return (iter);
 }
 
-void Ipv6ExtensionFragment::HandleTimeout (void)
+void Ipv6ExtensionFragment::HandleTimeout ()
 {
   NS_LOG_FUNCTION (this);
   Time now = Simulator::Now ();
@@ -661,8 +661,6 @@ void Ipv6ExtensionFragment::HandleTimeout (void)
   Time difference = std::get<0> (*m_timeoutEventList.begin ()) - now;
   NS_LOG_DEBUG ("Scheduling later HandleTimeout at " << (now + difference).GetSeconds ());
   m_timeoutEvent = Simulator::Schedule (difference, &Ipv6ExtensionFragment::HandleTimeout, this);
-
-  return;
 }
 
 
@@ -770,7 +768,6 @@ void Ipv6ExtensionFragment::Fragments::SetTimeoutIter (FragmentsTimeoutsListI_t 
 {
   NS_LOG_FUNCTION (this);
   m_timeoutIter = iter;
-  return;
 }
 
 Ipv6ExtensionFragment::FragmentsTimeoutsListI_t Ipv6ExtensionFragment::Fragments::GetTimeoutIter ()
@@ -845,7 +842,7 @@ uint8_t Ipv6ExtensionRouting::Process (Ptr<Packet>& packet,
   Ptr<Ipv6ExtensionRoutingDemux> ipv6ExtensionRoutingDemux = GetNode ()->GetObject<Ipv6ExtensionRoutingDemux> ();
   Ptr<Ipv6ExtensionRouting> ipv6ExtensionRouting = ipv6ExtensionRoutingDemux->GetExtensionRouting (routingTypeRouting);
 
-  if (ipv6ExtensionRouting == 0)
+  if (!ipv6ExtensionRouting)
     {
       if (routingSegmentsLeft == 0)
         {
@@ -864,7 +861,7 @@ uint8_t Ipv6ExtensionRouting::Process (Ptr<Packet>& packet,
       return routingLength;
     }
 
-  return ipv6ExtensionRouting->Process (packet, offset, ipv6Header, dst, (uint8_t *)0, stopProcessing, isDropped, dropReason);
+  return ipv6ExtensionRouting->Process (packet, offset, ipv6Header, dst, (uint8_t *)nullptr, stopProcessing, isDropped, dropReason);
 }
 
 
@@ -897,10 +894,10 @@ void Ipv6ExtensionRoutingDemux::DoDispose ()
   for (Ipv6ExtensionRoutingList_t::iterator it = m_extensionsRouting.begin (); it != m_extensionsRouting.end (); it++)
     {
       (*it)->Dispose ();
-      *it = 0;
+      *it = nullptr;
     }
   m_extensionsRouting.clear ();
-  m_node = 0;
+  m_node = nullptr;
   Object::DoDispose ();
 }
 
@@ -925,7 +922,7 @@ Ptr<Ipv6ExtensionRouting> Ipv6ExtensionRoutingDemux::GetExtensionRouting (uint8_
           return *i;
         }
     }
-  return 0;
+  return nullptr;
 }
 
 void Ipv6ExtensionRoutingDemux::Remove (Ptr<Ipv6ExtensionRouting> extensionRouting)
@@ -1076,7 +1073,7 @@ uint8_t Ipv6ExtensionLooseRouting::Process (Ptr<Packet>& packet,
   Socket::SocketErrno err;
   NS_ASSERT (ipv6rp);
 
-  Ptr<Ipv6Route> rtentry = ipv6rp->RouteOutput (p, ipv6header, 0, err);
+  Ptr<Ipv6Route> rtentry = ipv6rp->RouteOutput (p, ipv6header, nullptr, err);
 
   if (rtentry)
     {

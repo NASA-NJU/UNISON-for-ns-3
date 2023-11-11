@@ -40,7 +40,7 @@ NS_LOG_COMPONENT_DEFINE ("InetTopologyReader");
 
 NS_OBJECT_ENSURE_REGISTERED (InetTopologyReader);
 
-TypeId InetTopologyReader::GetTypeId (void)
+TypeId InetTopologyReader::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::InetTopologyReader")
     .SetParent<TopologyReader> ()
@@ -61,7 +61,7 @@ InetTopologyReader::~InetTopologyReader ()
 }
 
 NodeContainer
-InetTopologyReader::Read (void)
+InetTopologyReader::Read ()
 {
   std::ifstream topgen;
   topgen.open (GetFileName ().c_str ());
@@ -113,7 +113,7 @@ InetTopologyReader::Read (void)
         {
           NS_LOG_INFO ( "Link " << linksNumber << " from: " << from << " to: " << to);
 
-          if ( nodeMap[from] == 0 )
+          if ( !nodeMap[from] )
             {
               NS_LOG_INFO ( "Node " << nodesNumber << " name: " << from);
               Ptr<Node> tmpNode = CreateObject<Node> ();
@@ -122,7 +122,7 @@ InetTopologyReader::Read (void)
               nodesNumber++;
             }
 
-          if (nodeMap[to] == 0)
+          if (!nodeMap[to])
             {
               NS_LOG_INFO ( "Node " << nodesNumber << " name: " << to);
               Ptr<Node> tmpNode = CreateObject<Node> ();

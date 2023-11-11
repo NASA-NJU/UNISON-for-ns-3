@@ -19,7 +19,7 @@
  *              Song Luan <lsuper@mail.ustc.edu.cn> (Implemented Link Cache using dijsktra algorithm to get the best route)
  *
  * James P.G. Sterbenz <jpgs@ittc.ku.edu>, director
- * ResiliNets Research Group  http://wiki.ittc.ku.edu/resilinets
+ * ResiliNets Research Group  https://resilinets.org/
  * Information and Telecommunication Technology Center (ITTC)
  * and Department of Electrical Engineering and Computer Science
  * The University of Kansas Lawrence, KS USA.
@@ -343,7 +343,7 @@ public:
         /*
          * Verify if neither the entry are not 0 and they equal to each other
          */
-        if (((*i) == 0) || ((*j) == 0))
+        if (((*i) == nullptr) || ((*j) == nullptr))
           {
             return false;
           }
@@ -387,7 +387,7 @@ public:
   static TypeId GetTypeId ();
 
   DsrRouteCache ();
-  virtual ~DsrRouteCache ();
+  ~DsrRouteCache () override;
 
   // Delete assignment operator to avoid misuse
   DsrRouteCache & operator = (DsrRouteCache const &) = delete;

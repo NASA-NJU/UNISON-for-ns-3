@@ -26,8 +26,7 @@
 #include "wifi-phy.h"
 #include "wifi-tx-vector.h"
 #include "wifi-remote-station-manager.h"
-#include "wifi-mac-queue-item.h"
-#include "wifi-mac-queue.h"
+#include "wifi-mpdu.h"
 #include "msdu-aggregator.h"
 #include "wifi-net-device.h"
 #include "ns3/ht-capabilities.h"
@@ -46,7 +45,7 @@ namespace ns3 {
 NS_OBJECT_ENSURE_REGISTERED (MpduAggregator);
 
 TypeId
-MpduAggregator::GetTypeId (void)
+MpduAggregator::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::MpduAggregator")
     .SetParent<Object> ()
@@ -67,7 +66,7 @@ MpduAggregator::~MpduAggregator ()
 void
 MpduAggregator::DoDispose ()
 {
-  m_mac = 0;
+  m_mac = nullptr;
   Object::DoDispose ();
 }
 
@@ -79,7 +78,7 @@ MpduAggregator::SetWifiMac (const Ptr<WifiMac> mac)
 }
 
 void
-MpduAggregator::Aggregate (Ptr<const WifiMacQueueItem> mpdu, Ptr<Packet> ampdu, bool isSingle)
+MpduAggregator::Aggregate (Ptr<const WifiMpdu> mpdu, Ptr<Packet> ampdu, bool isSingle)
 {
   NS_LOG_FUNCTION (mpdu << ampdu << isSingle);
   NS_ASSERT (ampdu);
@@ -145,7 +144,7 @@ MpduAggregator::GetMaxAmpduSize (Mac48Address recipient, uint8_t tid,
 
   // Determine the constraint imposed by the recipient based on the PPDU
   // format used to transmit the A-MPDU
-  if (modulation == WIFI_MOD_CLASS_HE)
+  if (modulation >= WIFI_MOD_CLASS_HE)
     {
       NS_ABORT_MSG_IF (!heCapabilities, "HE Capabilities element not received");
 
@@ -191,29 +190,29 @@ MpduAggregator::GetAmpduSubframeHeader (uint16_t mpduSize, bool isSingle)
   return hdr;
 }
 
-std::vector<Ptr<WifiMacQueueItem>>
-MpduAggregator::GetNextAmpdu (Ptr<WifiMacQueueItem> mpdu, WifiTxParameters& txParams,
+std::vector<Ptr<WifiMpdu>>
+MpduAggregator::GetNextAmpdu (Ptr<WifiMpdu> mpdu, WifiTxParameters& txParams,
                               Time availableTime) const
 {
   NS_LOG_FUNCTION (this << *mpdu << &txParams << availableTime);
 
-  std::vector<Ptr<WifiMacQueueItem>> mpduList;
+  std::vector<Ptr<WifiMpdu>> mpduList;
 
   Mac48Address recipient = mpdu->GetHeader ().GetAddr1 ();
   NS_ASSERT (mpdu->GetHeader ().IsQosData () && !recipient.IsBroadcast ());
   uint8_t tid = mpdu->GetHeader ().GetQosTid ();
 
   Ptr<QosTxop> qosTxop = m_mac->GetQosTxop (tid);
-  NS_ASSERT (qosTxop != 0);
+  NS_ASSERT (qosTxop);
 
   //Have to make sure that the block ack agreement is established and A-MPDU is enabled
   if (qosTxop->GetBaAgreementEstablished (recipient, tid)
       && GetMaxAmpduSize (recipient, tid, txParams.m_txVector.GetModulationClass ()) > 0)
     {
       /* here is performed MPDU aggregation */
-      Ptr<WifiMacQueueItem> nextMpdu = mpdu;
+      Ptr<WifiMpdu> nextMpdu = mpdu;
 
-      while (nextMpdu != 0)
+      while (nextMpdu)
         {
           // if we are here, nextMpdu can be aggregated to the A-MPDU.
           NS_LOG_DEBUG ("Adding packet with sequence number " << nextMpdu->GetHeader ().GetSequenceNumber ()
@@ -223,11 +222,10 @@ MpduAggregator::GetNextAmpdu (Ptr<WifiMacQueueItem> mpdu, WifiTxParameters& txPa
           mpduList.push_back (nextMpdu);
 
           // If allowed by the BA agreement, get the next MPDU
-          Ptr<const WifiMacQueueItem> peekedMpdu;
-          peekedMpdu = qosTxop->PeekNextMpdu (tid, recipient, nextMpdu);
-          nextMpdu = 0;
+          auto peekedMpdu = qosTxop->PeekNextMpdu (SINGLE_LINK_OP_ID, tid, recipient, nextMpdu);
+          nextMpdu = nullptr;
 
-          if (peekedMpdu != 0)
+          if (peekedMpdu)
             {
               // PeekNextMpdu() does not return an MPDU that is beyond the transmit window
               NS_ASSERT (IsInWindow (peekedMpdu->GetHeader ().GetSequenceNumber (),
@@ -238,7 +236,7 @@ MpduAggregator::GetNextAmpdu (Ptr<WifiMacQueueItem> mpdu, WifiTxParameters& txPa
               // and duration limit are met. Note that the returned MPDU differs from
               // the peeked MPDU if A-MSDU aggregation is enabled.
               NS_LOG_DEBUG ("Trying to aggregate another MPDU");
-              nextMpdu = qosTxop->GetNextMpdu (peekedMpdu, txParams, availableTime, false);
+              nextMpdu = qosTxop->GetNextMpdu (SINGLE_LINK_OP_ID, peekedMpdu, txParams, availableTime, false);
             }
         }
 

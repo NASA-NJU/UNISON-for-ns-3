@@ -28,10 +28,10 @@
 namespace ns3 {
 
 NS_LOG_COMPONENT_DEFINE ("SSManager");
-  
+
 NS_OBJECT_ENSURE_REGISTERED (SSManager);
 
-TypeId SSManager::GetTypeId (void)
+TypeId SSManager::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::SSManager")
     .SetParent<Object> ()
@@ -39,19 +39,19 @@ TypeId SSManager::GetTypeId (void)
   return tid;
 }
 
-SSManager::SSManager (void)
+SSManager::SSManager ()
 {
   m_ssRecords = new std::vector<SSRecord*> ();
 }
 
-SSManager::~SSManager (void)
+SSManager::~SSManager ()
 {
   for (std::vector<SSRecord*>::iterator iter = m_ssRecords->begin (); iter != m_ssRecords->end (); ++iter)
     {
       delete *iter;
     }
   delete m_ssRecords;
-  m_ssRecords = 0;
+  m_ssRecords = nullptr;
 }
 
 SSRecord*
@@ -74,7 +74,7 @@ SSManager::GetSSRecord (const Mac48Address &macAddress) const
     }
 
   NS_LOG_DEBUG ("GetSSRecord: SSRecord not found!");
-  return 0;
+  return nullptr;
 }
 
 SSRecord*
@@ -101,11 +101,11 @@ SSManager::GetSSRecord (Cid cid) const
     }
 
   NS_LOG_DEBUG ("GetSSRecord: SSRecord not found!");
-  return 0;
+  return nullptr;
 }
 
 std::vector<SSRecord*>*
-SSManager::GetSSRecords (void) const
+SSManager::GetSSRecords () const
 {
   return m_ssRecords;
 }
@@ -127,7 +127,7 @@ bool
 SSManager::IsRegistered (const Mac48Address &macAddress) const
 {
   SSRecord *ssRecord = GetSSRecord (macAddress);
-  return ssRecord != 0 && ssRecord->GetRangingStatus () == WimaxNetDevice::RANGING_STATUS_SUCCESS;
+  return ssRecord != nullptr && ssRecord->GetRangingStatus () == WimaxNetDevice::RANGING_STATUS_SUCCESS;
 }
 
 void
@@ -163,13 +163,13 @@ SSManager::GetMacAddress (Cid cid) const
 }
 
 uint32_t
-SSManager::GetNSSs (void) const
+SSManager::GetNSSs () const
 {
   return m_ssRecords->size ();
 }
 
 uint32_t
-SSManager::GetNRegisteredSSs (void) const
+SSManager::GetNRegisteredSSs () const
 {
   uint32_t nrSS = 0;
   for (std::vector<SSRecord*>::iterator iter = m_ssRecords->begin (); iter != m_ssRecords->end (); ++iter)

@@ -37,14 +37,14 @@ namespace ns3 {
 class PacketCounterCalculator : public CounterCalculator<uint32_t> {
 public:
   PacketCounterCalculator();
-  virtual ~PacketCounterCalculator();
+  ~PacketCounterCalculator() override;
 
   /**
    * Register this type.
    * \return The TypeId.
    */
-  static TypeId GetTypeId (void);
-  
+  static TypeId GetTypeId ();
+
   /**
    * Increments the packet counter by one
    *
@@ -65,7 +65,10 @@ public:
                     Mac48Address realto);
 
 protected:
-  virtual void DoDispose (void);
+  /**
+   * Dispose of this Object.
+   */
+  void DoDispose () override;
 
   // end class PacketCounterCalculator
 };
@@ -82,14 +85,14 @@ class PacketSizeMinMaxAvgTotalCalculator :
 {
 public:
   PacketSizeMinMaxAvgTotalCalculator();
-  virtual ~PacketSizeMinMaxAvgTotalCalculator();
-  
+  ~PacketSizeMinMaxAvgTotalCalculator() override;
+
   /**
    * Register this type.
    * \return The TypeId.
    */
-  static TypeId GetTypeId (void);
-  
+  static TypeId GetTypeId ();
+
   /**
    * Increments the packet stats by the size of the packet
    *
@@ -97,19 +100,19 @@ public:
    * \param packet packet size used to update stats
    */
   void PacketUpdate (std::string path, Ptr<const Packet> packet);
-  
+
   /**
    * Increments the packet stats by the size of the packet
    *
    * \param path not used in this method
    * \param packet packet size used to update stats
    * \param realto not used in this method
-   */  
+   */
   void FrameUpdate (std::string path, Ptr<const Packet> packet,
                     Mac48Address realto);
 
 protected:
-  virtual void DoDispose (void);
+  void DoDispose () override;
 
   // end class PacketSizeMinMaxAvgTotalCalculator
 };

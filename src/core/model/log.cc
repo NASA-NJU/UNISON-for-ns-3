@@ -44,12 +44,12 @@ namespace ns3 {
  * The Log TimePrinter.
  * This is private to the logging implementation.
  */
-static TimePrinter g_logTimePrinter = 0;
+static TimePrinter g_logTimePrinter = nullptr;
 /**
  * \ingroup logging
  * The Log NodePrinter.
  */
-static NodePrinter g_logNodePrinter = 0;
+static NodePrinter g_logNodePrinter = nullptr;
 
 /**
  * \ingroup logging
@@ -72,7 +72,7 @@ static PrintList g_printList;
 
 /* static */
 LogComponent::ComponentList *
-LogComponent::GetComponentList (void)
+LogComponent::GetComponentList ()
 {
   static LogComponent::ComponentList components;
   return &components;
@@ -82,7 +82,7 @@ LogComponent::GetComponentList (void)
 PrintList::PrintList ()
 {
   const char *envVar = std::getenv ("NS_LOG");
-  if (envVar == 0 || std::strlen (envVar) == 0)
+  if (envVar == nullptr || std::strlen (envVar) == 0)
     {
       return;
     }
@@ -91,7 +91,7 @@ PrintList::PrintList ()
   std::string::size_type next = 0;
   while (next != std::string::npos)
     {
-      next = env.find_first_of (":", cur);
+      next = env.find_first_of (':', cur);
       std::string tmp = std::string (env, cur, next - cur);
       if (tmp == "print-list")
         {
@@ -142,10 +142,10 @@ GetLogComponent (const std::string name)
 }
 
 void
-LogComponent::EnvVarCheck (void)
+LogComponent::EnvVarCheck ()
 {
   const char *envVar = std::getenv ("NS_LOG");
-  if (envVar == 0 || std::strlen (envVar) == 0)
+  if (envVar == nullptr || std::strlen (envVar) == 0)
     {
       return;
     }
@@ -155,9 +155,9 @@ LogComponent::EnvVarCheck (void)
   std::string::size_type next = 0;
   while (next != std::string::npos)
     {
-      next = env.find_first_of (":", cur);
+      next = env.find_first_of (':', cur);
       std::string tmp = std::string (env, cur, next - cur);
-      std::string::size_type equal = tmp.find ("=");
+      std::string::size_type equal = tmp.find ('=');
       std::string component;
       if (equal == std::string::npos)
         {
@@ -181,7 +181,7 @@ LogComponent::EnvVarCheck (void)
               do
                 {
                   cur_lev = next_lev + 1;
-                  next_lev = tmp.find ("|", cur_lev);
+                  next_lev = tmp.find ('|', cur_lev);
                   std::string lev = tmp.substr (cur_lev, next_lev - cur_lev);
                   if (lev == "error")
                     {
@@ -286,7 +286,7 @@ LogComponent::IsEnabled (const enum LogLevel level) const
 }
 
 bool
-LogComponent::IsNoneEnabled (void) const
+LogComponent::IsNoneEnabled () const
 {
   return m_levels == 0;
 }
@@ -310,13 +310,13 @@ LogComponent::Disable (const enum LogLevel level)
 }
 
 char const *
-LogComponent::Name (void) const
+LogComponent::Name () const
 {
   return m_name.c_str ();
 }
 
 std::string
-LogComponent::File (void) const
+LogComponent::File () const
 {
   return m_file;
 }
@@ -366,7 +366,7 @@ LogComponentEnable (char const *name, enum LogLevel level)
        i != components->end ();
        i++)
     {
-      if (i->first.compare (name) == 0)
+      if (i->first == name)
         {
           i->second->Enable (level);
           return;
@@ -401,7 +401,7 @@ LogComponentDisable (char const *name, enum LogLevel level)
        i != components->end ();
        i++)
     {
-      if (i->first.compare (name) == 0)
+      if (i->first == name)
         {
           i->second->Disable (level);
           break;
@@ -422,7 +422,7 @@ LogComponentDisableAll (enum LogLevel level)
 }
 
 void
-LogComponentPrintList (void)
+LogComponentPrintList ()
 {
   LogComponent::ComponentList *components = LogComponent::GetComponentList ();
   for (LogComponent::ComponentList::const_iterator i = components->begin ();
@@ -510,7 +510,7 @@ static bool ComponentExists (std::string componentName)
        i != components->end ();
        i++)
     {
-      if (i->first.compare (name) == 0)
+      if (i->first == name)
         {
           return true;
         }
@@ -525,10 +525,10 @@ static bool ComponentExists (std::string componentName)
  * Parse the \c NS_LOG environment variable.
  * This is private to the logging implementation.
  */
-static void CheckEnvironmentVariables (void)
+static void CheckEnvironmentVariables ()
 {
   const char *envVar = std::getenv ("NS_LOG");
-  if (envVar == 0 || std::strlen (envVar) == 0)
+  if (envVar == nullptr || std::strlen (envVar) == 0)
     {
       return;
     }
@@ -539,9 +539,9 @@ static void CheckEnvironmentVariables (void)
 
   while (next != std::string::npos)
     {
-      next = env.find_first_of (":", cur);
+      next = env.find_first_of (':', cur);
       std::string tmp = std::string (env, cur, next - cur);
-      std::string::size_type equal = tmp.find ("=");
+      std::string::size_type equal = tmp.find ('=');
       std::string component;
       if (equal == std::string::npos)
         {
@@ -568,7 +568,7 @@ static void CheckEnvironmentVariables (void)
               do
                 {
                   cur_lev = next_lev + 1;
-                  next_lev = tmp.find ("|", cur_lev);
+                  next_lev = tmp.find ('|', cur_lev);
                   std::string lev = tmp.substr (cur_lev, next_lev - cur_lev);
                   if (lev == "error"
                       || lev == "warn"
@@ -626,7 +626,7 @@ void LogSetTimePrinter (TimePrinter printer)
    */
   CheckEnvironmentVariables ();
 }
-TimePrinter LogGetTimePrinter (void)
+TimePrinter LogGetTimePrinter ()
 {
   return g_logTimePrinter;
 }
@@ -635,36 +635,41 @@ void LogSetNodePrinter (NodePrinter printer)
 {
   g_logNodePrinter = printer;
 }
-NodePrinter LogGetNodePrinter (void)
+NodePrinter LogGetNodePrinter ()
 {
   return g_logNodePrinter;
 }
 
 
 ParameterLogger::ParameterLogger (std::ostream &os)
-  : m_first (true),
-    m_os (os)
+  : m_os (os)
 {}
 
-template<>
-ParameterLogger &
-ParameterLogger::operator<< <std::string> (const std::string param)
+
+void
+ParameterLogger::CommaRest()
 {
   if (m_first)
     {
-      m_os << "\"" << param << "\"";
       m_first = false;
     }
   else
     {
-      m_os << ", \"" << param << "\"";
+      m_os << ", ";
     }
-  return *this;
 }
 
 template<>
 ParameterLogger &
-ParameterLogger::operator<< <const char *> (const char * param)
+ParameterLogger::operator<< <std::string> (const std::string& param)
+{
+  CommaRest();
+  m_os << "\"" << param << "\"";
+  return *this;
+}
+
+ParameterLogger &
+ParameterLogger::operator<< (const char * param)
 {
   (*this) << std::string (param);
   return *this;
@@ -674,15 +679,7 @@ template<>
 ParameterLogger &
 ParameterLogger::operator<< <int8_t> (const int8_t param)
 {
-  if (m_first)
-    {
-      m_os << static_cast<int16_t> (param);
-      m_first = false;
-    }
-  else
-    {
-      m_os << ", " << static_cast<int16_t> (param);
-    }
+  (*this) << static_cast<int16_t> (param);
   return *this;
 }
 
@@ -690,15 +687,7 @@ template<>
 ParameterLogger &
 ParameterLogger::operator<< <uint8_t> (const uint8_t param)
 {
-  if (m_first)
-    {
-      m_os << static_cast<uint16_t> (param);
-      m_first = false;
-    }
-  else
-    {
-      m_os << ", " << static_cast<uint16_t> (param);
-    }
+  (*this) << static_cast<uint16_t> (param);
   return *this;
 }
 

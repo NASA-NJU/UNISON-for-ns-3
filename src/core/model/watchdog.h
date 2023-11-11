@@ -111,7 +111,7 @@ public:
 
 private:
   /** Internal callback invoked when the timer expires. */
-  void Expire (void);
+  void Expire ();
   /**
    * The timer implementation, which contains the bound callback
    * function and arguments.
@@ -154,7 +154,7 @@ template <typename... Ts>
 void
 Watchdog::SetArguments (Ts&&... args)
 {
-  if (m_impl == 0)
+  if (m_impl == nullptr)
     {
       NS_FATAL_ERROR ("You cannot set the arguments of a Watchdog before setting its function.");
       return;

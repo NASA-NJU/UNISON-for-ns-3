@@ -23,7 +23,8 @@
 
 #include "ns3/application.h"
 #include "ns3/socket.h"
-#include "ns3/epc-s1ap-sap.h"
+#include "epc-s1ap-sap.h"
+#include "epc-gtpc-header.h"
 
 namespace ns3 {
 
@@ -53,14 +54,14 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
-  virtual void DoDispose ();
+  static TypeId GetTypeId ();
+  void DoDispose () override;
 
   /** Constructor */
   EpcMmeApplication ();
 
   /** Destructor */
-  virtual ~EpcMmeApplication ();
+  ~EpcMmeApplication () override;
 
   /**
    *

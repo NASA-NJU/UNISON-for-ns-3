@@ -57,8 +57,8 @@ public:
   TcpHeaderGetSetTestCase (std::string name);
 protected:
 private:
-  virtual void DoRun (void);
-  virtual void DoTeardown (void);
+  void DoRun () override;
+  void DoTeardown () override;
 
 };
 
@@ -66,7 +66,7 @@ TcpHeaderGetSetTestCase::TcpHeaderGetSetTestCase (std::string name) : TestCase (
 {
 }
 
-void TcpHeaderGetSetTestCase::DoRun (void)
+void TcpHeaderGetSetTestCase::DoRun ()
 {
   uint16_t sourcePort;        // Source port
   uint16_t destinationPort;   // Destination port
@@ -142,7 +142,7 @@ void TcpHeaderGetSetTestCase::DoRun (void)
     }
 }
 
-void TcpHeaderGetSetTestCase::DoTeardown (void)
+void TcpHeaderGetSetTestCase::DoTeardown ()
 {
 }
 
@@ -162,8 +162,8 @@ public:
   TcpHeaderWithRFC793OptionTestCase (std::string name);
 
 private:
-  virtual void DoRun (void);
-  virtual void DoTeardown (void);
+  void DoRun () override;
+  void DoTeardown () override;
 
   /**
    * \brief Check an header with only one kind of option.
@@ -197,7 +197,8 @@ TcpHeaderWithRFC793OptionTestCase::DoRun ()
 void
 TcpHeaderWithRFC793OptionTestCase::CheckCorrectDeserialize ()
 {
-  TcpHeader source, destination;
+  TcpHeader source;
+  TcpHeader destination;
   TcpOptionNOP temp;
   Buffer buffer;
   buffer.AddAtStart (40);
@@ -220,7 +221,10 @@ void
 TcpHeaderWithRFC793OptionTestCase::CheckNoPadding ()
 {
   {
-    TcpOptionNOP oNop1, oNop2, oNop3, oNop4;
+    TcpOptionNOP oNop1;
+    TcpOptionNOP oNop2;
+    TcpOptionNOP oNop3;
+    TcpOptionNOP oNop4;
     TcpHeader header;
     Buffer buffer;
 
@@ -317,7 +321,8 @@ TcpHeaderWithRFC793OptionTestCase::OneOptionAtTime ()
   {
     TcpOptionMSS oMSS;
     oMSS.SetMSS (50);
-    TcpHeader header, dest;
+    TcpHeader header;
+    TcpHeader dest;
     Buffer buffer;
 
     NS_TEST_ASSERT_MSG_EQ (header.GetLength (), 5, "TcpHeader without option is"
@@ -367,7 +372,7 @@ public:
   TcpHeaderFlagsToString (std::string name);
 
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
 };
 
 TcpHeaderFlagsToString::TcpHeaderFlagsToString (std::string name)
@@ -376,9 +381,10 @@ TcpHeaderFlagsToString::TcpHeaderFlagsToString (std::string name)
 }
 
 void
-TcpHeaderFlagsToString::DoRun (void)
+TcpHeaderFlagsToString::DoRun ()
 {
-  std::string str, target;
+  std::string str;
+  std::string target;
   str = TcpHeader::FlagsToString (0x0);
   target = "";
   NS_TEST_ASSERT_MSG_EQ (str, target, "str " << str <<  " does not equal target " << target);

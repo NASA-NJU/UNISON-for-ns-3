@@ -25,7 +25,7 @@ namespace ns3 {
 
 NS_LOG_COMPONENT_DEFINE ("Backoff");
 
-Backoff::Backoff () 
+Backoff::Backoff ()
 {
   m_slotTime = MicroSeconds (1);
   m_minSlots = 1;
@@ -50,7 +50,7 @@ Backoff::Backoff(Time slotTime, uint32_t minSlots, uint32_t maxSlots, uint32_t c
 }
 
 Time
-Backoff::GetBackoffTime (void)
+Backoff::GetBackoffTime ()
 {
   uint32_t ceiling;
 
@@ -76,20 +76,20 @@ Backoff::GetBackoffTime (void)
   return backoff;
 }
 
-void 
-Backoff::ResetBackoffTime (void)
+void
+Backoff::ResetBackoffTime ()
 {
   m_numBackoffRetries = 0;
 }
 
-bool 
-Backoff::MaxRetriesReached (void) 
+bool
+Backoff::MaxRetriesReached ()
 {
   return (m_numBackoffRetries >= m_maxRetries);
 }
 
-void 
-Backoff::IncrNumRetries (void) 
+void
+Backoff::IncrNumRetries ()
 {
   m_numBackoffRetries++;
 }

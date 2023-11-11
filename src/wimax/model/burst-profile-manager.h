@@ -33,7 +33,7 @@ class RngReq;
 
 /**
  * \ingroup wimax
- * 
+ *
  * Profile manager for burst communications
  */
 class BurstProfileManager : public Object
@@ -43,19 +43,24 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
   /**
    * Constructor
    *
    * \param device WIMAX device
    */
   BurstProfileManager (Ptr<WimaxNetDevice> device);
-  ~BurstProfileManager (void);
-  void DoDispose (void);
+  ~BurstProfileManager () override;
+
+  // Delete copy constructor and assignment operator to avoid misuse
+  BurstProfileManager (const BurstProfileManager &) = delete;
+  BurstProfileManager &operator= (const BurstProfileManager &) = delete;
+
+  void DoDispose () override;
   /**
    * \returns the number of available burst profile
    */
-  uint16_t GetNrBurstProfilesToDefine (void);
+  uint16_t GetNrBurstProfilesToDefine ();
 
   /**
    * \brief returns the modulation type of a given iuc
@@ -96,16 +101,8 @@ public:
    * \brief Get burst profile to request
    * \returns the burst profile for SS
    */
-  uint8_t GetBurstProfileToRequest (void);
+  uint8_t GetBurstProfileToRequest ();
 private:
-  /// Type conversion operator
-  BurstProfileManager (const BurstProfileManager &);
-  /**
-   * Assignment operator
-   * \returns burst profile manager
-   */
-  BurstProfileManager& operator= (const BurstProfileManager &);
-
   Ptr<WimaxNetDevice> m_device; ///< the device
 };
 

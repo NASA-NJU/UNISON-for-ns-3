@@ -36,7 +36,7 @@ namespace ns3 {
  * (port numbers, payload size, checksum) as well as methods for serialization
  * to and deserialization from a byte buffer.
  */
-class UdpHeader : public Header 
+class UdpHeader : public Header
 {
 public:
 
@@ -46,12 +46,12 @@ public:
    * Creates a null header
    */
   UdpHeader ();
-  ~UdpHeader ();
+  ~UdpHeader () override;
 
   /**
-   * \brief Enable checksum calculation for UDP 
+   * \brief Enable checksum calculation for UDP
    */
-  void EnableChecksums (void);
+  void EnableChecksums ();
   /**
    * \param port the destination port for this UdpHeader
    */
@@ -63,11 +63,11 @@ public:
   /**
    * \return The source port for this UdpHeader
    */
-  uint16_t GetSourcePort (void) const;
+  uint16_t GetSourcePort () const;
   /**
    * \return the destination port for this UdpHeader
    */
-  uint16_t GetDestinationPort (void) const;
+  uint16_t GetDestinationPort () const;
 
   /**
    * \param source the ip source to use in the underlying
@@ -80,7 +80,7 @@ public:
    * If you want to use udp checksums, you should call this
    * method prior to adding the header to a packet.
    */
-  void InitializeChecksum (Address source, 
+  void InitializeChecksum (Address source,
                            Address destination,
                            uint8_t protocol);
 
@@ -95,7 +95,7 @@ public:
    * If you want to use udp checksums, you should call this
    * method prior to adding the header to a packet.
    */
-  void InitializeChecksum (Ipv4Address source, 
+  void InitializeChecksum (Ipv4Address source,
                            Ipv4Address destination,
                            uint8_t protocol);
 
@@ -110,7 +110,7 @@ public:
    * If you want to use udp checksums, you should call this
    * method prior to adding the header to a packet.
    */
-  void InitializeChecksum (Ipv6Address source, 
+  void InitializeChecksum (Ipv6Address source,
                            Ipv6Address destination,
                            uint8_t protocol);
 
@@ -118,18 +118,18 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
-  virtual TypeId GetInstanceTypeId (void) const;
-  virtual void Print (std::ostream &os) const;
-  virtual uint32_t GetSerializedSize (void) const;
-  virtual void Serialize (Buffer::Iterator start) const;
-  virtual uint32_t Deserialize (Buffer::Iterator start);
+  static TypeId GetTypeId ();
+  TypeId GetInstanceTypeId () const override;
+  void Print (std::ostream &os) const override;
+  uint32_t GetSerializedSize () const override;
+  void Serialize (Buffer::Iterator start) const override;
+  uint32_t Deserialize (Buffer::Iterator start) override;
 
   /**
    * \brief Is the UDP checksum correct ?
    * \returns true if the checksum is correct, false otherwise.
    */
-  bool IsChecksumOk (void) const;
+  bool IsChecksumOk () const;
 
   /**
    * \brief Force the UDP checksum to a given value.

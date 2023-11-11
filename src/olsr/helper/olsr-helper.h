@@ -54,13 +54,16 @@ public:
    */
   OlsrHelper (const OlsrHelper &o);
 
+  // Delete assignment operator to avoid misuse
+  OlsrHelper &operator= (const OlsrHelper &) = delete;
+
   /**
    * \returns pointer to clone of this OlsrHelper
    *
    * This method is mainly for internal use by the other helpers;
    * clients are expected to free the dynamic memory allocated by this method
    */
-  OlsrHelper* Copy (void) const;
+  OlsrHelper* Copy () const override;
 
   /**
     * \param node the node for which an exception is to be defined
@@ -76,7 +79,7 @@ public:
    *
    * This method will be called by ns3::InternetStackHelper::Install
    */
-  virtual Ptr<Ipv4RoutingProtocol> Create (Ptr<Node> node) const;
+  Ptr<Ipv4RoutingProtocol> Create (Ptr<Node> node) const override;
 
   /**
    * \param name the name of the attribute to set
@@ -100,12 +103,6 @@ public:
   int64_t AssignStreams (NodeContainer c, int64_t stream);
 
 private:
-  /**
-   * \brief Assignment operator declared private and not implemented to disallow
-   * assignment and prevent the compiler from happily inserting its own.
-   * \return nothing
-   */
-  OlsrHelper &operator = (const OlsrHelper &);
   ObjectFactory m_agentFactory; //!< Object factory
 
   std::map< Ptr<Node>, std::set<uint32_t> > m_interfaceExclusions; //!< container of interfaces excluded from OLSR operations

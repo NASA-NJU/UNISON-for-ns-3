@@ -36,7 +36,7 @@ namespace ns3 {
  *
  * \brief Helper class that adds ns3::Ipv4StaticRouting objects
  *
- * This class is expected to be used in conjunction with 
+ * This class is expected to be used in conjunction with
  * ns3::InternetStackHelper::SetRoutingHelper
  */
 class Ipv4StaticRoutingHelper : public Ipv4RoutingHelper
@@ -49,11 +49,14 @@ public:
   Ipv4StaticRoutingHelper ();
 
   /**
-   * \brief Construct an Ipv4StaticRoutingHelper from another previously 
+   * \brief Construct an Ipv4StaticRoutingHelper from another previously
    * initialized instance (Copy Constructor).
    * \param o object to be copied
    */
   Ipv4StaticRoutingHelper (const Ipv4StaticRoutingHelper &o);
+
+  // Delete assignment operator to avoid misuse
+  Ipv4StaticRoutingHelper &operator= (const Ipv4StaticRoutingHelper &) = delete;
 
   /**
    * \returns pointer to clone of this Ipv4StaticRoutingHelper
@@ -61,7 +64,7 @@ public:
    * This method is mainly for internal use by the other helpers;
    * clients are expected to free the dynamic memory allocated by this method
    */
-  Ipv4StaticRoutingHelper* Copy (void) const;
+  Ipv4StaticRoutingHelper* Copy () const override;
 
   /**
    * \param node the node on which the routing protocol will run
@@ -69,11 +72,11 @@ public:
    *
    * This method will be called by ns3::InternetStackHelper::Install
    */
-  virtual Ptr<Ipv4RoutingProtocol> Create (Ptr<Node> node) const;
+  Ptr<Ipv4RoutingProtocol> Create (Ptr<Node> node) const override;
 
   /**
    * Try and find the static routing protocol as either the main routing
-   * protocol or in the list of routing protocols associated with the 
+   * protocol or in the list of routing protocols associated with the
    * Ipv4 provided.
    *
    * \param ipv4 the Ptr<Ipv4> to search for the static routing protocol
@@ -82,7 +85,7 @@ public:
   Ptr<Ipv4StaticRouting> GetStaticRouting (Ptr<Ipv4> ipv4) const;
 
   /**
-   * \brief Add a multicast route to a node and net device using explicit 
+   * \brief Add a multicast route to a node and net device using explicit
    * Ptr<Node> and Ptr<NetDevice>
    *
    * \param n The node.
@@ -95,7 +98,7 @@ public:
                           Ptr<NetDevice> input, NetDeviceContainer output);
 
   /**
-   * \brief Add a multicast route to a node and device using a name string 
+   * \brief Add a multicast route to a node and device using a name string
    * previously associated to the node using the Object Name Service and a
    * Ptr<NetDevice>
    *
@@ -109,7 +112,7 @@ public:
                           Ptr<NetDevice> input, NetDeviceContainer output);
 
   /**
-   * \brief Add a multicast route to a node and device using a Ptr<Node> and a 
+   * \brief Add a multicast route to a node and device using a Ptr<Node> and a
    * name string previously associated to the device using the Object Name Service.
    *
    * \param n The node.
@@ -123,7 +126,7 @@ public:
 
   /**
    * \brief Add a multicast route to a node and device using name strings
-   * previously associated to both the node and device using the Object Name 
+   * previously associated to both the node and device using the Object Name
    * Service.
    *
    * \param nName The node.
@@ -153,7 +156,7 @@ public:
    * Functionally equivalent to:
    * route add 224.0.0.0 netmask 240.0.0.0 dev nd
    * \param n node
-   * \param ndName string with name previously associated to device using the 
+   * \param ndName string with name previously associated to device using the
    *        Object Name Service
    */
   void SetDefaultMulticastRoute (Ptr<Node> n, std::string ndName);
@@ -164,7 +167,7 @@ public:
    *
    * Functionally equivalent to:
    * route add 224.0.0.0 netmask 240.0.0.0 dev nd
-   * \param nName string with name previously associated to node using the 
+   * \param nName string with name previously associated to node using the
    *        Object Name Service
    * \param nd device of the node to add default route
    */
@@ -176,19 +179,12 @@ public:
    *
    * Functionally equivalent to:
    * route add 224.0.0.0 netmask 240.0.0.0 dev nd
-   * \param nName string with name previously associated to node using the 
+   * \param nName string with name previously associated to node using the
    *        Object Name Service
-   * \param ndName string with name previously associated to device using the 
+   * \param ndName string with name previously associated to device using the
    *        Object Name Service
    */
   void SetDefaultMulticastRoute (std::string nName, std::string ndName);
-private:
-  /**
-   * \brief Assignment operator declared private and not implemented to disallow
-   * assignment and prevent the compiler from happily inserting its own.
-   * \returns
-   */
-  Ipv4StaticRoutingHelper &operator = (const Ipv4StaticRoutingHelper &);
 };
 
 } // namespace ns3

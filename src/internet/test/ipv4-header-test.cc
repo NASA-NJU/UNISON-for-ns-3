@@ -80,7 +80,7 @@ class Ipv4HeaderTest : public TestCase
   void SendData_IpHdr_Dscp (Ptr<Socket> socket, std::string to, Ipv4Header::DscpType dscp, Ipv4Header::EcnType ecn);
 
 public:
-  virtual void DoRun (void);
+  void DoRun () override;
   Ipv4HeaderTest ();
 
   /**
@@ -150,7 +150,7 @@ Ipv4HeaderTest::SendData_IpHdr_Dscp (Ptr<Socket> socket, std::string to, Ipv4Hea
 }
 
 void
-Ipv4HeaderTest::DoRun (void)
+Ipv4HeaderTest::DoRun ()
 {
   // Create topology
 
@@ -161,7 +161,8 @@ Ipv4HeaderTest::DoRun (void)
   Ptr<Node> rxNode = CreateObject<Node> ();
   internet.Install (rxNode);
 
-  Ptr<SimpleNetDevice> rxDev1, rxDev2;
+  Ptr<SimpleNetDevice> rxDev1;
+  Ptr<SimpleNetDevice> rxDev2;
   { // first interface
     rxDev1 = CreateObject<SimpleNetDevice> ();
     rxDev1->SetAddress (Mac48Address::ConvertFrom (Mac48Address::Allocate ()));
@@ -240,7 +241,7 @@ Ipv4HeaderTest::DoRun (void)
       m_receivedHeader.Print (std::cout);
       std::cout << std::endl;
       m_receivedPacket->RemoveAllByteTags ();
-      m_receivedPacket = 0;
+      m_receivedPacket = nullptr;
     }
 
   // Ecn tests
@@ -259,7 +260,7 @@ Ipv4HeaderTest::DoRun (void)
       m_receivedHeader.Print (std::cout);
       std::cout << std::endl;
       m_receivedPacket->RemoveAllByteTags ();
-      m_receivedPacket = 0;
+      m_receivedPacket = nullptr;
     }
 
   Simulator::Destroy ();

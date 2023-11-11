@@ -64,10 +64,6 @@ namespace ns3 {
  *
  * @todo Add more on jiffies, sleep, processes, etc.
  *
- * @internal
- * Nanosleep takes a <tt>struct timeval</tt> as an input so we have to
- * deal with conversion between Time and @c timeval here.
- * They are both interpreted as elapsed times.
  */
 class WallClockSynchronizer : public Synchronizer
 {
@@ -76,12 +72,12 @@ public:
    * Get the registered TypeId for this class.
    * @returns The TypeId.
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   /** Constructor. */
   WallClockSynchronizer ();
   /** Destructor. */
-  virtual ~WallClockSynchronizer ();
+  ~WallClockSynchronizer () override;
 
   /** Conversion constant between &mu;s and ns. */
   static const uint64_t US_PER_NS = (uint64_t)1000;
@@ -131,15 +127,15 @@ protected:
   bool SleepWait (uint64_t ns);
 
   // Inherited from Synchronizer
-  virtual void DoSetOrigin (uint64_t ns);
-  virtual bool DoRealtime (void);
-  virtual uint64_t DoGetCurrentRealtime (void);
-  virtual bool DoSynchronize (uint64_t nsCurrent, uint64_t nsDelay);
-  virtual void DoSignal (void);
-  virtual void DoSetCondition (bool cond);
-  virtual int64_t DoGetDrift (uint64_t ns);
-  virtual void DoEventStart (void);
-  virtual uint64_t DoEventEnd (void);
+  void DoSetOrigin (uint64_t ns) override;
+  bool DoRealtime () override;
+  uint64_t DoGetCurrentRealtime () override;
+  bool DoSynchronize (uint64_t nsCurrent, uint64_t nsDelay) override;
+  void DoSignal () override;
+  void DoSetCondition (bool cond) override;
+  int64_t DoGetDrift (uint64_t ns) override;
+  void DoEventStart () override;
+  uint64_t DoEventEnd () override;
 
   /**
    * @brief Compute a correction to the nominal delay to account for
@@ -157,40 +153,13 @@ protected:
    *
    * @returns The current real time, in ns.
    */
-  uint64_t GetRealtime (void);
+  uint64_t GetRealtime ();
   /**
    * @brief Get the current normalized real time, in ns.
    *
    * @returns The current normalized real time, in ns.
    */
-  uint64_t GetNormalizedRealtime (void);
-
-  /**
-   * @brief Convert an absolute time in ns to a @c timeval
-   *
-   * @param [in] ns Absolute time in ns.
-   * @param [out] tv Converted @c timeval.
-   */
-  void NsToTimeval (int64_t ns, struct timeval *tv);
-  /**
-   * @brief Convert a @c timeval to absolute time, in ns.
-   *
-   * @param [in] tv The input @c timeval.
-   * @returns The absolute time, in ns.
-   */
-  uint64_t TimevalToNs (struct timeval *tv);
-
-  /**
-   * @brief Add two @c timeval.
-   *
-   * @param [in]  tv1 The first @c timeval.
-   * @param [in]  tv2 The second @c timeval.
-   * @param [out] result The sum of @c tv1 and @c tv2.
-   */
-  void TimevalAdd (
-    struct timeval *tv1,
-    struct timeval *tv2,
-    struct timeval *result);
+  uint64_t GetNormalizedRealtime ();
 
   /** Size of the system clock tick, as reported by @c clock_getres, in ns. */
   uint64_t m_jiffy;

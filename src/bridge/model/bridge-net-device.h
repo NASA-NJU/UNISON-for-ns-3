@@ -38,14 +38,14 @@ class Node;
 
 /**
  * \defgroup bridge Bridge Network Device
- * 
+ *
  * \brief a virtual net device that bridges multiple LAN segments
  *
  * The BridgeNetDevice object is a "virtual" netdevice that aggregates
  * multiple "real" netdevices and implements the data plane forwarding
  * part of IEEE 802.1D.  By adding a BridgeNetDevice to a Node, it
  * will act as a "bridge", or "switch", to multiple LAN segments.
- * 
+ *
  * By default the bridge netdevice implements a "learning bridge"
  * algorithm (see 802.1D), where incoming unicast frames from one port
  * may occasionally be forwarded throughout all other ports, but
@@ -75,15 +75,15 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
   BridgeNetDevice ();
-  virtual ~BridgeNetDevice ();
+  ~BridgeNetDevice () override;
 
   // Delete copy constructor and assignment operator to avoid misuse
   BridgeNetDevice (const BridgeNetDevice &) = delete;
   BridgeNetDevice & operator = (const BridgeNetDevice &) = delete;
 
-  /** 
+  /**
    * \brief Add a 'port' to a bridge device
    * \param bridgePort the NetDevice to add
    *
@@ -103,7 +103,7 @@ public:
    *
    * \return the number of bridged ports.
    */
-  uint32_t GetNBridgePorts (void) const;
+  uint32_t GetNBridgePorts () const;
 
   /**
    * \brief Gets the n-th bridged port.
@@ -113,33 +113,33 @@ public:
   Ptr<NetDevice> GetBridgePort (uint32_t n) const;
 
   // inherited from NetDevice base class.
-  virtual void SetIfIndex (const uint32_t index);
-  virtual uint32_t GetIfIndex (void) const;
-  virtual Ptr<Channel> GetChannel (void) const;
-  virtual void SetAddress (Address address);
-  virtual Address GetAddress (void) const;
-  virtual bool SetMtu (const uint16_t mtu);
-  virtual uint16_t GetMtu (void) const;
-  virtual bool IsLinkUp (void) const;
-  virtual void AddLinkChangeCallback (Callback<void> callback);
-  virtual bool IsBroadcast (void) const;
-  virtual Address GetBroadcast (void) const;
-  virtual bool IsMulticast (void) const;
-  virtual Address GetMulticast (Ipv4Address multicastGroup) const;
-  virtual bool IsPointToPoint (void) const;
-  virtual bool IsBridge (void) const;
-  virtual bool Send (Ptr<Packet> packet, const Address& dest, uint16_t protocolNumber);
-  virtual bool SendFrom (Ptr<Packet> packet, const Address& source, const Address& dest, uint16_t protocolNumber);
-  virtual Ptr<Node> GetNode (void) const;
-  virtual void SetNode (Ptr<Node> node);
-  virtual bool NeedsArp (void) const;
-  virtual void SetReceiveCallback (NetDevice::ReceiveCallback cb);
-  virtual void SetPromiscReceiveCallback (NetDevice::PromiscReceiveCallback cb);
-  virtual bool SupportsSendFrom () const;
-  virtual Address GetMulticast (Ipv6Address addr) const;
+  void SetIfIndex (const uint32_t index) override;
+  uint32_t GetIfIndex () const override;
+  Ptr<Channel> GetChannel () const override;
+  void SetAddress (Address address) override;
+  Address GetAddress () const override;
+  bool SetMtu (const uint16_t mtu) override;
+  uint16_t GetMtu () const override;
+  bool IsLinkUp () const override;
+  void AddLinkChangeCallback (Callback<void> callback) override;
+  bool IsBroadcast () const override;
+  Address GetBroadcast () const override;
+  bool IsMulticast () const override;
+  Address GetMulticast (Ipv4Address multicastGroup) const override;
+  bool IsPointToPoint () const override;
+  bool IsBridge () const override;
+  bool Send (Ptr<Packet> packet, const Address& dest, uint16_t protocolNumber) override;
+  bool SendFrom (Ptr<Packet> packet, const Address& source, const Address& dest, uint16_t protocolNumber) override;
+  Ptr<Node> GetNode () const override;
+  void SetNode (Ptr<Node> node) override;
+  bool NeedsArp () const override;
+  void SetReceiveCallback (NetDevice::ReceiveCallback cb) override;
+  void SetPromiscReceiveCallback (NetDevice::PromiscReceiveCallback cb) override;
+  bool SupportsSendFrom () const override;
+  Address GetMulticast (Ipv6Address addr) const override;
 
 protected:
-  virtual void DoDispose (void);
+  void DoDispose () override;
 
   /**
    * \brief Receives a packet from one bridged port.

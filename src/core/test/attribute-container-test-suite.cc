@@ -21,7 +21,6 @@
 #include <ns3/test.h>
 #include <ns3/log.h>
 #include <ns3/attribute-container.h>
-#include <ns3/attribute-container-accessor-helper.h>
 #include <ns3/pair.h>
 #include <ns3/double.h>
 #include <ns3/integer.h>
@@ -56,7 +55,7 @@ class AttributeContainerObject : public Object
 {
 public:
   AttributeContainerObject ();
-  virtual ~AttributeContainerObject ();
+  ~AttributeContainerObject () override;
 
   /**
    * Reverses the list of doubles.
@@ -66,9 +65,22 @@ public:
   /**
    * \brief Get the type ID.
    * \return The object TypeId.
-   */  
+   */
   static
   TypeId GetTypeId ();
+
+  /**
+   * Set the vector of ints to the given vector
+   *
+   * \param vec the given vector
+   */
+  void SetIntVec (std::vector<int> vec);
+  /**
+   * Get the vector of ints
+   *
+   * \return the vector of ints
+   */
+  std::vector<int> GetIntVec () const;
 
   /**
    * \brief Stream insertion operator.
@@ -110,7 +122,9 @@ AttributeContainerObject::GetTypeId ()
     .AddAttribute ("IntegerVector", "Vector of integers",
                    // the container value container differs from the underlying object
                    AttributeContainerValue <IntegerValue> (),
-                   MakeAttributeContainerAccessor <IntegerValue> (&AttributeContainerObject::m_intvec),
+                   // the type of the underlying container cannot be deduced
+                   MakeAttributeContainerAccessor <IntegerValue, std::list> (&AttributeContainerObject::SetIntVec,
+                                                                  &AttributeContainerObject::GetIntVec),
                    MakeAttributeContainerChecker<IntegerValue> (MakeIntegerChecker<int> ()))
     .AddAttribute ("MapStringInt", "Map of strings to ints",
                    // the container value container differs from the underlying object
@@ -131,6 +145,18 @@ AttributeContainerObject::ReverseList ()
   m_intvec = tmp;
 }
 
+void
+AttributeContainerObject::SetIntVec (std::vector<int> vec)
+{
+  m_intvec = vec;
+}
+
+std::vector<int>
+AttributeContainerObject::GetIntVec () const
+{
+  return m_intvec;
+}
+
 std::ostream &
 operator << (std::ostream &os, const AttributeContainerObject &obj)
 {
@@ -138,7 +164,10 @@ operator << (std::ostream &os, const AttributeContainerObject &obj)
   bool first = true;
   for (auto d: obj.m_doublelist)
     {
-      if (!first) os << ", ";
+      if (!first)
+        {
+          os << ", ";
+        }
       os << d;
       first = false;
     }
@@ -147,7 +176,7 @@ operator << (std::ostream &os, const AttributeContainerObject &obj)
 
 /**
  * \ingroup attribute-tests
- *  
+ *
  * This function handles mixed constness and compatible, yet
  * distinct numerical classes (like int and long)
  * \param x The left operand.
@@ -163,17 +192,17 @@ operator ==(const std::pair<A, B> &x, const std::pair<C, D> &y)
 
 /**
  * \ingroup attribute-tests
- *  
+ *
  * Test AttributeContainer instantiation, initialization, access
  */
 class AttributeContainerTestCase : public TestCase
 {
 public:
   AttributeContainerTestCase ();
-  virtual ~AttributeContainerTestCase () {}
+  ~AttributeContainerTestCase () override {}
 
 private:
-  virtual void DoRun ();
+  void DoRun () override;
 };
 
 AttributeContainerTestCase::AttributeContainerTestCase ()
@@ -256,7 +285,7 @@ AttributeContainerTestCase::DoRun ()
 
     NS_TEST_ASSERT_MSG_EQ (3, ac.GetN (), "Container size mismatch");
     auto aciter = ac.Begin ();
-    for (auto v: ref)
+    for (const auto& v: ref)
       {
         NS_TEST_ASSERT_MSG_NE (true, (aciter == ac.End ()), "AC iterator reached end");
         NS_TEST_ASSERT_MSG_EQ (v, (*aciter)->Get (), "Incorrect value");
@@ -269,17 +298,17 @@ AttributeContainerTestCase::DoRun ()
 
 /**
  * \ingroup attribute-tests
- *  
+ *
  * Attribute serialization and deserialization TestCase.
  */
 class AttributeContainerSerializationTestCase : public TestCase
 {
 public:
   AttributeContainerSerializationTestCase ();
-  virtual ~AttributeContainerSerializationTestCase () {}
+  ~AttributeContainerSerializationTestCase () override {}
 
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
 };
 
 AttributeContainerSerializationTestCase::AttributeContainerSerializationTestCase ()
@@ -289,7 +318,7 @@ AttributeContainerSerializationTestCase::AttributeContainerSerializationTestCase
 }
 
 void
-AttributeContainerSerializationTestCase::DoRun (void)
+AttributeContainerSerializationTestCase::DoRun ()
 {
   {
     // notice embedded spaces
@@ -359,17 +388,17 @@ AttributeContainerSerializationTestCase::DoRun (void)
 
 /**
  * \ingroup attribute-tests
- *  
+ *
  * Attribute set and get TestCase.
  */
 class AttributeContainerSetGetTestCase : public TestCase
 {
 public:
   AttributeContainerSetGetTestCase ();
-  virtual ~AttributeContainerSetGetTestCase () {}
+  ~AttributeContainerSetGetTestCase () override {}
 
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
 };
 
 AttributeContainerSetGetTestCase::AttributeContainerSetGetTestCase ()
@@ -379,7 +408,7 @@ AttributeContainerSetGetTestCase::AttributeContainerSetGetTestCase ()
 }
 
 void
-AttributeContainerSetGetTestCase::DoRun (void)
+AttributeContainerSetGetTestCase::DoRun ()
 {
   Ptr<AttributeContainerObject> obj = CreateObject<AttributeContainerObject> ();
   {
@@ -448,11 +477,14 @@ AttributeContainerSetGetTestCase::DoRun (void)
     // could possibly make custom assignment operator to make assignment statement work
     std::map<std::string, int> mapstrint;
     auto lst = value.Get ();
-    for (auto l: lst) mapstrint[l.first] = l.second;
+    for (const auto& l : lst)
+      {
+        mapstrint[l.first] = l.second;
+      }
 
     NS_TEST_ASSERT_MSG_EQ (map.size (), mapstrint.size (), "mapstrint wrong size");
     auto iter = map.begin ();
-    for (auto v: mapstrint)
+    for (const auto& v: mapstrint)
       {
         NS_TEST_ASSERT_MSG_EQ (v, *iter, "Incorrect value in mapstrint");
         ++iter;
@@ -462,7 +494,7 @@ AttributeContainerSetGetTestCase::DoRun (void)
 
 /**
  * \ingroup attribute-tests
- *  
+ *
  * Attribute attribute container TestCase.
  */
 class AttributeContainerTestSuite : public TestSuite

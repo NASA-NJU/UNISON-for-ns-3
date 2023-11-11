@@ -51,10 +51,10 @@ typedef std::vector < uint8_t > DlHarqProcessesTimer_t;
 /// DL HARQ process DCI buffer vector typedef
 typedef std::vector < DlDciListElement_s > DlHarqProcessesDciBuffer_t;
 /// vector of the LCs and layers per UE
-typedef std::vector < std::vector <struct RlcPduListElement_s> > RlcPduList_t; 
+typedef std::vector < std::vector <struct RlcPduListElement_s> > RlcPduList_t;
 /// vector of the 8 HARQ processes per UE
 typedef std::vector < RlcPduList_t > DlHarqRlcPduListBuffer_t;
-/// UL HARQ process DCI buffer vector 
+/// UL HARQ process DCI buffer vector
 typedef std::vector < UlDciListElement_s > UlHarqProcessesDciBuffer_t;
 /// UL HARQ process status vector
 typedef std::vector < uint8_t > UlHarqProcessesStatus_t;
@@ -91,25 +91,25 @@ public:
   /**
    * Destructor
    */
-  virtual ~CqaFfMacScheduler ();
+  ~CqaFfMacScheduler () override;
 
   // inherited from Object
-  virtual void DoDispose (void);
+  void DoDispose () override;
   /**
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   // inherited from FfMacScheduler
-  virtual void SetFfMacCschedSapUser (FfMacCschedSapUser* s);
-  virtual void SetFfMacSchedSapUser (FfMacSchedSapUser* s);
-  virtual FfMacCschedSapProvider* GetFfMacCschedSapProvider ();
-  virtual FfMacSchedSapProvider* GetFfMacSchedSapProvider ();
+  void SetFfMacCschedSapUser (FfMacCschedSapUser* s) override;
+  void SetFfMacSchedSapUser (FfMacSchedSapUser* s) override;
+  FfMacCschedSapProvider* GetFfMacCschedSapProvider () override;
+  FfMacSchedSapProvider* GetFfMacSchedSapProvider () override;
 
   // FFR SAPs
-  virtual void SetLteFfrSapProvider (LteFfrSapProvider* s);
-  virtual LteFfrSapUser* GetLteFfrSapUser ();
+  void SetLteFfrSapProvider (LteFfrSapProvider* s) override;
+  LteFfrSapUser* GetLteFfrSapUser () override;
 
   /// allow MemberCschedSapProvider<CqaFfMacScheduler> class friend access
   friend class MemberCschedSapProvider<CqaFfMacScheduler>;
@@ -253,9 +253,9 @@ private:
   double EstimateUlSinr (uint16_t rnti, uint16_t rb);
 
   /// Refresh DL CGI maps
-  void RefreshDlCqiMaps (void);
+  void RefreshDlCqiMaps ();
   /// Refresh UL CGI maps
-  void RefreshUlCqiMaps (void);
+  void RefreshUlCqiMaps ();
 
   /**
    * Update DL RLC buffer info

@@ -32,7 +32,7 @@ namespace ns3 {
 
 /**
  * \ingroup bridge
- * 
+ *
  * \brief Virtual channel implementation for bridges (BridgeNetDevice).
  *
  * Just like BridgeNetDevice aggregates multiple NetDevices,
@@ -46,9 +46,9 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
   BridgeChannel ();
-  virtual ~BridgeChannel ();
+  ~BridgeChannel () override;
 
   // Delete copy constructor and assignment operator to avoid misuse
   BridgeChannel (const BridgeChannel &) = delete;
@@ -61,8 +61,8 @@ public:
   void AddChannel (Ptr<Channel> bridgedChannel);
 
   // virtual methods implementation, from Channel
-  virtual std::size_t GetNDevices (void) const;
-  virtual Ptr<NetDevice> GetDevice (std::size_t i) const;
+  std::size_t GetNDevices () const override;
+  Ptr<NetDevice> GetDevice (std::size_t i) const override;
 
 private:
   std::vector< Ptr<Channel> > m_bridgedChannels; //!< pool of bridged channels

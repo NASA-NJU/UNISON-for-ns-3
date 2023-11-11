@@ -22,6 +22,8 @@
 #include "wifi-tx-vector.h"
 #include "wifi-phy-common.h"
 #include "ns3/abort.h"
+#include <algorithm>
+#include <iterator>
 
 namespace ns3 {
 
@@ -37,7 +39,9 @@ WifiTxVector::WifiTxVector ()
     m_ldpc (false),
     m_bssColor (0),
     m_length (0),
-    m_modeInitialized (false)
+    m_modeInitialized (false),
+    m_inactiveSubchannels (),
+    m_ruAllocation ()
 {
 }
 
@@ -67,7 +71,9 @@ WifiTxVector::WifiTxVector (WifiMode mode,
     m_ldpc (ldpc),
     m_bssColor (bssColor),
     m_length (length),
-    m_modeInitialized (true)
+    m_modeInitialized (true),
+    m_inactiveSubchannels (),
+    m_ruAllocation ()
 {
 }
 
@@ -85,7 +91,10 @@ WifiTxVector::WifiTxVector (const WifiTxVector& txVector)
     m_ldpc (txVector.m_ldpc),
     m_bssColor (txVector.m_bssColor),
     m_length (txVector.m_length),
-    m_modeInitialized (txVector.m_modeInitialized)
+    m_modeInitialized (txVector.m_modeInitialized),
+    m_inactiveSubchannels (txVector.m_inactiveSubchannels),
+    m_sigBMcs (txVector.m_sigBMcs),
+    m_ruAllocation (txVector.m_ruAllocation)
 {
   m_muUserInfos.clear ();
   if (!txVector.m_muUserInfos.empty ()) //avoids crashing for loop
@@ -103,7 +112,7 @@ WifiTxVector::~WifiTxVector ()
 }
 
 bool
-WifiTxVector::GetModeInitialized (void) const
+WifiTxVector::GetModeInitialized () const
 {
   return m_modeInitialized;
 }
@@ -125,7 +134,7 @@ WifiTxVector::GetMode (uint16_t staId) const
 }
 
 WifiModulationClass
-WifiTxVector::GetModulationClass (void) const
+WifiTxVector::GetModulationClass () const
 {
   NS_ABORT_MSG_IF (!m_modeInitialized, "WifiTxVector mode must be set before using");
 
@@ -139,31 +148,31 @@ WifiTxVector::GetModulationClass (void) const
 }
 
 uint8_t
-WifiTxVector::GetTxPowerLevel (void) const
+WifiTxVector::GetTxPowerLevel () const
 {
   return m_txPowerLevel;
 }
 
 WifiPreamble
-WifiTxVector::GetPreambleType (void) const
+WifiTxVector::GetPreambleType () const
 {
   return m_preamble;
 }
 
 uint16_t
-WifiTxVector::GetChannelWidth (void) const
+WifiTxVector::GetChannelWidth () const
 {
   return m_channelWidth;
 }
 
 uint16_t
-WifiTxVector::GetGuardInterval (void) const
+WifiTxVector::GetGuardInterval () const
 {
   return m_guardInterval;
 }
 
 uint8_t
-WifiTxVector::GetNTx (void) const
+WifiTxVector::GetNTx () const
 {
   return m_nTx;
 }
@@ -181,7 +190,7 @@ WifiTxVector::GetNss (uint16_t staId) const
 }
 
 uint8_t
-WifiTxVector::GetNssMax (void) const
+WifiTxVector::GetNssMax () const
 {
   uint8_t nss = 0;
   if (IsMu ())
@@ -199,25 +208,25 @@ WifiTxVector::GetNssMax (void) const
 }
 
 uint8_t
-WifiTxVector::GetNess (void) const
+WifiTxVector::GetNess () const
 {
   return m_ness;
 }
 
 bool
-WifiTxVector::IsAggregation (void) const
+WifiTxVector::IsAggregation () const
 {
   return m_aggregation;
 }
 
 bool
-WifiTxVector::IsStbc (void) const
+WifiTxVector::IsStbc () const
 {
   return m_stbc;
 }
 
 bool
-WifiTxVector::IsLdpc (void) const
+WifiTxVector::IsLdpc () const
 {
   return m_ldpc;
 }
@@ -313,7 +322,7 @@ WifiTxVector::SetBssColor (uint8_t color)
 }
 
 uint8_t
-WifiTxVector::GetBssColor (void) const
+WifiTxVector::GetBssColor () const
 {
   return m_bssColor;
 }
@@ -325,13 +334,45 @@ WifiTxVector::SetLength (uint16_t length)
 }
 
 uint16_t
-WifiTxVector::GetLength (void) const
+WifiTxVector::GetLength () const
 {
   return m_length;
 }
 
+void
+WifiTxVector::SetSigBMode (const WifiMode& mode)
+{
+  m_sigBMcs = mode;
+}
+
+WifiMode
+WifiTxVector::GetSigBMode () const
+{
+  return m_sigBMcs;
+}
+
+void
+WifiTxVector::SetRuAllocation (const RuAllocation& ruAlloc)
+{
+  if (IsDlMu () && !m_muUserInfos.empty ())
+    {
+      NS_ASSERT (ruAlloc == DeriveRuAllocation ());
+    }
+  m_ruAllocation = ruAlloc;
+}
+
+const RuAllocation&
+WifiTxVector::GetRuAllocation () const
+{
+  if (IsDlMu () && m_ruAllocation.empty ())
+    {
+      m_ruAllocation = DeriveRuAllocation ();
+    }
+  return m_ruAllocation;
+}
+
 bool
-WifiTxVector::IsValid (void) const
+WifiTxVector::IsValid () const
 {
   if (!GetModeInitialized ())
     {
@@ -367,19 +408,19 @@ WifiTxVector::IsValid (void) const
 }
 
 bool
-WifiTxVector::IsMu (void) const
+WifiTxVector::IsMu () const
 {
   return ns3::IsMu (m_preamble);
 }
 
 bool
-WifiTxVector::IsDlMu (void) const
+WifiTxVector::IsDlMu () const
 {
   return ns3::IsDlMu (m_preamble);
 }
 
 bool
-WifiTxVector::IsUlMu (void) const
+WifiTxVector::IsUlMu () const
 {
   return ns3::IsUlMu (m_preamble);
 }
@@ -415,87 +456,82 @@ WifiTxVector::SetHeMuUserInfo (uint16_t staId, HeMuUserInfo userInfo)
   NS_ABORT_MSG_IF (userInfo.mcs.GetModulationClass () < WIFI_MOD_CLASS_HE, "Only HE (or newer) modes authorized for MU");
   m_muUserInfos[staId] = userInfo;
   m_modeInitialized = true;
+  m_ruAllocation.clear ();
 }
 
 const WifiTxVector::HeMuUserInfoMap&
-WifiTxVector::GetHeMuUserInfoMap (void) const
+WifiTxVector::GetHeMuUserInfoMap () const
 {
   NS_ABORT_MSG_IF (!IsMu (), "HE MU user info map only available for MU");
   return m_muUserInfos;
 }
 
 WifiTxVector::HeMuUserInfoMap&
-WifiTxVector::GetHeMuUserInfoMap (void)
+WifiTxVector::GetHeMuUserInfoMap ()
 {
   NS_ABORT_MSG_IF (!IsMu (), "HE MU user info map only available for MU");
+  m_ruAllocation.clear ();
   return m_muUserInfos;
 }
 
 std::pair<std::size_t, std::size_t>
-WifiTxVector::GetNumRusPerHeSigBContentChannel (void) const
+WifiTxVector::GetNumRusPerHeSigBContentChannel () const
 {
   //MU-MIMO is not handled for now, i.e. one station per RU
-
-  if (m_channelWidth == 20)
+  auto ruAllocation = GetRuAllocation ();
+  NS_ASSERT_MSG (!ruAllocation.empty (), "RU allocation is not set");
+  if (ruAllocation.size () != m_channelWidth / 20)
     {
-      return std::make_pair (m_muUserInfos.size (), 0); //all RUs are in HE-SIG-B content channel 1
+      ruAllocation = DeriveRuAllocation ();
     }
+  NS_ASSERT_MSG (ruAllocation.size () == m_channelWidth / 20,
+                 "RU allocation is not consistent with packet bandwidth");
 
-  HeRu::SubcarrierGroup toneRangesContentChannel1, toneRangesContentChannel2;
-  // See section 27.3.10.8.3 of IEEE 802.11ax draft 4.0 for tone ranges per HE-SIG-B content channel
-  switch (m_channelWidth)
+  std::pair<std::size_t /* number of RUs in content channel 1 */,
+            std::size_t /* number of RUs in content channel 2 */> chSize {0, 0};
+
+  switch (GetChannelWidth ())
     {
       case 40:
-        toneRangesContentChannel1.push_back (std::make_pair (-244, -3));
-        toneRangesContentChannel2.push_back (std::make_pair (3, 244));
-        break;
-      case 80:
-        toneRangesContentChannel1.push_back (std::make_pair (-500, -259));
-        toneRangesContentChannel2.push_back (std::make_pair (-258, -17));
-        toneRangesContentChannel1.push_back (std::make_pair (-16, -4)); //first part of center carrier (in HE-SIG-B content channel 1)
-        toneRangesContentChannel1.push_back (std::make_pair (4, 16)); //second part of center carrier (in HE-SIG-B content channel 1)
-        toneRangesContentChannel1.push_back (std::make_pair (17, 258));
-        toneRangesContentChannel2.push_back (std::make_pair (259, 500));
-        break;
-      case 160:
-        toneRangesContentChannel1.push_back (std::make_pair (-1012, -771));
-        toneRangesContentChannel2.push_back (std::make_pair (-770, -529));
-        toneRangesContentChannel1.push_back (std::make_pair (-528, -516)); //first part of center carrier of lower 80 MHz band (in HE-SIG-B content channel 1)
-        toneRangesContentChannel1.push_back (std::make_pair (-508, -496)); //second part of center carrier of lower 80 MHz band (in HE-SIG-B content channel 1)
-        toneRangesContentChannel1.push_back (std::make_pair (-495, -254));
-        toneRangesContentChannel2.push_back (std::make_pair (-253, -12));
-        toneRangesContentChannel1.push_back (std::make_pair (12, 253));
-        toneRangesContentChannel2.push_back (std::make_pair (254, 495));
-        toneRangesContentChannel2.push_back (std::make_pair (496, 508)); //first part of center carrier of upper 80 MHz band (in HE-SIG-B content channel 2)
-        toneRangesContentChannel2.push_back (std::make_pair (516, 528)); //second part of center carrier of upper 80 MHz band (in HE-SIG-B content channel 2)
-        toneRangesContentChannel1.push_back (std::make_pair (529, 770));
-        toneRangesContentChannel2.push_back (std::make_pair (771, 1012));
+        chSize.second += HeRu::GetRuSpecs (ruAllocation[1]).size ();
+        [[fallthrough]];
+      case 20:
+        chSize.first += HeRu::GetRuSpecs (ruAllocation[0]).size ();
         break;
       default:
-        NS_ABORT_MSG ("Unknown channel width: " << m_channelWidth);
+        for (auto n = 0; n < m_channelWidth / 20;)
+          {
+            chSize.first += HeRu::GetRuSpecs (ruAllocation[n]).size ();
+            chSize.second += HeRu::GetRuSpecs (ruAllocation[n + 1]).size ();
+            if (ruAllocation[n] >= 208)
+              {
+                // 996 tone RU occupies 80 MHz
+                n += 4;
+                continue;
+              }
+            n += 2;
+          }
+        break;
     }
+  return chSize;
+}
 
-  std::size_t numRusContentChannel1 = 0;
-  std::size_t numRusContentChannel2 = 0;
-  for (auto & userInfo : m_muUserInfos)
-    {
-      HeRu::RuSpec ru = userInfo.second.ru;
-      if (!ru.IsPhyIndexSet ())
-        {
-          // this method can be called when calculating the TX duration of a frame
-          // and at that time the RU PHY index may have not been set yet
-          ru.SetPhyIndex (m_channelWidth, 0);
-        }
-      if (HeRu::DoesOverlap (m_channelWidth, ru, toneRangesContentChannel1))
-        {
-          numRusContentChannel1++;
-        }
-      if (HeRu::DoesOverlap (m_channelWidth, ru, toneRangesContentChannel2))
-        {
-          numRusContentChannel2++;
-        }
-    }
-  return std::make_pair (numRusContentChannel1, numRusContentChannel2);
+void
+WifiTxVector::SetInactiveSubchannels (const std::vector<bool>& inactiveSubchannels)
+{
+  NS_ABORT_MSG_IF (m_preamble < WIFI_PREAMBLE_HE_SU,
+                   "Only HE (or later) authorized for preamble puncturing");
+  NS_ABORT_MSG_IF (m_channelWidth < 80,
+                   "Preamble puncturing only possible for transmission bandwidth of 80 MHz or larger");
+  NS_ABORT_MSG_IF (!inactiveSubchannels.empty () && inactiveSubchannels.size () != (m_channelWidth / 20),
+                   "The size of the inactive subchannnels bitmap should be equal to the number of 20 MHz subchannels");
+  m_inactiveSubchannels = inactiveSubchannels;
+}
+
+const std::vector<bool>&
+WifiTxVector::GetInactiveSubchannels () const
+{
+  return m_inactiveSubchannels;
 }
 
 std::ostream & operator << ( std::ostream &os, const WifiTxVector &v)
@@ -539,6 +575,13 @@ std::ostream & operator << ( std::ostream &os, const WifiTxVector &v)
       os << " mode: " << v.GetMode ()
          << " Nss: " << +v.GetNss ();
     }
+  const auto& puncturedSubchannels = v.GetInactiveSubchannels ();
+  if (!puncturedSubchannels.empty ())
+    {
+      os << " Punctured subchannels: ";
+      std::copy (puncturedSubchannels.cbegin (), puncturedSubchannels.cend(),
+                 std::ostream_iterator<bool>(os, ", "));
+    }
   return os;
 }
 
@@ -556,4 +599,99 @@ HeMuUserInfo::operator!= (const HeMuUserInfo& other) const
   return !(*this == other);
 }
 
-} //namespace ns3
+ContentChannelAllocation
+WifiTxVector::GetContentChannelAllocation () const
+{
+   ContentChannelAllocation channelAlloc {{}};
+
+   if (m_channelWidth > 20)
+   {
+     channelAlloc.emplace_back();
+   }
+
+  for (const auto& [staId, userInfo] : m_muUserInfos)
+    {
+      auto ruType = userInfo.ru.GetRuType ();
+      auto ruIdx = userInfo.ru.GetIndex ();
+
+      if ((ruType == HeRu::RU_484_TONE) || (ruType == HeRu::RU_996_TONE))
+        {
+          channelAlloc[0].push_back (staId);
+          channelAlloc[1].push_back (staId);
+          continue;
+        }
+
+      size_t numRus {1};
+      if (ruType < HeRu::RU_242_TONE)
+        {
+          numRus = HeRu::m_heRuSubcarrierGroups.at ({20, ruType}).size ();
+        }
+
+      if (((ruIdx - 1) / numRus) % 2 == 0)
+        {
+          channelAlloc[0].push_back (staId);
+        }
+      else
+        {
+         channelAlloc[1].push_back (staId);
+        }
+    }
+
+  return channelAlloc;
+}
+
+RuAllocation
+WifiTxVector::DeriveRuAllocation () const
+{
+  std::all_of (m_muUserInfos.cbegin (), m_muUserInfos.cend (),
+      [&](const auto& userInfo) {
+          return userInfo.second.ru.GetRuType () == m_muUserInfos.cbegin ()->second.ru.GetRuType () ; });
+  RuAllocation ruAllocations (m_channelWidth / 20, HeRu::EMPTY_242_TONE_RU);
+  std::vector<HeRu::RuType> ruTypes{};
+  ruTypes.resize (ruAllocations.size ());
+  for (auto it = m_muUserInfos.begin (); it != m_muUserInfos.end (); ++it)
+    {
+      const auto ruType = it->second.ru.GetRuType ();
+      const auto ruBw = HeRu::GetBandwidth (ruType);
+      const auto isPrimary80MHz = it->second.ru.GetPrimary80MHz ();
+      const auto rusPerSubchannel = HeRu::GetRusOfType (ruBw > 20 ? ruBw : 20, ruType);
+      auto ruIndex = it->second.ru.GetIndex ();
+      if (!isPrimary80MHz)
+        {
+          ruIndex *= 2;
+        }
+      const auto index = (ruBw < 20) ?
+                         ((ruIndex - 1)/ rusPerSubchannel.size ()) :
+                         ((ruIndex - 1) * (ruBw / 20));
+      const auto numSubchannelsForRu = (ruBw < 20) ? 1 : (ruBw / 20);
+      NS_ASSERT (index < (m_channelWidth / 20));
+      auto ruAlloc = HeRu::GetEqualizedRuAllocation (ruType, false);
+      if (ruAllocations.at (index) != HeRu::EMPTY_242_TONE_RU)
+        {
+          if (ruType == ruTypes.at (index))
+            {
+              continue;
+            }
+          if (ruType == HeRu::RU_26_TONE)
+            {
+              ruAlloc = HeRu::GetEqualizedRuAllocation (ruTypes.at (index), true);
+            }
+          else if (ruTypes.at (index) == HeRu::RU_26_TONE)
+            {
+              ruAlloc = HeRu::GetEqualizedRuAllocation (ruType, true);
+            }
+          else
+            {
+              NS_ASSERT_MSG (false, "unsupported RU combination");
+            }
+        }
+      for (auto i = 0; i < numSubchannelsForRu; ++i)
+        {
+          ruTypes.at (index + i) = ruType;
+          ruAllocations.at (index + i) = ruAlloc;
+        }
+    }
+  return ruAllocations;
+}
+
+} // namespace ns3

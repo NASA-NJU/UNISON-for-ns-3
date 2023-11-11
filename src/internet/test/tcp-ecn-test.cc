@@ -62,11 +62,11 @@ public:
   TcpEcnTest (uint32_t testcase, const std::string &desc);
 
 protected:
-  virtual void CWndTrace (uint32_t oldValue, uint32_t newValue);
-  virtual void Rx (const Ptr<const Packet> p, const TcpHeader&h, SocketWho who);
-  virtual void Tx (const Ptr<const Packet> p, const TcpHeader&h, SocketWho who);
-  virtual Ptr<TcpSocketMsgBase> CreateSenderSocket (Ptr<Node> node);
-  void ConfigureProperties ();
+  void CWndTrace (uint32_t oldValue, uint32_t newValue) override;
+  void Rx (const Ptr<const Packet> p, const TcpHeader&h, SocketWho who) override;
+  void Tx (const Ptr<const Packet> p, const TcpHeader&h, SocketWho who) override;
+  Ptr<TcpSocketMsgBase> CreateSenderSocket (Ptr<Node> node) override;
+  void ConfigureProperties () override;
 
 private:
   uint32_t m_cwndChangeCount;     //!< Number of times the congestion window did change
@@ -96,7 +96,7 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   uint32_t m_dataPacketSent;  //!< Number of packets sent
   uint8_t m_testcase;         //!< Test case type
@@ -123,15 +123,15 @@ public:
   void SetTestCase (uint8_t testCase);
 
 protected:
-  virtual uint32_t SendDataPacket (SequenceNumber32 seq, uint32_t maxSize, bool withAck);
-  virtual void ReTxTimeout ();
-  Ptr<TcpSocketBase> Fork (void);
+  uint32_t SendDataPacket (SequenceNumber32 seq, uint32_t maxSize, bool withAck) override;
+  void ReTxTimeout () override;
+  Ptr<TcpSocketBase> Fork () override;
 };
 
 NS_OBJECT_ENSURE_REGISTERED (TcpSocketCongestedRouter);
 
 TypeId
-TcpSocketCongestedRouter::GetTypeId (void)
+TcpSocketCongestedRouter::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::TcpSocketCongestedRouter")
     .SetParent<TcpSocketMsgBase> ()
@@ -377,7 +377,7 @@ TcpSocketCongestedRouter::SendDataPacket (SequenceNumber32 seq, uint32_t maxSize
 }
 
 Ptr<TcpSocketBase>
-TcpSocketCongestedRouter::Fork (void)
+TcpSocketCongestedRouter::Fork ()
 {
   return CopyObject<TcpSocketCongestedRouter> (this);
 }

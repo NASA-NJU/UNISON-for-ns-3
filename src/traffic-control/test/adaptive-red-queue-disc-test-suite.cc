@@ -51,17 +51,15 @@ public:
    * \param addr address
    */
   AredQueueDiscTestItem (Ptr<Packet> p, const Address & addr);
-  virtual ~AredQueueDiscTestItem ();
+  ~AredQueueDiscTestItem () override;
 
-  // Delete copy constructor and assignment operator to avoid misuse
+  // Delete default constructor, copy constructor and assignment operator to avoid misuse
+  AredQueueDiscTestItem () = delete;
   AredQueueDiscTestItem (const AredQueueDiscTestItem &) = delete;
   AredQueueDiscTestItem & operator = (const AredQueueDiscTestItem &) = delete;
 
-  virtual void AddHeader (void);
-  virtual bool Mark(void);
-
-private:
-  AredQueueDiscTestItem ();
+  void AddHeader () override;
+  bool Mark() override;
 };
 
 AredQueueDiscTestItem::AredQueueDiscTestItem (Ptr<Packet> p, const Address & addr)
@@ -74,12 +72,12 @@ AredQueueDiscTestItem::~AredQueueDiscTestItem ()
 }
 
 void
-AredQueueDiscTestItem::AddHeader (void)
+AredQueueDiscTestItem::AddHeader ()
 {
 }
 
 bool
-AredQueueDiscTestItem::Mark (void)
+AredQueueDiscTestItem::Mark ()
 {
   return false;
 }
@@ -94,7 +92,7 @@ class AredQueueDiscTestCase : public TestCase
 {
 public:
   AredQueueDiscTestCase ();
-  virtual void DoRun (void);
+  void DoRun () override;
 private:
   /**
    * Enqueue function
@@ -345,7 +343,7 @@ AredQueueDiscTestCase::EnqueueWithDelay (Ptr<RedQueueDisc> queue, uint32_t size,
 }
 
 void
-AredQueueDiscTestCase::DoRun (void)
+AredQueueDiscTestCase::DoRun ()
 {
   RunAredDiscTest (QueueSizeUnit::PACKETS);
   RunAredDiscTest (QueueSizeUnit::BYTES);

@@ -26,6 +26,7 @@
 #include <ostream>
 #include "ns3/fatal-error.h"
 #include "ns3/ptr.h"
+#include "wifi-standards.h"
 
 /**
  * \file
@@ -59,6 +60,14 @@ const uint16_t WIFI_CODE_RATE_1_2 = 1;       //!< 1/2 coding rate
 const uint16_t WIFI_CODE_RATE_2_3 = 2;       //!< 2/3 coding rate
 const uint16_t WIFI_CODE_RATE_3_4 = 3;       //!< 3/4 coding rate
 const uint16_t WIFI_CODE_RATE_5_6 = 4;       //!< 5/6 coding rate
+const uint16_t WIFI_CODE_RATE_5_8 = 5;       //!< 5/8 coding rate
+const uint16_t WIFI_CODE_RATE_13_16 = 6;     //!< 13/16 coding rate
+const uint16_t WIFI_CODE_RATE_1_4 = 7;       //!< 1/4 coding rate
+const uint16_t WIFI_CODE_RATE_13_28 = 8;     //!< 13/28 coding rate
+const uint16_t WIFI_CODE_RATE_13_21 = 9;     //!< 13/21 coding rate
+const uint16_t WIFI_CODE_RATE_52_63 = 10;    //!< 52/63 coding rate
+const uint16_t WIFI_CODE_RATE_13_14 = 11;    //!< 13/14 coding rate
+const uint16_t WIFI_CODE_RATE_7_8 = 12;      //!< 7/8 coding rate
 
 /**
  * \ingroup wifi
@@ -71,10 +80,15 @@ enum WifiPreamble
   WIFI_PREAMBLE_HT_MF,
   WIFI_PREAMBLE_VHT_SU,
   WIFI_PREAMBLE_VHT_MU,
+  WIFI_PREAMBLE_DMG_CTRL,
+  WIFI_PREAMBLE_DMG_SC,
+  WIFI_PREAMBLE_DMG_OFDM,
   WIFI_PREAMBLE_HE_SU,
   WIFI_PREAMBLE_HE_ER_SU,
   WIFI_PREAMBLE_HE_MU,
-  WIFI_PREAMBLE_HE_TB
+  WIFI_PREAMBLE_HE_TB,
+  WIFI_PREAMBLE_EHT_MU,
+  WIFI_PREAMBLE_EHT_TB
 };
 
 /**
@@ -98,6 +112,12 @@ inline std::ostream& operator<< (std::ostream &os, const WifiPreamble &preamble)
         return (os << "VHT_SU");
       case WIFI_PREAMBLE_VHT_MU:
         return (os << "VHT_MU");
+      case WIFI_PREAMBLE_DMG_CTRL:
+        return (os << "DMG_CTRL");
+      case WIFI_PREAMBLE_DMG_SC:
+        return (os << "DMG_SC");
+      case WIFI_PREAMBLE_DMG_OFDM:
+        return (os << "DMG_OFDM");
       case WIFI_PREAMBLE_HE_SU:
         return (os << "HE_SU");
       case WIFI_PREAMBLE_HE_ER_SU:
@@ -106,6 +126,10 @@ inline std::ostream& operator<< (std::ostream &os, const WifiPreamble &preamble)
         return (os << "HE_MU");
       case WIFI_PREAMBLE_HE_TB:
         return (os << "HE_TB");
+      case WIFI_PREAMBLE_EHT_MU:
+        return (os << "EHT_MU");
+      case WIFI_PREAMBLE_EHT_TB:
+        return (os << "EHT_TB");
       default:
         NS_FATAL_ERROR ("Invalid preamble");
         return (os << "INVALID");
@@ -129,7 +153,12 @@ enum WifiModulationClass
   WIFI_MOD_CLASS_OFDM,     //!< OFDM (Clause 17)
   WIFI_MOD_CLASS_HT,       //!< HT (Clause 19)
   WIFI_MOD_CLASS_VHT,      //!< VHT (Clause 22)
-  WIFI_MOD_CLASS_HE        //!< HE (Clause 27)
+  WIFI_MOD_CLASS_DMG_CTRL, //!< DMG (Clause 21)
+  WIFI_MOD_CLASS_DMG_OFDM, //!< DMG (Clause 21)
+  WIFI_MOD_CLASS_DMG_SC,   //!< DMG (Clause 21)
+  WIFI_MOD_CLASS_DMG_LP_SC,//!< DMG (Clause 21)
+  WIFI_MOD_CLASS_HE,       //!< HE (Clause 27)
+  WIFI_MOD_CLASS_EHT       //!< EHT (Clause 36)
 };
 
 /**
@@ -155,8 +184,18 @@ inline std::ostream& operator<< (std::ostream &os, const WifiModulationClass &mo
         return (os << "HT");
       case WIFI_MOD_CLASS_VHT:
         return (os << "VHT");
+      case WIFI_MOD_CLASS_DMG_CTRL:
+        return (os << "DMG_CTRL");
+      case WIFI_MOD_CLASS_DMG_OFDM:
+        return (os << "DMG_OFDM");
+      case WIFI_MOD_CLASS_DMG_SC:
+        return (os << "DMG_SC");
+      case WIFI_MOD_CLASS_DMG_LP_SC:
+        return (os << "DMG_LP_SC");
       case WIFI_MOD_CLASS_HE:
         return (os << "HE");
+      case WIFI_MOD_CLASS_EHT:
+        return (os << "EHT");
       default:
         NS_FATAL_ERROR ("Unknown modulation");
         return (os << "unknown");
@@ -187,6 +226,8 @@ enum WifiPpduField
   WIFI_PPDU_FIELD_TRAINING, //!< STF + LTF fields (excluding those in preamble for HT-GF)
   WIFI_PPDU_FIELD_SIG_A,    //!< SIG-A field
   WIFI_PPDU_FIELD_SIG_B,    //!< SIG-B field
+  WIFI_PPDU_FIELD_U_SIG,    //!< U-SIG field
+  WIFI_PPDU_FIELD_EHT_SIG,  //!< EHT-SIG field
   WIFI_PPDU_FIELD_DATA      //!< data field
 };
 
@@ -213,6 +254,10 @@ inline std::ostream& operator<< (std::ostream &os, const WifiPpduField &field)
         return (os << "SIG-A");
       case WIFI_PPDU_FIELD_SIG_B:
         return (os << "SIG-B");
+      case WIFI_PPDU_FIELD_U_SIG:
+        return (os << "U-SIG");
+      case WIFI_PPDU_FIELD_EHT_SIG:
+        return (os << "EHT-SIG");
       case WIFI_PPDU_FIELD_DATA:
         return (os << "data");
       default:
@@ -276,11 +321,15 @@ enum WifiPhyRxfailureReason
   HT_SIG_FAILURE,
   SIG_A_FAILURE,
   SIG_B_FAILURE,
+  U_SIG_FAILURE,
+  EHT_SIG_FAILURE,
   PREAMBLE_DETECTION_PACKET_SWITCH,
   FRAME_CAPTURE_PACKET_SWITCH,
   OBSS_PD_CCA_RESET,
   HE_TB_PPDU_TOO_LATE,
-  FILTERED
+  FILTERED,
+  DMG_HEADER_FAILURE,
+  DMG_ALLOCATION_ENDED
 };
 
 /**
@@ -322,6 +371,10 @@ inline std::ostream& operator<< (std::ostream &os, const WifiPhyRxfailureReason 
         return (os << "SIG_A_FAILURE");
       case SIG_B_FAILURE:
         return (os << "SIG_B_FAILURE");
+      case U_SIG_FAILURE:
+        return (os << "U_SIG_FAILURE");
+      case EHT_SIG_FAILURE:
+        return (os << "EHT_SIG_FAILURE");
       case PREAMBLE_DETECTION_PACKET_SWITCH:
         return (os << "PREAMBLE_DETECTION_PACKET_SWITCH");
       case FRAME_CAPTURE_PACKET_SWITCH:
@@ -332,9 +385,51 @@ inline std::ostream& operator<< (std::ostream &os, const WifiPhyRxfailureReason 
         return (os << "HE_TB_PPDU_TOO_LATE");
       case FILTERED:
         return (os << "FILTERED");
+      case DMG_HEADER_FAILURE:
+        return (os << "DMG_HEADER_FAILURE");
+      case DMG_ALLOCATION_ENDED:
+        return (os << "DMG_ALLOCATION_ENDED");
       case UNKNOWN:
       default:
         NS_FATAL_ERROR ("Unknown reason");
+        return (os << "UNKNOWN");
+    }
+}
+
+/**
+ * \ingroup wifi
+ * Enumeration of the possible channel-list parameter elements
+ * defined in Table 8-5 of IEEE 802.11-2016.
+ */
+enum WifiChannelListType : uint8_t
+{
+    WIFI_CHANLIST_PRIMARY = 0,
+    WIFI_CHANLIST_SECONDARY,
+    WIFI_CHANLIST_SECONDARY40,
+    WIFI_CHANLIST_SECONDARY80
+};
+
+/**
+ * \brief Stream insertion operator.
+ *
+ * \param os the stream
+ * \param type the wifi channel list type
+ * \returns a reference to the stream
+ */
+inline std::ostream& operator<< (std::ostream &os, WifiChannelListType type)
+{
+  switch (type)
+    {
+      case WIFI_CHANLIST_PRIMARY:
+        return (os << "PRIMARY");
+      case WIFI_CHANLIST_SECONDARY:
+        return (os << "SECONDARY");
+      case WIFI_CHANLIST_SECONDARY40:
+        return (os << "SECONDARY40");
+      case WIFI_CHANLIST_SECONDARY80:
+        return (os << "SECONDARY80");
+      default:
+        NS_FATAL_ERROR ("Unknown wifi channel type");
         return (os << "UNKNOWN");
     }
 }
@@ -440,6 +535,14 @@ bool IsDlMu (WifiPreamble preamble);
  * \return true if the provided preamble corresponds to a uplink multi-user transmission
  */
 bool IsUlMu (WifiPreamble preamble);
+
+/**
+ * Return the modulation class corresponding to a given standard.
+ *
+ * \param standard the standard
+ * \return the modulation class corresponding to the standard
+ */
+WifiModulationClass GetModulationClassForStandard (WifiStandard standard);
 
 } //namespace ns3
 

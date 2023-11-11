@@ -32,7 +32,7 @@ namespace ns3 {
  * \brief holds a vector of ns3::Application pointers.
  *
  * Typically ns-3 Applications are installed on nodes using an Application
- * helper.  The helper Install method takes a NodeContainer which holds 
+ * helper.  The helper Install method takes a NodeContainer which holds
  * some number of Ptr<Node>.  For each of the Nodes in the NodeContainer
  * the helper will instantiate an application, install it in a node and
  * add a Ptr<Application> to that application into a Container for use
@@ -59,7 +59,7 @@ public:
   /**
    * Create an ApplicationContainer with exactly one application which has
    * been previously instantiated and assigned a name using the Object Name
-   * Service.  This Application is then specified by its assigned name. 
+   * Service.  This Application is then specified by its assigned name.
    *
    * \param name The name of the Application Object to add to the container.
    */
@@ -69,12 +69,12 @@ public:
   typedef std::vector<Ptr<Application> >::const_iterator Iterator;
 
   /**
-   * \brief Get an iterator which refers to the first Application in the 
+   * \brief Get an iterator which refers to the first Application in the
    * container.
    *
    * Applications can be retrieved from the container in two ways.  First,
    * directly by an index into the container, and second, using an iterator.
-   * This method is used in the iterator method and is typically used in a 
+   * This method is used in the iterator method and is typically used in a
    * for-loop to run through the Applications
    *
    * \code
@@ -87,15 +87,15 @@ public:
    *
    * \returns an iterator which refers to the first Application in the container.
    */
-  Iterator Begin (void) const;
+  Iterator Begin () const;
 
   /**
-   * \brief Get an iterator which indicates past-the-last Application in the 
+   * \brief Get an iterator which indicates past-the-last Application in the
    * container.
    *
    * Applications can be retrieved from the container in two ways.  First,
    * directly by an index into the container, and second, using an iterator.
-   * This method is used in the iterator method and is typically used in a 
+   * This method is used in the iterator method and is typically used in a
    * for-loop to run through the Applications
    *
    * \code
@@ -108,7 +108,7 @@ public:
    *
    * \returns an iterator which indicates an ending condition for a loop.
    */
-  Iterator End (void) const;
+  Iterator End () const;
 
   /**
    * \brief Get the number of Ptr<Application> stored in this container.
@@ -130,7 +130,7 @@ public:
    *
    * \returns the number of Ptr<Application> stored in this container.
    */
-  uint32_t GetN (void) const;
+  uint32_t GetN () const;
 
   /**
    * \brief Get the Ptr<Application> stored in this container at a given
@@ -183,7 +183,7 @@ public:
    * at the Time given as a parameter.
    *
    * All Applications need to be provided with a starting simulation time and
-   * a stopping simulation time.  The ApplicationContainer is a convenient 
+   * a stopping simulation time.  The ApplicationContainer is a convenient
    * place for allowing all of the contained Applications to be told to wake
    * up and start doing their thing (Start) at a common time.
    *
@@ -195,7 +195,7 @@ public:
   void Start (Time start);
 
   /**
-   * \brief Start all of the Applications in this container at the start time 
+   * \brief Start all of the Applications in this container at the start time
    * given as a parameter, plus some jitter.
    *
    * This method iterates through the contained Applications and calls
@@ -212,7 +212,7 @@ public:
    * at the Time given as a parameter.
    *
    * All Applications need to be provided with a starting simulation time and
-   * a stopping simulation time.  The ApplicationContainer is a convenient 
+   * a stopping simulation time.  The ApplicationContainer is a convenient
    * place for allowing all of the contained Applications to be told to shut
    * down and stop doing their thing (Stop) at a common time.
    *

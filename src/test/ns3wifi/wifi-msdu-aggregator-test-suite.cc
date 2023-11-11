@@ -44,7 +44,7 @@ class WifiMsduAggregatorThroughputTest : public TestCase
 {
 public:
   WifiMsduAggregatorThroughputTest ();
-  virtual void DoRun (void);
+  void DoRun () override;
 
 private:
   bool m_writeResults; //!< flag whether to generate pcap
@@ -57,7 +57,7 @@ WifiMsduAggregatorThroughputTest::WifiMsduAggregatorThroughputTest ()
 }
 
 void
-WifiMsduAggregatorThroughputTest::DoRun (void)
+WifiMsduAggregatorThroughputTest::DoRun ()
 {
   WifiHelper wifi;
   WifiMacHelper wifiMac;
@@ -118,7 +118,8 @@ WifiMsduAggregatorThroughputTest::DoRun (void)
 
   Ipv4AddressHelper address;
   address.SetBase ("192.168.0.0", "255.255.255.0");
-  Ipv4InterfaceContainer staNodeInterface, apNodeInterface;
+  Ipv4InterfaceContainer staNodeInterface;
+  Ipv4InterfaceContainer apNodeInterface;
   staNodeInterface = address.Assign (staDev);
   apNodeInterface = address.Assign (apDev);
 

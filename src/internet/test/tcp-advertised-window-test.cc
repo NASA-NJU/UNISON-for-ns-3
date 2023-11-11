@@ -40,7 +40,7 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   /** \brief typedef for a cb */
   typedef Callback<void, uint16_t, uint16_t> InvalidAwndCallback;
@@ -79,8 +79,8 @@ public:
   void SetExpectedSegmentSize (uint16_t seg) { m_segmentSize = seg; };
 
 protected:
-  virtual Ptr<TcpSocketBase> Fork ();
-  virtual uint16_t AdvertisedWindowSize (bool scale = true) const;
+  Ptr<TcpSocketBase> Fork () override;
+  uint16_t AdvertisedWindowSize (bool scale = true) const override;
 
 private:
   uint16_t OldAdvertisedWindowSize (bool scale = true) const;
@@ -88,7 +88,7 @@ private:
 
   /**
    * \brief Test meta-information: size of the segments that are received.
-   * 
+   *
    * This is necessary for making sure the calculated awnd only differs by
    * exactly that one segment that was not yet read by the application.
    */
@@ -103,7 +103,7 @@ TcpSocketAdvertisedWindowProxy::SetInvalidAwndCb (InvalidAwndCallback cb)
 }
 
 TypeId
-TcpSocketAdvertisedWindowProxy::GetTypeId (void)
+TcpSocketAdvertisedWindowProxy::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::TcpSocketAdvertisedWindowProxy")
     .SetParent<TcpSocketMsgBase> ()
@@ -114,7 +114,7 @@ TcpSocketAdvertisedWindowProxy::GetTypeId (void)
 }
 
 Ptr<TcpSocketBase>
-TcpSocketAdvertisedWindowProxy::Fork (void)
+TcpSocketAdvertisedWindowProxy::Fork ()
 {
   return CopyObject<TcpSocketAdvertisedWindowProxy> (this);
 }
@@ -215,7 +215,7 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
   /**
    * \brief Constructor
    * \param dropRatio the drop ratio
@@ -227,11 +227,11 @@ public:
   }
 
 protected:
-  virtual bool ShouldDrop (const Ipv4Header &ipHeader, const TcpHeader &tcpHeader,
-                           uint32_t packetSize);
+  bool ShouldDrop (const Ipv4Header &ipHeader, const TcpHeader &tcpHeader,
+                           uint32_t packetSize) override;
 
 private:
-  virtual void DoReset (void) { };
+  void DoReset () override { };
   double m_dropRatio; //!< Drop ratio
   Ptr<UniformRandomVariable> m_prng; //!< Random variable
 };
@@ -239,7 +239,7 @@ private:
 NS_OBJECT_ENSURE_REGISTERED (TcpDropRatioErrorModel);
 
 TypeId
-TcpDropRatioErrorModel::GetTypeId (void)
+TcpDropRatioErrorModel::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::TcpDropRatioErrorModel")
     .SetParent<TcpGeneralErrorModel> ()
@@ -251,7 +251,7 @@ bool
 TcpDropRatioErrorModel::ShouldDrop (const Ipv4Header &ipHeader, const TcpHeader &tcpHeader,
                               uint32_t packetSize)
 {
-  return m_prng->GetValue () < m_dropRatio; 
+  return m_prng->GetValue () < m_dropRatio;
 }
 
 /**
@@ -262,11 +262,11 @@ TcpDropRatioErrorModel::ShouldDrop (const Ipv4Header &ipHeader, const TcpHeader 
  * In TcpSocketBase, the advertised window is now calculated as
  *
  *   m_tcb->m_rxBuffer->MaxRxSequence () - m_tcb->m_rxBuffer->NextRxSequence ()
- * 
+ *
  * instead of the previous
  *
  *   m_tcb->m_rxBuffer->MaxBufferSize ()
- * 
+ *
  * This change was introduced with regard to situations in which the receiviing
  * application does not read from the socket as fast as possible (see bug 2559
  * for details). This test ensures that no regression is introduced for other,
@@ -290,9 +290,9 @@ public:
   TcpAdvertisedWindowTest (const std::string &desc, uint32_t size, uint32_t packets, double lossRatio);
 
 protected:
-  virtual void ConfigureEnvironment ();
-  virtual Ptr<TcpSocketMsgBase> CreateReceiverSocket (Ptr<Node> node);
-  virtual Ptr<ErrorModel> CreateReceiverErrorModel ();
+  void ConfigureEnvironment () override;
+  Ptr<TcpSocketMsgBase> CreateReceiverSocket (Ptr<Node> node) override;
+  Ptr<ErrorModel> CreateReceiverErrorModel () override;
 
 private:
   /** \brief Callback called for the update of the awnd
@@ -371,10 +371,10 @@ public:
                           std::vector<uint32_t> &toDrop);
 
 protected:
-  virtual void ConfigureEnvironment ();
-  virtual Ptr<TcpSocketMsgBase> CreateReceiverSocket (Ptr<Node> node);
-  virtual Ptr<TcpSocketMsgBase> CreateSenderSocket (Ptr<Node> node);
-  virtual Ptr<ErrorModel> CreateReceiverErrorModel ();
+  void ConfigureEnvironment () override;
+  Ptr<TcpSocketMsgBase> CreateReceiverSocket (Ptr<Node> node) override;
+  Ptr<TcpSocketMsgBase> CreateSenderSocket (Ptr<Node> node) override;
+  Ptr<ErrorModel> CreateReceiverErrorModel () override;
 
 private:
   /** \brief Callback called for the update of the awnd

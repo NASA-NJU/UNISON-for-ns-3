@@ -40,7 +40,7 @@ class DataOutputCallback;
 /**
  * \ingroup stats
  * \class StatisticalSummary
- * \brief Abstract class for calculating statistical data 
+ * \brief Abstract class for calculating statistical data
  *
  */
 class StatisticalSummary {
@@ -111,14 +111,14 @@ public:
 class DataCalculator : public Object {
 public:
   DataCalculator();
-  virtual ~DataCalculator();
+  ~DataCalculator() override;
 
   /**
    * Register this type.
    * \return The TypeId.
    */
-  static TypeId GetTypeId (void);
-  
+  static TypeId GetTypeId ();
+
   /**
    * Returns whether the DataCalculator is enabled
    * \return true if DataCalculator is enabled
@@ -177,7 +177,7 @@ protected:
   std::string m_key;      //!< Key value
   std::string m_context;  //!< Context value
 
-  virtual void DoDispose (void);
+  void DoDispose () override;
 
 private:
   EventId m_startEvent; //!< Start event

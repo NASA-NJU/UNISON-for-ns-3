@@ -20,6 +20,8 @@
 
 #include <map>
 #include "wave-net-device.h"
+#include "ns3/qos-utils.h"
+
 namespace ns3 {
 class WaveNetDevice;
 
@@ -133,9 +135,9 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
   ChannelScheduler ();
-  virtual ~ChannelScheduler ();
+  ~ChannelScheduler () override;
 
   /**
    * \param device enable channel scheduler associated with WaveNetDevice
@@ -144,11 +146,11 @@ public:
   /**
    * \return whether CCH channel access is assigned.
    */
-  bool IsCchAccessAssigned (void) const;
+  bool IsCchAccessAssigned () const;
   /**
    * \return whether SCH channel access is assigned.
    */
-  bool IsSchAccessAssigned (void) const;
+  bool IsSchAccessAssigned () const;
   /**
    * \param channelNumber the specified channel number
    * \return  whether channel access is assigned for the channel.
@@ -172,7 +174,7 @@ public:
   /**
    * \return whether the continuous access is assigned for CCHl.
    */
-  bool IsDefaultCchAccessAssigned (void) const;
+  bool IsDefaultCchAccessAssigned () const;
   /**
    * \param channelNumber the specified channel number
    * \return  the type of current assigned channel access for the specific channel.
@@ -194,8 +196,8 @@ public:
   bool StopSch (uint32_t channelNumber);
 
 protected:
-  virtual void DoInitialize (void);
-  virtual void DoDispose (void);
+  void DoInitialize () override;
+  void DoDispose () override;
 
   /**
      * \param channelNumber the specific channel
@@ -226,7 +228,7 @@ protected:
    * This method will assign default CCH access for CCH.
    * \return whether the channel access is assigned successfully
    */
-  virtual bool AssignDefaultCchAccess (void) = 0;
+  virtual bool AssignDefaultCchAccess () = 0;
   /**
    * \param channelNumber indicating for which channel should release
    * the assigned channel access resource.

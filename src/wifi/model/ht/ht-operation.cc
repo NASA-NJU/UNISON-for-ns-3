@@ -48,8 +48,7 @@ HtOperation::HtOperation ()
     m_txRxMcsSetUnequal (0),
     m_txMaxNSpatialStreams (0),
     m_txUnequalModulation (0),
-    m_reservedMcsSet3 (0),
-    m_htSupported (0)
+    m_reservedMcsSet3 (0)
 {
   for (uint8_t k = 0; k < MAX_SUPPORTED_MCS; k++)
     {
@@ -63,17 +62,9 @@ HtOperation::ElementId () const
   return IE_HT_OPERATION;
 }
 
-void
-HtOperation::SetHtSupported (uint8_t htSupported)
-{
-  m_htSupported = htSupported;
-}
-
-uint8_t
+uint16_t
 HtOperation::GetInformationFieldSize () const
 {
-  //we should not be here if HT is not supported
-  NS_ASSERT (m_htSupported > 0);
   return 22;
 }
 
@@ -192,79 +183,79 @@ HtOperation::SetTxUnequalModulation (uint8_t txUnequalModulation)
 }
 
 uint8_t
-HtOperation::GetPrimaryChannel (void) const
+HtOperation::GetPrimaryChannel () const
 {
   return m_primaryChannel;
 }
 
 uint8_t
-HtOperation::GetSecondaryChannelOffset (void) const
+HtOperation::GetSecondaryChannelOffset () const
 {
   return m_secondaryChannelOffset;
 }
 
 uint8_t
-HtOperation::GetStaChannelWidth (void) const
+HtOperation::GetStaChannelWidth () const
 {
   return m_staChannelWidth;
 }
 
 uint8_t
-HtOperation::GetRifsMode (void) const
+HtOperation::GetRifsMode () const
 {
   return m_rifsMode;
 }
 
 uint8_t
-HtOperation::GetHtProtection (void) const
+HtOperation::GetHtProtection () const
 {
   return m_htProtection;
 }
 
 uint8_t
-HtOperation::GetNonGfHtStasPresent (void) const
+HtOperation::GetNonGfHtStasPresent () const
 {
   return m_nonGfHtStasPresent;
 }
 
 uint8_t
-HtOperation::GetObssNonHtStasPresent (void) const
+HtOperation::GetObssNonHtStasPresent () const
 {
   return m_obssNonHtStasPresent;
 }
 
 uint8_t
-HtOperation::GetDualBeacon (void) const
+HtOperation::GetDualBeacon () const
 {
   return m_dualBeacon;
 }
 
 uint8_t
-HtOperation::GetDualCtsProtection (void) const
+HtOperation::GetDualCtsProtection () const
 {
   return m_dualCtsProtection;
 }
 
 uint8_t
-HtOperation::GetStbcBeacon (void) const
+HtOperation::GetStbcBeacon () const
 {
   return m_stbcBeacon;
 }
 
 uint8_t
-HtOperation::GetLSigTxopProtectionFullSupport (void) const
+HtOperation::GetLSigTxopProtectionFullSupport () const
 {
   return m_lSigTxopProtectionFullSupport;
 }
 
 uint8_t
-HtOperation::GetPcoActive (void) const
+HtOperation::GetPcoActive () const
 {
   return m_pcoActive;
 }
 
 uint8_t
-HtOperation::GetPhase (void) const
+HtOperation::GetPhase () const
 {
   return m_pcoPhase;
 }
@@ -280,57 +271,37 @@ HtOperation::IsSupportedMcs (uint8_t mcs) const
 }
 
 uint16_t
-HtOperation::GetRxHighestSupportedDataRate (void) const
+HtOperation::GetRxHighestSupportedDataRate () const
 {
   return m_rxHighestSupportedDataRate;
 }
 
 uint8_t
-HtOperation::GetTxMcsSetDefined (void) const
+HtOperation::GetTxMcsSetDefined () const
 {
   return m_txMcsSetDefined;
 }
 
 uint8_t
-HtOperation::GetTxRxMcsSetUnequal (void) const
+HtOperation::GetTxRxMcsSetUnequal () const
 {
   return m_txRxMcsSetUnequal;
 }
 
 uint8_t
-HtOperation::GetTxMaxNSpatialStreams (void) const
+HtOperation::GetTxMaxNSpatialStreams () const
 {
   return m_txMaxNSpatialStreams;
 }
 
 uint8_t
-HtOperation::GetTxUnequalModulation (void) const
+HtOperation::GetTxUnequalModulation () const
 {
   return m_txUnequalModulation;
 }
 
-Buffer::Iterator
-HtOperation::Serialize (Buffer::Iterator i) const
-{
-  if (m_htSupported < 1)
-    {
-      return i;
-    }
-  return WifiInformationElement::Serialize (i);
-}
-
-uint16_t
-HtOperation::GetSerializedSize () const
-{
-  if (m_htSupported < 1)
-    {
-      return 0;
-    }
-  return WifiInformationElement::GetSerializedSize ();
-}
-
 uint8_t
-HtOperation::GetInformationSubset1 (void) const
+HtOperation::GetInformationSubset1 () const
 {
   uint8_t val = 0;
   val |= m_secondaryChannelOffset & 0x03;
@@ -350,7 +321,7 @@ HtOperation::SetInformationSubset1 (uint8_t ctrl)
 }
 
 uint16_t
-HtOperation::GetInformationSubset2 (void) const
+HtOperation::GetInformationSubset2 () const
 {
   uint16_t val = 0;
   val |= m_htProtection & 0x03;
@@ -372,7 +343,7 @@ HtOperation::SetInformationSubset2 (uint16_t ctrl)
 }
 
 uint16_t
-HtOperation::GetInformationSubset3 (void) const
+HtOperation::GetInformationSubset3 () const
 {
   uint16_t val = 0;
   val |= m_reservedInformationSubset3_1 & 0x3f;
@@ -424,7 +395,7 @@ HtOperation::SetBasicMcsSet (uint64_t ctrl1, uint64_t ctrl2)
 }
 
 uint64_t
-HtOperation::GetBasicMcsSet1 (void) const
+HtOperation::GetBasicMcsSet1 () const
 {
   uint64_t val = 0;
   for (uint64_t i = 63; i > 0; i--)
@@ -436,7 +407,7 @@ HtOperation::GetBasicMcsSet1 (void) const
 }
 
 uint64_t
-HtOperation::GetBasicMcsSet2 (void) const
+HtOperation::GetBasicMcsSet2 () const
 {
   uint64_t val = 0;
   val = val | (m_reservedMcsSet3 & 0x07ffffff);
@@ -458,21 +429,18 @@ HtOperation::GetBasicMcsSet2 (void) const
 void
 HtOperation::SerializeInformationField (Buffer::Iterator start) const
 {
-  if (m_htSupported == 1)
-    {
-      //write the corresponding value for each bit
-      start.WriteU8 (GetPrimaryChannel ());
-      start.WriteU8 (GetInformationSubset1 ());
-      start.WriteU16 (GetInformationSubset2 ());
-      start.WriteU16 (GetInformationSubset3 ());
-      start.WriteHtolsbU64 (GetBasicMcsSet1 ());
-      start.WriteHtolsbU64 (GetBasicMcsSet2 ());
-    }
+  //write the corresponding value for each bit
+  start.WriteU8 (GetPrimaryChannel ());
+  start.WriteU8 (GetInformationSubset1 ());
+  start.WriteU16 (GetInformationSubset2 ());
+  start.WriteU16 (GetInformationSubset3 ());
+  start.WriteHtolsbU64 (GetBasicMcsSet1 ());
+  start.WriteHtolsbU64 (GetBasicMcsSet2 ());
 }
 
-uint8_t
+uint16_t
 HtOperation::DeserializeInformationField (Buffer::Iterator start,
-                                          uint8_t length)
+                                          uint16_t length)
 {
   Buffer::Iterator i = start;
   uint8_t primarychannel = i.ReadU8 ();

@@ -70,12 +70,13 @@ int main (int argc, char *argv[])
        << "_rngRun"  << std::setw (3) << std::setfill ('0')  << runValue.Get () ;
 
   Ptr<LteHelper> lteHelper = CreateObject<LteHelper> ();
-  
+
   lteHelper->SetAttribute ("PathlossModel", StringValue ("ns3::FriisSpectrumPropagationLossModel"));
 
   // Create Nodes: eNodeB and UE
   NodeContainer enbNodes;
-  NodeContainer ueNodes1, ueNodes2;
+  NodeContainer ueNodes1;
+  NodeContainer ueNodes2;
   enbNodes.Create (2);
   ueNodes1.Create (numUes);
   ueNodes2.Create (numUes);

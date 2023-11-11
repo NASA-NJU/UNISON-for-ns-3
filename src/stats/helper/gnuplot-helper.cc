@@ -35,7 +35,7 @@ namespace ns3 {
 NS_LOG_COMPONENT_DEFINE ("GnuplotHelper");
 
 GnuplotHelper::GnuplotHelper ()
-  : m_aggregator                     (0),
+  : m_aggregator                     (nullptr),
     m_plotProbeCount                 (0),
     m_outputFileNameWithoutExtension ("gnuplot-helper"),
     m_title                          ("Gnuplot Helper Plot"),
@@ -54,7 +54,7 @@ GnuplotHelper::GnuplotHelper (const std::string &outputFileNameWithoutExtension,
                               const std::string &xLegend,
                               const std::string &yLegend,
                               const std::string &terminalType)
-  : m_aggregator                     (0),
+  : m_aggregator                     (nullptr),
     m_plotProbeCount                 (0),
     m_outputFileNameWithoutExtension (outputFileNameWithoutExtension),
     m_title                          (title),
@@ -84,7 +84,7 @@ GnuplotHelper::ConfigurePlot (const std::string &outputFileNameWithoutExtension,
                         << xLegend << yLegend <<  terminalType);
 
   // See if an aggregator has already been constructed.
-  if (m_aggregator != 0)
+  if (m_aggregator)
     {
       NS_LOG_WARN ("An existing aggregator object " << m_aggregator <<
                    " may be destroyed if no references remain.");
@@ -126,11 +126,11 @@ GnuplotHelper::PlotProbe (const std::string &typeId,
   std::string lastToken;
 
   // See if the path has any wildcards.
-  bool pathHasNoWildcards = path.find ("*") == std::string::npos;
+  bool pathHasNoWildcards = path.find ('*') == std::string::npos;
 
-  // Remove the last token from the path; this should correspond to the 
+  // Remove the last token from the path; this should correspond to the
   // trace source attribute.
-  size_t lastSlash = path.find_last_of ("/");
+  size_t lastSlash = path.find_last_of ('/');
   if (lastSlash == std::string::npos)
     {
       pathWithoutLastToken = path;
@@ -219,7 +219,7 @@ GnuplotHelper::AddProbe (const std::string &typeId,
 
   // Create a base class object in order to validate the type.
   Ptr<Probe> probe = m_factory.Create ()->GetObject<Probe> ();
-  if (probe == 0)
+  if (!probe)
     {
       NS_ABORT_MSG ("The requested type is not a probe");
     }

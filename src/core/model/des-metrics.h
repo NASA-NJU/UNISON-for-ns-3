@@ -48,7 +48,7 @@ namespace ns3 {
  * event, and the (virtual) times when the event was scheduled and
  * when it will execute.
  *
- * See the DES Metrics Project page: https://wilseypa.github.io/desMetrics/
+ * See the DES Metrics Project page: https://github.com/wilseypa/desMetrics
  * for more information and analysis tools.
  *
  * If enabled (see below), ns-3 scripts should use CommandLine to
@@ -140,12 +140,12 @@ public:
   /**
    * Destructor, closes the trace file.
    */
-  ~DesMetrics (void);
+  ~DesMetrics () override;
 
 private:
 
   /** Close the output file. */
-  void Close (void);
+  void Close ();
 
   /**
    * Cache the last-used output directory.

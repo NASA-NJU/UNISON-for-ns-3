@@ -32,19 +32,19 @@ using namespace ns3;
  */
 class Ipv6ARouting : public Ipv6RoutingProtocol {
 public:
-  Ptr<Ipv6Route> RouteOutput (Ptr<Packet> p, const Ipv6Header &header, Ptr<NetDevice> oif, Socket::SocketErrno &sockerr)  { return 0; }
+  Ptr<Ipv6Route> RouteOutput (Ptr<Packet> p, const Ipv6Header &header, Ptr<NetDevice> oif, Socket::SocketErrno &sockerr) override  { return nullptr; }
   bool RouteInput  (Ptr<const Packet> p, const Ipv6Header &header, Ptr<const NetDevice> idev,
                     UnicastForwardCallback ucb, MulticastForwardCallback mcb,
-                    LocalDeliverCallback lcb, ErrorCallback ecb) { return false; }
-  void NotifyInterfaceUp (uint32_t interface) {}
-  void NotifyInterfaceDown (uint32_t interface) {}
-  void NotifyAddAddress (uint32_t interface, Ipv6InterfaceAddress address) {}
-  void NotifyRemoveAddress (uint32_t interface, Ipv6InterfaceAddress address) {}
+                    LocalDeliverCallback lcb, ErrorCallback ecb) override { return false; }
+  void NotifyInterfaceUp (uint32_t interface) override {}
+  void NotifyInterfaceDown (uint32_t interface) override {}
+  void NotifyAddAddress (uint32_t interface, Ipv6InterfaceAddress address) override {}
+  void NotifyRemoveAddress (uint32_t interface, Ipv6InterfaceAddress address) override {}
   void NotifyAddRoute (Ipv6Address dst, Ipv6Prefix mask, Ipv6Address nextHop, uint32_t interface, Ipv6Address prefixToUse = Ipv6Address::
-                         GetZero ()) {}
-  void NotifyRemoveRoute (Ipv6Address dst, Ipv6Prefix mask, Ipv6Address nextHop, uint32_t interface, Ipv6Address prefixToUse) {}
-  void SetIpv6 (Ptr<Ipv6> ipv6) {}
-  virtual void PrintRoutingTable (Ptr<OutputStreamWrapper> stream, Time::Unit unit) const {};
+                         GetZero ()) override {}
+  void NotifyRemoveRoute (Ipv6Address dst, Ipv6Prefix mask, Ipv6Address nextHop, uint32_t interface, Ipv6Address prefixToUse) override {}
+  void SetIpv6 (Ptr<Ipv6> ipv6) override {}
+  void PrintRoutingTable (Ptr<OutputStreamWrapper> stream, Time::Unit unit) const override {};
 };
 
 /**
@@ -55,19 +55,19 @@ public:
  */
 class Ipv6BRouting : public Ipv6RoutingProtocol {
 public:
-  Ptr<Ipv6Route> RouteOutput (Ptr<Packet> p, const Ipv6Header &header, Ptr<NetDevice> oif, Socket::SocketErrno &sockerr)  { return 0; }
+  Ptr<Ipv6Route> RouteOutput (Ptr<Packet> p, const Ipv6Header &header, Ptr<NetDevice> oif, Socket::SocketErrno &sockerr) override  { return nullptr; }
   bool RouteInput  (Ptr<const Packet> p, const Ipv6Header &header, Ptr<const NetDevice> idev,
                     UnicastForwardCallback ucb, MulticastForwardCallback mcb,
-                    LocalDeliverCallback lcb, ErrorCallback ecb) { return false; }
-  void NotifyInterfaceUp (uint32_t interface) {}
-  void NotifyInterfaceDown (uint32_t interface) {}
-  void NotifyAddAddress (uint32_t interface, Ipv6InterfaceAddress address) {}
-  void NotifyRemoveAddress (uint32_t interface, Ipv6InterfaceAddress address) {}
+                    LocalDeliverCallback lcb, ErrorCallback ecb) override { return false; }
+  void NotifyInterfaceUp (uint32_t interface) override {}
+  void NotifyInterfaceDown (uint32_t interface) override {}
+  void NotifyAddAddress (uint32_t interface, Ipv6InterfaceAddress address) override {}
+  void NotifyRemoveAddress (uint32_t interface, Ipv6InterfaceAddress address) override {}
   void NotifyAddRoute (Ipv6Address dst, Ipv6Prefix mask, Ipv6Address nextHop, uint32_t interface, Ipv6Address prefixToUse = Ipv6Address::
-                         GetZero ()) {}
-  void NotifyRemoveRoute (Ipv6Address dst, Ipv6Prefix mask, Ipv6Address nextHop, uint32_t interface, Ipv6Address prefixToUse) {}
-  void SetIpv6 (Ptr<Ipv6> ipv6) {}
-  virtual void PrintRoutingTable (Ptr<OutputStreamWrapper> stream, Time::Unit unit) const {};
+                         GetZero ()) override {}
+  void NotifyRemoveRoute (Ipv6Address dst, Ipv6Prefix mask, Ipv6Address nextHop, uint32_t interface, Ipv6Address prefixToUse) override {}
+  void SetIpv6 (Ptr<Ipv6> ipv6) override {}
+  void PrintRoutingTable (Ptr<OutputStreamWrapper> stream, Time::Unit unit) const override {};
 };
 
 /**
@@ -80,7 +80,7 @@ class Ipv6ListRoutingNegativeTestCase : public TestCase
 {
 public:
   Ipv6ListRoutingNegativeTestCase();
-  virtual void DoRun (void);
+  void DoRun () override;
 };
 
 Ipv6ListRoutingNegativeTestCase::Ipv6ListRoutingNegativeTestCase()
@@ -88,7 +88,7 @@ Ipv6ListRoutingNegativeTestCase::Ipv6ListRoutingNegativeTestCase()
 {
 }
 void
-Ipv6ListRoutingNegativeTestCase::DoRun (void)
+Ipv6ListRoutingNegativeTestCase::DoRun ()
 {
   Ptr<Ipv6ListRouting> lr = CreateObject<Ipv6ListRouting> ();
   Ptr<Ipv6RoutingProtocol> aRouting = CreateObject<Ipv6ARouting> ();
@@ -114,7 +114,7 @@ class Ipv6ListRoutingPositiveTestCase : public TestCase
 {
 public:
   Ipv6ListRoutingPositiveTestCase();
-  virtual void DoRun (void);
+  void DoRun () override;
 };
 
 Ipv6ListRoutingPositiveTestCase::Ipv6ListRoutingPositiveTestCase()
@@ -122,7 +122,7 @@ Ipv6ListRoutingPositiveTestCase::Ipv6ListRoutingPositiveTestCase()
 {
 }
 void
-Ipv6ListRoutingPositiveTestCase::DoRun (void)
+Ipv6ListRoutingPositiveTestCase::DoRun ()
 {
   Ptr<Ipv6ListRouting> lr = CreateObject<Ipv6ListRouting> ();
   Ptr<Ipv6RoutingProtocol> aRouting = CreateObject<Ipv6ARouting> ();

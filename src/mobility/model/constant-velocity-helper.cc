@@ -56,19 +56,19 @@ ConstantVelocityHelper::SetPosition (const Vector &position)
 }
 
 Vector
-ConstantVelocityHelper::GetCurrentPosition (void) const
+ConstantVelocityHelper::GetCurrentPosition () const
 {
   NS_LOG_FUNCTION (this);
   return m_position;
 }
 
-Vector 
-ConstantVelocityHelper::GetVelocity (void) const
+Vector
+ConstantVelocityHelper::GetVelocity () const
 {
   NS_LOG_FUNCTION (this);
   return m_paused ? Vector (0.0, 0.0, 0.0) : m_velocity;
 }
-void 
+void
 ConstantVelocityHelper::SetVelocity (const Vector &vel)
 {
   NS_LOG_FUNCTION (this << vel);
@@ -77,7 +77,7 @@ ConstantVelocityHelper::SetVelocity (const Vector &vel)
 }
 
 void
-ConstantVelocityHelper::Update (void) const
+ConstantVelocityHelper::Update () const
 {
   NS_LOG_FUNCTION (this);
   Time now = Simulator::Now ();
@@ -118,15 +118,15 @@ ConstantVelocityHelper::UpdateWithBounds (const Box &bounds) const
   m_position.z = std::max (bounds.zMin, m_position.z);
 }
 
-void 
-ConstantVelocityHelper::Pause (void)
+void
+ConstantVelocityHelper::Pause ()
 {
   NS_LOG_FUNCTION (this);
   m_paused = true;
 }
 
-void 
-ConstantVelocityHelper::Unpause (void)
+void
+ConstantVelocityHelper::Unpause ()
 {
   NS_LOG_FUNCTION (this);
   m_paused = false;

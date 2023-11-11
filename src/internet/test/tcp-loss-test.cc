@@ -32,7 +32,7 @@ NS_LOG_COMPONENT_DEFINE ("TcpLossTestSuite");
  * \brief Check rollover of sequence number and how that affects loss recovery
  *
  * This test checks that fast recovery is entered correctly even if it has
- * been a long time since the last recovery event.  Merge request !156 
+ * been a long time since the last recovery event.  Merge request !156
  * reported the error and fixed the issue with large transfers.
  *
  * The issue reported is that fast recovery detection relies on comparing
@@ -65,14 +65,14 @@ public:
   TcpLargeTransferLossTest (uint32_t firstLoss, uint32_t secondLoss, uint32_t lastSegment, const std::string& desc);
 
 protected:
-  void ConfigureProperties (void);
-  void ConfigureEnvironment (void);
-  void FinalChecks (void);
-  void Tx (const Ptr<const Packet> p, const TcpHeader&h, SocketWho who);
-  void Rx (const Ptr<const Packet> p, const TcpHeader&h, SocketWho who);
+  void ConfigureProperties () override;
+  void ConfigureEnvironment () override;
+  void FinalChecks () override;
+  void Tx (const Ptr<const Packet> p, const TcpHeader&h, SocketWho who) override;
+  void Rx (const Ptr<const Packet> p, const TcpHeader&h, SocketWho who) override;
   void CongStateTrace (const TcpSocketState::TcpCongState_t oldValue,
-                       const TcpSocketState::TcpCongState_t newValue);
-  Ptr<ErrorModel> CreateReceiverErrorModel ();
+                       const TcpSocketState::TcpCongState_t newValue) override;
+  Ptr<ErrorModel> CreateReceiverErrorModel () override;
 private:
   uint32_t m_firstLoss;             //!< First segment loss
   uint32_t m_secondLoss;            //!< Second segment loss
@@ -143,20 +143,20 @@ TcpLargeTransferLossTest::CreateReceiverErrorModel ()
   return rem;
 }
 
-void 
+void
 TcpLargeTransferLossTest::Tx (const Ptr<const Packet> p, const TcpHeader&h, SocketWho who)
 {
   m_sent++;
 }
 
-void 
+void
 TcpLargeTransferLossTest::Rx (const Ptr<const Packet> p, const TcpHeader&h, SocketWho who)
 {
   m_received++;
 }
 
 void
-TcpLargeTransferLossTest::FinalChecks (void)
+TcpLargeTransferLossTest::FinalChecks ()
 {
   // The addition of 2 accounts for the two forcibly lost packets
   NS_TEST_ASSERT_MSG_EQ (m_sent, (m_received + 2), "Did not observe expected number of sent packets");
@@ -176,7 +176,7 @@ public:
     // For large transfer tests, the three sequence numbers passed in
     // are the segment (i.e. not byte) number that should be dropped first,
     // then the second drop, and then the last segment number to send
-    // 
+    //
     // If we force a loss at packet 1000 and then shortly after at 2000,
     // the TCP logic should correctly pass this case (no sequence wrapping).
     AddTestCase (new TcpLargeTransferLossTest (1000, 2000, 2500, "large-transfer-loss-without-wrap"), TestCase::EXTENSIVE);

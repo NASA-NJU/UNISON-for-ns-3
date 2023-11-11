@@ -55,7 +55,7 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   TcpCongestionOps ();
 
@@ -65,7 +65,7 @@ public:
    */
   TcpCongestionOps (const TcpCongestionOps &other);
 
-  virtual ~TcpCongestionOps ();
+  ~TcpCongestionOps () override;
 
   /**
    * \brief Get the name of the congestion control algorithm
@@ -218,7 +218,7 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   TcpNewReno ();
 
@@ -228,14 +228,14 @@ public:
    */
   TcpNewReno (const TcpNewReno& sock);
 
-  ~TcpNewReno ();
+  ~TcpNewReno () override;
 
-  std::string GetName () const;
+  std::string GetName () const override;
 
-  virtual void IncreaseWindow (Ptr<TcpSocketState> tcb, uint32_t segmentsAcked);
-  virtual uint32_t GetSsThresh (Ptr<const TcpSocketState> tcb,
-                                uint32_t bytesInFlight);
-  virtual Ptr<TcpCongestionOps> Fork ();
+  void IncreaseWindow (Ptr<TcpSocketState> tcb, uint32_t segmentsAcked) override;
+  uint32_t GetSsThresh (Ptr<const TcpSocketState> tcb,
+                                uint32_t bytesInFlight) override;
+  Ptr<TcpCongestionOps> Fork () override;
 
 protected:
   virtual uint32_t SlowStart (Ptr<TcpSocketState> tcb, uint32_t segmentsAcked);

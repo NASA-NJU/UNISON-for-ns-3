@@ -38,24 +38,10 @@ public:
 
   // Implementations of pure virtual methods of WifiInformationElement
   WifiInformationElementId ElementId () const override;
-  uint8_t GetInformationFieldSize () const override;
+  uint16_t GetInformationFieldSize () const override;
   void SerializeInformationField (Buffer::Iterator start) const override;
-  uint8_t DeserializeInformationField (Buffer::Iterator start,
-                                       uint8_t length) override;
-
-  /* This information element is a bit special in that it is only
-     included if the STA is an ERP STA. To support this we
-     override the Serialize and GetSerializedSize methods of
-     WifiInformationElement. */
-  Buffer::Iterator Serialize (Buffer::Iterator start) const override;
-  uint16_t GetSerializedSize () const override;
-
-  /**
-   * Set the ERP supported field.
-   *
-   * \param erpSupported the ERP supported field in the ErpInformation information element
-   */
-  void SetErpSupported (uint8_t erpSupported);
+  uint16_t DeserializeInformationField (Buffer::Iterator start,
+                                       uint16_t length) override;
 
   /**
    * Set the Barker_Preamble_Mode field in the ErpInformation information element.
@@ -81,26 +67,23 @@ public:
    *
    * \return the Barker_Preamble_Mode field in the ErpInformation information element
    */
-  uint8_t GetBarkerPreambleMode (void) const;
+  uint8_t GetBarkerPreambleMode () const;
   /**
    * Return the Use_Protection field in the ErpInformation information element.
    *
    * \return the Use_Protection field in the ErpInformation information element
    */
-  uint8_t GetUseProtection (void) const;
+  uint8_t GetUseProtection () const;
   /**
    * Return the Non_Erp_Present field in the ErpInformation information element.
    *
    * \return the Non_Erp_Present field in the ErpInformation information element
    */
-  uint8_t GetNonErpPresent (void) const;
+  uint8_t GetNonErpPresent () const;
 
 
 private:
   uint8_t m_erpInformation; ///< ERP information
-
-  /// This is used to decide whether this element should be added to the frame or not
-  bool m_erpSupported;
 };
 
 /**

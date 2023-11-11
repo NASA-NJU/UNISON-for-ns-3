@@ -41,7 +41,7 @@ NS_LOG_COMPONENT_DEFINE ("BSSchedulerSimple");
 
 NS_OBJECT_ENSURE_REGISTERED (BSSchedulerSimple);
 
-TypeId BSSchedulerSimple::GetTypeId (void)
+TypeId BSSchedulerSimple::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::BSSchedulerSimple")
     .SetParent<BSScheduler> ()
@@ -54,7 +54,7 @@ TypeId BSSchedulerSimple::GetTypeId (void)
 BSSchedulerSimple::BSSchedulerSimple ()
   : m_downlinkBursts (new std::list<std::pair<OfdmDlMapIe*, Ptr<PacketBurst> > > ())
 {
-  SetBs (0);
+  SetBs (nullptr);
 }
 
 BSSchedulerSimple::BSSchedulerSimple (Ptr<BaseStationNetDevice> bs)
@@ -65,23 +65,23 @@ BSSchedulerSimple::BSSchedulerSimple (Ptr<BaseStationNetDevice> bs)
   SetBs (bs);
 }
 
-BSSchedulerSimple::~BSSchedulerSimple (void)
+BSSchedulerSimple::~BSSchedulerSimple ()
 {
   std::list<std::pair<OfdmDlMapIe*, Ptr<PacketBurst> > > *downlinkBursts = m_downlinkBursts;
   std::pair<OfdmDlMapIe*, Ptr<PacketBurst> > pair;
   while (downlinkBursts->size ())
     {
       pair = downlinkBursts->front ();
-      pair.second = 0;
+      pair.second = nullptr;
       delete pair.first;
     }
-  SetBs (0);
+  SetBs (nullptr);
   delete m_downlinkBursts;
-  m_downlinkBursts = 0;
+  m_downlinkBursts = nullptr;
 }
 
 std::list<std::pair<OfdmDlMapIe*, Ptr<PacketBurst> > >*
-BSSchedulerSimple::GetDownlinkBursts (void) const
+BSSchedulerSimple::GetDownlinkBursts () const
 {
   return m_downlinkBursts;
 }
@@ -107,7 +107,7 @@ void BSSchedulerSimple::AddDownlinkBurst (Ptr<const WimaxConnection> connection,
   m_downlinkBursts->push_back (std::make_pair (dlMapIe, burst));
 }
 
-void BSSchedulerSimple::Schedule (void)
+void BSSchedulerSimple::Schedule ()
 {
   Ptr<WimaxConnection> connection;
   WimaxPhy::ModulationType modulationType = WimaxPhy::MODULATION_TYPE_BPSK_12;
@@ -220,7 +220,7 @@ void BSSchedulerSimple::Schedule (void)
 
 bool BSSchedulerSimple::SelectConnection (Ptr<WimaxConnection> &connection)
 {
-  connection = 0;
+  connection = nullptr;
   Time currentTime = Simulator::Now ();
   std::vector<Ptr<WimaxConnection> >::const_iterator iter1;
   std::vector<ServiceFlow*>::iterator iter2;

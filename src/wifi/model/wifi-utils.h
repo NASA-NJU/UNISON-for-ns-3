@@ -67,7 +67,7 @@ double RatioToDb (double ratio);
  *
  * \return the total Ack size in bytes
  */
-uint32_t GetAckSize (void);
+uint32_t GetAckSize ();
 /**
  * Return the total BlockAck size (including FCS trailer).
  *
@@ -94,13 +94,13 @@ uint32_t GetMuBarSize (std::list<BlockAckReqType> types);
  *
  * \return the total RTS size in bytes
  */
-uint32_t GetRtsSize (void);
+uint32_t GetRtsSize ();
 /**
  * Return the total CTS size (including FCS trailer).
  *
  * \return the total CTS size in bytes
  */
-uint32_t GetCtsSize (void);
+uint32_t GetCtsSize ();
 /**
  * \param seq MPDU sequence number
  * \param winstart sequence number window start
@@ -128,10 +128,18 @@ void AddWifiMacTrailer (Ptr<Packet> packet);
 uint32_t GetSize (Ptr<const Packet> packet, const WifiMacHeader *hdr, bool isAmpdu);
 
 /// Size of the space of sequence numbers
-const uint16_t SEQNO_SPACE_SIZE = 4096;
+static constexpr uint16_t SEQNO_SPACE_SIZE = 4096;
 
 /// Size of the half the space of sequence numbers (used to determine old packets)
-const uint16_t SEQNO_SPACE_HALF_SIZE = SEQNO_SPACE_SIZE / 2;
+static constexpr uint16_t SEQNO_SPACE_HALF_SIZE = SEQNO_SPACE_SIZE / 2;
+
+/// Link ID for single link operations (helps tracking places where correct link
+/// ID is to be used to support multi-link operations)
+static constexpr uint8_t SINGLE_LINK_OP_ID = 0;
+
+/// Invalid link identifier
+static constexpr uint8_t WIFI_LINKID_UNDEFINED = 0xff;
+
 } // namespace ns3
 
 #endif /* WIFI_UTILS_H */

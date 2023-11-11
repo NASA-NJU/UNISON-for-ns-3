@@ -59,10 +59,9 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
   JakesProcess ();
-  virtual ~JakesProcess();
-  virtual void DoDispose ();
+  ~JakesProcess() override;
 
   /**
    * Get the channel complex gain
@@ -80,6 +79,10 @@ public:
    * \param model the propagation model using this class
    */
   void SetPropagationLossModel (Ptr<const PropagationLossModel> model);
+
+protected:
+  void DoDispose () override;
+
 private:
   /**
    * This class Represents a single oscillator
@@ -119,7 +122,7 @@ private:
   void SetDopplerFrequencyHz (double dopplerFrequencyHz);
 
   /**
-   *
+   * Builds the object Oscillators
    */
   void ConstructOscillators ();
 private:

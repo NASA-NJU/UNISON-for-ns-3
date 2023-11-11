@@ -62,7 +62,7 @@ const uint32_t PCAP_SNAPLEN   = 64;         //!< Don't bother to save much data.
 
 /**
  * \ingroup system-tests-tcp
- * 
+ *
  * \brief Tests of TCP implementation loss behavior.
  */
 class Ns3TcpLossTestCase : public TestCase
@@ -72,19 +72,19 @@ public:
 
   /**
    * Constructor.
-   * 
+   *
    * \param tcpModel The TCP model name.
    * \param testCase Testcase number.
    */
   Ns3TcpLossTestCase (std::string tcpModel, uint32_t testCase);
-  virtual ~Ns3TcpLossTestCase ()
+  ~Ns3TcpLossTestCase () override
   {
   }
 
 private:
-  virtual void DoSetup (void);
-  virtual void DoRun (void);
-  virtual void DoTeardown (void);
+  void DoSetup () override;
+  void DoRun () override;
+  void DoTeardown () override;
 
   Ptr<OutputStreamWrapper> m_osw; //!< The output stream.
   std::string m_pcapFilename;     //!< The PCAP filename.
@@ -101,7 +101,7 @@ private:
   /**
    * Check that the transmitted packets are consitent with the trace.
    * This callback is hooked to ns3::Ipv4L3Protocol/Tx.
-   * 
+   *
    * \param context The callback context (unused).
    * \param packet The transmitted packet.
    * \param ipv4 The IPv4 object that did send the packet (unused).
@@ -110,21 +110,21 @@ private:
   void Ipv4L3Tx (std::string context, Ptr<const Packet> packet, Ptr<Ipv4> ipv4, uint32_t interface);
   /**
    * CWND trace.
-   * 
+   *
    * \param oldval The old value.
    * \param newval The new value.
    */
   void CwndTracer (uint32_t oldval, uint32_t newval);
   /**
    * Write to the socket until the buffer is full.
-   * 
+   *
    * \param localSocket The output socket.
    * \param txSpace The space left on the socket (unused).
    */
   void WriteUntilBufferFull (Ptr<Socket> localSocket, uint32_t txSpace);
   /**
    * Start transmitting a TCP flow.
-   * 
+   *
    * \param localSocket The sending socket.
    * \param servAddress The IPv4 address of the server (i.e., the destination address).
    * \param servPort The TCP port of the server (i.e., the destination port).
@@ -160,7 +160,7 @@ Ns3TcpLossTestCase::Ns3TcpLossTestCase (std::string tcpModel, uint32_t testCase)
 }
 
 void
-Ns3TcpLossTestCase::DoSetup (void)
+Ns3TcpLossTestCase::DoSetup ()
 {
   // This test was written before SACK was added to ns-3
   Config::SetDefault ("ns3::TcpSocketBase::Sack", BooleanValue (false));
@@ -192,7 +192,7 @@ Ns3TcpLossTestCase::DoSetup (void)
 }
 
 void
-Ns3TcpLossTestCase::DoTeardown (void)
+Ns3TcpLossTestCase::DoTeardown ()
 {
   m_pcapFile.Close ();
 }
@@ -233,7 +233,11 @@ Ns3TcpLossTestCase::Ipv4L3Tx (std::string, Ptr<const Packet> packet, Ptr<Ipv4>, 
       // file and see if it still does the right thing.
       //
       uint8_t expectedBuffer[PCAP_SNAPLEN];
-      uint32_t tsSec, tsUsec, inclLen, origLen, readLen;
+      uint32_t tsSec;
+      uint32_t tsUsec;
+      uint32_t inclLen;
+      uint32_t origLen;
+      uint32_t readLen;
       m_pcapFile.Read (expectedBuffer, sizeof(expectedBuffer), tsSec, tsUsec, inclLen, origLen, readLen);
 
       NS_LOG_INFO ("read " << readLen << " bytes");
@@ -243,7 +247,8 @@ Ns3TcpLossTestCase::Ipv4L3Tx (std::string, Ptr<const Packet> packet, Ptr<Ipv4>, 
 
       int result = memcmp (actual, expectedBuffer, readLen);
 
-      TcpHeader expectedHeader, receivedHeader;
+      TcpHeader expectedHeader;
+      TcpHeader receivedHeader;
       Ptr<Packet> expected = Create<Packet> (expectedBuffer, readLen);
 
       expected->RemoveHeader (expectedHeader);
@@ -296,7 +301,7 @@ Ns3TcpLossTestCase::WriteUntilBufferFull (Ptr<Socket> localSocket, uint32_t)
           std::clog << "Submitting " << toWrite
                     << " bytes to TCP socket" << std::endl;
         }
-      int amountSent = localSocket->Send (0, toWrite, 0);
+      int amountSent = localSocket->Send (nullptr, toWrite, 0);
       NS_ASSERT (amountSent > 0);  // Given GetTxAvailable() non-zero, amountSent should not be zero
       m_currentTxBytes += amountSent;
     }
@@ -333,7 +338,7 @@ Ns3TcpLossTestCase::StartFlow (Ptr<Socket> localSocket,
 }
 
 void
-Ns3TcpLossTestCase::DoRun (void)
+Ns3TcpLossTestCase::DoRun ()
 {
   // Network topology
   //
@@ -347,7 +352,7 @@ Ns3TcpLossTestCase::DoRun (void)
 
   std::ostringstream tcpModel;
   tcpModel << "ns3::Tcp" << m_tcpModel;
-  if (m_tcpModel.compare ("WestwoodPlus") == 0)
+  if (m_tcpModel == "WestwoodPlus")
     {
       Config::SetDefault ("ns3::TcpL4Protocol::SocketType",
                           TypeIdValue (TcpWestwood::GetTypeId ()));
@@ -508,7 +513,7 @@ Ns3TcpLossTestCase::DoRun (void)
 
 /**
  * \ingroup system-tests-tcp
- * 
+ *
  * TCP implementation loss behavior TestSuite.
  */
 class Ns3TcpLossTestSuite : public TestSuite

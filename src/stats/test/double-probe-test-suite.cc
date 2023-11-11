@@ -26,12 +26,12 @@ public:
    * \brief Get the type ID.
    * \return The object TypeId.
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
   SampleEmitter ()
   {
     m_var = CreateObject<ExponentialRandomVariable> ();
   }
-  virtual ~SampleEmitter ()
+  ~SampleEmitter () override
   {
   }
   /// Start emission of data.
@@ -72,7 +72,7 @@ private:
 
 
 TypeId
-SampleEmitter::GetTypeId (void)
+SampleEmitter::GetTypeId ()
 {
   static TypeId tid = TypeId ("SampleEmitter")
     .SetParent<Object> ()
@@ -93,10 +93,10 @@ class ProbeTestCase1 : public TestCase
 {
 public:
   ProbeTestCase1 ();
-  virtual ~ProbeTestCase1 ();
+  ~ProbeTestCase1 () override;
 
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
 
   /**
    * Trace sink.
@@ -140,7 +140,7 @@ ProbeTestCase1::TraceSink (std::string context, double oldValue, double newValue
 }
 
 void
-ProbeTestCase1::DoRun (void)
+ProbeTestCase1::DoRun ()
 {
   // Defer creation of this until here because it is a random variable
   m_s = CreateObject<SampleEmitter> ();

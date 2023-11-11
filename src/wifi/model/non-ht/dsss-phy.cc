@@ -38,14 +38,15 @@ NS_LOG_COMPONENT_DEFINE ("DsssPhy");
  *       HR/DSSS PHY (IEEE 802.11-2016, clause 16)
  *******************************************************/
 
-/* *NS_CHECK_STYLE_OFF* */
+// clang-format off
+
 const PhyEntity::PpduFormats DsssPhy::m_dsssPpduFormats {
-  { WIFI_PREAMBLE_LONG,  { WIFI_PPDU_FIELD_PREAMBLE,      //PHY preamble
-                           WIFI_PPDU_FIELD_NON_HT_HEADER, //PHY header
-                           WIFI_PPDU_FIELD_DATA } },
-  { WIFI_PREAMBLE_SHORT, { WIFI_PPDU_FIELD_PREAMBLE,      //Short PHY preamble
-                           WIFI_PPDU_FIELD_NON_HT_HEADER, //Short PHY header
-                           WIFI_PPDU_FIELD_DATA } }
+    { WIFI_PREAMBLE_LONG,  { WIFI_PPDU_FIELD_PREAMBLE,      // PHY preamble
+                             WIFI_PPDU_FIELD_NON_HT_HEADER, // PHY header
+                             WIFI_PPDU_FIELD_DATA } },
+    { WIFI_PREAMBLE_SHORT, { WIFI_PPDU_FIELD_PREAMBLE,      // Short PHY preamble
+                             WIFI_PPDU_FIELD_NON_HT_HEADER, // Short PHY header
+                             WIFI_PPDU_FIELD_DATA } }
 };
 
 const PhyEntity::ModulationLookupTable DsssPhy::m_dsssModulationLookupTable {
@@ -55,7 +56,8 @@ const PhyEntity::ModulationLookupTable DsssPhy::m_dsssModulationLookupTable {
   { "DsssRate5_5Mbps", { WIFI_CODE_RATE_UNDEFINED, 16 } },
   { "DsssRate11Mbps",  { WIFI_CODE_RATE_UNDEFINED, 256 } }
 };
-/* *NS_CHECK_STYLE_ON* */
+
+// clang-format on
 
 /// DSSS rates in bits per second
 static const std::array<uint64_t, 4> s_dsssRatesBpsList = {1000000,  2000000, 5500000, 11000000};
@@ -65,7 +67,7 @@ static const std::array<uint64_t, 4> s_dsssRatesBpsList = {1000000,  2000000, 55
  *
  * \return the DSSS rates in bits per second
  */
-const std::array<uint64_t, 4>& GetDsssRatesBpsList (void)
+const std::array<uint64_t, 4>& GetDsssRatesBpsList ()
 {
   return s_dsssRatesBpsList;
 };
@@ -116,7 +118,7 @@ DsssPhy::GetHeaderMode (const WifiTxVector& txVector) const
 }
 
 const PhyEntity::PpduFormats &
-DsssPhy::GetPpduFormats (void) const
+DsssPhy::GetPpduFormats () const
 {
   return m_dsssPpduFormats;
 }
@@ -182,8 +184,9 @@ Ptr<WifiPpdu>
 DsssPhy::BuildPpdu (const WifiConstPsduMap & psdus, const WifiTxVector& txVector, Time ppduDuration)
 {
   NS_LOG_FUNCTION (this << psdus << txVector << ppduDuration);
-  return Create<DsssPpdu> (psdus.begin ()->second, txVector, ppduDuration,
-                           ObtainNextUid (txVector));
+  return Create<DsssPpdu> (psdus.begin ()->second, txVector,
+                           m_wifiPhy->GetOperatingChannel ().GetPrimaryChannelCenterFrequency (txVector.GetChannelWidth ()),
+                           ppduDuration, ObtainNextUid (txVector));
 }
 
 PhyEntity::PhyFieldRxStatus
@@ -237,10 +240,15 @@ DsssPhy::GetRxChannelWidth (const WifiTxVector& txVector) const
   return PhyEntity::GetRxChannelWidth (txVector);
 }
 
-Ptr<SpectrumValue>
-DsssPhy::GetTxPowerSpectralDensity (double txPowerW, Ptr<const WifiPpdu> ppdu) const
+uint16_t
+DsssPhy::GetMeasurementChannelWidth (const Ptr<const WifiPpdu> ppdu) const
 {
-  const WifiTxVector& txVector = ppdu->GetTxVector ();
+  return ppdu ? GetRxChannelWidth (ppdu->GetTxVector ()) : 22;
+}
+
+Ptr<SpectrumValue>
+DsssPhy::GetTxPowerSpectralDensity (double txPowerW, Ptr<const WifiPpdu> /* ppdu */, const WifiTxVector& txVector) const
+{
   uint16_t centerFrequency = GetCenterFrequencyForChannelWidth (txVector);
   uint16_t channelWidth = txVector.GetChannelWidth ();
   NS_LOG_FUNCTION (this << centerFrequency << channelWidth << txPowerW);
@@ -250,7 +258,7 @@ DsssPhy::GetTxPowerSpectralDensity (double txPowerW, Ptr<const WifiPpdu> ppdu) c
 }
 
 void
-DsssPhy::InitializeModes (void)
+DsssPhy::InitializeModes ()
 {
   for (const auto & rate : GetDsssRatesBpsList ())
     {
@@ -361,7 +369,7 @@ DsssPhy::IsAllowed (const WifiTxVector& /*txVector*/)
 }
 
 uint32_t
-DsssPhy::GetMaxPsduSize (void) const
+DsssPhy::GetMaxPsduSize () const
 {
   return 4095;
 }
@@ -373,7 +381,7 @@ namespace {
 /**
  * Constructor class for DSSS modes
  */
-static class ConstructorDsss
+class ConstructorDsss
 {
 public:
   ConstructorDsss ()

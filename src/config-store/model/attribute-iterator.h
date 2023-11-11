@@ -12,10 +12,10 @@
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- * 
+ *
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
- 
+
 #ifndef ATTRIBUTE_ITERATOR_H
 #define ATTRIBUTE_ITERATOR_H
 
@@ -29,7 +29,7 @@ namespace ns3 {
 /**
  * \ingroup configstore
  *
- * \brief Iterator to iterate on the values of attributes of an ns3::Object 
+ * \brief Iterator to iterate on the values of attributes of an ns3::Object
  * \note This class is used internally by ConfigStore and GtkConfigStore.
  */
 class AttributeIterator
@@ -41,17 +41,17 @@ public:
   /**
    * Start the process of iterating all objects from the root namespace object
    */
-  void Iterate (void);
+  void Iterate ();
 protected:
   /**
    * Get the current attribute path
    * \returns the current path string
    */
-  std::string GetCurrentPath (void) const;
+  std::string GetCurrentPath () const;
 private:
   /**
    * This method visits and performs a config-store action (such as saving
-   * to a text file) on the attribute values corresponding to the input 
+   * to a text file) on the attribute values corresponding to the input
    * object pointer and attribute name.
    *
    * \param object the object visited
@@ -67,7 +67,7 @@ private:
    * This method is called to end the process of visiting the currently
    * visited object.
    */
-  virtual void DoEndVisitObject (void);
+  virtual void DoEndVisitObject ();
   /**
    * Visit the attribute of type ns3::PointerValue, with the provided name,
    * found on the object pointed to by the first argument.
@@ -80,7 +80,7 @@ private:
   /**
    * End the visit to the attribute of type ns3::PointerValue.
    */
-  virtual void DoEndVisitPointerAttribute (void);
+  virtual void DoEndVisitPointerAttribute ();
   /**
    * Visit the attribute of type ns3::ObjectVectorValue, with the
    * provided name, found on the object pointed to by the first argument.
@@ -89,13 +89,13 @@ private:
    *
    * \param object the object on which the attribute of type ObjectVectorValue resides
    * \param name the attribute name provided
-   * \param [in] vector the ObjectPtrContainerValue corresponding to the named attribute 
+   * \param [in] vector the ObjectPtrContainerValue corresponding to the named attribute
    */
   virtual void DoStartVisitArrayAttribute (Ptr<Object> object, std::string name, const ObjectPtrContainerValue &vector);
   /**
    * End the visit to the attribute of type ns3::ObjectVectorValue.
    */
-  virtual void DoEndVisitArrayAttribute (void);
+  virtual void DoEndVisitArrayAttribute ();
   /**
    * Start to visit the object found in the input array at the provided index
    * \param vector the array
@@ -106,7 +106,7 @@ private:
   /**
    * End the visit to the array item
    */
-  virtual void DoEndVisitArrayItem (void);
+  virtual void DoEndVisitArrayItem ();
 
   /**
    * Perform the iteration
@@ -140,7 +140,7 @@ private:
   /**
    * End the visit to the object
    */
-  void EndVisitObject (void);
+  void EndVisitObject ();
   /**
    * Visit the attribute of type ns3::PointerValue, with the provided name,
    * found on the object pointed to by the first argument.
@@ -153,7 +153,7 @@ private:
   /**
    * End the visit to the attribute of type ns3::PointerValue.
    */
-  void EndVisitPointerAttribute (void);
+  void EndVisitPointerAttribute ();
   /**
    * Visit the attribute of type ns3::ObjectVectorValue, with the
    * provided name, found on the object pointed to by the first argument.
@@ -162,13 +162,13 @@ private:
    *
    * \param object the object on which the attribute of type ObjectVectorValue resides
    * \param name the attribute name provided
-   * \param [in] vector the ObjectPtrContainerValue corresponding to the named attribute 
+   * \param [in] vector the ObjectPtrContainerValue corresponding to the named attribute
    */
   void StartVisitArrayAttribute (Ptr<Object> object, std::string name, const ObjectPtrContainerValue &vector);
   /**
    * End the visit to the attribute of type ns3::ObjectVectorValue.
    */
-  void EndVisitArrayAttribute (void);
+  void EndVisitArrayAttribute ();
   /**
    * Start to visit the object found in the input array at the provided index
    * \param vector the array
@@ -179,7 +179,7 @@ private:
   /**
    * End the visit to the array item
    */
-  void EndVisitArrayItem (void);
+  void EndVisitArrayItem ();
 
 
   std::vector<Ptr<Object> > m_examined; ///< list of attributes examined

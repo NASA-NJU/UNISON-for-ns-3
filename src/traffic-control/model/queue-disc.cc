@@ -36,7 +36,7 @@ NS_LOG_COMPONENT_DEFINE ("QueueDisc");
 
 NS_OBJECT_ENSURE_REGISTERED (QueueDiscClass);
 
-TypeId QueueDiscClass::GetTypeId (void)
+TypeId QueueDiscClass::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::QueueDiscClass")
     .SetParent<Object> ()
@@ -61,15 +61,15 @@ QueueDiscClass::~QueueDiscClass ()
 }
 
 void
-QueueDiscClass::DoDispose (void)
+QueueDiscClass::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
-  m_queueDisc = 0;
+  m_queueDisc = nullptr;
   Object::DoDispose ();
 }
 
 Ptr<QueueDisc>
-QueueDiscClass::GetQueueDisc (void) const
+QueueDiscClass::GetQueueDisc () const
 {
   NS_LOG_FUNCTION (this);
   return m_queueDisc;
@@ -204,7 +204,7 @@ QueueDisc::Stats::Print (std::ostream &os) const
   while (itp != nDroppedPacketsBeforeEnqueue.end () &&
          itb != nDroppedBytesBeforeEnqueue.end ())
     {
-      NS_ASSERT (itp->first.compare (itb->first) == 0);
+      NS_ASSERT (itp->first == itb->first);
       os << std::endl << "  " << itp->first << ": "
          << itp->second << " / " << itb->second;
       itp++;
@@ -221,7 +221,7 @@ QueueDisc::Stats::Print (std::ostream &os) const
   while (itp != nDroppedPacketsAfterDequeue.end () &&
          itb != nDroppedBytesAfterDequeue.end ())
     {
-      NS_ASSERT (itp->first.compare (itb->first) == 0);
+      NS_ASSERT (itp->first == itb->first);
       os << std::endl << "  " << itp->first << ": "
          << itp->second << " / " << itb->second;
       itp++;
@@ -241,7 +241,7 @@ QueueDisc::Stats::Print (std::ostream &os) const
   while (itp != nMarkedPackets.end () &&
          itb != nMarkedBytes.end ())
     {
-      NS_ASSERT (itp->first.compare (itb->first) == 0);
+      NS_ASSERT (itp->first == itb->first);
       os << std::endl << "  " << itp->first << ": "
          << itp->second << " / " << itb->second;
       itp++;
@@ -259,7 +259,7 @@ std::ostream & operator << (std::ostream &os, const QueueDisc::Stats &stats)
 
 NS_OBJECT_ENSURE_REGISTERED (QueueDisc);
 
-TypeId QueueDisc::GetTypeId (void)
+TypeId QueueDisc::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::QueueDisc")
     .SetParent<Object> ()
@@ -379,15 +379,15 @@ QueueDisc::~QueueDisc ()
 }
 
 void
-QueueDisc::DoDispose (void)
+QueueDisc::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
   m_queues.clear ();
   m_filters.clear ();
   m_classes.clear ();
-  m_devQueueIface = 0;
+  m_devQueueIface = nullptr;
   m_send = nullptr;
-  m_requeued = 0;
+  m_requeued = nullptr;
   m_internalQueueDbeFunctor = nullptr;
   m_internalQueueDadFunctor = nullptr;
   m_childQueueDiscDbeFunctor = nullptr;
@@ -396,7 +396,7 @@ QueueDisc::DoDispose (void)
 }
 
 void
-QueueDisc::DoInitialize (void)
+QueueDisc::DoInitialize ()
 {
   NS_LOG_FUNCTION (this);
 
@@ -416,7 +416,7 @@ QueueDisc::DoInitialize (void)
 }
 
 const QueueDisc::Stats&
-QueueDisc::GetStats (void)
+QueueDisc::GetStats ()
 {
   NS_ASSERT (m_stats.nTotalDroppedPackets == m_stats.nTotalDroppedPacketsBeforeEnqueue
              + m_stats.nTotalDroppedPacketsAfterDequeue);
@@ -442,14 +442,14 @@ QueueDisc::GetNPackets () const
 }
 
 uint32_t
-QueueDisc::GetNBytes (void) const
+QueueDisc::GetNBytes () const
 {
   NS_LOG_FUNCTION (this);
   return m_nBytes;
 }
 
 QueueSize
-QueueDisc::GetMaxSize (void) const
+QueueDisc::GetMaxSize () const
 {
   NS_LOG_FUNCTION (this);
 
@@ -518,7 +518,7 @@ QueueDisc::SetMaxSize (QueueSize size)
 }
 
 QueueSize
-QueueDisc::GetCurrentSize (void)
+QueueDisc::GetCurrentSize ()
 {
   NS_LOG_FUNCTION (this);
 
@@ -541,7 +541,7 @@ QueueDisc::SetNetDeviceQueueInterface (Ptr<NetDeviceQueueInterface> ndqi)
 }
 
 Ptr<NetDeviceQueueInterface>
-QueueDisc::GetNetDeviceQueueInterface (void) const
+QueueDisc::GetNetDeviceQueueInterface () const
 {
   NS_LOG_FUNCTION (this);
   return m_devQueueIface;
@@ -555,7 +555,7 @@ QueueDisc::SetSendCallback (SendCallback func)
 }
 
 QueueDisc::SendCallback
-QueueDisc::GetSendCallback (void) const
+QueueDisc::GetSendCallback () const
 {
   NS_LOG_FUNCTION (this);
   return m_send;
@@ -569,7 +569,7 @@ QueueDisc::SetQuota (const uint32_t quota)
 }
 
 uint32_t
-QueueDisc::GetQuota (void) const
+QueueDisc::GetQuota () const
 {
   NS_LOG_FUNCTION (this);
   return m_quota;
@@ -603,7 +603,7 @@ QueueDisc::GetInternalQueue (std::size_t i) const
 }
 
 std::size_t
-QueueDisc::GetNInternalQueues (void) const
+QueueDisc::GetNInternalQueues () const
 {
   return m_queues.size ();
 }
@@ -623,7 +623,7 @@ QueueDisc::GetPacketFilter (std::size_t i) const
 }
 
 std::size_t
-QueueDisc::GetNPacketFilters (void) const
+QueueDisc::GetNPacketFilters () const
 {
   return m_filters.size ();
 }
@@ -632,7 +632,7 @@ void
 QueueDisc::AddQueueDiscClass (Ptr<QueueDiscClass> qdClass)
 {
   NS_LOG_FUNCTION (this);
-  NS_ABORT_MSG_IF (qdClass->GetQueueDisc () == 0, "Cannot add a class with no attached queue disc");
+  NS_ABORT_MSG_IF (!qdClass->GetQueueDisc (), "Cannot add a class with no attached queue disc");
   // the child queue disc cannot be one with wake mode equal to WAKE_CHILD because
   // such queue discs do not implement the enqueue/dequeue methods
   NS_ABORT_MSG_IF (qdClass->GetQueueDisc ()->GetWakeMode () == WAKE_CHILD,
@@ -664,7 +664,7 @@ QueueDisc::GetQueueDiscClass (std::size_t i) const
 }
 
 std::size_t
-QueueDisc::GetNQueueDiscClasses (void) const
+QueueDisc::GetNQueueDiscClasses () const
 {
   return m_classes.size ();
 }
@@ -684,7 +684,7 @@ QueueDisc::Classify (Ptr<QueueDiscItem> item)
 }
 
 QueueDisc::WakeMode
-QueueDisc::GetWakeMode (void) const
+QueueDisc::GetWakeMode () const
 {
   return WAKE_ROOT;
 }
@@ -891,7 +891,7 @@ QueueDisc::Enqueue (Ptr<QueueDiscItem> item)
 }
 
 Ptr<QueueDiscItem>
-QueueDisc::Dequeue (void)
+QueueDisc::Dequeue ()
 {
   NS_LOG_FUNCTION (this);
 
@@ -902,7 +902,7 @@ QueueDisc::Dequeue (void)
 
   if (item)
     {
-      m_requeued = 0;
+      m_requeued = nullptr;
       if (m_peeked)
         {
           // If the packet was requeued because a peek operation was requested
@@ -925,14 +925,14 @@ QueueDisc::Dequeue (void)
 }
 
 Ptr<const QueueDiscItem>
-QueueDisc::Peek (void)
+QueueDisc::Peek ()
 {
   NS_LOG_FUNCTION (this);
   return DoPeek ();
 }
 
 Ptr<const QueueDiscItem>
-QueueDisc::DoPeek (void)
+QueueDisc::DoPeek ()
 {
   NS_LOG_FUNCTION (this);
 
@@ -950,7 +950,7 @@ QueueDisc::DoPeek (void)
 }
 
 void
-QueueDisc::Run (void)
+QueueDisc::Run ()
 {
   NS_LOG_FUNCTION (this);
 
@@ -971,7 +971,7 @@ QueueDisc::Run (void)
 }
 
 bool
-QueueDisc::RunBegin (void)
+QueueDisc::RunBegin ()
 {
   NS_LOG_FUNCTION (this);
   if (m_running)
@@ -984,18 +984,18 @@ QueueDisc::RunBegin (void)
 }
 
 void
-QueueDisc::RunEnd (void)
+QueueDisc::RunEnd ()
 {
   NS_LOG_FUNCTION (this);
   m_running = false;
 }
 
 bool
-QueueDisc::Restart (void)
+QueueDisc::Restart ()
 {
   NS_LOG_FUNCTION (this);
   Ptr<QueueDiscItem> item = DequeuePacket();
-  if (item == 0)
+  if (!item)
     {
       NS_LOG_LOGIC ("No packet to send");
       return false;
@@ -1012,7 +1012,7 @@ QueueDisc::DequeuePacket ()
   Ptr<QueueDiscItem> item;
 
   // First check if there is a requeued packet
-  if (m_requeued != 0)
+  if (m_requeued)
     {
         // If the queue where the requeued packet is destined to is not stopped, return
         // the requeued packet; otherwise, return an empty packet.
@@ -1020,7 +1020,7 @@ QueueDisc::DequeuePacket ()
         if (!m_devQueueIface || !m_devQueueIface->GetTxQueue (m_requeued->GetTxQueueIndex ())->IsStopped ())
           {
             item = m_requeued;
-            m_requeued = 0;
+            m_requeued = nullptr;
             if (m_peeked)
               {
                 // If the packet was requeued because a peek operation was requested
@@ -1043,7 +1043,7 @@ QueueDisc::DequeuePacket ()
         {
           item = Dequeue ();
           // If the item is not null, add the header to the packet.
-          if (item != 0)
+          if (item)
             {
               item->AddHeader ();
             }

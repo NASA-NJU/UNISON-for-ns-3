@@ -18,7 +18,7 @@
  * Author: Yufei Cheng   <yfcheng@ittc.ku.edu>
  *
  * James P.G. Sterbenz <jpgs@ittc.ku.edu>, director
- * ResiliNets Research Group  http://wiki.ittc.ku.edu/resilinets
+ * ResiliNets Research Group  https://resilinets.org/
  * Information and Telecommunication Technology Center (ITTC)
  * and Department of Electrical Engineering and Computer Science
  * The University of Kansas Lawrence, KS USA.
@@ -58,7 +58,7 @@ public:
    * \param exp expiration time
    * \param p protocol number
    */
-  DsrPassiveBuffEntry (Ptr<const Packet> pa = 0, Ipv4Address d = Ipv4Address (), Ipv4Address s = Ipv4Address (),
+  DsrPassiveBuffEntry (Ptr<const Packet> pa = nullptr, Ipv4Address d = Ipv4Address (), Ipv4Address s = Ipv4Address (),
                        Ipv4Address n = Ipv4Address (), uint16_t i = 0, uint16_t f = 0, uint8_t seg = 0, Time exp = Simulator::Now (),
                        uint8_t p = 0)
     : m_packet (pa),
@@ -265,7 +265,7 @@ public:
   static TypeId GetTypeId ();
 
   DsrPassiveBuffer ();
-  virtual ~DsrPassiveBuffer ();
+  ~DsrPassiveBuffer () override;
 
   /// Push entry in queue, if there is no entry with the same packet and destination address in queue.
   /// \param entry Buffer Entry

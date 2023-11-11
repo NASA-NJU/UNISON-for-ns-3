@@ -75,20 +75,18 @@ class LteX2HandoverMeasuresTestCase : public TestCase
 {
 public:
   /**
-   *
+   * Constructor.
    *
    * \param nEnbs number of eNBs in the test
    * \param nUes number of UEs in the test
    * \param nDedicatedBearers number of bearers to be activated per UE
-   * \param checkPointEventList
-   * \param checkPointEventListName
+   * \param checkPointEventList list of check point events
+   * \param checkPointEventListName name of check point event list
    * \param useUdp true if UDP is to be used, false if TCP is to be used
    * \param schedulerType type of scheduler to be used (e.g. "ns3::PfFfMacScheduler")
    * \param handoverAlgorithmType type of handover algorithm to be used (e.g. "ns3::A3RsrpHandoverAlgorithm")
-   * \param admitHo
+   * \param admitHo true if Ho is admitted, false if it is not admitted
    * \param useIdealRrc true if ideal RRC is to be used, false if real RRC is to be used
-   *
-   * \return
    */
   LteX2HandoverMeasuresTestCase (uint32_t nEnbs, uint32_t nUes, uint32_t nDedicatedBearers,
                                  std::list<CheckPointEvent> checkPointEventList,
@@ -103,11 +101,11 @@ private:
    * \param nEnbs number of eNBs in the test
    * \param nUes number of UEs in the test
    * \param nDedicatedBearers number of bearers to be activated per UE
-   * \param checkPointEventListName
+   * \param checkPointEventListName name of check point event list
    * \param useUdp true if UDP is to be used, false if TCP is to be used
    * \param schedulerType the scheduler type
    * \param handoverAlgorithmType type of handover algorithm to be used (e.g. "ns3::A3RsrpHandoverAlgorithm")
-   * \param admitHo
+   * \param admitHo true if Ho is admitted, false if it is not admitted
    * \param useIdealRrc true if the ideal RRC should be used
    * \returns the name string
    */
@@ -116,7 +114,7 @@ private:
                                       bool useUdp, std::string schedulerType,
                                       std::string handoverAlgorithmType, bool admitHo,
                                       bool useIdealRrc);
-  virtual void DoRun (void);
+  void DoRun () override;
   /**
    * Check connected function
    * \param ueDevice the UE device
@@ -302,7 +300,7 @@ LteX2HandoverMeasuresTestCase::DoRun ()
   // Install Mobility Model in eNBs
   // eNBs are located along a line in the X axis
   Ptr<ListPositionAllocator> enbPositionAlloc = CreateObject<ListPositionAllocator> ();
-  for (uint16_t i = 0; i < m_nEnbs; i++)
+  for (uint32_t i = 0; i < m_nEnbs; i++)
     {
       Vector enbPosition (distance * (i + 1), 0, 0);
       enbPositionAlloc->Add (enbPosition);
@@ -317,7 +315,7 @@ LteX2HandoverMeasuresTestCase::DoRun ()
   MobilityHelper ueMobility;
   ueMobility.SetMobilityModel ("ns3::ConstantVelocityMobilityModel");
   ueMobility.Install (ueNodes);
-  for (uint16_t i = 0; i < m_nUes; i++)
+  for (uint32_t i = 0; i < m_nUes; i++)
     {
       ueNodes.Get (i)->GetObject<MobilityModel> ()->SetPosition (Vector (0, 0, 0));
       ueNodes.Get (i)->GetObject<ConstantVelocityMobilityModel> ()->SetVelocity (Vector (speed, 0, 0));
@@ -576,7 +574,7 @@ LteX2HandoverMeasuresTestCase::CheckConnected (Ptr<NetDevice> ueDevice, Ptr<NetD
   Ptr<LteEnbRrc> enbRrc = enbLteDevice->GetRrc ();
   uint16_t rnti = ueRrc->GetRnti ();
   Ptr<UeManager> ueManager = enbRrc->GetUeManager (rnti);
-  NS_TEST_ASSERT_MSG_NE (ueManager, 0, "RNTI " << rnti << " not found in eNB");
+  NS_TEST_ASSERT_MSG_NE (ueManager, nullptr, "RNTI " << rnti << " not found in eNB");
 
   UeManager::State ueManagerState = ueManager->GetState ();
   NS_TEST_ASSERT_MSG_EQ (ueManagerState, UeManager::CONNECTED_NORMALLY, "Wrong UeManager state!");
@@ -708,22 +706,25 @@ LteX2HandoverMeasuresTestSuite::LteX2HandoverMeasuresTestSuite ()
   Time checkInterval = Seconds (1);
 
   std::string cel1name ("ho: 0 -> 1");
-  std::list<CheckPointEvent> cel1;
-  cel1.push_back (CheckPointEvent (Seconds (1), Seconds (10.1), checkInterval, 0, 0));
-  cel1.push_back (CheckPointEvent (Seconds (11), Seconds (17), checkInterval, 0, 1));
+  const std::list<CheckPointEvent> cel1 {
+    CheckPointEvent (Seconds (1), Seconds (10.1), checkInterval, 0, 0),
+    CheckPointEvent (Seconds (11), Seconds (17), checkInterval, 0, 1),
+  };
 
   std::string cel2name ("ho: 0 -> 1 -> 2");
-  std::list<CheckPointEvent> cel2;
-  cel2.push_back (CheckPointEvent (Seconds (1), Seconds (10.1), checkInterval, 0, 0));
-  cel2.push_back (CheckPointEvent (Seconds (11), Seconds (17.1), checkInterval, 0, 1));
-  cel2.push_back (CheckPointEvent (Seconds (18), Seconds (24), checkInterval, 0, 2));
+  const std::list<CheckPointEvent> cel2 {
+    CheckPointEvent (Seconds (1), Seconds (10.1), checkInterval, 0, 0),
+    CheckPointEvent (Seconds (11), Seconds (17.1), checkInterval, 0, 1),
+    CheckPointEvent (Seconds (18), Seconds (24), checkInterval, 0, 2),
+  };
 
   std::string cel3name ("ho: 0 -> 1 -> 2 -> 3");
-  std::list<CheckPointEvent> cel3;
-  cel3.push_back (CheckPointEvent (Seconds (1), Seconds (10.1), checkInterval,  0, 0));
-  cel3.push_back (CheckPointEvent (Seconds (11), Seconds (17.1), checkInterval, 0, 1));
-  cel3.push_back (CheckPointEvent (Seconds (18), Seconds (24.1), checkInterval, 0, 2));
-  cel3.push_back (CheckPointEvent (Seconds (25), Seconds (37), checkInterval, 0, 3));
+  const std::list<CheckPointEvent> cel3 {
+    CheckPointEvent (Seconds (1), Seconds (10.1), checkInterval,  0, 0),
+    CheckPointEvent (Seconds (11), Seconds (17.1), checkInterval, 0, 1),
+    CheckPointEvent (Seconds (18), Seconds (24.1), checkInterval, 0, 2),
+    CheckPointEvent (Seconds (25), Seconds (37), checkInterval, 0, 3),
+  };
 
 
   int32_t useIdealRrc;

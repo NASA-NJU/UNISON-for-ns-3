@@ -29,10 +29,10 @@ class Ipv6AddressTestCase : public TestCase
 {
 public:
   Ipv6AddressTestCase ();
-  virtual ~Ipv6AddressTestCase ();
+  ~Ipv6AddressTestCase () override;
 
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
 };
 
 Ipv6AddressTestCase::Ipv6AddressTestCase ()
@@ -45,7 +45,7 @@ Ipv6AddressTestCase::~Ipv6AddressTestCase ()
 }
 
 void
-Ipv6AddressTestCase::DoRun (void)
+Ipv6AddressTestCase::DoRun ()
 {
   Ipv6Address ip = Ipv6Address ("2001:db8::1");
   uint8_t ipBytes[16];

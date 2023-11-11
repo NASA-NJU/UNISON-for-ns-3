@@ -32,8 +32,8 @@ class NetworkNumberAllocatorTestCase : public TestCase
 {
 public:
   NetworkNumberAllocatorTestCase ();
-  virtual void DoRun (void);
-  virtual void DoTeardown (void);
+  void DoRun () override;
+  void DoTeardown () override;
 };
 
 NetworkNumberAllocatorTestCase::NetworkNumberAllocatorTestCase ()
@@ -41,12 +41,12 @@ NetworkNumberAllocatorTestCase::NetworkNumberAllocatorTestCase ()
 {
 }
 void
-NetworkNumberAllocatorTestCase::DoTeardown (void)
+NetworkNumberAllocatorTestCase::DoTeardown ()
 {
   Ipv4AddressGenerator::Reset ();
 }
 void
-NetworkNumberAllocatorTestCase::DoRun (void)
+NetworkNumberAllocatorTestCase::DoRun ()
 {
   Ipv4Address network;
   Ipv4AddressGenerator::Init (Ipv4Address ("1.0.0.0"), Ipv4Mask ("255.0.0.0"),
@@ -89,8 +89,8 @@ class AddressAllocatorTestCase : public TestCase
 public:
   AddressAllocatorTestCase ();
 private:
-  virtual void DoRun (void);
-  virtual void DoTeardown (void);
+  void DoRun () override;
+  void DoTeardown () override;
 };
 
 AddressAllocatorTestCase::AddressAllocatorTestCase ()
@@ -99,7 +99,7 @@ AddressAllocatorTestCase::AddressAllocatorTestCase ()
 }
 
 void
-AddressAllocatorTestCase::DoRun (void)
+AddressAllocatorTestCase::DoRun ()
 {
   Ipv4Address address;
 
@@ -125,8 +125,8 @@ AddressAllocatorTestCase::DoRun (void)
   NS_TEST_EXPECT_MSG_EQ (address, Ipv4Address ("0.0.1.4"), "105");
 }
 
-void 
-AddressAllocatorTestCase::DoTeardown (void)
+void
+AddressAllocatorTestCase::DoTeardown ()
 {
   Ipv4AddressGenerator::Reset ();
   Simulator::Destroy ();
@@ -143,8 +143,8 @@ class NetworkAndAddressTestCase : public TestCase
 {
 public:
   NetworkAndAddressTestCase ();
-  virtual void DoRun (void);
-  virtual void DoTeardown (void);
+  void DoRun () override;
+  void DoTeardown () override;
 };
 
 NetworkAndAddressTestCase::NetworkAndAddressTestCase ()
@@ -153,14 +153,14 @@ NetworkAndAddressTestCase::NetworkAndAddressTestCase ()
 }
 
 void
-NetworkAndAddressTestCase::DoTeardown (void)
+NetworkAndAddressTestCase::DoTeardown ()
 {
   Ipv4AddressGenerator::Reset ();
   Simulator::Destroy ();
 }
 
 void
-NetworkAndAddressTestCase::DoRun (void)
+NetworkAndAddressTestCase::DoRun ()
 {
   Ipv4Address address;
   Ipv4Address network;
@@ -177,7 +177,7 @@ NetworkAndAddressTestCase::DoRun (void)
   address = Ipv4AddressGenerator::NextAddress (Ipv4Mask ("255.0.0.0"));
   NS_TEST_EXPECT_MSG_EQ (address, Ipv4Address ("4.0.0.5"), "203");
 
-  Ipv4AddressGenerator::Init (Ipv4Address ("0.3.0.0"), 
+  Ipv4AddressGenerator::Init (Ipv4Address ("0.3.0.0"),
                               Ipv4Mask ("255.255.0.0"), Ipv4Address ("0.0.0.3"));
   address = Ipv4AddressGenerator::NextAddress (Ipv4Mask ("255.255.0.0"));
   NS_TEST_EXPECT_MSG_EQ (address, Ipv4Address ("0.3.0.3"), "204");
@@ -213,8 +213,8 @@ class ExampleAddressGeneratorTestCase : public TestCase
 public:
   ExampleAddressGeneratorTestCase ();
 private:
-  virtual void DoRun (void);
-  virtual void DoTeardown (void);
+  void DoRun () override;
+  void DoTeardown () override;
 };
 
 ExampleAddressGeneratorTestCase::ExampleAddressGeneratorTestCase ()
@@ -223,17 +223,17 @@ ExampleAddressGeneratorTestCase::ExampleAddressGeneratorTestCase ()
 }
 
 void
-ExampleAddressGeneratorTestCase::DoTeardown (void)
+ExampleAddressGeneratorTestCase::DoTeardown ()
 {
   Ipv4AddressGenerator::Reset ();
 }
 
 void
-ExampleAddressGeneratorTestCase::DoRun (void)
+ExampleAddressGeneratorTestCase::DoRun ()
 {
   Ipv4Address address;
   //
-  // First, initialize our /24 network to 192.168.0.0 and begin 
+  // First, initialize our /24 network to 192.168.0.0 and begin
   // allocating with ip address 0.0.0.3 out of that prefix.
   //
   Ipv4AddressGenerator::Init (Ipv4Address ("192.168.0.0"),
@@ -245,7 +245,7 @@ ExampleAddressGeneratorTestCase::DoRun (void)
   address = Ipv4AddressGenerator::NextAddress (Ipv4Mask ("255.255.255.0"));
   NS_TEST_EXPECT_MSG_EQ (address, Ipv4Address ("192.168.0.5"), "302");
   //
-  // Allocate the next network out of our /24 network (this should be 
+  // Allocate the next network out of our /24 network (this should be
   // 192.168.1.0) and begin allocating with IP address 0.0.0.3 out of that
   // prefix.
   //
@@ -271,8 +271,8 @@ class AddressCollisionTestCase : public TestCase
 public:
   AddressCollisionTestCase ();
 private:
-  void DoRun (void);
-  void DoTeardown (void);
+  void DoRun () override;
+  void DoTeardown () override;
 };
 
 AddressCollisionTestCase::AddressCollisionTestCase ()
@@ -281,13 +281,13 @@ AddressCollisionTestCase::AddressCollisionTestCase ()
 }
 
 void
-AddressCollisionTestCase::DoTeardown (void)
+AddressCollisionTestCase::DoTeardown ()
 {
   Ipv4AddressGenerator::Reset ();
   Simulator::Destroy ();
 }
 void
-AddressCollisionTestCase::DoRun (void)
+AddressCollisionTestCase::DoRun ()
 {
   Ipv4AddressGenerator::AddAllocated ("0.0.0.5");
   Ipv4AddressGenerator::AddAllocated ("0.0.0.10");

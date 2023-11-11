@@ -49,7 +49,7 @@ static int32_t g_hash;
 
 /**
  * \ingroup system-tests-tc
- * 
+ *
  * Simple test packet filter able to classify IPv4 packets.
  */
 class Ipv4FqPieTestPacketFilter : public Ipv4PacketFilter
@@ -59,10 +59,10 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   Ipv4FqPieTestPacketFilter ();
-  virtual ~Ipv4FqPieTestPacketFilter ();
+  ~Ipv4FqPieTestPacketFilter () override;
 
 private:
   /**
@@ -70,18 +70,18 @@ private:
    * \param item The item to classify (unused).
    * \return a pre-set hash value.
    */
-  virtual int32_t DoClassify (Ptr<QueueDiscItem> item) const;
+  int32_t DoClassify (Ptr<QueueDiscItem> item) const override;
 
   /**
    * Check the protocol.
    * \param item The item to check (unused).
    * \return true.
    */
-  virtual bool CheckProtocol (Ptr<QueueDiscItem> item) const;
+  bool CheckProtocol (Ptr<QueueDiscItem> item) const override;
 };
 
 TypeId
-Ipv4FqPieTestPacketFilter::GetTypeId (void)
+Ipv4FqPieTestPacketFilter::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::Ipv4FqPieTestPacketFilter")
     .SetParent<Ipv4PacketFilter> ()
@@ -111,17 +111,17 @@ Ipv4FqPieTestPacketFilter::CheckProtocol (Ptr<QueueDiscItem> item) const
 
 /**
  * \ingroup system-tests-tc
- * 
+ *
  * This class tests packets for which there is no suitable filter.
  */
 class FqPieQueueDiscNoSuitableFilter : public TestCase
 {
 public:
   FqPieQueueDiscNoSuitableFilter ();
-  virtual ~FqPieQueueDiscNoSuitableFilter ();
+  ~FqPieQueueDiscNoSuitableFilter () override;
 
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
 };
 
 FqPieQueueDiscNoSuitableFilter::FqPieQueueDiscNoSuitableFilter ()
@@ -132,7 +132,7 @@ FqPieQueueDiscNoSuitableFilter::~FqPieQueueDiscNoSuitableFilter ()
 {}
 
 void
-FqPieQueueDiscNoSuitableFilter::DoRun (void)
+FqPieQueueDiscNoSuitableFilter::DoRun ()
 {
   // Packets that cannot be classified by the available filters should be dropped
   Ptr<FqPieQueueDisc> queueDisc = CreateObjectWithAttributes<FqPieQueueDisc> ("MaxSize", StringValue ("4p"));
@@ -162,17 +162,17 @@ FqPieQueueDiscNoSuitableFilter::DoRun (void)
 
 /**
  * \ingroup system-tests-tc
- * 
+ *
  * This class tests the IP flows separation and the packet limit.
  */
 class FqPieQueueDiscIPFlowsSeparationAndPacketLimit : public TestCase
 {
 public:
   FqPieQueueDiscIPFlowsSeparationAndPacketLimit ();
-  virtual ~FqPieQueueDiscIPFlowsSeparationAndPacketLimit ();
+  ~FqPieQueueDiscIPFlowsSeparationAndPacketLimit () override;
 
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
   /**
    * Enqueue a packet.
    * \param queue the queue disc
@@ -198,7 +198,7 @@ FqPieQueueDiscIPFlowsSeparationAndPacketLimit::AddPacket (Ptr<FqPieQueueDisc> qu
 }
 
 void
-FqPieQueueDiscIPFlowsSeparationAndPacketLimit::DoRun (void)
+FqPieQueueDiscIPFlowsSeparationAndPacketLimit::DoRun ()
 {
   Ptr<FqPieQueueDisc> queueDisc = CreateObjectWithAttributes<FqPieQueueDisc> ("MaxSize", StringValue ("4p"));
 
@@ -236,17 +236,17 @@ FqPieQueueDiscIPFlowsSeparationAndPacketLimit::DoRun (void)
 
 /**
  * \ingroup system-tests-tc
- * 
+ *
  * This class tests the deficit per flow.
  */
 class FqPieQueueDiscDeficit : public TestCase
 {
 public:
   FqPieQueueDiscDeficit ();
-  virtual ~FqPieQueueDiscDeficit ();
+  ~FqPieQueueDiscDeficit () override;
 
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
   /**
    * Enqueue a packet.
    * \param queue The queue disc.
@@ -272,7 +272,7 @@ FqPieQueueDiscDeficit::AddPacket (Ptr<FqPieQueueDisc> queue, Ipv4Header hdr)
 }
 
 void
-FqPieQueueDiscDeficit::DoRun (void)
+FqPieQueueDiscDeficit::DoRun ()
 {
   Ptr<FqPieQueueDisc> queueDisc = CreateObject<FqPieQueueDisc> ();
 
@@ -383,17 +383,17 @@ FqPieQueueDiscDeficit::DoRun (void)
 
 /**
  * \ingroup system-tests-tc
- * 
+ *
  * This class tests the TCP flows separation.
  */
 class FqPieQueueDiscTCPFlowsSeparation : public TestCase
 {
 public:
   FqPieQueueDiscTCPFlowsSeparation ();
-  virtual ~FqPieQueueDiscTCPFlowsSeparation ();
+  ~FqPieQueueDiscTCPFlowsSeparation () override;
 
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
   /**
    * Enqueue a packet.
    * \param queue The queue disc.
@@ -421,7 +421,7 @@ FqPieQueueDiscTCPFlowsSeparation::AddPacket (Ptr<FqPieQueueDisc> queue, Ipv4Head
 }
 
 void
-FqPieQueueDiscTCPFlowsSeparation::DoRun (void)
+FqPieQueueDiscTCPFlowsSeparation::DoRun ()
 {
   Ptr<FqPieQueueDisc> queueDisc = CreateObjectWithAttributes<FqPieQueueDisc> ("MaxSize", StringValue ("10p"));
 
@@ -475,17 +475,17 @@ FqPieQueueDiscTCPFlowsSeparation::DoRun (void)
 
 /**
  * \ingroup system-tests-tc
- * 
+ *
  * This class tests the UDP flows separation
  */
 class FqPieQueueDiscUDPFlowsSeparation : public TestCase
 {
 public:
   FqPieQueueDiscUDPFlowsSeparation ();
-  virtual ~FqPieQueueDiscUDPFlowsSeparation ();
+  ~FqPieQueueDiscUDPFlowsSeparation () override;
 
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
   /**
    * Enqueue a packet.
    * \param queue The queue disc.
@@ -513,7 +513,7 @@ FqPieQueueDiscUDPFlowsSeparation::AddPacket (Ptr<FqPieQueueDisc> queue, Ipv4Head
 }
 
 void
-FqPieQueueDiscUDPFlowsSeparation::DoRun (void)
+FqPieQueueDiscUDPFlowsSeparation::DoRun ()
 {
   Ptr<FqPieQueueDisc> queueDisc = CreateObjectWithAttributes<FqPieQueueDisc> ("MaxSize", StringValue ("10p"));
 
@@ -568,10 +568,10 @@ FqPieQueueDiscUDPFlowsSeparation::DoRun (void)
 
 /**
  * \ingroup system-tests-tc
- * 
+ *
  * \brief This class tests linear probing, collision response, and set
  * creation capability of set associative hashing in FqPIE.
- * 
+ *
  * This class tests linear probing, collision response, and set
  * creation capability of set associative hashing in FqPIE.
  * We modified DoClassify () and CheckProtocol () so that we could control
@@ -596,10 +596,10 @@ class FqPieQueueDiscSetLinearProbing : public TestCase
 {
 public:
   FqPieQueueDiscSetLinearProbing ();
-  virtual ~FqPieQueueDiscSetLinearProbing ();
+  ~FqPieQueueDiscSetLinearProbing () override;
 
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
   /**
    * Enqueue a packet.
    * \param queue The queue disc.
@@ -625,7 +625,7 @@ FqPieQueueDiscSetLinearProbing::AddPacket (Ptr<FqPieQueueDisc> queue, Ipv4Header
 }
 
 void
-FqPieQueueDiscSetLinearProbing::DoRun (void)
+FqPieQueueDiscSetLinearProbing::DoRun ()
 {
   Ptr<FqPieQueueDisc> queueDisc = CreateObjectWithAttributes<FqPieQueueDisc> ("EnableSetAssociativeHash", BooleanValue (true));
   queueDisc->SetQuantum (90);
@@ -693,9 +693,9 @@ FqPieQueueDiscSetLinearProbing::DoRun (void)
 
 /**
  * \ingroup system-tests-tc
- * 
- * \brief This class tests L4S mode. 
- * 
+ *
+ * \brief This class tests L4S mode.
+ *
  * This test is divided to sub test one without hash collisions and so ECT0 and ECT1 flows are
  * classified into different flows.
  * Sub Test 1
@@ -710,10 +710,10 @@ class FqPieQueueDiscL4sMode : public TestCase
 {
 public:
   FqPieQueueDiscL4sMode ();
-  virtual ~FqPieQueueDiscL4sMode ();
+  ~FqPieQueueDiscL4sMode () override;
 
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
   /**
    * Enqueue the given number of packets.
    * \param queue The queue disc.
@@ -791,14 +791,14 @@ FqPieQueueDiscL4sMode::DequeueWithDelay (Ptr<FqPieQueueDisc> queue, double delay
 }
 
 void
-FqPieQueueDiscL4sMode::DoRun (void)
+FqPieQueueDiscL4sMode::DoRun ()
 {
   // Test is divided into 2 sub test cases:
   // 1) Without hash collisions
   // 2) With hash collisions
 
   // Test case 1, Without hash collisions
-  Ptr<FqPieQueueDisc> queueDisc = CreateObjectWithAttributes<FqPieQueueDisc> ("MaxSize", StringValue ("10240p"), 
+  Ptr<FqPieQueueDisc> queueDisc = CreateObjectWithAttributes<FqPieQueueDisc> ("MaxSize", StringValue ("10240p"),
     "UseEcn", BooleanValue (true), "Perturbation", UintegerValue (0),
     "UseL4s", BooleanValue (true), "CeThreshold", TimeValue (MilliSeconds (2)));
 
@@ -843,7 +843,7 @@ FqPieQueueDiscL4sMode::DoRun (void)
   Simulator::Destroy ();
 
   // Test case 2, With hash collisions
-  queueDisc = CreateObjectWithAttributes<FqPieQueueDisc> ("MaxSize", StringValue ("10240p"), 
+  queueDisc = CreateObjectWithAttributes<FqPieQueueDisc> ("MaxSize", StringValue ("10240p"),
     "UseEcn", BooleanValue (true), "Perturbation", UintegerValue (0),
     "UseL4s", BooleanValue (true), "CeThreshold", TimeValue (MilliSeconds (2)));
 
@@ -886,7 +886,7 @@ FqPieQueueDiscL4sMode::DoRun (void)
 
 /**
  * \ingroup system-tests-tc
- * 
+ *
  * FQ-PIE queue disc test suite.
  */
 class FqPieQueueDiscTestSuite : public TestSuite

@@ -33,7 +33,7 @@ NS_LOG_COMPONENT_DEFINE ("LteTestEarfcn");
  * \ingroup lte-test
  * \ingroup tests
  *
- * \brief Test case that is testing if the frequency is properly generated 
+ * \brief Test case that is testing if the frequency is properly generated
  * from provided EARFCN frequency.
  */
 
@@ -48,14 +48,14 @@ public:
    * \param f frequency
    */
   LteEarfcnTestCase (const char* str, uint32_t earfcn, double f);
-  virtual ~LteEarfcnTestCase ();
+  ~LteEarfcnTestCase () override;
 
 protected:
   uint32_t m_earfcn; ///< the EARFCN
   double m_f; ///< the frequency
 
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
 };
 
 LteEarfcnTestCase::LteEarfcnTestCase (const char* str, uint32_t earfcn, double f)
@@ -70,8 +70,8 @@ LteEarfcnTestCase::~LteEarfcnTestCase ()
 {
 }
 
-void 
-LteEarfcnTestCase::DoRun (void)
+void
+LteEarfcnTestCase::DoRun ()
 {
   double f = LteSpectrumValueHelper::GetCarrierFrequency (m_earfcn);
   NS_TEST_ASSERT_MSG_EQ_TOL (f, m_f, 0.0000001, "wrong frequency");
@@ -81,8 +81,8 @@ LteEarfcnTestCase::DoRun (void)
  * \ingroup lte-test
  * \ingroup tests
  *
- * \brief 
- * Test case that is testing if the downlink frequency is properly 
+ * \brief
+ * Test case that is testing if the downlink frequency is properly
  * converted from provided downlink EARFCN frequency value.
  */
 
@@ -99,7 +99,7 @@ public:
   LteEarfcnDlTestCase (const char* str, uint32_t earfcn, double f);
 
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
 };
 
 LteEarfcnDlTestCase::LteEarfcnDlTestCase (const char* str, uint32_t earfcn, double f)
@@ -107,8 +107,8 @@ LteEarfcnDlTestCase::LteEarfcnDlTestCase (const char* str, uint32_t earfcn, doub
 {
 }
 
-void 
-LteEarfcnDlTestCase::DoRun (void)
+void
+LteEarfcnDlTestCase::DoRun ()
 {
 //   LogLevel logLevel = (LogLevel)(LOG_PREFIX_FUNC | LOG_PREFIX_TIME | LOG_LEVEL_ALL);
 //   LogComponentEnable ("LteSpectrumValueHelper", logLevel);
@@ -123,7 +123,7 @@ LteEarfcnDlTestCase::DoRun (void)
  * \ingroup lte-test
  * \ingroup tests
  *
- * \brief  Test case that is testing if the uplink frequency is properly 
+ * \brief  Test case that is testing if the uplink frequency is properly
  * converted from provided uplink EARFCN frequency value.
  */
 
@@ -140,7 +140,7 @@ public:
   LteEarfcnUlTestCase (const char* str, uint32_t earfcn, double f);
 
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
 };
 
 LteEarfcnUlTestCase::LteEarfcnUlTestCase (const char* str, uint32_t earfcn, double f)
@@ -148,8 +148,8 @@ LteEarfcnUlTestCase::LteEarfcnUlTestCase (const char* str, uint32_t earfcn, doub
 {
 }
 
-void 
-LteEarfcnUlTestCase::DoRun (void)
+void
+LteEarfcnUlTestCase::DoRun ()
 {
   double f = LteSpectrumValueHelper::GetUplinkCarrierFrequency (m_earfcn);
   NS_TEST_ASSERT_MSG_EQ_TOL (f, m_f, 0.0000001, "wrong frequency");

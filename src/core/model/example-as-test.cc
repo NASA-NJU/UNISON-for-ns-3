@@ -54,13 +54,13 @@ ExampleAsTestCase::ExampleAsTestCase (const std::string name,
   NS_LOG_FUNCTION (this << name << program << dataDir << args);
 }
 
-ExampleAsTestCase::~ExampleAsTestCase (void)
+ExampleAsTestCase::~ExampleAsTestCase ()
 {
   NS_LOG_FUNCTION_NOARGS ();
 }
 
 std::string
-ExampleAsTestCase::GetCommandTemplate (void) const
+ExampleAsTestCase::GetCommandTemplate () const
 {
   NS_LOG_FUNCTION_NOARGS ();
   std::string command ("%s ");
@@ -69,7 +69,7 @@ ExampleAsTestCase::GetCommandTemplate (void) const
 }
 
 std::string
-ExampleAsTestCase::GetPostProcessingCommand (void) const
+ExampleAsTestCase::GetPostProcessingCommand () const
 {
   NS_LOG_FUNCTION_NOARGS ();
   std::string command ("");
@@ -77,7 +77,7 @@ ExampleAsTestCase::GetPostProcessingCommand (void) const
 }
 
 void
-ExampleAsTestCase::DoRun (void)
+ExampleAsTestCase::DoRun ()
 {
   NS_LOG_FUNCTION_NOARGS ();
   // Set up the output file names
@@ -125,7 +125,7 @@ ExampleAsTestCase::DoRun (void)
 
   // Check that we're not just introspecting the command-line
   const char * envVar = std::getenv ("NS_COMMANDLINE_INTROSPECTION");
-  if (envVar != 0 && std::strlen (envVar) != 0)
+  if (envVar != nullptr && std::strlen (envVar) != 0)
     {
       return;
     }

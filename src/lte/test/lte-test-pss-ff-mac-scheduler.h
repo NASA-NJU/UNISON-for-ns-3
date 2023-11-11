@@ -34,12 +34,12 @@ using namespace ns3;
  * \ingroup lte-test
  * \ingroup tests
  *
- * \brief This system test program creates different test cases with a single eNB and 
- * several UEs, all having the same Radio Bearer specification. In each test 
- * case, the UEs see the same SINR from the eNB; different test cases are 
- * implemented obtained by using different SINR values and different numbers of 
- * UEs. The test consists on checking that the obtained throughput performance 
- * is equal among users is consistent with the definition of token bank fair  
+ * \brief This system test program creates different test cases with a single eNB and
+ * several UEs, all having the same Radio Bearer specification. In each test
+ * case, the UEs see the same SINR from the eNB; different test cases are
+ * implemented obtained by using different SINR values and different numbers of
+ * UEs. The test consists on checking that the obtained throughput performance
+ * is equal among users is consistent with the definition of token bank fair
  * queue scheduling
  */
 class LenaPssFfMacSchedulerTestCase1 : public TestCase
@@ -57,7 +57,7 @@ public:
    * \param errorModelEnabled if true the error model is enabled
    */
   LenaPssFfMacSchedulerTestCase1 (uint16_t nUser, double dist, double thrRefDl, double thrRefUl, uint16_t packetSize, uint16_t interval, bool  errorModelEnabled);
-  virtual ~LenaPssFfMacSchedulerTestCase1 ();
+  ~LenaPssFfMacSchedulerTestCase1 () override;
 
 private:
   /**
@@ -67,7 +67,7 @@ private:
    * \returns the name string
    */
   static std::string BuildNameString (uint16_t nUser, double dist);
-  virtual void DoRun (void);
+  void DoRun () override;
   uint16_t m_nUser; ///< number of UE nodes
   double m_dist; ///< the distance between nodes
   uint16_t m_packetSize;  ///< the packet size in bytes
@@ -82,7 +82,7 @@ private:
  * \ingroup lte-test
  * \ingroup tests
  *
- * \brief Simillar to the LenaPssFfMacSchedulerTestCase1 with the difference that 
+ * \brief Simillar to the LenaPssFfMacSchedulerTestCase1 with the difference that
  * UEs are places in such a way to experience different SINRs. Test checks if the
  * achieved throughput in such conditions has expected value.
  */
@@ -99,7 +99,7 @@ public:
    * \param errorModelEnabled if true the error model is enabled
    */
   LenaPssFfMacSchedulerTestCase2 (std::vector<double> dist, std::vector<uint32_t> estThrPssDl, std::vector<uint16_t> packetSize, uint16_t interval, bool  errorModelEnabled);
-  virtual ~LenaPssFfMacSchedulerTestCase2 ();
+  ~LenaPssFfMacSchedulerTestCase2 () override;
 
 private:
   /**
@@ -109,7 +109,7 @@ private:
    * \returns the name string
    */
   static std::string BuildNameString (uint16_t nUser, std::vector<double> dist);
-  virtual void DoRun (void);
+  void DoRun () override;
   uint16_t m_nUser; ///< number of UE nodes
   std::vector<double> m_dist; ///< the distance between nodes
   std::vector<uint16_t> m_packetSize;  ///< the packet size in bytes

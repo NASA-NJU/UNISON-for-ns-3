@@ -45,7 +45,7 @@ struct CaraWifiRemoteStation : public WifiRemoteStation
 NS_OBJECT_ENSURE_REGISTERED (CaraWifiManager);
 
 TypeId
-CaraWifiManager::GetTypeId (void)
+CaraWifiManager::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::CaraWifiManager")
     .SetParent<WifiRemoteStationManager> ()
@@ -110,7 +110,7 @@ CaraWifiManager::DoInitialize ()
 }
 
 WifiRemoteStation *
-CaraWifiManager::DoCreateStation (void) const
+CaraWifiManager::DoCreateStation () const
 {
   NS_LOG_FUNCTION (this);
   CaraWifiRemoteStation *station = new CaraWifiRemoteStation ();
@@ -197,9 +197,9 @@ CaraWifiManager::DoReportFinalDataFailed (WifiRemoteStation *st)
 }
 
 WifiTxVector
-CaraWifiManager::DoGetDataTxVector (WifiRemoteStation *st)
+CaraWifiManager::DoGetDataTxVector (WifiRemoteStation *st, uint16_t allowedWidth)
 {
-  NS_LOG_FUNCTION (this << st);
+  NS_LOG_FUNCTION (this << st << allowedWidth);
   CaraWifiRemoteStation *station = static_cast<CaraWifiRemoteStation*> (st);
   uint16_t channelWidth = GetChannelWidth (station);
   if (channelWidth > 20 && channelWidth != 22)

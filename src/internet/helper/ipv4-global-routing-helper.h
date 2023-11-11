@@ -46,13 +46,16 @@ public:
    */
   Ipv4GlobalRoutingHelper (const Ipv4GlobalRoutingHelper &o);
 
+  // Delete assignment operator to avoid misuse
+  Ipv4GlobalRoutingHelper &operator= (const Ipv4GlobalRoutingHelper &) = delete;
+
   /**
    * \returns pointer to clone of this Ipv4GlobalRoutingHelper
    *
    * This method is mainly for internal use by the other helpers;
    * clients are expected to free the dynamic memory allocated by this method
    */
-  Ipv4GlobalRoutingHelper* Copy (void) const;
+  Ipv4GlobalRoutingHelper* Copy () const override;
 
   /**
    * \param node the node on which the routing protocol will run
@@ -60,7 +63,7 @@ public:
    *
    * This method will be called by ns3::InternetStackHelper::Install
    */
-  virtual Ptr<Ipv4RoutingProtocol> Create (Ptr<Node> node) const;
+  Ptr<Ipv4RoutingProtocol> Create (Ptr<Node> node) const override;
 
   /**
    * \brief Build a routing database and initialize the routing tables of
@@ -71,12 +74,12 @@ public:
    * BuildGlobalRoutingDatabase () and  InitializeRoutes ().
    *
    */
-  static void PopulateRoutingTables (void);
+  static void PopulateRoutingTables ();
   /**
    * \brief Remove all routes that were previously installed in a prior call
-   * to either PopulateRoutingTables() or RecomputeRoutingTables(), and 
+   * to either PopulateRoutingTables() or RecomputeRoutingTables(), and
    * add a new set of routes.
-   * 
+   *
    * This method does not change the set of nodes
    * over which GlobalRouting is being used, but it will dynamically update
    * its representation of the global topology before recomputing routes.
@@ -84,14 +87,7 @@ public:
    * call RecomputeRoutingTables() at any later time in the simulation.
    *
    */
-  static void RecomputeRoutingTables (void);
-private:
-  /**
-   * \brief Assignment operator declared private and not implemented to disallow
-   * assignment and prevent the compiler from happily inserting its own.
-   * \return
-   */
-  Ipv4GlobalRoutingHelper &operator = (const Ipv4GlobalRoutingHelper &);
+  static void RecomputeRoutingTables ();
 };
 
 } // namespace ns3

@@ -32,7 +32,7 @@ NS_LOG_COMPONENT_DEFINE ("WifiRadioEnergyModel");
 NS_OBJECT_ENSURE_REGISTERED (WifiRadioEnergyModel);
 
 TypeId
-WifiRadioEnergyModel::GetTypeId (void)
+WifiRadioEnergyModel::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::WifiRadioEnergyModel")
     .SetParent<DeviceEnergyModel> ()
@@ -87,7 +87,7 @@ WifiRadioEnergyModel::GetTypeId (void)
 }
 
 WifiRadioEnergyModel::WifiRadioEnergyModel ()
-  : m_source (0),
+  : m_source (nullptr),
     m_currentState (WifiPhyState::IDLE),
     m_lastUpdateTime (Seconds (0.0)),
     m_nPendingChangeState (0)
@@ -104,7 +104,7 @@ WifiRadioEnergyModel::WifiRadioEnergyModel ()
 WifiRadioEnergyModel::~WifiRadioEnergyModel ()
 {
   NS_LOG_FUNCTION (this);
-  m_txCurrentModel = 0;
+  m_txCurrentModel = nullptr;
   delete m_listener;
 }
 
@@ -112,7 +112,7 @@ void
 WifiRadioEnergyModel::SetEnergySource (const Ptr<EnergySource> source)
 {
   NS_LOG_FUNCTION (this << source);
-  NS_ASSERT (source != NULL);
+  NS_ASSERT (source);
   m_source = source;
   m_switchToOffEvent.Cancel ();
   Time durationToOff = GetMaximumTimeInState (m_currentState);
@@ -120,7 +120,7 @@ WifiRadioEnergyModel::SetEnergySource (const Ptr<EnergySource> source)
 }
 
 double
-WifiRadioEnergyModel::GetTotalEnergyConsumption (void) const
+WifiRadioEnergyModel::GetTotalEnergyConsumption () const
 {
   NS_LOG_FUNCTION (this);
 
@@ -138,7 +138,7 @@ WifiRadioEnergyModel::GetTotalEnergyConsumption (void) const
 }
 
 double
-WifiRadioEnergyModel::GetIdleCurrentA (void) const
+WifiRadioEnergyModel::GetIdleCurrentA () const
 {
   NS_LOG_FUNCTION (this);
   return m_idleCurrentA;
@@ -152,7 +152,7 @@ WifiRadioEnergyModel::SetIdleCurrentA (double idleCurrentA)
 }
 
 double
-WifiRadioEnergyModel::GetCcaBusyCurrentA (void) const
+WifiRadioEnergyModel::GetCcaBusyCurrentA () const
 {
   NS_LOG_FUNCTION (this);
   return m_ccaBusyCurrentA;
@@ -166,7 +166,7 @@ WifiRadioEnergyModel::SetCcaBusyCurrentA (double CcaBusyCurrentA)
 }
 
 double
-WifiRadioEnergyModel::GetTxCurrentA (void) const
+WifiRadioEnergyModel::GetTxCurrentA () const
 {
   NS_LOG_FUNCTION (this);
   return m_txCurrentA;
@@ -180,7 +180,7 @@ WifiRadioEnergyModel::SetTxCurrentA (double txCurrentA)
 }
 
 double
-WifiRadioEnergyModel::GetRxCurrentA (void) const
+WifiRadioEnergyModel::GetRxCurrentA () const
 {
   NS_LOG_FUNCTION (this);
   return m_rxCurrentA;
@@ -194,7 +194,7 @@ WifiRadioEnergyModel::SetRxCurrentA (double rxCurrentA)
 }
 
 double
-WifiRadioEnergyModel::GetSwitchingCurrentA (void) const
+WifiRadioEnergyModel::GetSwitchingCurrentA () const
 {
   NS_LOG_FUNCTION (this);
   return m_switchingCurrentA;
@@ -208,7 +208,7 @@ WifiRadioEnergyModel::SetSwitchingCurrentA (double switchingCurrentA)
 }
 
 double
-WifiRadioEnergyModel::GetSleepCurrentA (void) const
+WifiRadioEnergyModel::GetSleepCurrentA () const
 {
   NS_LOG_FUNCTION (this);
   return m_sleepCurrentA;
@@ -222,7 +222,7 @@ WifiRadioEnergyModel::SetSleepCurrentA (double sleepCurrentA)
 }
 
 WifiPhyState
-WifiRadioEnergyModel::GetCurrentState (void) const
+WifiRadioEnergyModel::GetCurrentState () const
 {
   NS_LOG_FUNCTION (this);
   return m_currentState;
@@ -339,7 +339,7 @@ WifiRadioEnergyModel::ChangeState (int newState)
 }
 
 void
-WifiRadioEnergyModel::HandleEnergyDepletion (void)
+WifiRadioEnergyModel::HandleEnergyDepletion ()
 {
   NS_LOG_FUNCTION (this);
   NS_LOG_DEBUG ("WifiRadioEnergyModel:Energy is depleted!");
@@ -351,7 +351,7 @@ WifiRadioEnergyModel::HandleEnergyDepletion (void)
 }
 
 void
-WifiRadioEnergyModel::HandleEnergyRecharged (void)
+WifiRadioEnergyModel::HandleEnergyRecharged ()
 {
   NS_LOG_FUNCTION (this);
   NS_LOG_DEBUG ("WifiRadioEnergyModel:Energy is recharged!");
@@ -363,7 +363,7 @@ WifiRadioEnergyModel::HandleEnergyRecharged (void)
 }
 
 void
-WifiRadioEnergyModel::HandleEnergyChanged (void)
+WifiRadioEnergyModel::HandleEnergyChanged ()
 {
   NS_LOG_FUNCTION (this);
   NS_LOG_DEBUG ("WifiRadioEnergyModel:Energy is changed!");
@@ -376,7 +376,7 @@ WifiRadioEnergyModel::HandleEnergyChanged (void)
 }
 
 WifiRadioEnergyModelPhyListener *
-WifiRadioEnergyModel::GetPhyListener (void)
+WifiRadioEnergyModel::GetPhyListener ()
 {
   NS_LOG_FUNCTION (this);
   return m_listener;
@@ -387,10 +387,10 @@ WifiRadioEnergyModel::GetPhyListener (void)
  */
 
 void
-WifiRadioEnergyModel::DoDispose (void)
+WifiRadioEnergyModel::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
-  m_source = NULL;
+  m_source = nullptr;
   m_energyDepletionCallback.Nullify ();
 }
 
@@ -418,7 +418,7 @@ WifiRadioEnergyModel::GetStateA (int state) const
 }
 
 double
-WifiRadioEnergyModel::DoGetCurrentA (void) const
+WifiRadioEnergyModel::DoGetCurrentA () const
 {
   return GetStateA (m_currentState);
 }
@@ -500,7 +500,7 @@ WifiRadioEnergyModelPhyListener::NotifyRxStart (Time duration)
 }
 
 void
-WifiRadioEnergyModelPhyListener::NotifyRxEndOk (void)
+WifiRadioEnergyModelPhyListener::NotifyRxEndOk ()
 {
   NS_LOG_FUNCTION (this);
   if (m_changeStateCallback.IsNull ())
@@ -511,7 +511,7 @@ WifiRadioEnergyModelPhyListener::NotifyRxEndOk (void)
 }
 
 void
-WifiRadioEnergyModelPhyListener::NotifyRxEndError (void)
+WifiRadioEnergyModelPhyListener::NotifyRxEndError ()
 {
   NS_LOG_FUNCTION (this);
   if (m_changeStateCallback.IsNull ())
@@ -541,9 +541,10 @@ WifiRadioEnergyModelPhyListener::NotifyTxStart (Time duration, double txPowerDbm
 }
 
 void
-WifiRadioEnergyModelPhyListener::NotifyMaybeCcaBusyStart (Time duration)
+WifiRadioEnergyModelPhyListener::NotifyCcaBusyStart (Time duration, WifiChannelListType channelType,
+                                                     const std::vector<Time>& /*per20MhzDurations*/)
 {
-  NS_LOG_FUNCTION (this << duration);
+  NS_LOG_FUNCTION (this << duration << channelType);
   if (m_changeStateCallback.IsNull ())
     {
       NS_FATAL_ERROR ("WifiRadioEnergyModelPhyListener:Change state callback not set!");
@@ -569,7 +570,7 @@ WifiRadioEnergyModelPhyListener::NotifySwitchingStart (Time duration)
 }
 
 void
-WifiRadioEnergyModelPhyListener::NotifySleep (void)
+WifiRadioEnergyModelPhyListener::NotifySleep ()
 {
   NS_LOG_FUNCTION (this);
   if (m_changeStateCallback.IsNull ())
@@ -581,7 +582,7 @@ WifiRadioEnergyModelPhyListener::NotifySleep (void)
 }
 
 void
-WifiRadioEnergyModelPhyListener::NotifyWakeup (void)
+WifiRadioEnergyModelPhyListener::NotifyWakeup ()
 {
   NS_LOG_FUNCTION (this);
   if (m_changeStateCallback.IsNull ())
@@ -592,7 +593,7 @@ WifiRadioEnergyModelPhyListener::NotifyWakeup (void)
 }
 
 void
-WifiRadioEnergyModelPhyListener::NotifyOff (void)
+WifiRadioEnergyModelPhyListener::NotifyOff ()
 {
   NS_LOG_FUNCTION (this);
   if (m_changeStateCallback.IsNull ())
@@ -604,7 +605,7 @@ WifiRadioEnergyModelPhyListener::NotifyOff (void)
 }
 
 void
-WifiRadioEnergyModelPhyListener::NotifyOn (void)
+WifiRadioEnergyModelPhyListener::NotifyOn ()
 {
   NS_LOG_FUNCTION (this);
   if (m_changeStateCallback.IsNull ())
@@ -615,7 +616,7 @@ WifiRadioEnergyModelPhyListener::NotifyOn (void)
 }
 
 void
-WifiRadioEnergyModelPhyListener::SwitchToIdle (void)
+WifiRadioEnergyModelPhyListener::SwitchToIdle ()
 {
   NS_LOG_FUNCTION (this);
   if (m_changeStateCallback.IsNull ())

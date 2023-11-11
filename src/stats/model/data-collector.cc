@@ -42,7 +42,7 @@ DataCollector::~DataCollector() {
 
 /* static */
 TypeId
-DataCollector::GetTypeId (void)
+DataCollector::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::DataCollector")
     .SetParent<Object> ()
@@ -51,7 +51,7 @@ DataCollector::GetTypeId (void)
     ;
   return tid;
 }
-  
+
 void DataCollector::DoDispose () {
   NS_LOG_FUNCTION (this);
 

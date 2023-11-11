@@ -36,7 +36,7 @@ namespace ns3 {
  * This class can be used to add and verify the FCS at the end of an
  * Ethernet packet.
  */
-class EthernetTrailer : public Trailer 
+class EthernetTrailer : public Trailer
 {
 public:
   /**
@@ -53,7 +53,7 @@ public:
   /**
    * \brief Updates the Fcs Field to the correct FCS
    * \param p Reference to a packet on which the FCS should be
-   * calculated. The packet should not currently contain an 
+   * calculated. The packet should not currently contain an
    * EthernetTrailer.
    */
   void CalcFcs (Ptr<const Packet> p);
@@ -80,26 +80,26 @@ public:
    * \param p Reference to the packet on which the FCS should be
    * calculated. The packet should not contain an EthernetTrailer.
    *
-   * \return Returns true if the Packet FCS matches the FCS in the trailer, 
+   * \return Returns true if the Packet FCS matches the FCS in the trailer,
    * false otherwise.
    */
   bool CheckFcs (Ptr<const Packet> p) const;
 
   /**
    *\return Returns the size of the trailer
-   */ 
+   */
   uint32_t GetTrailerSize () const;
 
   /**
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
-  virtual TypeId GetInstanceTypeId (void) const;
-  virtual void Print (std::ostream &os) const;
-  virtual uint32_t GetSerializedSize (void) const;
-  virtual void Serialize (Buffer::Iterator end) const;
-  virtual uint32_t Deserialize (Buffer::Iterator end);
+  static TypeId GetTypeId ();
+  TypeId GetInstanceTypeId () const override;
+  void Print (std::ostream &os) const override;
+  uint32_t GetSerializedSize () const override;
+  void Serialize (Buffer::Iterator end) const override;
+  uint32_t Deserialize (Buffer::Iterator end) override;
 private:
   /**
    * Enabled FCS calculations. If false, m_fcs is set to 0 and CheckFcs

@@ -51,17 +51,17 @@ SsServiceFlowManager::SsServiceFlowManager (Ptr<SubscriberStationNetDevice> devi
     m_currentTransactionId (0),
     m_transactionIdIndex (1),
     m_dsaReqRetries (0),
-    m_pendingServiceFlow (0)
+    m_pendingServiceFlow (nullptr)
 {
 }
 
-SsServiceFlowManager::~SsServiceFlowManager (void)
+SsServiceFlowManager::~SsServiceFlowManager ()
 {
 }
 
 /* static */
 TypeId
-SsServiceFlowManager::GetTypeId (void)
+SsServiceFlowManager::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::SsServiceFlowManager")
     .SetParent<ServiceFlowManager> ()
@@ -72,7 +72,7 @@ SsServiceFlowManager::GetTypeId (void)
 }
 
 void
-SsServiceFlowManager::DoDispose (void)
+SsServiceFlowManager::DoDispose ()
 {
   ServiceFlowManager::DoDispose ();
 }
@@ -84,19 +84,19 @@ SsServiceFlowManager::SetMaxDsaReqRetries (uint8_t maxDsaReqRetries)
 }
 
 uint8_t
-SsServiceFlowManager::GetMaxDsaReqRetries (void) const
+SsServiceFlowManager::GetMaxDsaReqRetries () const
 {
   return m_maxDsaReqRetries;
 }
 
 EventId
-SsServiceFlowManager::GetDsaRspTimeoutEvent (void) const
+SsServiceFlowManager::GetDsaRspTimeoutEvent () const
 {
   return m_dsaRspTimeoutEvent;
 }
 
 EventId
-SsServiceFlowManager::GetDsaAckTimeoutEvent (void) const
+SsServiceFlowManager::GetDsaAckTimeoutEvent () const
 {
   return m_dsaAckTimeoutEvent;
 }
@@ -117,10 +117,10 @@ SsServiceFlowManager::AddServiceFlow (ServiceFlow *serviceFlow)
 
 
 void
-SsServiceFlowManager::InitiateServiceFlows (void)
+SsServiceFlowManager::InitiateServiceFlows ()
 {
   ServiceFlow *serviceFlow = GetNextServiceFlowToAllocate ();
-  NS_ASSERT_MSG (serviceFlow != 0,"Error while initiating a new service flow: All service flows have been initiated");
+  NS_ASSERT_MSG (serviceFlow != nullptr,"Error while initiating a new service flow: All service flows have been initiated");
   m_pendingServiceFlow = serviceFlow;
   ScheduleDsaReq (m_pendingServiceFlow);
 }
@@ -140,7 +140,7 @@ SsServiceFlowManager::CreateDsaReq (const ServiceFlow *serviceFlow)
 }
 
 Ptr<Packet>
-SsServiceFlowManager::CreateDsaAck (void)
+SsServiceFlowManager::CreateDsaAck ()
 {
   DsaAck dsaAck;
   dsaAck.SetTransactionId (m_dsaReq.GetTransactionId ());
@@ -210,7 +210,7 @@ SsServiceFlowManager::ProcessDsaRsp (const DsaRsp &dsaRsp)
   m_device->Enqueue (dsaAck, MacHeaderType (), ss->GetPrimaryConnection ());
 
   m_dsaReqRetries = 0;
-  if (m_pendingServiceFlow == NULL)
+  if (m_pendingServiceFlow == nullptr)
     {
       // May be the DSA-ACK was not received by the SS
       return;
@@ -227,10 +227,10 @@ SsServiceFlowManager::ProcessDsaRsp (const DsaRsp &dsaRsp)
   ss->GetConnectionManager ()->AddConnection (transportConnection,
                                               Cid::TRANSPORT);
   m_pendingServiceFlow->SetIsEnabled (true);
-  m_pendingServiceFlow = 0;
+  m_pendingServiceFlow = nullptr;
   // check if all service flow have been initiated
   ServiceFlow * serviceFlow = GetNextServiceFlowToAllocate ();
-  if (serviceFlow == 0)
+  if (serviceFlow == nullptr)
     {
       ss->SetAreServiceFlowsAllocated (true);
     }

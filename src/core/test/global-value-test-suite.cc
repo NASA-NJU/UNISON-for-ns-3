@@ -49,11 +49,11 @@ public:
   /** Constructor. */
   GlobalValueTestCase ();
   /** Destructor. */
-  virtual ~GlobalValueTestCase ()
+  ~GlobalValueTestCase () override
   {}
 
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
 };
 
 GlobalValueTestCase::GlobalValueTestCase ()
@@ -61,7 +61,7 @@ GlobalValueTestCase::GlobalValueTestCase ()
 {}
 
 void
-GlobalValueTestCase::DoRun (void)
+GlobalValueTestCase::DoRun ()
 {
   //
   // Typically these are static globals but we can make one on the stack to

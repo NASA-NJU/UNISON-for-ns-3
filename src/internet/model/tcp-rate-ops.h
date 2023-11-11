@@ -46,7 +46,7 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
   /**
    * \brief Put the rate information inside the sent skb
    *
@@ -185,21 +185,21 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
-  virtual ~TcpRateLinux () override
+  static TypeId GetTypeId ();
+  ~TcpRateLinux () override
   {
   }
 
-  virtual void SkbSent (TcpTxItem *skb, bool isStartOfTransmission) override;
-  virtual void SkbDelivered (TcpTxItem * skb) override;
-  virtual void CalculateAppLimited (uint32_t cWnd, uint32_t in_flight,
+  void SkbSent (TcpTxItem *skb, bool isStartOfTransmission) override;
+  void SkbDelivered (TcpTxItem * skb) override;
+  void CalculateAppLimited (uint32_t cWnd, uint32_t in_flight,
                                     uint32_t segmentSize, const SequenceNumber32 &tailSeq,
                                     const SequenceNumber32 &nextTx, const uint32_t lostOut,
                                     const uint32_t retransOut) override;
-  virtual const TcpRateSample & GenerateSample (uint32_t delivered, uint32_t lost,
+  const TcpRateSample & GenerateSample (uint32_t delivered, uint32_t lost,
                                                 bool is_sack_reneg, uint32_t priorInFlight,
                                                 const Time &minRtt) override;
-  virtual const TcpRateConnection & GetConnectionRate () override
+  const TcpRateConnection & GetConnectionRate () override
   {
     return m_rate;
   }

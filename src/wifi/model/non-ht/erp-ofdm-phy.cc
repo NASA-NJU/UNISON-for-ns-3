@@ -36,17 +36,18 @@ NS_LOG_COMPONENT_DEFINE ("ErpOfdmPhy");
  *       ERP-OFDM PHY (IEEE 802.11-2016, clause 18)
  *******************************************************/
 
-/* *NS_CHECK_STYLE_OFF* */
+// clang-format off
+
 const PhyEntity::ModulationLookupTable ErpOfdmPhy::m_erpOfdmModulationLookupTable {
-  // Unique name           Code rate           Constellation size
-  { "ErpOfdmRate6Mbps",  { WIFI_CODE_RATE_1_2, 2 } },
-  { "ErpOfdmRate9Mbps",  { WIFI_CODE_RATE_3_4, 2 } },
-  { "ErpOfdmRate12Mbps", { WIFI_CODE_RATE_1_2, 4 } },
-  { "ErpOfdmRate18Mbps", { WIFI_CODE_RATE_3_4, 4 } },
-  { "ErpOfdmRate24Mbps", { WIFI_CODE_RATE_1_2, 16 } },
-  { "ErpOfdmRate36Mbps", { WIFI_CODE_RATE_3_4, 16 } },
-  { "ErpOfdmRate48Mbps", { WIFI_CODE_RATE_2_3, 64 } },
-  { "ErpOfdmRate54Mbps", { WIFI_CODE_RATE_3_4, 64 } }
+    // Unique name           Code rate           Constellation size
+    { "ErpOfdmRate6Mbps",  { WIFI_CODE_RATE_1_2, 2 } },
+    { "ErpOfdmRate9Mbps",  { WIFI_CODE_RATE_3_4, 2 } },
+    { "ErpOfdmRate12Mbps", { WIFI_CODE_RATE_1_2, 4 } },
+    { "ErpOfdmRate18Mbps", { WIFI_CODE_RATE_3_4, 4 } },
+    { "ErpOfdmRate24Mbps", { WIFI_CODE_RATE_1_2, 16 } },
+    { "ErpOfdmRate36Mbps", { WIFI_CODE_RATE_3_4, 16 } },
+    { "ErpOfdmRate48Mbps", { WIFI_CODE_RATE_2_3, 64 } },
+    { "ErpOfdmRate54Mbps", { WIFI_CODE_RATE_3_4, 64 } }
 };
 
 /// ERP OFDM rates in bits per second
@@ -54,14 +55,14 @@ static const std::array<uint64_t, 8> s_erpOfdmRatesBpsList =
     {  6000000,  9000000, 12000000, 18000000,
       24000000, 36000000, 48000000, 54000000};
 
-/* *NS_CHECK_STYLE_ON* */
+// clang-format on
 
 /**
  * Get the array of possible ERP OFDM rates.
  *
  * \return the ERP OFDM rates in bits per second
  */
-const std::array<uint64_t, 8>& GetErpOfdmRatesBpsList (void)
+const std::array<uint64_t, 8>& GetErpOfdmRatesBpsList ()
 {
   return s_erpOfdmRatesBpsList;
 };
@@ -106,12 +107,13 @@ Ptr<WifiPpdu>
 ErpOfdmPhy::BuildPpdu (const WifiConstPsduMap & psdus, const WifiTxVector& txVector, Time /* ppduDuration */)
 {
   NS_LOG_FUNCTION (this << psdus << txVector);
-  return Create<ErpOfdmPpdu> (psdus.begin ()->second, txVector, m_wifiPhy->GetPhyBand (),
-                              ObtainNextUid (txVector));
+  return Create<ErpOfdmPpdu> (psdus.begin ()->second, txVector,
+                              m_wifiPhy->GetOperatingChannel ().GetPrimaryChannelCenterFrequency (txVector.GetChannelWidth ()),
+                              m_wifiPhy->GetPhyBand (), ObtainNextUid (txVector));
 }
 
 void
-ErpOfdmPhy::InitializeModes (void)
+ErpOfdmPhy::InitializeModes ()
 {
   for (const auto & rate : GetErpOfdmRatesBpsList ())
     {
@@ -231,7 +233,7 @@ ErpOfdmPhy::IsAllowed (const WifiTxVector& /*txVector*/)
 }
 
 uint32_t
-ErpOfdmPhy::GetMaxPsduSize (void) const
+ErpOfdmPhy::GetMaxPsduSize () const
 {
   return 4095;
 }
@@ -243,7 +245,7 @@ namespace {
 /**
  * Constructor class for ERP-OFDM modes
  */
-static class ConstructorErpOfdm
+class ConstructorErpOfdm
 {
 public:
   ConstructorErpOfdm ()

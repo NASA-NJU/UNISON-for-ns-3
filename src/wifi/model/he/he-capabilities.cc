@@ -117,8 +117,7 @@ HeCapabilities::HeCapabilities ()
     m_nominalPacketPadding (0),
     m_maxHeLtfRxInHeMuMoreThanOneRu (0),
     m_highestNssSupportedM1 (0),
-    m_highestMcsSupported (0),
-    m_heSupported (0)
+    m_highestMcsSupported (0)
 {
   m_txBwMap.resize (8,0);
   m_rxBwMap.resize (8,0);
@@ -136,17 +135,9 @@ HeCapabilities::ElementIdExt () const
   return IE_EXT_HE_CAPABILITIES;
 }
 
-void
-HeCapabilities::SetHeSupported (uint8_t heSupported)
-{
-  m_heSupported = heSupported;
-}
-
-uint8_t
+uint16_t
 HeCapabilities::GetInformationFieldSize () const
 {
-  //we should not be here if HE is not supported
-  NS_ASSERT (m_heSupported > 0);
   // IEEE 802.11ax-2021 9.4.2.248 HE Capabilities element
   // Element ID Extension (1) + HE MAC Capabilities Information (6)
   // + HE PHY Capabilities Information (11) + Supported HE-MCS And NSS Set (4)
@@ -155,45 +146,22 @@ HeCapabilities::GetInformationFieldSize () const
   return 22;
 }
 
-Buffer::Iterator
-HeCapabilities::Serialize (Buffer::Iterator i) const
-{
-  if (m_heSupported < 1)
-    {
-      return i;
-    }
-  return WifiInformationElement::Serialize (i);
-}
-
-uint16_t
-HeCapabilities::GetSerializedSize () const
-{
-  if (m_heSupported < 1)
-    {
-      return 0;
-    }
-  return WifiInformationElement::GetSerializedSize ();
-}
-
 void
 HeCapabilities::SerializeInformationField (Buffer::Iterator start) const
 {
-  if (m_heSupported == 1)
-    {
-      //write the corresponding value for each bit
-      start.WriteHtolsbU32 (GetHeMacCapabilitiesInfo1 ());
-      start.WriteU16 (GetHeMacCapabilitiesInfo2 ());
-      start.WriteHtolsbU64 (GetHePhyCapabilitiesInfo1 ());
-      start.WriteHtolsbU16 (GetHePhyCapabilitiesInfo2 ());
-      start.WriteU8 (GetHePhyCapabilitiesInfo3 ());
-      start.WriteHtolsbU32 (GetSupportedMcsAndNss ());
-      // TODO: add another 32-bits field if 160 MHz channel is supported (variable length)
-      // TODO: optional PPE Threshold field (variable length)
-    }
+  //write the corresponding value for each bit
+  start.WriteHtolsbU32 (GetHeMacCapabilitiesInfo1 ());
+  start.WriteU16 (GetHeMacCapabilitiesInfo2 ());
+  start.WriteHtolsbU64 (GetHePhyCapabilitiesInfo1 ());
+  start.WriteHtolsbU16 (GetHePhyCapabilitiesInfo2 ());
+  start.WriteU8 (GetHePhyCapabilitiesInfo3 ());
+  start.WriteHtolsbU32 (GetSupportedMcsAndNss ());
+  // TODO: add another 32-bits field if 160 MHz channel is supported (variable length)
+  // TODO: optional PPE Threshold field (variable length)
 }
 
-uint8_t
-HeCapabilities::DeserializeInformationField (Buffer::Iterator start, uint8_t length)
+uint16_t
+HeCapabilities::DeserializeInformationField (Buffer::Iterator start, uint16_t length)
 {
   Buffer::Iterator i = start;
   uint32_t macCapabilities1 = i.ReadLsbtohU32 ();
@@ -574,7 +542,7 @@ HeCapabilities::SetMaxAmpduLength (uint32_t maxAmpduLength)
 {
   for (uint8_t i = 0; i <= 3; i++)
     {
-      if ((1ul << (20 + i)) - 1 == maxAmpduLength)
+      if ((1UL << (20 + i)) - 1 == maxAmpduLength)
         {
           m_maxAmpduLengthExponent = i;
           return;
@@ -598,46 +566,46 @@ HeCapabilities::SetHighestNssSupported (uint8_t nss)
 }
 
 uint8_t
-HeCapabilities::GetChannelWidthSet (void) const
+HeCapabilities::GetChannelWidthSet () const
 {
   return m_channelWidthSet;
 }
 
 uint8_t
-HeCapabilities::GetLdpcCodingInPayload (void) const
+HeCapabilities::GetLdpcCodingInPayload () const
 {
   return m_ldpcCodingInPayload;
 }
 
 bool
-HeCapabilities::GetHeSuPpdu1xHeLtf800nsGi (void) const
+HeCapabilities::GetHeSuPpdu1xHeLtf800nsGi () const
 {
   return (m_heSuPpdu1xHeLtf800nsGi == 1);
 }
 
 bool
-HeCapabilities::GetHePpdu4xHeLtf800nsGi (void) const
+HeCapabilities::GetHePpdu4xHeLtf800nsGi () const
 {
   return (m_hePpdu4xHeLtf800nsGi == 1);
 }
 
 
 uint8_t
-HeCapabilities::GetHighestMcsSupported (void) const
+HeCapabilities::GetHighestMcsSupported () const
 {
   return m_highestMcsSupported + 7;
 }
 
 uint8_t
-HeCapabilities::GetHighestNssSupported (void) const
+HeCapabilities::GetHighestNssSupported () const
 {
   return m_highestNssSupportedM1 + 1;
 }
 
 uint32_t
-HeCapabilities::GetMaxAmpduLength (void) const
+HeCapabilities::GetMaxAmpduLength () const
 {
-  return std::min<uint32_t> ((1ul << (20 + m_maxAmpduLengthExponent)) - 1, 6500631);
+  return std::min<uint32_t> ((1UL << (20 + m_maxAmpduLengthExponent)) - 1, 6500631);
 }
 
 std::ostream &

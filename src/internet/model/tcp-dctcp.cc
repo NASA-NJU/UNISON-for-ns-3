@@ -30,7 +30,7 @@ NS_LOG_COMPONENT_DEFINE ("TcpDctcp");
 
 NS_OBJECT_ENSURE_REGISTERED (TcpDctcp);
 
-TypeId TcpDctcp::GetTypeId (void)
+TypeId TcpDctcp::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::TcpDctcp")
     .SetParent<TcpLinuxReno> ()
@@ -97,12 +97,12 @@ TcpDctcp::TcpDctcp (const TcpDctcp& sock)
   NS_LOG_FUNCTION (this);
 }
 
-TcpDctcp::~TcpDctcp (void)
+TcpDctcp::~TcpDctcp ()
 {
   NS_LOG_FUNCTION (this);
 }
 
-Ptr<TcpCongestionOps> TcpDctcp::Fork (void)
+Ptr<TcpCongestionOps> TcpDctcp::Fork ()
 {
   NS_LOG_FUNCTION (this);
   return CopyObject<TcpDctcp> (this);
@@ -226,7 +226,8 @@ TcpDctcp::CeState1to0 (Ptr<TcpSocketState> tcb)
   m_priorRcvNxt = tcb->m_rxBuffer->NextRxSequence ();
   m_ceState = false;
 
-  if (tcb->m_ecnState == TcpSocketState::ECN_CE_RCVD || tcb->m_ecnState == TcpSocketState::ECN_SENDING_ECE)
+  if (tcb->m_ecnState.Get () == TcpSocketState::ECN_CE_RCVD ||
+      tcb->m_ecnState.Get () == TcpSocketState::ECN_SENDING_ECE)
     {
       tcb->m_ecnState = TcpSocketState::ECN_IDLE;
     }

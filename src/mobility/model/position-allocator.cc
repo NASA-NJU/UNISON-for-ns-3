@@ -35,7 +35,7 @@ NS_LOG_COMPONENT_DEFINE ("PositionAllocator");
 NS_OBJECT_ENSURE_REGISTERED (PositionAllocator);
 
 TypeId
-PositionAllocator::GetTypeId (void)
+PositionAllocator::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::PositionAllocator")
     .SetParent<Object> ()
@@ -53,7 +53,7 @@ PositionAllocator::~PositionAllocator ()
 NS_OBJECT_ENSURE_REGISTERED (ListPositionAllocator);
 
 TypeId
-ListPositionAllocator::GetTypeId (void)
+ListPositionAllocator::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::ListPositionAllocator")
     .SetParent<PositionAllocator> ()
@@ -89,7 +89,9 @@ ListPositionAllocator::Add (const std::string filePath,
           continue;
         }
 
-      double x, y, z;
+      double x;
+      double y;
+      double z;
       bool ok = csv.GetValue (0, x);
       NS_LOG_INFO ("read x: " << x << (ok ? " ok" : " FAIL"));
       NS_ASSERT_MSG (ok, "failed reading x");
@@ -116,7 +118,7 @@ ListPositionAllocator::Add (const std::string filePath,
 }
 
 Vector
-ListPositionAllocator::GetNext (void) const
+ListPositionAllocator::GetNext () const
 {
   Vector v = *m_current;
   m_current++;
@@ -134,7 +136,7 @@ ListPositionAllocator::AssignStreams (int64_t stream)
 }
 
 uint32_t
-ListPositionAllocator::GetSize (void) const
+ListPositionAllocator::GetSize () const
 {
   return m_positions.size ();
 }
@@ -143,7 +145,7 @@ ListPositionAllocator::GetSize (void) const
 NS_OBJECT_ENSURE_REGISTERED (GridPositionAllocator);
 
 TypeId
-GridPositionAllocator::GetTypeId (void)
+GridPositionAllocator::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::GridPositionAllocator")
     .SetParent<PositionAllocator> ()
@@ -230,45 +232,46 @@ GridPositionAllocator::SetLayoutType (enum LayoutType layoutType)
 }
 
 double
-GridPositionAllocator::GetMinX (void) const
+GridPositionAllocator::GetMinX () const
 {
   return m_xMin;
 }
 
 double
-GridPositionAllocator::GetMinY (void) const
+GridPositionAllocator::GetMinY () const
 {
   return m_yMin;
 }
 
 double
-GridPositionAllocator::GetDeltaX (void) const
+GridPositionAllocator::GetDeltaX () const
 {
   return m_deltaX;
 }
 
 double
-GridPositionAllocator::GetDeltaY (void) const
+GridPositionAllocator::GetDeltaY () const
 {
   return m_deltaY;
 }
 
 uint32_t
-GridPositionAllocator::GetN (void) const
+GridPositionAllocator::GetN () const
 {
   return m_n;
 }
 
 enum GridPositionAllocator::LayoutType
-GridPositionAllocator::GetLayoutType (void) const
+GridPositionAllocator::GetLayoutType () const
 {
   return m_layoutType;
 }
 
 Vector
-GridPositionAllocator::GetNext (void) const
+GridPositionAllocator::GetNext () const
 {
-  double x = 0.0, y = 0.0;
+  double x = 0.0;
+  double y = 0.0;
   switch (m_layoutType)
     {
       case ROW_FIRST:
@@ -294,7 +297,7 @@ GridPositionAllocator::AssignStreams (int64_t stream)
 NS_OBJECT_ENSURE_REGISTERED (RandomRectanglePositionAllocator);
 
 TypeId
-RandomRectanglePositionAllocator::GetTypeId (void)
+RandomRectanglePositionAllocator::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::RandomRectanglePositionAllocator")
     .SetParent<PositionAllocator> ()
@@ -344,7 +347,7 @@ RandomRectanglePositionAllocator::SetZ (double z)
 }
 
 Vector
-RandomRectanglePositionAllocator::GetNext (void) const
+RandomRectanglePositionAllocator::GetNext () const
 {
   double x = m_x->GetValue ();
   double y = m_y->GetValue ();
@@ -363,7 +366,7 @@ RandomRectanglePositionAllocator::AssignStreams (int64_t stream)
 NS_OBJECT_ENSURE_REGISTERED (RandomBoxPositionAllocator);
 
 TypeId
-RandomBoxPositionAllocator::GetTypeId (void)
+RandomBoxPositionAllocator::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::RandomBoxPositionAllocator")
     .SetParent<PositionAllocator> ()
@@ -413,7 +416,7 @@ RandomBoxPositionAllocator::SetZ (Ptr<RandomVariableStream> z)
 }
 
 Vector
-RandomBoxPositionAllocator::GetNext (void) const
+RandomBoxPositionAllocator::GetNext () const
 {
   double x = m_x->GetValue ();
   double y = m_y->GetValue ();
@@ -434,7 +437,7 @@ RandomBoxPositionAllocator::AssignStreams (int64_t stream)
 NS_OBJECT_ENSURE_REGISTERED (RandomDiscPositionAllocator);
 
 TypeId
-RandomDiscPositionAllocator::GetTypeId (void)
+RandomDiscPositionAllocator::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::RandomDiscPositionAllocator")
     .SetParent<PositionAllocator> ()
@@ -506,7 +509,7 @@ RandomDiscPositionAllocator::SetZ (double z)
 }
 
 Vector
-RandomDiscPositionAllocator::GetNext (void) const
+RandomDiscPositionAllocator::GetNext () const
 {
   double theta = m_theta->GetValue ();
   double rho = m_rho->GetValue ();
@@ -528,7 +531,7 @@ RandomDiscPositionAllocator::AssignStreams (int64_t stream)
 NS_OBJECT_ENSURE_REGISTERED (UniformDiscPositionAllocator);
 
 TypeId
-UniformDiscPositionAllocator::GetTypeId (void)
+UniformDiscPositionAllocator::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::UniformDiscPositionAllocator")
     .SetParent<PositionAllocator> ()
@@ -591,9 +594,10 @@ UniformDiscPositionAllocator::SetZ (double z)
 }
 
 Vector
-UniformDiscPositionAllocator::GetNext (void) const
+UniformDiscPositionAllocator::GetNext () const
 {
-  double x,y;
+  double x;
+  double y;
   do
     {
       x = m_rv->GetValue (-m_rho, m_rho);

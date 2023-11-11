@@ -29,24 +29,24 @@ namespace ns3 {
  *
  * \brief Mobility model for which the current position does not change once it has been set and until it is set again explicitly to a new value.
  */
-class ConstantPositionMobilityModel : public MobilityModel 
+class ConstantPositionMobilityModel : public MobilityModel
 {
 public:
   /**
    * Register this type with the TypeId system.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
   /**
    * Create a position located at coordinates (0,0,0)
    */
   ConstantPositionMobilityModel ();
-  virtual ~ConstantPositionMobilityModel ();
+  ~ConstantPositionMobilityModel () override;
 
 private:
-  virtual Vector DoGetPosition (void) const;
-  virtual void DoSetPosition (const Vector &position);
-  virtual Vector DoGetVelocity (void) const;
+  Vector DoGetPosition () const override;
+  void DoSetPosition (const Vector &position) override;
+  Vector DoGetVelocity () const override;
 
   Vector m_position; //!< the constant position
 };

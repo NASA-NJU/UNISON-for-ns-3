@@ -35,7 +35,7 @@ namespace ns3 {
 /**
  * \ingroup lte
  *
- * Takes care of storing the information generated at PHY layer regarding 
+ * Takes care of storing the information generated at PHY layer regarding
  * transmission. Metrics saved are:
  *
  *   - Timestamp (in seconds)
@@ -58,14 +58,14 @@ public:
   /**
    * Destructor
    */
-  virtual ~PhyTxStatsCalculator ();
+  ~PhyTxStatsCalculator () override;
 
   // Inherited from ns3::Object
   /**
    *  Register this type.
    *  \return The object TypeId.
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   /**
    * Set the name of the file where the UL Tx PHY statistics will be stored.
@@ -78,7 +78,7 @@ public:
    * Get the name of the file where the UL RX PHY statistics will be stored.
    * @return the name of the file where the UL RX PHY statistics will be stored
    */
-  std::string GetUlTxOutputFilename (void);
+  std::string GetUlTxOutputFilename ();
 
   /**
    * Set the name of the file where the DL TX PHY statistics will be stored.
@@ -91,7 +91,7 @@ public:
    * Get the name of the file where the DL TX PHY statistics will be stored.
    * @return the name of the file where the DL TX PHY statistics will be stored
    */
-  std::string GetDlTxOutputFilename (void);
+  std::string GetDlTxOutputFilename ();
 
   /**
    * Notifies the stats calculator that an downlink transmission has occurred.
@@ -105,23 +105,23 @@ public:
    */
   void UlPhyTransmission (PhyTransmissionStatParameters params);
 
-  
-  /** 
+
+  /**
    * trace sink
-   * 
-   * \param phyTxStats 
-   * \param path 
-   * \param params 
+   *
+   * \param phyTxStats
+   * \param path
+   * \param params
    */
   static void DlPhyTransmissionCallback (Ptr<PhyTxStatsCalculator> phyTxStats,
                                   std::string path, PhyTransmissionStatParameters params);
 
-  /** 
+  /**
    * trace sink
-   * 
-   * \param phyTxStats 
-   * \param path 
-   * \param params 
+   *
+   * \param phyTxStats
+   * \param path
+   * \param params
    */
   static void UlPhyTransmissionCallback (Ptr<PhyTxStatsCalculator> phyTxStats,
                                   std::string path, PhyTransmissionStatParameters params);

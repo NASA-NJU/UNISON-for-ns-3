@@ -18,7 +18,7 @@
  * Author: Hemanth Narra <hemanth@ittc.ku.com>
  *
  * James P.G. Sterbenz <jpgs@ittc.ku.edu>, director
- * ResiliNets Research Group  http://wiki.ittc.ku.edu/resilinets
+ * ResiliNets Research Group  https://resilinets.org/
  * Information and Telecommunication Technology Center (ITTC)
  * and Department of Electrical Engineering and Computer Science
  * The University of Kansas Lawrence, KS USA.
@@ -66,12 +66,12 @@ public:
    * \param hops the number of hops
    * \param nextHop the IP address of the next hop
    * \param lifetime the lifetime
-   * \param SettlingTime the settling time
+   * \param settlingTime the settling time
    * \param changedEntries flag for changed entries
    */
-  RoutingTableEntry (Ptr<NetDevice> dev = 0, Ipv4Address dst = Ipv4Address (), uint32_t seqNo = 0,
+  RoutingTableEntry (Ptr<NetDevice> dev = nullptr, Ipv4Address dst = Ipv4Address (), uint32_t seqNo = 0,
                      Ipv4InterfaceAddress iface = Ipv4InterfaceAddress (), uint32_t hops = 0, Ipv4Address nextHop = Ipv4Address (),
-                     Time lifetime = Simulator::Now (), Time SettlingTime = Simulator::Now (), bool changedEntries = false);
+                     Time lifetime = Simulator::Now (), Time settlingTime = Simulator::Now (), bool changedEntries = false);
 
   ~RoutingTableEntry ();
   /**
@@ -289,9 +289,9 @@ private:
   uint32_t m_hops;
   /**
    * \brief Expiration or deletion time of the route
-   *	Lifetime field in the routing table plays dual role --
-   *	for an active route it is the expiration time, and for an invalid route
-   *	it is the deletion time.
+   * Lifetime field in the routing table plays dual role --
+   * for an active route it is the expiration time, and for an invalid route
+   * it is the deletion time.
    */
   Time m_lifeTime;
   /** Ip route, include

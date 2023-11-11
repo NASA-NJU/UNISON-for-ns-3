@@ -47,14 +47,14 @@ public:
   /// \param classifier the Ipv4FlowClassifier this probe is associated with
   /// \param node the Node this probe is associated with
   Ipv4FlowProbe (Ptr<FlowMonitor> monitor, Ptr<Ipv4FlowClassifier> classifier, Ptr<Node> node);
-  virtual ~Ipv4FlowProbe ();
+  ~Ipv4FlowProbe () override;
 
   /// Register this type.
   /// \return The TypeId.
-  static TypeId GetTypeId (void);
-  
+  static TypeId GetTypeId ();
+
   /// \brief enumeration of possible reasons why a packet may be dropped
-  enum DropReason 
+  enum DropReason
   {
     /// Packet dropped due to missing route to the destination
     DROP_NO_ROUTE = 0,
@@ -83,7 +83,7 @@ public:
 
 protected:
 
-  virtual void DoDispose (void);
+  void DoDispose () override;
 
 private:
   /// Log a packet being sent

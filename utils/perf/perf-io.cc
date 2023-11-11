@@ -28,9 +28,9 @@ using namespace ns3;
 
 /**
  * \ingroup system-tests-perf
- * 
+ *
  * Check the performance of writing to file.
- * 
+ *
  * \param file The file to write to.
  * \param n The number of writes to perform.
  * \param buffer The buffer to write.
@@ -50,9 +50,9 @@ PerfFile (FILE *file, uint32_t n, const char *buffer, uint32_t size)
 
 /**
  * \ingroup system-tests-perf
- * 
+ *
  * Check the performance of writing to an output stream.
- * 
+ *
  * \param stream The output stream to write to.
  * \param n The number of writes to perform.
  * \param buffer The buffer to write.
@@ -67,7 +67,7 @@ PerfStream (std::ostream &stream, uint32_t n, const char *buffer, uint32_t size)
     }
 }
 
-int 
+int
 main (int argc, char *argv[])
 {
   uint32_t n = 100000;
@@ -134,7 +134,7 @@ main (int argc, char *argv[])
           auto resultNs = std::chrono::duration_cast<std::chrono::nanoseconds> (end - start);
           resultNs = std::min (resultNs, minResultNs);
           fclose (file);
-          file = 0;
+          file = nullptr;
           std::cout << "."; std::cout.flush ();
         }
       std::cout << std::endl;

@@ -30,11 +30,9 @@
 #include "ns3/test.h"
 #include "ns3/log.h"
 
-using namespace std;
-
 using namespace ns3;
 
-/// Const string used to build the test name.
+/// \return A const string used to build the test name.
 const std::string suite ("type-id: ");
 
 /**
@@ -50,17 +48,17 @@ const std::string suite ("type-id: ");
 
 /**
  * \ingroup typeid-tests
- * 
+ *
  * Test for uniqueness of all TypeIds.
  */
 class UniqueTypeIdTestCase : public TestCase
 {
 public:
   UniqueTypeIdTestCase ();
-  virtual ~UniqueTypeIdTestCase ();
+  ~UniqueTypeIdTestCase () override;
 
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
   enum
   {
     HashChainFlag = 0x80000000
@@ -75,36 +73,36 @@ UniqueTypeIdTestCase::~UniqueTypeIdTestCase ()
 {}
 
 void
-UniqueTypeIdTestCase::DoRun (void)
+UniqueTypeIdTestCase::DoRun ()
 {
-  cout << suite << endl;
-  cout << suite << GetName () << endl;
+  std::cout << suite << std::endl;
+  std::cout << suite << GetName () << std::endl;
 
   // Use same custom hasher as TypeId
   ns3::Hasher hasher = ns3::Hasher ( Create<Hash::Function::Murmur3> () );
 
-  uint32_t nids = TypeId::GetRegisteredN ();
+  uint16_t nids = TypeId::GetRegisteredN ();
 
-  cout << suite << "UniqueTypeIdTestCase: nids: " << nids << endl;
-  cout << suite << "TypeId list:" << endl;
-  cout << suite << "TypeId  Chain  hash          Name" << endl;
+  std::cout << suite << "UniqueTypeIdTestCase: nids: " << nids << std::endl;
+  std::cout << suite << "TypeId list:" << std::endl;
+  std::cout << suite << "TypeId  Chain  hash          Name" << std::endl;
 
   for (uint16_t i = 0; i < nids; ++i)
     {
       const TypeId tid = TypeId::GetRegistered (i);
-      cout << suite << "" << std::setw (6) << tid.GetUid ();
+      std::cout << suite << "" << std::setw (6) << tid.GetUid ();
       if (tid.GetHash () & HashChainFlag)
         {
-          cout << "  chain";
+          std::cout << "  chain";
         }
       else
         {
-          cout << "       ";
+          std::cout << "       ";
         }
-      cout << "  0x"     << std::setfill ('0') << std::hex << std::setw (8)
+      std::cout << "  0x"     << std::setfill ('0') << std::hex << std::setw (8)
            << tid.GetHash () << std::dec << std::setfill (' ')
            << "    "     << tid.GetName ()
-           << endl;
+           << std::endl;
 
       NS_TEST_ASSERT_MSG_EQ (tid.GetUid (),
                              TypeId::LookupByName (tid.GetName ()).GetUid (),
@@ -124,23 +122,23 @@ UniqueTypeIdTestCase::DoRun (void)
 
     }
 
-  cout << suite << "<-- end TypeId list -->" << endl;
+  std::cout << suite << "<-- end TypeId list -->" << std::endl;
 }
 
 
 /**
  * \ingroup typeid-tests
- * 
+ *
  * Collision test.
  */
 class CollisionTestCase : public TestCase
 {
 public:
   CollisionTestCase ();
-  virtual ~CollisionTestCase ();
+  ~CollisionTestCase () override;
 
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
   enum
   {
     HashChainFlag = 0x80000000
@@ -155,51 +153,51 @@ CollisionTestCase::~CollisionTestCase ()
 {}
 
 void
-CollisionTestCase::DoRun (void)
+CollisionTestCase::DoRun ()
 {
-  cout << suite << endl;
-  cout << suite << GetName () << endl;
+  std::cout << suite << std::endl;
+  std::cout << suite << GetName () << std::endl;
 
   // Register two types whose hashes collide, in alphabetical order
   // Murmur3 collision from /usr/share/dict/web2
-  string t1Name = "daemon";
-  string t2Name = "unerring";
-  cout << suite << "creating colliding types "
+  std::string t1Name = "daemon";
+  std::string t2Name = "unerring";
+  std::cout << suite << "creating colliding types "
        << "'" << t1Name << "', '" << t2Name << "'"
        << " in alphabetical order:"
-       << endl;
+       << std::endl;
   TypeId t1 (t1Name);
   TypeId t2 (t2Name);
 
   // Check that they are alphabetical: t1 name < t2 name
   NS_TEST_ASSERT_MSG_EQ ( (t1.GetHash () & HashChainFlag), 0,
                           "First and lesser TypeId has HashChainFlag set");
-  cout << suite << "collision: first,lesser  not chained: OK" << endl;
+  std::cout << suite << "collision: first,lesser  not chained: OK" << std::endl;
 
   NS_TEST_ASSERT_MSG_NE ( (t2.GetHash () & HashChainFlag), 0,
                           "Second and greater TypeId does not have HashChainFlag set");
-  cout << suite << "collision: second,greater    chained: OK" << endl;
+  std::cout << suite << "collision: second,greater    chained: OK" << std::endl;
 
 
   // Register colliding types in reverse alphabetical order
   // Murmur3 collision from /usr/share/dict/web2
-  string t3Name = "trigonon";
-  string t4Name = "seriation";
-  cout << suite << "creating colliding types "
+  std::string t3Name = "trigonon";
+  std::string t4Name = "seriation";
+  std::cout << suite << "creating colliding types "
        << "'" << t3Name << "', '" << t4Name << "'"
        << " in reverse alphabetical order:"
-       << endl;
-  TypeId t3 (t3Name.c_str ());
-  TypeId t4 (t4Name.c_str ());
+       << std::endl;
+  TypeId t3 (t3Name);
+  TypeId t4 (t4Name);
 
   // Check that they are alphabetical: t3 name > t4 name
   NS_TEST_ASSERT_MSG_NE ( (t3.GetHash () & HashChainFlag), 0,
                           "First and greater TypeId does not have HashChainFlag set");
-  cout << suite << "collision: first,greater     chained: OK" << endl;
+  std::cout << suite << "collision: first,greater     chained: OK" << std::endl;
 
   NS_TEST_ASSERT_MSG_EQ ( (t4.GetHash () & HashChainFlag), 0,
                           "Second and lesser TypeId has HashChainFlag set");
-  cout << suite << "collision: second,lesser not chained: OK" << endl;
+  std::cout << suite << "collision: second,lesser not chained: OK" << std::endl;
 
   /** TODO Extra credit:  register three types whose hashes collide
    *
@@ -211,7 +209,7 @@ CollisionTestCase::DoRun (void)
 
 /**
  * \ingroup typeid-tests
- * 
+ *
  * Class used to test deprecated Attributes.
  */
 class DeprecatedAttribute : public Object
@@ -230,14 +228,14 @@ public:
     : m_attr (0)
   {
   }
-  virtual ~DeprecatedAttribute ()
+  ~DeprecatedAttribute () override
   {}
 
   /**
    * \brief Get the type ID.
    * \return The object TypeId.
    */
-  static TypeId GetTypeId (void)
+  static TypeId GetTypeId ()
   {
     static TypeId tid = TypeId ("DeprecatedAttribute")
       .SetParent<Object> ()
@@ -293,17 +291,17 @@ public:
 
 /**
  * \ingroup typeid-tests
- * 
+ *
  * Check deprecated Attributes and TraceSources.
  */
 class DeprecatedAttributeTestCase : public TestCase
 {
 public:
   DeprecatedAttributeTestCase ();
-  virtual ~DeprecatedAttributeTestCase ();
+  ~DeprecatedAttributeTestCase () override;
 
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
 
 };
 
@@ -315,59 +313,59 @@ DeprecatedAttributeTestCase::~DeprecatedAttributeTestCase ()
 {}
 
 void
-DeprecatedAttributeTestCase::DoRun (void)
+DeprecatedAttributeTestCase::DoRun ()
 {
-  cerr << suite << endl;
-  cerr << suite << GetName () << endl;
+  std::cerr << suite << std::endl;
+  std::cerr << suite << GetName () << std::endl;
 
   TypeId tid = DeprecatedAttribute::GetTypeId ();
-  cerr << suite << "DeprecatedAttribute TypeId: " << tid.GetUid () << endl;
+  std::cerr << suite << "DeprecatedAttribute TypeId: " << tid.GetUid () << std::endl;
 
   //  Try the lookups
   struct TypeId::AttributeInformation ainfo;
   NS_TEST_ASSERT_MSG_EQ (tid.LookupAttributeByName ("attribute", &ainfo), true,
                          "lookup new attribute");
-  cerr << suite << "lookup new attribute:"
+  std::cerr << suite << "lookup new attribute:"
        << (ainfo.supportLevel == TypeId::SUPPORTED ? "supported" : "error")
-       << endl;
+       << std::endl;
 
   NS_TEST_ASSERT_MSG_EQ (tid.LookupAttributeByName ("oldAttribute", &ainfo), true,
                          "lookup old attribute");
-  cerr << suite << "lookup old attribute:"
+  std::cerr << suite << "lookup old attribute:"
        << (ainfo.supportLevel == TypeId::DEPRECATED ? "deprecated" : "error")
-       << endl;
+       << std::endl;
 
 
   struct TypeId::TraceSourceInformation tinfo;
   Ptr<const TraceSourceAccessor> acc;
   acc = tid.LookupTraceSourceByName ("trace", &tinfo);
-  NS_TEST_ASSERT_MSG_NE (acc, 0, "lookup new trace source");
-  cerr << suite << "lookup new trace source:"
-       << (tinfo.supportLevel == TypeId::SUPPORTED ? "supported" : "error")
-       << endl;
+  NS_TEST_ASSERT_MSG_NE (acc, nullptr, "lookup new trace source");
+  std::cerr << suite << "lookup new trace source:"
+            << (tinfo.supportLevel == TypeId::SUPPORTED ? "supported" : "error")
+            << std::endl;
 
   acc = tid.LookupTraceSourceByName ("oldTrace", &tinfo);
-  NS_TEST_ASSERT_MSG_NE (acc, 0, "lookup old trace source");
-  cerr << suite << "lookup old trace source:"
-       << (tinfo.supportLevel == TypeId::DEPRECATED ? "deprecated" : "error")
-       << endl;
+  NS_TEST_ASSERT_MSG_NE (acc, nullptr, "lookup old trace source");
+  std::cerr << suite << "lookup old trace source:"
+            << (tinfo.supportLevel == TypeId::DEPRECATED ? "deprecated" : "error")
+            << std::endl;
 }
 
 
 /**
  * \ingroup typeid-tests
- * 
+ *
  * Performance test: measure average lookup time.
  */
 class LookupTimeTestCase : public TestCase
 {
 public:
   LookupTimeTestCase ();
-  virtual ~LookupTimeTestCase ();
+  ~LookupTimeTestCase () override;
 
 private:
-  void DoRun (void);
-  void DoSetup (void);
+  void DoRun () override;
+  void DoSetup () override;
   /**
    * Report the performance test results.
    * \param how How the TypeId is searched (name or hash).
@@ -389,12 +387,12 @@ LookupTimeTestCase::~LookupTimeTestCase ()
 {}
 
 void
-LookupTimeTestCase::DoRun (void)
+LookupTimeTestCase::DoRun ()
 {
-  cout << suite << endl;
-  cout << suite << GetName () << endl;
+  std::cout << suite << std::endl;
+  std::cout << suite << GetName () << std::endl;
 
-  uint32_t nids = TypeId::GetRegisteredN ();
+  uint16_t nids = TypeId::GetRegisteredN ();
 
   int start = clock ();
   for (uint32_t j = 0; j < REPETITIONS; ++j)
@@ -423,13 +421,13 @@ LookupTimeTestCase::DoRun (void)
 }
 
 void
-LookupTimeTestCase::DoSetup (void)
+LookupTimeTestCase::DoSetup ()
 {
   uint32_t nids = TypeId::GetRegisteredN ();
 
-  cout << suite << "Lookup time: reps: " << REPETITIONS
+  std::cout << suite << "Lookup time: reps: " << REPETITIONS
        << ", num TypeId's: " << nids
-       << endl;
+       << std::endl;
 
 }
 
@@ -442,17 +440,17 @@ LookupTimeTestCase::Report (const std::string how,
 
   double per = 1E6 * double(delta) / (reps * double(CLOCKS_PER_SEC));
 
-  cout << suite << "Lookup time: by " << how << ": "
+  std::cout << suite << "Lookup time: by " << how << ": "
        << "ticks: " << delta
        << "\tper: "   << per
        << " microsec/lookup"
-       << endl;
+       << std::endl;
 }
 
 
 /**
  * \ingroup typeid-tests
- * 
+ *
  * TypeId test suites.
  */
 class TypeIdTestSuite : public TestSuite
@@ -477,12 +475,12 @@ TypeIdTestSuite::TypeIdTestSuite ()
 }
 
 /// Static variable for test initialization.
-static TypeIdTestSuite g_TypeIdTestSuite; 
+static TypeIdTestSuite g_TypeIdTestSuite;
 
 
 /**
  * \ingroup typeid-tests
- * 
+ *
  * TypeId performance test suites.
  */
 class TypeIdPerformanceSuite : public TestSuite

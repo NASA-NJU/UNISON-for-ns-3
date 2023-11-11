@@ -52,7 +52,7 @@ struct AmrrWifiRemoteStation : public WifiRemoteStation
 NS_OBJECT_ENSURE_REGISTERED (AmrrWifiManager);
 
 TypeId
-AmrrWifiManager::GetTypeId (void)
+AmrrWifiManager::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::AmrrWifiManager")
     .SetParent<WifiRemoteStationManager> ()
@@ -122,7 +122,7 @@ AmrrWifiManager::DoInitialize ()
 }
 
 WifiRemoteStation *
-AmrrWifiManager::DoCreateStation (void) const
+AmrrWifiManager::DoCreateStation () const
 {
   NS_LOG_FUNCTION (this);
   AmrrWifiRemoteStation *station = new AmrrWifiRemoteStation ();
@@ -319,9 +319,9 @@ AmrrWifiManager::UpdateMode (AmrrWifiRemoteStation *station)
 }
 
 WifiTxVector
-AmrrWifiManager::DoGetDataTxVector (WifiRemoteStation *st)
+AmrrWifiManager::DoGetDataTxVector (WifiRemoteStation *st, uint16_t allowedWidth)
 {
-  NS_LOG_FUNCTION (this << st);
+  NS_LOG_FUNCTION (this << st << allowedWidth);
   AmrrWifiRemoteStation *station = static_cast<AmrrWifiRemoteStation*> (st);
   UpdateMode (station);
   NS_ASSERT (station->m_txrate < GetNSupported (station));

@@ -319,7 +319,7 @@ public:
    * \brief Clear the list of objects associated with names.
    */
 
-  static void Clear (void);
+  static void Clear ();
 
   /**
    * \brief Given a name path string, look to see if there's an object
@@ -462,7 +462,7 @@ Names::Find (std::string path)
     }
   else
     {
-      return 0;
+      return nullptr;
     }
 }
 
@@ -478,7 +478,7 @@ Names::Find (std::string path, std::string name)
     }
   else
     {
-      return 0;
+      return nullptr;
     }
 }
 
@@ -494,7 +494,7 @@ Names::Find (Ptr<Object> context, std::string name)
     }
   else
     {
-      return 0;
+      return nullptr;
     }
 }
 

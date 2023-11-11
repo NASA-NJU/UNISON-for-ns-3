@@ -24,7 +24,7 @@
 namespace ns3 {
 
 /* static */
-TypeId FlowProbe::GetTypeId (void)
+TypeId FlowProbe::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::FlowProbe")
     .SetParent<Object> ()
@@ -47,9 +47,9 @@ FlowProbe::FlowProbe (Ptr<FlowMonitor> flowMonitor)
 }
 
 void
-FlowProbe::DoDispose (void)
+FlowProbe::DoDispose ()
 {
-  m_flowMonitor = 0;
+  m_flowMonitor = nullptr;
   Object::DoDispose ();
 }
 
@@ -75,9 +75,9 @@ FlowProbe::AddPacketDropStats (FlowId flowId, uint32_t packetSize, uint32_t reas
   ++flow.packetsDropped[reasonCode];
   flow.bytesDropped[reasonCode] += packetSize;
 }
- 
+
 FlowProbe::Stats
-FlowProbe::GetStats () const 
+FlowProbe::GetStats () const
 {
   return m_stats;
 }

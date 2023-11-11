@@ -35,10 +35,12 @@
 
 namespace ns3 {
 
+class ObssPdAlgorithm;
+
 /**
  * This defines the BSS membership value for HE PHY.
  */
-#define HE_PHY 125
+#define HE_PHY 122
 
 /**
  * Parameters for received HE-SIG-A for OBSS_PD based SR
@@ -77,12 +79,12 @@ public:
   /**
    * Destructor for HE PHY
    */
-  virtual ~HePhy ();
+  ~HePhy () override;
 
   WifiMode GetSigMode (WifiPpduField field, const WifiTxVector& txVector) const override;
-  WifiMode GetSigAMode (void) const override;
+  WifiMode GetSigAMode () const override;
   WifiMode GetSigBMode (const WifiTxVector& txVector) const override;
-  const PpduFormats & GetPpduFormats (void) const override;
+  const PpduFormats & GetPpduFormats () const override;
   Time GetLSigDuration (WifiPreamble preamble) const override;
   Time GetTrainingDuration (const WifiTxVector& txVector,
                             uint8_t nDataLtf,
@@ -93,19 +95,22 @@ public:
                            const WifiTxVector& txVector,
                            Time ppduDuration) override;
   Ptr<const WifiPsdu> GetAddressedPsduInPpdu (Ptr<const WifiPpdu> ppdu) const override;
-  void StartReceivePreamble (Ptr<WifiPpdu> ppdu,
+  void StartReceivePreamble (Ptr<const WifiPpdu> ppdu,
                              RxPowerWattPerChannelBand& rxPowersW,
                              Time rxDuration) override;
-  void CancelAllEvents (void) override;
+  void CancelAllEvents () override;
   uint16_t GetStaId (const Ptr<const WifiPpdu> ppdu) const override;
   uint16_t GetMeasurementChannelWidth (const Ptr<const WifiPpdu> ppdu) const override;
-  void StartTx (Ptr<WifiPpdu> ppdu) override;
+  void StartTx (Ptr<const WifiPpdu> ppdu, const WifiTxVector& txVector) override;
   Time CalculateTxDuration (WifiConstPsduMap psduMap, const WifiTxVector& txVector, WifiPhyBand band) const override;
+  void SwitchMaybeToCcaBusy (const Ptr<const WifiPpdu> ppdu) override;
+  double GetCcaThreshold (const Ptr<const WifiPpdu> ppdu, WifiChannelListType channelType) const override;
+  void NotifyCcaBusy (const Ptr<const WifiPpdu> ppdu, Time duration, WifiChannelListType channelType) override;
 
   /**
    * \return the BSS color of this PHY.
    */
-  uint8_t GetBssColor (void) const;
+  uint8_t GetBssColor () const;
 
   /**
    * Compute the L-SIG length value corresponding to the given HE TB PPDU duration.
@@ -135,6 +140,13 @@ public:
    * \return the duration of the non-OFDMA portion of the HE TB PPDU.
    */
   Time CalculateNonOfdmaDurationForHeTb (const WifiTxVector& txVector) const;
+
+  /**
+   * \param txVector the transmission parameters used for the HE MU PPDU
+   *
+   * \return the duration of the non-OFDMA portion of the HE MU PPDU.
+   */
+  Time CalculateNonOfdmaDurationForHeMu (const WifiTxVector& txVector) const;
 
   /**
    * Get the band in the TX spectrum associated with the RU used by the PSDU
@@ -176,7 +188,7 @@ public:
   /**
    * \return the UID of the HE TB PPDU being received
    */
-  uint64_t GetCurrentHeTbPpduUid (void) const;
+  uint64_t GetCurrentHeTbPpduUid () const;
 
   /**
    * Set the TRIGVECTOR and the associated expiration time. A TRIGVECTOR shall expire
@@ -199,6 +211,13 @@ public:
   uint16_t GetCenterFrequencyForNonOfdmaPart (const WifiTxVector& txVector, uint16_t staId) const;
 
   /**
+   * Sets the OBSS-PD algorithm.
+   *
+   * \param algorithm the OBSS-PD algorithm
+   */
+  void SetObssPdAlgorithm (const Ptr<ObssPdAlgorithm> algorithm);
+
+  /**
    * Set a callback for a end of HE-SIG-A.
    *
    * \param callback the EndOfHeSigACallback to set
@@ -217,7 +236,7 @@ public:
   /**
    * Initialize all HE modes.
    */
-  static void InitializeModes (void);
+  static void InitializeModes ();
   /**
    * Return the HE MCS corresponding to
    * the provided index.
@@ -232,73 +251,73 @@ public:
    *
    * \return MCS 0 from HE MCS values
    */
-  static WifiMode GetHeMcs0 (void);
+  static WifiMode GetHeMcs0 ();
   /**
    * Return MCS 1 from HE MCS values.
    *
    * \return MCS 1 from HE MCS values
    */
-  static WifiMode GetHeMcs1 (void);
+  static WifiMode GetHeMcs1 ();
   /**
    * Return MCS 2 from HE MCS values.
    *
    * \return MCS 2 from HE MCS values
    */
-  static WifiMode GetHeMcs2 (void);
+  static WifiMode GetHeMcs2 ();
   /**
    * Return MCS 3 from HE MCS values.
    *
    * \return MCS 3 from HE MCS values
    */
-  static WifiMode GetHeMcs3 (void);
+  static WifiMode GetHeMcs3 ();
   /**
    * Return MCS 4 from HE MCS values.
    *
    * \return MCS 4 from HE MCS values
    */
-  static WifiMode GetHeMcs4 (void);
+  static WifiMode GetHeMcs4 ();
   /**
    * Return MCS 5 from HE MCS values.
    *
    * \return MCS 5 from HE MCS values
    */
-  static WifiMode GetHeMcs5 (void);
+  static WifiMode GetHeMcs5 ();
   /**
    * Return MCS 6 from HE MCS values.
    *
    * \return MCS 6 from HE MCS values
    */
-  static WifiMode GetHeMcs6 (void);
+  static WifiMode GetHeMcs6 ();
   /**
    * Return MCS 7 from HE MCS values.
    *
    * \return MCS 7 from HE MCS values
    */
-  static WifiMode GetHeMcs7 (void);
+  static WifiMode GetHeMcs7 ();
   /**
    * Return MCS 8 from HE MCS values.
    *
    * \return MCS 8 from HE MCS values
    */
-  static WifiMode GetHeMcs8 (void);
+  static WifiMode GetHeMcs8 ();
   /**
    * Return MCS 9 from HE MCS values.
    *
    * \return MCS 9 from HE MCS values
    */
-  static WifiMode GetHeMcs9 (void);
+  static WifiMode GetHeMcs9 ();
   /**
    * Return MCS 10 from HE MCS values.
    *
    * \return MCS 10 from HE MCS values
    */
-  static WifiMode GetHeMcs10 (void);
+  static WifiMode GetHeMcs10 ();
   /**
    * Return MCS 11 from HE MCS values.
    *
    * \return MCS 11 from HE MCS values
    */
-  static WifiMode GetHeMcs11 (void);
+  static WifiMode GetHeMcs11 ();
 
   /**
    * Return the coding rate corresponding to
@@ -381,20 +400,50 @@ public:
    */
   static bool IsAllowed (const WifiTxVector& txVector);
 
+  /**
+   * Get variable length HE SIG-B field size based on TX Vector
+   * \param txVector WiFi TX Vector
+   * \return field size in bytes
+   */
+  static uint32_t GetSigBFieldSize (const WifiTxVector& txVector);
+
 protected:
-  PhyFieldRxStatus ProcessSigA (Ptr<Event> event, PhyFieldRxStatus status) override;
-  PhyFieldRxStatus ProcessSigB (Ptr<Event> event, PhyFieldRxStatus status) override;
+  PhyFieldRxStatus ProcessSig (Ptr<Event> event, PhyFieldRxStatus status, WifiPpduField field) override;
   Ptr<Event> DoGetEvent (Ptr<const WifiPpdu> ppdu, RxPowerWattPerChannelBand& rxPowersW) override;
   bool IsConfigSupported (Ptr<const WifiPpdu> ppdu) const override;
-  void DoStartReceivePayload (Ptr<Event> event) override;
+  Time DoStartReceivePayload (Ptr<Event> event) override;
   std::pair<uint16_t, WifiSpectrumBand> GetChannelWidthAndBand (const WifiTxVector& txVector, uint16_t staId) const override;
+  void RxPayloadSucceeded (Ptr<const WifiPsdu> psdu, RxSignalInfo rxSignalInfo,
+                                   const WifiTxVector& txVector, uint16_t staId,
+                                   const std::vector<bool>& statusPerMpdu) override;
+  void RxPayloadFailed (Ptr<const WifiPsdu> psdu, double snr, const WifiTxVector& txVector) override;
   void DoEndReceivePayload (Ptr<const WifiPpdu> ppdu) override;
   void DoResetReceive (Ptr<Event> event) override;
   void DoAbortCurrentReception (WifiPhyRxfailureReason reason) override;
   uint64_t ObtainNextUid (const WifiTxVector& txVector) override;
-  Ptr<SpectrumValue> GetTxPowerSpectralDensity (double txPowerW, Ptr<const WifiPpdu> ppdu) const override;
-  uint32_t GetMaxPsduSize (void) const override;
+  Ptr<SpectrumValue> GetTxPowerSpectralDensity (double txPowerW, Ptr<const WifiPpdu> ppdu, const WifiTxVector& txVector) const override;
+  uint32_t GetMaxPsduSize () const override;
   WifiConstPsduMap GetWifiConstPsduMap (Ptr<const WifiPsdu> psdu, const WifiTxVector& txVector) const override;
+
+  /**
+   * Process SIG-A, perform amendment-specific actions, and
+   * provide an updated status of the reception.
+   *
+   * \param event the event holding incoming PPDU's information
+   * \param status the status of the reception of the correctly received SIG-A after the configuration support check
+   * \return the updated status of the reception of the SIG-A
+   */
+  virtual PhyFieldRxStatus ProcessSigA (Ptr<Event> event, PhyFieldRxStatus status);
+
+  /**
+   * Process SIG-B, perform amendment-specific actions, and
+   * provide an updated status of the reception.
+   *
+   * \param event the event holding incoming PPDU's information
+   * \param status the status of the reception of the correctly received SIG-A after the configuration support check
+   * \return the updated status of the reception of the SIG-B
+   */
+  virtual PhyFieldRxStatus ProcessSigB (Ptr<Event> event, PhyFieldRxStatus status);
 
   /**
    * Start receiving the PSDU (i.e. the first symbol of the PSDU has arrived) of an UL-OFDMA transmission.
@@ -418,14 +467,21 @@ protected:
    * and lookup in Table 10-10 of IEEE P802.11ax/D6.0.
    */
   static uint64_t CalculateNonHtReferenceRate (WifiCodeRate codeRate, uint16_t constellationSize);
+
   /**
    * \param channelWidth the channel width in MHz
-   * \return he number of usable subcarriers for data
+   * \return the number of usable subcarriers for data
    */
   static uint16_t GetUsableSubcarriers (uint16_t channelWidth);
 
+  /**
+   * \param guardInterval the guard interval duration
+   * \return the symbol duration
+   */
+  static Time GetSymbolDuration (Time guardInterval);
+
   uint64_t m_previouslyTxPpduUid;  //!< UID of the previously sent PPDU, used by AP to recognize response HE TB PPDUs
-  uint64_t m_currentHeTbPpduUid;   //!< UID of the HE TB PPDU being received
+  uint64_t m_currentMuPpduUid;     //!< UID of the HE MU or HE TB PPDU being received
 
   std::map <uint16_t /* STA-ID */, EventId> m_beginOfdmaPayloadRxEvents; //!< the beginning of the OFDMA payload reception events (indexed by STA-ID)
 
@@ -434,9 +490,30 @@ protected:
   Time m_trigVectorExpirationTime;           //!< expiration time of the TRIGVECTOR
 
 private:
-  void BuildModeList (void) override;
+  void BuildModeList () override;
   uint8_t GetNumberBccEncoders (const WifiTxVector& txVector) const override;
   Time GetSymbolDuration (const WifiTxVector& txVector) const override;
+
+  /**
+   * Notify PHY state helper to switch to CCA busy state,
+   *
+   * \param duration the duration of the CCA state
+   * \param channelType the channel type for which the CCA busy state is reported.
+   * \param per20MHzDurations the per-20 MHz CCA durations vector
+   */
+  void NotifyCcaBusy (Time duration, WifiChannelListType channelType, const std::vector<Time>& per20MHzDurations);
+
+  /**
+   * Compute the per-20 MHz CCA durations vector that indicates
+   * for how long each 20 MHz subchannel (corresponding to the
+   * index of the element in the vector) is busy and where a zero duration
+   * indicates that the subchannel is idle. The vector is non-empty if the
+   * operational channel width is larger than 20 MHz.
+   *
+   * \param ppdu the incoming PPDU or nullptr for any signal
+   * \return the per-20 MHz CCA durations vector
+   */
+  std::vector<Time> GetPer20MHzDurations (const Ptr<const WifiPpdu> ppdu);
 
   /**
    * Create and return the HE MCS corresponding to
@@ -462,6 +539,10 @@ private:
                                     WifiPhyBand band);
 
   static const PpduFormats m_hePpduFormats; //!< HE PPDU formats
+
+  std::size_t m_rxHeTbPpdus;                 //!< Number of successfully received HE TB PPDUS
+  Ptr<ObssPdAlgorithm> m_obssPdAlgorithm;    //!< OBSS-PD algorithm
+  std::vector<Time> m_lastPer20MHzDurations; //!< Hold the last per-20 MHz CCA durations vector
 }; //class HePhy
 
 } //namespace ns3

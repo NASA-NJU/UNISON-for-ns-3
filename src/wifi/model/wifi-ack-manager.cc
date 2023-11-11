@@ -31,7 +31,7 @@ NS_LOG_COMPONENT_DEFINE ("WifiAckManager");
 NS_OBJECT_ENSURE_REGISTERED (WifiAckManager);
 
 TypeId
-WifiAckManager::GetTypeId (void)
+WifiAckManager::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::WifiAckManager")
     .SetParent<Object> ()
@@ -40,16 +40,22 @@ WifiAckManager::GetTypeId (void)
   return tid;
 }
 
+WifiAckManager::WifiAckManager ()
+  : m_linkId (0)
+{
+  NS_LOG_FUNCTION (this);
+}
+
 WifiAckManager::~WifiAckManager ()
 {
   NS_LOG_FUNCTION_NOARGS ();
 }
 
 void
-WifiAckManager::DoDispose (void)
+WifiAckManager::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
-  m_mac = 0;
+  m_mac = nullptr;
   Object::DoDispose ();
 }
 
@@ -60,8 +66,21 @@ WifiAckManager::SetWifiMac (Ptr<WifiMac> mac)
   m_mac = mac;
 }
 
+Ptr<WifiRemoteStationManager>
+WifiAckManager::GetWifiRemoteStationManager () const
+{
+  return m_mac->GetWifiRemoteStationManager (m_linkId);
+}
+
 void
-WifiAckManager::SetQosAckPolicy (Ptr<WifiMacQueueItem> item, const WifiAcknowledgment* acknowledgment)
+WifiAckManager::SetLinkId (uint8_t linkId)
+{
+  NS_LOG_FUNCTION (this << +linkId);
+  m_linkId = linkId;
+}
+
+void
+WifiAckManager::SetQosAckPolicy (Ptr<WifiMpdu> item, const WifiAcknowledgment* acknowledgment)
 {
   NS_LOG_FUNCTION (*item << acknowledgment);
 
@@ -70,7 +89,7 @@ WifiAckManager::SetQosAckPolicy (Ptr<WifiMacQueueItem> item, const WifiAcknowled
     {
       return;
     }
-  NS_ASSERT (acknowledgment != nullptr);
+  NS_ASSERT (acknowledgment);
 
   hdr.SetQosAckPolicy (acknowledgment->GetQosAckPolicy (hdr.GetAddr1 (), hdr.GetQosTid ()));
 }
@@ -86,7 +105,7 @@ WifiAckManager::SetQosAckPolicy (Ptr<WifiPsdu> psdu, const WifiAcknowledgment* a
       return;
     }
 
-  NS_ASSERT (acknowledgment != nullptr);
+  NS_ASSERT (acknowledgment);
 
   for (const auto& tid : psdu->GetTids ())
     {

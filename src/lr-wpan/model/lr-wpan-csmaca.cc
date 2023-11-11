@@ -38,7 +38,7 @@ NS_LOG_COMPONENT_DEFINE ("LrWpanCsmaCa");
 NS_OBJECT_ENSURE_REGISTERED (LrWpanCsmaCa);
 
 TypeId
-LrWpanCsmaCa::GetTypeId (void)
+LrWpanCsmaCa::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::LrWpanCsmaCa")
     .SetParent<Object> ()
@@ -69,7 +69,7 @@ LrWpanCsmaCa::LrWpanCsmaCa ()
 
 LrWpanCsmaCa::~LrWpanCsmaCa ()
 {
-  m_mac = 0;
+  m_mac = nullptr;
 }
 
 void
@@ -79,7 +79,7 @@ LrWpanCsmaCa::DoDispose ()
   m_lrWpanMacTransCostCallback = MakeNullCallback <void, uint32_t> ();
 
   Cancel ();
-  m_mac = 0;
+  m_mac = nullptr;
 }
 
 void
@@ -89,34 +89,34 @@ LrWpanCsmaCa::SetMac (Ptr<LrWpanMac> mac)
 }
 
 Ptr<LrWpanMac>
-LrWpanCsmaCa::GetMac (void) const
+LrWpanCsmaCa::GetMac () const
 {
   return m_mac;
 }
 
 void
-LrWpanCsmaCa::SetSlottedCsmaCa (void)
+LrWpanCsmaCa::SetSlottedCsmaCa ()
 {
   NS_LOG_FUNCTION (this);
   m_isSlotted = true;
 }
 
 void
-LrWpanCsmaCa::SetUnSlottedCsmaCa (void)
+LrWpanCsmaCa::SetUnSlottedCsmaCa ()
 {
   NS_LOG_FUNCTION (this);
   m_isSlotted = false;
 }
 
 bool
-LrWpanCsmaCa::IsSlottedCsmaCa (void) const
+LrWpanCsmaCa::IsSlottedCsmaCa () const
 {
   NS_LOG_FUNCTION (this);
   return (m_isSlotted);
 }
 
 bool
-LrWpanCsmaCa::IsUnSlottedCsmaCa (void) const
+LrWpanCsmaCa::IsUnSlottedCsmaCa () const
 {
   NS_LOG_FUNCTION (this);
   return (!m_isSlotted);
@@ -126,11 +126,12 @@ void
 LrWpanCsmaCa::SetMacMinBE (uint8_t macMinBE)
 {
   NS_LOG_FUNCTION (this << macMinBE);
+  NS_ASSERT_MSG (macMinBE <= m_macMaxBE,"MacMinBE (" << macMinBE << ") should be <= MacMaxBE (" << m_macMaxBE << ")");
   m_macMinBE = macMinBE;
 }
 
 uint8_t
-LrWpanCsmaCa::GetMacMinBE (void) const
+LrWpanCsmaCa::GetMacMinBE () const
 {
   NS_LOG_FUNCTION (this);
   return m_macMinBE;
@@ -140,11 +141,12 @@ void
 LrWpanCsmaCa::SetMacMaxBE (uint8_t macMaxBE)
 {
   NS_LOG_FUNCTION (this << macMaxBE);
-  m_macMinBE = macMaxBE;
+  NS_ASSERT_MSG (macMaxBE >= 3 && macMaxBE <= 8, "MacMaxBE (" << macMaxBE << ") should be >= 3 and <= 8");
+  m_macMaxBE = macMaxBE;
 }
 
 uint8_t
-LrWpanCsmaCa::GetMacMaxBE (void) const
+LrWpanCsmaCa::GetMacMaxBE () const
 {
   NS_LOG_FUNCTION (this);
   return m_macMaxBE;
@@ -154,11 +156,12 @@ void
 LrWpanCsmaCa::SetMacMaxCSMABackoffs (uint8_t macMaxCSMABackoffs)
 {
   NS_LOG_FUNCTION (this << macMaxCSMABackoffs);
+  NS_ASSERT_MSG (macMaxCSMABackoffs <= 5, "MacMaxCSMABackoffs should be <= 5");
   m_macMaxCSMABackoffs = macMaxCSMABackoffs;
 }
 
 uint8_t
-LrWpanCsmaCa::GetMacMaxCSMABackoffs (void) const
+LrWpanCsmaCa::GetMacMaxCSMABackoffs () const
 {
   NS_LOG_FUNCTION (this);
   return m_macMaxCSMABackoffs;
@@ -172,15 +175,14 @@ LrWpanCsmaCa::SetUnitBackoffPeriod (uint64_t unitBackoffPeriod)
 }
 
 uint64_t
-LrWpanCsmaCa::GetUnitBackoffPeriod (void) const
+LrWpanCsmaCa::GetUnitBackoffPeriod () const
 {
   NS_LOG_FUNCTION (this);
   return m_aUnitBackoffPeriod;
 }
 
-
 Time
-LrWpanCsmaCa::GetTimeToNextSlot (void) const
+LrWpanCsmaCa::GetTimeToNextSlot () const
 {
   NS_LOG_FUNCTION (this);
 
@@ -236,7 +238,6 @@ LrWpanCsmaCa::GetTimeToNextSlot (void) const
 
 }
 
-
 void
 LrWpanCsmaCa::Start ()
 {
@@ -284,9 +285,8 @@ LrWpanCsmaCa::Cancel ()
   m_randomBackoffEvent.Cancel ();
   m_requestCcaEvent.Cancel ();
   m_canProceedEvent.Cancel ();
+  m_mac->GetPhy ()->CcaCancel ();
 }
-
-
 
 void
 LrWpanCsmaCa::RandomBackoffDelay ()
@@ -332,7 +332,7 @@ LrWpanCsmaCa::RandomBackoffDelay ()
                                                     << timeLeftInCap.As (Time::S) << ")");
 
 
-      if (randomBackoff > timeLeftInCap)
+      if (randomBackoff >= timeLeftInCap)
         {
           uint64_t usedBackoffs = (double)(timeLeftInCap.GetSeconds () *  symbolRate) / m_aUnitBackoffPeriod;
           m_randomBackoffPeriodsLeft -= usedBackoffs;
@@ -346,7 +346,6 @@ LrWpanCsmaCa::RandomBackoffDelay ()
 
     }
 }
-
 
 Time
 LrWpanCsmaCa::GetTimeLeftInCap ()
@@ -381,7 +380,6 @@ LrWpanCsmaCa::GetTimeLeftInCap ()
 
   return (endCapTime - currentTime);
 }
-
 
 void
 LrWpanCsmaCa::CanProceed ()
@@ -427,7 +425,7 @@ LrWpanCsmaCa::CanProceed ()
   else
     {
       //time the PHY takes to switch from Rx to Tx and Tx to Rx
-      transactionSymbols += (m_mac->GetPhy ()->aTurnaroundTime *2);
+      transactionSymbols += (m_mac->GetPhy ()->aTurnaroundTime * 2);
     }
   transactionSymbols +=  m_mac->GetIfsSize ();
 
@@ -543,14 +541,12 @@ LrWpanCsmaCa::PlmeCcaConfirm (LrWpanPhyEnumeration status)
     }
 }
 
-
 void
 LrWpanCsmaCa::SetLrWpanMacTransCostCallback (LrWpanMacTransCostCallback c)
 {
   NS_LOG_FUNCTION (this);
   m_lrWpanMacTransCostCallback = c;
 }
-
 
 void
 LrWpanCsmaCa::SetLrWpanMacStateCallback (LrWpanMacStateCallback c)
@@ -565,7 +561,6 @@ LrWpanCsmaCa::SetBatteryLifeExtension (bool batteryLifeExtension)
   m_macBattLifeExt = batteryLifeExtension;
 }
 
-
 int64_t
 LrWpanCsmaCa::AssignStreams (int64_t stream)
 {
@@ -575,13 +570,13 @@ LrWpanCsmaCa::AssignStreams (int64_t stream)
 }
 
 uint8_t
-LrWpanCsmaCa::GetNB (void)
+LrWpanCsmaCa::GetNB ()
 {
   return m_NB;
 }
 
 bool
-LrWpanCsmaCa::GetBatteryLifeExtension (void)
+LrWpanCsmaCa::GetBatteryLifeExtension ()
 {
   return m_macBattLifeExt;
 }

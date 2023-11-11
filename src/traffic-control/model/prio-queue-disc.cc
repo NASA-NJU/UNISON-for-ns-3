@@ -54,7 +54,7 @@ std::istream &operator >> (std::istream &is, Priomap &priomap)
   return is;
 }
 
-TypeId PrioQueueDisc::GetTypeId (void)
+TypeId PrioQueueDisc::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::PrioQueueDisc")
     .SetParent<QueueDisc> ()
@@ -140,7 +140,7 @@ PrioQueueDisc::DoEnqueue (Ptr<QueueDiscItem> item)
 }
 
 Ptr<QueueDiscItem>
-PrioQueueDisc::DoDequeue (void)
+PrioQueueDisc::DoDequeue ()
 {
   NS_LOG_FUNCTION (this);
 
@@ -148,20 +148,20 @@ PrioQueueDisc::DoDequeue (void)
 
   for (uint32_t i = 0; i < GetNQueueDiscClasses (); i++)
     {
-      if ((item = GetQueueDiscClass (i)->GetQueueDisc ()->Dequeue ()) != 0)
+      if ((item = GetQueueDiscClass (i)->GetQueueDisc ()->Dequeue ()))
         {
           NS_LOG_LOGIC ("Popped from band " << i << ": " << item);
           NS_LOG_LOGIC ("Number packets band " << i << ": " << GetQueueDiscClass (i)->GetQueueDisc ()->GetNPackets ());
           return item;
         }
     }
-  
+
   NS_LOG_LOGIC ("Queue empty");
   return item;
 }
 
 Ptr<const QueueDiscItem>
-PrioQueueDisc::DoPeek (void)
+PrioQueueDisc::DoPeek ()
 {
   NS_LOG_FUNCTION (this);
 
@@ -169,7 +169,7 @@ PrioQueueDisc::DoPeek (void)
 
   for (uint32_t i = 0; i < GetNQueueDiscClasses (); i++)
     {
-      if ((item = GetQueueDiscClass (i)->GetQueueDisc ()->Peek ()) != 0)
+      if ((item = GetQueueDiscClass (i)->GetQueueDisc ()->Peek ()))
         {
           NS_LOG_LOGIC ("Peeked from band " << i << ": " << item);
           NS_LOG_LOGIC ("Number packets band " << i << ": " << GetQueueDiscClass (i)->GetQueueDisc ()->GetNPackets ());
@@ -182,7 +182,7 @@ PrioQueueDisc::DoPeek (void)
 }
 
 bool
-PrioQueueDisc::CheckConfig (void)
+PrioQueueDisc::CheckConfig ()
 {
   NS_LOG_FUNCTION (this);
   if (GetNInternalQueues () > 0)
@@ -216,7 +216,7 @@ PrioQueueDisc::CheckConfig (void)
 }
 
 void
-PrioQueueDisc::InitializeParams (void)
+PrioQueueDisc::InitializeParams ()
 {
   NS_LOG_FUNCTION (this);
 }

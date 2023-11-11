@@ -58,15 +58,15 @@ namespace {
   long double
   Scale (Time::Unit u)
   {
-    return UNIT_COEFF[u] * std::pow (10L, UNIT_POWER[u]); 
+    return UNIT_COEFF[u] * std::pow (10L, UNIT_POWER[u]);
   }
 
-  /** 
-   * Initializer for \c UNIT_VALUE 
+  /**
+   * Initializer for \c UNIT_VALUE
    * \returns The array of scale factors between units.
    */
   long double *
-  InitUnitValue (void)
+  InitUnitValue ()
   {
     static long double values[Time::LAST];
     for (auto u = static_cast<int> (Time::Y); u != static_cast<int> (Time::LAST); ++u)
@@ -86,7 +86,7 @@ namespace {
 
 // The set of marked times
 // static
-Time::MarkedTimes * Time::g_markingTimes = 0;
+Time::MarkedTimes * Time::g_markingTimes = nullptr;
 
 /// The static mutex for critical sections around modification of Time::g_markingTimes.
 static std::mutex g_markingMutex;
@@ -199,11 +199,11 @@ Time::Time (const std::string& s)
 }
 
 // static
-struct Time::Resolution
-Time::SetDefaultNsResolution (void)
+struct Time::Resolution&
+Time::SetDefaultNsResolution ()
 {
   NS_LOG_FUNCTION_NOARGS ();
-  struct Resolution resolution;
+  static struct Resolution resolution;
   SetResolution (Time::NS, &resolution, false);
   return resolution;
 }
@@ -307,7 +307,7 @@ Time::ClearMarkedTimes ()
     {
       NS_LOG_LOGIC ("clearing MarkedTimes");
       g_markingTimes->erase (g_markingTimes->begin (), g_markingTimes->end ());
-      g_markingTimes = 0;
+      g_markingTimes = nullptr;
     }
 }  // Time::ClearMarkedTimes
 
@@ -319,7 +319,7 @@ Time::Mark (Time * const time)
   std::unique_lock lock {g_markingMutex};
 
   NS_LOG_FUNCTION (time);
-  NS_ASSERT (time != 0);
+  NS_ASSERT (time != nullptr);
 
   // Repeat the g_markingTimes test here inside the CriticalSection,
   // since earlier test was outside and might be stale.
@@ -345,7 +345,7 @@ Time::Clear (Time * const time)
   std::unique_lock lock {g_markingMutex};
 
   NS_LOG_FUNCTION (time);
-  NS_ASSERT (time != 0);
+  NS_ASSERT (time != nullptr);
 
   if (g_markingTimes)
     {
@@ -376,7 +376,7 @@ Time::ConvertTimes (const enum Unit unit)
 
   NS_LOG_FUNCTION_NOARGS ();
 
-  NS_ASSERT_MSG (g_markingTimes != 0,
+  NS_ASSERT_MSG (g_markingTimes != nullptr,
                  "No MarkedTimes registry. "
                  "Time::SetResolution () called more than once?");
 
@@ -400,14 +400,14 @@ Time::ConvertTimes (const enum Unit unit)
   // Assert above already guarantees g_markingTimes != 0
   NS_LOG_LOGIC ("clearing MarkedTimes");
   g_markingTimes->erase (g_markingTimes->begin (), g_markingTimes->end ());
-  g_markingTimes = 0;
+  g_markingTimes = nullptr;
 
 }  // Time::ConvertTimes ()
 
 
 // static
 enum Time::Unit
-Time::GetResolution (void)
+Time::GetResolution ()
 {
   // No function log b/c it interferes with operator<<
   return PeekResolution ()->unit;
@@ -456,7 +456,6 @@ operator << (std::ostream & os, const TimeWithUnit & timeU)
 
   switch (unit)
     {
-      // *NS_CHECK_STYLE_OFF*
     case Time::Y:    label = "y";    break;
     case Time::D:    label = "d";    break;
     case Time::H:    label = "h";    break;
@@ -467,7 +466,6 @@ operator << (std::ostream & os, const TimeWithUnit & timeU)
     case Time::NS:   label = "ns";   break;
     case Time::PS:   label = "ps";   break;
     case Time::FS:   label = "fs";   break;
-      // *NS_CHECK_STYLE_ON*
 
     case Time::LAST:
     case Time::AUTO:
@@ -529,44 +527,44 @@ MakeTimeChecker (const Time min, const Time max)
       : m_minValue (minValue),
         m_maxValue (maxValue)
     {}
-    virtual bool Check (const AttributeValue &value) const
+    bool Check (const AttributeValue &value) const override
     {
       NS_LOG_FUNCTION (&value);
       const TimeValue *v = dynamic_cast<const TimeValue *> (&value);
-      if (v == 0)
+      if (v == nullptr)
         {
           return false;
         }
       return v->Get () >= m_minValue && v->Get () <= m_maxValue;
     }
-    virtual std::string GetValueTypeName (void) const
+    std::string GetValueTypeName () const override
     {
       NS_LOG_FUNCTION_NOARGS ();
       return "ns3::TimeValue";
     }
-    virtual bool HasUnderlyingTypeInformation (void) const
+    bool HasUnderlyingTypeInformation () const override
     {
       NS_LOG_FUNCTION_NOARGS ();
       return true;
     }
-    virtual std::string GetUnderlyingTypeInformation (void) const
+    std::string GetUnderlyingTypeInformation () const override
     {
       NS_LOG_FUNCTION_NOARGS ();
       std::ostringstream oss;
       oss << "Time" << " " << m_minValue << ":" << m_maxValue;
       return oss.str ();
     }
-    virtual Ptr<AttributeValue> Create (void) const
+    Ptr<AttributeValue> Create () const override
     {
       NS_LOG_FUNCTION_NOARGS ();
       return ns3::Create<TimeValue> ();
     }
-    virtual bool Copy (const AttributeValue &source, AttributeValue &destination) const
+    bool Copy (const AttributeValue &source, AttributeValue &destination) const override
     {
       NS_LOG_FUNCTION (&source << &destination);
       const TimeValue *src = dynamic_cast<const TimeValue *> (&source);
       TimeValue *dst = dynamic_cast<TimeValue *> (&destination);
-      if (src == 0 || dst == 0)
+      if (src == nullptr || dst == nullptr)
         {
           return false;
         }

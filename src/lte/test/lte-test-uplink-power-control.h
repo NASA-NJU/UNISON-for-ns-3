@@ -22,11 +22,20 @@
 #ifndef LTE_TEST_UPLINK_POWER_CONTROL_H
 #define LTE_TEST_UPLINK_POWER_CONTROL_H
 
+#include "ns3/nstime.h"
+#include "ns3/ptr.h"
 #include "ns3/spectrum-value.h"
 #include "ns3/spectrum-test.h"
 #include "ns3/test.h"
 
 using namespace ns3;
+
+namespace ns3
+{
+class LteFfrSimple;
+class LteUePowerControl;
+class MobilityModel;
+} // namespace ns3
 
 /**
  * \ingroup lte-test
@@ -56,7 +65,7 @@ public:
    * \param name the reference name
    */
   LteUplinkPowerControlTestCase (std::string name);
-  virtual ~LteUplinkPowerControlTestCase ();
+  ~LteUplinkPowerControlTestCase () override;
 
   /**
    * Teleport UE funcction
@@ -108,7 +117,7 @@ public:
   void SrsTxPowerTrace (uint16_t cellId, uint16_t rnti, double txPower);
 
 protected:
-  virtual void DoRun (void);
+  void DoRun () override;
 
   Ptr<MobilityModel> m_ueMobility; ///< UE mobility model
   Time m_teleportTime; ///< teleport time
@@ -138,10 +147,10 @@ public:
    * \param name the reference name
    */
   LteUplinkOpenLoopPowerControlTestCase (std::string name);
-  virtual ~LteUplinkOpenLoopPowerControlTestCase ();
+  ~LteUplinkOpenLoopPowerControlTestCase () override;
 
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
 };
 
 /**
@@ -159,10 +168,10 @@ public:
    * \param name the reference name
    */
   LteUplinkClosedLoopPowerControlAbsoluteModeTestCase (std::string name);
-  virtual ~LteUplinkClosedLoopPowerControlAbsoluteModeTestCase ();
+  ~LteUplinkClosedLoopPowerControlAbsoluteModeTestCase () override;
 
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
 };
 
 /**
@@ -180,10 +189,10 @@ public:
    * \param name the reference name
    */
   LteUplinkClosedLoopPowerControlAccumulatedModeTestCase (std::string name);
-  virtual ~LteUplinkClosedLoopPowerControlAccumulatedModeTestCase ();
+  ~LteUplinkClosedLoopPowerControlAccumulatedModeTestCase () override;
 
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
 };
 
 #endif /* LTE_TEST_UPLINK_POWER_CONTROL_H */

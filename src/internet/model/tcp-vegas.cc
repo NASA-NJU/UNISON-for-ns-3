@@ -18,7 +18,7 @@
  * Author: Truc Anh N. Nguyen <annguyen@ittc.ku.edu>
  *
  * James P.G. Sterbenz <jpgs@ittc.ku.edu>, director
- * ResiliNets Research Group  http://wiki.ittc.ku.edu/resilinets
+ * ResiliNets Research Group  https://resilinets.org/
  * Information and Telecommunication Technology Center (ITTC)
  * and Department of Electrical Engineering and Computer Science
  * The University of Kansas Lawrence, KS USA.
@@ -35,7 +35,7 @@ NS_LOG_COMPONENT_DEFINE ("TcpVegas");
 NS_OBJECT_ENSURE_REGISTERED (TcpVegas);
 
 TypeId
-TcpVegas::GetTypeId (void)
+TcpVegas::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::TcpVegas")
     .SetParent<TcpNewReno> ()
@@ -57,7 +57,7 @@ TcpVegas::GetTypeId (void)
   return tid;
 }
 
-TcpVegas::TcpVegas (void)
+TcpVegas::TcpVegas ()
   : TcpNewReno (),
     m_alpha (2),
     m_beta (4),
@@ -85,13 +85,13 @@ TcpVegas::TcpVegas (const TcpVegas& sock)
   NS_LOG_FUNCTION (this);
 }
 
-TcpVegas::~TcpVegas (void)
+TcpVegas::~TcpVegas ()
 {
   NS_LOG_FUNCTION (this);
 }
 
 Ptr<TcpCongestionOps>
-TcpVegas::Fork (void)
+TcpVegas::Fork ()
 {
   return CopyObject<TcpVegas> (this);
 }

@@ -25,6 +25,7 @@
 #include "attribute-helper.h"
 #include "event-id.h"
 #include "int64x64.h"
+#include "type-name.h"
 #include <stdint.h>
 #include <limits>
 #include <cmath>
@@ -297,7 +298,7 @@ public:
    * Exactly equivalent to `t == 0`.
    * \return \c true if the time is zero, \c false otherwise.
   */
-  inline bool IsZero (void) const
+  inline bool IsZero () const
   {
     return m_data == 0;
   }
@@ -305,7 +306,7 @@ public:
    * Exactly equivalent to `t <= 0`.
    * \return \c true if the time is negative or zero, \c false otherwise.
    */
-  inline bool IsNegative (void) const
+  inline bool IsNegative () const
   {
     return m_data <= 0;
   }
@@ -313,7 +314,7 @@ public:
    * Exactly equivalent to `t >= 0`.
    * \return \c true if the time is positive or zero, \c false otherwise.
    */
-  inline bool IsPositive (void) const
+  inline bool IsPositive () const
   {
     return m_data >= 0;
   }
@@ -321,7 +322,7 @@ public:
    * Exactly equivalent to `t < 0`.
    * \return \c true if the time is strictly negative, \c false otherwise.
    */
-  inline bool IsStrictlyNegative (void) const
+  inline bool IsStrictlyNegative () const
   {
     return m_data < 0;
   }
@@ -329,7 +330,7 @@ public:
    * Exactly equivalent to `t > 0`.
    * \return \c true if the time is strictly positive, \c false otherwise.
    */
-  inline bool IsStrictlyPositive (void) const
+  inline bool IsStrictlyPositive () const
   {
     return m_data > 0;
   }
@@ -360,43 +361,43 @@ public:
    *
    * \return An approximate value in the indicated unit.
    */
-  inline double GetYears (void) const
+  inline double GetYears () const
   {
     return ToDouble (Time::Y);
   }
-  inline double GetDays (void) const
+  inline double GetDays () const
   {
     return ToDouble (Time::D);
   }
-  inline double GetHours (void) const
+  inline double GetHours () const
   {
     return ToDouble (Time::H);
   }
-  inline double GetMinutes (void) const
+  inline double GetMinutes () const
   {
     return ToDouble (Time::MIN);
   }
-  inline double GetSeconds (void) const
+  inline double GetSeconds () const
   {
     return ToDouble (Time::S);
   }
-  inline int64_t GetMilliSeconds (void) const
+  inline int64_t GetMilliSeconds () const
   {
     return ToInteger (Time::MS);
   }
-  inline int64_t GetMicroSeconds (void) const
+  inline int64_t GetMicroSeconds () const
   {
     return ToInteger (Time::US);
   }
-  inline int64_t GetNanoSeconds (void) const
+  inline int64_t GetNanoSeconds () const
   {
     return ToInteger (Time::NS);
   }
-  inline int64_t GetPicoSeconds (void) const
+  inline int64_t GetPicoSeconds () const
   {
     return ToInteger (Time::PS);
   }
-  inline int64_t GetFemtoSeconds (void) const
+  inline int64_t GetFemtoSeconds () const
   {
     return ToInteger (Time::FS);
   }
@@ -412,15 +413,15 @@ public:
    * Get the raw time value, in the current resolution unit.
    * \returns The raw time value
    */
-  inline int64_t GetTimeStep (void) const
+  inline int64_t GetTimeStep () const
   {
     return m_data;
   }
-  inline double GetDouble (void) const
+  inline double GetDouble () const
   {
     return static_cast<double> (m_data);
   }
-  inline int64_t GetInteger (void) const
+  inline int64_t GetInteger () const
   {
     return GetTimeStep ();
   }
@@ -438,7 +439,7 @@ public:
   /**
    * \returns The current global resolution.
    */
-  static enum Unit GetResolution (void);
+  static enum Unit GetResolution ();
 
 
   /**
@@ -601,9 +602,9 @@ private:
    *
    * \return A pointer to the current Resolution
    */
-  static inline struct Resolution * PeekResolution (void)
+  static inline struct Resolution * PeekResolution ()
   {
-    static struct Time::Resolution resolution = SetDefaultNsResolution ();
+    static struct Time::Resolution& resolution{SetDefaultNsResolution()};
     return &resolution;
   }
   /**
@@ -622,7 +623,7 @@ private:
    *
    * \return The Resolution object for the default resolution.
    */
-  static struct Resolution SetDefaultNsResolution (void);
+  static struct Resolution& SetDefaultNsResolution ();
   /**
    *  Set the current Resolution.
    *
@@ -744,7 +745,7 @@ private:
   friend typename std::enable_if<std::is_integral<T>::value, Time>::type
   operator * (const Time& lhs, T rhs);
 
-  // Reversed arg version (forwards to `rhs * lhs`) 
+  // Reversed arg version (forwards to `rhs * lhs`)
   // Accepts both integers and decimal types
   template<class T>
   friend typename std::enable_if<std::is_arithmetic<T>::value, Time>::type
@@ -946,16 +947,16 @@ operator * (const int64x64_t & lhs, const Time & rhs)
  *
  * \tparam T Integer data type (int, long, etc.)
  *
- * \param [in] lhs The Time instance to scale 
+ * \param [in] lhs The Time instance to scale
  * \param [in] rhs The scale value
- * \returns A new Time instance containing the scaled value 
+ * \returns A new Time instance containing the scaled value
  */
 template<class T>
 typename std::enable_if<std::is_integral<T>::value, Time>::type
 operator * (const Time& lhs, T rhs)
 {
   static_assert(!std::is_same<T, bool>::value,
-                "Multiplying a Time by a boolean is not supported"); 
+                "Multiplying a Time by a boolean is not supported");
 
   return Time (lhs.m_data * rhs);
 }
@@ -977,9 +978,9 @@ operator * (const Time& lhs, T rhs)
  *
  * \tparam T Arithmetic data type (int, long, float, etc.)
  *
- * \param [in] lhs The scale value 
- * \param [in] rhs The Time instance to scale 
- * \returns A new Time instance containing the scaled value 
+ * \param [in] lhs The scale value
+ * \param [in] rhs The Time instance to scale
+ * \returns A new Time instance containing the scaled value
  */
 template<class T>
 typename std::enable_if<std::is_arithmetic<T>::value, Time>::type
@@ -1033,16 +1034,16 @@ operator / (const Time & lhs, const int64x64_t & rhs)
  *
  * \tparam T Integer data type (int, long, etc.)
  *
- * \param [in] lhs The Time instance to scale 
+ * \param [in] lhs The Time instance to scale
  * \param [in] rhs The scale value
- * \returns A new Time instance containing the scaled value 
+ * \returns A new Time instance containing the scaled value
  */
 template<class T>
 typename std::enable_if<std::is_integral<T>::value, Time>::type
 operator / (const Time& lhs, T rhs)
 {
   static_assert(!std::is_same<T, bool>::value,
-                "Dividing a Time by a boolean is not supported"); 
+                "Dividing a Time by a boolean is not supported");
 
   return Time(lhs.m_data / rhs);
 }
@@ -1326,7 +1327,7 @@ Ptr<const AttributeChecker> MakeTimeChecker (const Time min, const Time max);
  * \return The AttributeChecker
  */
 inline
-Ptr<const AttributeChecker> MakeTimeChecker (void)
+Ptr<const AttributeChecker> MakeTimeChecker ()
 {
   return MakeTimeChecker (Time::Min (), Time::Max ());
 }
@@ -1375,6 +1376,14 @@ private:
   friend std::ostream & operator << (std::ostream & os, const TimeWithUnit & timeU);
 
 };  // class TimeWithUnit
+
+/**
+ * \ingroup time
+ *
+ * ns3::TypeNameGet<Time>() specialization.
+ * \returns The type name as a string.
+ */
+TYPENAMEGET_DEFINE (Time);
 
 } // namespace ns3
 

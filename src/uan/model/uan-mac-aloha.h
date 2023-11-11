@@ -3,7 +3,7 @@
  * Copyright (c) 2009 University of Washington
  *
  * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as 
+ * it under the terms of the GNU General Public License version 2 as
  * published by the Free Software Foundation;
  *
  * This program is distributed in the hope that it will be useful,
@@ -46,20 +46,20 @@ public:
   /** Default constructor */
   UanMacAloha ();
   /** Dummy destructor, see DoDispose. */
-  virtual ~UanMacAloha ();
+  ~UanMacAloha () override;
   /**
    * Register this type.
    * \return The TypeId.
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
 
   // Inherited methods
-  virtual bool Enqueue (Ptr<Packet> pkt, uint16_t protocolNumber, const Address &dest);
-  virtual void SetForwardUpCb (Callback<void, Ptr<Packet>, uint16_t, const Mac8Address&> cb);
-  virtual void AttachPhy (Ptr<UanPhy> phy);
-  virtual void Clear (void);
-  int64_t AssignStreams (int64_t stream);
+  bool Enqueue (Ptr<Packet> pkt, uint16_t protocolNumber, const Address &dest) override;
+  void SetForwardUpCb (Callback<void, Ptr<Packet>, uint16_t, const Mac8Address&> cb) override;
+  void AttachPhy (Ptr<UanPhy> phy) override;
+  void Clear () override;
+  int64_t AssignStreams (int64_t stream) override;
 
 private:
   /** PHY layer attached to this MAC. */
@@ -86,7 +86,7 @@ private:
    */
   void RxPacketError (Ptr<Packet> pkt, double sinr);
 protected:
-  virtual void DoDispose ();
+  void DoDispose () override;
 
 };  // class UanMacAloha
 

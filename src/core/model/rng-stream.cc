@@ -49,7 +49,7 @@ NS_LOG_COMPONENT_DEFINE ("RngStream");
 /** Namespace for MRG32k3a implementation details. */
 namespace MRG32k3a {
 
-// *NS_CHECK_STYLE_OFF*
+// clang-format off
 
 /** Type for 3x3 matrix of doubles. */
 typedef double Matrix[3][3];
@@ -132,7 +132,7 @@ double MultModM (double a, double s, double c, double m)
     {
       return v += m;
     }
-  else 
+  else
     {
       return v;
     }
@@ -181,7 +181,8 @@ void MatVecModM (const Matrix A, const double s[3], double v[3],
 void MatMatModM (const Matrix A, const Matrix B,
                  Matrix C, double m)
 {
-  int i, j;
+  int i;
+  int j;
   double V[3];
   Matrix W;
 
@@ -209,7 +210,7 @@ void MatMatModM (const Matrix A, const Matrix B,
 
 //-------------------------------------------------------------------------
 /**
- * Compute the matrix B = (A^(2^e) Mod m);  works also if A = B. 
+ * Compute the matrix B = (A^(2^e) Mod m);  works also if A = B.
  *
  * \param [in] src Matrix input argument \c A.
  * \param [out] dst Matrix output \c B.
@@ -218,7 +219,8 @@ void MatMatModM (const Matrix A, const Matrix B,
  */
 void MatTwoPowModM (const Matrix src, Matrix dst, double m, int32_t e)
 {
-  int i, j;
+  int i;
+  int j;
 
   /* initialize: dst = src */
   for (i = 0; i < 3; ++i)
@@ -247,7 +249,8 @@ void MatTwoPowModM (const Matrix src, Matrix dst, double m, int32_t e)
  */
 void MatPowModM (const double A[3][3], double B[3][3], double m, int32_t n)
 {
-  int i, j;
+  int i;
+  int j;
   double W[3][3];
 
   // initialize: W = A; B = I
@@ -292,7 +295,7 @@ struct Precalculated
  *
  * \returns The precalculated powers of the transition matrices.
  */
-struct Precalculated PowerOfTwoConstants (void)
+struct Precalculated PowerOfTwoConstants ()
 {
   struct Precalculated precalculated;
   for (int i = 0; i < 190; i++)
@@ -325,7 +328,7 @@ void PowerOfTwoMatrix (int n, Matrix a1p, Matrix a2p)
 
 } // namespace MRG32k3a
 
-// *NS_CHECK_STYLE_ON*
+// clang-format on
 
 
 namespace ns3 {
@@ -335,7 +338,9 @@ using namespace MRG32k3a;
 double RngStream::RandU01 ()
 {
   int32_t k;
-  double p1, p2, u;
+  double p1;
+  double p2;
+  double u;
 
   /* Component 1 */
   p1 = a12 * m_currentState[1] - a13n * m_currentState[0];
@@ -392,7 +397,8 @@ RngStream::RngStream (const RngStream& r)
 void
 RngStream::AdvanceNthBy (uint64_t nth, int by, double state[6])
 {
-  Matrix matrix1,matrix2;
+  Matrix matrix1;
+  Matrix matrix2;
   for (int i = 0; i < 64; i++)
     {
       int nbit = 63 - i;

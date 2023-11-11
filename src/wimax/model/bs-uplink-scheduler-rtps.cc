@@ -36,13 +36,13 @@
 namespace ns3 {
 
 NS_LOG_COMPONENT_DEFINE ("UplinkSchedulerRtps");
-  
+
 NS_OBJECT_ENSURE_REGISTERED (UplinkSchedulerRtps);
-  
+
 
 UplinkSchedulerRtps::UplinkSchedulerRtps ()
 {
-  SetBs (0);
+  SetBs (nullptr);
   SetTimeStampIrInterval (Seconds (0));
   SetNrIrOppsAllocated (0);
   SetIsIrIntrvlAllocated (false);
@@ -62,14 +62,14 @@ UplinkSchedulerRtps::UplinkSchedulerRtps (Ptr<BaseStationNetDevice> bs)
   SetUcdTimeStamp (Simulator::Now ());
 }
 
-UplinkSchedulerRtps::~UplinkSchedulerRtps (void)
+UplinkSchedulerRtps::~UplinkSchedulerRtps ()
 {
-  SetBs (0);
+  SetBs (nullptr);
   m_uplinkAllocations.clear ();
 }
 
 TypeId
-UplinkSchedulerRtps::GetTypeId (void)
+UplinkSchedulerRtps::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::UplinkSchedulerRtps")
     .SetParent<UplinkScheduler> ()
@@ -80,7 +80,7 @@ UplinkSchedulerRtps::GetTypeId (void)
 }
 
 std::list<OfdmUlMapIe>
-UplinkSchedulerRtps::GetUplinkAllocations (void) const
+UplinkSchedulerRtps::GetUplinkAllocations () const
 {
   return m_uplinkAllocations;
 }
@@ -142,7 +142,7 @@ UplinkSchedulerRtps::GetChannelDescriptorsToUpdate (bool &updateDcd, bool &updat
 }
 
 uint32_t
-UplinkSchedulerRtps::CalculateAllocationStartTime (void)
+UplinkSchedulerRtps::CalculateAllocationStartTime ()
 {
   return GetBs ()->GetNrDlSymbols () * GetBs ()->GetPhy ()->GetPsPerSymbol () + GetBs ()->GetTtg ();
 }
@@ -161,7 +161,7 @@ UplinkSchedulerRtps::AddUplinkAllocation (OfdmUlMapIe &ulMapIe,
 }
 
 void
-UplinkSchedulerRtps::Schedule (void)
+UplinkSchedulerRtps::Schedule ()
 {
   m_uplinkAllocations.clear ();
   SetIsIrIntrvlAllocated (false);
@@ -312,15 +312,14 @@ UplinkSchedulerRtps::Schedule (void)
                                                                                      WimaxNetDevice::DIRECTION_UPLINK));
 
               // allocate unicast polls for nrtPS flows if bandwidth is available
-              if (availableSymbols)
-                {
+              
                   ServiceBandwidthRequests (ssRecord,
                                             ServiceFlow::SF_TYPE_NRTPS,
                                             ulMapIe,
                                             modulationType,
                                             symbolsToAllocation,
                                             availableSymbols);
-                }
+                
               // finally allocate unicast polls for BE flows if bandwidth is available
               if (availableSymbols)
                 {

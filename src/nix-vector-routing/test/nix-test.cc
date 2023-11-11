@@ -98,7 +98,7 @@ class NixVectorRoutingTest : public TestCase
   void SendData (Time delay, Ptr<Socket> socket, Ipv6Address to);
 
 public:
-  virtual void DoRun (void);
+  void DoRun () override;
   NixVectorRoutingTest ();
 
   /**
@@ -155,7 +155,7 @@ NixVectorRoutingTest::SendData (Time delay, Ptr<Socket> socket, Ipv6Address to)
 }
 
 void
-NixVectorRoutingTest::DoRun (void)
+NixVectorRoutingTest::DoRun ()
 {
   // Create topology
   NodeContainer nSrcnA;
@@ -358,7 +358,7 @@ NixVectorRoutingTest::DoRun (void)
                                   "IpRouteCache:\n\n";
   NS_TEST_EXPECT_MSG_EQ (stringStream2v4.str (), emptyCaches, "The caches should have been empty.");
   NS_TEST_EXPECT_MSG_EQ (stringStream2v6.str (), emptyCaches, "The caches should have been empty.");
-  
+
   Simulator::Destroy ();
 }
 

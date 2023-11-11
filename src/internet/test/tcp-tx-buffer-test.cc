@@ -39,8 +39,8 @@ public:
   TcpTxBufferTestCase ();
 
 private:
-  virtual void DoRun (void);
-  virtual void DoTeardown (void);
+  void DoRun () override;
+  void DoTeardown () override;
 
   /** \brief Test if a segment is really set as lost */
   void TestIsLost ();
@@ -57,7 +57,7 @@ private:
    * \brief Callback to provide a value of receiver window
    * \returns the receiver window size
    */
-  uint32_t GetRWnd (void) const;
+  uint32_t GetRWnd () const;
 };
 
 TcpTxBufferTestCase::TcpTxBufferTestCase ()
@@ -119,26 +119,37 @@ TcpTxBufferTestCase::TestIsLost ()
 
   txBuf->Add(Create<Packet> (10000));
 
-  for (uint8_t i = 0; i <10 ; ++i)
-    txBuf->CopyFromSequence (1000, SequenceNumber32((i*1000)+1));
+  for (uint8_t i = 0; i < 10; ++i)
+    {
+      txBuf->CopyFromSequence (1000, SequenceNumber32 ((i * 1000) + 1));
+    }
 
-  for (uint8_t i = 0; i < 10 ; ++i)
-    NS_TEST_ASSERT_MSG_EQ (txBuf->IsLost(SequenceNumber32((i*1000)+1)), false,
-                           "Lost is true, but it's not");
+  for (uint8_t i = 0; i < 10; ++i)
+    {
+      NS_TEST_ASSERT_MSG_EQ (txBuf->IsLost (SequenceNumber32 ((i * 1000) + 1)),
+                             false,
+                             "Lost is true, but it's not");
+    }
 
   sack->AddSackBlock (TcpOptionSack::SackBlock (SequenceNumber32 (1001), SequenceNumber32 (2001)));
   txBuf->Update(sack->GetSackList());
 
-  for (uint8_t i = 0; i < 10 ; ++i)
-    NS_TEST_ASSERT_MSG_EQ (txBuf->IsLost(SequenceNumber32((i*1000)+1)), false,
-                           "Lost is true, but it's not");
+  for (uint8_t i = 0; i < 10; ++i)
+    {
+      NS_TEST_ASSERT_MSG_EQ (txBuf->IsLost (SequenceNumber32 ((i * 1000) + 1)),
+                             false,
+                             "Lost is true, but it's not");
+    }
 
   sack->AddSackBlock (TcpOptionSack::SackBlock (SequenceNumber32 (2001), SequenceNumber32 (3001)));
   txBuf->Update(sack->GetSackList());
 
-  for (uint8_t i = 0; i < 10 ; ++i)
-    NS_TEST_ASSERT_MSG_EQ (txBuf->IsLost(SequenceNumber32((i*1000)+1)), false,
-                           "Lost is true, but it's not");
+  for (uint8_t i = 0; i < 10; ++i)
+    {
+      NS_TEST_ASSERT_MSG_EQ (txBuf->IsLost (SequenceNumber32 ((i * 1000) + 1)),
+                             false,
+                             "Lost is true, but it's not");
+    }
 
   sack->AddSackBlock (TcpOptionSack::SackBlock (SequenceNumber32 (3001), SequenceNumber32 (4001)));
   txBuf->Update(sack->GetSackList());
@@ -146,15 +157,16 @@ TcpTxBufferTestCase::TestIsLost ()
   NS_TEST_ASSERT_MSG_EQ (txBuf->IsLost(SequenceNumber32(1)), true,
                          "Lost is true, but it's not");
 
-  for (uint8_t i = 1; i < 10 ; ++i)
-    NS_TEST_ASSERT_MSG_EQ (txBuf->IsLost(SequenceNumber32((i*1000)+1)), false,
-                           "Lost is true, but it's not");
-
-
+  for (uint8_t i = 1; i < 10; ++i)
+    {
+      NS_TEST_ASSERT_MSG_EQ (txBuf->IsLost (SequenceNumber32 ((i * 1000) + 1)),
+                             false,
+                             "Lost is true, but it's not");
+    }
 }
 
 uint32_t
-TcpTxBufferTestCase::GetRWnd (void) const
+TcpTxBufferTestCase::GetRWnd () const
 {
   // Assume unlimited receiver window
   return std::numeric_limits<uint32_t>::max ();

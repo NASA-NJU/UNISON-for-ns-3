@@ -37,7 +37,7 @@ NS_LOG_COMPONENT_DEFINE ("ClearChannelCmu");
 
 /**
  * WiFi clear channel cmu experiment class.
- * 
+ *
  * It handles the creation and run of an experiment.
  */
 class Experiment
@@ -55,7 +55,7 @@ public:
    * \param wifiPhy   //!< The YansWifiPhyHelper class.
    * \param wifiMac   //!< The WifiMacHelper class.
    * \param wifiChannel //!< The YansWifiChannelHelper class.
-   * \return the number of received packets. 
+   * \return the number of received packets.
    */
   uint32_t Run (const WifiHelper &wifi, const YansWifiPhyHelper &wifiPhy,
                 const WifiMacHelper &wifiMac, const YansWifiChannelHelper &wifiChannel);
@@ -211,12 +211,13 @@ Experiment::Run (const WifiHelper &wifi, const YansWifiPhyHelper &wifiPhy,
 int main (int argc, char *argv[])
 {
   std::ofstream outfile ("clear-channel.plt");
-  std::vector <std::string> modes;
 
-  modes.push_back ("DsssRate1Mbps");
-  modes.push_back ("DsssRate2Mbps");
-  modes.push_back ("DsssRate5_5Mbps");
-  modes.push_back ("DsssRate11Mbps");
+  const std::vector <std::string> modes {
+    "DsssRate1Mbps",
+    "DsssRate2Mbps",
+    "DsssRate5_5Mbps",
+    "DsssRate11Mbps",
+  };
 
   CommandLine cmd (__FILE__);
   cmd.Parse (argc, argv);

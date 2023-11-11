@@ -43,7 +43,7 @@ class LrWpanCollisionTestCase : public TestCase
 {
 public:
   LrWpanCollisionTestCase ();
-  virtual ~LrWpanCollisionTestCase ();
+  ~LrWpanCollisionTestCase () override;
 
   /**
    * \brief Function called when DataIndication is hit.
@@ -52,7 +52,7 @@ public:
    */
    void DataIndication (McpsDataIndicationParams params, Ptr<Packet> p);
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
 
   uint8_t m_rxPackets; //!< Rx packets counter.
 };
@@ -74,7 +74,7 @@ void LrWpanCollisionTestCase::DataIndication (McpsDataIndicationParams params, P
 
 
 void
-LrWpanCollisionTestCase::DoRun (void)
+LrWpanCollisionTestCase::DoRun ()
 {
 
   // Create 3 nodes, and a NetDevice for each one

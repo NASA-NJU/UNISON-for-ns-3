@@ -44,39 +44,39 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   ComponentCarrierUe ();
 
-  virtual ~ComponentCarrierUe (void);
-  virtual void DoDispose (void);
+  ~ComponentCarrierUe () override;
+  void DoDispose () override;
 
 
   /**
    * \return a pointer to the physical layer.
    */
-  Ptr<LteUePhy> GetPhy (void) const;
+  Ptr<LteUePhy> GetPhy () const;
 
   /**
    * \return a pointer to the MAC layer.
    */
-  Ptr<LteUeMac> GetMac (void) const;
+  Ptr<LteUeMac> GetMac () const;
 
   /**
    * Set LteUePhy
    * \param s a pointer to the LteUePhy
-   */  
+   */
   void SetPhy (Ptr<LteUePhy> s);
 
   /**
    * Set the LteEnbMac
    * \param s a pointer to the LteEnbMac
-   */ 
+   */
   void SetMac (Ptr<LteUeMac> s);
-  
+
 protected:
   // inherited from Object
-  virtual void DoInitialize (void);
+  void DoInitialize () override;
 
 private:
 

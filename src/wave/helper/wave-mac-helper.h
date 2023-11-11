@@ -38,42 +38,22 @@ public:
    * Create a NqosWaveMacHelper to make life easier for people who want to
    * work with non-QOS Wave MAC layers.
    */
-  NqosWaveMacHelper (void);
+  NqosWaveMacHelper ();
 
   /**
    * Destroy a NqosWaveMacHelper.
    */
-  virtual ~NqosWaveMacHelper (void);
+  ~NqosWaveMacHelper () override;
   /**
    * Create a mac helper in a default working state.
    * i.e., this is an ocb mac by default.
    * \returns NqosWaveMacHelper
    */
-  static NqosWaveMacHelper Default (void);
+  static NqosWaveMacHelper Default ();
   /**
+   * \tparam Ts \deduced Argument types
    * \param type the type of ns3::WifiMac to create.
-   * \param n0 the name of the attribute to set
-   * \param v0 the value of the attribute to set
-   * \param n1 the name of the attribute to set
-   * \param v1 the value of the attribute to set
-   * \param n2 the name of the attribute to set
-   * \param v2 the value of the attribute to set
-   * \param n3 the name of the attribute to set
-   * \param v3 the value of the attribute to set
-   * \param n4 the name of the attribute to set
-   * \param v4 the value of the attribute to set
-   * \param n5 the name of the attribute to set
-   * \param v5 the value of the attribute to set
-   * \param n6 the name of the attribute to set
-   * \param v6 the value of the attribute to set
-   * \param n7 the name of the attribute to set
-   * \param v7 the value of the attribute to set
-   * \param n8 the value of the attribute to set
-   * \param v8 the value of the attribute to set
-   * \param n9 the value of the attribute to set
-   * \param v9 the value of the attribute to set
-   * \param n10 the value of the attribute to set
-   * \param v10 the value of the attribute to set
+   * \param [in] args Name and AttributeValue pairs to set.
    *
    * All the attributes specified in this method should exist
    * in the requested mac.
@@ -81,18 +61,8 @@ public:
    * note: Here we require users set type with OcbWifiMac or its
    * subclass, otherwise it will become error
    */
-  virtual void SetType (std::string type,
-                        std::string n0 = "", const AttributeValue &v0 = EmptyAttributeValue (),
-                        std::string n1 = "", const AttributeValue &v1 = EmptyAttributeValue (),
-                        std::string n2 = "", const AttributeValue &v2 = EmptyAttributeValue (),
-                        std::string n3 = "", const AttributeValue &v3 = EmptyAttributeValue (),
-                        std::string n4 = "", const AttributeValue &v4 = EmptyAttributeValue (),
-                        std::string n5 = "", const AttributeValue &v5 = EmptyAttributeValue (),
-                        std::string n6 = "", const AttributeValue &v6 = EmptyAttributeValue (),
-                        std::string n7 = "", const AttributeValue &v7 = EmptyAttributeValue (),
-                        std::string n8 = "", const AttributeValue &v8 = EmptyAttributeValue (),
-                        std::string n9 = "", const AttributeValue &v9 = EmptyAttributeValue (),
-                        std::string n10 = "", const AttributeValue &v10 = EmptyAttributeValue ());
+  template <typename... Ts>
+  void SetType (std::string type, Ts&&... args);
 };
 
 /**
@@ -106,43 +76,23 @@ public:
    * Create a QosWaveMacHelper that is used to make life easier when working
    * with Wifi 802.11p devices using a QOS MAC layer.
    */
-  QosWaveMacHelper (void);
+  QosWaveMacHelper ();
 
   /**
    * Destroy a QosWaveMacHelper
    */
-  virtual ~QosWaveMacHelper (void);
+  ~QosWaveMacHelper () override;
 
   /**
    * Create a mac helper in a default working state.
    * \return A mac helper
    */
-  static QosWaveMacHelper Default (void);
+  static QosWaveMacHelper Default ();
 
   /**
+   * \tparam Ts \deduced Argument types
    * \param type the type of ns3::WifiMac to create.
-   * \param n0 the name of the attribute to set
-   * \param v0 the value of the attribute to set
-   * \param n1 the name of the attribute to set
-   * \param v1 the value of the attribute to set
-   * \param n2 the name of the attribute to set
-   * \param v2 the value of the attribute to set
-   * \param n3 the name of the attribute to set
-   * \param v3 the value of the attribute to set
-   * \param n4 the name of the attribute to set
-   * \param v4 the value of the attribute to set
-   * \param n5 the name of the attribute to set
-   * \param v5 the value of the attribute to set
-   * \param n6 the name of the attribute to set
-   * \param v6 the value of the attribute to set
-   * \param n7 the name of the attribute to set
-   * \param v7 the value of the attribute to set
-   * \param n8 the value of the attribute to set
-   * \param v8 the value of the attribute to set
-   * \param n9 the value of the attribute to set
-   * \param v9 the value of the attribute to set
-   * \param n10 the value of the attribute to set
-   * \param v10 the value of the attribute to set
+   * \param [in] args Name and AttributeValue pairs to set.
    *
    * All the attributes specified in this method should exist
    * in the requested mac.
@@ -150,19 +100,35 @@ public:
    * note: Here we require users set type with OcbWifiMac or its
    * subclass, otherwise it will become error
    */
-  virtual void SetType (std::string type,
-                        std::string n0 = "", const AttributeValue &v0 = EmptyAttributeValue (),
-                        std::string n1 = "", const AttributeValue &v1 = EmptyAttributeValue (),
-                        std::string n2 = "", const AttributeValue &v2 = EmptyAttributeValue (),
-                        std::string n3 = "", const AttributeValue &v3 = EmptyAttributeValue (),
-                        std::string n4 = "", const AttributeValue &v4 = EmptyAttributeValue (),
-                        std::string n5 = "", const AttributeValue &v5 = EmptyAttributeValue (),
-                        std::string n6 = "", const AttributeValue &v6 = EmptyAttributeValue (),
-                        std::string n7 = "", const AttributeValue &v7 = EmptyAttributeValue (),
-                        std::string n8 = "", const AttributeValue &v8 = EmptyAttributeValue (),
-                        std::string n9 = "", const AttributeValue &v9 = EmptyAttributeValue (),
-                        std::string n10 = "", const AttributeValue &v10 = EmptyAttributeValue ());
+  template <typename... Ts>
+  void SetType (std::string type, Ts&&... args);
 };
+
+
+
+/***************************************************************
+ *  Implementation of the templates declared above.
+ ***************************************************************/
+
+template <typename... Ts>
+ void NqosWaveMacHelper::SetType (std::string type, Ts&&... args)
+{
+  if (type != "ns3::OcbWifiMac")
+    {
+      NS_FATAL_ERROR ("QosWaveMacHelper shall set OcbWifiMac");
+    }
+  WifiMacHelper::SetType ("ns3::OcbWifiMac", std::forward<Ts> (args)...);
+}
+
+template <typename... Ts>
+void QosWaveMacHelper::SetType (std::string type, Ts&&... args)
+{
+  if (type != "ns3::OcbWifiMac")
+    {
+      NS_FATAL_ERROR ("QosWaveMacHelper shall set OcbWifiMac");
+    }
+  WifiMacHelper::SetType ("ns3::OcbWifiMac", std::forward<Ts> (args)...);
+}
 
 }
 

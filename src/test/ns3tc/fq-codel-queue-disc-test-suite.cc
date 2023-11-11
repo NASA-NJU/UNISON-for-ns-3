@@ -51,10 +51,10 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   Ipv4TestPacketFilter ();
-  virtual ~Ipv4TestPacketFilter ();
+  ~Ipv4TestPacketFilter () override;
 
 private:
   /**
@@ -62,18 +62,18 @@ private:
    * \param item The item to classify (unused).
    * \return a pre-set hash value.
    */
-  virtual int32_t DoClassify (Ptr<QueueDiscItem> item) const;
+  int32_t DoClassify (Ptr<QueueDiscItem> item) const override;
 
   /**
    * Check the protocol.
    * \param item The item to check (unused).
    * \return true.
    */
-  virtual bool CheckProtocol (Ptr<QueueDiscItem> item) const;
+  bool CheckProtocol (Ptr<QueueDiscItem> item) const override;
 };
 
 TypeId
-Ipv4TestPacketFilter::GetTypeId (void)
+Ipv4TestPacketFilter::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::Ipv4TestPacketFilter")
     .SetParent<Ipv4PacketFilter> ()
@@ -112,10 +112,10 @@ class FqCoDelQueueDiscNoSuitableFilter : public TestCase
 {
 public:
   FqCoDelQueueDiscNoSuitableFilter ();
-  virtual ~FqCoDelQueueDiscNoSuitableFilter ();
+  ~FqCoDelQueueDiscNoSuitableFilter () override;
 
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
 };
 
 FqCoDelQueueDiscNoSuitableFilter::FqCoDelQueueDiscNoSuitableFilter ()
@@ -128,7 +128,7 @@ FqCoDelQueueDiscNoSuitableFilter::~FqCoDelQueueDiscNoSuitableFilter ()
 }
 
 void
-FqCoDelQueueDiscNoSuitableFilter::DoRun (void)
+FqCoDelQueueDiscNoSuitableFilter::DoRun ()
 {
   // Packets that cannot be classified by the available filters should be dropped
   Ptr<FqCoDelQueueDisc> queueDisc = CreateObjectWithAttributes<FqCoDelQueueDisc> ("MaxSize", StringValue ("4p"));
@@ -165,10 +165,10 @@ class FqCoDelQueueDiscIPFlowsSeparationAndPacketLimit : public TestCase
 {
 public:
   FqCoDelQueueDiscIPFlowsSeparationAndPacketLimit ();
-  virtual ~FqCoDelQueueDiscIPFlowsSeparationAndPacketLimit ();
+  ~FqCoDelQueueDiscIPFlowsSeparationAndPacketLimit () override;
 
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
   /**
    * Enqueue a packet.
    * \param queue The queue disc.
@@ -196,7 +196,7 @@ FqCoDelQueueDiscIPFlowsSeparationAndPacketLimit::AddPacket (Ptr<FqCoDelQueueDisc
 }
 
 void
-FqCoDelQueueDiscIPFlowsSeparationAndPacketLimit::DoRun (void)
+FqCoDelQueueDiscIPFlowsSeparationAndPacketLimit::DoRun ()
 {
   Ptr<FqCoDelQueueDisc> queueDisc = CreateObjectWithAttributes<FqCoDelQueueDisc> ("MaxSize", StringValue ("4p"));
 
@@ -241,10 +241,10 @@ class FqCoDelQueueDiscDeficit : public TestCase
 {
 public:
   FqCoDelQueueDiscDeficit ();
-  virtual ~FqCoDelQueueDiscDeficit ();
+  ~FqCoDelQueueDiscDeficit () override;
 
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
   /**
    * Enqueue a packet.
    * \param queue The queue disc.
@@ -272,7 +272,7 @@ FqCoDelQueueDiscDeficit::AddPacket (Ptr<FqCoDelQueueDisc> queue, Ipv4Header hdr)
 }
 
 void
-FqCoDelQueueDiscDeficit::DoRun (void)
+FqCoDelQueueDiscDeficit::DoRun ()
 {
   Ptr<FqCoDelQueueDisc> queueDisc = CreateObjectWithAttributes<FqCoDelQueueDisc> ();
 
@@ -390,10 +390,10 @@ class FqCoDelQueueDiscTCPFlowsSeparation : public TestCase
 {
 public:
   FqCoDelQueueDiscTCPFlowsSeparation ();
-  virtual ~FqCoDelQueueDiscTCPFlowsSeparation ();
+  ~FqCoDelQueueDiscTCPFlowsSeparation () override;
 
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
   /**
    * Enqueue a packet.
    * \param queue The queue disc.
@@ -423,7 +423,7 @@ FqCoDelQueueDiscTCPFlowsSeparation::AddPacket (Ptr<FqCoDelQueueDisc> queue, Ipv4
 }
 
 void
-FqCoDelQueueDiscTCPFlowsSeparation::DoRun (void)
+FqCoDelQueueDiscTCPFlowsSeparation::DoRun ()
 {
   Ptr<FqCoDelQueueDisc> queueDisc = CreateObjectWithAttributes<FqCoDelQueueDisc> ("MaxSize", StringValue ("10p"));
 
@@ -484,10 +484,10 @@ class FqCoDelQueueDiscUDPFlowsSeparation : public TestCase
 {
 public:
   FqCoDelQueueDiscUDPFlowsSeparation ();
-  virtual ~FqCoDelQueueDiscUDPFlowsSeparation ();
+  ~FqCoDelQueueDiscUDPFlowsSeparation () override;
 
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
   /**
    * Enqueue a packet.
    * \param queue The queue disc.
@@ -517,7 +517,7 @@ FqCoDelQueueDiscUDPFlowsSeparation::AddPacket (Ptr<FqCoDelQueueDisc> queue, Ipv4
 }
 
 void
-FqCoDelQueueDiscUDPFlowsSeparation::DoRun (void)
+FqCoDelQueueDiscUDPFlowsSeparation::DoRun ()
 {
   Ptr<FqCoDelQueueDisc> queueDisc = CreateObjectWithAttributes<FqCoDelQueueDisc> ("MaxSize", StringValue ("10p"));
 
@@ -581,10 +581,10 @@ class FqCoDelQueueDiscECNMarking : public TestCase
 {
 public:
   FqCoDelQueueDiscECNMarking ();
-  virtual ~FqCoDelQueueDiscECNMarking ();
+  ~FqCoDelQueueDiscECNMarking () override;
 
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
   /**
    * Enqueue some packets.
    * \param queue The queue disc.
@@ -651,7 +651,7 @@ FqCoDelQueueDiscECNMarking::DequeueWithDelay (Ptr<FqCoDelQueueDisc> queue, doubl
 }
 
 void
-FqCoDelQueueDiscECNMarking::DoRun (void)
+FqCoDelQueueDiscECNMarking::DoRun ()
 {
   // Test is divided into 3 sub test cases:
   // 1) CeThreshold disabled
@@ -700,7 +700,7 @@ FqCoDelQueueDiscECNMarking::DoRun (void)
   Ptr<CoDelQueueDisc> q2 = queueDisc->GetQueueDiscClass (2)->GetQueueDisc ()->GetObject <CoDelQueueDisc> ();
   Ptr<CoDelQueueDisc> q3 = queueDisc->GetQueueDiscClass (3)->GetQueueDisc ()->GetObject <CoDelQueueDisc> ();
   Ptr<CoDelQueueDisc> q4 = queueDisc->GetQueueDiscClass (4)->GetQueueDisc ()->GetObject <CoDelQueueDisc> ();
-  
+
 
   //Ensure there are some remaining packets in the flow queues to check for flow queues with ECN capable packets
   NS_TEST_EXPECT_MSG_NE (queueDisc->GetQueueDiscClass (0)->GetQueueDisc ()->GetNPackets (), 0, "There should be some remaining packets");
@@ -723,7 +723,7 @@ FqCoDelQueueDiscECNMarking::DoRun (void)
   NS_TEST_EXPECT_MSG_EQ (q1->GetStats ().GetNDroppedPackets (CoDelQueueDisc::TARGET_EXCEEDED_DROP), 0, "There should not be any dropped packets");
   NS_TEST_EXPECT_MSG_EQ (q2->GetStats ().GetNMarkedPackets (CoDelQueueDisc::TARGET_EXCEEDED_MARK), 6, "There should be 6 marked packets");
   NS_TEST_EXPECT_MSG_EQ (q2->GetStats ().GetNDroppedPackets (CoDelQueueDisc::TARGET_EXCEEDED_DROP), 0, "There should not be any dropped packets");
-  
+
   // As packets in flow queues are not ECN capable
   NS_TEST_EXPECT_MSG_EQ (q3->GetStats ().GetNDroppedPackets (CoDelQueueDisc::TARGET_EXCEEDED_DROP), 4, "There should be 4 dropped packets"
                         "with 20 packets, total bytes in the queue = 120 * 20 = 2400. First packet dequeues at 110ms which is greater than"
@@ -753,7 +753,7 @@ FqCoDelQueueDiscECNMarking::DoRun (void)
                                                                                    "CeThreshold", TimeValue (MilliSeconds (2)));
   queueDisc->SetQuantum (1514);
   queueDisc->Initialize ();
-  
+
   // Add 20 ECT0 (ECN capable) packets from first flow
   hdr.SetDestination (Ipv4Address ("10.10.1.2"));
   hdr.SetEcn (Ipv4Header::ECN_ECT0);
@@ -828,7 +828,7 @@ FqCoDelQueueDiscECNMarking::DoRun (void)
                                                                                    "CeThreshold", TimeValue (MilliSeconds (2)));
   queueDisc->SetQuantum (1514);
   queueDisc->Initialize ();
-  
+
   // Add 20 ECT0 (ECN capable) packets from first flow
   hdr.SetDestination (Ipv4Address ("10.10.1.2"));
   hdr.SetEcn (Ipv4Header::ECN_ECT0);
@@ -870,15 +870,15 @@ FqCoDelQueueDiscECNMarking::DoRun (void)
 
   // As packets in flow queues are ECN capable
   NS_TEST_EXPECT_MSG_EQ (q0->GetStats ().GetNDroppedPackets (CoDelQueueDisc::TARGET_EXCEEDED_DROP), 0, "There should not be any dropped packets");
-  NS_TEST_EXPECT_MSG_EQ (q0->GetStats ().GetNMarkedPackets (CoDelQueueDisc::CE_THRESHOLD_EXCEEDED_MARK) + 
+  NS_TEST_EXPECT_MSG_EQ (q0->GetStats ().GetNMarkedPackets (CoDelQueueDisc::CE_THRESHOLD_EXCEEDED_MARK) +
                          q0->GetStats ().GetNMarkedPackets (CoDelQueueDisc::TARGET_EXCEEDED_MARK), 20 - q0->GetNPackets (), "Number of CE threshold"
                         " exceeded marks plus Number of Target exceeded marks should be equal to total number of packets dequeued");
   NS_TEST_EXPECT_MSG_EQ (q1->GetStats ().GetNDroppedPackets (CoDelQueueDisc::TARGET_EXCEEDED_DROP), 0, "There should not be any dropped packets");
-  NS_TEST_EXPECT_MSG_EQ (q1->GetStats ().GetNMarkedPackets (CoDelQueueDisc::CE_THRESHOLD_EXCEEDED_MARK) + 
+  NS_TEST_EXPECT_MSG_EQ (q1->GetStats ().GetNMarkedPackets (CoDelQueueDisc::CE_THRESHOLD_EXCEEDED_MARK) +
                          q1->GetStats ().GetNMarkedPackets (CoDelQueueDisc::TARGET_EXCEEDED_MARK), 20 - q1->GetNPackets (), "Number of CE threshold"
                         " exceeded marks plus Number of Target exceeded marks should be equal to total number of packets dequeued");
   NS_TEST_EXPECT_MSG_EQ (q2->GetStats ().GetNDroppedPackets (CoDelQueueDisc::TARGET_EXCEEDED_DROP), 0, "There should not be any dropped packets");
-  NS_TEST_EXPECT_MSG_EQ (q2->GetStats ().GetNMarkedPackets (CoDelQueueDisc::CE_THRESHOLD_EXCEEDED_MARK) + 
+  NS_TEST_EXPECT_MSG_EQ (q2->GetStats ().GetNMarkedPackets (CoDelQueueDisc::CE_THRESHOLD_EXCEEDED_MARK) +
                          q2->GetStats ().GetNMarkedPackets (CoDelQueueDisc::TARGET_EXCEEDED_MARK), 20 - q2->GetNPackets (), "Number of CE threshold"
                         " exceeded marks plus Number of Target exceeded marks should be equal to total number of packets dequeued");
 
@@ -909,14 +909,14 @@ FqCoDelQueueDiscECNMarking::DoRun (void)
  *
  * We modified DoClassify () and CheckProtocol () so that we could control
  * the hash returned for each packet. In the beginning, we use flow hashes
- * ranging from 0 to 7. These must go into different queues in the same set. 
- * The set number for these is obtained using outerHash, which is 0.  
+ * ranging from 0 to 7. These must go into different queues in the same set.
+ * The set number for these is obtained using outerHash, which is 0.
  * When a new packet arrives with flow hash 1024, outerHash = 0 is obtained
  * and the first set is iteratively searched.
- * The packet is eventually added to queue 0 since the tags of queues 
- * in the set do not match with the hash of the flow. The tag of queue 0 is 
+ * The packet is eventually added to queue 0 since the tags of queues
+ * in the set do not match with the hash of the flow. The tag of queue 0 is
  * updated as 1024. When a packet with hash 1025 arrives, outerHash = 0
- * is obtained and the first set is iteratively searched. 
+ * is obtained and the first set is iteratively searched.
  * Since there is no match, it is added to queue 0 and the tag of queue 0 is
  * updated to 1025.
  *
@@ -929,9 +929,9 @@ class FqCoDelQueueDiscSetLinearProbing : public TestCase
 {
 public:
   FqCoDelQueueDiscSetLinearProbing ();
-  virtual ~FqCoDelQueueDiscSetLinearProbing ();
+  ~FqCoDelQueueDiscSetLinearProbing () override;
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
   /**
    * Enqueue a packet.
    * \param queue The queue disc.
@@ -959,7 +959,7 @@ FqCoDelQueueDiscSetLinearProbing::AddPacket (Ptr<FqCoDelQueueDisc> queue, Ipv4He
 }
 
 void
-FqCoDelQueueDiscSetLinearProbing::DoRun (void)
+FqCoDelQueueDiscSetLinearProbing::DoRun ()
 {
   Ptr<FqCoDelQueueDisc> queueDisc = CreateObjectWithAttributes<FqCoDelQueueDisc> ("EnableSetAssociativeHash", BooleanValue (true));
   queueDisc->SetQuantum (90);
@@ -1036,10 +1036,10 @@ class FqCoDelQueueDiscL4sMode : public TestCase
 {
 public:
   FqCoDelQueueDiscL4sMode ();
-  virtual ~FqCoDelQueueDiscL4sMode ();
+  ~FqCoDelQueueDiscL4sMode () override;
 
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
 
   /**
    * Enqueue some packets.
@@ -1122,7 +1122,7 @@ FqCoDelQueueDiscL4sMode::DequeueWithDelay (Ptr<FqCoDelQueueDisc> queue, double d
 }
 
 void
-FqCoDelQueueDiscL4sMode::DoRun (void)
+FqCoDelQueueDiscL4sMode::DoRun ()
 {
   // Test is divided into 2 sub test cases:
   // 1) Without hash collisions

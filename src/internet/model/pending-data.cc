@@ -55,7 +55,7 @@ PendingData::PendingData (uint32_t s, uint8_t* d, uint32_t msg, uint32_t resp)
     }
 }
 
-PendingData::PendingData(const std::string& s) 
+PendingData::PendingData(const std::string& s)
   : size (s.length () + 1), data (0),
     msgSize (0), responseSize (0)
 {
@@ -84,7 +84,7 @@ PendingData* PendingData::Copy () const
 PendingData* PendingData::CopyS (uint32_t s)
 { // Copy, but with new size (assumes no associated data);
   NS_LOG_FUNCTION (this << s);
-  return new PendingData (s, 0, msgSize, responseSize);
+  return new PendingData (s, nullptr, msgSize, responseSize);
 }
 
 PendingData* PendingData::CopySD (uint32_t s, uint8_t* d)
@@ -125,14 +125,17 @@ uint32_t PendingData::SizeFromOffset (uint32_t offset)
 { // Find out how much data is available from offset
   NS_LOG_FUNCTION (this << offset);
   /// \todo should this return zero, or error out?
-  if (offset > size) return 0;     // No data at requested offset
+  if (offset > size)
+    {
+      return 0; // No data at requested offset
+    }
   return size - offset;            // Available data after offset
 }
 
 uint32_t PendingData::OffsetFromSeq (const SequenceNumber32& seqFront, const SequenceNumber32& seqOffset)
 { // f is the first sequence number in this data, o is offset sequence
   NS_LOG_FUNCTION (this << seqFront << seqOffset);
-  if (seqOffset < seqFront) 
+  if (seqOffset < seqFront)
     {
       return 0; // HuH?  Shouldn't happen
     }
@@ -221,7 +224,7 @@ PendingData::RemoveToSeq (const SequenceNumber32& seqFront, const SequenceNumber
 {
   NS_LOG_FUNCTION (this << seqFront << seqOffset);
   uint32_t count = OffsetFromSeq (seqFront, seqOffset);
-  NS_ASSERT_MSG (count <= size, "Trying to remove more data than in the buffer"); 
+  NS_ASSERT_MSG (count <= size, "Trying to remove more data than in the buffer");
   if (count == size)
     {
       Clear ();

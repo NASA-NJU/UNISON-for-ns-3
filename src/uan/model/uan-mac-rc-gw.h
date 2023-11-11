@@ -58,20 +58,20 @@ class UanMacRcGw : public UanMac
 {
 public:
   UanMacRcGw ();           //!< Constructor
-  virtual ~UanMacRcGw ();  //!< Dummy destructor, see DoDispose.
+  ~UanMacRcGw () override;  //!< Dummy destructor, see DoDispose.
 
   /**
    * Register this type.
    * \return The type ID.
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   // Inherited methods
-  virtual bool Enqueue (Ptr<Packet> pkt, uint16_t protocolNumber, const Address &dest);
-  virtual void SetForwardUpCb (Callback<void, Ptr<Packet>, uint16_t, const Mac8Address&> cb);
-  virtual void AttachPhy (Ptr<UanPhy> phy);
-  virtual void Clear (void);
-  int64_t AssignStreams (int64_t stream);
+  bool Enqueue (Ptr<Packet> pkt, uint16_t protocolNumber, const Address &dest) override;
+  void SetForwardUpCb (Callback<void, Ptr<Packet>, uint16_t, const Mac8Address&> cb) override;
+  void AttachPhy (Ptr<UanPhy> phy) override;
+  void Clear () override;
+  int64_t AssignStreams (int64_t stream) override;
 
   /**
    * TracedCallback signature for
@@ -89,7 +89,7 @@ public:
     (Time now, Time delay, uint32_t numRts, uint32_t totalBytes,
      double secs, uint32_t ctlRate, double actualX);
 
-  
+
 private:
   /** Gateway state. */
   enum State {
@@ -124,7 +124,7 @@ private:
   };
   /** Forwarding up callback. */
   Callback<void, Ptr<Packet>, uint16_t, const Mac8Address&> m_forwardUpCb;
-  
+
   Ptr<UanPhy> m_phy;            //!< PHY layer attached to this MAC.
   Time m_maxDelta;              //!< Maximum propagation delay between gateway and non-gateway nodes .
   Time m_sifs;                  //!< Spacing between frames to account for timing error and processing delay.
@@ -185,9 +185,9 @@ private:
   void ReceivePacket (Ptr<Packet> pkt, double sinr, UanTxMode mode);
 
   /** Cycle through pending requests. */
-  void StartCycle (void);
+  void StartCycle ();
   /** End cycle by scheduling pending ACKs. */
-  void EndCycle (void);
+  void EndCycle ();
   /**
    * Send packet on PHY.
    *
@@ -196,7 +196,7 @@ private:
    */
   void SendPacket (Ptr<Packet> pkt, uint32_t rate);
   /** Set state to INCYCLE. */
-  void CycleStarted (void);
+  void CycleStarted ();
   /**
    * PHY receive error callback.
    *
@@ -222,7 +222,7 @@ private:
    *
    * \return Vector of expected propagation delays.
    */
-  std::vector<double>  GetExpPdk (void);
+  std::vector<double>  GetExpPdk ();
   /**
    * Throughput for \pname{a} reservations with framesize \pname{ld},
    * given expected delays exppdk.
@@ -281,9 +281,9 @@ private:
    *
    * \return Optimum number.
    */
-  uint32_t FindOptA (void);
+  uint32_t FindOptA ();
 protected:
-  virtual void DoDispose ();
+  void DoDispose () override;
 
 };  // class UanMacRcGw
 

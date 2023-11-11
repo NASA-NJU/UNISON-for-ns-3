@@ -31,15 +31,15 @@ namespace ns3 {
  *
  * \brief IPv4 list routing.
  *
- * This class is a specialization of Ipv4RoutingProtocol that allows 
- * other instances of Ipv4RoutingProtocol to be inserted in a 
+ * This class is a specialization of Ipv4RoutingProtocol that allows
+ * other instances of Ipv4RoutingProtocol to be inserted in a
  * prioritized list.  Routing protocols in the list are consulted one
  * by one, from highest to lowest priority, until a routing protocol
  * is found that will take the packet (this corresponds to a non-zero
  * return value to RouteOutput, or a return value of true to RouteInput).
- * The order by which routing protocols with the same priority value 
+ * The order by which routing protocols with the same priority value
  * are consulted is undefined.
- * 
+ *
  */
 class Ipv4ListRouting : public Ipv4RoutingProtocol
 {
@@ -48,10 +48,10 @@ public:
    * \brief Get the type ID of this class.
    * \return type ID
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   Ipv4ListRouting ();
-  virtual ~Ipv4ListRouting ();
+  ~Ipv4ListRouting () override;
 
   /**
    * \brief Register a new routing protocol to be used in this IPv4 stack
@@ -64,14 +64,14 @@ public:
   /**
    * \return number of routing protocols in the list
    */
-  virtual uint32_t GetNRoutingProtocols (void) const;
+  virtual uint32_t GetNRoutingProtocols () const;
   /**
    * Return pointer to routing protocol stored at index, with the
    * first protocol (index 0) the highest priority, the next one (index 1)
    * the second highest priority, and so on.  The priority parameter is an
    * output parameter and it returns the integer priority of the protocol.
-   * 
-   * \return pointer to routing protocol indexed by 
+   *
+   * \return pointer to routing protocol indexed by
    * \param index index of protocol to return
    * \param priority output parameter, set to the priority of the protocol
             being returned
@@ -79,21 +79,21 @@ public:
   virtual Ptr<Ipv4RoutingProtocol> GetRoutingProtocol (uint32_t index, int16_t& priority) const;
 
   // Below are from Ipv4RoutingProtocol
-  virtual Ptr<Ipv4Route> RouteOutput (Ptr<Packet> p, const Ipv4Header &header, Ptr<NetDevice> oif, Socket::SocketErrno &sockerr);
+  Ptr<Ipv4Route> RouteOutput (Ptr<Packet> p, const Ipv4Header &header, Ptr<NetDevice> oif, Socket::SocketErrno &sockerr) override;
 
-  virtual bool RouteInput (Ptr<const Packet> p, const Ipv4Header &header, Ptr<const NetDevice> idev,
+  bool RouteInput (Ptr<const Packet> p, const Ipv4Header &header, Ptr<const NetDevice> idev,
                            UnicastForwardCallback ucb, MulticastForwardCallback mcb,
-                           LocalDeliverCallback lcb, ErrorCallback ecb);
-  virtual void NotifyInterfaceUp (uint32_t interface);
-  virtual void NotifyInterfaceDown (uint32_t interface);
-  virtual void NotifyAddAddress (uint32_t interface, Ipv4InterfaceAddress address);
-  virtual void NotifyRemoveAddress (uint32_t interface, Ipv4InterfaceAddress address);
-  virtual void SetIpv4 (Ptr<Ipv4> ipv4);
-  virtual void PrintRoutingTable (Ptr<OutputStreamWrapper> stream, Time::Unit unit = Time::S) const;
+                           LocalDeliverCallback lcb, ErrorCallback ecb) override;
+  void NotifyInterfaceUp (uint32_t interface) override;
+  void NotifyInterfaceDown (uint32_t interface) override;
+  void NotifyAddAddress (uint32_t interface, Ipv4InterfaceAddress address) override;
+  void NotifyRemoveAddress (uint32_t interface, Ipv4InterfaceAddress address) override;
+  void SetIpv4 (Ptr<Ipv4> ipv4) override;
+  void PrintRoutingTable (Ptr<OutputStreamWrapper> stream, Time::Unit unit = Time::S) const override;
 
 protected:
-  virtual void DoDispose (void);
-  virtual void DoInitialize (void);
+  void DoDispose () override;
+  void DoInitialize () override;
 private:
   /**
    * \brief Container identifying an IPv4 Routing Protocol entry in the list.

@@ -42,10 +42,10 @@ class Ns3WimaxSfCreationTestCase : public TestCase
 {
 public:
   Ns3WimaxSfCreationTestCase ();
-  virtual ~Ns3WimaxSfCreationTestCase ();
+  ~Ns3WimaxSfCreationTestCase () override;
 
 private:
-  virtual void DoRun (void);
+  void DoRun () override;
 
 };
 
@@ -59,7 +59,7 @@ Ns3WimaxSfCreationTestCase::~Ns3WimaxSfCreationTestCase ()
 }
 
 void
-Ns3WimaxSfCreationTestCase::DoRun (void)
+Ns3WimaxSfCreationTestCase::DoRun ()
 {
 
   // default values
@@ -74,7 +74,8 @@ Ns3WimaxSfCreationTestCase::DoRun (void)
 
   WimaxHelper wimax;
 
-  NetDeviceContainer ssDevs, bsDevs;
+  NetDeviceContainer ssDevs;
+  NetDeviceContainer bsDevs;
 
   ssDevs = wimax.Install (ssNodes,
                           WimaxHelper::DEVICE_TYPE_SUBSCRIBER_STATION,

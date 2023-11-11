@@ -53,17 +53,17 @@ public:
   {
   public:
     HtSigHeader ();
-    virtual ~HtSigHeader ();
+    ~HtSigHeader () override;
 
     /**
      * \brief Get the type ID.
      * \return the object TypeId
      */
-    static TypeId GetTypeId (void);
+    static TypeId GetTypeId ();
 
-    TypeId GetInstanceTypeId (void) const override;
+    TypeId GetInstanceTypeId () const override;
     void Print (std::ostream &os) const override;
-    uint32_t GetSerializedSize (void) const override;
+    uint32_t GetSerializedSize () const override;
     void Serialize (Buffer::Iterator start) const override;
     uint32_t Deserialize (Buffer::Iterator start) override;
 
@@ -78,7 +78,7 @@ public:
      *
      * \return the MCS field of HT-SIG
      */
-    uint8_t GetMcs (void) const;
+    uint8_t GetMcs () const;
     /**
      * Fill the channel width field of HT-SIG (in MHz).
      *
@@ -90,7 +90,7 @@ public:
      *
      * \return the channel width (in MHz)
      */
-    uint16_t GetChannelWidth (void) const;
+    uint16_t GetChannelWidth () const;
     /**
      * Fill the aggregation field of HT-SIG.
      *
@@ -102,7 +102,7 @@ public:
      *
      * \return the aggregation field of HT-SIG
      */
-    bool GetAggregation (void) const;
+    bool GetAggregation () const;
     /**
      * Fill the short guard interval field of HT-SIG.
      *
@@ -114,7 +114,7 @@ public:
      *
      * \return the short guard interval field of HT-SIG
      */
-    bool GetShortGuardInterval (void) const;
+    bool GetShortGuardInterval () const;
     /**
      * Fill the HT length field of HT-SIG (in bytes).
      *
@@ -126,7 +126,7 @@ public:
      *
      * \return the HT length field of HT-SIG (in bytes)
      */
-    uint16_t GetHtLength (void) const;
+    uint16_t GetHtLength () const;
 
   private:
     uint8_t m_mcs;         ///< Modulation and Coding Scheme index
@@ -141,22 +141,23 @@ public:
    *
    * \param psdu the PHY payload (PSDU)
    * \param txVector the TXVECTOR that was used for this PPDU
+   * \param txCenterFreq the center frequency (MHz) that was used for this PPDU
    * \param ppduDuration the transmission duration of this PPDU
    * \param band the WifiPhyBand used for the transmission of this PPDU
    * \param uid the unique ID of this PPDU
    */
-  HtPpdu (Ptr<const WifiPsdu> psdu, const WifiTxVector& txVector, Time ppduDuration,
-          WifiPhyBand band, uint64_t uid);
+  HtPpdu (Ptr<const WifiPsdu> psdu, const WifiTxVector& txVector, uint16_t txCenterFreq,
+          Time ppduDuration, WifiPhyBand band, uint64_t uid);
   /**
    * Destructor for HtPpdu.
    */
-  virtual ~HtPpdu ();
+  ~HtPpdu () override;
 
-  Time GetTxDuration (void) const override;
-  Ptr<WifiPpdu> Copy (void) const override;
+  Time GetTxDuration () const override;
+  Ptr<WifiPpdu> Copy () const override;
 
 private:
-  WifiTxVector DoGetTxVector (void) const override;
+  WifiTxVector DoGetTxVector () const override;
 
   HtSigHeader m_htSig;  //!< the HT-SIG PHY header
 }; //class HtPpdu

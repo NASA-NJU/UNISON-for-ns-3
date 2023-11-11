@@ -30,7 +30,7 @@ NS_LOG_COMPONENT_DEFINE ("MeshL2RoutingProtocol");
 NS_OBJECT_ENSURE_REGISTERED (MeshL2RoutingProtocol);
 
 TypeId
-MeshL2RoutingProtocol::GetTypeId (void)
+MeshL2RoutingProtocol::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::MeshL2RoutingProtocol")
     .SetParent<Object> ()
@@ -41,7 +41,7 @@ MeshL2RoutingProtocol::GetTypeId (void)
 
 MeshL2RoutingProtocol::~MeshL2RoutingProtocol ()
 {
-  m_mp = 0;
+  m_mp = nullptr;
 }
 
 void

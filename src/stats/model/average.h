@@ -49,7 +49,7 @@ public:
    * Add new sample
    * \param x The sample
    */
-  void Update (T const & x)
+  void Update (const T& x)
   {
     // Give the variance calculator the next value.
     m_varianceCalculator.Update (x);
@@ -113,8 +113,8 @@ public:
   /**
    * \brief Margin of error of the mean for 90% confidence level
    *
-   * Note that estimates are valid for 
-   *   - uncorrelated measurements, 
+   * Note that estimates are valid for
+   *   - uncorrelated measurements,
    *   - normal distribution and
    *   - large enough sample size.
    *
@@ -122,10 +122,10 @@ public:
    */
   double   Error90 () const { return 1.645 * std::sqrt (Var () / Count ()); }
   /**
-   * \brief Margin of error of the mean for 95% confidence level 
+   * \brief Margin of error of the mean for 95% confidence level
    *
-   * Note that estimates are valid for 
-   *   - uncorrelated measurements, 
+   * Note that estimates are valid for
+   *   - uncorrelated measurements,
    *   - normal distribution and
    *   - large enough sample size.
    *
@@ -133,10 +133,10 @@ public:
    */
   double   Error95 () const { return 1.960 * std::sqrt (Var () / Count ()); }
   /**
-   * \brief Margin of error of the mean for 99% confidence level 
+   * \brief Margin of error of the mean for 99% confidence level
    *
-   * Note that estimates are valid for 
-   *   - uncorrelated measurements, 
+   * Note that estimates are valid for
+   *   - uncorrelated measurements,
    *   - normal distribution and
    *   - large enough sample size.
    *
@@ -160,12 +160,17 @@ private:
  * \return the ouput stream.
  */
 template <typename T>
-std::ostream & operator<< (std::ostream & os, Average<T> const & x)
+std::ostream&
+operator<< (std::ostream& os, const Average<T>& x)
 {
   if (x.Count () != 0)
-    os << x.Avg () << " (" << x.Stddev () << ") [" << x.Min () << ", " << x.Max () << "]";
+    {
+      os << x.Avg () << " (" << x.Stddev () << ") [" << x.Min () << ", " << x.Max () << "]";
+    }
   else
-    os << "NA";  // not available
+    {
+      os << "NA"; // not available
+    }
   return os;
 }
 }

@@ -18,7 +18,7 @@
  * Author: Yufei Cheng   <yfcheng@ittc.ku.edu>
  *
  * James P.G. Sterbenz <jpgs@ittc.ku.edu>, director
- * ResiliNets Research Group  http://wiki.ittc.ku.edu/resilinets
+ * ResiliNets Research Group  https://resilinets.org/
  * Information and Telecommunication Technology Center (ITTC)
  * and Department of Electrical Engineering and Computer Science
  * The University of Kansas Lawrence, KS USA.
@@ -188,7 +188,6 @@ DsrErrorBuffer::Drop (DsrErrorBuffEntry en, std::string reason)
   NS_LOG_LOGIC (reason << en.GetPacket ()->GetUid () << " " << en.GetDestination ());
 //  en.GetErrorCallback () (en.GetPacket (), en.GetDestination (),
 //     Socket::ERROR_NOROUTETOHOST);
-  return;
 }
 
 void
@@ -197,7 +196,6 @@ DsrErrorBuffer::DropLink (DsrErrorBuffEntry en, std::string reason)
   NS_LOG_LOGIC (reason << en.GetPacket ()->GetUid () << " " << en.GetSource () << " " << en.GetNextHop ());
 //  en.GetErrorCallback () (en.GetPacket (), en.GetDestination (),
 //     Socket::ERROR_NOROUTETOHOST);
-  return;
 }
 }  // namespace dsr
 }  // namespace ns3

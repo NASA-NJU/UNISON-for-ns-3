@@ -38,17 +38,10 @@ public:
 
   // Implementations of pure virtual methods of WifiInformationElement
   WifiInformationElementId ElementId () const override;
-  uint8_t GetInformationFieldSize () const override;
+  uint16_t GetInformationFieldSize () const override;
   void SerializeInformationField (Buffer::Iterator start) const override;
-  uint8_t DeserializeInformationField (Buffer::Iterator start,
-                                       uint8_t length) override;
-  /* This information element is a bit special in that it is only
-     included if the STA is a HT STA. To support this we
-     override the Serialize and GetSerializedSize methods of
-     WifiInformationElement. */
-  Buffer::Iterator Serialize (Buffer::Iterator start) const override;
-  uint16_t GetSerializedSize () const override;
-
+  uint16_t DeserializeInformationField (Buffer::Iterator start,
+                                        uint16_t length) override;
   /**
    * Set the HT Supported flag.
    *
@@ -116,49 +109,49 @@ public:
    *
    * \return the first byte in the Extended Capabilities information element
    */
-  uint8_t GetExtendedCapabilitiesByte1 (void) const;
+  uint8_t GetExtendedCapabilitiesByte1 () const;
   /**
    * Return the second byte in the Extended Capabilities information element.
    *
    * \return the second byte in the Extended Capabilities information element
    */
-  uint8_t GetExtendedCapabilitiesByte2 (void) const;
+  uint8_t GetExtendedCapabilitiesByte2 () const;
   /**
    * Return the third byte in the Extended Capabilities information element.
    *
    * \return the third byte in the Extended Capabilities information element
    */
-  uint8_t GetExtendedCapabilitiesByte3 (void) const;
+  uint8_t GetExtendedCapabilitiesByte3 () const;
   /**
    * Return the fourth byte in the Extended Capabilities information element.
    *
    * \return the fourth byte in the Extended Capabilities information element
    */
-  uint8_t GetExtendedCapabilitiesByte4 (void) const;
+  uint8_t GetExtendedCapabilitiesByte4 () const;
   /**
    * Return the fifth byte in the Extended Capabilities information element.
    *
    * \return the fifth byte in the Extended Capabilities information element
    */
-  uint8_t GetExtendedCapabilitiesByte5 (void) const;
+  uint8_t GetExtendedCapabilitiesByte5 () const;
   /**
    * Return the sixth byte in the Extended Capabilities information element.
    *
    * \return the sixth byte in the Extended Capabilities information element
    */
-  uint8_t GetExtendedCapabilitiesByte6 (void) const;
+  uint8_t GetExtendedCapabilitiesByte6 () const;
   /**
    * Return the seventh byte in the Extended Capabilities information element.
    *
    * \return the seventh byte in the Extended Capabilities information element
    */
-  uint8_t GetExtendedCapabilitiesByte7 (void) const;
+  uint8_t GetExtendedCapabilitiesByte7 () const;
   /**
    * Return the eighth byte in the Extended Capabilities information element.
    *
    * \return the eighth byte in the Extended Capabilities information element
    */
-  uint8_t GetExtendedCapabilitiesByte8 (void) const;
+  uint8_t GetExtendedCapabilitiesByte8 () const;
 
 
 private:

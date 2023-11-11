@@ -105,11 +105,10 @@
 #include "ns3/mobility-model.h"
 
 using namespace ns3;
-using namespace std;
 
 NS_LOG_COMPONENT_DEFINE ("PowerAdaptationDistance");
 
-/// Pcket size generated at the AP
+/// Packet size generated at the AP
 static const uint32_t packetSize = 1420;
 
 /**
@@ -120,15 +119,15 @@ class NodeStatistics
 public:
   /**
    * \brief Constructor.
-   * 
+   *
    * \param aps Access points
    * \param stas WiFi Stations.
    */
   NodeStatistics (NetDeviceContainer aps, NetDeviceContainer stas);
 
   /**
-   * \brief Callback called by WifiNetDevice/Phy/PhyTxBegin. 
-   * 
+   * \brief Callback called by WifiNetDevice/Phy/PhyTxBegin.
+   *
    * \param path The trace path.
    * \param packet The sent packet.
    * \param powerW The Tx power.
@@ -136,7 +135,7 @@ public:
   void PhyCallback (std::string path, Ptr<const Packet> packet, double powerW);
   /**
    * \brief Callback called by PacketSink/Rx.
-   * 
+   *
    * \param path The trace path.
    * \param packet The received packet.
    * \param from The sender address.
@@ -144,7 +143,7 @@ public:
   void RxCallback (std::string path, Ptr<const Packet> packet, const Address &from);
   /**
    * \brief Callback called by WifiNetDevice/RemoteStationManager/x/PowerChange.
-   * 
+   *
    * \param path The trace path.
    * \param oldPower Old Tx power.
    * \param newPower Actual Tx power.
@@ -153,7 +152,7 @@ public:
   void PowerCallback (std::string path, double oldPower, double newPower, Mac48Address dest);
   /**
    * \brief Callback called by WifiNetDevice/RemoteStationManager/x/RateChange.
-   * 
+   *
    * \param path The trace path.
    * \param oldRate Old rate.
    * \param newRate Actual rate.
@@ -162,7 +161,7 @@ public:
   void RateCallback (std::string path, DataRate oldRate, DataRate newRate, Mac48Address dest);
   /**
    * \brief Set the Position of a node.
-   * 
+   *
    * \param node The node.
    * \param position The position.
    */
@@ -176,7 +175,7 @@ public:
   void AdvancePosition (Ptr<Node> node, int stepsSize, int stepsTime);
   /**
    * \brief Get the Position of a node.
-   * 
+   *
    * \param node The node.
    * \return the position of the node.
    */
@@ -184,13 +183,13 @@ public:
 
   /**
    * \brief Get the Throughput output data
-   * 
+   *
    * \return the Throughput output data.
    */
   Gnuplot2dDataset GetDatafile ();
   /**
    * \brief Get the Power output data.
-   * 
+   *
    * \return the Power output data.
    */
   Gnuplot2dDataset GetPowerDatafile ();
@@ -201,13 +200,13 @@ private:
   typedef std::vector<std::pair<Time, DataRate> > TxTime;
   /**
    * \brief Setup the WifiPhy object.
-   * 
+   *
    * \param phy The WifiPhy to setup.
    */
   void SetupPhy (Ptr<WifiPhy> phy);
   /**
    * \brief Get the time at which a given datarate has been recorded.
-   * 
+   *
    * \param rate The datarate to search.
    * \return the time.
    */
@@ -259,7 +258,7 @@ NodeStatistics::SetupPhy (Ptr<WifiPhy> phy)
       DataRate dataRate = DataRate (mode.GetDataRate (phy->GetChannelWidth ()));
       Time time = phy->CalculateTxDuration (packetSize, txVector, phy->GetPhyBand ());
       NS_LOG_DEBUG (mode.GetUniqueName () << " " << time.GetSeconds () << " " << dataRate);
-      m_timeTable.push_back (std::make_pair (time, dataRate));
+      m_timeTable.emplace_back (time, dataRate);
     }
 }
 
@@ -352,11 +351,27 @@ NodeStatistics::GetPowerDatafile ()
   return m_output_power;
 }
 
+/**
+ * Callback called by WifiNetDevice/RemoteStationManager/x/PowerChange.
+ *
+ * \param path The trace path.
+ * \param oldPower Old Tx power.
+ * \param newPower Actual Tx power.
+ * \param dest Destination of the transmission.
+ */
 void PowerCallback (std::string path, double oldPower, double newPower, Mac48Address dest)
 {
   NS_LOG_INFO ((Simulator::Now ()).GetSeconds () << " " << dest << " Old power=" << oldPower << " New power=" << newPower);
 }
 
+/**
+ * \brief Callback called by WifiNetDevice/RemoteStationManager/x/RateChange.
+ *
+ * \param path The trace path.
+ * \param oldRate Old rate.
+ * \param newRate Actual rate.
+ * \param dest Destination of the transmission.
+ */
 void RateCallback (std::string path, DataRate oldRate, DataRate newRate, Mac48Address dest)
 {
   NS_LOG_INFO ((Simulator::Now ()).GetSeconds () << " " << dest << " Old rate=" << oldRate << " New rate=" <<  newRate);
@@ -516,19 +531,19 @@ int main (int argc, char *argv[])
   Simulator::Run ();
 
   std::ofstream outfile (("throughput-" + outputFileName + ".plt").c_str ());
-  Gnuplot gnuplot = Gnuplot (("throughput-" + outputFileName + ".eps").c_str (), "Throughput");
+  Gnuplot gnuplot = Gnuplot ("throughput-" + outputFileName + ".eps", "Throughput");
   gnuplot.SetTerminal ("post eps color enhanced");
   gnuplot.SetLegend ("Time (seconds)", "Throughput (Mb/s)");
   gnuplot.SetTitle ("Throughput (AP to STA) vs time");
   gnuplot.AddDataset (statistics.GetDatafile ());
   gnuplot.GenerateOutput (outfile);
 
-  if (manager.compare ("ns3::ParfWifiManager") == 0
-      || manager.compare ("ns3::AparfWifiManager") == 0
-      || manager.compare ("ns3::RrpaaWifiManager") == 0)
+  if (manager == "ns3::ParfWifiManager"
+      || manager == "ns3::AparfWifiManager"
+      || manager == "ns3::RrpaaWifiManager")
     {
       std::ofstream outfile2 (("power-" + outputFileName + ".plt").c_str ());
-      gnuplot = Gnuplot (("power-" + outputFileName + ".eps").c_str (), "Average Transmit Power");
+      gnuplot = Gnuplot ("power-" + outputFileName + ".eps", "Average Transmit Power");
       gnuplot.SetTerminal ("post eps color enhanced");
       gnuplot.SetLegend ("Time (seconds)", "Power (mW)");
       gnuplot.SetTitle ("Average transmit power (AP to STA) vs time");

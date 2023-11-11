@@ -55,23 +55,23 @@ class WaveformGenerator : public SpectrumPhy
 
 public:
   WaveformGenerator ();
-  virtual ~WaveformGenerator ();
+  ~WaveformGenerator () override;
 
   /**
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   // inherited from SpectrumPhy
-  void SetChannel (Ptr<SpectrumChannel> c);
-  void SetMobility (Ptr<MobilityModel> m);
-  void SetDevice (Ptr<NetDevice> d);
-  Ptr<MobilityModel> GetMobility () const;
-  Ptr<NetDevice> GetDevice () const;
-  Ptr<const SpectrumModel> GetRxSpectrumModel () const;
-  Ptr<Object> GetAntenna () const;
-  void StartRx (Ptr<SpectrumSignalParameters> params);
+  void SetChannel (Ptr<SpectrumChannel> c) override;
+  void SetMobility (Ptr<MobilityModel> m) override;
+  void SetDevice (Ptr<NetDevice> d) override;
+  Ptr<MobilityModel> GetMobility () const override;
+  Ptr<NetDevice> GetDevice () const override;
+  Ptr<const SpectrumModel> GetRxSpectrumModel () const override;
+  Ptr<Object> GetAntenna () const override;
+  void StartRx (Ptr<SpectrumSignalParameters> params) override;
 
 
   /**
@@ -131,7 +131,7 @@ public:
 
 
 private:
-  virtual void DoDispose (void);
+  void DoDispose () override;
 
   Ptr<MobilityModel> m_mobility;  //!< Mobility model
   Ptr<AntennaModel> m_antenna;    //!< Antenna model

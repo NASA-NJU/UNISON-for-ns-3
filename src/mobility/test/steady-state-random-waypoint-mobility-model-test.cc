@@ -39,26 +39,26 @@ class SteadyStateRandomWaypointTest : public TestCase
 public:
   SteadyStateRandomWaypointTest ()
     : TestCase ("Check steady-state rwp mobility model velocity and position distributions") {}
-  virtual ~SteadyStateRandomWaypointTest () {}
+  ~SteadyStateRandomWaypointTest () override {}
 
 private:
   std::vector<Ptr<MobilityModel> > mobilityStack; ///< modility model
   double count; ///< count
 private:
-  virtual void DoRun (void);
-  virtual void DoTeardown (void);
+  void DoRun () override;
+  void DoTeardown () override;
   /// Distribution compare function
   void DistribCompare ();
 };
 
 void
-SteadyStateRandomWaypointTest::DoTeardown (void)
+SteadyStateRandomWaypointTest::DoTeardown ()
 {
   mobilityStack.clear();
 }
 
 void
-SteadyStateRandomWaypointTest::DoRun (void)
+SteadyStateRandomWaypointTest::DoRun ()
 {
   SeedManager::SetSeed (123);
 
@@ -86,7 +86,7 @@ SteadyStateRandomWaypointTest::DoRun (void)
       // Add this mobility model to the stack.
       mobilityStack.push_back (model);
       Simulator::Schedule (Seconds (0.0), &Object::Initialize, model);
-    } 
+    }
 
   Simulator::Schedule (Seconds (0.001), &SteadyStateRandomWaypointTest::DistribCompare, this);
   Simulator::Schedule (Seconds (totalTime), &SteadyStateRandomWaypointTest::DistribCompare, this);

@@ -31,23 +31,23 @@ namespace ns3 {
 NS_LOG_COMPONENT_DEFINE ("MakeEvent");
 
 // This is the only non-templated version of MakeEvent.
-EventImpl * MakeEvent (void (*f)(void))
+EventImpl * MakeEvent (void (*f)())
 {
   NS_LOG_FUNCTION (f);
   // zero arg version
   class EventFunctionImpl0 : public EventImpl
   {
   public:
-    typedef void (*F)(void);
+    typedef void (*F)();
 
     EventFunctionImpl0 (F function)
       : m_function (function)
     {}
-    virtual ~EventFunctionImpl0 ()
+    ~EventFunctionImpl0 () override
     {}
 
   protected:
-    virtual void Notify (void)
+    void Notify () override
     {
       (*m_function)();
     }

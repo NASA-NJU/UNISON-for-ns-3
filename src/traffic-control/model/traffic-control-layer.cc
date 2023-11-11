@@ -33,7 +33,7 @@ NS_LOG_COMPONENT_DEFINE ("TrafficControlLayer");
 NS_OBJECT_ENSURE_REGISTERED (TrafficControlLayer);
 
 TypeId
-TrafficControlLayer::GetTypeId (void)
+TrafficControlLayer::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::TrafficControlLayer")
     .SetParent<Object> ()
@@ -55,7 +55,7 @@ TrafficControlLayer::GetTypeId (void)
 }
 
 TypeId
-TrafficControlLayer::GetInstanceTypeId (void) const
+TrafficControlLayer::GetInstanceTypeId () const
 {
   return GetTypeId ();
 }
@@ -72,17 +72,17 @@ TrafficControlLayer::~TrafficControlLayer ()
 }
 
 void
-TrafficControlLayer::DoDispose (void)
+TrafficControlLayer::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
-  m_node = 0;
+  m_node = nullptr;
   m_handlers.clear ();
   m_netDevices.clear ();
   Object::DoDispose ();
 }
 
 void
-TrafficControlLayer::DoInitialize (void)
+TrafficControlLayer::DoInitialize ()
 {
   NS_LOG_FUNCTION (this);
 
@@ -119,7 +119,7 @@ TrafficControlLayer::RegisterProtocolHandler (Node::ProtocolHandler handler,
 }
 
 void
-TrafficControlLayer::ScanDevices (void)
+TrafficControlLayer::ScanDevices ()
 {
   NS_LOG_FUNCTION (this);
 
@@ -163,7 +163,7 @@ TrafficControlLayer::ScanDevices (void)
 
           if (ndqi)
             {
-              for (uint16_t i = 0; i < ndqi->GetNTxQueues (); i++)
+              for (std::size_t i = 0; i < ndqi->GetNTxQueues (); i++)
                 {
                   Ptr<QueueDisc> qd;
 
@@ -235,7 +235,7 @@ TrafficControlLayer::GetRootQueueDiscOnDevice (Ptr<NetDevice> device) const
 
   if (ndi == m_netDevices.end ())
     {
-      return 0;
+      return nullptr;
     }
   return ndi->second.m_rootQueueDisc;
 }
@@ -254,11 +254,11 @@ TrafficControlLayer::DeleteRootQueueDiscOnDevice (Ptr<NetDevice> device)
 
   std::map<Ptr<NetDevice>, NetDeviceInfo>::iterator ndi = m_netDevices.find (device);
 
-  NS_ASSERT_MSG (ndi != m_netDevices.end () && ndi->second.m_rootQueueDisc != 0,
+  NS_ASSERT_MSG (ndi != m_netDevices.end () && ndi->second.m_rootQueueDisc,
                  "No root queue disc installed on device " << device);
 
   // remove the root queue disc
-  ndi->second.m_rootQueueDisc = 0;
+  ndi->second.m_rootQueueDisc = nullptr;
   for (auto& q : ndi->second.m_queueDiscsToWake)
     {
       q->SetNetDeviceQueueInterface (nullptr);
@@ -270,7 +270,7 @@ TrafficControlLayer::DeleteRootQueueDiscOnDevice (Ptr<NetDevice> device)
   if (ndqi)
     {
       // remove configured callbacks, if any
-      for (uint16_t i = 0; i < ndqi->GetNTxQueues (); i++)
+      for (std::size_t i = 0; i < ndqi->GetNTxQueues (); i++)
         {
           ndqi->GetTxQueue (i)->SetWakeCallback (MakeNullCallback <void> ());
         }
@@ -293,12 +293,12 @@ void
 TrafficControlLayer::NotifyNewAggregate ()
 {
   NS_LOG_FUNCTION (this);
-  if (m_node == 0)
+  if (!m_node)
     {
       Ptr<Node> node = this->GetObject<Node> ();
       //verify that it's a valid node and that
       //the node was not set before
-      if (node != 0)
+      if (node)
         {
           this->SetNode (node);
         }
@@ -307,7 +307,7 @@ TrafficControlLayer::NotifyNewAggregate ()
 }
 
 uint32_t
-TrafficControlLayer::GetNDevices (void) const
+TrafficControlLayer::GetNDevices () const
 {
   return m_node->GetNDevices ();
 }
@@ -325,8 +325,8 @@ TrafficControlLayer::Receive (Ptr<NetDevice> device, Ptr<const Packet> p,
   for (ProtocolHandlerList::iterator i = m_handlers.begin ();
        i != m_handlers.end (); i++)
     {
-      if (i->device == 0
-          || (i->device != 0 && i->device == device))
+      if (!i->device
+          || (i->device == device))
         {
           if (i->protocol == 0
               || i->protocol == protocol)
@@ -375,7 +375,7 @@ TrafficControlLayer::Send (Ptr<NetDevice> device, Ptr<QueueDiscItem> item)
 
   NS_ASSERT (!devQueueIface || txq < devQueueIface->GetNTxQueues ());
 
-  if (ndi == m_netDevices.end () || ndi->second.m_rootQueueDisc == 0)
+  if (ndi == m_netDevices.end () || !ndi->second.m_rootQueueDisc)
     {
       // The device has no attached queue disc, thus add the header to the packet and
       // send it directly to the device if the selected queue is not stopped

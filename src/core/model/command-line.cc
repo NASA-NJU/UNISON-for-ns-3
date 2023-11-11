@@ -52,32 +52,31 @@ namespace {
 /**
  * HTML-encode a string, for PrintDoxygenUsage().
  * Usage and help strings, which are intended for text-only display,
- * can contain illegal characters for HTML.  This function 
+ * can contain illegal characters for HTML.  This function
  * encodes '&', '\"', '\'',  and '<'.
  * \param [in] source The original string.
  * \returns The HTML-encoded version.
  */
-std::string 
+std::string
 Encode (const std::string & source)
 {
   std::string buffer;
   buffer.reserve (1.1 * source.size ());
 
-  for(size_t pos = 0; pos != source.size (); ++pos) 
+  for(size_t pos = 0; pos != source.size (); ++pos)
     {
-      /* *NS_CHECK_STYLE_OFF* */
-      switch (source[pos]) 
+      switch (source[pos])
         {
         case '&':  buffer.append ("&amp;");          break;
         case '\"': buffer.append ("&quot;");         break;
         case '\'': buffer.append ("&apos;");         break;
-          // case '>':  buffer.append ("&gt;");           break;
+        // case '>':  buffer.append ("&gt;");           break;
 
-        case '<':  {
+        case '<':
           // Special case:
           // "...blah <file..." is not allowed
           // "...foo<bar..."  is allowed
-          if (buffer.back () == ' ')
+          if (buffer.empty () || buffer.back () == ' ')
             {
               buffer.append ("&lt;");
             }
@@ -87,11 +86,9 @@ Encode (const std::string & source)
             }
 
           break;
-        }
 
         default:   buffer.append (&source[pos], 1);  break;
         }
-      /* *NS_CHECK_STYLE_ON* */
     }
   return buffer;
 }
@@ -151,7 +148,7 @@ CommandLine::Copy (const CommandLine &cmd)
   m_shortName   = cmd.m_shortName;
 }
 void
-CommandLine::Clear (void)
+CommandLine::Clear ()
 {
   NS_LOG_FUNCTION (this);
 
@@ -237,7 +234,7 @@ CommandLine::HandleOption (const std::string & param) const
     }
   else
     {
-      cur = arg.find ("-");
+      cur = arg.find ('-');
       if (cur == 0)
         {
           arg = arg.substr (1, arg.size () - 1);
@@ -249,8 +246,9 @@ CommandLine::HandleOption (const std::string & param) const
         }
     }
   // find any value following '='
-  cur = arg.find ("=");
-  std::string name, value;
+  cur = arg.find ('=');
+  std::string name;
+  std::string value;
   if (cur == std::string::npos)
     {
       name = arg;
@@ -408,12 +406,12 @@ CommandLine::PrintVersion (std::ostream & os) const
 }
 
 void
-CommandLine::PrintDoxygenUsage (void) const
+CommandLine::PrintDoxygenUsage () const
 {
   NS_LOG_FUNCTION (this);
 
   const char * envVar = std::getenv ("NS_COMMANDLINE_INTROSPECTION");
-  if (envVar == 0 || std::strlen (envVar) == 0)
+  if (envVar == nullptr || std::strlen (envVar) == 0)
     {
       return;
     }
@@ -724,13 +722,13 @@ CommandLine::HandleArgument (const std::string &name, const std::string &value) 
 }
 
 bool
-CommandLine::CallbackItem::HasDefault (void) const
+CommandLine::CallbackItem::HasDefault () const
 {
   return m_default != "";
 }
 
 std::string
-CommandLine::CallbackItem::GetDefault (void) const
+CommandLine::CallbackItem::GetDefault () const
 {
   return m_default;
 }
@@ -799,7 +797,7 @@ CommandLine::GetExtraNonOption (std::size_t i) const
   if (m_nonOptions.size () >= i + m_NNonOptions)
     {
       auto ip = dynamic_cast<StringItem *> (m_nonOptions[i + m_NNonOptions]);
-      if (ip != NULL)
+      if (ip != nullptr)
         {
           value = ip->m_value;
         }
@@ -808,7 +806,7 @@ CommandLine::GetExtraNonOption (std::size_t i) const
 }
 
 std::size_t
-CommandLine::GetNExtraNonOptions (void) const
+CommandLine::GetNExtraNonOptions () const
 {
   if (m_nonOptions.size () > m_NNonOptions)
     {
@@ -850,13 +848,13 @@ CommandLine::StringItem::Parse (const std::string value)
 }
 
 bool
-CommandLine::StringItem::HasDefault (void) const
+CommandLine::StringItem::HasDefault () const
 {
   return false;
 }
 
 std::string
-CommandLine::StringItem::GetDefault (void) const
+CommandLine::StringItem::GetDefault () const
 {
   return "";
 }

@@ -36,23 +36,23 @@
 namespace ns3 {
 
 NS_LOG_COMPONENT_DEFINE ("simpleOfdmWimaxChannel");
-  
+
 // NS_OBJECT_ENSURE_REGISTERED (simpleOfdmWimaxChannel);
 
 
-SimpleOfdmWimaxChannel::SimpleOfdmWimaxChannel (void)
+SimpleOfdmWimaxChannel::SimpleOfdmWimaxChannel ()
 {
-  m_loss = 0;
+  m_loss = nullptr;
 }
 
-SimpleOfdmWimaxChannel::~SimpleOfdmWimaxChannel (void)
+SimpleOfdmWimaxChannel::~SimpleOfdmWimaxChannel ()
 {
   m_phyList.clear ();
 }
 
 /* static */
 TypeId
-SimpleOfdmWimaxChannel::GetTypeId (void)
+SimpleOfdmWimaxChannel::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::SimpleOfdmWimaxChannel")
     .SetParent<WimaxChannel> ()
@@ -82,7 +82,7 @@ SimpleOfdmWimaxChannel::SimpleOfdmWimaxChannel (PropModel propModel)
       break;
 
     default:
-      m_loss = 0;
+      m_loss = nullptr;
     }
 
 }
@@ -109,7 +109,7 @@ SimpleOfdmWimaxChannel::SetPropagationModel (PropModel propModel)
       break;
 
     default:
-      m_loss = 0;
+      m_loss = nullptr;
     }
 
 }
@@ -122,7 +122,7 @@ SimpleOfdmWimaxChannel::DoAttach (Ptr<WimaxPhy> phy)
 }
 
 std::size_t
-SimpleOfdmWimaxChannel::DoGetNDevices (void) const
+SimpleOfdmWimaxChannel::DoGetNDevices () const
 {
   return m_phyList.size ();
 }
@@ -141,7 +141,7 @@ SimpleOfdmWimaxChannel::DoGetDevice (std::size_t index) const
     }
 
   NS_FATAL_ERROR ("Unable to get device");
-  return 0;
+  return nullptr;
 }
 
 void
@@ -157,8 +157,8 @@ SimpleOfdmWimaxChannel::Send (Time BlockTime,
                               Ptr<PacketBurst> burst)
 {
   double rxPowerDbm = 0;
-  Ptr<MobilityModel> senderMobility = 0;
-  Ptr<MobilityModel> receiverMobility = 0;
+  Ptr<MobilityModel> senderMobility = nullptr;
+  Ptr<MobilityModel> receiverMobility = nullptr;
   senderMobility = phy->GetDevice ()->GetNode ()->GetObject<MobilityModel> ();
   simpleOfdmSendParam * param;
   for (std::list<Ptr<SimpleOfdmWimaxPhy> >::iterator iter = m_phyList.begin (); iter != m_phyList.end (); ++iter)
@@ -168,7 +168,7 @@ SimpleOfdmWimaxChannel::Send (Time BlockTime,
         {
           double distance = 0;
           receiverMobility = (*iter)->GetDevice ()->GetNode ()->GetObject<MobilityModel> ();
-          if (receiverMobility != 0 && senderMobility != 0 && m_loss != 0)
+          if (receiverMobility && senderMobility && m_loss)
             {
               distance = senderMobility->GetDistanceFrom (receiverMobility);
               delay =  Seconds (distance/300000000.0);
@@ -184,7 +184,7 @@ SimpleOfdmWimaxChannel::Send (Time BlockTime,
                                            burst);
           Ptr<Object> dstNetDevice = (*iter)->GetDevice ();
           uint32_t dstNode;
-          if (dstNetDevice == 0)
+          if (!dstNetDevice)
             {
               dstNode = 0xffffffff;
             }

@@ -32,8 +32,8 @@ NS_LOG_COMPONENT_DEFINE ("Icmpv4Header");
 
 NS_OBJECT_ENSURE_REGISTERED (Icmpv4Header);
 
-TypeId 
-Icmpv4Header::GetTypeId (void)
+TypeId
+Icmpv4Header::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::Icmpv4Header")
     .SetParent<Header> ()
@@ -54,19 +54,19 @@ Icmpv4Header::~Icmpv4Header ()
   NS_LOG_FUNCTION (this);
 }
 void
-Icmpv4Header::EnableChecksum (void)
+Icmpv4Header::EnableChecksum ()
 {
   NS_LOG_FUNCTION (this);
   m_calcChecksum = true;
 }
 TypeId
-Icmpv4Header::GetInstanceTypeId (void) const
+Icmpv4Header::GetInstanceTypeId () const
 {
   NS_LOG_FUNCTION (this);
   return GetTypeId ();
 }
 uint32_t
-Icmpv4Header::GetSerializedSize (void) const
+Icmpv4Header::GetSerializedSize () const
 {
   NS_LOG_FUNCTION (this);
   return 4;
@@ -89,7 +89,7 @@ Icmpv4Header::Serialize (Buffer::Iterator start) const
     }
 
 }
-uint32_t 
+uint32_t
 Icmpv4Header::Deserialize (Buffer::Iterator start)
 {
   NS_LOG_FUNCTION (this << &start);
@@ -98,35 +98,35 @@ Icmpv4Header::Deserialize (Buffer::Iterator start)
   start.Next (2); // uint16_t checksum = start.ReadNtohU16 ();
   return 4;
 }
-void 
+void
 Icmpv4Header::Print (std::ostream &os) const
 {
   NS_LOG_FUNCTION (this << &os);
   os << "type=" << (uint32_t)m_type << ", code=" << (uint32_t)m_code;
 }
 
-void 
+void
 Icmpv4Header::SetType (uint8_t type)
 {
   NS_LOG_FUNCTION (this << static_cast<uint32_t> (type));
   m_type = type;
 }
-void 
+void
 Icmpv4Header::SetCode (uint8_t code)
 {
   NS_LOG_FUNCTION (this << static_cast<uint32_t> (code));
   m_code = code;
 }
-uint8_t 
-Icmpv4Header::GetType (void) const
+uint8_t
+Icmpv4Header::GetType () const
 {
   NS_LOG_FUNCTION (this);
   return m_type;
 }
-uint8_t 
-Icmpv4Header::GetCode (void) const
+uint8_t
+Icmpv4Header::GetCode () const
 {
-  NS_LOG_FUNCTION (this); 
+  NS_LOG_FUNCTION (this);
   return m_code;
 }
 
@@ -136,23 +136,23 @@ Icmpv4Header::GetCode (void) const
 
 NS_OBJECT_ENSURE_REGISTERED (Icmpv4Echo);
 
-void 
+void
 Icmpv4Echo::SetIdentifier (uint16_t id)
 {
-  NS_LOG_FUNCTION (this << id); 
+  NS_LOG_FUNCTION (this << id);
   m_identifier = id;
 }
-void 
+void
 Icmpv4Echo::SetSequenceNumber (uint16_t seq)
 {
   NS_LOG_FUNCTION (this << seq);
   m_sequence = seq;
 }
-void 
+void
 Icmpv4Echo::SetData (Ptr<const Packet> data)
 {
   NS_LOG_FUNCTION (this << *data);
-  
+
   uint32_t size = data->GetSize ();
   //
   // All kinds of optimizations are possible, but let's not get carried away
@@ -169,20 +169,20 @@ Icmpv4Echo::SetData (Ptr<const Packet> data)
     }
   data->CopyData (m_data, size);
 }
-uint16_t 
-Icmpv4Echo::GetIdentifier (void) const
+uint16_t
+Icmpv4Echo::GetIdentifier () const
 {
   NS_LOG_FUNCTION (this);
   return m_identifier;
 }
-uint16_t 
-Icmpv4Echo::GetSequenceNumber (void) const
+uint16_t
+Icmpv4Echo::GetSequenceNumber () const
 {
   NS_LOG_FUNCTION (this);
   return m_sequence;
 }
 uint32_t
-Icmpv4Echo::GetDataSize (void) const
+Icmpv4Echo::GetDataSize () const
 {
   NS_LOG_FUNCTION (this);
   return m_dataSize;
@@ -194,8 +194,8 @@ Icmpv4Echo::GetData (uint8_t payload[]) const
   memcpy (payload, m_data, m_dataSize);
   return m_dataSize;
 }
-TypeId 
-Icmpv4Echo::GetTypeId (void)
+TypeId
+Icmpv4Echo::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::Icmpv4Echo")
     .SetParent<Header> ()
@@ -220,22 +220,22 @@ Icmpv4Echo::~Icmpv4Echo ()
 {
   NS_LOG_FUNCTION (this);
   delete [] m_data;
-  m_data = 0;
+  m_data = nullptr;
   m_dataSize = 0;
 }
-TypeId 
-Icmpv4Echo::GetInstanceTypeId (void) const
+TypeId
+Icmpv4Echo::GetInstanceTypeId () const
 {
   NS_LOG_FUNCTION (this);
   return GetTypeId ();
 }
-uint32_t 
-Icmpv4Echo::GetSerializedSize (void) const
+uint32_t
+Icmpv4Echo::GetSerializedSize () const
 {
   NS_LOG_FUNCTION (this);
   return 4 + m_dataSize;
 }
-void 
+void
 Icmpv4Echo::Serialize (Buffer::Iterator start) const
 {
   NS_LOG_FUNCTION (this << &start);
@@ -243,7 +243,7 @@ Icmpv4Echo::Serialize (Buffer::Iterator start) const
   start.WriteHtonU16 (m_sequence);
   start.Write (m_data, m_dataSize);
 }
-uint32_t 
+uint32_t
 Icmpv4Echo::Deserialize (Buffer::Iterator start)
 {
   NS_LOG_FUNCTION (this << &start);
@@ -262,7 +262,7 @@ Icmpv4Echo::Deserialize (Buffer::Iterator start)
   start.Read (m_data, m_dataSize);
   return m_dataSize+4;
 }
-void 
+void
 Icmpv4Echo::Print (std::ostream &os) const
 {
   NS_LOG_FUNCTION (this << &os);
@@ -276,8 +276,8 @@ Icmpv4Echo::Print (std::ostream &os) const
 
 NS_OBJECT_ENSURE_REGISTERED (Icmpv4DestinationUnreachable);
 
-TypeId 
-Icmpv4DestinationUnreachable::GetTypeId (void)
+TypeId
+Icmpv4DestinationUnreachable::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::Icmpv4DestinationUnreachable")
     .SetParent<Header> ()
@@ -297,39 +297,39 @@ Icmpv4DestinationUnreachable::Icmpv4DestinationUnreachable ()
     }
 }
 
-void 
+void
 Icmpv4DestinationUnreachable::SetNextHopMtu (uint16_t mtu)
 {
   NS_LOG_FUNCTION (this << mtu);
   m_nextHopMtu = mtu;
 }
-uint16_t 
-Icmpv4DestinationUnreachable::GetNextHopMtu (void) const
+uint16_t
+Icmpv4DestinationUnreachable::GetNextHopMtu () const
 {
   NS_LOG_FUNCTION (this);
   return m_nextHopMtu;
 }
 
-void 
+void
 Icmpv4DestinationUnreachable::SetData (Ptr<const Packet> data)
 {
   NS_LOG_FUNCTION (this << *data);
   data->CopyData (m_data, 8);
 }
-void 
+void
 Icmpv4DestinationUnreachable::SetHeader (Ipv4Header header)
 {
   NS_LOG_FUNCTION (this << header);
   m_header = header;
 }
-void 
+void
 Icmpv4DestinationUnreachable::GetData (uint8_t payload[8]) const
 {
   NS_LOG_FUNCTION (this << payload);
   memcpy (payload, m_data, 8);
 }
-Ipv4Header 
-Icmpv4DestinationUnreachable::GetHeader (void) const
+Ipv4Header
+Icmpv4DestinationUnreachable::GetHeader () const
 {
   NS_LOG_FUNCTION (this);
   return m_header;
@@ -340,13 +340,13 @@ Icmpv4DestinationUnreachable::~Icmpv4DestinationUnreachable ()
 {
 }
 TypeId
-Icmpv4DestinationUnreachable::GetInstanceTypeId (void) const
+Icmpv4DestinationUnreachable::GetInstanceTypeId () const
 {
   NS_LOG_FUNCTION (this);
   return GetTypeId ();
 }
 uint32_t
-Icmpv4DestinationUnreachable::GetSerializedSize (void) const
+Icmpv4DestinationUnreachable::GetSerializedSize () const
 {
   NS_LOG_FUNCTION (this);
   return 4 + m_header.GetSerializedSize () + 8;
@@ -363,7 +363,7 @@ Icmpv4DestinationUnreachable::Serialize (Buffer::Iterator start) const
   start.Write (m_data, 8);
 }
 
-uint32_t 
+uint32_t
 Icmpv4DestinationUnreachable::Deserialize (Buffer::Iterator start)
 {
   NS_LOG_FUNCTION (this << &start);
@@ -378,7 +378,7 @@ Icmpv4DestinationUnreachable::Deserialize (Buffer::Iterator start)
     }
   return i.GetDistanceFrom (start);
 }
-void 
+void
 Icmpv4DestinationUnreachable::Print (std::ostream &os) const
 {
   NS_LOG_FUNCTION (this << &os);
@@ -400,8 +400,8 @@ Icmpv4DestinationUnreachable::Print (std::ostream &os) const
 
 NS_OBJECT_ENSURE_REGISTERED (Icmpv4TimeExceeded);
 
-TypeId 
-Icmpv4TimeExceeded::GetTypeId (void)
+TypeId
+Icmpv4TimeExceeded::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::Icmpv4TimeExceeded")
     .SetParent<Header> ()
@@ -422,26 +422,26 @@ Icmpv4TimeExceeded::Icmpv4TimeExceeded ()
 }
 
 
-void 
+void
 Icmpv4TimeExceeded::SetData (Ptr<const Packet> data)
 {
   NS_LOG_FUNCTION (this << *data);
   data->CopyData (m_data, 8);
 }
-void 
+void
 Icmpv4TimeExceeded::SetHeader (Ipv4Header header)
 {
   NS_LOG_FUNCTION (this << header);
   m_header = header;
 }
-void 
+void
 Icmpv4TimeExceeded::GetData (uint8_t payload[8]) const
 {
   NS_LOG_FUNCTION (this << payload);
   memcpy (payload, m_data, 8);
 }
-Ipv4Header 
-Icmpv4TimeExceeded::GetHeader (void) const
+Ipv4Header
+Icmpv4TimeExceeded::GetHeader () const
 {
   NS_LOG_FUNCTION (this);
   return m_header;
@@ -453,13 +453,13 @@ Icmpv4TimeExceeded::~Icmpv4TimeExceeded ()
   NS_LOG_FUNCTION (this);
 }
 TypeId
-Icmpv4TimeExceeded::GetInstanceTypeId (void) const
+Icmpv4TimeExceeded::GetInstanceTypeId () const
 {
   NS_LOG_FUNCTION (this);
   return GetTypeId ();
 }
 uint32_t
-Icmpv4TimeExceeded::GetSerializedSize (void) const
+Icmpv4TimeExceeded::GetSerializedSize () const
 {
   NS_LOG_FUNCTION (this);
   return 4 + m_header.GetSerializedSize () + 8;
@@ -475,7 +475,7 @@ Icmpv4TimeExceeded::Serialize (Buffer::Iterator start) const
   start.Write (m_data, 8);
 }
 
-uint32_t 
+uint32_t
 Icmpv4TimeExceeded::Deserialize (Buffer::Iterator start)
 {
   NS_LOG_FUNCTION (this << &start);
@@ -489,7 +489,7 @@ Icmpv4TimeExceeded::Deserialize (Buffer::Iterator start)
     }
   return i.GetDistanceFrom (start);
 }
-void 
+void
 Icmpv4TimeExceeded::Print (std::ostream &os) const
 {
   NS_LOG_FUNCTION (this << &os);

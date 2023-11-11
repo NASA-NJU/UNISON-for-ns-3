@@ -121,7 +121,7 @@ public:
    * \param s the reference name
    */
   RrcHeaderTestCase (std::string s);
-  virtual void DoRun (void) = 0;
+  void DoRun () override = 0;
   /**
    * \brief Create radio resource config dedicated
    * \returns LteRrcSap::RadioResourceConfigDedicated
@@ -301,7 +301,7 @@ class RrcConnectionRequestTestCase : public RrcHeaderTestCase
 {
 public:
   RrcConnectionRequestTestCase ();
-  virtual void DoRun (void);
+  void DoRun () override;
 };
 
 RrcConnectionRequestTestCase::RrcConnectionRequestTestCase () : RrcHeaderTestCase ("Testing RrcConnectionRequest")
@@ -309,7 +309,7 @@ RrcConnectionRequestTestCase::RrcConnectionRequestTestCase () : RrcHeaderTestCas
 }
 
 void
-RrcConnectionRequestTestCase::DoRun (void)
+RrcConnectionRequestTestCase::DoRun ()
 {
   packet = Create<Packet> ();
   NS_LOG_DEBUG ("============= RrcConnectionRequestTestCase ===========");
@@ -340,7 +340,7 @@ RrcConnectionRequestTestCase::DoRun (void)
   NS_TEST_ASSERT_MSG_EQ (source.GetMmec (),destination.GetMmec (), "Different m_mmec!");
   NS_TEST_ASSERT_MSG_EQ (source.GetMtmsi (),destination.GetMtmsi (), "Different m_mTmsi!");
 
-  packet = 0;
+  packet = nullptr;
 }
 
 /**
@@ -353,7 +353,7 @@ class RrcConnectionSetupTestCase : public RrcHeaderTestCase
 {
 public:
   RrcConnectionSetupTestCase ();
-  virtual void DoRun (void);
+  void DoRun () override;
 };
 
 RrcConnectionSetupTestCase::RrcConnectionSetupTestCase () : RrcHeaderTestCase ("Testing RrcConnectionSetupTestCase")
@@ -361,7 +361,7 @@ RrcConnectionSetupTestCase::RrcConnectionSetupTestCase () : RrcHeaderTestCase ("
 }
 
 void
-RrcConnectionSetupTestCase::DoRun (void)
+RrcConnectionSetupTestCase::DoRun ()
 {
   packet = Create<Packet> ();
   NS_LOG_DEBUG ("============= RrcConnectionSetupTestCase ===========");
@@ -394,7 +394,7 @@ RrcConnectionSetupTestCase::DoRun (void)
 
   AssertEqualRadioResourceConfigDedicated (source.GetRadioResourceConfigDedicated (),destination.GetRadioResourceConfigDedicated ());
 
-  packet = 0;
+  packet = nullptr;
 }
 
 /**
@@ -407,7 +407,7 @@ class RrcConnectionSetupCompleteTestCase : public RrcHeaderTestCase
 {
 public:
   RrcConnectionSetupCompleteTestCase ();
-  virtual void DoRun (void);
+  void DoRun () override;
 };
 
 RrcConnectionSetupCompleteTestCase::RrcConnectionSetupCompleteTestCase () : RrcHeaderTestCase ("Testing RrcConnectionSetupCompleteTestCase")
@@ -415,7 +415,7 @@ RrcConnectionSetupCompleteTestCase::RrcConnectionSetupCompleteTestCase () : RrcH
 }
 
 void
-RrcConnectionSetupCompleteTestCase::DoRun (void)
+RrcConnectionSetupCompleteTestCase::DoRun ()
 {
   packet = Create<Packet> ();
   NS_LOG_DEBUG ("============= RrcConnectionSetupCompleteTestCase ===========");
@@ -445,7 +445,7 @@ RrcConnectionSetupCompleteTestCase::DoRun (void)
   // Check that the destination and source headers contain the same values
   NS_TEST_ASSERT_MSG_EQ (source.GetRrcTransactionIdentifier (),destination.GetRrcTransactionIdentifier (), "RrcTransactionIdentifier");
 
-  packet = 0;
+  packet = nullptr;
 }
 
 /**
@@ -458,7 +458,7 @@ class RrcConnectionReconfigurationCompleteTestCase : public RrcHeaderTestCase
 {
 public:
   RrcConnectionReconfigurationCompleteTestCase ();
-  virtual void DoRun (void);
+  void DoRun () override;
 };
 
 RrcConnectionReconfigurationCompleteTestCase::RrcConnectionReconfigurationCompleteTestCase ()
@@ -467,7 +467,7 @@ RrcConnectionReconfigurationCompleteTestCase::RrcConnectionReconfigurationComple
 }
 
 void
-RrcConnectionReconfigurationCompleteTestCase::DoRun (void)
+RrcConnectionReconfigurationCompleteTestCase::DoRun ()
 {
   packet = Create<Packet> ();
   NS_LOG_DEBUG ("============= RrcConnectionReconfigurationCompleteTestCase ===========");
@@ -497,7 +497,7 @@ RrcConnectionReconfigurationCompleteTestCase::DoRun (void)
   // Check that the destination and source headers contain the same values
   NS_TEST_ASSERT_MSG_EQ (source.GetRrcTransactionIdentifier (),destination.GetRrcTransactionIdentifier (), "RrcTransactionIdentifier");
 
-  packet = 0;
+  packet = nullptr;
 }
 
 /**
@@ -510,7 +510,7 @@ class RrcConnectionReconfigurationTestCase : public RrcHeaderTestCase
 {
 public:
   RrcConnectionReconfigurationTestCase ();
-  virtual void DoRun (void);
+  void DoRun () override;
 };
 
 RrcConnectionReconfigurationTestCase::RrcConnectionReconfigurationTestCase ()
@@ -519,7 +519,7 @@ RrcConnectionReconfigurationTestCase::RrcConnectionReconfigurationTestCase ()
 }
 
 void
-RrcConnectionReconfigurationTestCase::DoRun (void)
+RrcConnectionReconfigurationTestCase::DoRun ()
 {
   packet = Create<Packet> ();
   NS_LOG_DEBUG ("============= RrcConnectionReconfigurationTestCase ===========");
@@ -603,11 +603,12 @@ RrcConnectionReconfigurationTestCase::DoRun (void)
   reportConfigToAddMod.reportConfigEutra.reportQuantity = LteRrcSap::ReportConfigEutra::SAME_AS_TRIGGER_QUANTITY;
   reportConfigToAddMod.reportConfigEutra.maxReportCells = 5;
   reportConfigToAddMod.reportConfigEutra.reportInterval = LteRrcSap::ReportConfigEutra::MIN60;
-  reportConfigToAddMod.reportConfigEutra.reportAmount = 16; 
+  reportConfigToAddMod.reportConfigEutra.reportAmount = 16;
   msg.measConfig.reportConfigToAddModList.push_back (reportConfigToAddMod);
 
   // Set measIdToAddModList
-  LteRrcSap::MeasIdToAddMod measIdToAddMod,measIdToAddMod2;
+  LteRrcSap::MeasIdToAddMod measIdToAddMod;
+  LteRrcSap::MeasIdToAddMod measIdToAddMod2;
   measIdToAddMod.measId = 7;
   measIdToAddMod.measObjectId = 6;
   measIdToAddMod.reportConfigId = 5;
@@ -707,7 +708,7 @@ RrcConnectionReconfigurationTestCase::DoRun (void)
       AssertEqualRadioResourceConfigDedicated (source.GetRadioResourceConfigDedicated (), destination.GetRadioResourceConfigDedicated ());
     }
 
-  packet = 0;
+  packet = nullptr;
 }
 
 /**
@@ -720,7 +721,7 @@ class HandoverPreparationInfoTestCase : public RrcHeaderTestCase
 {
 public:
   HandoverPreparationInfoTestCase ();
-  virtual void DoRun (void);
+  void DoRun () override;
 };
 
 HandoverPreparationInfoTestCase::HandoverPreparationInfoTestCase () : RrcHeaderTestCase ("Testing HandoverPreparationInfoTestCase")
@@ -728,7 +729,7 @@ HandoverPreparationInfoTestCase::HandoverPreparationInfoTestCase () : RrcHeaderT
 }
 
 void
-HandoverPreparationInfoTestCase::DoRun (void)
+HandoverPreparationInfoTestCase::DoRun ()
 {
   packet = Create<Packet> ();
   NS_LOG_DEBUG ("============= HandoverPreparationInfoTestCase ===========");
@@ -786,7 +787,7 @@ HandoverPreparationInfoTestCase::DoRun (void)
   NS_TEST_ASSERT_MSG_EQ (source.GetAsConfig ().sourceSystemInformationBlockType1.cellAccessRelatedInfo.csgIdentity, destination.GetAsConfig ().sourceSystemInformationBlockType1.cellAccessRelatedInfo.csgIdentity, "csgIdentity");
   NS_TEST_ASSERT_MSG_EQ (source.GetAsConfig ().sourceDlCarrierFreq, destination.GetAsConfig ().sourceDlCarrierFreq, "sourceDlCarrierFreq");
 
-  packet = 0;
+  packet = nullptr;
 }
 
 /**
@@ -799,7 +800,7 @@ class RrcConnectionReestablishmentRequestTestCase : public RrcHeaderTestCase
 {
 public:
   RrcConnectionReestablishmentRequestTestCase ();
-  virtual void DoRun (void);
+  void DoRun () override;
 };
 
 RrcConnectionReestablishmentRequestTestCase::RrcConnectionReestablishmentRequestTestCase () : RrcHeaderTestCase ("Testing RrcConnectionReestablishmentRequestTestCase")
@@ -807,7 +808,7 @@ RrcConnectionReestablishmentRequestTestCase::RrcConnectionReestablishmentRequest
 }
 
 void
-RrcConnectionReestablishmentRequestTestCase::DoRun (void)
+RrcConnectionReestablishmentRequestTestCase::DoRun ()
 {
   packet = Create<Packet> ();
   NS_LOG_DEBUG ("============= RrcConnectionReestablishmentRequestTestCase ===========");
@@ -841,7 +842,7 @@ RrcConnectionReestablishmentRequestTestCase::DoRun (void)
   NS_TEST_ASSERT_MSG_EQ (source.GetUeIdentity ().physCellId, destination.GetUeIdentity ().physCellId, "physCellId");
   NS_TEST_ASSERT_MSG_EQ (source.GetReestablishmentCause (),destination.GetReestablishmentCause (), "ReestablishmentCause");
 
-  packet = 0;
+  packet = nullptr;
 }
 
 /**
@@ -854,7 +855,7 @@ class RrcConnectionReestablishmentTestCase : public RrcHeaderTestCase
 {
 public:
   RrcConnectionReestablishmentTestCase ();
-  virtual void DoRun (void);
+  void DoRun () override;
 };
 
 RrcConnectionReestablishmentTestCase::RrcConnectionReestablishmentTestCase () : RrcHeaderTestCase ("Testing RrcConnectionReestablishmentTestCase")
@@ -862,7 +863,7 @@ RrcConnectionReestablishmentTestCase::RrcConnectionReestablishmentTestCase () : 
 }
 
 void
-RrcConnectionReestablishmentTestCase::DoRun (void)
+RrcConnectionReestablishmentTestCase::DoRun ()
 {
   packet = Create<Packet> ();
   NS_LOG_DEBUG ("============= RrcConnectionReestablishmentTestCase ===========");
@@ -894,7 +895,7 @@ RrcConnectionReestablishmentTestCase::DoRun (void)
   NS_TEST_ASSERT_MSG_EQ (source.GetRrcTransactionIdentifier (), destination.GetRrcTransactionIdentifier (), "rrcTransactionIdentifier");
   AssertEqualRadioResourceConfigDedicated (source.GetRadioResourceConfigDedicated (),destination.GetRadioResourceConfigDedicated ());
 
-  packet = 0;
+  packet = nullptr;
 }
 
 /**
@@ -907,7 +908,7 @@ class RrcConnectionReestablishmentCompleteTestCase : public RrcHeaderTestCase
 {
 public:
   RrcConnectionReestablishmentCompleteTestCase ();
-  virtual void DoRun (void);
+  void DoRun () override;
 };
 
 RrcConnectionReestablishmentCompleteTestCase::RrcConnectionReestablishmentCompleteTestCase () : RrcHeaderTestCase ("Testing RrcConnectionReestablishmentCompleteTestCase")
@@ -915,7 +916,7 @@ RrcConnectionReestablishmentCompleteTestCase::RrcConnectionReestablishmentComple
 }
 
 void
-RrcConnectionReestablishmentCompleteTestCase::DoRun (void)
+RrcConnectionReestablishmentCompleteTestCase::DoRun ()
 {
   packet = Create<Packet> ();
   NS_LOG_DEBUG ("============= RrcConnectionReestablishmentCompleteTestCase ===========");
@@ -945,7 +946,7 @@ RrcConnectionReestablishmentCompleteTestCase::DoRun (void)
   // Check that the destination and source headers contain the same values
   NS_TEST_ASSERT_MSG_EQ (source.GetRrcTransactionIdentifier (), destination.GetRrcTransactionIdentifier (), "rrcTransactionIdentifier");
 
-  packet = 0;
+  packet = nullptr;
 }
 
 /**
@@ -958,7 +959,7 @@ class RrcConnectionRejectTestCase : public RrcHeaderTestCase
 {
 public:
   RrcConnectionRejectTestCase ();
-  virtual void DoRun (void);
+  void DoRun () override;
 };
 
 RrcConnectionRejectTestCase::RrcConnectionRejectTestCase () : RrcHeaderTestCase ("Testing RrcConnectionRejectTestCase")
@@ -966,7 +967,7 @@ RrcConnectionRejectTestCase::RrcConnectionRejectTestCase () : RrcHeaderTestCase 
 }
 
 void
-RrcConnectionRejectTestCase::DoRun (void)
+RrcConnectionRejectTestCase::DoRun ()
 {
   packet = Create<Packet> ();
   NS_LOG_DEBUG ("============= RrcConnectionRejectTestCase ===========");
@@ -996,7 +997,7 @@ RrcConnectionRejectTestCase::DoRun (void)
   // Check that the destination and source headers contain the same values
   NS_TEST_ASSERT_MSG_EQ (source.GetMessage ().waitTime, destination.GetMessage ().waitTime, "Different waitTime!");
 
-  packet = 0;
+  packet = nullptr;
 }
 
 /**
@@ -1009,7 +1010,7 @@ class MeasurementReportTestCase : public RrcHeaderTestCase
 {
 public:
   MeasurementReportTestCase ();
-  virtual void DoRun (void);
+  void DoRun () override;
 };
 
 MeasurementReportTestCase::MeasurementReportTestCase () : RrcHeaderTestCase ("Testing MeasurementReportTestCase")
@@ -1017,7 +1018,7 @@ MeasurementReportTestCase::MeasurementReportTestCase () : RrcHeaderTestCase ("Te
 }
 
 void
-MeasurementReportTestCase::DoRun (void)
+MeasurementReportTestCase::DoRun ()
 {
   packet = Create<Packet> ();
   NS_LOG_DEBUG ("============= MeasurementReportTestCase ===========");
@@ -1112,7 +1113,7 @@ MeasurementReportTestCase::DoRun (void)
         }
     }
 
-  packet = 0;
+  packet = nullptr;
 }
 
 /**

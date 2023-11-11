@@ -33,9 +33,9 @@ class Packet;
 /**
  * \ingroup ipv4
  *
- * \brief This class implements Linux struct pktinfo 
+ * \brief This class implements Linux struct pktinfo
  * in order to deliver ancillary information to the socket interface.
- * This is used with socket option such as IP_PKTINFO, IP_RECVTTL, 
+ * This is used with socket option such as IP_PKTINFO, IP_RECVTTL,
  * IP_RECVTOS. See linux manpage ip(7).
  *
  * See also SocketIpTosTag and SocketIpTtlTag
@@ -63,7 +63,7 @@ public:
    *
    * \returns the address
    */
-  Ipv4Address GetAddress (void) const;
+  Ipv4Address GetAddress () const;
 
   /**
    * \brief Set the tag's receiving interface
@@ -76,7 +76,7 @@ public:
    *
    * \returns the interface index
    */
-  uint32_t GetRecvIf (void) const;
+  uint32_t GetRecvIf () const;
 
   /**
    * \brief Set the tag's Time to Live
@@ -89,22 +89,22 @@ public:
    * Implemented, but not used in the stack yet
    * \returns the TTL
    */
-  uint8_t GetTtl (void) const;
+  uint8_t GetTtl () const;
 
   /**
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
-  virtual TypeId GetInstanceTypeId (void) const;
-  virtual uint32_t GetSerializedSize (void) const;
-  virtual void Serialize (TagBuffer i) const;
-  virtual void Deserialize (TagBuffer i);
-  virtual void Print (std::ostream &os) const;
+  static TypeId GetTypeId ();
+  TypeId GetInstanceTypeId () const override;
+  uint32_t GetSerializedSize () const override;
+  void Serialize (TagBuffer i) const override;
+  void Deserialize (TagBuffer i) override;
+  void Print (std::ostream &os) const override;
 
 private:
   // Linux IP_PKTINFO ip(7) implementation
-  // 
+  //
   // struct in_pktinfo {
   //   unsigned int   ipi_ifindex;  /* Interface index */
   //   struct in_addr ipi_spec_dst; /* Local address */

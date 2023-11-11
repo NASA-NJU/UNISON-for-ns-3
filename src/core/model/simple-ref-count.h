@@ -23,7 +23,6 @@
 #define SIMPLE_REF_COUNT_H
 
 #include "atomic-counter.h"
-#include "empty.h"
 #include "default-deleter.h"
 #include "assert.h"
 #include <stdint.h>
@@ -36,6 +35,15 @@
  */
 
 namespace ns3 {
+
+/**
+ * \ingroup ptr
+ * \brief Empty class, used as a default parent class for SimpleRefCount
+ */
+class empty
+{
+};
+
 
 /**
  * \ingroup ptr
@@ -60,7 +68,7 @@ namespace ns3 {
  *      Recursive Template Pattern)
  * \tparam PARENT \explicit The typename of the parent of this template.
  *      By default, this typename is "'ns3::empty'" which is an empty
- *      class: compilers which implement the RBCO optimization (empty
+ *      class: compilers which implement the EBCO optimization (empty
  *      base class optimization) will make this a no-op
  * \tparam DELETER \explicit The typename of a class which implements
  *      a public static method named 'Delete'. This method will be called
@@ -100,7 +108,7 @@ public:
    * conjunction with the Ptr template which would make calling Ref
    * unnecessary and dangerous.
    */
-  inline void Ref (void) const
+  inline void Ref () const
   {
     NS_ASSERT (m_count < std::numeric_limits<uint32_t>::max ());
     m_count++;
@@ -111,7 +119,7 @@ public:
    * conjunction with the Ptr template which would make calling Ref
    * unnecessary and dangerous.
    */
-  inline void Unref (void) const
+  inline void Unref () const
   {
     if (m_count-- == 1)
       {
@@ -128,7 +136,7 @@ public:
    *
    * \return The reference count.
    */
-  inline uint32_t GetReferenceCount (void) const
+  inline uint32_t GetReferenceCount () const
   {
     return m_count;
   }

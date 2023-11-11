@@ -103,7 +103,7 @@ class IePreq : public WifiInformationElement
 {
 public:
   IePreq ();
-  ~IePreq ();
+  ~IePreq () override;
   /**
    * Add a destination address unit: flags, destination and sequence
    * number
@@ -140,7 +140,7 @@ public:
 
   // Setters for fields:
   /**
-   * Set number of hops from originator to mesh STA transmitting this 
+   * Set number of hops from originator to mesh STA transmitting this
    * element
    * \param hopcount the hop count
    */
@@ -252,20 +252,20 @@ public:
    * \returns true if full
    */
   bool IsFull () const;
-  
+
   // Inherited from WifiInformationElement
-  virtual WifiInformationElementId ElementId () const;
-  virtual void SerializeInformationField (Buffer::Iterator i) const;
-  virtual uint8_t DeserializeInformationField (Buffer::Iterator i, uint8_t length);
-  virtual uint8_t GetInformationFieldSize () const;
-  virtual void Print (std::ostream& os) const;
+  WifiInformationElementId ElementId () const override;
+  void SerializeInformationField (Buffer::Iterator i) const override;
+  uint16_t DeserializeInformationField (Buffer::Iterator i, uint16_t length) override;
+  uint16_t GetInformationFieldSize () const override;
+  void Print (std::ostream& os) const override;
 
 private:
   /**
    * how many destinations we support
    * \todo make as an attribute
    */
-  uint8_t m_maxSize; 
+  uint8_t m_maxSize;
 
   uint8_t m_flags; ///< flags
   uint8_t m_hopCount; ///< hop count

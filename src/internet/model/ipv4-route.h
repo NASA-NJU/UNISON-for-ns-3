@@ -35,10 +35,10 @@ class NetDevice;
  *
  *\brief IPv4 route cache entry (similar to Linux struct rtable)
  *
- * This is a reference counted object.  In the future, we will add other 
+ * This is a reference counted object.  In the future, we will add other
  * entries from struct dst_entry, struct rtable, and struct dst_ops as needed.
  */
-class Ipv4Route : public SimpleRefCount<Ipv4Route> 
+class Ipv4Route : public SimpleRefCount<Ipv4Route>
 {
 public:
   Ipv4Route ();
@@ -50,7 +50,7 @@ public:
   /**
    * \return Destination Ipv4Address of the route
    */
-  Ipv4Address GetDestination (void) const;
+  Ipv4Address GetDestination () const;
 
   /**
    * \param src Source Ipv4Address
@@ -59,16 +59,16 @@ public:
   /**
    * \return Source Ipv4Address of the route
    */
-  Ipv4Address GetSource (void) const;
+  Ipv4Address GetSource () const;
 
   /**
    * \param gw Gateway (next hop) Ipv4Address
    */
   void SetGateway (Ipv4Address gw);
   /**
-   * \return Ipv4Address of the gateway (next hop) 
+   * \return Ipv4Address of the gateway (next hop)
    */
-  Ipv4Address GetGateway (void) const;
+  Ipv4Address GetGateway () const;
 
   /**
    * Equivalent in Linux to dst_entry.dev
@@ -79,7 +79,7 @@ public:
   /**
    * \return pointer to NetDevice for outgoing packets
    */
-  Ptr<NetDevice> GetOutputDevice (void) const;
+  Ptr<NetDevice> GetOutputDevice () const;
 
 #ifdef NOTYET
   // rtable.idev
@@ -108,10 +108,10 @@ std::ostream& operator<< (std::ostream& os, Ipv4Route const& route);
 
 /**
  * \ingroup ipv4Routing
- * 
+ *
  * \brief Ipv4 multicast route cache entry (similar to Linux struct mfc_cache)
  */
-class Ipv4MulticastRoute : public SimpleRefCount<Ipv4MulticastRoute> 
+class Ipv4MulticastRoute : public SimpleRefCount<Ipv4MulticastRoute>
 {
 public:
   Ipv4MulticastRoute ();
@@ -123,7 +123,7 @@ public:
   /**
    * \return Ipv4Address of the multicast group
    */
-  Ipv4Address GetGroup (void) const; 
+  Ipv4Address GetGroup () const;
 
   /**
    * \param origin Ipv4Address of the origin address
@@ -132,7 +132,7 @@ public:
   /**
    * \return Ipv4Address of the origin address
    */
-  Ipv4Address GetOrigin (void) const; 
+  Ipv4Address GetOrigin () const;
 
   /**
    * \param iif Parent (input interface) for this route
@@ -141,7 +141,7 @@ public:
   /**
    * \return Parent (input interface) for this route
    */
-  uint32_t GetParent (void) const;
+  uint32_t GetParent () const;
 
   /**
    * \param oif Outgoing interface index

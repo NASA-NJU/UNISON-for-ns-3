@@ -54,14 +54,14 @@ public:
     INTERMEDIATE,
     HIGH
   };
-  UlJob (void);
-  virtual ~UlJob (void);
+  UlJob ();
+  ~UlJob () override;
   /**
    * Get SS record
    * \returns the SS record
    */
   SSRecord *
-  GetSsRecord (void);
+  GetSsRecord ();
   /**
    * Set SS record
    * \param ssRecord the SS record
@@ -71,7 +71,7 @@ public:
    * Get scheduling type
    * \returns the scheduling type
    */
-  enum ServiceFlow::SchedulingType GetSchedulingType (void);
+  enum ServiceFlow::SchedulingType GetSchedulingType ();
   /**
    * Set scheduling type
    * \param schedulingType the scheduling type
@@ -82,7 +82,7 @@ public:
    * \returns the service flow
    */
   ServiceFlow *
-  GetServiceFlow (void);
+  GetServiceFlow ();
   /**
    * Set service flow
    * \param serviceFlow
@@ -93,7 +93,7 @@ public:
    * Get type
    * \returns the request type
    */
-  ReqType GetType (void);
+  ReqType GetType ();
   /**
    * Set type
    * \param type the type
@@ -104,7 +104,7 @@ public:
    * Get release time
    * \returns the release time
    */
-  Time GetReleaseTime (void);
+  Time GetReleaseTime ();
   /**
    * Set release time
    * \param releaseTime the release time
@@ -115,7 +115,7 @@ public:
    * Get period
    * \returns the period time
    */
-  Time GetPeriod (void);
+  Time GetPeriod ();
   /**
    * Set period
    * \param period the period
@@ -126,7 +126,7 @@ public:
    * Get deadline
    * \returns the deadline time
    */
-  Time GetDeadline (void);
+  Time GetDeadline ();
   /**
    * Set deadline
    * \param deadline the dead line
@@ -137,7 +137,7 @@ public:
    * Get size
    * \returns the size
    */
-  uint32_t GetSize (void);
+  uint32_t GetSize ();
   /**
    * Set size
    * \param size the size
@@ -177,7 +177,7 @@ public:
    * Get priority
    * \returns the priority
    */
-  int GetPriority (void);
+  int GetPriority ();
   /**
    * Set priority
    * \param priority the priority
@@ -189,7 +189,7 @@ public:
    * \returns the UL job
    */
   Ptr<UlJob>
-  GetUlJob (void);
+  GetUlJob ();
   /**
    * Set UL job
    * \param job the UL job
@@ -201,7 +201,7 @@ private:
   Ptr<UlJob> m_job; ///< the job
 };
 
-/// SortProcess structure 
+/// SortProcess structure
 struct SortProcess
 {
   /**
@@ -211,7 +211,7 @@ struct SortProcess
    * \returns true if left is logically less then right for given comparison
    */
    bool operator () (PriorityUlJob& left, PriorityUlJob& right) const
-   { 
+   {
     if (left.GetPriority () < right.GetPriority ())
       {
         return true;
@@ -246,7 +246,7 @@ struct SortProcessPtr
    * \returns true if left is logically less then right for given comparison
    */
   bool operator () (Ptr<PriorityUlJob>& left, Ptr<PriorityUlJob>& right) const
-  { 
+  {
     if (left->GetPriority () < right->GetPriority ())
       {
         return true;

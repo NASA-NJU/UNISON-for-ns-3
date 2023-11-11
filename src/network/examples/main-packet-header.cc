@@ -11,12 +11,12 @@ using namespace ns3;
  * \ingroup network
  * A simple example of an Header implementation
  */
-class MyHeader : public Header 
+class MyHeader : public Header
 {
 public:
 
   MyHeader ();
-  virtual ~MyHeader ();
+  ~MyHeader () override;
 
   /**
    * Set the header data.
@@ -27,25 +27,25 @@ public:
    * Get the header data.
    * \return The data.
    */
-  uint16_t GetData (void) const;
+  uint16_t GetData () const;
 
   /**
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
-  virtual TypeId GetInstanceTypeId (void) const;
-  virtual void Print (std::ostream &os) const;
-  virtual void Serialize (Buffer::Iterator start) const;
-  virtual uint32_t Deserialize (Buffer::Iterator start);
-  virtual uint32_t GetSerializedSize (void) const;
+  static TypeId GetTypeId ();
+  TypeId GetInstanceTypeId () const override;
+  void Print (std::ostream &os) const override;
+  void Serialize (Buffer::Iterator start) const override;
+  uint32_t Deserialize (Buffer::Iterator start) override;
+  uint32_t GetSerializedSize () const override;
 private:
   uint16_t m_data;  //!< Header data
 };
 
 MyHeader::MyHeader ()
 {
-  // we must provide a public default constructor, 
+  // we must provide a public default constructor,
   // implicit or explicit, but never private.
 }
 MyHeader::~MyHeader ()
@@ -53,7 +53,7 @@ MyHeader::~MyHeader ()
 }
 
 TypeId
-MyHeader::GetTypeId (void)
+MyHeader::GetTypeId ()
 {
   static TypeId tid = TypeId ("ns3::MyHeader")
     .SetParent<Header> ()
@@ -62,7 +62,7 @@ MyHeader::GetTypeId (void)
   return tid;
 }
 TypeId
-MyHeader::GetInstanceTypeId (void) const
+MyHeader::GetInstanceTypeId () const
 {
   return GetTypeId ();
 }
@@ -76,7 +76,7 @@ MyHeader::Print (std::ostream &os) const
   os << "data=" << m_data;
 }
 uint32_t
-MyHeader::GetSerializedSize (void) const
+MyHeader::GetSerializedSize () const
 {
   // we reserve 2 bytes for our header.
   return 2;
@@ -100,13 +100,13 @@ MyHeader::Deserialize (Buffer::Iterator start)
   return 2;
 }
 
-void 
+void
 MyHeader::SetData (uint16_t data)
 {
   m_data = data;
 }
-uint16_t 
-MyHeader::GetData (void) const
+uint16_t
+MyHeader::GetData () const
 {
   return m_data;
 }

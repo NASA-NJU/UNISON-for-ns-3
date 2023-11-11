@@ -42,7 +42,7 @@ using namespace ns3;
  * <-----------|----------->|             Beacon
  *             |----------->|             Peer Link Open frame
  *             |<-----------|             Peer Link Confirm frame
- *             |<-----------|             Peer Link Open frame 
+ *             |<-----------|             Peer Link Open frame
  *             |----------->|             Peer Link Confirm frame
  *             |............|             !!! Data started:
  *             |<-----------|-----------> ARP Request (time 2)
@@ -74,9 +74,9 @@ class HwmpSimplestRegressionTest : public TestCase
 {
 public:
   HwmpSimplestRegressionTest ();
-  virtual ~HwmpSimplestRegressionTest();
+  ~HwmpSimplestRegressionTest() override;
 
-  virtual void DoRun ();
+  void DoRun () override;
   /// Check results function
   void CheckResults ();
 

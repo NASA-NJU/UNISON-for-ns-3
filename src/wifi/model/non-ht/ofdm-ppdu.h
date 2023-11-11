@@ -56,17 +56,17 @@ public:
   {
   public:
     LSigHeader ();
-    virtual ~LSigHeader ();
+    ~LSigHeader () override;
 
     /**
      * \brief Get the type ID.
      * \return the object TypeId
      */
-    static TypeId GetTypeId (void);
+    static TypeId GetTypeId ();
 
-    TypeId GetInstanceTypeId (void) const override;
+    TypeId GetInstanceTypeId () const override;
     void Print (std::ostream &os) const override;
-    uint32_t GetSerializedSize (void) const override;
+    uint32_t GetSerializedSize () const override;
     void Serialize (Buffer::Iterator start) const override;
     uint32_t Deserialize (Buffer::Iterator start) override;
 
@@ -95,7 +95,7 @@ public:
      *
      * \return the LENGTH field of L-SIG expressed in bytes
      */
-    uint16_t GetLength (void) const;
+    uint16_t GetLength () const;
 
   private:
     uint8_t m_rate;    ///< RATE field
@@ -107,20 +107,22 @@ public:
    *
    * \param psdu the PHY payload (PSDU)
    * \param txVector the TXVECTOR that was used for this PPDU
+   * \param txCenterFreq the center frequency (MHz) that was used for this PPDU
    * \param band the WifiPhyBand used for the transmission of this PPDU
    * \param uid the unique ID of this PPDU
    * \param instantiateLSig flag used to instantiate LSigHeader (set LSigHeader's
    *                        rate and length), should be disabled by child classes
    */
-  OfdmPpdu (Ptr<const WifiPsdu> psdu, const WifiTxVector& txVector, WifiPhyBand band, uint64_t uid,
+  OfdmPpdu (Ptr<const WifiPsdu> psdu, const WifiTxVector& txVector,
+            uint16_t txCenterFreq, WifiPhyBand band, uint64_t uid,
             bool instantiateLSig = true);
   /**
    * Destructor for OfdmPpdu.
    */
-  virtual ~OfdmPpdu ();
+  ~OfdmPpdu () override;
 
-  Time GetTxDuration (void) const override;
-  Ptr<WifiPpdu> Copy (void) const override;
+  Time GetTxDuration () const override;
+  Ptr<WifiPpdu> Copy () const override;
 
 protected:
   WifiPhyBand m_band;       //!< the WifiPhyBand used to transmit that PPDU
@@ -128,7 +130,7 @@ protected:
   LSigHeader m_lSig;        //!< the L-SIG PHY header
 
 private:
-  WifiTxVector DoGetTxVector (void) const override;
+  WifiTxVector DoGetTxVector () const override;
 }; //class OfdmPpdu
 
 } //namespace ns3

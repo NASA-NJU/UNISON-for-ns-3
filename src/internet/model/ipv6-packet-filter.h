@@ -41,14 +41,14 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   Ipv6PacketFilter ();
-  virtual ~Ipv6PacketFilter ();
+  ~Ipv6PacketFilter () override;
 
 private:
-  virtual bool CheckProtocol (Ptr<QueueDiscItem> item) const;
-  virtual int32_t DoClassify (Ptr<QueueDiscItem> item) const = 0;
+  bool CheckProtocol (Ptr<QueueDiscItem> item) const override;
+  int32_t DoClassify (Ptr<QueueDiscItem> item) const override = 0;
 };
 
 } // namespace ns3

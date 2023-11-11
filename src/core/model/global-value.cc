@@ -45,18 +45,18 @@ GlobalValue::GlobalValue (std::string name, std::string help,
                           Ptr<const AttributeChecker> checker)
   : m_name (name),
     m_help (help),
-    m_initialValue (0),
-    m_currentValue (0),
+    m_initialValue (nullptr),
+    m_currentValue (nullptr),
     m_checker (checker)
 {
   NS_LOG_FUNCTION (name << help << &initialValue << checker);
-  if (m_checker == 0)
+  if (!m_checker)
     {
       NS_FATAL_ERROR ("Checker should not be zero on " << name );
     }
   m_initialValue = m_checker->CreateValidValue (initialValue);
   m_currentValue = m_initialValue;
-  if (m_initialValue == 0)
+  if (!m_initialValue)
     {
       NS_FATAL_ERROR ("Value set by user on " << name << " is invalid.");
     }
@@ -65,12 +65,12 @@ GlobalValue::GlobalValue (std::string name, std::string help,
 }
 
 void
-GlobalValue::InitializeFromEnv (void)
+GlobalValue::InitializeFromEnv ()
 {
   NS_LOG_FUNCTION (this);
 
   const char *envVar = getenv ("NS_GLOBAL_VALUE");
-  if (envVar == 0 || std::strlen (envVar) == 0)
+  if (envVar == nullptr || std::strlen (envVar) == 0)
     {
       return;
     }
@@ -79,9 +79,9 @@ GlobalValue::InitializeFromEnv (void)
   std::string::size_type next = 0;
   while (next != std::string::npos)
     {
-      next = env.find (";", cur);
+      next = env.find (';', cur);
       std::string tmp = std::string (env, cur, next - cur);
-      std::string::size_type equal = tmp.find ("=");
+      std::string::size_type equal = tmp.find ('=');
       if (equal != std::string::npos)
         {
           std::string name = tmp.substr (0, equal);
@@ -89,7 +89,7 @@ GlobalValue::InitializeFromEnv (void)
           if (name == m_name)
             {
               Ptr<AttributeValue> v = m_checker->CreateValidValue (StringValue (value));
-              if (v != 0)
+              if (v)
                 {
                   m_initialValue = v;
                   m_currentValue = v;
@@ -102,13 +102,13 @@ GlobalValue::InitializeFromEnv (void)
 }
 
 std::string
-GlobalValue::GetName (void) const
+GlobalValue::GetName () const
 {
   NS_LOG_FUNCTION_NOARGS ();
   return m_name;
 }
 std::string
-GlobalValue::GetHelp (void) const
+GlobalValue::GetHelp () const
 {
   NS_LOG_FUNCTION_NOARGS ();
   return m_help;
@@ -123,14 +123,14 @@ GlobalValue::GetValue (AttributeValue &value) const
       return;
     }
   StringValue *str = dynamic_cast<StringValue *> (&value);
-  if (str == 0)
+  if (str == nullptr)
     {
       NS_FATAL_ERROR ("GlobalValue name=" << m_name << ": input value is not a string");
     }
   str->Set (m_currentValue->SerializeToString (m_checker));
 }
 Ptr<const AttributeChecker>
-GlobalValue::GetChecker (void) const
+GlobalValue::GetChecker () const
 {
   NS_LOG_FUNCTION (this);
 
@@ -143,7 +143,7 @@ GlobalValue::SetValue (const AttributeValue &value)
   NS_LOG_FUNCTION (&value);
 
   Ptr<AttributeValue> v = m_checker->CreateValidValue (value);
-  if (v == 0)
+  if (!v)
     {
       return 0;
     }
@@ -184,21 +184,21 @@ GlobalValue::BindFailSafe (std::string name, const AttributeValue &value)
   return false;
 }
 GlobalValue::Iterator
-GlobalValue::Begin (void)
+GlobalValue::Begin ()
 {
   NS_LOG_FUNCTION_NOARGS ();
 
   return GetVector ()->begin ();
 }
 GlobalValue::Iterator
-GlobalValue::End (void)
+GlobalValue::End ()
 {
   NS_LOG_FUNCTION_NOARGS ();
   return GetVector ()->end ();
 }
 
 void
-GlobalValue::ResetInitialValue (void)
+GlobalValue::ResetInitialValue ()
 {
   NS_LOG_FUNCTION (this);
   m_currentValue = m_initialValue;
@@ -230,7 +230,7 @@ GlobalValue::GetValueByName (std::string name, AttributeValue &value)
 }
 
 GlobalValue::Vector *
-GlobalValue::GetVector (void)
+GlobalValue::GetVector ()
 {
   NS_LOG_FUNCTION_NOARGS ();
   static Vector vector;

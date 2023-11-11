@@ -25,7 +25,7 @@
 #include "ns3/nstime.h"
 #include "wifi-mode.h"
 #include "qos-utils.h"
-#include "wifi-mac-queue-item.h"
+#include "wifi-mpdu.h"
 #include <map>
 
 namespace ns3 {
@@ -51,10 +51,10 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   MsduAggregator ();
-  virtual ~MsduAggregator ();
+  ~MsduAggregator () override;
 
   /**
    * Compute the size of the A-MSDU resulting from the aggregation of an MSDU of
@@ -98,7 +98,7 @@ public:
    * \param availableTime the time available for the frame exchange
    * \return the resulting A-MSDU, if aggregation is possible, a null pointer otherwise.
    */
-  Ptr<WifiMacQueueItem> GetNextAmsdu (Ptr<const WifiMacQueueItem> peekedItem, WifiTxParameters& txParams,
+  Ptr<WifiMpdu> GetNextAmsdu (Ptr<WifiMpdu> peekedItem, WifiTxParameters& txParams,
                                       Time availableTime) const;
 
   /**
@@ -118,7 +118,7 @@ public:
    * \param aggregatedPacket the aggregated packet.
    * \returns DeaggregatedMsdus.
    */
-  static WifiMacQueueItem::DeaggregatedMsdus Deaggregate (Ptr<Packet> aggregatedPacket);
+  static WifiMpdu::DeaggregatedMsdus Deaggregate (Ptr<Packet> aggregatedPacket);
 
   /**
    * Set the MAC layer to use.

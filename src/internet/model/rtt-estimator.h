@@ -38,7 +38,7 @@ namespace ns3 {
  * The RTT Estimator class computes an estimate of the round trip time
  * observed in a series of Time measurements.  The estimate is provided in
  * the form of an estimate and a sample variation.  Subclasses can implement
- * different algorithms to provide values for the estimate and variation.  
+ * different algorithms to provide values for the estimate and variation.
  */
 class RttEstimator : public Object {
 public:
@@ -46,7 +46,7 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   RttEstimator();
   /**
@@ -55,9 +55,9 @@ public:
    */
   RttEstimator (const RttEstimator& r);
 
-  virtual ~RttEstimator();
+  ~RttEstimator() override;
 
-  virtual TypeId GetInstanceTypeId (void) const;
+  TypeId GetInstanceTypeId () const override;
 
   /**
    * \brief Add a new measurement to the estimator. Pure virtual function.
@@ -80,23 +80,23 @@ public:
    * \brief gets the RTT estimate.
    * \return The RTT estimate.
    */
-  Time GetEstimate (void) const;
+  Time GetEstimate () const;
 
   /**
    * Note that this is not a formal statistical variance; it has the
-   * the same units as the estimate.  Mean deviation or standard deviation 
+   * the same units as the estimate.  Mean deviation or standard deviation
    * are example quantities that could be provided here.
    *
    * \brief gets the RTT estimate variation.
    * \return The RTT estimate variation.
    */
-  Time GetVariation (void) const;
+  Time GetVariation () const;
 
   /**
    * \brief gets the number of samples used in the estimates
    * \return the number of samples used in the estimates
    */
-  uint32_t GetNSamples (void) const;
+  uint32_t GetNSamples () const;
 
 private:
   Time m_initialEstimatedRtt; //!< Initial RTT estimation
@@ -126,7 +126,7 @@ public:
    * \brief Get the type ID.
    * \return the object TypeId
    */
-  static TypeId GetTypeId (void);
+  static TypeId GetTypeId ();
 
   RttMeanDeviation ();
 
@@ -136,30 +136,30 @@ public:
    */
   RttMeanDeviation (const RttMeanDeviation& r);
 
-  virtual TypeId GetInstanceTypeId (void) const;
+  TypeId GetInstanceTypeId () const override;
 
   /**
    * \brief Add a new measurement to the estimator.
    * \param measure the new RTT measure.
    */
-  void Measurement (Time measure);
+  void Measurement (Time measure) override;
 
-  Ptr<RttEstimator> Copy () const;
+  Ptr<RttEstimator> Copy () const override;
 
   /**
    * \brief Resets the estimator.
    */
-  void Reset ();
+  void Reset () override;
 
 private:
-  /** 
+  /**
    * Utility function to check for possible conversion
    * of a double value (0 < value < 1) to a reciprocal power of two
    *
    * Values of 1/32, 1/16, 1/8, 1/4, and 1/2 (i.e., within the possible
    * range of experimentation for this estimator) are supported.
-   * 
-   * \param val value to check 
+   *
+   * \param val value to check
    * \return log base 2 (1/val) if reciprocal power of 2, or zero if not
    */
   uint32_t CheckForReciprocalPowerOfTwo (double val) const;
