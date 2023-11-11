@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2008-2009 Strasbourg University
  *               2013 Universita' di Firenze
@@ -204,7 +203,8 @@ class Ipv6InterfaceContainer
     /**
      * \brief Set the default route for all the devices (except the router itself).
      * Note that the route will be set to the link-local address of the node with the specified
-     * address. \param routerAddr the default router address
+     * address.
+     * \param routerAddr the default router address
      */
     void SetDefaultRouteInAllNodes(Ipv6Address routerAddr);
 
@@ -218,7 +218,9 @@ class Ipv6InterfaceContainer
     /**
      * \brief Set the default route for the specified index.
      * Note that the route will be set to the link-local address of the node with the specified
-     * address. \param i index \param routerAddr the default router address
+     * address.
+     * \param i index
+     * \param routerAddr the default router address
      */
     void SetDefaultRoute(uint32_t i, Ipv6Address routerAddr);
 

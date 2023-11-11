@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
@@ -49,9 +48,9 @@ static void
 AsciiPhyTransmitSinkWithContext(Ptr<OutputStreamWrapper> stream,
                                 std::string context,
                                 Ptr<const Packet> p,
-                                WifiMode mode,
-                                WifiPreamble preamble,
-                                uint8_t txLevel)
+                                WifiMode mode [[maybe_unused]],
+                                WifiPreamble preamble [[maybe_unused]],
+                                uint8_t txLevel [[maybe_unused]])
 {
     NS_LOG_FUNCTION(stream << context << p << mode << preamble << txLevel);
     *stream->GetStream() << "t " << Simulator::Now().GetSeconds() << " " << context << " " << *p
@@ -130,7 +129,7 @@ YansWavePhyHelper::Default()
 void
 YansWavePhyHelper::EnablePcapInternal(std::string prefix,
                                       Ptr<NetDevice> nd,
-                                      bool promiscuous,
+                                      bool /* promiscuous */,
                                       bool explicitFilename)
 {
     //
@@ -340,7 +339,7 @@ WaveHelper::Install(const WifiPhyHelper& phyHelper,
 {
     try
     {
-        [[maybe_unused]] const QosWaveMacHelper& qosMac =
+        const QosWaveMacHelper& qosMac [[maybe_unused]] =
             dynamic_cast<const QosWaveMacHelper&>(macHelper);
     }
     catch (const std::bad_cast&)

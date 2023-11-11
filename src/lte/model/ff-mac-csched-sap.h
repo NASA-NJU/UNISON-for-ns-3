@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2011 Centre Tecnologic de Telecomunicacions de Catalunya (CTTC)
  *
@@ -85,7 +84,7 @@ class FfMacCschedSapProvider
         struct SiConfiguration_s m_siConfiguration; ///< SI configuration
 
         uint16_t m_ulBandwidth; ///< UL bandwidth
-        uint16_t m_dlBandwidth; ///< DL badnwidth
+        uint16_t m_dlBandwidth; ///< DL bandwidth
 
         enum NormalExtended_e m_ulCyclicPrefixLength; ///< UL cyclic prefix length
         enum NormalExtended_e m_dlCyclicPrefixLength; ///< DL cyclic prefix length
@@ -114,7 +113,7 @@ class FfMacCschedSapProvider
         uint8_t m_deltaPucchShift;              ///< delta pu cch shift
         uint8_t m_nrbCqi;                       ///< nrb CQI
         uint8_t m_ncsAn;                        ///< ncs an
-        uint8_t m_srsSubframeConfiguration;     ///< SRS subframe confguration
+        uint8_t m_srsSubframeConfiguration;     ///< SRS subframe configuration
         uint8_t m_srsSubframeOffset;            ///< SRS subframe offset
         uint8_t m_srsBandwidthConfiguration;    ///< SRS bandwidth configuration
         bool m_srsMaxUpPts;                     ///< SRS maximum up pts
@@ -143,7 +142,7 @@ class FfMacCschedSapProvider
         struct DrxConfig_s m_drxConfig; ///< drx config
         uint16_t m_timeAlignmentTimer;  ///< time alignment timer
 
-        /// MeasGapConfigPattern_e enumaration
+        /// MeasGapConfigPattern_e enumeration
         enum MeasGapConfigPattern_e
         {
             MGP_GP1,
@@ -152,7 +151,7 @@ class FfMacCschedSapProvider
         } m_measGapConfigPattern; ///< measGapConfigPattern
 
         uint8_t m_measGapConfigSubframeOffset;    ///< measure gap config subframe offset
-        bool m_spsConfigPresent;                  ///< SPS configu present
+        bool m_spsConfigPresent;                  ///< SPS config present
         struct SpsConfig_s m_spsConfig;           ///< SPS config
         bool m_srConfigPresent;                   ///< SR config present
         struct SrConfig_s m_srConfig;             ///< SR config

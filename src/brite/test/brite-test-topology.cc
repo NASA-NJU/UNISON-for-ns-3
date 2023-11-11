@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
@@ -44,10 +43,10 @@ class BriteTopologyStructureTestCase : public TestCase
 {
   public:
     BriteTopologyStructureTestCase();
-    virtual ~BriteTopologyStructureTestCase();
+    ~BriteTopologyStructureTestCase() override;
 
   private:
-    virtual void DoRun(void);
+    void DoRun() override;
 };
 
 BriteTopologyStructureTestCase::BriteTopologyStructureTestCase()
@@ -61,7 +60,7 @@ BriteTopologyStructureTestCase::~BriteTopologyStructureTestCase()
 }
 
 void
-BriteTopologyStructureTestCase::DoRun(void)
+BriteTopologyStructureTestCase::DoRun()
 {
     std::string confFile = "src/brite/test/test.conf";
 
@@ -112,10 +111,10 @@ class BriteTopologyFunctionTestCase : public TestCase
 {
   public:
     BriteTopologyFunctionTestCase();
-    virtual ~BriteTopologyFunctionTestCase();
+    ~BriteTopologyFunctionTestCase() override;
 
   private:
-    virtual void DoRun(void);
+    void DoRun() override;
 };
 
 BriteTopologyFunctionTestCase::BriteTopologyFunctionTestCase()
@@ -128,7 +127,7 @@ BriteTopologyFunctionTestCase::~BriteTopologyFunctionTestCase()
 }
 
 void
-BriteTopologyFunctionTestCase::DoRun(void)
+BriteTopologyFunctionTestCase::DoRun()
 {
     std::string confFile = "src/brite/test/test.conf";
     BriteTopologyHelper bth(confFile);

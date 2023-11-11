@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2013 Lawrence Livermore National Laboratory
  *
@@ -58,16 +57,36 @@ SetCbArg(std::string val)
 
 } // unnamed namespace
 
+/**
+ * Print a row containing the name, the default
+ * and the final values of an argument.
+ *
+ * \param [in] label The argument label.
+ * \param [in] defaultValue The default value of the argument.
+ * \param [in] finalValue The final value of the argument.
+ *
+ */
+#define DefaultFinal(label, defaultValue, finalValue)                                              \
+    std::left << std::setw(20) << label + std::string(":") << std::setw(20) << defaultValue        \
+              << finalValue << "\n"
+
 int
 main(int argc, char* argv[])
 {
+    // Plain old data options
     int intArg = 1;
     bool boolArg = false;
     std::string strArg = "strArg default";
-    // Attribute path
+
+    // Attribute path option
     const std::string attrClass = "ns3::RandomVariableStream";
     const std::string attrName = "Antithetic";
     const std::string attrPath = attrClass + "::" + attrName;
+
+    // char* buffer option
+    constexpr int CHARBUF_SIZE = 10;
+    char charbuf[CHARBUF_SIZE] = "charstar";
+
     // Non-option arguments
     int nonOpt1 = 1;
     int nonOpt2 = 1;
@@ -86,6 +105,7 @@ main(int argc, char* argv[])
         tid.LookupAttributeByName(attrName, &info);
         attrDef = info.originalInitialValue->SerializeToString(info.checker);
     }
+    const std::string charbufDef{charbuf};
     const int nonOpt1Def = nonOpt1;
     const int nonOpt2Def = nonOpt2;
 
@@ -98,11 +118,12 @@ main(int argc, char* argv[])
     cmd.AddValue("strArg", "a string argument", strArg);
     cmd.AddValue("anti", attrPath);
     cmd.AddValue("cbArg", "a string via callback", MakeCallback(SetCbArg));
+    cmd.AddValue("charbuf", "a char* buffer", charbuf, CHARBUF_SIZE);
     cmd.AddNonOption("nonOpt1", "first non-option", nonOpt1);
     cmd.AddNonOption("nonOpt2", "second non-option", nonOpt2);
     cmd.Parse(argc, argv);
 
-    // Show initial values:
+    // Show what happened
     std::cout << std::endl;
     std::cout << cmd.GetName() << ":" << std::endl;
 
@@ -111,52 +132,43 @@ main(int argc, char* argv[])
     cmd.PrintVersion(std::cout);
     std::cout << std::endl;
 
-    std::cout << "Initial values:" << std::endl;
+    std::cout << "Argument            Initial Value       Final Value\n"
+              << std::left << std::boolalpha;
 
-    std::cout << std::left << std::setw(10) << "intArg:" << intDef << std::endl;
-    std::cout << std::setw(10) << "boolArg:" << std::boolalpha << boolDef << std::noboolalpha
-              << std::endl;
-
-    std::cout << std::setw(10) << "strArg:"
-              << "\"" << strDef << "\"" << std::endl;
-    std::cout << std::setw(10) << "anti:"
-              << "\"" << attrDef << "\"" << std::endl;
-    std::cout << std::setw(10) << "cbArg:"
-              << "\"" << cbDef << "\"" << std::endl;
-    std::cout << std::left << std::setw(10) << "nonOpt1:" << nonOpt1Def << std::endl;
-    std::cout << std::left << std::setw(10) << "nonOpt2:" << nonOpt2Def << std::endl;
-    std::cout << std::endl;
-
-    // Show final values
-    std::cout << "Final values:" << std::endl;
-    std::cout << std::left << std::setw(10) << "intArg:" << intArg << std::endl;
-    std::cout << std::setw(10) << "boolArg:" << std::boolalpha << boolArg << std::noboolalpha
-              << std::endl;
-
-    std::cout << std::setw(10) << "strArg:"
-              << "\"" << strArg << "\"" << std::endl;
+    std::cout << DefaultFinal("intArg", intDef, intArg) //
+              << DefaultFinal("boolArg",
+                              (boolDef ? "true" : "false"),
+                              (boolArg ? "true" : "false")) //
+              << DefaultFinal("strArg", "\"" + strDef + "\"", "\"" + strArg + "\"");
 
     // Look up new default value for attribute
+    std::string antiArg;
     {
         struct TypeId::AttributeInformation info;
         tid.LookupAttributeByName(attrName, &info);
-
-        std::cout << std::setw(10) << "anti:"
-                  << "\"" << info.initialValue->SerializeToString(info.checker) << "\""
-                  << std::endl;
+        antiArg = info.initialValue->SerializeToString(info.checker);
     }
-    std::cout << std::setw(10) << "cbArg:"
-              << "\"" << g_cbArg << "\"" << std::endl;
-    std::cout << std::left << std::setw(10) << "nonOpt1:" << nonOpt1 << std::endl;
-    std::cout << std::left << std::setw(10) << "nonOpt2:" << nonOpt2 << std::endl;
-    std::cout << std::left << "Number of extra non-option arguments:" << cmd.GetNExtraNonOptions()
-              << std::endl;
+
+    std::cout << DefaultFinal("anti", "\"" + attrDef + "\"", "\"" + antiArg + "\"")
+              << DefaultFinal("cbArg", cbDef, g_cbArg)
+              << DefaultFinal("charbuf",
+                              "\"" + charbufDef + "\"",
+                              "\"" + std::string(charbuf) + "\"")
+              << DefaultFinal("nonOpt1", nonOpt1Def, nonOpt1)
+              << DefaultFinal("nonOpt2", nonOpt2Def, nonOpt2) << std::endl;
+
+    std::cout << std::setw(40)
+              << "Number of extra non-option arguments:" << cmd.GetNExtraNonOptions() << std::endl;
 
     for (std::size_t i = 0; i < cmd.GetNExtraNonOptions(); ++i)
     {
-        std::cout << std::left << std::setw(10) << "extra:"
-                  << "\"" << cmd.GetExtraNonOption(i) << "\"" << std::endl;
+        std::cout << DefaultFinal("extra non-option " + std::to_string(i),
+                                  "",
+                                  "\"" + cmd.GetExtraNonOption(i) + "\"");
     }
+    std::cout << std::endl;
+
+#undef DefaultFinal
 
     return 0;
 }

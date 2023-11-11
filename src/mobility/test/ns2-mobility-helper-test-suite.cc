@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2007 INRIA
  *               2009,2010 Contributors
@@ -146,7 +145,7 @@ class Ns2MobilityHelperTest : public TestCase
 
     /**
      * Set NS-2 trace to read as single large string (don't forget to add \\n and quote \"'s)
-     *  \param trace the mobility trace
+     * \param trace the mobility trace
      */
     void SetTrace(const std::string& trace)
     {
@@ -196,7 +195,7 @@ class Ns2MobilityHelperTest : public TestCase
     bool WriteTrace()
     {
         m_traceFile = CreateTempDirFilename("Ns2MobilityHelperTest.tcl");
-        std::ofstream of(m_traceFile.c_str());
+        std::ofstream of(m_traceFile);
         NS_TEST_ASSERT_MSG_EQ_RETURNS_BOOL(of.is_open(), true, "Need to write tmp. file");
         of << m_trace;
         of.close();

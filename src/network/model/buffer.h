@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2005,2006,2007 INRIA
  *
@@ -430,7 +429,7 @@ class Buffer
          * read.
          * The data is read in network format and returned in host format.
          *
-         * \warning this is the slow version, please use ReadNtohU16 (void)
+         * \warning this is the slow version, please use ReadNtohU16 ()
          */
         uint16_t SlowReadNtohU16();
         /**
@@ -440,7 +439,7 @@ class Buffer
          * read.
          * The data is read in network format and returned in host format.
          *
-         * \warning this is the slow version, please use ReadNtohU32 (void)
+         * \warning this is the slow version, please use ReadNtohU32 ()
          */
         uint32_t SlowReadNtohU32();
         /**

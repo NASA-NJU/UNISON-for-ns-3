@@ -1,4 +1,3 @@
-/* -*-  Mode: C++; c-file-style: "gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2011 Centre Tecnologic de Telecomunicacions de Catalunya (CTTC)
  *
@@ -87,11 +86,11 @@ class LteRlcAm : public LteRlc
      * method called when the T_status_prohibit timer expires
      *
      * \param seqNumber SequenceNumber10
-     * \returns true is inside receivign window
+     * \returns true is inside receiving window
      */
     bool IsInsideReceivingWindow(SequenceNumber10 seqNumber);
     //
-    //   void ReassembleOutsideWindow (void);
+    //   void ReassembleOutsideWindow ();
     //   void ReassembleSnLessThan (uint16_t seqNumber);
     //
 

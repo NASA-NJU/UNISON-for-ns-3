@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2009 University of Washington
  *
@@ -103,10 +102,10 @@ UanTest::UanTest()
 }
 
 bool
-UanTest::RxPacket(Ptr<NetDevice> dev,
+UanTest::RxPacket(Ptr<NetDevice> /* dev */,
                   Ptr<const Packet> pkt,
-                  [[maybe_unused]] uint16_t mode,
-                  [[maybe_unused]] const Address& sender)
+                  uint16_t /* mode */,
+                  const Address& /* sender */)
 {
     m_bytesRx += pkt->GetSize();
     return true;

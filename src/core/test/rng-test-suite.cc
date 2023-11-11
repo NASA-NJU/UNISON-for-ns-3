@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
@@ -76,17 +75,17 @@ class RngUniformTestCase : public TestCase
     static const uint32_t N_MEASUREMENTS = 1000000;
 
     RngUniformTestCase();
-    virtual ~RngUniformTestCase();
+    ~RngUniformTestCase() override;
 
     /**
      * Run a chi-squared test on the results of the random number generator.
-     * \param u The random number generaor.
+     * \param u The random number generator.
      * \return the chi-squared test result.
      */
     double ChiSquaredTest(Ptr<UniformRandomVariable> u);
 
   private:
-    virtual void DoRun(void);
+    void DoRun() override;
 };
 
 RngUniformTestCase::RngUniformTestCase()
@@ -134,9 +133,9 @@ RngUniformTestCase::ChiSquaredTest(Ptr<UniformRandomVariable> u)
 }
 
 void
-RngUniformTestCase::DoRun(void)
+RngUniformTestCase::DoRun()
 {
-    RngSeedManager::SetSeed(static_cast<uint32_t>(time(0)));
+    RngSeedManager::SetSeed(static_cast<uint32_t>(time(nullptr)));
 
     double sum = 0.;
     double maxStatistic = gsl_cdf_chisq_Qinv(0.05, N_BINS);
@@ -169,17 +168,17 @@ class RngNormalTestCase : public TestCase
     static const uint32_t N_MEASUREMENTS = 1000000;
 
     RngNormalTestCase();
-    virtual ~RngNormalTestCase();
+    ~RngNormalTestCase() override;
 
     /**
      * Run a chi-squared test on the results of the random number generator.
-     * \param n The random number generaor.
+     * \param n The random number generator.
      * \return the chi-squared test result.
      */
     double ChiSquaredTest(Ptr<NormalRandomVariable> n);
 
   private:
-    virtual void DoRun(void);
+    void DoRun() override;
 };
 
 RngNormalTestCase::RngNormalTestCase()
@@ -241,9 +240,9 @@ RngNormalTestCase::ChiSquaredTest(Ptr<NormalRandomVariable> n)
 }
 
 void
-RngNormalTestCase::DoRun(void)
+RngNormalTestCase::DoRun()
 {
-    RngSeedManager::SetSeed(static_cast<uint32_t>(time(0)));
+    RngSeedManager::SetSeed(static_cast<uint32_t>(time(nullptr)));
 
     double sum = 0.;
     double maxStatistic = gsl_cdf_chisq_Qinv(0.05, N_BINS);
@@ -276,17 +275,17 @@ class RngExponentialTestCase : public TestCase
     static const uint32_t N_MEASUREMENTS = 1000000;
 
     RngExponentialTestCase();
-    virtual ~RngExponentialTestCase();
+    ~RngExponentialTestCase() override;
 
     /**
      * Run a chi-squared test on the results of the random number generator.
-     * \param n The random number generaor.
+     * \param n The random number generator.
      * \return the chi-squared test result.
      */
     double ChiSquaredTest(Ptr<ExponentialRandomVariable> n);
 
   private:
-    virtual void DoRun(void);
+    void DoRun() override;
 };
 
 RngExponentialTestCase::RngExponentialTestCase()
@@ -347,9 +346,9 @@ RngExponentialTestCase::ChiSquaredTest(Ptr<ExponentialRandomVariable> e)
 }
 
 void
-RngExponentialTestCase::DoRun(void)
+RngExponentialTestCase::DoRun()
 {
-    RngSeedManager::SetSeed(static_cast<uint32_t>(time(0)));
+    RngSeedManager::SetSeed(static_cast<uint32_t>(time(nullptr)));
 
     double sum = 0.;
     double maxStatistic = gsl_cdf_chisq_Qinv(0.05, N_BINS);
@@ -382,17 +381,17 @@ class RngParetoTestCase : public TestCase
     static const uint32_t N_MEASUREMENTS = 1000000;
 
     RngParetoTestCase();
-    virtual ~RngParetoTestCase();
+    ~RngParetoTestCase() override;
 
     /**
      * Run a chi-squared test on the results of the random number generator.
-     * \param p The random number generaor.
+     * \param p The random number generator.
      * \return the chi-squared test result.
      */
     double ChiSquaredTest(Ptr<ParetoRandomVariable> p);
 
   private:
-    virtual void DoRun(void);
+    void DoRun() override;
 };
 
 RngParetoTestCase::RngParetoTestCase()
@@ -456,9 +455,9 @@ RngParetoTestCase::ChiSquaredTest(Ptr<ParetoRandomVariable> p)
 }
 
 void
-RngParetoTestCase::DoRun(void)
+RngParetoTestCase::DoRun()
 {
-    RngSeedManager::SetSeed(static_cast<uint32_t>(time(0)));
+    RngSeedManager::SetSeed(static_cast<uint32_t>(time(nullptr)));
 
     double sum = 0.;
     double maxStatistic = gsl_cdf_chisq_Qinv(0.05, N_BINS);

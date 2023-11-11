@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2005,2006 INRIA
  *
@@ -230,13 +229,13 @@ class Ptr
      * \note Explicit tests against `0`, `NULL` or `nullptr` are not supported.
      * All these cases will fail to compile:
      * \code
-     *   if (p != 0)      {...}    // Should be `if (p)`
+     *   if (p != nullptr {...}    // Should be `if (p)`
      *   if (p != NULL)   {...}
-     *   if (p != nullptr {...}
+     *   if (p != 0)      {...}
      *
-     *   if (p == 0)      {...}    // Should be `if (!p)`
+     *   if (p == nullptr {...}    // Should be `if (!p)`
      *   if (p == NULL)   {...}
-     *   if (p == nullptr {...}
+     *   if (p == 0)      {...}
      * \endcode
      * Just use `if (p)` or `if (!p)` as indicated.
      *

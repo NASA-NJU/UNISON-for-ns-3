@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2006 INRIA
  *
@@ -421,7 +420,7 @@ GetRandomStream(std::string filename)
         else
         {
             LOG("  Event time distribution:      from " << filename);
-            input = new std::ifstream(filename.c_str());
+            input = new std::ifstream(filename);
         }
 
         double value;

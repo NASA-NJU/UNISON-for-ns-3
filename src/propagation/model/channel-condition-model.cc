@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2019 SIGNET Lab, Department of Information Engineering,
  * University of Padova
@@ -204,9 +203,8 @@ AlwaysLosChannelConditionModel::~AlwaysLosChannelConditionModel()
 }
 
 Ptr<ChannelCondition>
-AlwaysLosChannelConditionModel::GetChannelCondition(
-    [[maybe_unused]] Ptr<const MobilityModel> a,
-    [[maybe_unused]] Ptr<const MobilityModel> b) const
+AlwaysLosChannelConditionModel::GetChannelCondition(Ptr<const MobilityModel> /* a */,
+                                                    Ptr<const MobilityModel> /* b */) const
 {
     Ptr<ChannelCondition> c = CreateObject<ChannelCondition>(ChannelCondition::LOS);
 
@@ -242,9 +240,8 @@ NeverLosChannelConditionModel::~NeverLosChannelConditionModel()
 }
 
 Ptr<ChannelCondition>
-NeverLosChannelConditionModel::GetChannelCondition(
-    [[maybe_unused]] Ptr<const MobilityModel> a,
-    [[maybe_unused]] Ptr<const MobilityModel> b) const
+NeverLosChannelConditionModel::GetChannelCondition(Ptr<const MobilityModel> /* a */,
+                                                   Ptr<const MobilityModel> /* b */) const
 {
     Ptr<ChannelCondition> c = CreateObject<ChannelCondition>(ChannelCondition::NLOS);
 
@@ -409,8 +406,8 @@ ThreeGppChannelConditionModel::GetChannelCondition(Ptr<const MobilityModel> a,
 }
 
 ChannelCondition::O2iConditionValue
-ThreeGppChannelConditionModel::ComputeO2i([[maybe_unused]] Ptr<const MobilityModel> a,
-                                          [[maybe_unused]] Ptr<const MobilityModel> b) const
+ThreeGppChannelConditionModel::ComputeO2i(Ptr<const MobilityModel> a,
+                                          Ptr<const MobilityModel> b) const
 {
     double o2iProb = m_uniformVarO2i->GetValue(0, 1);
 

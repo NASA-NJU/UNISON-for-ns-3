@@ -1,4 +1,3 @@
-/* -*-  Mode: C++; c-file-style: "gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2013
  *
@@ -63,8 +62,9 @@ class HtCapabilities : public WifiInformationElement
      * Set the Supported MCS Set field in the HT Capabilities information element.
      *
      * \param ctrl1 the first 64 bytes of the Supported MCS Set field in the HT Capabilities
-     * information element \param ctrl2 the last 64 bytes of the Supported MCS Set field in the HT
-     * Capabilities information element
+     * information element
+     * \param ctrl2 the last 64 bytes of the Supported MCS Set field in the HT Capabilities
+     * information element
      */
     void SetSupportedMcsSet(uint64_t ctrl1, uint64_t ctrl2);
     /**

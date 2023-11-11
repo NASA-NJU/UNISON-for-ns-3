@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
@@ -49,11 +48,11 @@ class MpiReceiver : public Object
 {
   public:
     /**
-     *  Register this type.
-     *  \return The object TypeId.
+     * Register this type.
+     * \return The object TypeId.
      */
-    static TypeId GetTypeId(void);
-    virtual ~MpiReceiver();
+    static TypeId GetTypeId();
+    ~MpiReceiver() override;
 
     /**
      * \brief Direct an incoming packet to the device Receive() method
@@ -67,7 +66,7 @@ class MpiReceiver : public Object
     void SetReceiveCallback(Callback<void, Ptr<Packet>> callback);
 
   private:
-    virtual void DoDispose(void);
+    void DoDispose() override;
 
     /** Callback to send received packets to. */
     Callback<void, Ptr<Packet>> m_rxCallback;

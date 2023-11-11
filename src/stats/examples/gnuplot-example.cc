@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2011 University of Washington
  *
@@ -80,7 +79,7 @@ Create2DPlotFile()
     plot.AddDataset(dataset);
 
     // Open the plot file.
-    std::ofstream plotFile(plotFileName.c_str());
+    std::ofstream plotFile(plotFileName);
 
     // Write the plot file.
     plot.GenerateOutput(plotFile);
@@ -154,7 +153,7 @@ Create2DPlotWithErrorBarsFile()
     plot.AddDataset(dataset);
 
     // Open the plot file.
-    std::ofstream plotFile(plotFileName.c_str());
+    std::ofstream plotFile(plotFileName);
 
     // Write the plot file.
     plot.GenerateOutput(plotFile);
@@ -234,7 +233,7 @@ Create3DPlotFile()
     plot.AddDataset(dataset);
 
     // Open the plot file.
-    std::ofstream plotFile(plotFileName.c_str());
+    std::ofstream plotFile(plotFileName);
 
     // Write the plot file.
     plot.GenerateOutput(plotFile);

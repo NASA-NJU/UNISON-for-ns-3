@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 //
 // Copyright (c) 2009 INESC Porto
 //
@@ -577,7 +576,7 @@ void
 FlowMonitor::SerializeToXmlFile(std::string fileName, bool enableHistograms, bool enableProbes)
 {
     NS_LOG_FUNCTION(this << fileName << enableHistograms << enableProbes);
-    std::ofstream os(fileName.c_str(), std::ios::out | std::ios::binary);
+    std::ofstream os(fileName, std::ios::out | std::ios::binary);
     os << "<?xml version=\"1.0\" ?>\n";
     SerializeToXmlStream(os, 0, enableHistograms, enableProbes);
     os.close();

@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
@@ -70,7 +69,7 @@ SetTimeout(std::string value)
 {
     try
     {
-        timeout = ns3::Seconds(atof(value.c_str()));
+        timeout = ns3::Seconds(std::stof(value));
         return true;
     }
     catch (...)
@@ -149,7 +148,9 @@ main(int argc, char* argv[])
     {
         Ptr<ns3::ofi::LearningController> controller = CreateObject<ns3::ofi::LearningController>();
         if (!timeout.IsZero())
+        {
             controller->SetAttribute("ExpirationTime", TimeValue(timeout));
+        }
         swtch.Install(switchNode, switchDevices, controller);
     }
 
@@ -221,4 +222,6 @@ main(int argc, char* argv[])
 #else
     NS_LOG_INFO("NS-3 OpenFlow is not enabled. Cannot run simulation.");
 #endif // NS3_OPENFLOW
+
+    return 0;
 }

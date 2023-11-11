@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2009 University of Washington
  *
@@ -283,7 +282,7 @@ Ptr<Ipv4RoutingProtocol>
 Ipv4ListRouting::GetRoutingProtocol(uint32_t index, int16_t& priority) const
 {
     NS_LOG_FUNCTION(this << index << priority);
-    if (index > m_routingProtocols.size())
+    if (index >= m_routingProtocols.size())
     {
         NS_FATAL_ERROR("Ipv4ListRouting::GetRoutingProtocol():  index " << index
                                                                         << " out of range");

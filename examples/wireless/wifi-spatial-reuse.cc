@@ -1,4 +1,3 @@
-/* -*-  Mode: C++; c-file-style: "gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2019 University of Washington
  *
@@ -109,7 +108,7 @@ ContextToNodeId(std::string context)
 {
     std::string sub = context.substr(10);
     uint32_t pos = sub.find("/Device");
-    return atoi(sub.substr(0, pos).c_str());
+    return std::stoi(sub.substr(0, pos));
 }
 
 void

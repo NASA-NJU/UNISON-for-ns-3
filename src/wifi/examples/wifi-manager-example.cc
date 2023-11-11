@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2016 University of Washington
  *
@@ -585,7 +584,7 @@ main(int argc, char* argv[])
     }
     plotName += ".eps";
     dataName += ".plt";
-    std::ofstream outfile(dataName.c_str());
+    std::ofstream outfile(dataName);
     Gnuplot gnuplot = Gnuplot(plotName);
 
     Config::SetDefault("ns3::WifiRemoteStationManager::MaxSlrc", UintegerValue(maxSlrc));

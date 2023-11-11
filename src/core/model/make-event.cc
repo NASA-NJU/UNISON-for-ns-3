@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2008 INRIA
  *
@@ -24,7 +23,7 @@
 /**
  * \file
  * \ingroup events
- * ns3::MakeEvent(void(*f)(void)) implementation.
+ * ns3::MakeEvent(void(*f)()) implementation.
  */
 
 namespace ns3

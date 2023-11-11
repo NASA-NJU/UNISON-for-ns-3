@@ -1,4 +1,3 @@
-/* -*-  Mode: C++; c-file-style: "gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2011 University of Kansas
  *
@@ -188,7 +187,7 @@ RoutingExperiment::CheckThroughput()
     double kbs = (bytesTotal * 8.0) / 1000;
     bytesTotal = 0;
 
-    std::ofstream out(m_CSVfileName.c_str(), std::ios::app);
+    std::ofstream out(m_CSVfileName, std::ios::app);
 
     out << (Simulator::Now()).GetSeconds() << "," << kbs << "," << packetsReceived << ","
         << m_nSinks << "," << m_protocolName << "," << m_txp << "" << std::endl;
@@ -228,7 +227,7 @@ main(int argc, char* argv[])
     std::string CSVfileName = experiment.CommandSetup(argc, argv);
 
     // blank out the last output file and write the column headers
-    std::ofstream out(CSVfileName.c_str());
+    std::ofstream out(CSVfileName);
     out << "SimulationSecond,"
         << "ReceiveRate,"
         << "PacketsReceived,"
@@ -297,7 +296,7 @@ RoutingExperiment::Run(int nSinks, double txp, std::string CSVfileName)
     NetDeviceContainer adhocDevices = wifi.Install(wifiPhy, wifiMac, adhocNodes);
 
     MobilityHelper mobilityAdhoc;
-    [[maybe_unused]] int64_t streamIndex = 0; // used to get consistent mobility across scenarios
+    int64_t streamIndex = 0; // used to get consistent mobility across scenarios
 
     ObjectFactory pos;
     pos.SetTypeId("ns3::RandomRectanglePositionAllocator");
@@ -402,19 +401,19 @@ RoutingExperiment::Run(int nSinks, double txp, std::string CSVfileName)
     ss4 << rate;
     std::string sRate = ss4.str();
 
-    // NS_LOG_INFO ("Configure Tracing.");
+    // NS_LOG_INFO("Configure Tracing.");
     // tr_name = tr_name + "_" + m_protocolName +"_" + nodes + "nodes_" + sNodeSpeed + "speed_" +
     // sNodePause + "pause_" + sRate + "rate";
 
     // AsciiTraceHelper ascii;
-    // Ptr<OutputStreamWrapper> osw = ascii.CreateFileStream ( (tr_name + ".tr").c_str());
-    // wifiPhy.EnableAsciiAll (osw);
+    // Ptr<OutputStreamWrapper> osw = ascii.CreateFileStream(tr_name + ".tr");
+    // wifiPhy.EnableAsciiAll(osw);
     AsciiTraceHelper ascii;
     MobilityHelper::EnableAsciiAll(ascii.CreateFileStream(tr_name + ".mob"));
 
     // Ptr<FlowMonitor> flowmon;
     // FlowMonitorHelper flowmonHelper;
-    // flowmon = flowmonHelper.InstallAll ();
+    // flowmon = flowmonHelper.InstallAll();
 
     NS_LOG_INFO("Run Simulation.");
 
@@ -423,7 +422,7 @@ RoutingExperiment::Run(int nSinks, double txp, std::string CSVfileName)
     Simulator::Stop(Seconds(TotalTime));
     Simulator::Run();
 
-    // flowmon->SerializeToXmlFile ((tr_name + ".flowmon").c_str(), false, false);
+    // flowmon->SerializeToXmlFile(tr_name + ".flowmon", false, false);
 
     Simulator::Destroy();
 }

@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2017 Universita' degli Studi di Napoli Federico II
  *
@@ -32,7 +31,7 @@ namespace ns3
 NS_LOG_COMPONENT_DEFINE("NetmapNetDevice");
 
 TypeId
-NetDeviceQueueLock::GetTypeId(void)
+NetDeviceQueueLock::GetTypeId()
 {
     static TypeId tid = TypeId("ns3::NetDeviceQueueLock")
                             .SetParent<NetDeviceQueue>()
@@ -50,7 +49,7 @@ NetDeviceQueueLock::~NetDeviceQueueLock()
 }
 
 bool
-NetDeviceQueueLock::IsStopped(void) const
+NetDeviceQueueLock::IsStopped() const
 {
     m_mutex.lock();
     bool stopped = NetDeviceQueue::IsStopped();
@@ -59,7 +58,7 @@ NetDeviceQueueLock::IsStopped(void) const
 }
 
 void
-NetDeviceQueueLock::Start(void)
+NetDeviceQueueLock::Start()
 {
     m_mutex.lock();
     NetDeviceQueue::Start();
@@ -67,7 +66,7 @@ NetDeviceQueueLock::Start(void)
 }
 
 void
-NetDeviceQueueLock::Stop(void)
+NetDeviceQueueLock::Stop()
 {
     m_mutex.lock();
     NetDeviceQueue::Stop();
@@ -75,7 +74,7 @@ NetDeviceQueueLock::Stop(void)
 }
 
 void
-NetDeviceQueueLock::Wake(void)
+NetDeviceQueueLock::Wake()
 {
     m_mutex.lock();
     NetDeviceQueue::Wake();
@@ -120,7 +119,7 @@ NetmapNetDeviceFdReader::SetNetmapIfp(struct netmap_if* nifp)
 }
 
 FdReader::Data
-NetmapNetDeviceFdReader::DoRead(void)
+NetmapNetDeviceFdReader::DoRead()
 {
     NS_LOG_FUNCTION(this);
 
@@ -152,7 +151,7 @@ NetmapNetDeviceFdReader::DoRead(void)
             // advance the netmap pointers and sync the fd
             rxring->head = rxring->cur = nm_ring_next(rxring, i);
 
-            ioctl(m_fd, NIOCRXSYNC, NULL);
+            ioctl(m_fd, NIOCRXSYNC, nullptr);
 
             break;
         }
@@ -173,7 +172,7 @@ NetmapNetDeviceFdReader::DoRead(void)
 NS_OBJECT_ENSURE_REGISTERED(NetmapNetDevice);
 
 TypeId
-NetmapNetDevice::GetTypeId(void)
+NetmapNetDevice::GetTypeId()
 {
     static TypeId tid =
         TypeId("ns3::NetmapNetDevice")
@@ -210,7 +209,7 @@ NetmapNetDevice::~NetmapNetDevice()
 }
 
 Ptr<FdReader>
-NetmapNetDevice::DoCreateFdReader(void)
+NetmapNetDevice::DoCreateFdReader()
 {
     NS_LOG_FUNCTION(this);
 
@@ -222,7 +221,7 @@ NetmapNetDevice::DoCreateFdReader(void)
 }
 
 void
-NetmapNetDevice::DoFinishStartingDevice(void)
+NetmapNetDevice::DoFinishStartingDevice()
 {
     NS_LOG_FUNCTION(this);
 
@@ -231,7 +230,7 @@ NetmapNetDevice::DoFinishStartingDevice(void)
 }
 
 void
-NetmapNetDevice::DoFinishStoppingDevice(void)
+NetmapNetDevice::DoFinishStoppingDevice()
 {
     NS_LOG_FUNCTION(this);
 
@@ -329,7 +328,7 @@ NetmapNetDevice::SyncAndNotifyQueue()
     {
         // we sync the netmap ring periodically.
         // the traffic control layer can write packets during the period between two syncs.
-        ioctl(GetFileDescriptor(), NIOCTXSYNC, NULL);
+        ioctl(GetFileDescriptor(), NIOCTXSYNC, nullptr);
 
         // we need of a nearly periodic notification to queue limits of the transmitted bytes.
         uint32_t totalTransmittedBytes = m_totalQueuedBytes - GetBytesInNetmapTxRing();
@@ -354,7 +353,7 @@ NetmapNetDevice::SyncAndNotifyQueue()
         NS_LOG_DEBUG("Space in the netmap ring of " << nm_ring_space(txring) << " packets");
     }
 
-    ioctl(GetFileDescriptor(), NIOCTXSYNC, NULL);
+    ioctl(GetFileDescriptor(), NIOCTXSYNC, nullptr);
 }
 
 ssize_t

@@ -1,4 +1,3 @@
-/* -*-  Mode: C++; c-file-style: "gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2007 INRIA
  * Copyright (c) 2011 The Boeing Company
@@ -267,13 +266,13 @@ operator>>(std::istream& is, Mac16Address& address)
         if (next == std::string::npos)
         {
             tmp = v.substr(col, v.size() - col);
-            address.m_address[i] = strtoul(tmp.c_str(), nullptr, 16);
+            address.m_address[i] = std::stoul(tmp, nullptr, 16);
             break;
         }
         else
         {
             tmp = v.substr(col, next - col);
-            address.m_address[i] = strtoul(tmp.c_str(), nullptr, 16);
+            address.m_address[i] = std::stoul(tmp, nullptr, 16);
             col = next + 1;
         }
     }

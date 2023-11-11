@@ -1,4 +1,3 @@
-/* -*-  Mode: C++; c-file-style: "gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2013 Magister Solutions (original test-lte-handover-delay.cc)
  * Copyright (c) 2021 University of Washington (handover failure cases)
@@ -367,6 +366,9 @@ LteHandoverFailureTestCase::DoTeardown()
  * \ingroup lte-test
  * \ingroup tests
  *
+ * The following log components can be used to debug this test's behavior:
+ * LteHandoverFailureTest:LteEnbRrc:LteEnbMac:LteUeRrc:EpcX2
+ *
  * \brief Lte Handover Failure Test Suite
  */
 static class LteHandoverFailureTestSuite : public TestSuite
@@ -375,13 +377,6 @@ static class LteHandoverFailureTestSuite : public TestSuite
     LteHandoverFailureTestSuite()
         : TestSuite("lte-handover-failure", TestSuite::SYSTEM)
     {
-        LogLevel logLevel = (LogLevel)(LOG_PREFIX_TIME | LOG_LEVEL_INFO);
-        LogComponentEnable("LteHandoverFailureTest", logLevel);
-        LogComponentEnable("LteEnbRrc", logLevel);
-        LogComponentEnable("LteEnbMac", logLevel);
-        LogComponentEnable("LteUeRrc", logLevel);
-        LogComponentEnable("EpcX2", logLevel);
-
         // Argument sequence for all test cases: useIdealRrc, handoverTime, simulationDuration,
         // numberOfRaPreambles, preambleTransMax, raResponseWindowSize,
         //                                       handoverJoiningTimeout, handoverLeavingTimeout

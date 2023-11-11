@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2010 INRIA
  *
@@ -221,7 +220,7 @@ class int64x64_t
      *
      * \return This value in floating form.
      */
-    inline double GetDouble(void) const
+    inline double GetDouble() const
     {
         const bool negative = _cairo_int128_negative(_v);
         const cairo_int128_t value = negative ? _cairo_int128_negate(_v) : _v;
@@ -238,7 +237,7 @@ class int64x64_t
      *
      * \return The integer portion of this value.
      */
-    inline int64_t GetHigh(void) const
+    inline int64_t GetHigh() const
     {
         return (int64_t)_v.hi;
     }
@@ -248,7 +247,7 @@ class int64x64_t
      *
      * \return The fractional portion, unscaled, as an integer.
      */
-    inline uint64_t GetLow(void) const
+    inline uint64_t GetLow() const
     {
         return _v.lo;
     }
@@ -258,7 +257,7 @@ class int64x64_t
      * Truncation is always toward zero,
      * \return The value truncated toward zero.
      */
-    int64_t GetInt(void) const
+    int64_t GetInt() const
     {
         const bool negative = _cairo_int128_negative(_v);
         const cairo_int128_t value = negative ? _cairo_int128_negate(_v) : _v;
@@ -273,7 +272,7 @@ class int64x64_t
      * regardless of the current (floating) rounding mode.
      * \return The value rounded to the nearest int.
      */
-    int64_t Round(void) const
+    int64_t Round() const
     {
         const bool negative = _cairo_int128_negative(_v);
         cairo_uint128_t value = negative ? _cairo_int128_negate(_v) : _v;
@@ -316,10 +315,10 @@ class int64x64_t
      */
     /**
      * @{
-     *  Arithmetic operator.
-     *  \param [in] lhs Left hand argument
-     *  \param [in] rhs Right hand argument
-     *  \return The result of the operator.
+     * Arithmetic operator.
+     * \param [in] lhs Left hand argument
+     * \param [in] rhs Right hand argument
+     * \return The result of the operator.
      */
 
     friend inline bool operator==(const int64x64_t& lhs, const int64x64_t& rhs)
@@ -341,25 +340,25 @@ class int64x64_t
     {
         lhs._v = _cairo_int128_add(lhs._v, rhs._v);
         return lhs;
-    };
+    }
 
     friend inline int64x64_t& operator-=(int64x64_t& lhs, const int64x64_t& rhs)
     {
         lhs._v = _cairo_int128_sub(lhs._v, rhs._v);
         return lhs;
-    };
+    }
 
     friend inline int64x64_t& operator*=(int64x64_t& lhs, const int64x64_t& rhs)
     {
         lhs.Mul(rhs);
         return lhs;
-    };
+    }
 
     friend inline int64x64_t& operator/=(int64x64_t& lhs, const int64x64_t& rhs)
     {
         lhs.Div(rhs);
         return lhs;
-    };
+    }
 
     /** @} */
 
@@ -369,26 +368,26 @@ class int64x64_t
      */
     /**
      * @{
-     *  Unary operator.
-     *  \param [in] lhs Left hand argument
-     *  \return The result of the operator.
+     * Unary operator.
+     * \param [in] lhs Left hand argument
+     * \return The result of the operator.
      */
     friend inline int64x64_t operator+(const int64x64_t& lhs)
     {
         return lhs;
-    };
+    }
 
     friend inline int64x64_t operator-(const int64x64_t& lhs)
     {
         int64x64_t tmp = lhs;
         tmp._v = _cairo_int128_negate(tmp._v);
         return tmp;
-    };
+    }
 
     friend inline int64x64_t operator!(const int64x64_t& lhs)
     {
         return (lhs == int64x64_t()) ? int64x64_t(1, 0) : int64x64_t();
-    };
+    }
 
     /** @} */
 

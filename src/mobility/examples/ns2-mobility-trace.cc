@@ -1,4 +1,3 @@
-/* -*-  Mode: C++; c-file-style: "gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2007 INRIA
  *               2009,2010 Contributors
@@ -118,7 +117,7 @@ main(int argc, char* argv[])
 
     // open log file for output
     std::ofstream os;
-    os.open(logFile.c_str());
+    os.open(logFile);
 
     // Create all nodes.
     NodeContainer stas;

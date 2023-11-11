@@ -1,4 +1,3 @@
-/* -*-  Mode: C++; c-file-style: "gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2018 Fraunhofer ESK
  *
@@ -319,12 +318,12 @@ Throughput(bool firstWrite, Time binSize, std::string fileName)
 
     if (firstWrite == true)
     {
-        output.open(fileName.c_str(), std::ofstream::out);
+        output.open(fileName, std::ofstream::out);
         firstWrite = false;
     }
     else
     {
-        output.open(fileName.c_str(), std::ofstream::app);
+        output.open(fileName, std::ofstream::app);
     }
 
     // Instantaneous throughput every 200 ms

@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  *  This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
@@ -36,7 +35,7 @@ GtkConfigStore::GtkConfigStore()
 }
 
 void
-GtkConfigStore::ConfigureDefaults(void)
+GtkConfigStore::ConfigureDefaults()
 {
     // this function should be called before running the script to enable the user
     // to configure the default values for the objects he wants to use
@@ -44,7 +43,7 @@ GtkConfigStore::ConfigureDefaults(void)
     GtkWidget* view;
     GtkWidget* scroll;
 
-    gtk_init(0, 0);
+    gtk_init(nullptr, nullptr);
     window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_window_set_title(GTK_WINDOW(window), "ns-3 Default attributes.");
     gtk_window_set_default_size(GTK_WINDOW(window), 600, 600);
@@ -55,7 +54,7 @@ GtkConfigStore::ConfigureDefaults(void)
     creator.Build(model);
 
     view = create_view_config_default(model);
-    scroll = gtk_scrolled_window_new(0, 0);
+    scroll = gtk_scrolled_window_new(nullptr, nullptr);
     gtk_container_add(GTK_CONTAINER(scroll), view);
 
     GtkWidget* vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
@@ -79,19 +78,19 @@ GtkConfigStore::ConfigureDefaults(void)
 
     gtk_main();
 
-    gtk_tree_model_foreach(GTK_TREE_MODEL(model), clean_model_callback_config_default, 0);
+    gtk_tree_model_foreach(GTK_TREE_MODEL(model), clean_model_callback_config_default, nullptr);
 
     gtk_widget_destroy(window);
 }
 
 void
-GtkConfigStore::ConfigureAttributes(void)
+GtkConfigStore::ConfigureAttributes()
 {
     GtkWidget* window;
     GtkWidget* view;
     GtkWidget* scroll;
 
-    gtk_init(0, 0);
+    gtk_init(nullptr, nullptr);
 
     window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_window_set_title(GTK_WINDOW(window), "ns-3 Object attributes.");
@@ -104,7 +103,7 @@ GtkConfigStore::ConfigureAttributes(void)
     creator.Build(model);
 
     view = create_view(model);
-    scroll = gtk_scrolled_window_new(0, 0);
+    scroll = gtk_scrolled_window_new(nullptr, nullptr);
     gtk_container_add(GTK_CONTAINER(scroll), view);
 
     GtkWidget* vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
@@ -128,7 +127,7 @@ GtkConfigStore::ConfigureAttributes(void)
 
     gtk_main();
 
-    gtk_tree_model_foreach(GTK_TREE_MODEL(model), clean_model_callback, 0);
+    gtk_tree_model_foreach(GTK_TREE_MODEL(model), clean_model_callback, nullptr);
 
     gtk_widget_destroy(window);
 }

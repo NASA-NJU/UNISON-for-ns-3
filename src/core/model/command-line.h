@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2008 INRIA
  *
@@ -24,8 +23,10 @@
 #include "nstime.h"
 #include "type-id.h"
 
+#include <memory> // shared_ptr
 #include <sstream>
 #include <string>
+#include <tuple>
 #include <vector>
 
 /**
@@ -242,7 +243,7 @@ class CommandLine
      *
      * \param [in] filename The source file name.
      */
-    CommandLine(const std::string filename);
+    CommandLine(const std::string& filename);
     /**
      * Copy constructor
      *
@@ -264,7 +265,7 @@ class CommandLine
      *
      * \param [in] usage Program usage message to write with \c \--help.
      */
-    void Usage(const std::string usage);
+    void Usage(const std::string& usage);
 
     /**
      * Add a program argument, assigning to POD
@@ -279,12 +280,33 @@ class CommandLine
     void AddValue(const std::string& name, const std::string& help, T& value);
 
     /**
+     * Retrieve the \c char* in \c char* and add it as a program argument
+     *
+     * This variant it used to receive C string pointers
+     * from the python bindings.
+     *
+     * The C string result stored in \c value will be null-terminated,
+     * and have a maximum length of \c (num - 1).
+     * The result will be truncated to fit, if necessary.
+     *
+     * \param [in] name The name of the program-supplied argument
+     * \param [in] help The help text used by \c \--PrintHelp
+     * \param [out] value A pointer pointing to the beginning
+     *        of a null-terminated C string buffer provided by
+     *        the caller. The parsed value will be stored in
+     *        that buffer (if no value is parsed, this
+     *        variable is not modified).
+     * \param num The size of the buffer pointed to by \c value,
+     *        including any terminating null.
+     */
+    void AddValue(const std::string& name, const std::string& help, char* value, std::size_t num);
+    /**
      * Callback function signature for
      * AddValue(const std::string&,const std::string&,Callback<bool,const std::string>).
      *
      * \param [in] value The argument value.
      */
-    typedef bool (*Callback)(const std::string value);
+    typedef bool (*Callback)(const std::string& value);
 
     /**
      * Add a program argument, using a Callback to parse the value
@@ -301,7 +323,7 @@ class CommandLine
     void AddValue(const std::string& name,
                   const std::string& help,
                   ns3::Callback<bool, std::string> callback,
-                  const std::string defaultValue = "");
+                  const std::string& defaultValue = "");
 
     /**
      * Add a program argument as a shorthand for an Attribute.
@@ -321,7 +343,7 @@ class CommandLine
      *        is parsed, this variable is not modified).
      */
     template <typename T>
-    void AddNonOption(const std::string name, const std::string help, T& value);
+    void AddNonOption(const std::string& name, const std::string& help, T& value);
 
     /**
      * Get extra non-option arguments by index.
@@ -431,7 +453,7 @@ class CommandLine
          * \param [in] value The string representation
          * \return \c true if parsing the value succeeded
          */
-        virtual bool Parse(const std::string value) = 0;
+        virtual bool Parse(const std::string& value) const = 0;
         /**
          * \return \c true if this item has a default value.
          */
@@ -451,7 +473,7 @@ class CommandLine
     {
       public:
         // Inherited
-        bool Parse(const std::string value) override;
+        bool Parse(const std::string& value) const override;
         bool HasDefault() const override;
         std::string GetDefault() const override;
 
@@ -461,18 +483,43 @@ class CommandLine
 
     /**
      * \ingroup commandline
-     * \brief Extension of Item for strings.
+     * \brief Extension of Item for extra non-options, stored as strings.
      */
     class StringItem : public Item
     {
       public:
         // Inherited
-        bool Parse(const std::string value) override;
+        bool Parse(const std::string& value) const override;
         bool HasDefault() const override;
         std::string GetDefault() const override;
 
-        std::string m_value; /**< The argument value. */
-    };                       // class StringItem
+        /**
+         * The argument value.
+         * \internal This has to be \c mutable because the Parse()
+         * function is \c const in the base class Item.
+         */
+        mutable std::string m_value;
+    }; // class StringItem
+
+    /**
+     * \ingroup commandline
+     * \brief Extension of Item for \c char*.
+     */
+    class CharStarItem : public Item
+    {
+      public:
+        // Inherited
+        bool Parse(const std::string& value) const override;
+        bool HasDefault() const override;
+        std::string GetDefault() const override;
+
+        /** The buffer to write in to. */
+        char* m_buffer;
+        /** The size of the buffer, including terminating null. */
+        std::size_t m_size;
+        /** The default value. */
+        std::string m_default;
+    }; // class CharStarItem
 
     /**
      * \ingroup commandline
@@ -482,19 +529,40 @@ class CommandLine
     {
       public:
         // Inherited
+        bool Parse(const std::string& value) const override;
         bool HasDefault() const override;
         std::string GetDefault() const override;
 
-        /**
-         * Parse from a string.
-         *
-         * \param [in] value The string representation
-         * \return \c true if parsing the value succeeded
-         */
-        bool Parse(const std::string value) override;
         ns3::Callback<bool, std::string> m_callback; /**< The Callback */
         std::string m_default; /**< The default value, as a string, if it exists. */
     };                         // class CallbackItem
+
+    /**
+     * Tuple type returned by GetOptionName().
+     *
+     * | Field    | Meaning
+     * |----------|--------------------------------------------
+     * | `get<0>` | Is this an option (beginning with `-`)?
+     * | `get<1>` | The option name (after any `-`, before `=`)
+     * | `get<2>` | The value (after any `=`)
+     */
+    using HasOptionName = std::tuple<bool, std::string, std::string>;
+
+    /**
+     * Strip leading `--` or `-` from options.
+     *
+     * \param [in] param Option name to search
+     * \returns \c false if none found, indicating this is a non-option.
+     */
+    HasOptionName GetOptionName(const std::string& param) const;
+    /**
+     * Handle hard-coded options.
+     *
+     * \note: if any hard-coded options are found this function exits.
+     *
+     * \param [in] args Vector of hard-coded options to handle.
+     */
+    void HandleHardOptions(const std::vector<std::string>& args) const;
 
     /**
      * Handle an option in the form \c param=value.
@@ -518,8 +586,9 @@ class CommandLine
      *
      * \param [in] name The argument name
      * \param [in] value The command line value
+     * \returns \c true if the argument was handled successfully
      */
-    void HandleArgument(const std::string& name, const std::string& value) const;
+    bool HandleArgument(const std::string& name, const std::string& value) const;
     /**
      * Callback function to handle attributes.
      *
@@ -527,7 +596,7 @@ class CommandLine
      * \param [in] value The value to assign to \pname{name}.
      * \return \c true if the value was set successfully, false otherwise.
      */
-    static bool HandleAttribute(const std::string name, const std::string value);
+    static bool HandleAttribute(const std::string& name, const std::string& value);
 
     /**
      * Handler for \c \--PrintGlobals:  print all global variables and values
@@ -570,7 +639,7 @@ class CommandLine
      */
     void PrintGroups(std::ostream& os) const;
     /**
-     * Copy constructor
+     * Copy constructor implementation
      *
      * \param [in] cmd CommandLine to copy
      */
@@ -584,23 +653,31 @@ class CommandLine
      */
     void PrintDoxygenUsage() const;
 
-    typedef std::vector<Item*> Items; /**< Argument list container */
-    Items m_options;                  /**< The list of option arguments */
-    Items m_nonOptions;               /**< The list of non-option arguments */
-    std::size_t m_NNonOptions;        /**< The expected number of non-option arguments */
-    std::size_t m_nonOptionCount;     /**< The number of actual non-option arguments seen so far. */
-    std::string m_usage;              /**< The Usage string */
-    std::string
-        m_shortName; /**< The source file name (without `.cc`), as would be given to `ns3 run` */
+    /** Argument list container */
+    using Items = std::vector<std::shared_ptr<Item>>;
+
+    /** The list of option arguments */
+    Items m_options;
+    /** The list of non-option arguments */
+    Items m_nonOptions;
+
+    /** The expected number of non-option arguments */
+    std::size_t m_NNonOptions;
+    /** The number of actual non-option arguments seen so far. */
+    std::size_t m_nonOptionCount;
+    /** The Usage string */
+    std::string m_usage;
+    /** The source file name (without `.cc`), as would be given to `ns3 run` */
+    std::string m_shortName;
 
 }; // class CommandLine
 
 /** \ingroup commandline
- *  \defgroup commandlinehelper Helpers to Specialize on bool
+ *  \defgroup commandlinehelper Helpers to specialize UserItem
  */
 /**
  * \ingroup commandlinehelper
- * \brief Helpers for CommandLine to specialize on bool
+ * \brief Helpers for CommandLine to specialize UserItem
  */
 namespace CommandLineHelper
 {
@@ -610,47 +687,47 @@ namespace CommandLineHelper
  * \brief Helpers to specialize CommandLine::UserItem::Parse()
  *
  * \param [in] value The argument name
- * \param [out] val The argument location
+ * \param [out] dest The argument location
  * \tparam T \deduced The type being specialized
  * \return \c true if parsing was successful
  */
 template <typename T>
-bool UserItemParse(const std::string value, T& val);
+bool UserItemParse(const std::string& value, T& dest);
 /**
- * \brief Specialization of CommandLine::UserItem to \c bool
+ * \brief Specialization of CommandLine::UserItem::Parse() to \c bool
  *
  * \param [in] value The argument name
- * \param [out] val The boolean variable to set
+ * \param [out] dest The boolean variable to set
  * \return \c true if parsing was successful
  */
 template <>
-bool UserItemParse<bool>(const std::string value, bool& val);
+bool UserItemParse<bool>(const std::string& value, bool& dest);
 /**
- * \brief Specialization of CommandLine::UserItem to \c uint8_t
+ * \brief Specialization of CommandLine::UserItem::Parse() to \c uint8_t
  * to distinguish from \c char
  *
  * \param [in] value The argument name
- * \param [out] val The \c uint8_t variable to set
+ * \param [out] dest The \c uint8_t variable to set
  * \return \c true if parsing was successful
  */
 template <>
-bool UserItemParse<uint8_t>(const std::string value, uint8_t& val);
+bool UserItemParse<uint8_t>(const std::string& value, uint8_t& dest);
 
 /**
  * \ingroup commandlinehelper
  * \brief Helper to specialize CommandLine::UserItem::GetDefault() on types
  * needing special handling.
  *
- * \param [in] val The argument value
- * \return The string representation of value
+ * \param [in] defaultValue The default value from the UserItem.
+ * \return The string representation of value.
  * @{
  */
 template <typename T>
-std::string GetDefault(const T& val);
+std::string GetDefault(const std::string& defaultValue);
 template <>
-std::string GetDefault<bool>(const bool& val);
+std::string GetDefault<bool>(const std::string& defaultValue);
 template <>
-std::string GetDefault<Time>(const Time& val);
+std::string GetDefault<Time>(const std::string& defaultValue);
 /**@}*/
 
 } // namespace CommandLineHelper
@@ -668,7 +745,7 @@ template <typename T>
 void
 CommandLine::AddValue(const std::string& name, const std::string& help, T& value)
 {
-    UserItem<T>* item = new UserItem<T>();
+    auto item = std::make_shared<UserItem<T>>();
     item->m_name = name;
     item->m_help = help;
     item->m_valuePtr = &value;
@@ -682,9 +759,9 @@ CommandLine::AddValue(const std::string& name, const std::string& help, T& value
 
 template <typename T>
 void
-CommandLine::AddNonOption(const std::string name, const std::string help, T& value)
+CommandLine::AddNonOption(const std::string& name, const std::string& help, T& value)
 {
-    UserItem<T>* item = new UserItem<T>();
+    auto item = std::make_shared<UserItem<T>>();
     item->m_name = name;
     item->m_help = help;
     item->m_valuePtr = &value;
@@ -707,32 +784,30 @@ template <typename T>
 std::string
 CommandLine::UserItem<T>::GetDefault() const
 {
-    return CommandLineHelper::GetDefault<T>(*m_valuePtr);
+    return CommandLineHelper::GetDefault<T>(m_default);
 }
 
 template <typename T>
 std::string
-CommandLineHelper::GetDefault(const T& val)
+CommandLineHelper::GetDefault(const std::string& defaultValue)
 {
-    std::ostringstream oss;
-    oss << val;
-    return oss.str();
+    return defaultValue;
 }
 
 template <typename T>
 bool
-CommandLine::UserItem<T>::Parse(const std::string value)
+CommandLine::UserItem<T>::Parse(const std::string& value) const
 {
     return CommandLineHelper::UserItemParse<T>(value, *m_valuePtr);
 }
 
 template <typename T>
 bool
-CommandLineHelper::UserItemParse(const std::string value, T& val)
+CommandLineHelper::UserItemParse(const std::string& value, T& dest)
 {
     std::istringstream iss;
     iss.str(value);
-    iss >> val;
+    iss >> dest;
     return !iss.bad() && !iss.fail();
 }
 

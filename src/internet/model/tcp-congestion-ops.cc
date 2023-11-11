@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2015 Natale Patriciello <natale.patriciello@gmail.com>
  *
@@ -82,8 +81,8 @@ TcpCongestionOps::HasCongControl() const
 
 void
 TcpCongestionOps::CongControl(Ptr<TcpSocketState> tcb,
-                              [[maybe_unused]] const TcpRateOps::TcpRateConnection& rc,
-                              [[maybe_unused]] const TcpRateOps::TcpRateSample& rs)
+                              const TcpRateOps::TcpRateConnection& /* rc */,
+                              const TcpRateOps::TcpRateSample& /* rs */)
 {
     NS_LOG_FUNCTION(this << tcb);
 }

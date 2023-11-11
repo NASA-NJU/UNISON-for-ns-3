@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2020 Orange Labs
  *
@@ -537,7 +536,7 @@ HtPhy::GetHtMcs(uint8_t index)
 }
 
 #define GET_HT_MCS(x)                                                                              \
-    WifiMode HtPhy::GetHtMcs##x(void)                                                              \
+    WifiMode HtPhy::GetHtMcs##x()                                                                  \
     {                                                                                              \
         static WifiMode mcs = CreateHtMcs(x);                                                      \
         return mcs;                                                                                \

@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2007 Georgia Tech Research Corporation
  * Copyright (c) 2010 Adrian Sai-wah Tam
@@ -893,7 +892,7 @@ TcpSocketBase::Send(Ptr<Packet> p, uint32_t flags)
 
 /* Inherit from Socket class: In TcpSocketBase, it is same as Send() call */
 int
-TcpSocketBase::SendTo(Ptr<Packet> p, uint32_t flags, [[maybe_unused]] const Address& address)
+TcpSocketBase::SendTo(Ptr<Packet> p, uint32_t flags, const Address& /* address */)
 {
     return Send(p, flags); // SendTo() and Send() are the same
 }
@@ -2370,7 +2369,7 @@ void
 TcpSocketBase::ProcessSynRcvd(Ptr<Packet> packet,
                               const TcpHeader& tcpHeader,
                               const Address& fromAddress,
-                              [[maybe_unused]] const Address& toAddress)
+                              const Address& /* toAddress */)
 {
     NS_LOG_FUNCTION(this << tcpHeader);
 
@@ -2965,7 +2964,7 @@ TcpSocketBase::SetupEndpoint6()
    TcpSocketBase cloned, allocate a new end point to handle the incoming
    connection and send a SYN+ACK to complete the handshake. */
 void
-TcpSocketBase::CompleteFork([[maybe_unused]] Ptr<Packet> p,
+TcpSocketBase::CompleteFork(Ptr<Packet> p [[maybe_unused]],
                             const TcpHeader& h,
                             const Address& fromAddress,
                             const Address& toAddress)

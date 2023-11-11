@@ -123,9 +123,25 @@ if(${ENABLE_BUILD_VERSION})
   )
 endif()
 
+if(WIN32)
+  set(libraries_to_link
+      ${libraries_to_link}
+      wsock32
+      ws2_32
+  )
+  set(fd-reader-sources
+      model/win32-fd-reader.cc
+  )
+else()
+  set(fd-reader-sources
+      model/unix-fd-reader.cc
+  )
+endif()
+
 # Define core lib sources
 set(source_files
     ${int64x64_sources}
+    ${fd-reader-sources}
     ${example_as_test_sources}
     ${embedded_version_sources}
     helper/csv-reader.cc
@@ -191,7 +207,6 @@ set(source_files
     model/system-wall-clock-timestamp.cc
     model/length.cc
     model/trickle-timer.cc
-    model/unix-fd-reader.cc
     model/realtime-simulator-impl.cc
     model/wall-clock-synchronizer.cc
 )
@@ -231,6 +246,7 @@ set(header_files
     model/event-impl.h
     model/fatal-error.h
     model/fatal-impl.h
+    model/fd-reader.h
     model/global-value.h
     model/hash-fnv.h
     model/hash-function.h
@@ -291,7 +307,6 @@ set(header_files
     model/type-name.h
     model/type-traits.h
     model/uinteger.h
-    model/unix-fd-reader.h
     model/unused.h
     model/valgrind.h
     model/vector.h

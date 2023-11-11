@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  *  Copyright 2018. Lawrence Livermore National Security, LLC.
  *
@@ -94,7 +93,7 @@ class SinkTracer
     /**
      * PacketSink Init.
      */
-    static void Init(void);
+    static void Init();
 
     /**
      * PacketSink receive trace callback.
@@ -125,7 +124,7 @@ class SinkTracer
      *
      * \return MPI world rank.
      */
-    static int GetWorldRank(void)
+    static int GetWorldRank()
     {
         return m_worldRank;
     }
@@ -135,7 +134,7 @@ class SinkTracer
      *
      * \return MPI world size.
      */
-    static int GetWorldSize(void)
+    static int GetWorldSize()
     {
         return m_worldSize;
     }
@@ -144,7 +143,7 @@ class SinkTracer
      * Get current line count and increment it.
      * \return the line count.
      */
-    static int GetLineCount(void)
+    static int GetLineCount()
     {
         return m_line++;
     }

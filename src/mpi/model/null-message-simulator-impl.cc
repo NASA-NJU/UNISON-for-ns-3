@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  *  Copyright 2013. Lawrence Livermore National Security, LLC.
  *
@@ -54,10 +53,10 @@ NS_LOG_COMPONENT_DEFINE("NullMessageSimulatorImpl");
 
 NS_OBJECT_ENSURE_REGISTERED(NullMessageSimulatorImpl);
 
-NullMessageSimulatorImpl* NullMessageSimulatorImpl::g_instance = 0;
+NullMessageSimulatorImpl* NullMessageSimulatorImpl::g_instance = nullptr;
 
 TypeId
-NullMessageSimulatorImpl::GetTypeId(void)
+NullMessageSimulatorImpl::GetTypeId()
 {
     static TypeId tid =
         TypeId("ns3::NullMessageSimulatorImpl")
@@ -86,11 +85,11 @@ NullMessageSimulatorImpl::NullMessageSimulatorImpl()
     m_currentContext = Simulator::NO_CONTEXT;
     m_unscheduledEvents = 0;
     m_eventCount = 0;
-    m_events = 0;
+    m_events = nullptr;
 
     m_safeTime = Seconds(0);
 
-    NS_ASSERT(g_instance == 0);
+    NS_ASSERT(g_instance == nullptr);
     g_instance = this;
 }
 
@@ -100,7 +99,7 @@ NullMessageSimulatorImpl::~NullMessageSimulatorImpl()
 }
 
 void
-NullMessageSimulatorImpl::DoDispose(void)
+NullMessageSimulatorImpl::DoDispose()
 {
     NS_LOG_FUNCTION(this);
 
@@ -109,7 +108,7 @@ NullMessageSimulatorImpl::DoDispose(void)
         Scheduler::Event next = m_events->RemoveNext();
         next.impl->Unref();
     }
-    m_events = 0;
+    m_events = nullptr;
     SimulatorImpl::DoDispose();
 }
 
@@ -134,11 +133,9 @@ NullMessageSimulatorImpl::Destroy()
 }
 
 void
-NullMessageSimulatorImpl::CalculateLookAhead(void)
+NullMessageSimulatorImpl::CalculateLookAhead()
 {
     NS_LOG_FUNCTION(this);
-
-    int num_local_nodes = 0;
 
     if (MpiInterface::GetSize() > 1)
     {
@@ -149,8 +146,6 @@ NullMessageSimulatorImpl::CalculateLookAhead(void)
             {
                 continue;
             }
-
-            num_local_nodes++;
 
             for (uint32_t i = 0; i < (*iter)->GetNDevices(); ++i)
             {
@@ -228,7 +223,7 @@ NullMessageSimulatorImpl::SetScheduler(ObjectFactory schedulerFactory)
 }
 
 void
-NullMessageSimulatorImpl::ProcessOneEvent(void)
+NullMessageSimulatorImpl::ProcessOneEvent()
 {
     NS_LOG_FUNCTION(this);
 
@@ -249,13 +244,13 @@ NullMessageSimulatorImpl::ProcessOneEvent(void)
 }
 
 bool
-NullMessageSimulatorImpl::IsFinished(void) const
+NullMessageSimulatorImpl::IsFinished() const
 {
     return m_events->IsEmpty() || m_stop;
 }
 
 Time
-NullMessageSimulatorImpl::Next(void) const
+NullMessageSimulatorImpl::Next() const
 {
     NS_LOG_FUNCTION(this);
 
@@ -305,7 +300,7 @@ NullMessageSimulatorImpl::RescheduleNullMessageEvent(uint32_t nodeSysId)
 }
 
 void
-NullMessageSimulatorImpl::Run(void)
+NullMessageSimulatorImpl::Run()
 {
     NS_LOG_FUNCTION(this);
 
@@ -333,7 +328,7 @@ NullMessageSimulatorImpl::Run(void)
 }
 
 void
-NullMessageSimulatorImpl::HandleArrivingMessagesNonBlocking(void)
+NullMessageSimulatorImpl::HandleArrivingMessagesNonBlocking()
 {
     NS_LOG_FUNCTION(this);
 
@@ -346,7 +341,7 @@ NullMessageSimulatorImpl::HandleArrivingMessagesNonBlocking(void)
 }
 
 void
-NullMessageSimulatorImpl::HandleArrivingMessagesBlocking(void)
+NullMessageSimulatorImpl::HandleArrivingMessagesBlocking()
 {
     NS_LOG_FUNCTION(this);
 
@@ -380,7 +375,7 @@ NullMessageSimulatorImpl::GetSystemId() const
 }
 
 void
-NullMessageSimulatorImpl::Stop(void)
+NullMessageSimulatorImpl::Stop()
 {
     NS_LOG_FUNCTION(this);
 
@@ -457,7 +452,7 @@ NullMessageSimulatorImpl::ScheduleDestroy(EventImpl* event)
 }
 
 Time
-NullMessageSimulatorImpl::Now(void) const
+NullMessageSimulatorImpl::Now() const
 {
     return TimeStep(m_currentTs);
 }
@@ -522,7 +517,7 @@ NullMessageSimulatorImpl::IsExpired(const EventId& id) const
 {
     if (id.GetUid() == EventId::UID::DESTROY)
     {
-        if (id.PeekEventImpl() == 0 || id.PeekEventImpl()->IsCancelled())
+        if (id.PeekEventImpl() == nullptr || id.PeekEventImpl()->IsCancelled())
         {
             return true;
         }
@@ -537,7 +532,7 @@ NullMessageSimulatorImpl::IsExpired(const EventId& id) const
         }
         return true;
     }
-    if (id.PeekEventImpl() == 0 || id.GetTs() < m_currentTs ||
+    if (id.PeekEventImpl() == nullptr || id.GetTs() < m_currentTs ||
         (id.GetTs() == m_currentTs && id.GetUid() <= m_currentUid) ||
         id.PeekEventImpl()->IsCancelled())
     {
@@ -550,7 +545,7 @@ NullMessageSimulatorImpl::IsExpired(const EventId& id) const
 }
 
 Time
-NullMessageSimulatorImpl::GetMaximumSimulationTime(void) const
+NullMessageSimulatorImpl::GetMaximumSimulationTime() const
 {
     // XXX: I am fairly certain other compilers use other non-standard
     // post-fixes to indicate 64 bit constants.
@@ -558,13 +553,13 @@ NullMessageSimulatorImpl::GetMaximumSimulationTime(void) const
 }
 
 uint32_t
-NullMessageSimulatorImpl::GetContext(void) const
+NullMessageSimulatorImpl::GetContext() const
 {
     return m_currentContext;
 }
 
 uint64_t
-NullMessageSimulatorImpl::GetEventCount(void) const
+NullMessageSimulatorImpl::GetEventCount() const
 {
     return m_eventCount;
 }
@@ -590,9 +585,9 @@ NullMessageSimulatorImpl::NullMessageEventHandler(RemoteChannelBundle* bundle)
 }
 
 NullMessageSimulatorImpl*
-NullMessageSimulatorImpl::GetInstance(void)
+NullMessageSimulatorImpl::GetInstance()
 {
-    NS_ASSERT(g_instance != 0);
+    NS_ASSERT(g_instance != nullptr);
     return g_instance;
 }
 } // namespace ns3

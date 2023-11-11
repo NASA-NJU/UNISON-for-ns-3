@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2009 University of Washington
  *
@@ -302,7 +301,7 @@ main(int argc, char* argv[])
 
     Gnuplot gp;
     gp.AddDataset(ds);
-    std::ofstream of(exp.m_gnuplotfile.c_str());
+    std::ofstream of(exp.m_gnuplotfile);
     if (!of.is_open())
     {
         NS_FATAL_ERROR("Can not open GNU Plot outfile: " << exp.m_gnuplotfile);

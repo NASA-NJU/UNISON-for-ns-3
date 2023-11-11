@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2013 University of Washington
  *
@@ -75,7 +74,7 @@ FileAggregator::FileAggregator(const std::string& outputFileName, enum FileType 
         break;
     }
 
-    m_file.open(m_outputFileName.c_str());
+    m_file.open(m_outputFileName);
 }
 
 FileAggregator::~FileAggregator()

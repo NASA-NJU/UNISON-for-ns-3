@@ -1,4 +1,3 @@
-/* -*-  Mode: C++; c-file-style: "gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2009 The Boeing Company
  *               2014 Universita' degli Studi di Napoli "Federico II"
@@ -80,7 +79,7 @@ RemainingEnergyTrace(double oldValue, double newValue)
     std::stringstream ss;
     ss << "energy_" << node << ".log";
 
-    static std::fstream f(ss.str().c_str(), std::ios::out);
+    static std::fstream f(ss.str(), std::ios::out);
 
     f << Simulator::Now().GetSeconds() << "    remaining energy=" << newValue << std::endl;
 }
@@ -101,7 +100,7 @@ PhyStateTrace(std::string context, Time start, Time duration, WifiPhyState state
     std::stringstream ss;
     ss << "state_" << node << ".log";
 
-    static std::fstream f(ss.str().c_str(), std::ios::out);
+    static std::fstream f(ss.str(), std::ios::out);
 
     f << Simulator::Now().GetSeconds() << "    state=" << state << " start=" << start
       << " duration=" << duration << std::endl;

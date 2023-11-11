@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2012 Lawrence Livermore National Laboratory
  *
@@ -398,7 +397,7 @@ LookupTimeTestCase::DoRun()
         for (uint16_t i = 0; i < nids; ++i)
         {
             const TypeId tid = TypeId::GetRegistered(i);
-            const TypeId sid = TypeId::LookupByName(tid.GetName());
+            const TypeId sid [[maybe_unused]] = TypeId::LookupByName(tid.GetName());
         }
     }
     int stop = clock();
@@ -410,7 +409,7 @@ LookupTimeTestCase::DoRun()
         for (uint16_t i = 0; i < nids; ++i)
         {
             const TypeId tid = TypeId::GetRegistered(i);
-            const TypeId sid = TypeId::LookupByHash(tid.GetHash());
+            const TypeId sid [[maybe_unused]] = TypeId::LookupByHash(tid.GetHash());
         }
     }
     stop = clock();

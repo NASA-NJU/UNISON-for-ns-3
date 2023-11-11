@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2010 Andrea Sacco
  *
@@ -112,10 +111,10 @@ AcousticModemEnergyTestCase::SendOnePacket(Ptr<Node> node)
 }
 
 bool
-AcousticModemEnergyTestCase::RxPacket(Ptr<NetDevice> dev,
+AcousticModemEnergyTestCase::RxPacket(Ptr<NetDevice> /* dev */,
                                       Ptr<const Packet> pkt,
-                                      [[maybe_unused]] uint16_t mode,
-                                      [[maybe_unused]] const Address& sender)
+                                      uint16_t /* mode */,
+                                      const Address& /* sender */)
 {
     // increase the total bytes received
     m_bytesRx += pkt->GetSize();

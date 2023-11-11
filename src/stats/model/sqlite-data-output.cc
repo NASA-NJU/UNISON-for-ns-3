@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2008 Drexel University
  *
@@ -49,7 +48,7 @@ SqliteDataOutput::~SqliteDataOutput()
 
 /* static */
 TypeId
-SqliteDataOutput::GetTypeId(void)
+SqliteDataOutput::GetTypeId()
 {
     static TypeId tid = TypeId("ns3::SqliteDataOutput")
                             .SetParent<DataOutputInterface>()

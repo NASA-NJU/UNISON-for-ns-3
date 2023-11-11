@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2008 INRIA
  *
@@ -39,7 +38,7 @@ namespace ns3
  *
  * The get functor method should have a signature like
  * \code
- *   typedef U (T::*getter)(void) const
+ *   typedef U (T::*getter)() const
  * \endcode
  * where \pname{T} is the class and \pname{U} is the type of
  * the return value.
@@ -77,7 +76,7 @@ inline Ptr<const AttributeAccessor> MakeAccessorHelper(T1 a1);
  *
  * The get functor method should have a signature like
  * \code
- *   typedef U (T::*getter)(void) const
+ *   typedef U (T::*getter)() const
  * \endcode
  * where \pname{T} is the class and \pname{U} is the type of
  * the return value.
@@ -328,7 +327,7 @@ DoMakeAccessorHelperOne(U (T::*getter)() const)
         }
 
       private:
-        bool DoSet([[maybe_unused]] T* object, [[maybe_unused]] const V* v) const override
+        bool DoSet(T* /* object */, const V* /* v */) const override
         {
             return false;
         }
@@ -399,7 +398,7 @@ DoMakeAccessorHelperOne(void (T::*setter)(U))
             return true;
         }
 
-        bool DoGet([[maybe_unused]] const T* object, [[maybe_unused]] V* v) const override
+        bool DoGet(const T* /* object */, V* /* v */) const override
         {
             return false;
         }

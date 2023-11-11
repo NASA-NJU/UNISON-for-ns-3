@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2007 Georgia Tech Research Corporation
  *
@@ -60,7 +59,7 @@ TypeNameGet()
  */
 #define TYPENAMEGET_DEFINE(T)                                                                      \
     template <>                                                                                    \
-    inline std::string TypeNameGet<T>(void)                                                        \
+    inline std::string TypeNameGet<T>()                                                            \
     {                                                                                              \
         return #T;                                                                                 \
     }

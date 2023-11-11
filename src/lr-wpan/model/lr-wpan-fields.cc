@@ -1,4 +1,3 @@
-/* -*-  Mode: C++; c-file-style: "gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2019 Ritsumeikan University, Shiga, Japan.
  *
@@ -53,7 +52,7 @@ SuperframeField::SetBeaconOrder(uint8_t bcnOrder)
 {
     if (bcnOrder > 15)
     {
-        std::cout << "SuperframeField Beacon Order value must be 15 or less\n";
+        NS_ABORT_MSG("SuperframeField Beacon Order value must be 15 or less");
     }
     else
     {
@@ -66,7 +65,7 @@ SuperframeField::SetSuperframeOrder(uint8_t frmOrder)
 {
     if (frmOrder > 15)
     {
-        std::cout << "SuperframeField Frame Order value must be 15 or less\n";
+        NS_ABORT_MSG("SuperframeField Frame Order value must be 15 or less");
     }
     else
     {
@@ -79,7 +78,7 @@ SuperframeField::SetFinalCapSlot(uint8_t capSlot)
 {
     if (capSlot > 15)
     {
-        std::cout << "The final slot cannot greater than the slots in a CAP (15)\n";
+        NS_ABORT_MSG("The final slot cannot be greater than the slots in a CAP (15)");
     }
     else
     {

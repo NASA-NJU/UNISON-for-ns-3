@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2009 University of Washington
  *
@@ -85,7 +84,7 @@ class Ipv4Route : public SimpleRefCount<Ipv4Route>
 #ifdef NOTYET
     // rtable.idev
     void SetInputIfIndex(uint32_t iif);
-    uint32_t GetInputIfIndex(void) const;
+    uint32_t GetInputIfIndex() const;
 #endif
 
   private:

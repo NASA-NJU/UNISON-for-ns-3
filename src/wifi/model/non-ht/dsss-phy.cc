@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2020 Orange Labs
  *
@@ -310,7 +309,7 @@ DsssPhy::GetDsssRate(uint64_t rate)
 }
 
 #define GET_DSSS_MODE(x, m)                                                                        \
-    WifiMode DsssPhy::Get##x(void)                                                                 \
+    WifiMode DsssPhy::Get##x()                                                                     \
     {                                                                                              \
         static WifiMode mode = CreateDsssMode(#x, WIFI_MOD_CLASS_##m);                             \
         return mode;                                                                               \

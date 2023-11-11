@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2016 Universita' degli Studi di Napoli Federico II
  * Copyright (c) 2020 NITK Surathkal (adapted for COBALT)
@@ -866,8 +865,7 @@ FqCobaltQueueDiscEcnMarking::DequeueWithDelay(Ptr<FqCobaltQueueDisc> queue,
 }
 
 void
-FqCobaltQueueDiscEcnMarking::DropNextTracer([[maybe_unused]] int64_t oldVal,
-                                            [[maybe_unused]] int64_t newVal)
+FqCobaltQueueDiscEcnMarking::DropNextTracer(int64_t /* oldVal */, int64_t /* newVal */)
 {
     m_dropNextCount++;
 }

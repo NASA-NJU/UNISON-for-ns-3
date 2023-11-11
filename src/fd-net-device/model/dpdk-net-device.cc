@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2019 NITK Surathkal
  *
@@ -52,7 +51,7 @@ NS_OBJECT_ENSURE_REGISTERED(DpdkNetDevice);
 volatile bool DpdkNetDevice::m_forceQuit = false;
 
 TypeId
-DpdkNetDevice::GetTypeId(void)
+DpdkNetDevice::GetTypeId()
 {
     static TypeId tid =
         TypeId("ns3::DpdkNetDevice")
@@ -93,7 +92,7 @@ DpdkNetDevice::GetTypeId(void)
 }
 
 DpdkNetDevice::DpdkNetDevice()
-    : m_mempool(NULL)
+    : m_mempool(nullptr)
 {
     NS_LOG_FUNCTION(this);
 }
@@ -118,18 +117,19 @@ DpdkNetDevice::SetDeviceName(std::string deviceName)
 }
 
 void
-DpdkNetDevice::CheckAllPortsLinkStatus(void)
+DpdkNetDevice::CheckAllPortsLinkStatus()
 {
     NS_LOG_FUNCTION(this);
 
 #define CHECK_INTERVAL 100 /* 100ms */
 #define MAX_CHECK_TIME 90  /* 9s (90 * 100ms) in total */
-    uint8_t count, allPortsUp, printFlag = 0;
+
+    uint8_t printFlag = 0;
     struct rte_eth_link link;
 
-    for (count = 0; count <= MAX_CHECK_TIME; count++)
+    for (uint8_t count = 0; count <= MAX_CHECK_TIME; count++)
     {
-        allPortsUp = 1;
+        uint8_t allPortsUp = 1;
 
         if (m_forceQuit)
         {
@@ -206,7 +206,7 @@ DpdkNetDevice::HandleRx()
 
     for (uint16_t i = 0; i < m_rxBuffer->length; i++)
     {
-        struct rte_mbuf* pkt = NULL;
+        struct rte_mbuf* pkt = nullptr;
         pkt = m_rxBuffer->pkts[i];
 
         if (!pkt)
@@ -242,7 +242,7 @@ DpdkNetDevice::LaunchCore(void* arg)
 }
 
 bool
-DpdkNetDevice::IsLinkUp(void) const
+DpdkNetDevice::IsLinkUp() const
 {
     // Refer https://mails.dpdk.org/archives/users/2018-December/003822.html
     return true;
@@ -257,9 +257,9 @@ DpdkNetDevice::InitDpdk(int argc, char** argv, std::string dpdkDriver)
     std::string command;
     command.append("dpdk-devbind.py --force ");
     command.append("--bind=");
-    command.append(dpdkDriver.c_str());
+    command.append(dpdkDriver);
     command.append(" ");
-    command.append(m_deviceName.c_str());
+    command.append(m_deviceName);
     printf("Executing: %s\n", command.c_str());
     if (system(command.c_str()))
     {
@@ -307,7 +307,7 @@ DpdkNetDevice::InitDpdk(int argc, char** argv, std::string dpdkDriver)
                                         RTE_MBUF_DEFAULT_BUF_SIZE,
                                         rte_socket_id());
 
-    if (m_mempool == NULL)
+    if (!m_mempool)
     {
         rte_exit(EXIT_FAILURE, "Cannot init mbuf pool\n");
     }
@@ -381,7 +381,7 @@ DpdkNetDevice::InitDpdk(int argc, char** argv, std::string dpdkDriver)
                                                             RTE_ETH_TX_BUFFER_SIZE(m_maxRxPktBurst),
                                                             0,
                                                             rte_eth_dev_socket_id(m_portId));
-    if (m_txBuffer == NULL || m_rxBuffer == NULL)
+    if (!m_txBuffer || !m_rxBuffer)
     {
         rte_exit(EXIT_FAILURE, "Cannot allocate buffer for rx/tx on port %u\n", m_portId);
     }
@@ -410,7 +410,7 @@ DpdkNetDevice::AllocateBuffer(size_t len)
     struct rte_mbuf* pkt = rte_pktmbuf_alloc(m_mempool);
     if (!pkt)
     {
-        return NULL;
+        return nullptr;
     }
     uint8_t* buf = rte_pktmbuf_mtod(pkt, uint8_t*);
     return buf;
@@ -436,7 +436,7 @@ DpdkNetDevice::Write(uint8_t* buffer, size_t length)
     struct rte_mbuf** pkt = new struct rte_mbuf*[1];
     int queueId = 0;
 
-    if (buffer == NULL || m_txBuffer->length == m_maxTxPktBurst)
+    if (!buffer || m_txBuffer->length == m_maxTxPktBurst)
     {
         NS_LOG_ERROR("Error allocating mbuf" << buffer);
         return -1;
@@ -459,7 +459,7 @@ DpdkNetDevice::Write(uint8_t* buffer, size_t length)
 }
 
 void
-DpdkNetDevice::DoFinishStoppingDevice(void)
+DpdkNetDevice::DoFinishStoppingDevice()
 {
     std::unique_lock lock{m_pendingReadMutex};
 

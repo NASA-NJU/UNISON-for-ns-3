@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  *  Copyright (c) 2009 INRIA, UDcast
  *
@@ -59,7 +58,8 @@ class CsParameters
     CsParameters(enum Action classifierDscAction, IpcsClassifierRecord classifier);
     /**
      * \brief sets the dynamic service classifier action to ADD, Change or delete. Only ADD is
-     * supported \param action the action enumeration
+     * supported
+     * \param action the action enumeration
      */
     void SetClassifierDscAction(enum Action action);
     /**

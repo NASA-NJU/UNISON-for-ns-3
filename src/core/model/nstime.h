@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2005,2006 INRIA
  *
@@ -175,16 +174,16 @@ class Time
 
     /**
      * \name Numeric constructors
-     *  Construct from a numeric value.
+     * Construct from a numeric value.
      * @{
      */
     /**
-     *  Construct from a numeric value.
-     *  The current time resolution will be assumed as the unit.
-     *  \param [in] v The value.
+     * Construct from a numeric value.
+     * The current time resolution will be assumed as the unit.
+     * \param [in] v The value.
      */
     explicit inline Time(double v)
-        : m_data(lround(v))
+        : m_data(llround(v))
     {
         if (g_markingTimes)
         {
@@ -473,10 +472,10 @@ class Time
     static enum Unit GetResolution();
 
     /**
-     *  Create a Time in the current unit.
+     * Create a Time in the current unit.
      *
-     *  \param [in] value The value of the new Time.
-     *  \return A Time with \pname{value} in the current time unit.
+     * \param [in] value The value of the new Time.
+     * \return A Time with \pname{value} in the current time unit.
      */
     inline static Time From(const int64x64_t& value)
     {
@@ -490,15 +489,18 @@ class Time
      * @{
      */
     /**
-     *  Create a Time equal to \pname{value}  in unit \c unit
+     * Create a Time equal to \pname{value}  in unit \c unit
      *
-     *  \param [in] value The new Time value, expressed in \c unit
-     *  \param [in] unit The unit of \pname{value}
-     *  \return The Time representing \pname{value} in \c unit
+     * \param [in] value The new Time value, expressed in \c unit
+     * \param [in] unit The unit of \pname{value}
+     * \return The Time representing \pname{value} in \c unit
      */
     inline static Time FromInteger(uint64_t value, enum Unit unit)
     {
         struct Information* info = PeekInformation(unit);
+
+        NS_ASSERT_MSG(info->isValid, "Attempted a conversion from an unavailable unit.");
+
         if (info->fromMul)
         {
             value *= info->factor;
@@ -518,6 +520,9 @@ class Time
     inline static Time From(const int64x64_t& value, enum Unit unit)
     {
         struct Information* info = PeekInformation(unit);
+
+        NS_ASSERT_MSG(info->isValid, "Attempted a conversion from an unavailable unit.");
+
         // DO NOT REMOVE this temporary variable. It's here
         // to work around a compiler bug in gcc 3.4
         int64x64_t retval = value;
@@ -541,14 +546,17 @@ class Time
      * @{
      */
     /**
-     *  Get the Time value expressed in a particular unit.
+     * Get the Time value expressed in a particular unit.
      *
-     *  \param [in] unit The desired unit
-     *  \return The Time expressed in \pname{unit}
+     * \param [in] unit The desired unit
+     * \return The Time expressed in \pname{unit}
      */
     inline int64_t ToInteger(enum Unit unit) const
     {
         struct Information* info = PeekInformation(unit);
+
+        NS_ASSERT_MSG(info->isValid, "Attempted a conversion to an unavailable unit.");
+
         int64_t v = m_data;
         if (info->toMul)
         {
@@ -569,6 +577,9 @@ class Time
     inline int64x64_t To(enum Unit unit) const
     {
         struct Information* info = PeekInformation(unit);
+
+        NS_ASSERT_MSG(info->isValid, "Attempted a conversion to an unavailable unit.");
+
         int64x64_t retval = int64x64_t(m_data);
         if (info->toMul)
         {
@@ -625,6 +636,7 @@ class Time
         int64_t factor;      //!< Ratio of this unit / current unit
         int64x64_t timeTo;   //!< Multiplier to convert to this unit
         int64x64_t timeFrom; //!< Multiplier to convert from this unit
+        bool isValid;        //!< True if the current unit can be used
     };
 
     /** Current time unit, and conversion info. */
@@ -637,7 +649,7 @@ class Time
     /**
      *  Get the current Resolution
      *
-     * \return A pointer to the current Resolution
+     *  \return A pointer to the current Resolution
      */
     static inline struct Resolution* PeekResolution()
     {
@@ -659,7 +671,7 @@ class Time
     /**
      *  Set the default resolution
      *
-     * \return The Resolution object for the default resolution.
+     *  \return The Resolution object for the default resolution.
      */
     static struct Resolution& SetDefaultNsResolution();
     /**
@@ -844,7 +856,7 @@ typedef void (*Time)(Time oldValue, Time newValue);
  * This is internal to the Time implementation.
  * \relates Time
  */
-[[maybe_unused]] static bool g_TimeStaticInit = Time::StaticInit();
+static bool g_TimeStaticInit [[maybe_unused]] = Time::StaticInit();
 
 /**
  * Equality operator for Time.
@@ -1440,7 +1452,7 @@ MakeTimeChecker()
  * \ingroup attribute_time
  * Helper to make a Time checker with a lower bound.
  *
- *  \param [in] min Minimum allowed value.
+ * \param [in] min Minimum allowed value.
  * \return The AttributeChecker
  */
 inline Ptr<const AttributeChecker>
@@ -1473,10 +1485,10 @@ class TimeWithUnit
     Time::Unit m_unit; //!< The unit to use in output
 
     /**
-     *  Output streamer
-     *  \param [in,out] os The stream.
-     *  \param [in] timeU The Time with desired unit
-     *  \returns The stream.
+     * Output streamer
+     * \param [in,out] os The stream.
+     * \param [in] timeU The Time with desired unit
+     * \returns The stream.
      */
     friend std::ostream& operator<<(std::ostream& os, const TimeWithUnit& timeU);
 

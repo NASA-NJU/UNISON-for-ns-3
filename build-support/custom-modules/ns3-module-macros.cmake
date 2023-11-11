@@ -35,8 +35,14 @@ function(build_lib)
   # Argument parsing
   set(options IGNORE_PCH)
   set(oneValueArgs LIBNAME)
-  set(multiValueArgs SOURCE_FILES HEADER_FILES LIBRARIES_TO_LINK TEST_SOURCES
-                     DEPRECATED_HEADER_FILES MODULE_ENABLED_FEATURES
+  set(multiValueArgs
+      SOURCE_FILES
+      HEADER_FILES
+      LIBRARIES_TO_LINK
+      TEST_SOURCES
+      DEPRECATED_HEADER_FILES
+      MODULE_ENABLED_FEATURES
+      PRIVATE_HEADER_FILES
   )
   cmake_parse_arguments(
     "BLIB" "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN}
@@ -119,7 +125,7 @@ function(build_lib)
     ${lib${BLIB_LIBNAME}}
     PROPERTIES
       PUBLIC_HEADER
-      "${BLIB_HEADER_FILES};${BLIB_DEPRECATED_HEADER_FILES};${config_headers};${CMAKE_HEADER_OUTPUT_DIRECTORY}/${BLIB_LIBNAME}-module.h"
+      "${BLIB_HEADER_FILES};${BLIB_DEPRECATED_HEADER_FILES};${config_headers};${BLIB_PRIVATE_HEADER_FILES};${CMAKE_HEADER_OUTPUT_DIRECTORY}/${BLIB_LIBNAME}-module.h"
       RUNTIME_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY} # set output
                                                                  # directory for
                                                                  # DLLs
@@ -221,8 +227,8 @@ function(build_lib)
 
   # Copy all header files to outputfolder/include before each build
   copy_headers_before_building_lib(
-    ${BLIB_LIBNAME} ${CMAKE_HEADER_OUTPUT_DIRECTORY} "${BLIB_HEADER_FILES}"
-    public
+    ${BLIB_LIBNAME} ${CMAKE_HEADER_OUTPUT_DIRECTORY}
+    "${BLIB_HEADER_FILES};${BLIB_PRIVATE_HEADER_FILES}" public
   )
   if(BLIB_DEPRECATED_HEADER_FILES)
     copy_headers_before_building_lib(
@@ -230,6 +236,26 @@ function(build_lib)
       "${BLIB_DEPRECATED_HEADER_FILES}" deprecated
     )
   endif()
+
+  # Build lib examples if requested
+  set(examples_before ${ns3-execs-clean})
+  foreach(example_folder example;examples)
+    if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${example_folder})
+      if(${ENABLE_EXAMPLES})
+        if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${example_folder}/CMakeLists.txt)
+          add_subdirectory(${example_folder})
+        endif()
+      endif()
+      scan_python_examples(${CMAKE_CURRENT_SOURCE_DIR}/${example_folder})
+    endif()
+  endforeach()
+  set(module_examples ${ns3-execs-clean})
+
+  # Filter only module examples
+  foreach(example ${examples_before})
+    list(REMOVE_ITEM module_examples ${example})
+  endforeach()
+  unset(examples_before)
 
   # Check if the module tests should be built
   set(filtered_in ON)
@@ -285,20 +311,23 @@ function(build_lib)
       if(${PRECOMPILE_HEADERS_ENABLED} AND (NOT ${BLIB_IGNORE_PCH}))
         target_precompile_headers(${test${BLIB_LIBNAME}} REUSE_FROM stdlib_pch)
       endif()
+
+      # Add dependency between tests and examples used as tests
+      if(${ENABLE_EXAMPLES})
+        foreach(source_file ${BLIB_TEST_SOURCES})
+          file(READ ${source_file} source_file_contents)
+          foreach(example_as_test ${module_examples})
+            string(FIND "${source_file_contents}" "${example_as_test}"
+                        is_sub_string
+            )
+            if(NOT (${is_sub_string} EQUAL -1))
+              add_dependencies(test-runner-examples-as-tests ${example_as_test})
+            endif()
+          endforeach()
+        endforeach()
+      endif()
     endif()
   endif()
-
-  # Build lib examples if requested
-  foreach(example_folder example;examples)
-    if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${example_folder})
-      if(${ENABLE_EXAMPLES})
-        if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${example_folder}/CMakeLists.txt)
-          add_subdirectory(${example_folder})
-        endif()
-      endif()
-      scan_python_examples(${CMAKE_CURRENT_SOURCE_DIR}/${example_folder})
-    endif()
-  endforeach()
 
   # Handle package export
   install(

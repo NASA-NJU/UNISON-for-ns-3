@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2018 NITK Surathkal
  *
@@ -382,8 +381,7 @@ TcpRateLinuxWithSocketsTest::Rx(const Ptr<const Packet> p, const TcpHeader& h, S
 }
 
 void
-TcpRateLinuxWithSocketsTest::BytesInFlightTrace([[maybe_unused]] uint32_t oldValue,
-                                                uint32_t newValue)
+TcpRateLinuxWithSocketsTest::BytesInFlightTrace(uint32_t /* oldValue */, uint32_t newValue)
 {
     m_bytesInFlight = newValue;
 }

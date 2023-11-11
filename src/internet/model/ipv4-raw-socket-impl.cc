@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 #include "ipv4-raw-socket-impl.h"
 
 #include "icmpv4.h"
@@ -12,8 +11,13 @@
 #include "ns3/packet.h"
 #include "ns3/uinteger.h"
 
+#ifdef __WIN32__
+#include "ns3/win32-internet.h"
+#else
 #include <netinet/in.h>
 #include <sys/socket.h>
+#endif
+
 #include <sys/types.h>
 
 namespace ns3

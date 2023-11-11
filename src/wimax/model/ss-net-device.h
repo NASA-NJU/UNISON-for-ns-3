@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2007,2008,2009 INRIA, UDcast
  *
@@ -201,7 +200,7 @@ class SubscriberStationNetDevice : public WimaxNetDevice
      */
     uint8_t GetMaxContentionRangingRetries() const;
     /**
-     *  \param basicConnection the basic connection to be used
+     * \param basicConnection the basic connection to be used
      */
     void SetBasicConnection(Ptr<WimaxConnection> basicConnection);
     /**

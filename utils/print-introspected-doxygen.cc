@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2007 INRIA
  *
@@ -1251,7 +1250,7 @@ PrintAttributeValueWithName(std::ostream& os,
     if ((name == "EmptyAttribute") || (name == "ObjectPtrContainer"))
     {
         // Just default constructors.
-        os << "(void)\n";
+        os << "()\n";
     }
     else
     {
@@ -1262,8 +1261,8 @@ PrintAttributeValueWithName(std::ostream& os,
     }
     os << commentStop;
 
-    // <name>Value::Get (void) const
-    os << commentStart << functionStart << type << qualClass << "::Get (void) const\n"
+    // <name>Value::Get () const
+    os << commentStart << functionStart << type << qualClass << "::Get () const\n"
        << returns << "The " << name << " value.\n"
        << commentStop;
 
@@ -1351,9 +1350,9 @@ PrintMakeChecker(std::ostream& os, const std::string& name, const std::string& h
     os << commentStop;
 
     // \ingroup attribute_<name>Value
-    // Make<name>Checker (void)
+    // Make<name>Checker ()
     os << commentStart << sectAttr << functionStart << "ns3::Ptr<const ns3::AttributeChecker> "
-       << make << "(void)\n"
+       << make << "()\n"
        << returns << "The AttributeChecker.\n"
        << seeAlso << "AttributeChecker\n"
        << commentStop;
@@ -1505,14 +1504,6 @@ main(int argc, char* argv[])
     // Create a Node, to force linking and instantiation of our TypeIds
     NodeContainer c;
     c.Create(1);
-
-    // mode-line:  helpful when debugging introspected-doxygen.h
-    if (!outputText)
-    {
-        std::cout << "/* -*- Mode:C++; c-file-style:\"gnu\"; "
-                     "indent-tabs-mode:nil; -*- */\n"
-                  << std::endl;
-    }
 
     std::cout << std::endl;
     std::cout << commentStart << file << "\n"

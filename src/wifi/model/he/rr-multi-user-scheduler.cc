@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2020 Universita' degli Studi di Napoli Federico II
  *
@@ -646,7 +645,7 @@ RrMultiUserScheduler::TrySendingDlMuPpdu()
 
                     m_txParams.m_txVector.SetHeMuUserInfo(
                         staIt->aid,
-                        {{currRuType, 1, false}, suTxVector.GetMode(), suTxVector.GetNss()});
+                        {{currRuType, 1, true}, suTxVector.GetMode(), suTxVector.GetNss()});
 
                     if (!m_heFem->TryAddMpdu(mpdu, m_txParams, actualAvailableTime))
                     {
@@ -811,7 +810,7 @@ RrMultiUserScheduler::ComputeDlMuInfo()
         mpdu = candidate.second;
         NS_ASSERT(mpdu);
 
-        [[maybe_unused]] bool ret =
+        bool ret [[maybe_unused]] =
             m_heFem->TryAddMpdu(mpdu, dlMuInfo.txParams, actualAvailableTime);
         NS_ASSERT_MSG(ret,
                       "Weird that an MPDU does not meet constraints when "

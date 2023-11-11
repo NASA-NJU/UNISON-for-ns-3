@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  *  Copyright 2013. Lawrence Livermore National Security, LLC.
  *
@@ -160,7 +159,7 @@ class MpiInterface
     /**
      * Common enable logic.
      */
-    static void SetParallelSimulatorImpl(void);
+    static void SetParallelSimulatorImpl();
 
     /**
      * Static instance of the instantiated parallel controller.

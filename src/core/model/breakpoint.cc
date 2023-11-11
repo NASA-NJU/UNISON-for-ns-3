@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2006,2007 INRIA, INESC Porto
  *
@@ -52,17 +51,17 @@ BreakpointFallback()
 #else
 
 void
-BreakpointFallback(void)
+BreakpointFallback()
 {
     NS_LOG_FUNCTION_NOARGS();
 
-    int* a = 0;
+    int* a = nullptr;
     /**
      * we test here to allow a debugger to change the value of
      * the variable 'a' to allow the debugger to avoid the
      * subsequent segfault.
      */
-    if (a == 0)
+    if (a == nullptr)
     {
         *a = 0;
     }

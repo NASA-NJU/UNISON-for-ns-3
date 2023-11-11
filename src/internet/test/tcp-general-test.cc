@@ -1,4 +1,3 @@
-/* -*-  Mode: C++; c-file-style: "gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2015 Natale Patriciello <natale.patriciello@gmail.com>
  *
@@ -271,9 +270,8 @@ TcpGeneralTest::DoConnect()
 }
 
 void
-TcpGeneralTest::HandleAccept(Ptr<Socket> socket, const Address& from)
+TcpGeneralTest::HandleAccept(Ptr<Socket> socket, const Address& from [[maybe_unused]])
 {
-    (void)from;
     socket->SetRecvCallback(MakeCallback(&TcpGeneralTest::ReceivePacket, this));
     socket->SetCloseCallbacks(MakeCallback(&TcpGeneralTest::NormalCloseCb, this),
                               MakeCallback(&TcpGeneralTest::ErrorCloseCb, this));
@@ -366,7 +364,7 @@ TcpGeneralTest::QueueDropCb(std::string context, Ptr<const Packet> p)
 }
 
 void
-TcpGeneralTest::PhyDropCb(std::string context, [[maybe_unused]] Ptr<const Packet> p)
+TcpGeneralTest::PhyDropCb(std::string context, Ptr<const Packet> /* p */)
 {
     if (context == "SENDER")
     {

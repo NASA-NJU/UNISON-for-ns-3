@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2009 University of Washington
  *
@@ -119,7 +118,7 @@ UanMacAloha::AttachPhy(Ptr<UanPhy> phy)
 }
 
 void
-UanMacAloha::RxPacketGood(Ptr<Packet> pkt, [[maybe_unused]] double sinr, UanTxMode txMode)
+UanMacAloha::RxPacketGood(Ptr<Packet> pkt, double /* sinr */, UanTxMode /* txMode */)
 {
     UanHeaderCommon header;
     pkt->RemoveHeader(header);

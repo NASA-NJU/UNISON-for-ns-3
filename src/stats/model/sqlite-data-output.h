@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2008 Drexel University
  *
@@ -43,15 +42,15 @@ class SqliteDataOutput : public DataOutputInterface
 {
   public:
     SqliteDataOutput();
-    virtual ~SqliteDataOutput() override;
+    ~SqliteDataOutput() override;
 
     /**
      * Register this type.
      * \return The TypeId.
      */
-    static TypeId GetTypeId(void);
+    static TypeId GetTypeId();
 
-    virtual void Output(DataCollector& dc) override;
+    void Output(DataCollector& dc) override;
 
   private:
     /**
@@ -72,7 +71,7 @@ class SqliteDataOutput : public DataOutputInterface
         /**
          * Destructor
          */
-        ~SqliteOutputCallback();
+        ~SqliteOutputCallback() override;
 
         /**
          * \brief Generates data statistics
@@ -82,7 +81,7 @@ class SqliteDataOutput : public DataOutputInterface
          */
         void OutputStatistic(std::string key,
                              std::string variable,
-                             const StatisticalSummary* statSum);
+                             const StatisticalSummary* statSum) override;
 
         /**
          * \brief Generates a single data output
@@ -90,7 +89,7 @@ class SqliteDataOutput : public DataOutputInterface
          * \param variable the variable name
          * \param val the value
          */
-        void OutputSingleton(std::string key, std::string variable, int val);
+        void OutputSingleton(std::string key, std::string variable, int val) override;
 
         /**
          * \brief Generates a single data output
@@ -98,7 +97,7 @@ class SqliteDataOutput : public DataOutputInterface
          * \param variable the variable name
          * \param val the value
          */
-        void OutputSingleton(std::string key, std::string variable, uint32_t val);
+        void OutputSingleton(std::string key, std::string variable, uint32_t val) override;
 
         /**
          * \brief Generates a single data output
@@ -106,7 +105,7 @@ class SqliteDataOutput : public DataOutputInterface
          * \param variable the variable name
          * \param val the value
          */
-        void OutputSingleton(std::string key, std::string variable, double val);
+        void OutputSingleton(std::string key, std::string variable, double val) override;
 
         /**
          * \brief Generates a single data output
@@ -114,7 +113,7 @@ class SqliteDataOutput : public DataOutputInterface
          * \param variable the variable name
          * \param val the value
          */
-        void OutputSingleton(std::string key, std::string variable, std::string val);
+        void OutputSingleton(std::string key, std::string variable, std::string val) override;
 
         /**
          * \brief Generates a single data output
@@ -122,7 +121,7 @@ class SqliteDataOutput : public DataOutputInterface
          * \param variable the variable name
          * \param val the value
          */
-        void OutputSingleton(std::string key, std::string variable, Time val);
+        void OutputSingleton(std::string key, std::string variable, Time val) override;
 
       private:
         Ptr<SQLiteOutput> m_db; //!< Db

@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2009 Duy Nguyen
  * Copyright (c) 2015 Ghada Badawy
@@ -1996,7 +1995,7 @@ MinstrelHtWifiManager::PrintTable(MinstrelHtWifiRemoteStation* station)
     {
         std::ostringstream tmp;
         tmp << "minstrel-ht-stats-" << station->m_state->m_address << ".txt";
-        station->m_statsFile.open(tmp.str().c_str(), std::ios::out);
+        station->m_statsFile.open(tmp.str(), std::ios::out);
     }
 
     station->m_statsFile

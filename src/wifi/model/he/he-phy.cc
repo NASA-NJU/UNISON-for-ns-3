@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2020 Orange Labs
  *
@@ -1470,7 +1469,7 @@ HePhy::GetHeMcs(uint8_t index)
 }
 
 #define GET_HE_MCS(x)                                                                              \
-    WifiMode HePhy::GetHeMcs##x(void)                                                              \
+    WifiMode HePhy::GetHeMcs##x()                                                                  \
     {                                                                                              \
         static WifiMode mcs = CreateHeMcs(x);                                                      \
         return mcs;                                                                                \

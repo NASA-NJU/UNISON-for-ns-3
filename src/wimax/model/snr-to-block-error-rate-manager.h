@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  *  Copyright (c) 2007,2008, 2009 INRIA, UDcast
  *
@@ -77,8 +76,10 @@ class SNRToBlockErrorRateManager
     SNRToBlockErrorRateRecord*
     /**
      * \brief returns a record of type SNRToBlockErrorRateRecord corresponding to a given modulation
-     * and SNR value \param SNR the SNR value \param modulation one of the seven MCS \return the
-     * Block Error Rate
+     * and SNR value
+     * \param SNR the SNR value
+     * \param modulation one of the seven MCS
+     * \return the Block Error Rate
      */
     GetSNRToBlockErrorRateRecord(double SNR, uint8_t modulation);
     /**

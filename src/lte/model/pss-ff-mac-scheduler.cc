@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2011 Centre Tecnologic de Telecomunicacions de Catalunya (CTTC)
  *
@@ -551,7 +550,6 @@ PssFfMacScheduler::DoSchedDlTriggerReq(
     }
 
     // RACH Allocation
-    uint16_t rbAllocatedNum = 0;
     std::vector<bool> ulRbMap;
     ulRbMap.resize(m_cschedCellConfig.m_ulBandwidth, false);
     ulRbMap = m_ffrSapProvider->GetAvailableUlRbg();
@@ -565,7 +563,6 @@ PssFfMacScheduler::DoSchedDlTriggerReq(
     {
         if ((*it) == true)
         {
-            rbAllocatedNum++;
             if (tmpMinBandwidth > maxContinuousUlBandwidth)
             {
                 maxContinuousUlBandwidth = tmpMinBandwidth;

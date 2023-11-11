@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2014 ResiliNets, ITTC, University of Kansas
  *
@@ -514,8 +513,7 @@ CoDelQueueDiscBasicDrop::CoDelQueueDiscBasicDrop(QueueSizeUnit mode)
 }
 
 void
-CoDelQueueDiscBasicDrop::DropNextTracer([[maybe_unused]] uint32_t oldVal,
-                                        [[maybe_unused]] uint32_t newVal)
+CoDelQueueDiscBasicDrop::DropNextTracer(uint32_t /* oldVal */, uint32_t /* newVal */)
 {
     m_dropNextCount++;
 }
@@ -732,8 +730,7 @@ CoDelQueueDiscBasicMark::CoDelQueueDiscBasicMark(QueueSizeUnit mode)
 }
 
 void
-CoDelQueueDiscBasicMark::DropNextTracer([[maybe_unused]] uint32_t oldVal,
-                                        [[maybe_unused]] uint32_t newVal)
+CoDelQueueDiscBasicMark::DropNextTracer(uint32_t /* oldVal */, uint32_t /* newVal */)
 {
     m_dropNextCount++;
 }

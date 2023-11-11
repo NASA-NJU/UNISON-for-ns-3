@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  *  Copyright 2013. Lawrence Livermore National Security, LLC.
  *
@@ -56,19 +55,19 @@ class RemoteChannelBundle : public Object
      *  Register this type.
      *  \return The object TypeId.
      */
-    static TypeId GetTypeId(void);
+    static TypeId GetTypeId();
 
     /** Default constructor. */
     RemoteChannelBundle();
 
     /**
-     * Construct and assing system Id.
-     * \param [in] remoteSystemId The system id.
+     *  Construct and assign system Id.
+     *  \param [in] remoteSystemId The system id.
      */
     RemoteChannelBundle(const uint32_t remoteSystemId);
 
     /** Destructor. */
-    ~RemoteChannelBundle()
+    ~RemoteChannelBundle() override
     {
     }
 
@@ -89,13 +88,13 @@ class RemoteChannelBundle : public Object
      * Get the current guarantee time for this bundle.
      * \return guarantee time
      */
-    Time GetGuaranteeTime(void) const;
+    Time GetGuaranteeTime() const;
 
     /**
-     * \param time The guarantee time.
-     *
      * Set the guarantee time for the bundle.  This should be called
      * after a packet or Null Message received.
+     *
+     * \param time The guarantee time.
      */
     void SetGuaranteeTime(Time time);
 
@@ -103,7 +102,7 @@ class RemoteChannelBundle : public Object
      * Get the minimum delay along any channel in this bundle
      * \return The minimum delay.
      */
-    Time GetDelay(void) const;
+    Time GetDelay() const;
 
     /**
      * Set the event ID of the Null Message send event currently scheduled
@@ -117,20 +116,20 @@ class RemoteChannelBundle : public Object
      * Get the event ID of the Null Message send event for this bundle
      * \return The null message event id.
      */
-    EventId GetEventId(void) const;
+    EventId GetEventId() const;
 
     /**
      * Get the number of ns-3 channels in this bundle
      * \return The number of channels.
      */
-    std::size_t GetSize(void) const;
+    std::size_t GetSize() const;
 
     /**
-     * \param time The delay from now when the null message should be received.
-     *
      * Send Null Message to the remote task associated with this bundle.
      * Message will be delivered at current simulation time + the time
      * passed in.
+     *
+     * \param time The delay from now when the null message should be received.
      */
     void Send(Time time);
 

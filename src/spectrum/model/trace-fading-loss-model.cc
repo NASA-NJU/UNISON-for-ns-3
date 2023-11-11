@@ -1,4 +1,3 @@
-/* -*-  Mode: C++; c-file-style: "gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2011 Centre Tecnologic de Telecomunicacions de Catalunya (CTTC)
  *
@@ -121,7 +120,7 @@ TraceFadingLossModel::LoadTrace()
 {
     NS_LOG_FUNCTION(this << "Loading Fading Trace " << m_traceFile);
     std::ifstream ifTraceFile;
-    ifTraceFile.open(m_traceFile.c_str(), std::ifstream::in);
+    ifTraceFile.open(m_traceFile, std::ifstream::in);
     m_fadingTrace.clear();
     if (!ifTraceFile.good())
     {

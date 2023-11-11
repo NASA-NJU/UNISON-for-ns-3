@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2005,2006 INRIA
  * This program is free software; you can redistribute it and/or modify
@@ -244,8 +243,8 @@ class WaveNetDevice : public WifiNetDevice
      */
     bool StartSch(const SchInfo& schInfo);
     /**
-     *  \param channelNumber the channel which access resource will be released.
-     *  \return whether channel access is released successfully
+     * \param channelNumber the channel which access resource will be released.
+     * \return whether channel access is released successfully
      */
     bool StopSch(uint32_t channelNumber);
 

@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2017 Universita' degli Studi di Napoli Federico II
  *
@@ -70,7 +69,7 @@ NetmapNetDeviceHelper::NetmapNetDeviceHelper()
 }
 
 std::string
-NetmapNetDeviceHelper::GetDeviceName(void)
+NetmapNetDeviceHelper::GetDeviceName()
 {
     return m_deviceName;
 }
@@ -155,7 +154,7 @@ NetmapNetDeviceHelper::SetDeviceAttributes(Ptr<FdNetDevice> device) const
     if ((ifr.ifr_flags & IFF_PROMISC) == 0)
     {
         NS_FATAL_ERROR("NetmapNetDeviceHelper::SetFileDescriptor (): "
-                       << m_deviceName.c_str()
+                       << m_deviceName
                        << " is not in promiscuous mode. Please config the interface in promiscuous "
                           "mode before to run the simulation.");
     }
@@ -196,7 +195,7 @@ NetmapNetDeviceHelper::SetDeviceAttributes(Ptr<FdNetDevice> device) const
 }
 
 int
-NetmapNetDeviceHelper::CreateFileDescriptor(void) const
+NetmapNetDeviceHelper::CreateFileDescriptor() const
 {
     NS_LOG_FUNCTION(this);
 
@@ -287,7 +286,7 @@ NetmapNetDeviceHelper::CreateFileDescriptor(void) const
         status = ::execlp(NETMAP_DEV_CREATOR,
                           NETMAP_DEV_CREATOR, // argv[0] (filename)
                           oss.str().c_str(),  // argv[1] (-p<path?
-                          (char*)NULL);
+                          nullptr);
 
         //
         // If the execlp successfully completes, it never returns.  If it returns it failed or the
@@ -401,7 +400,7 @@ NetmapNetDeviceHelper::CreateFileDescriptor(void) const
         // one we're interested in.
         //
         struct cmsghdr* cmsg;
-        for (cmsg = CMSG_FIRSTHDR(&msg); cmsg != NULL; cmsg = CMSG_NXTHDR(&msg, cmsg))
+        for (cmsg = CMSG_FIRSTHDR(&msg); cmsg != nullptr; cmsg = CMSG_NXTHDR(&msg, cmsg))
         {
             if (cmsg->cmsg_level == SOL_SOCKET && cmsg->cmsg_type == SCM_RIGHTS)
             {

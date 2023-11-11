@@ -1,4 +1,3 @@
-/* -*-  Mode: C++; c-file-style: "gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2011 The Boeing Company
  *
@@ -194,25 +193,21 @@ LrWpanCsmaCa::GetTimeToNextSlot() const
     // or other device/incoming frame (Rx beacon time reference ).
 
     Time elapsedSuperframe; // (i.e  The beacon + the elapsed CAP)
-    Time currentTime;
+    Time currentTime = Simulator::Now();
     double symbolsToBoundary;
     Time nextBoundary;
     uint64_t elapsedSuperframeSymbols;
-    uint64_t symbolRate;
+    uint64_t symbolRate =
+        (uint64_t)m_mac->GetPhy()->GetDataOrSymbolRate(false); // symbols per second
     Time timeAtBoundary;
-    [[maybe_unused]] Time elapsedCap;
-    [[maybe_unused]] Time beaconTime;
-
-    currentTime = Simulator::Now();
-    symbolRate = (uint64_t)m_mac->GetPhy()->GetDataOrSymbolRate(false); // symbols per second
 
     if (m_coorDest)
     {
         // Take the Incoming Frame Reference
         elapsedSuperframe = currentTime - m_mac->m_macBeaconRxTime;
 
-        beaconTime = Seconds((double)m_mac->m_rxBeaconSymbols / symbolRate);
-        elapsedCap = elapsedSuperframe - beaconTime;
+        Time beaconTime [[maybe_unused]] = Seconds((double)m_mac->m_rxBeaconSymbols / symbolRate);
+        Time elapsedCap [[maybe_unused]] = elapsedSuperframe - beaconTime;
         NS_LOG_DEBUG("Elapsed incoming CAP symbols: " << (elapsedCap.GetSeconds() * symbolRate)
                                                       << " (" << elapsedCap.As(Time::S) << ")");
     }

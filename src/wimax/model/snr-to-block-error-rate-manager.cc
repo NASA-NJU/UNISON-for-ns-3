@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  *  Copyright (c) 2007,2008, 2009 INRIA, UDcast
  *
@@ -98,7 +97,7 @@ SNRToBlockErrorRateManager::LoadTraces()
         std::stringstream traceFilePath;
         traceFilePath << m_traceFilePath << "/modulation" << i << ".txt";
 
-        traceFile.open(traceFilePath.str().c_str(), std::ifstream::in);
+        traceFile.open(traceFilePath.str(), std::ifstream::in);
         if (traceFile.good() == false)
         {
             NS_LOG_INFO("Unable to load " << traceFilePath.str() << "!! Loading default traces...");
@@ -237,7 +236,7 @@ SNRToBlockErrorRateManager::ReLoadTraces()
         std::stringstream traceFilePath;
         traceFilePath << m_traceFilePath << "/Modulation" << i << ".txt";
 
-        traceFile.open(traceFilePath.str().c_str(), std::ifstream::in);
+        traceFile.open(traceFilePath.str(), std::ifstream::in);
         if (traceFile.good() == false)
         {
             NS_LOG_INFO("Unable to load " << traceFilePath.str() << "!!Loading default traces...");

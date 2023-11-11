@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2010 Hajime Tazaki
  *
@@ -257,7 +256,7 @@ RocketfuelTopologyReader::GenerateFromWeightsFile(const std::vector<std::string>
 
     sname = argv[0];
     tname = argv[1];
-    double v [[maybe_unused]] = std::stod(argv[2], &endptr); // weight
+    std::stod(argv[2], &endptr); // weight
 
     if (argv[2].size() != endptr)
     {
@@ -338,7 +337,7 @@ NodeContainer
 RocketfuelTopologyReader::Read()
 {
     std::ifstream topgen;
-    topgen.open(GetFileName().c_str());
+    topgen.open(GetFileName());
     NodeContainer nodes;
 
     std::istringstream lineBuffer;

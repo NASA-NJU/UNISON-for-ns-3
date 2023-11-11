@@ -1,4 +1,3 @@
-/* -*-  Mode: C++; c-file-style: "gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2012 Centre Tecnologic de Telecomunicacions de Catalunya (CTTC)
  *
@@ -34,7 +33,6 @@ namespace ns3
  * LteEnbRrc and the EpcEnbApplication. In particular, this class implements the
  * Provider part of the SAP, i.e., the methods exported by the
  * EpcEnbApplication and called by the LteEnbRrc.
- *
  */
 class EpcEnbS1SapProvider
 {
@@ -42,18 +40,18 @@ class EpcEnbS1SapProvider
     virtual ~EpcEnbS1SapProvider();
 
     /**
+     * Initial UE message.
      *
-     *
-     * \param imsi
-     * \param rnti
+     * \param imsi IMSI
+     * \param rnti RNTI
      */
     virtual void InitialUeMessage(uint64_t imsi, uint16_t rnti) = 0;
 
     /**
-     *  \brief Triggers epc-enb-application to send ERAB Release Indication message towards MME
-     *  \param imsi the UE IMSI
-     *  \param rnti the UE RNTI
-     *  \param bearerId Bearer Identity which is to be de-activated
+     * \brief Triggers epc-enb-application to send ERAB Release Indication message towards MME
+     * \param imsi the UE IMSI
+     * \param rnti the UE RNTI
+     * \param bearerId Bearer Identity which is to be de-activated
      */
     virtual void DoSendReleaseIndication(uint64_t imsi, uint16_t rnti, uint8_t bearerId) = 0;
 
@@ -81,11 +79,11 @@ class EpcEnbS1SapProvider
     virtual void PathSwitchRequest(PathSwitchRequestParameters params) = 0;
 
     /**
-     * release UE context at the S1 Application of the source eNB after
+     * Release UE context at the S1 Application of the source eNB after
      * reception of the UE CONTEXT RELEASE X2 message from the target eNB
      * during X2-based handover
      *
-     * \param rnti
+     * \param rnti RNTI
      */
     virtual void UeContextRelease(uint16_t rnti) = 0;
 };
@@ -95,7 +93,6 @@ class EpcEnbS1SapProvider
  * LteEnbRrc and the EpcEnbApplication. In particular, this class implements the
  * User part of the SAP, i.e., the methods exported by the LteEnbRrc
  * and called by the EpcEnbApplication.
- *
  */
 class EpcEnbS1SapUser
 {
@@ -113,7 +110,7 @@ class EpcEnbS1SapUser
     /**
      * Initial context setup request
      *
-     * \param params
+     * \param params Parameters
      */
     virtual void InitialContextSetupRequest(InitialContextSetupRequestParameters params) = 0;
 
@@ -131,9 +128,9 @@ class EpcEnbS1SapUser
     };
 
     /**
-     * request the setup of a DataRadioBearer
+     * Request the setup of a DataRadioBearer
      *
-     *  \param params
+     * \param params Parameters
      */
     virtual void DataRadioBearerSetupRequest(DataRadioBearerSetupRequestParameters params) = 0;
 
@@ -144,9 +141,9 @@ class EpcEnbS1SapUser
     };
 
     /**
-     * request a path switch acknowledge
+     * Request a path switch acknowledge
      *
-     *  \param params
+     * \param params Parameters
      */
     virtual void PathSwitchRequestAcknowledge(PathSwitchRequestAcknowledgeParameters params) = 0;
 };
@@ -154,7 +151,6 @@ class EpcEnbS1SapUser
 /**
  * Template for the implementation of the EpcEnbS1SapProvider as a member
  * of an owner class of type C to which all methods are forwarded
- *
  */
 template <class C>
 class MemberEpcEnbS1SapProvider : public EpcEnbS1SapProvider
@@ -223,7 +219,6 @@ MemberEpcEnbS1SapProvider<C>::UeContextRelease(uint16_t rnti)
 /**
  * Template for the implementation of the EpcEnbS1SapUser as a member
  * of an owner class of type C to which all methods are forwarded
- *
  */
 template <class C>
 class MemberEpcEnbS1SapUser : public EpcEnbS1SapUser

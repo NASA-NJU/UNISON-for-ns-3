@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2012 INRIA, 2012 University of Washington
  *
@@ -35,7 +34,6 @@
 #include <iomanip>
 #include <iostream>
 #include <limits>
-#include <linux/if_tun.h>
 #include <memory>
 #include <net/ethernet.h>
 #include <net/if.h>
@@ -183,7 +181,7 @@ EmuFdNetDeviceHelper::SetFileDescriptor(Ptr<FdNetDevice> device) const
     if ((ifr.ifr_flags & IFF_PROMISC) == 0)
     {
         NS_FATAL_ERROR("EmuFdNetDeviceHelper::SetFileDescriptor (): "
-                       << m_deviceName.c_str() << " is not in promiscuous mode");
+                       << m_deviceName << " is not in promiscuous mode");
     }
 
     if ((ifr.ifr_flags & IFF_BROADCAST) != IFF_BROADCAST)

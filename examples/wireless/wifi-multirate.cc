@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
@@ -702,7 +701,7 @@ main(int argc, char* argv[])
     // for commandline input
     experiment.CommandSetup(argc, argv);
 
-    std::ofstream outfile((experiment.GetOutputFileName() + ".plt").c_str());
+    std::ofstream outfile(experiment.GetOutputFileName() + ".plt");
 
     MobilityHelper mobility;
     Gnuplot gnuplot;

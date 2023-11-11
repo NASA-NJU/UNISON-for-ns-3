@@ -1,4 +1,3 @@
-/* -*-  Mode: C++; c-file-style: "gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2013 Magister Solutions
  *
@@ -209,15 +208,13 @@ ThreeGppHttpServer::StartApplication()
             m_initialSocket = Socket::CreateSocket(GetNode(), TcpSocketFactory::GetTypeId());
             m_initialSocket->SetAttribute("SegmentSize", UintegerValue(m_mtuSize));
 
-            [[maybe_unused]] int ret;
-
             if (Ipv4Address::IsMatchingType(m_localAddress))
             {
                 const Ipv4Address ipv4 = Ipv4Address::ConvertFrom(m_localAddress);
                 const InetSocketAddress inetSocket = InetSocketAddress(ipv4, m_localPort);
                 NS_LOG_INFO(this << " Binding on " << ipv4 << " port " << m_localPort << " / "
                                  << inetSocket << ".");
-                ret = m_initialSocket->Bind(inetSocket);
+                int ret [[maybe_unused]] = m_initialSocket->Bind(inetSocket);
                 NS_LOG_DEBUG(this << " Bind() return value= " << ret
                                   << " GetErrNo= " << m_initialSocket->GetErrno() << ".");
             }
@@ -227,12 +224,12 @@ ThreeGppHttpServer::StartApplication()
                 const Inet6SocketAddress inet6Socket = Inet6SocketAddress(ipv6, m_localPort);
                 NS_LOG_INFO(this << " Binding on " << ipv6 << " port " << m_localPort << " / "
                                  << inet6Socket << ".");
-                ret = m_initialSocket->Bind(inet6Socket);
+                int ret [[maybe_unused]] = m_initialSocket->Bind(inet6Socket);
                 NS_LOG_DEBUG(this << " Bind() return value= " << ret
                                   << " GetErrNo= " << m_initialSocket->GetErrno() << ".");
             }
 
-            ret = m_initialSocket->Listen();
+            int ret [[maybe_unused]] = m_initialSocket->Listen();
             NS_LOG_DEBUG(this << " Listen () return value= " << ret
                               << " GetErrNo= " << m_initialSocket->GetErrno() << ".");
 
@@ -454,8 +451,8 @@ ThreeGppHttpServer::SendCallback(Ptr<Socket> socket, uint32_t availableBufferSiz
 
     if (!m_txBuffer->IsBufferEmpty(socket))
     {
-        [[maybe_unused]] const uint32_t txBufferSize = m_txBuffer->GetBufferSize(socket);
-        [[maybe_unused]] const uint32_t actualSent = ServeFromTxBuffer(socket);
+        const uint32_t txBufferSize [[maybe_unused]] = m_txBuffer->GetBufferSize(socket);
+        const uint32_t actualSent [[maybe_unused]] = ServeFromTxBuffer(socket);
 
 #ifdef NS3_LOG_ENABLE
         // Some log messages.

@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2005,2006 INRIA
  *
@@ -108,7 +107,7 @@ SimulatorEventsTestCase::NowUs()
 }
 
 void
-SimulatorEventsTestCase::EventA([[maybe_unused]] int a)
+SimulatorEventsTestCase::EventA(int /* a */)
 {
     m_a = false;
 }
@@ -129,7 +128,7 @@ SimulatorEventsTestCase::EventB(int b)
 }
 
 void
-SimulatorEventsTestCase::EventC([[maybe_unused]] int c)
+SimulatorEventsTestCase::EventC(int /* c */)
 {
     m_c = false;
 }

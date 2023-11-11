@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2007-2008 Louis Pasteur University
  *
@@ -552,8 +551,9 @@ class Ipv6Prefix
     void SetPrefixLength(uint8_t prefixLength);
 
     /**
-     * \brief Get the minimum prefix length, i.e., 128 - the length of the largest sequence trailing
-     * zeroes. \return minimum prefix length
+     * \brief Get the minimum prefix length, i.e., 128 - the length of the largest sequence
+     * trailing zeroes.
+     * \return minimum prefix length
      */
     uint8_t GetMinimumPrefixLength() const;
 

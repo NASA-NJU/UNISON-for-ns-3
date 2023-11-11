@@ -1,4 +1,3 @@
-/* -*-  Mode: C++; c-file-style: "gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2016 Centre Tecnologic de Telecomunicacions de Catalunya (CTTC)
  *
@@ -537,7 +536,7 @@ void
 CarrierAggregationTestCase::WriteResultToFile()
 {
     std::ofstream dlOutFile;
-    dlOutFile.open(dlResultsFileName.c_str(), std::ofstream::out | std::ofstream::app);
+    dlOutFile.open(dlResultsFileName, std::ofstream::out | std::ofstream::app);
     dlOutFile.setf(std::ios_base::fixed);
 
     if (!dlOutFile.is_open())
@@ -550,7 +549,7 @@ CarrierAggregationTestCase::WriteResultToFile()
     dlOutFile.close();
 
     std::ofstream ulOutFile;
-    ulOutFile.open(ulResultsFileName.c_str(), std::ofstream::out | std::ofstream::app);
+    ulOutFile.open(ulResultsFileName, std::ofstream::out | std::ofstream::app);
     ulOutFile.setf(std::ios_base::fixed);
 
     if (!ulOutFile.is_open())

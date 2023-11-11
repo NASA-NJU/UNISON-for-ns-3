@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2020 Orange Labs
  *
@@ -159,7 +158,7 @@ ErpOfdmPhy::GetErpOfdmRate(uint64_t rate)
 }
 
 #define GET_ERP_OFDM_MODE(x, f)                                                                    \
-    WifiMode ErpOfdmPhy::Get##x(void)                                                              \
+    WifiMode ErpOfdmPhy::Get##x()                                                                  \
     {                                                                                              \
         static WifiMode mode = CreateErpOfdmMode(#x, f);                                           \
         return mode;                                                                               \

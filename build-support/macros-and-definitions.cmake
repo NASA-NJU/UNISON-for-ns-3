@@ -293,6 +293,7 @@ macro(clear_global_cached_variables)
   unset(ns3-contrib-libs CACHE)
   unset(ns3-example-folders CACHE)
   unset(ns3-execs CACHE)
+  unset(ns3-execs-clean CACHE)
   unset(ns3-execs-py CACHE)
   unset(ns3-external-libs CACHE)
   unset(ns3-headers-to-module-map CACHE)
@@ -306,6 +307,7 @@ macro(clear_global_cached_variables)
     ns3-contrib-libs
     ns3-example-folders
     ns3-execs
+    ns3-execs-clean
     ns3-execs-py
     ns3-external-libs
     ns3-headers-to-module-map
@@ -434,7 +436,7 @@ macro(process_options)
   if(${NS3_CLANG_FORMAT})
     find_program(CLANG_FORMAT clang-format)
     if("${CLANG_FORMAT}" STREQUAL "CLANG_FORMAT-NOTFOUND")
-      message(${HIGHLIGHTED_STATUS} "Proceeding without clang-format")
+      message(FATAL_ERROR "Clang-format was not found")
     else()
       file(
         GLOB_RECURSE
@@ -449,7 +451,7 @@ macro(process_options)
         scratch/*.h
       )
       add_custom_target(
-        clang-format COMMAND clang-format -style=file -i
+        clang-format COMMAND ${CLANG_FORMAT} -style=file -i
                              ${ALL_CXX_SOURCE_FILES}
       )
       unset(ALL_CXX_SOURCE_FILES)
@@ -457,13 +459,13 @@ macro(process_options)
   endif()
 
   if(${NS3_CLANG_TIDY})
-    find_program(CLANG_TIDY clang-tidy)
+    find_program(
+      CLANG_TIDY NAMES clang-tidy clang-tidy-14 clang-tidy-15 clang-tidy-16
+    )
     if("${CLANG_TIDY}" STREQUAL "CLANG_TIDY-NOTFOUND")
-      message(${HIGHLIGHTED_STATUS}
-              "Proceeding without clang-tidy static analysis"
-      )
+      message(FATAL_ERROR "Clang-tidy was not found")
     else()
-      set(CMAKE_CXX_CLANG_TIDY "clang-tidy")
+      set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY}")
     endif()
   else()
     unset(CMAKE_CXX_CLANG_TIDY)
@@ -832,6 +834,35 @@ macro(process_options)
       configure_file(
         bindings/python/ns__init__.py ${destination_dir}/__init__.py COPYONLY
       )
+
+      # And create an install target for the bindings
+      if(NOT NS3_BINDINGS_INSTALL_DIR)
+        # If the installation directory for the python bindings is not set,
+        # suggest the user site-packages directory
+        execute_process(
+          COMMAND python3 -m site --user-site
+          OUTPUT_VARIABLE SUGGESTED_BINDINGS_INSTALL_DIR
+        )
+        string(STRIP "${SUGGESTED_BINDINGS_INSTALL_DIR}"
+                     SUGGESTED_BINDINGS_INSTALL_DIR
+        )
+        message(
+          ${HIGHLIGHTED_STATUS}
+          "NS3_BINDINGS_INSTALL_DIR was not set. The python bindings won't be installed with ./ns3 install."
+        )
+        message(
+          ${HIGHLIGHTED_STATUS}
+          "Set NS3_BINDINGS_INSTALL_DIR=\"${SUGGESTED_BINDINGS_INSTALL_DIR}\" to install it to the default location."
+        )
+      else()
+        install(FILES bindings/python/ns__init__.py
+                DESTINATION ${NS3_BINDINGS_INSTALL_DIR}/ns RENAME __init__.py
+        )
+        add_custom_target(
+          uninstall_bindings COMMAND rm -R ${NS3_BINDINGS_INSTALL_DIR}/ns
+        )
+        add_dependencies(uninstall uninstall_bindings)
+      endif()
     endif()
   endif()
 
@@ -859,6 +890,7 @@ macro(process_options)
   endif()
 
   if(${ENABLE_TESTS})
+    add_custom_target(test-runner-examples-as-tests)
     add_custom_target(all-test-targets)
 
     # Create a custom target to run test.py --no-build Target is also used to
@@ -924,20 +956,6 @@ macro(process_options)
       message(STATUS "GSL was found.")
       add_definitions(-DHAVE_GSL)
       include_directories(${GSL_INCLUDE_DIRS})
-    endif()
-  endif()
-
-  if(${NS3_GNUPLOT})
-    find_package(Gnuplot-ios) # Not sure what package would contain the correct
-                              # header/library
-    if(NOT ${GNUPLOT_FOUND})
-      message(${HIGHLIGHTED_STATUS}
-              "GNUPLOT was not found. Continuing without it."
-      )
-    else()
-      message(STATUS "GNUPLOT was found.")
-      include_directories(${GNUPLOT_INCLUDE_DIRS})
-      link_directories(${GNUPLOT_LIBRARY})
     endif()
   endif()
 
@@ -1372,6 +1390,10 @@ function(set_runtime_outputdirectory target_name output_directory target_prefix)
   set(ns3-exec-outputname ns${NS3_VER}-${target_name}${build_profile_suffix})
   set(ns3-execs "${output_directory}${ns3-exec-outputname};${ns3-execs}"
       CACHE INTERNAL "list of c++ executables"
+  )
+  set(ns3-execs-clean "${target_prefix}${target_name};${ns3-execs-clean}"
+      CACHE INTERNAL
+            "list of c++ executables without version prefix and build suffix"
   )
 
   set_target_properties(
@@ -2012,9 +2034,17 @@ function(find_external_library)
   set(library_dirs)
   set(libraries)
 
+  # Include parent directories in the search paths to handle Bake cases
+  get_filename_component(parent_project_dir ${PROJECT_SOURCE_DIR} DIRECTORY)
+  get_filename_component(
+    grandparent_project_dir ${parent_project_dir} DIRECTORY
+  )
+  set(project_parent_dirs ${parent_project_dir} ${grandparent_project_dir})
+
   # Paths and suffixes where libraries will be searched on
   set(library_search_paths
       ${search_paths}
+      ${project_parent_dirs}
       ${CMAKE_OUTPUT_DIRECTORY} # Search for libraries in ns-3-dev/build
       ${CMAKE_INSTALL_PREFIX} # Search for libraries in the install directory
                               # (e.g. /usr/)
@@ -2126,8 +2156,9 @@ function(find_external_library)
   endforeach()
 
   set(header_search_paths
-      ${parent_dirs}
       ${search_paths}
+      ${parent_dirs}
+      ${project_parent_dirs}
       ${CMAKE_OUTPUT_DIRECTORY} # Search for headers in
       # ns-3-dev/build
       ${CMAKE_INSTALL_PREFIX} # Search for headers in the install

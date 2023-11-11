@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2019 NITK Surathkal
  *
@@ -438,8 +437,7 @@ CobaltQueueDiscMarkTest::CobaltQueueDiscMarkTest(QueueSizeUnit mode)
 }
 
 void
-CobaltQueueDiscMarkTest::DropNextTracer([[maybe_unused]] int64_t oldVal,
-                                        [[maybe_unused]] int64_t newVal)
+CobaltQueueDiscMarkTest::DropNextTracer(int64_t /* oldVal */, int64_t /* newVal */)
 {
     m_dropNextCount++;
 }

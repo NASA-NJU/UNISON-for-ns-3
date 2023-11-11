@@ -1,4 +1,3 @@
-/* -*-  Mode: C++; c-file-style: "gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2015 Natale Patriciello <natale.patriciello@gmail.com>
  *
@@ -132,11 +131,9 @@ TcpFlagErrorModel::TcpFlagErrorModel()
 bool
 TcpFlagErrorModel::ShouldDrop(const Ipv4Header& ipHeader,
                               const TcpHeader& tcpHeader,
-                              uint32_t packetSize)
+                              uint32_t packetSize [[maybe_unused]])
 {
     NS_LOG_FUNCTION(this << ipHeader << tcpHeader);
-
-    (void)packetSize;
 
     bool toDrop = false;
 

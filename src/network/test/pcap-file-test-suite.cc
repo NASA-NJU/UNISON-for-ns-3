@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
@@ -61,7 +60,7 @@ CheckFileExists(std::string filename)
 }
 
 static bool
-CheckFileLength(std::string filename, uint64_t sizeExpected)
+CheckFileLength(std::string filename, long sizeExpected)
 {
     FILE* p = std::fopen(filename.c_str(), "rb");
     if (p == nullptr)
@@ -71,7 +70,7 @@ CheckFileLength(std::string filename, uint64_t sizeExpected)
 
     std::fseek(p, 0, SEEK_END);
 
-    uint64_t sizeActual = std::ftell(p);
+    auto sizeActual = std::ftell(p);
     std::fclose(p);
 
     return sizeActual == sizeExpected;
@@ -337,9 +336,9 @@ public:
   virtual ~AppendModeCreateTestCase ();
 
 private:
-  virtual void DoSetup (void);
-  virtual void DoRun (void);
-  virtual void DoTeardown (void);
+  virtual void DoSetup ();
+  virtual void DoRun ();
+  virtual void DoTeardown ();
 
   std::string m_testFilename;
 };
@@ -354,7 +353,7 @@ AppendModeCreateTestCase::~AppendModeCreateTestCase ()
 }
 
 void
-AppendModeCreateTestCase::DoSetup (void)
+AppendModeCreateTestCase::DoSetup ()
 {
   std::stringstream filename;
   uint32_t n = rand ();
@@ -363,7 +362,7 @@ AppendModeCreateTestCase::DoSetup (void)
 }
 
 void
-AppendModeCreateTestCase::DoTeardown (void)
+AppendModeCreateTestCase::DoTeardown ()
 {
   if (remove (m_testFilename.c_str ()))
     {
@@ -372,7 +371,7 @@ AppendModeCreateTestCase::DoTeardown (void)
 }
 
 void
-AppendModeCreateTestCase::DoRun (void)
+AppendModeCreateTestCase::DoRun ()
 {
   PcapFile f;
 
@@ -509,7 +508,7 @@ FileHeaderTestCase::DoRun()
     //
     FILE* p = std::fopen(m_testFilename.c_str(), "r+b");
     NS_TEST_ASSERT_MSG_NE(p,
-                          0,
+                          nullptr,
                           "fopen("
                               << m_testFilename
                               << ") should have been able to open a correctly created pcap file");
@@ -651,7 +650,7 @@ FileHeaderTestCase::DoRun()
     //
     p = std::fopen(m_testFilename.c_str(), "r+b");
     NS_TEST_ASSERT_MSG_NE(p,
-                          0,
+                          nullptr,
                           "fopen("
                               << m_testFilename
                               << ") should have been able to open a correctly created pcap file");
@@ -807,7 +806,7 @@ RecordHeaderTestCase::DoRun()
     //
     FILE* p = std::fopen(m_testFilename.c_str(), "r+b");
     NS_TEST_ASSERT_MSG_NE(p,
-                          0,
+                          nullptr,
                           "fopen() should have been able to open a correctly created pcap file");
 
     //
@@ -816,7 +815,7 @@ RecordHeaderTestCase::DoRun()
     // double check that this is exactly what happened.
     //
     std::fseek(p, 0, SEEK_END);
-    uint64_t size = std::ftell(p);
+    auto size = std::ftell(p);
     NS_TEST_ASSERT_MSG_EQ(size, 83, "Pcap file with one 43 byte packet is incorrect size");
 
     //
@@ -979,7 +978,7 @@ RecordHeaderTestCase::DoRun()
     //
     p = std::fopen(m_testFilename.c_str(), "r+b");
     NS_TEST_ASSERT_MSG_NE(p,
-                          0,
+                          nullptr,
                           "fopen() should have been able to open a correctly created pcap file");
 
     //

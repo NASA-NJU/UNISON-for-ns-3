@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2010 Lalith Suresh
  *
@@ -66,18 +65,18 @@ class Ipv4ClickRouting : public Ipv4RoutingProtocol
     friend class ::ClickIfidFromNameTest;
     friend class ::ClickIpMacAddressFromNameTest;
 
-    static TypeId GetTypeId(void);
+    static TypeId GetTypeId();
 
     Ipv4ClickRouting();
-    virtual ~Ipv4ClickRouting();
+    ~Ipv4ClickRouting() override;
 
-    Ptr<UniformRandomVariable> GetRandomVariable(void);
+    Ptr<UniformRandomVariable> GetRandomVariable();
 
   protected:
-    virtual void DoInitialize(void);
+    void DoInitialize() override;
 
   public:
-    virtual void DoDispose();
+    void DoDispose() override;
 
     /**
      * \brief Click configuration file to be used by the node's Click Instance.
@@ -138,9 +137,10 @@ class Ipv4ClickRouting : public Ipv4RoutingProtocol
   public:
     /**
      * \brief Allows the Click service methods, which reside outside Ipv4ClickRouting, to get the
-     * required Ipv4ClickRouting instances. \param simnode The Click simclick_node_t instance for
-     * which the Ipv4ClickRouting instance is required \return A Ptr to the required
-     * Ipv4ClickRouting instance
+     * required Ipv4ClickRouting instances.
+     * \param simnode The Click simclick_node_t instance for which the Ipv4ClickRouting instance is
+     * required
+     * \return A Ptr to the required Ipv4ClickRouting instance
      */
     static Ptr<Ipv4ClickRouting> GetClickInstanceFromSimNode(simclick_node_t* simnode);
 
@@ -149,7 +149,7 @@ class Ipv4ClickRouting : public Ipv4RoutingProtocol
      * \brief Provides for SIMCLICK_GET_DEFINES
      * \return The defines mapping for .click configuration file parsing
      */
-    std::map<std::string, std::string> GetDefines(void);
+    std::map<std::string, std::string> GetDefines();
 
     /**
      * \brief Provides for SIMCLICK_IFID_FROM_NAME
@@ -195,7 +195,7 @@ class Ipv4ClickRouting : public Ipv4RoutingProtocol
      * \brief Set the Ipv4 instance to be used
      * \param ipv4 The Ipv4 instance
      */
-    virtual void SetIpv4(Ptr<Ipv4> ipv4);
+    void SetIpv4(Ptr<Ipv4> ipv4) override;
 
   private:
     /**
@@ -256,23 +256,23 @@ class Ipv4ClickRouting : public Ipv4RoutingProtocol
     void Receive(Ptr<Packet> p, Mac48Address receiverAddr, Mac48Address dest);
 
     // From Ipv4RoutingProtocol
-    virtual Ptr<Ipv4Route> RouteOutput(Ptr<Packet> p,
-                                       const Ipv4Header& header,
-                                       Ptr<NetDevice> oif,
-                                       Socket::SocketErrno& sockerr);
-    virtual bool RouteInput(Ptr<const Packet> p,
-                            const Ipv4Header& header,
-                            Ptr<const NetDevice> idev,
-                            UnicastForwardCallback ucb,
-                            MulticastForwardCallback mcb,
-                            LocalDeliverCallback lcb,
-                            ErrorCallback ecb);
-    virtual void PrintRoutingTable(Ptr<OutputStreamWrapper> stream,
-                                   Time::Unit unit = Time::S) const;
-    virtual void NotifyInterfaceUp(uint32_t interface);
-    virtual void NotifyInterfaceDown(uint32_t interface);
-    virtual void NotifyAddAddress(uint32_t interface, Ipv4InterfaceAddress address);
-    virtual void NotifyRemoveAddress(uint32_t interface, Ipv4InterfaceAddress address);
+    Ptr<Ipv4Route> RouteOutput(Ptr<Packet> p,
+                               const Ipv4Header& header,
+                               Ptr<NetDevice> oif,
+                               Socket::SocketErrno& sockerr) override;
+    bool RouteInput(Ptr<const Packet> p,
+                    const Ipv4Header& header,
+                    Ptr<const NetDevice> idev,
+                    UnicastForwardCallback ucb,
+                    MulticastForwardCallback mcb,
+                    LocalDeliverCallback lcb,
+                    ErrorCallback ecb) override;
+    void PrintRoutingTable(Ptr<OutputStreamWrapper> stream,
+                           Time::Unit unit = Time::S) const override;
+    void NotifyInterfaceUp(uint32_t interface) override;
+    void NotifyInterfaceDown(uint32_t interface) override;
+    void NotifyAddAddress(uint32_t interface, Ipv4InterfaceAddress address) override;
+    void NotifyRemoveAddress(uint32_t interface, Ipv4InterfaceAddress address) override;
 
   private:
     std::string m_clickFile;

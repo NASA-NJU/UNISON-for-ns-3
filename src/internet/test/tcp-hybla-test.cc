@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2015 Natale Patriciello, <natale.patriciello@gmail.com>
  *
@@ -83,7 +82,7 @@ TcpHyblaIncrementTest::TcpHyblaIncrementTest(uint32_t cWnd,
 }
 
 void
-TcpHyblaIncrementTest::RhoUpdated([[maybe_unused]] double oldVal, double newVal)
+TcpHyblaIncrementTest::RhoUpdated(double /* oldVal */, double newVal)
 {
     m_rho = newVal;
 }

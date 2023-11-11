@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2013 ResiliNets, ITTC, University of Kansas
  *
@@ -29,7 +28,7 @@
  * NSF grant CNS-1050226 (Multilayer Network Resilience Analysis and Experimentation on GENI),
  * US Department of Defense (DoD), and ITTC at The University of Kansas.
  *
- * “TCP Westwood(+) Protocol Implementation in ns-3”
+ * "TCP Westwood(+) Protocol Implementation in ns-3"
  * Siddharth Gangadhar, Trúc Anh Ngọc Nguyễn , Greeshma Umapathi, and James P.G. Sterbenz,
  * ICST SIMUTools Workshop on ns-3 (WNS3), Cannes, France, March 2013
  */
@@ -190,7 +189,7 @@ RtoTracer(std::string context, Time oldval, Time newval)
  * \param nextTx Next sequence number.
  */
 static void
-NextTxTracer(std::string context, [[maybe_unused]] SequenceNumber32 old, SequenceNumber32 nextTx)
+NextTxTracer(std::string context, SequenceNumber32 old [[maybe_unused]], SequenceNumber32 nextTx)
 {
     uint32_t nodeId = GetNodeIdFromContext(context);
 
@@ -206,7 +205,7 @@ NextTxTracer(std::string context, [[maybe_unused]] SequenceNumber32 old, Sequenc
  * \param inFlight In flight value.
  */
 static void
-InFlightTracer(std::string context, [[maybe_unused]] uint32_t old, uint32_t inFlight)
+InFlightTracer(std::string context, uint32_t old [[maybe_unused]], uint32_t inFlight)
 {
     uint32_t nodeId = GetNodeIdFromContext(context);
 
@@ -222,7 +221,7 @@ InFlightTracer(std::string context, [[maybe_unused]] uint32_t old, uint32_t inFl
  * \param nextRx Next sequence number.
  */
 static void
-NextRxTracer(std::string context, [[maybe_unused]] SequenceNumber32 old, SequenceNumber32 nextRx)
+NextRxTracer(std::string context, SequenceNumber32 old [[maybe_unused]], SequenceNumber32 nextRx)
 {
     uint32_t nodeId = GetNodeIdFromContext(context);
 
@@ -553,13 +552,13 @@ main(int argc, char* argv[])
     {
         std::ofstream ascii;
         Ptr<OutputStreamWrapper> ascii_wrap;
-        ascii.open((prefix_file_name + "-ascii").c_str());
+        ascii.open(prefix_file_name + "-ascii");
         ascii_wrap = new OutputStreamWrapper(prefix_file_name + "-ascii", std::ios::out);
         stack.EnableAsciiIpv4All(ascii_wrap);
 
         for (uint16_t index = 0; index < num_flows; index++)
         {
-            std::string flowString("");
+            std::string flowString;
             if (num_flows > 1)
             {
                 flowString = "-flow" + std::to_string(index);

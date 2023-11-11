@@ -1,4 +1,3 @@
-/* -*-  Mode: C++; c-file-style: "gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2013 Universita' di Firenze, Italy
  *
@@ -36,8 +35,13 @@
 #include "ns3/udp-socket.h"
 #include "ns3/uinteger.h"
 
-#include <limits>
+#ifdef __WIN32__
+#include "ns3/win32-internet.h"
+#else
 #include <netinet/in.h>
+#endif
+
+#include <limits>
 #include <string>
 
 using namespace ns3;

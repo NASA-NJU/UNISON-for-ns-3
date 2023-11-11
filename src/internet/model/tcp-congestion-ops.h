@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2015 Natale Patriciello <natale.patriciello@gmail.com>
  *
@@ -80,7 +79,7 @@ class TcpCongestionOps : public Object
      *
      * \param tcb internal congestion state
      */
-    virtual void Init([[maybe_unused]] Ptr<TcpSocketState> tcb)
+    virtual void Init(Ptr<TcpSocketState> tcb [[maybe_unused]])
     {
     }
 

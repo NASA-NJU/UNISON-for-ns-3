@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  *  This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
@@ -84,19 +83,19 @@ class ModelTypeidCreator : public AttributeDefaultIterator
      * \param defaultValue default value
      * \param index index of the attribute in the specified Typeid
      */
-    virtual void VisitAttribute(TypeId tid,
-                                std::string name,
-                                std::string defaultValue,
-                                uint32_t index);
+    void VisitAttribute(TypeId tid,
+                        std::string name,
+                        std::string defaultValue,
+                        uint32_t index) override;
     /**
      * \brief Add a node for the new TypeId object
      * \param name TypeId name
      */
-    virtual void StartVisitTypeId(std::string name);
+    void StartVisitTypeId(std::string name) override;
     /**
      * \brief Remove the last gtk tree iterator
      */
-    virtual void EndVisitTypeId(void);
+    void EndVisitTypeId() override;
     /**
      * \brief Adds a treestore iterator to m_treestore model
      * \param node the node to be added
@@ -105,7 +104,7 @@ class ModelTypeidCreator : public AttributeDefaultIterator
     /**
      * Removes the last GtkTreeIterator from m_iters
      */
-    void Remove(void);
+    void Remove();
     /// this is the TreeStore model corresponding to the view
     GtkTreeStore* m_treestore;
     /// This contains a vector of iterators used to build the TreeStore

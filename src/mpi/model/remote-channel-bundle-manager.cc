@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  *  Copyright 2013. Lawrence Livermore National Security, LLC.
  *
@@ -47,7 +46,7 @@ RemoteChannelBundleManager::Find(uint32_t systemId)
 
     if (kv == g_remoteChannelBundles.end())
     {
-        return 0;
+        return nullptr;
     }
     else
     {
@@ -69,13 +68,13 @@ RemoteChannelBundleManager::Add(uint32_t systemId)
 }
 
 std::size_t
-RemoteChannelBundleManager::Size(void)
+RemoteChannelBundleManager::Size()
 {
     return g_remoteChannelBundles.size();
 }
 
 void
-RemoteChannelBundleManager::InitializeNullMessageEvents(void)
+RemoteChannelBundleManager::InitializeNullMessageEvents()
 {
     NS_ASSERT(!g_initialized);
 
@@ -93,7 +92,7 @@ RemoteChannelBundleManager::InitializeNullMessageEvents(void)
 }
 
 Time
-RemoteChannelBundleManager::GetSafeTime(void)
+RemoteChannelBundleManager::GetSafeTime()
 {
     NS_ASSERT(g_initialized);
 
@@ -110,7 +109,7 @@ RemoteChannelBundleManager::GetSafeTime(void)
 }
 
 void
-RemoteChannelBundleManager::Destroy(void)
+RemoteChannelBundleManager::Destroy()
 {
     NS_ASSERT(g_initialized);
 

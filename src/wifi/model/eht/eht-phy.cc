@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2021 DERONNE SOFTWARE ENGINEERING
  *
@@ -223,7 +222,7 @@ EhtPhy::GetEhtMcs(uint8_t index)
 }
 
 #define GET_EHT_MCS(x)                                                                             \
-    WifiMode EhtPhy::GetEhtMcs##x(void)                                                            \
+    WifiMode EhtPhy::GetEhtMcs##x()                                                                \
     {                                                                                              \
         static WifiMode mcs = CreateEhtMcs(x);                                                     \
         return mcs;                                                                                \

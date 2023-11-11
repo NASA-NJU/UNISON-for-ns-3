@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2007, 2008 University of Washington
  *
@@ -37,7 +36,7 @@ NS_LOG_COMPONENT_DEFINE("PointToPointRemoteChannel");
 NS_OBJECT_ENSURE_REGISTERED(PointToPointRemoteChannel);
 
 TypeId
-PointToPointRemoteChannel::GetTypeId(void)
+PointToPointRemoteChannel::GetTypeId()
 {
     static TypeId tid = TypeId("ns3::PointToPointRemoteChannel")
                             .SetParent<PointToPointChannel>()

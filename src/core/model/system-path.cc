@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2008 INRIA
  *
@@ -40,12 +39,16 @@
 // version or require a more up-to-date GCC.
 // we use the "fs" namespace to prevent collisions
 // with musl libc.
-#ifdef __cpp_lib_filesystem
+#ifdef __has_include
+#if __has_include(<filesystem>)
 #include <filesystem>
 namespace fs = std::filesystem;
-#else
+#elif __has_include(<experimental/filesystem>)
 #include <experimental/filesystem>
 namespace fs = std::experimental::filesystem;
+#else
+#error "No support for filesystem library"
+#endif
 #endif
 
 #ifdef __APPLE__
@@ -186,13 +189,13 @@ FindSelfDirectory()
         //  LPTSTR = char *
         DWORD size = 1024;
         LPTSTR lpFilename = (LPTSTR)malloc(sizeof(TCHAR) * size);
-        DWORD status = GetModuleFileName(0, lpFilename, size);
+        DWORD status = GetModuleFileName(nullptr, lpFilename, size);
         while (status == size)
         {
             size = size * 2;
             free(lpFilename);
             lpFilename = (LPTSTR)malloc(sizeof(TCHAR) * size);
-            status = GetModuleFileName(0, lpFilename, size);
+            status = GetModuleFileName(nullptr, lpFilename, size);
         }
         NS_ASSERT(status != 0);
         filename = lpFilename;
@@ -202,7 +205,7 @@ FindSelfDirectory()
     {
         uint32_t bufsize = 1024;
         char* buffer = (char*)malloc(bufsize);
-        NS_ASSERT(buffer != 0);
+        NS_ASSERT(buffer);
         int status = _NSGetExecutablePath(buffer, &bufsize);
         if (status == -1)
         {
@@ -225,7 +228,7 @@ FindSelfDirectory()
         mib[2] = KERN_PROC_PATHNAME;
         mib[3] = -1;
 
-        sysctl(mib, 4, buf, &bufSize, NULL, 0);
+        sysctl(mib, 4, buf, &bufSize, nullptr, 0);
         filename = buf;
     }
 #endif
@@ -315,10 +318,10 @@ MakeTemporaryDirectoryName()
     char* path = nullptr;
 
     path = std::getenv("TMP");
-    if (path == nullptr || std::strlen(path) == 0)
+    if (!path || std::strlen(path) == 0)
     {
         path = std::getenv("TEMP");
-        if (path == nullptr || std::strlen(path) == 0)
+        if (!path || std::strlen(path) == 0)
         {
             path = const_cast<char*>("/tmp");
         }

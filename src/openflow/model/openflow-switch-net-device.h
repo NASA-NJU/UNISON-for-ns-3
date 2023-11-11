@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
@@ -95,7 +94,7 @@ class OpenFlowSwitchNetDevice : public NetDevice
      * Register this type.
      * \return The TypeId.
      */
-    static TypeId GetTypeId(void);
+    static TypeId GetTypeId();
 
     /**
      * \name Descriptive Data
@@ -118,7 +117,7 @@ class OpenFlowSwitchNetDevice : public NetDevice
     /**@}*/
 
     OpenFlowSwitchNetDevice();
-    virtual ~OpenFlowSwitchNetDevice();
+    ~OpenFlowSwitchNetDevice() override;
 
     /**
      * \brief Set up the Switch's controller connection.
@@ -186,9 +185,9 @@ class OpenFlowSwitchNetDevice : public NetDevice
      * \param packet_uid Packet UID; used to fetch the packet and its metadata.
      * \param in_port The index of the port the Packet was initially received on.
      * \param max_len The maximum number of bytes the caller wants to be sent; a value of 0
-     * indicates the entire packet should be sent. Used when outputting to controller. \param
-     * out_port The port we want to output on. \param ignore_no_fwd If true, Ports that are set to
-     * not forward are forced to forward.
+     * indicates the entire packet should be sent. Used when outputting to controller.
+     * \param out_port The port we want to output on.
+     * \param ignore_no_fwd If true, Ports that are set to not forward are forced to forward.
      */
     void DoOutput(uint32_t packet_uid,
                   int in_port,
@@ -213,7 +212,7 @@ class OpenFlowSwitchNetDevice : public NetDevice
     /**
      * \return Number of switch ports attached to this switch.
      */
-    uint32_t GetNSwitchPorts(void) const;
+    uint32_t GetNSwitchPorts() const;
 
     /**
      * \param p The Port to get the index of.
@@ -233,36 +232,36 @@ class OpenFlowSwitchNetDevice : public NetDevice
     vport_table_t GetVPortTable();
 
     // From NetDevice
-    virtual void SetIfIndex(const uint32_t index);
-    virtual uint32_t GetIfIndex(void) const;
-    virtual Ptr<Channel> GetChannel(void) const;
-    virtual void SetAddress(Address address);
-    virtual Address GetAddress(void) const;
-    virtual bool SetMtu(const uint16_t mtu);
-    virtual uint16_t GetMtu(void) const;
-    virtual bool IsLinkUp(void) const;
-    virtual void AddLinkChangeCallback(Callback<void> callback);
-    virtual bool IsBroadcast(void) const;
-    virtual Address GetBroadcast(void) const;
-    virtual bool IsMulticast(void) const;
-    virtual Address GetMulticast(Ipv4Address multicastGroup) const;
-    virtual bool IsPointToPoint(void) const;
-    virtual bool IsBridge(void) const;
-    virtual bool Send(Ptr<Packet> packet, const Address& dest, uint16_t protocolNumber);
-    virtual bool SendFrom(Ptr<Packet> packet,
-                          const Address& source,
-                          const Address& dest,
-                          uint16_t protocolNumber);
-    virtual Ptr<Node> GetNode(void) const;
-    virtual void SetNode(Ptr<Node> node);
-    virtual bool NeedsArp(void) const;
-    virtual void SetReceiveCallback(NetDevice::ReceiveCallback cb);
-    virtual void SetPromiscReceiveCallback(NetDevice::PromiscReceiveCallback cb);
-    virtual bool SupportsSendFrom() const;
-    virtual Address GetMulticast(Ipv6Address addr) const;
+    void SetIfIndex(const uint32_t index) override;
+    uint32_t GetIfIndex() const override;
+    Ptr<Channel> GetChannel() const override;
+    void SetAddress(Address address) override;
+    Address GetAddress() const override;
+    bool SetMtu(const uint16_t mtu) override;
+    uint16_t GetMtu() const override;
+    bool IsLinkUp() const override;
+    void AddLinkChangeCallback(Callback<void> callback) override;
+    bool IsBroadcast() const override;
+    Address GetBroadcast() const override;
+    bool IsMulticast() const override;
+    Address GetMulticast(Ipv4Address multicastGroup) const override;
+    bool IsPointToPoint() const override;
+    bool IsBridge() const override;
+    bool Send(Ptr<Packet> packet, const Address& dest, uint16_t protocolNumber) override;
+    bool SendFrom(Ptr<Packet> packet,
+                  const Address& source,
+                  const Address& dest,
+                  uint16_t protocolNumber) override;
+    Ptr<Node> GetNode() const override;
+    void SetNode(Ptr<Node> node) override;
+    bool NeedsArp() const override;
+    void SetReceiveCallback(NetDevice::ReceiveCallback cb) override;
+    void SetPromiscReceiveCallback(NetDevice::PromiscReceiveCallback cb) override;
+    bool SupportsSendFrom() const override;
+    Address GetMulticast(Ipv6Address addr) const override;
 
   protected:
-    virtual void DoDispose(void);
+    void DoDispose() override;
 
     /**
      * Called when a packet is received on one of the switch's ports.
@@ -322,8 +321,9 @@ class OpenFlowSwitchNetDevice : public NetDevice
      *
      * \param packet_uid Packet UID; used to fetch the packet and its metadata.
      * \param in_port The index of the port the Packet was initially received on. This port doesn't
-     * forward when flooding. \param flood If true, don't send out on the ports with flooding
-     * disabled. \return 0 if everything's ok, otherwise an error number.
+     * forward when flooding.
+     * \param flood If true, don't send out on the ports with flooding disabled.
+     * \return 0 if everything's ok, otherwise an error number.
      */
     int OutputAll(uint32_t packet_uid, int in_port, bool flood);
 
@@ -356,7 +356,8 @@ class OpenFlowSwitchNetDevice : public NetDevice
      * \param packet_uid Packet UID; used to fetch the packet and its metadata.
      * \param in_port The index of the port the Packet was initially received on.
      * \param max_len The maximum number of bytes that the caller wants to be sent; a value of 0
-     * indicates the entire packet should be sent. \param reason Why the packet is being sent.
+     * indicates the entire packet should be sent.
+     * \param reason Why the packet is being sent.
      */
     void OutputControl(uint32_t packet_uid, int in_port, size_t max_len, int reason);
 

@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2009 University of Washington
  *
@@ -134,7 +133,7 @@ class UanPhyDual : public UanPhy
     UanTxMode GetMode(uint32_t n) override;
     void Clear() override;
 
-    void SetSleepMode([[maybe_unused]] bool sleep) override
+    void SetSleepMode(bool /* sleep */) override
     {
         /// \todo This method has to be implemented
     }

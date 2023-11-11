@@ -7,8 +7,8 @@ cmake_minimum_required(VERSION 3.10..3.10)
 mark_as_advanced(CCACHE)
 find_program(CCACHE ccache)
 if(NOT ("${CCACHE}" STREQUAL "CCACHE-NOTFOUND"))
-  set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
   message(STATUS "CCache is enabled.")
+  set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ${CCACHE})
   execute_process(
     COMMAND
       ${CCACHE} --set-config
@@ -66,7 +66,6 @@ option(NS3_NETANIM "Build netanim" OFF)
 
 # other options
 option(NS3_ENABLE_BUILD_VERSION "Embed version info into libraries" OFF)
-option(NS3_GNUPLOT "Build with Gnuplot support" OFF)
 option(NS3_GSL "Build with GSL support" ON)
 option(NS3_GTK3 "Build with GTK3 support" ON)
 option(NS3_LINK_TIME_OPTIMIZATION "Build with link-time optimization" OFF)

@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2012 Centre Tecnologic de Telecomunicacions de Catalunya (CTTC)
  *
@@ -340,7 +339,6 @@ class EpcX2Sap
      * \brief Parameters of the HANDOVER CANCEL message.
      *
      * See section 9.1.1.6 for further info about the parameters
-     *
      */
     struct HandoverCancelParams
     {
@@ -403,7 +401,7 @@ class EpcX2SapProvider : public EpcX2Sap
 
     /**
      * Send resource status update function
-     * \param params the resource statue update paramweters
+     * \param params the resource statue update parameters
      */
     virtual void SendResourceStatusUpdate(ResourceStatusUpdateParams params) = 0;
 
@@ -511,13 +509,13 @@ class EpcX2SpecificEpcX2SapProvider : public EpcX2SapProvider
 
     /**
      * Send handover request function
-     * \param params the hadnover request parameters
+     * \param params the handover request parameters
      */
     void SendHandoverRequest(HandoverRequestParams params) override;
 
     /**
      * Send handover request ack function
-     * \param params the handover request ack pararameters
+     * \param params the handover request ack parameters
      */
     void SendHandoverRequestAck(HandoverRequestAckParams params) override;
 

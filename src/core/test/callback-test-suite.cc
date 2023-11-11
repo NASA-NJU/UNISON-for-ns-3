@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2009 University of Washington
  *
@@ -70,7 +69,7 @@ class BasicCallbackTestCase : public TestCase
      * Callback 3 target function.
      * \param a A parameter (unused).
      */
-    void Target3([[maybe_unused]] double a)
+    void Target3(double a [[maybe_unused]])
     {
         m_test3 = true;
     }
@@ -81,7 +80,7 @@ class BasicCallbackTestCase : public TestCase
      * \param b Another parameter (unused).
      * \return four.
      */
-    int Target4([[maybe_unused]] double a, [[maybe_unused]] int b)
+    int Target4(double a [[maybe_unused]], int b [[maybe_unused]])
     {
         m_test4 = true;
         return 4;
@@ -267,7 +266,7 @@ class MakeCallbackTestCase : public TestCase
      * Callback 3 target function.
      * \param a A parameter (unused).
      */
-    void Target3([[maybe_unused]] double a)
+    void Target3(double a [[maybe_unused]])
     {
         m_test3 = true;
     }
@@ -278,7 +277,7 @@ class MakeCallbackTestCase : public TestCase
      * \param b Another parameter (unused).
      * \return four.
      */
-    int Target4([[maybe_unused]] double a, [[maybe_unused]] int b)
+    int Target4(double a [[maybe_unused]], int b [[maybe_unused]])
     {
         m_test4 = true;
         return 4;

@@ -1,4 +1,3 @@
-/* -*-  Mode: C++; c-file-style: "gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2011-2013 Centre Tecnologic de Telecomunicacions de Catalunya (CTTC)
  *
@@ -246,7 +245,7 @@ LenaDataPhyErrorModelTestCase::DoRun()
 
         double dlRxPackets = rlcStats->GetDlRxPackets(imsi, lcId);
         double dlTxPackets = rlcStats->GetDlTxPackets(imsi, lcId);
-        [[maybe_unused]] double dlBler = 1.0 - (dlRxPackets / dlTxPackets);
+        double dlBler [[maybe_unused]] = 1.0 - (dlRxPackets / dlTxPackets);
         double expectedDlRxPackets = dlTxPackets - dlTxPackets * m_blerRef;
         NS_LOG_INFO("\tUser " << i << " imsi " << imsi << " DOWNLINK"
                               << " pkts rx " << dlRxPackets << " tx " << dlTxPackets << " BLER "
@@ -408,7 +407,7 @@ LenaDlCtrlPhyErrorModelTestCase::DoRun()
         uint8_t lcId = 3;
         double dlRxPackets = rlcStats->GetDlRxPackets(imsi, lcId);
         double dlTxPackets = rlcStats->GetDlTxPackets(imsi, lcId);
-        [[maybe_unused]] double dlBler = 1.0 - (dlRxPackets / dlTxPackets);
+        double dlBler [[maybe_unused]] = 1.0 - (dlRxPackets / dlTxPackets);
         double expectedDlRxPackets = dlTxPackets - dlTxPackets * m_blerRef;
         NS_LOG_INFO("\tUser " << i << " imsi " << imsi << " DOWNLINK"
                               << " pkts rx " << dlRxPackets << " tx " << dlTxPackets << " BLER "

@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2017 Kungliga Tekniska Högskolan
  *               2017 Universita' degli Studi di Napoli Federico II
@@ -105,9 +104,11 @@ class TbfQueueDiscTestCase : public TestCase
     void Enqueue(Ptr<TbfQueueDisc> queue, Address dest, uint32_t size);
     /**
      * DequeueAndCheck function to check if a packet is blocked or not after dequeuing and verify
-     * against expected result \param queue the queue disc on which DequeueAndCheck needs to be done
-     * \param flag the boolean value against which the return value of dequeue () has to be compared
-     * with \param printStatement the string to be printed in the NS_TEST_EXPECT_MSG_EQ
+     * against expected result
+     * \param queue the queue disc on which DequeueAndCheck needs to be done
+     * \param flag the boolean value against which the return value of dequeue ()
+     * has to be compared with
+     * \param printStatement the string to be printed in the NS_TEST_EXPECT_MSG_EQ
      */
     void DequeueAndCheck(Ptr<TbfQueueDisc> queue, bool flag, std::string printStatement);
     /**

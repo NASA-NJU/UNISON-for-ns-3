@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2014 Natale Patriciello <natale.patriciello@gmail.com>
  *
@@ -383,9 +382,6 @@ TcpHeaderWithRFC793OptionTestCase::OneOptionAtTime()
 void
 TcpHeaderWithRFC793OptionTestCase::DoTeardown()
 {
-    uint32_t foo;
-    foo = UINT32_MAX;
-    foo--;
 }
 
 /**

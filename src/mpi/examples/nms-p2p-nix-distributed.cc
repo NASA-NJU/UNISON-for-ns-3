@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
@@ -137,7 +136,9 @@ main(int argc, char* argv[])
         nCN,
         vectorOfVectorOfNodeContainer(5, vectorOfNodeContainer(nLANClients)));
 
-    PointToPointHelper p2p_2gb200ms, p2p_1gb5ms, p2p_100mb1ms;
+    PointToPointHelper p2p_2gb200ms;
+    PointToPointHelper p2p_1gb5ms;
+    PointToPointHelper p2p_100mb1ms;
     InternetStackHelper stack;
 
     Ipv4InterfaceContainer ifs;
@@ -311,7 +312,12 @@ main(int argc, char* argv[])
         NetDeviceContainer ndcLR;
         ndcLR = p2p_1gb5ms.Install(nodes_netLR[z]);
         // Connect Net2/Net3 through Lone Routers to Net0
-        NodeContainer net0_4, net0_5, net2_4a, net2_4b, net3_5a, net3_5b;
+        NodeContainer net0_4;
+        NodeContainer net0_5;
+        NodeContainer net2_4a;
+        NodeContainer net2_4b;
+        NodeContainer net3_5a;
+        NodeContainer net3_5b;
         net0_4.Add(nodes_netLR[z].Get(0));
         net0_4.Add(nodes_net0[z][0].Get(0));
         net0_5.Add(nodes_netLR[z].Get(1));
@@ -324,7 +330,12 @@ main(int argc, char* argv[])
         net3_5a.Add(nodes_net3[z][0].Get(0));
         net3_5b.Add(nodes_netLR[z].Get(1));
         net3_5b.Add(nodes_net3[z][1].Get(0));
-        NetDeviceContainer ndc0_4, ndc0_5, ndc2_4a, ndc2_4b, ndc3_5a, ndc3_5b;
+        NetDeviceContainer ndc0_4;
+        NetDeviceContainer ndc0_5;
+        NetDeviceContainer ndc2_4a;
+        NetDeviceContainer ndc2_4b;
+        NetDeviceContainer ndc3_5a;
+        NetDeviceContainer ndc3_5b;
         ndc0_4 = p2p_1gb5ms.Install(net0_4);
         oss.str("");
         oss << 10 + z << ".1.253.0";

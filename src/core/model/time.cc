@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2005,2006 INRIA
  * Copyright (c) 2007 Emmanuelle Laprise
@@ -246,11 +245,20 @@ Time::SetResolution(enum Unit unit, struct Resolution* resolution, const bool co
         NS_LOG_DEBUG("SetResolution for unit " << (int)unit << " loop iteration " << i
                                                << " has shift " << shift << " has quotient "
                                                << quotient);
+
+        struct Information* info = &resolution->info[i];
+        if ((std::pow(10, std::fabs(shift)) * quotient) >
+            static_cast<double>(std::numeric_limits<int64_t>::max()))
+        {
+            NS_LOG_DEBUG("SetResolution for unit " << (int)unit << " loop iteration " << i
+                                                   << " marked as INVALID");
+            info->isValid = false;
+            continue;
+        }
         int64_t factor = static_cast<int64_t>(std::pow(10, std::fabs(shift)) * quotient);
         double realFactor = std::pow(10, (double)shift) * static_cast<double>(UNIT_COEFF[i]) /
                             UNIT_COEFF[(int)unit];
         NS_LOG_DEBUG("SetResolution factor " << factor << " real factor " << realFactor);
-        struct Information* info = &resolution->info[i];
         info->factor = factor;
         // here we could equivalently check for realFactor == 1.0 but it's better
         // to avoid checking equality of doubles
@@ -260,6 +268,7 @@ Time::SetResolution(enum Unit unit, struct Resolution* resolution, const bool co
             info->timeTo = int64x64_t(1);
             info->toMul = true;
             info->fromMul = true;
+            info->isValid = true;
         }
         else if (realFactor > 1)
         {
@@ -267,6 +276,7 @@ Time::SetResolution(enum Unit unit, struct Resolution* resolution, const bool co
             info->timeTo = int64x64_t::Invert(factor);
             info->toMul = false;
             info->fromMul = true;
+            info->isValid = true;
         }
         else
         {
@@ -275,6 +285,7 @@ Time::SetResolution(enum Unit unit, struct Resolution* resolution, const bool co
             info->timeTo = int64x64_t(factor);
             info->toMul = true;
             info->fromMul = false;
+            info->isValid = true;
         }
     }
     resolution->unit = unit;

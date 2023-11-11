@@ -1,4 +1,3 @@
-/* -*-  Mode: C++; c-file-style: "gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2015 Danilo Abrignani
  * Copyright (c) 2016 Centre Tecnologic de Telecomunicacions de Catalunya (CTTC)
@@ -476,7 +475,7 @@ RrComponentCarrierManager::DoUlReceiveMacCe(MacCeListElement_s bsr, uint8_t comp
 }
 
 void
-RrComponentCarrierManager::DoUlReceiveSr(uint16_t rnti, [[maybe_unused]] uint8_t componentCarrierId)
+RrComponentCarrierManager::DoUlReceiveSr(uint16_t rnti, uint8_t /* componentCarrierId */)
 {
     NS_LOG_FUNCTION(this);
     // split traffic in uplink equally among carriers

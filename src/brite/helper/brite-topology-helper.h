@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
@@ -36,6 +35,7 @@ namespace ns3
 {
 
 class PointToPointHelper;
+class Ipv4AddressHelper;
 
 /**
  * \defgroup brite BRITE Topology Generator
@@ -89,14 +89,13 @@ class BriteTopologyHelper
      * generate brite seed file
      *
      * \param streamNumber the stream number to assign
-     *
      */
     void AssignStreams(int64_t streamNumber);
 
     /**
-     *  Create NS3 topology using information generated from BRITE.
+     * Create NS3 topology using information generated from BRITE.
      *
-     *  \param stack Internet stack to assign to nodes in topology
+     * \param stack Internet stack to assign to nodes in topology
      */
     void BuildBriteTopology(InternetStackHelper& stack);
 
@@ -106,7 +105,6 @@ class BriteTopologyHelper
      *
      * \param stack Internet stack to assign to nodes in topology.
      * \param systemCount The number of MPI instances to be used in the simulation.
-     *
      */
     void BuildBriteTopology(InternetStackHelper& stack, const uint32_t systemCount);
 
@@ -115,7 +113,6 @@ class BriteTopologyHelper
      *
      * \param asNum the AS number
      * \returns the number of leaf nodes in the specified AS
-     *
      */
     uint32_t GetNLeafNodesForAs(uint32_t asNum);
 
@@ -142,7 +139,6 @@ class BriteTopologyHelper
      * \param asNum the AS number
      * \param nodeNum the Node number
      * \return the specified node
-     *
      */
     Ptr<Node> GetNodeForAs(uint32_t asNum, uint32_t nodeNum);
 
@@ -151,7 +147,7 @@ class BriteTopologyHelper
      *
      * \returns the number of AS created in the topology
      */
-    uint32_t GetNAs(void) const;
+    uint32_t GetNAs() const;
 
     /**
      * Returns the system number for the MPI instance that this AS is assigned to.  Will always
@@ -164,6 +160,8 @@ class BriteTopologyHelper
     uint32_t GetSystemNumberForAs(uint32_t asNum) const;
 
     /**
+     * Assign IPv4 addresses.
+     *
      * \param address an Ipv4AddressHelper which is used to install
      *                IPv4 addresses on all the node interfaces in
      *                the topology
@@ -171,6 +169,8 @@ class BriteTopologyHelper
     void AssignIpv4Addresses(Ipv4AddressHelper& address);
 
     /**
+     * Assign IPv6 addresses.
+     *
      * \param address an Ipv6AddressHelper which is used to install
      *                IPv6 addresses on all the node interfaces in
      *                the topology
@@ -242,13 +242,13 @@ class BriteTopologyHelper
     NodeContainer m_nodes;
 
     /// Build the Node Info list
-    void BuildBriteNodeInfoList(void);
+    void BuildBriteNodeInfoList();
     /// Build the Edge Info list
-    void BuildBriteEdgeInfoList(void);
+    void BuildBriteEdgeInfoList();
     /// Construct the topology.
-    void ConstructTopology(void);
+    void ConstructTopology();
     /// Generate the BRITE topology.
-    void GenerateBriteTopology(void);
+    void GenerateBriteTopology();
 
     /// brite configuration file to use
     std::string m_confFile;

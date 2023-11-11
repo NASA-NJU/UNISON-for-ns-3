@@ -12,6 +12,7 @@ check-style-clang-format:
       clang-format-14
   script:
     - python3 utils/check-style-clang-format.py .
+  timeout: 3h
 
 clang-tidy:
   stage: code-linting
@@ -22,5 +23,14 @@ clang-tidy:
       clang cmake
       clang-tidy-14
   script:
-    - ./ns3 configure --enable-examples --enable-tests --enable-clang-tidy
+    - ./ns3 configure --enable-clang-tidy -d debug --enable-examples --enable-tests
     - run-clang-tidy-14 -p cmake-cache/ -quiet
+      1> clang-tidy-errors.log
+      2> /dev/null
+    - (! egrep -A 3 "error:|warning:" clang-tidy-errors.log)
+    - echo "No clang-tidy errors found"
+  artifacts:
+    paths:
+      - clang-tidy-errors.log
+    when: on_failure
+  timeout: 3h

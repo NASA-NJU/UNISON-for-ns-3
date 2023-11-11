@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2007,2008, 2009 INRIA, UDcast
  *
@@ -120,8 +119,9 @@ class WimaxConnection : public Object
     bool HasPackets() const;
     /**
      * \return true if the connection has at least one packet of type packetType in its queue, false
-     * otherwise \param packetType type of packet to check in the queue \return true if packets
-     * available
+     * otherwise
+     * \param packetType type of packet to check in the queue
+     * \return true if packets available
      */
     bool HasPackets(MacHeaderType::HeaderType packetType) const;
 

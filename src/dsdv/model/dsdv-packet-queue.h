@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2010 Hemanth Narra
  *
@@ -207,7 +206,9 @@ class PacketQueue
 
     /**
      * Push entry in queue, if there is no entry with the same packet and destination address in
-     * queue. \param entry QueueEntry to compare \return true if successful
+     * queue.
+     * \param entry QueueEntry to compare
+     * \return true if successful
      */
     bool Enqueue(QueueEntry& entry);
     /**

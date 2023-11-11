@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2020 Orange Labs
  *
@@ -202,7 +201,8 @@ class DsssPhy : public PhyEntity
      *
      * \param uniqueName the unique name of the WifiMode
      * \param modClass the modulation class of the WifiMode, must be either WIFI_MOD_CLASS_DSSS or
-     * WIFI_MOD_CLASS_HR_DSSS \return the DSSS or HR/DSSS WifiMode
+     * WIFI_MOD_CLASS_HR_DSSS
+     * \return the DSSS or HR/DSSS WifiMode
      */
     static WifiMode CreateDsssMode(std::string uniqueName, WifiModulationClass modClass);
 

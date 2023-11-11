@@ -26,6 +26,10 @@ the ".clang-format" file. This script performs the following checks / fixes:
 - Check / trim trailing whitespace.
 - Check / replace tabs with spaces.
 
+The clang-format and tabs checks respect clang-format guards, which mark code blocks
+that should not be checked. Trailing whitespace is always checked regardless of
+clang-format guards.
+
 This script can be applied to all text files in a given path or to individual files.
 
 NOTE: The formatting check requires clang-format (version >= 14) to be found on the path.
@@ -47,10 +51,13 @@ from typing import List, Tuple
 # PARAMETERS
 ###########################################################
 CLANG_FORMAT_VERSIONS = [
-    14,
-    15,
     16,
+    15,
+    14,
 ]
+
+CLANG_FORMAT_GUARD_ON = '// clang-format on'
+CLANG_FORMAT_GUARD_OFF = '// clang-format off'
 
 DIRECTORIES_TO_SKIP = [
     '__pycache__',
@@ -59,6 +66,12 @@ DIRECTORIES_TO_SKIP = [
     'build',
     'cmake-cache',
     'testpy-output',
+]
+
+# List of files entirely copied from elsewhere that should not be checked,
+# in order to optimize the performance of this script
+FILES_TO_SKIP = [
+    'valgrind.h',
 ]
 
 FILE_EXTENSIONS_TO_CHECK_FORMATTING = [
@@ -71,6 +84,7 @@ FILE_EXTENSIONS_TO_CHECK_WHITESPACE = [
     '.c',
     '.cc',
     '.click',
+    '.cmake',
     '.conf',
     '.css',
     '.dot',
@@ -127,46 +141,61 @@ def skip_directory(dirpath: str) -> bool:
 
     _, directory = os.path.split(dirpath)
 
-    return directory in DIRECTORIES_TO_SKIP or \
-        (directory.startswith('.') and directory != '.')
+    return (directory in DIRECTORIES_TO_SKIP or
+            (directory.startswith('.') and directory != '.'))
 
 
-def skip_file_formatting(filename: str) -> bool:
+def skip_file_formatting(path: str) -> bool:
     """
     Check if a file should be skipped from formatting analysis.
 
-    @param filename Name of the file.
+    @param path Path to the file.
     @return Whether the file should be skipped or not.
     """
 
-    _, extension = os.path.splitext(os.path.split(filename)[1])
+    filename = os.path.split(path)[1]
+
+    if filename in FILES_TO_SKIP:
+        return True
+
+    _, extension = os.path.splitext(filename)
 
     return extension not in FILE_EXTENSIONS_TO_CHECK_FORMATTING
 
 
-def skip_file_whitespace(filename: str) -> bool:
+def skip_file_whitespace(path: str) -> bool:
     """
     Check if a file should be skipped from trailing whitespace analysis.
 
-    @param filename Name of the file.
+    @param path Path to the file.
     @return Whether the file should be skipped or not.
     """
 
-    basename, extension = os.path.splitext(os.path.split(filename)[1])
+    filename = os.path.split(path)[1]
 
-    return basename not in FILES_TO_CHECK_WHITESPACE and \
-        extension not in FILE_EXTENSIONS_TO_CHECK_WHITESPACE
+    if filename in FILES_TO_SKIP:
+        return True
+
+    basename, extension = os.path.splitext(filename)
+
+    return (basename not in FILES_TO_CHECK_WHITESPACE and
+            extension not in FILE_EXTENSIONS_TO_CHECK_WHITESPACE)
 
 
-def skip_file_tabs(filename: str) -> bool:
+def skip_file_tabs(path: str) -> bool:
     """
     Check if a file should be skipped from tabs analysis.
 
-    @param filename Name of the file.
+    @param path Path to the file.
     @return Whether the file should be skipped or not.
     """
 
-    _, extension = os.path.splitext(os.path.split(filename)[1])
+    filename = os.path.split(path)[1]
+
+    if filename in FILES_TO_SKIP:
+        return True
+
+    _, extension = os.path.splitext(filename)
 
     return extension not in FILE_EXTENSIONS_TO_CHECK_TABS
 
@@ -234,12 +263,31 @@ def find_clang_format_path() -> str:
     @return Path to clang-format.
     """
 
+    # Find exact version
     for version in CLANG_FORMAT_VERSIONS:
         clang_format_path = shutil.which(f'clang-format-{version}')
 
         if clang_format_path:
             return clang_format_path
 
+    # Find default version and check if it is supported
+    clang_format_path = shutil.which('clang-format')
+
+    if clang_format_path:
+        process = subprocess.run(
+            [clang_format_path, '--version'],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+
+        version = process.stdout.strip().split(' ')[-1]
+        major_version = int(version.split('.')[0])
+
+        if major_version in CLANG_FORMAT_VERSIONS:
+            return clang_format_path
+
+    # No supported version of clang-format found
     raise RuntimeError(
         f'Could not find any supported version of clang-format installed on this system. '
         f'List of supported versions: {CLANG_FORMAT_VERSIONS}.'
@@ -290,7 +338,7 @@ def check_style(path: str,
         print('')
 
     if enable_check_tabs:
-        check_whitespace_successful = check_tabs(
+        check_tabs_successful = check_tabs(
             files_to_check_tabs, fix, n_jobs)
 
     if check_formatting_successful and \
@@ -554,12 +602,26 @@ def check_tabs_file(filename: str, fix: bool) -> Tuple[str, bool]:
     """
 
     has_tabs = False
+    clang_format_enabled = True
 
     with open(filename, 'r', encoding='utf-8') as f:
         file_lines = f.readlines()
 
-    # Check if there are tabs and fix them
     for (i, line) in enumerate(file_lines):
+
+        # Check clang-format guards
+        line_stripped = line.strip()
+
+        if line_stripped == CLANG_FORMAT_GUARD_ON:
+            clang_format_enabled = True
+        elif line_stripped == CLANG_FORMAT_GUARD_OFF:
+            clang_format_enabled = False
+
+        if (not clang_format_enabled and
+                line_stripped not in (CLANG_FORMAT_GUARD_ON, CLANG_FORMAT_GUARD_OFF)):
+            continue
+
+        # Check if there are tabs and fix them
         if line.find('\t') != -1:
             has_tabs = True
 
@@ -586,6 +648,7 @@ if __name__ == '__main__':
         description='Check and apply the ns-3 coding style to all files in a given PATH. '
         'The script checks the formatting of the file with clang-format. '
         'Additionally, it checks the presence of trailing whitespace and tabs. '
+        'Formatting and tabs checks respect clang-format guards. '
         'When used in "check mode" (default), the script checks if all files are well '
         'formatted and do not have trailing whitespace nor tabs. '
         'If it detects non-formatted files, they will be printed and this process exits with a '

@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2008 INRIA
  *
@@ -650,7 +649,7 @@ class ObjectVectorTraceConfigTestCase : public TestCase
      * \param oldValue The old value.
      * \param newValue The new value.
      */
-    void Trace([[maybe_unused]] int16_t oldValue, int16_t newValue)
+    void Trace(int16_t oldValue [[maybe_unused]], int16_t newValue)
     {
         m_newValue = newValue;
     }
@@ -661,7 +660,7 @@ class ObjectVectorTraceConfigTestCase : public TestCase
      * \param old The old value.
      * \param newValue The new value.
      */
-    void TraceWithPath(std::string path, [[maybe_unused]] int16_t old, int16_t newValue)
+    void TraceWithPath(std::string path, int16_t old [[maybe_unused]], int16_t newValue)
     {
         m_newValue = newValue;
         m_path = path;

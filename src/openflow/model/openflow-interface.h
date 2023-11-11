@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
@@ -78,19 +77,25 @@ extern "C"
 }
 
 // Capabilities supported by this implementation.
+#ifndef OFP_SUPPORTED_CAPABILITIES
 #define OFP_SUPPORTED_CAPABILITIES                                                                 \
     (OFPC_FLOW_STATS | OFPC_TABLE_STATS | OFPC_PORT_STATS | OFPC_MULTI_PHY_TX | OFPC_VPORT_TABLE)
+#endif
 
 // Actions supported by this implementation.
+#ifndef OFP_SUPPORTED_ACTIONS
 #define OFP_SUPPORTED_ACTIONS                                                                      \
     ((1 << OFPAT_OUTPUT) | (1 << OFPAT_SET_VLAN_VID) | (1 << OFPAT_SET_VLAN_PCP) |                 \
      (1 << OFPAT_STRIP_VLAN) | (1 << OFPAT_SET_DL_SRC) | (1 << OFPAT_SET_DL_DST) |                 \
      (1 << OFPAT_SET_NW_SRC) | (1 << OFPAT_SET_NW_DST) | (1 << OFPAT_SET_TP_SRC) |                 \
      (1 << OFPAT_SET_TP_DST) | (1 << OFPAT_SET_MPLS_LABEL) | (1 << OFPAT_SET_MPLS_EXP))
+#endif
 
+#ifndef OFP_SUPPORTED_VPORT_TABLE_ACTIONS
 #define OFP_SUPPORTED_VPORT_TABLE_ACTIONS                                                          \
     ((1 << OFPPAT_OUTPUT) | (1 << OFPPAT_POP_MPLS) | (1 << OFPPAT_PUSH_MPLS) |                     \
      (1 << OFPPAT_SET_MPLS_LABEL) | (1 << OFPPAT_SET_MPLS_EXP))
+#endif
 
 namespace ns3
 {
@@ -114,7 +119,7 @@ struct Port
     Port()
         : config(0),
           state(0),
-          netdev(0),
+          netdev(nullptr),
           rx_packets(0),
           tx_packets(0),
           rx_bytes(0),
@@ -398,9 +403,9 @@ class Controller : public Object
      * Register this type.
      * \return The TypeId.
      */
-    static TypeId GetTypeId(void);
+    static TypeId GetTypeId();
     /** Destructor. */
-    virtual ~Controller();
+    ~Controller() override;
 
     /**
      * Adds a switch to the controller.
@@ -456,12 +461,15 @@ class Controller : public Object
      *
      * \param key The matching key data; used to create a flow that matches the packet.
      * \param buffer_id The OpenFlow Buffer ID; used to run the actions on the packet if we add or
-     * modify the flow. \param command Whether to add, modify, or delete this flow. \param acts List
-     * of actions to execute. \param actions_len Length of the actions buffer. \param idle_timeout
-     * Flow expires if left inactive for this amount of time (specify OFP_FLOW_PERMANENT to disable
-     * feature). \param hard_timeout Flow expires after this amount of time (specify
-     * OFP_FLOW_PERMANENT to disable feature). \return Flow data that when passed to SetFlow will
-     * add, modify, or delete a flow it defines.
+     * modify the flow.
+     * \param command Whether to add, modify, or delete this flow.
+     * \param acts List of actions to execute.
+     * \param actions_len Length of the actions buffer.
+     * \param idle_timeout Flow expires if left inactive for this amount of time (specify
+     * OFP_FLOW_PERMANENT to disable feature).
+     * \param hard_timeout Flow expires after this amount of time (specify OFP_FLOW_PERMANENT to
+     * disable feature).
+     * \return Flow data that when passed to SetFlow will add, modify, or delete a flow it defines.
      */
     ofp_flow_mod* BuildFlow(sw_flow_key key,
                             uint32_t buffer_id,
@@ -498,9 +506,9 @@ class DropController : public Controller
      * Register this type.
      * \return The TypeId.
      */
-    static TypeId GetTypeId(void);
+    static TypeId GetTypeId();
 
-    void ReceiveFromSwitch(Ptr<OpenFlowSwitchNetDevice> swtch, ofpbuf* buffer);
+    void ReceiveFromSwitch(Ptr<OpenFlowSwitchNetDevice> swtch, ofpbuf* buffer) override;
 };
 
 /**
@@ -518,14 +526,14 @@ class LearningController : public Controller
      * Register this type.
      * \return The TypeId.
      */
-    static TypeId GetTypeId(void);
+    static TypeId GetTypeId();
 
-    virtual ~LearningController()
+    ~LearningController() override
     {
         m_learnState.clear();
     }
 
-    void ReceiveFromSwitch(Ptr<OpenFlowSwitchNetDevice> swtch, ofpbuf* buffer);
+    void ReceiveFromSwitch(Ptr<OpenFlowSwitchNetDevice> swtch, ofpbuf* buffer) override;
 
   protected:
     /// Learned state

@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2008 INRIA
  * Copyright (c) 2009 MIRKO BANCHI
@@ -83,11 +82,11 @@ Wifi80211pHelper::Install(const WifiPhyHelper& phyHelper,
                           const WifiMacHelper& macHelper,
                           NodeContainer c) const
 {
-    [[maybe_unused]] const QosWaveMacHelper* qosMac =
+    const QosWaveMacHelper* qosMac [[maybe_unused]] =
         dynamic_cast<const QosWaveMacHelper*>(&macHelper);
     if (qosMac == nullptr)
     {
-        [[maybe_unused]] const NqosWaveMacHelper* nqosMac =
+        const NqosWaveMacHelper* nqosMac [[maybe_unused]] =
             dynamic_cast<const NqosWaveMacHelper*>(&macHelper);
         if (nqosMac == nullptr)
         {

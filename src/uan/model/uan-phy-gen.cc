@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2009 University of Washington
  *
@@ -834,7 +833,7 @@ UanPhyGen::StartRxPacket(Ptr<Packet> pkt, double rxPowerDb, UanTxMode txMode, Ua
 }
 
 void
-UanPhyGen::RxEndEvent(Ptr<Packet> pkt, [[maybe_unused]] double rxPowerDb, UanTxMode txMode)
+UanPhyGen::RxEndEvent(Ptr<Packet> pkt, double /* rxPowerDb */, UanTxMode txMode)
 {
     if (pkt != m_pktRx)
     {
@@ -1049,9 +1048,9 @@ UanPhyGen::AssignStreams(int64_t stream)
 }
 
 void
-UanPhyGen::NotifyTransStartTx(Ptr<Packet> packet,
-                              [[maybe_unused]] double txPowerDb,
-                              UanTxMode txMode)
+UanPhyGen::NotifyTransStartTx(Ptr<Packet> /* packet */,
+                              double /* txPowerDb */,
+                              UanTxMode /* txMode */)
 {
     if (m_pktRx)
     {

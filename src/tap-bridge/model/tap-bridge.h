@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2009 University of Washington
  *
@@ -23,6 +22,7 @@
 #include "ns3/callback.h"
 #include "ns3/data-rate.h"
 #include "ns3/event-id.h"
+#include "ns3/fd-reader.h"
 #include "ns3/mac48-address.h"
 #include "ns3/net-device.h"
 #include "ns3/node.h"
@@ -30,7 +30,6 @@
 #include "ns3/packet.h"
 #include "ns3/ptr.h"
 #include "ns3/traced-callback.h"
-#include "ns3/unix-fd-reader.h"
 
 #include <cstring>
 

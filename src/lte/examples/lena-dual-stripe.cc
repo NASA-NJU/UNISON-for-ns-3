@@ -1,4 +1,3 @@
-/* -*-  Mode: C++; c-file-style: "gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2012 Centre Tecnologic de Telecomunicacions de Catalunya (CTTC)
  *
@@ -82,7 +81,9 @@ class FemtocellBlockAllocator
   private:
     /**
      * Function that checks if the box area is overlapping with some of previously created building
-     * blocks. \param box the area to check \returns true if there is an overlap
+     * blocks.
+     * \param box the area to check
+     * \returns true if there is an overlap
      */
     bool OverlapsWithAnyPrevious(Box box);
     Box m_area;                           ///< Area
@@ -176,7 +177,7 @@ void
 PrintGnuplottableBuildingListToFile(std::string filename)
 {
     std::ofstream outFile;
-    outFile.open(filename.c_str(), std::ios_base::out | std::ios_base::trunc);
+    outFile.open(filename, std::ios_base::out | std::ios_base::trunc);
     if (!outFile.is_open())
     {
         NS_LOG_ERROR("Can't open file " << filename);
@@ -201,7 +202,7 @@ void
 PrintGnuplottableUeListToFile(std::string filename)
 {
     std::ofstream outFile;
-    outFile.open(filename.c_str(), std::ios_base::out | std::ios_base::trunc);
+    outFile.open(filename, std::ios_base::out | std::ios_base::trunc);
     if (!outFile.is_open())
     {
         NS_LOG_ERROR("Can't open file " << filename);
@@ -235,7 +236,7 @@ void
 PrintGnuplottableEnbListToFile(std::string filename)
 {
     std::ofstream outFile;
-    outFile.open(filename.c_str(), std::ios_base::out | std::ios_base::trunc);
+    outFile.open(filename, std::ios_base::out | std::ios_base::trunc);
     if (!outFile.is_open())
     {
         NS_LOG_ERROR("Can't open file " << filename);

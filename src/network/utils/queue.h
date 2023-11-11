@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2007 University of Washington
  *
@@ -198,20 +197,20 @@ class QueueBase : public Object
   // Hence, it is disabled by default and must be explicitly
   // enabled with this method which specifies the size
   // of the average window in time units.
-  void EnableRunningAverage (Time averageWindow);
-  void DisableRunningAverage (void);
+  void EnableRunningAverage(Time averageWindow);
+  void DisableRunningAverage();
   // average
-  double GetQueueSizeAverage (void);
-  double GetReceivedBytesPerSecondAverage (void);
-  double GetReceivedPacketsPerSecondAverage (void);
-  double GetDroppedBytesPerSecondAverage (void);
-  double GetDroppedPacketsPerSecondAverage (void);
+  double GetQueueSizeAverage();
+  double GetReceivedBytesPerSecondAverage();
+  double GetReceivedPacketsPerSecondAverage();
+  double GetDroppedBytesPerSecondAverage();
+  double GetDroppedPacketsPerSecondAverage();
   // variance
-  double GetQueueSizeVariance (void);
-  double GetReceivedBytesPerSecondVariance (void);
-  double GetReceivedPacketsPerSecondVariance (void);
-  double GetDroppedBytesPerSecondVariance (void);
-  double GetDroppedPacketsPerSecondVariance (void);
+  double GetQueueSizeVariance();
+  double GetReceivedBytesPerSecondVariance();
+  double GetReceivedPacketsPerSecondVariance();
+  double GetDroppedBytesPerSecondVariance();
+  double GetDroppedPacketsPerSecondVariance();
 #endif
 
   protected:

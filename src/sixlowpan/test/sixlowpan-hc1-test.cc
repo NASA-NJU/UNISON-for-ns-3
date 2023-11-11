@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2013 Universita' di Firenze, Italy
  *
@@ -96,13 +95,9 @@ SixlowpanHc1ImplTest::ReceivePacket(Ptr<Socket> socket, Ptr<Packet> packet, cons
 void
 SixlowpanHc1ImplTest::ReceivePkt(Ptr<Socket> socket)
 {
-    uint32_t availableData;
-    availableData = socket->GetRxAvailable();
+    uint32_t availableData [[maybe_unused]] = socket->GetRxAvailable();
     m_receivedPacket = socket->Recv(std::numeric_limits<uint32_t>::max(), 0);
     NS_ASSERT(availableData == m_receivedPacket->GetSize());
-    // cast availableData to void, to suppress 'availableData' set but not used
-    // compiler warning
-    (void)availableData;
 }
 
 void

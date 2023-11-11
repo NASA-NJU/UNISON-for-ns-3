@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2007, 2014 University of Washington
  *               2015 Universita' degli Studi di Napoli Federico II
@@ -399,7 +398,7 @@ QueueDisc::DoInitialize()
     NS_LOG_FUNCTION(this);
 
     // Check the configuration and initialize the parameters of this queue disc
-    [[maybe_unused]] bool ok = CheckConfig();
+    bool ok [[maybe_unused]] = CheckConfig();
     NS_ASSERT_MSG(ok, "The queue disc configuration is not correct");
     InitializeParams();
 

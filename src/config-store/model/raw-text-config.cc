@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2009 INRIA
  *
@@ -60,7 +59,7 @@ RawTextConfigSave::SetFilename(std::string filename)
 {
     NS_LOG_FUNCTION(this << filename);
     m_os = new std::ofstream();
-    m_os->open(filename.c_str(), std::ios::out);
+    m_os->open(filename, std::ios::out);
 }
 
 void
@@ -227,7 +226,7 @@ RawTextConfigLoad::SetFilename(std::string filename)
 {
     NS_LOG_FUNCTION(this << filename);
     m_is = new std::ifstream();
-    m_is->open(filename.c_str(), std::ios::in);
+    m_is->open(filename, std::ios::in);
 }
 
 std::string

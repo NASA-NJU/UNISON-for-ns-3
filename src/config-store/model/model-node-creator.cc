@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  *  This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
@@ -31,7 +30,7 @@ void
 ModelCreator::Build(GtkTreeStore* treestore)
 {
     m_treestore = treestore;
-    m_iters.push_back(0);
+    m_iters.push_back(nullptr);
     // this function will go through all the objects and call on them
     // DoStartVisitObject, DoIterate and DoEndVisitObject
     Iterate();
@@ -49,7 +48,7 @@ ModelCreator::Add(ModelNode* node)
 }
 
 void
-ModelCreator::Remove(void)
+ModelCreator::Remove()
 {
     GtkTreeIter* iter = m_iters.back();
     g_free(iter);
@@ -77,7 +76,7 @@ ModelCreator::DoStartVisitObject(Ptr<Object> object)
 }
 
 void
-ModelCreator::DoEndVisitObject(void)
+ModelCreator::DoEndVisitObject()
 {
     Remove();
 }
@@ -93,7 +92,7 @@ ModelCreator::DoStartVisitPointerAttribute(Ptr<Object> object, std::string name,
 }
 
 void
-ModelCreator::DoEndVisitPointerAttribute(void)
+ModelCreator::DoEndVisitPointerAttribute()
 {
     Remove();
 }
@@ -111,7 +110,7 @@ ModelCreator::DoStartVisitArrayAttribute(Ptr<Object> object,
 }
 
 void
-ModelCreator::DoEndVisitArrayAttribute(void)
+ModelCreator::DoEndVisitArrayAttribute()
 {
     Remove();
 }
@@ -133,7 +132,7 @@ ModelCreator::DoStartVisitArrayItem(const ObjectPtrContainerValue& vector,
 }
 
 void
-ModelCreator::DoEndVisitArrayItem(void)
+ModelCreator::DoEndVisitArrayItem()
 {
     GtkTreeIter* iter = m_iters.back();
     g_free(iter);

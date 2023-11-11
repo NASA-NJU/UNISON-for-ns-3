@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2009 University of Washington
  *
@@ -334,7 +333,7 @@ UanMacCw::GetSlotTime()
 }
 
 void
-UanMacCw::PhyRxPacketGood(Ptr<Packet> packet, [[maybe_unused]] double sinr, UanTxMode mode)
+UanMacCw::PhyRxPacketGood(Ptr<Packet> packet, double /* sinr */, UanTxMode /* mode */)
 {
     UanHeaderCommon header;
     packet->RemoveHeader(header);
@@ -347,7 +346,7 @@ UanMacCw::PhyRxPacketGood(Ptr<Packet> packet, [[maybe_unused]] double sinr, UanT
 }
 
 void
-UanMacCw::PhyRxPacketError(Ptr<Packet> packet, [[maybe_unused]] double sinr)
+UanMacCw::PhyRxPacketError(Ptr<Packet> /* packet */, double /* sinr */)
 {
 }
 

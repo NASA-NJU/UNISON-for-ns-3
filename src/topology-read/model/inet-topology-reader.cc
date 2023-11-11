@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2010 Universita' di Firenze, Italy
  *
@@ -65,7 +64,7 @@ NodeContainer
 InetTopologyReader::Read()
 {
     std::ifstream topgen;
-    topgen.open(GetFileName().c_str());
+    topgen.open(GetFileName());
     std::map<std::string, Ptr<Node>> nodeMap;
     NodeContainer nodes;
 

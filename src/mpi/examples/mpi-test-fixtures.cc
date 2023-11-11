@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  *  Copyright 2018. Lawrence Livermore National Security, LLC.
  *
@@ -38,7 +37,7 @@ int SinkTracer::m_worldRank = -1;
 int SinkTracer::m_worldSize = -1;
 
 void
-SinkTracer::Init(void)
+SinkTracer::Init()
 {
     m_sinkCount = 0;
     m_line = 0;

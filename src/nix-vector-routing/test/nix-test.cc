@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2021 NITK Surathkal
  *
@@ -118,7 +117,7 @@ NixVectorRoutingTest::NixVectorRoutingTest()
 void
 NixVectorRoutingTest::ReceivePkt(Ptr<Socket> socket)
 {
-    [[maybe_unused]] uint32_t availableData = socket->GetRxAvailable();
+    uint32_t availableData [[maybe_unused]] = socket->GetRxAvailable();
     m_receivedPacket = socket->Recv(std::numeric_limits<uint32_t>::max(), 0);
     NS_TEST_ASSERT_MSG_EQ(availableData,
                           m_receivedPacket->GetSize(),

@@ -1,4 +1,3 @@
-/* -*-  Mode: C++; c-file-style: "gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2011, 2012 Centre Tecnologic de Telecomunicacions de Catalunya (CTTC)
  * Copyright (c) 2018 Fraunhofer ESK : RLF extensions
@@ -1051,8 +1050,10 @@ class LteEnbRrc : public Object
 
     /**
      *  \brief This function acts as an interface to trigger Release indication messages towards eNB
-     * and EPC \param imsi the IMSI \param rnti the RNTI \param bearerId Bearer Identity which is to
-     * be de-activated
+     * and EPC
+     * \param imsi the IMSI
+     * \param rnti the RNTI
+     * \param bearerId Bearer Identity which is to be de-activated
      */
     void DoSendReleaseDataRadioBearer(uint64_t imsi, uint16_t rnti, uint8_t bearerId);
 
@@ -1152,8 +1153,9 @@ class LteEnbRrc : public Object
 
     /**
      * Part of the RRC protocol. Forwarding LteEnbRrcSapProvider::CompleteSetupUe interface to
-     * UeManager::CompleteSetupUe \param rnti the RNTI \param params the
-     * LteEnbRrcSapProvider::CompleteSetupUeParameters
+     * UeManager::CompleteSetupUe
+     * \param rnti the RNTI
+     * \param params the LteEnbRrcSapProvider::CompleteSetupUeParameters
      */
     void DoCompleteSetupUe(uint16_t rnti, LteEnbRrcSapProvider::CompleteSetupUeParameters params);
     /**

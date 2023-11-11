@@ -1,4 +1,3 @@
-/* -*-  Mode: C++; c-file-style: "gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2012 Centre Tecnologic de Telecomunicacions de Catalunya (CTTC)
  *
@@ -234,7 +233,7 @@ LteX2HandoverTestCase::DoRun()
     Config::Reset();
     // This test is sensitive to random variable stream assigments
     RngSeedManager::SetSeed(1);
-    RngSeedManager::SetRun(2);
+    RngSeedManager::SetRun(3);
     Config::SetDefault("ns3::UdpClient::Interval", TimeValue(m_udpClientInterval));
     Config::SetDefault("ns3::UdpClient::MaxPackets", UintegerValue(1000000));
     Config::SetDefault("ns3::UdpClient::PacketSize", UintegerValue(m_udpClientPktSize));
@@ -749,16 +748,16 @@ LteX2HandoverTestSuite::LteX2HandoverTestSuite()
         ue2bwd,
     };
 
-    std::string hel6name("2 fwd");
-    const std::list<HandoverEvent> hel6{
-        ue2fwd,
-    };
+    // std::string hel6name("2 fwd");
+    // const std::list<HandoverEvent> hel6{
+    //     ue2fwd,
+    // };
 
-    std::string hel7name("2 fwd & bwd");
-    const std::list<HandoverEvent> hel7{
-        ue2fwd,
-        ue2bwd,
-    };
+    // std::string hel7name("2 fwd & bwd");
+    // const std::list<HandoverEvent> hel7{
+    //     ue2fwd,
+    //     ue2bwd,
+    // };
 
     std::vector<std::string> schedulers{
         "ns3::RrFfMacScheduler",

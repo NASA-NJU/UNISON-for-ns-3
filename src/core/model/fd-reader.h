@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2010 The Boeing Company
  *
@@ -18,14 +17,23 @@
  * Author: Tom Goff <thomas.goff@boeing.com>
  */
 
-#ifndef UNIX_FD_READER_H
-#define UNIX_FD_READER_H
+#ifndef FD_READER_H
+#define FD_READER_H
 
 #include "callback.h"
 #include "event-id.h"
 
-#include <stdint.h>
+#include <cstdint>
 #include <thread>
+
+#ifdef __WIN32__
+#include <BaseTsd.h>
+
+/**
+ * Signed version of size_t
+ */
+typedef SSIZE_T ssize_t;
+#endif
 
 /**
  * \file
@@ -69,6 +77,12 @@ class FdReader : public SimpleRefCount<FdReader>
      */
     void Stop();
 
+#ifdef __WIN32__
+    /**
+     * Keeps track if the Winsock library has been initialized.
+     */
+    static bool winsock_initialized;
+#endif
   protected:
     /**
      * \brief A structure representing data read.
@@ -146,4 +160,4 @@ class FdReader : public SimpleRefCount<FdReader>
 
 } // namespace ns3
 
-#endif /* UNIX_FD_READER_H */
+#endif /* FD_READER_H */

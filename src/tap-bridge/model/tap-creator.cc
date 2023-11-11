@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2009 University of Washington
  *
@@ -72,7 +71,6 @@ static int gVerbose = 0; // Set to true to turn on logging messages.
 #define ASCII_A (0x61)
 #define ASCII_Z (0x7a)
 #define ASCII_COLON (0x3a)
-#define ASCII_ZERO (0x30)
 
 static char
 AsciiToLowCase(char c)
@@ -318,7 +316,7 @@ CreateTap(const char* dev,
     // configured a network tap that we are just going to use.  So don't mess
     // up his hard work by changing anything, just return the tap fd.
     //
-    if (strcmp(mode, "2") == 0 || strcmp(mode, "3") == 0)
+    if (std::string(mode) == "2" || std::string(mode) == "3")
     {
         LOG("Returning precreated tap ");
         return tap;

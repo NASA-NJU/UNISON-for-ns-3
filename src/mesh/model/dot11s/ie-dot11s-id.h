@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2008,2009 IITP RAS
  *
@@ -58,7 +57,7 @@ class IeMeshId : public WifiInformationElement
      * \returns true if broadcast
      */
     bool IsBroadcast() const;
-    // uint32_t GetLength (void) const;
+    // uint32_t GetLength () const;
     /**
      * Peek the IeMeshId as a string value
      * \returns the mesh ID as a string

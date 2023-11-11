@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2007,2008 INRIA
  *
@@ -53,8 +52,9 @@ class ServiceFlowRecord
      */
     uint32_t GetGrantSize() const;
     /**
-     * \brief Set the grant time stamp. Used for data alocation for ugs flows, and unicast poll (bw
-     * request) for non-UGS flows \param grantTimeStamp the grant time stamp to set
+     * \brief Set the grant time stamp. Used for data allocation for ugs flows, and unicast poll
+     * (bw request) for non-UGS flows
+     * \param grantTimeStamp the grant time stamp to set
      */
     void SetGrantTimeStamp(Time grantTimeStamp);
     /**

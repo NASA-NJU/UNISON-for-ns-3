@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2010 Gustavo Carneiro
  *
@@ -18,7 +17,6 @@
  * Author: Gustavo Carneiro <gjcarneiro@gmail.com> <gjc@inescporto.pt>
  */
 #include <Python.h>
-#undef HAVE_PTHREAD_H
 #undef HAVE_SYS_STAT_H
 #include "visual-simulator-impl.h"
 
@@ -49,7 +47,7 @@ GetDefaultSimulatorImplFactory()
 } // namespace
 
 TypeId
-VisualSimulatorImpl::GetTypeId(void)
+VisualSimulatorImpl::GetTypeId()
 {
     static TypeId tid =
         TypeId("ns3::VisualSimulatorImpl")
@@ -75,12 +73,12 @@ VisualSimulatorImpl::~VisualSimulatorImpl()
 }
 
 void
-VisualSimulatorImpl::DoDispose(void)
+VisualSimulatorImpl::DoDispose()
 {
     if (m_simulator)
     {
         m_simulator->Dispose();
-        m_simulator = NULL;
+        m_simulator = nullptr;
     }
     SimulatorImpl::DoDispose();
 }
@@ -105,31 +103,25 @@ VisualSimulatorImpl::SetScheduler(ObjectFactory schedulerFactory)
 
 // System ID for non-distributed simulation is always zero
 uint32_t
-VisualSimulatorImpl::GetSystemId(void) const
+VisualSimulatorImpl::GetSystemId() const
 {
     return m_simulator->GetSystemId();
 }
 
 bool
-VisualSimulatorImpl::IsFinished(void) const
+VisualSimulatorImpl::IsFinished() const
 {
     return m_simulator->IsFinished();
 }
 
 void
-VisualSimulatorImpl::Run(void)
+VisualSimulatorImpl::Run()
 {
     if (!Py_IsInitialized())
     {
-#if PY_MAJOR_VERSION >= 3
-        const wchar_t* argv[] = {L"python", NULL};
+        const wchar_t* argv[] = {L"python", nullptr};
         Py_Initialize();
         PySys_SetArgv(1, (wchar_t**)argv);
-#else
-        const char* argv[] = {"python", NULL};
-        Py_Initialize();
-        PySys_SetArgv(1, (char**)argv);
-#endif
         PyRun_SimpleString("import visualizer\n"
                            "visualizer.start();\n");
     }
@@ -145,7 +137,7 @@ VisualSimulatorImpl::Run(void)
 }
 
 void
-VisualSimulatorImpl::Stop(void)
+VisualSimulatorImpl::Stop()
 {
     m_simulator->Stop();
 }
@@ -184,7 +176,7 @@ VisualSimulatorImpl::ScheduleDestroy(EventImpl* event)
 }
 
 Time
-VisualSimulatorImpl::Now(void) const
+VisualSimulatorImpl::Now() const
 {
     return m_simulator->Now();
 }
@@ -214,25 +206,25 @@ VisualSimulatorImpl::IsExpired(const EventId& id) const
 }
 
 Time
-VisualSimulatorImpl::GetMaximumSimulationTime(void) const
+VisualSimulatorImpl::GetMaximumSimulationTime() const
 {
     return m_simulator->GetMaximumSimulationTime();
 }
 
 uint32_t
-VisualSimulatorImpl::GetContext(void) const
+VisualSimulatorImpl::GetContext() const
 {
     return m_simulator->GetContext();
 }
 
 uint64_t
-VisualSimulatorImpl::GetEventCount(void) const
+VisualSimulatorImpl::GetEventCount() const
 {
     return m_simulator->GetEventCount();
 }
 
 void
-VisualSimulatorImpl::RunRealSimulator(void)
+VisualSimulatorImpl::RunRealSimulator()
 {
     m_simulator->Run();
 }

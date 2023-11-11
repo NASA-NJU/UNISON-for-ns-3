@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
@@ -55,8 +54,8 @@ NS_OBJECT_ENSURE_REGISTERED(GrantedTimeWindowMpiInterface);
 
 SentBuffer::SentBuffer()
 {
-    m_buffer = 0;
-    m_request = 0;
+    m_buffer = nullptr;
+    m_request = nullptr;
 }
 
 SentBuffer::~SentBuffer()
@@ -101,7 +100,7 @@ std::atomic<bool> GrantedTimeWindowMpiInterface::g_sending(false);
 #endif
 
 TypeId
-GrantedTimeWindowMpiInterface::GetTypeId(void)
+GrantedTimeWindowMpiInterface::GetTypeId()
 {
     static TypeId tid =
         TypeId("ns3::GrantedTimeWindowMpiInterface").SetParent<Object>().SetGroupName("Mpi");
@@ -305,7 +304,7 @@ GrantedTimeWindowMpiInterface::ReceiveMessages()
 
         // Find the correct node/device to schedule receive event
         Ptr<Node> pNode = NodeList::GetNode(node);
-        Ptr<MpiReceiver> pMpiRec = 0;
+        Ptr<MpiReceiver> pMpiRec = nullptr;
         uint32_t nDevices = pNode->GetNDevices();
         for (uint32_t i = 0; i < nDevices; ++i)
         {

@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2022 Universita' degli Studi di Napoli Federico II
  *
@@ -423,8 +422,9 @@ MultiLinkSetupTest::DoRun()
 
     NetDeviceContainer apDevices = wifi.Install(apPhyHelper, mac, wifiApNode);
 
-    apPhyHelper.EnablePcap("wifi-mlo_AP", apDevices);
-    staPhyHelper.EnablePcap("wifi-mlo_STA", staDevices);
+    // Uncomment the lines below to write PCAP files
+    // apPhyHelper.EnablePcap("wifi-mlo_AP", apDevices);
+    // staPhyHelper.EnablePcap("wifi-mlo_STA", staDevices);
 
     // Assign fixed streams to random variables in use
     streamNumber += wifi.AssignStreams(apDevices, streamNumber);

@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright 2007 University of Washington
  *
@@ -231,7 +230,7 @@ GlobalRoutingLSA::ClearLinkRecords()
         delete p;
         p = nullptr;
 
-        *i = 0;
+        *i = nullptr;
     }
     NS_LOG_LOGIC("Clear list");
     m_linkRecords.clear();
@@ -566,7 +565,7 @@ GlobalRouter::ClearLSAs()
         delete p;
         p = nullptr;
 
-        *i = 0;
+        *i = nullptr;
     }
     NS_LOG_LOGIC("Clear list of LSAs");
     m_LSAs.clear();
@@ -662,8 +661,9 @@ GlobalRouter::DiscoverLSAs()
         // associated with a bridge.  We are only going to involve devices with
         // IP addresses in routing.
         //
-        uint32_t interfaceNumber = ipv4Local->GetInterfaceForDevice(ndLocal);
-        if (!(ipv4Local->IsUp(interfaceNumber) && ipv4Local->IsForwarding(interfaceNumber)))
+        int32_t interfaceNumber = ipv4Local->GetInterfaceForDevice(ndLocal);
+        if (interfaceNumber == -1 ||
+            !(ipv4Local->IsUp(interfaceNumber) && ipv4Local->IsForwarding(interfaceNumber)))
         {
             NS_LOG_LOGIC("Net device "
                          << ndLocal

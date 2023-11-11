@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
@@ -106,7 +105,7 @@ void
 AbstractAnimationInterfaceTestCase::CheckFileExistence()
 {
     FILE* fp = fopen(m_traceFileName, "r");
-    NS_TEST_ASSERT_MSG_NE(fp, 0, "Trace file was not created");
+    NS_TEST_ASSERT_MSG_NE(fp, nullptr, "Trace file was not created");
     fclose(fp);
     unlink(m_traceFileName);
 }

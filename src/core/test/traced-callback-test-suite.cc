@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2009 University of Washington
  *
@@ -67,7 +66,7 @@ BasicTracedCallbackTestCase::BasicTracedCallbackTestCase()
 }
 
 void
-BasicTracedCallbackTestCase::CbOne([[maybe_unused]] uint8_t a, [[maybe_unused]] double b)
+BasicTracedCallbackTestCase::CbOne(uint8_t /* a */, double /* b */)
 {
     m_one = true;
 }

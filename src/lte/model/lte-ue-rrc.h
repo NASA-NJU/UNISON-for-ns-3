@@ -1,4 +1,3 @@
-/* -*-  Mode: C++; c-file-style: "gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2011 Centre Tecnologic de Telecomunicacions de Catalunya (CTTC)
  * Copyright (c) 2018 Fraunhofer ESK : RLF extensions
@@ -505,34 +504,39 @@ class LteUeRrc : public Object
     void DoRecvSystemInformation(LteRrcSap::SystemInformation msg);
     /**
      * Part of the RRC protocol. Implement the LteUeRrcSapProvider::RecvRrcConnectionSetup
-     * interface. \param msg the LteRrcSap::RrcConnectionSetup
+     * interface.
+     * \param msg the LteRrcSap::RrcConnectionSetup
      */
     void DoRecvRrcConnectionSetup(LteRrcSap::RrcConnectionSetup msg);
     /**
      * Part of the RRC protocol. Implement the LteUeRrcSapProvider::RecvRrcConnectionReconfiguration
-     * interface. \param msg the LteRrcSap::RrcConnectionReconfiguration
+     * interface.
+     * \param msg the LteRrcSap::RrcConnectionReconfiguration
      */
     void DoRecvRrcConnectionReconfiguration(LteRrcSap::RrcConnectionReconfiguration msg);
     /**
      * Part of the RRC protocol. Implement the LteUeRrcSapProvider::RecvRrcConnectionReestablishment
-     * interface. \param msg LteRrcSap::RrcConnectionReestablishment
+     * interface.
+     * \param msg LteRrcSap::RrcConnectionReestablishment
      */
     void DoRecvRrcConnectionReestablishment(LteRrcSap::RrcConnectionReestablishment msg);
     /**
      * Part of the RRC protocol. Implement the
-     * LteUeRrcSapProvider::RecvRrcConnectionReestablishmentReject interface. \param msg
-     * LteRrcSap::RrcConnectionReestablishmentReject
+     * LteUeRrcSapProvider::RecvRrcConnectionReestablishmentReject interface.
+     * \param msg LteRrcSap::RrcConnectionReestablishmentReject
      */
     void DoRecvRrcConnectionReestablishmentReject(
         LteRrcSap::RrcConnectionReestablishmentReject msg);
     /**
      * Part of the RRC protocol. Implement the LteUeRrcSapProvider::RecvRrcConnectionRelease
-     * interface. \param msg LteRrcSap::RrcConnectionRelease
+     * interface.
+     * \param msg LteRrcSap::RrcConnectionRelease
      */
     void DoRecvRrcConnectionRelease(LteRrcSap::RrcConnectionRelease msg);
     /**
      * Part of the RRC protocol. Implement the LteUeRrcSapProvider::RecvRrcConnectionReject
-     * interface. \param msg the LteRrcSap::RrcConnectionReject
+     * interface.
+     * \param msg the LteRrcSap::RrcConnectionReject
      */
     void DoRecvRrcConnectionReject(LteRrcSap::RrcConnectionReject msg);
 

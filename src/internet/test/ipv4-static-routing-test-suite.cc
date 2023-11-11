@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
@@ -88,15 +87,11 @@ Ipv4StaticRoutingSlash32TestCase::~Ipv4StaticRoutingSlash32TestCase()
 void
 Ipv4StaticRoutingSlash32TestCase::ReceivePkt(Ptr<Socket> socket)
 {
-    uint32_t availableData;
-    availableData = socket->GetRxAvailable();
+    uint32_t availableData [[maybe_unused]] = socket->GetRxAvailable();
     m_receivedPacket = socket->Recv(std::numeric_limits<uint32_t>::max(), 0);
     NS_TEST_ASSERT_MSG_EQ(availableData,
                           m_receivedPacket->GetSize(),
                           "Received packet size is not equal to Rx buffer size");
-    // cast availableData to void, to suppress 'availableData' set but not used
-    // compiler warning
-    (void)availableData;
 }
 
 void

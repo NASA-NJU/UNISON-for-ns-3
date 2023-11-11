@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
@@ -476,7 +475,7 @@ class DictFiles
 
             // Open the file
             std::ifstream dictStream;
-            dictStream.open(dictFile.c_str());
+            dictStream.open(dictFile);
             if (!dictStream.is_open())
             {
                 std::cerr << "Failed to open dictionary file."

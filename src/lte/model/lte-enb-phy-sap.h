@@ -1,4 +1,3 @@
-/* -*-  Mode: C++; c-file-style: "gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2011 Centre Tecnologic de Telecomunicacions de Catalunya (CTTC)
  *
@@ -87,7 +86,8 @@ class LteEnbPhySapUser
 
     /**
      * \brief Receive SendLteControlMessage (PDCCH map, CQI feedbacks) using the ideal control
-     * channel \param msg the Ideal Control Message to receive
+     * channel
+     * \param msg the Ideal Control Message to receive
      */
     virtual void ReceiveLteControlMessage(Ptr<LteControlMessage> msg) = 0;
 

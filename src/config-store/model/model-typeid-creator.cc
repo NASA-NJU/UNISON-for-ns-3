@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  *  This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
@@ -30,7 +29,7 @@ void
 ModelTypeidCreator::Build(GtkTreeStore* treestore)
 {
     m_treestore = treestore;
-    m_iters.push_back(0);
+    m_iters.push_back(nullptr);
     Iterate();
     NS_ASSERT(m_iters.size() == 1);
 }
@@ -46,7 +45,7 @@ ModelTypeidCreator::Add(ModelTypeid* node)
 }
 
 void
-ModelTypeidCreator::Remove(void)
+ModelTypeidCreator::Remove()
 {
     GtkTreeIter* iter = m_iters.back();
     g_free(iter);
@@ -79,7 +78,7 @@ ModelTypeidCreator::StartVisitTypeId(std::string name)
 }
 
 void
-ModelTypeidCreator::EndVisitTypeId(void)
+ModelTypeidCreator::EndVisitTypeId()
 {
     Remove();
 }
