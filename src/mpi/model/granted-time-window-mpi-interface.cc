@@ -37,14 +37,13 @@
 #include "ns3/nstime.h"
 #include "ns3/simulator-impl.h"
 #include "ns3/simulator.h"
-
-#include <iomanip>
-#include <iostream>
-#include <list>
 #ifdef NS3_MTP
 #include "ns3/mtp-interface.h"
 #endif
 
+#include <iomanip>
+#include <iostream>
+#include <list>
 #include <mpi.h>
 
 namespace ns3

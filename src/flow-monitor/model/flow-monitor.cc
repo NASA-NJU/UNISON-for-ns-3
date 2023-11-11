@@ -513,14 +513,14 @@ FlowMonitor::SerializeToXmlStream(std::ostream& os,
              reasonCode++)
         {
             os << std::string(indent, ' ');
-            os << "<packetsDropped reasonCode=\"" << reasonCode << "\"" << " number=\""
-               << flowI->second.packetsDropped[reasonCode] << "\" />\n";
+            os << "<packetsDropped reasonCode=\"" << reasonCode << "\""
+               << " number=\"" << flowI->second.packetsDropped[reasonCode] << "\" />\n";
         }
         for (uint32_t reasonCode = 0; reasonCode < flowI->second.bytesDropped.size(); reasonCode++)
         {
             os << std::string(indent, ' ');
-            os << "<bytesDropped reasonCode=\"" << reasonCode << "\"" << " bytes=\""
-               << flowI->second.bytesDropped[reasonCode] << "\" />\n";
+            os << "<bytesDropped reasonCode=\"" << reasonCode << "\""
+               << " bytes=\"" << flowI->second.bytesDropped[reasonCode] << "\" />\n";
         }
         if (enableHistograms)
         {

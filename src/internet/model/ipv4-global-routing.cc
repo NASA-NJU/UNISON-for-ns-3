@@ -425,11 +425,14 @@ Ipv4GlobalRouting::PrintRoutingTable(Ptr<OutputStreamWrapper> stream, Time::Unit
             }
             *os << std::setw(6) << flags.str();
             // Metric not implemented
-            *os << "-" << "      ";
+            *os << "-"
+                << "      ";
             // Ref ct not implemented
-            *os << "-" << "      ";
+            *os << "-"
+                << "      ";
             // Use not implemented
-            *os << "-" << "   ";
+            *os << "-"
+                << "   ";
             if (Names::FindName(m_ipv4->GetNetDevice(route.GetInterface())) != "")
             {
                 *os << Names::FindName(m_ipv4->GetNetDevice(route.GetInterface()));

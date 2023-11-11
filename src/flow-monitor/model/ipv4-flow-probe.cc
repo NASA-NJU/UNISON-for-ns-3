@@ -127,7 +127,7 @@ class Ipv4FlowProbeTag : public Tag
 NS_OBJECT_ENSURE_REGISTERED(Ipv4FlowProbeTag);
 
 TypeId
-Ipv4FlowProbeTag::GetTypeId(void)
+Ipv4FlowProbeTag::GetTypeId()
 {
     static TypeId tid = TypeId("ns3::Ipv4FlowProbeTag")
                             .SetParent<Tag>()

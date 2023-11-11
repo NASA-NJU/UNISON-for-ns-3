@@ -144,7 +144,7 @@ Buffer::Create(uint32_t dataSize)
     NS_ASSERT(data->m_count == 1);
     return data;
 }
-#else /* BUFFER_FREE_LIST */
+#else  /* BUFFER_FREE_LIST */
 void
 Buffer::Recycle(struct Buffer::Data* data)
 {

@@ -47,11 +47,11 @@ NS_LOG_COMPONENT_DEFINE("ByteTagList");
  */
 struct ByteTagListData
 {
-    uint32_t size; //!< size of the data
+    uint32_t size;   //!< size of the data
 #ifdef NS3_MTP
     AtomicCounter count;
 #else
-    uint32_t count; //!< use counter (for smart deallocation)
+    uint32_t count;  //!< use counter (for smart deallocation)
 #endif
     uint32_t dirty;  //!< number of bytes actually in use
     uint8_t data[4]; //!< data

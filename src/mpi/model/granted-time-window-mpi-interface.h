@@ -112,6 +112,7 @@ class GrantedTimeWindowMpiInterface : public ParallelCommunicationInterface, Obj
     virtual void SendPacket(Ptr<Packet> p, const Time& rxTime, uint32_t node, uint32_t dev);
     virtual MPI_Comm GetCommunicator();
 
+  private:
     /*
      * The granted time window implementation is a collaboration of several
      * classes.  Methods that should be invoked only by the

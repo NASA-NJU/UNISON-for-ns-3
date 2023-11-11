@@ -147,11 +147,11 @@ class PacketTagList
 #ifdef NS3_MTP
         AtomicCounter count;
 #else
-        uint32_t count; //!< Number of incoming links
+        uint32_t count;       //!< Number of incoming links
 #endif
-        TypeId tid;      //!< Type of the tag serialized into #data
-        uint32_t size;   //!< Size of the \c data buffer
-        uint8_t data[1]; //!< Serialization buffer
+        TypeId tid;           //!< Type of the tag serialized into #data
+        uint32_t size;        //!< Size of the \c data buffer
+        uint8_t data[1];      //!< Serialization buffer
     };
 
     /**

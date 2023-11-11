@@ -245,11 +245,12 @@ Ipv4FlowClassifier::SerializeToXmlStream(std::ostream& os, uint16_t indent) cons
          iter++)
     {
         Indent(os, indent);
-        os << "<Flow flowId=\"" << iter->second << "\"" << " sourceAddress=\""
-           << iter->first.sourceAddress << "\"" << " destinationAddress=\""
-           << iter->first.destinationAddress << "\"" << " protocol=\"" << int(iter->first.protocol)
-           << "\"" << " sourcePort=\"" << iter->first.sourcePort << "\"" << " destinationPort=\""
-           << iter->first.destinationPort << "\">\n";
+        os << "<Flow flowId=\"" << iter->second << "\""
+           << " sourceAddress=\"" << iter->first.sourceAddress << "\""
+           << " destinationAddress=\"" << iter->first.destinationAddress << "\""
+           << " protocol=\"" << int(iter->first.protocol) << "\""
+           << " sourcePort=\"" << iter->first.sourcePort << "\""
+           << " destinationPort=\"" << iter->first.destinationPort << "\">\n";
 
         indent += 2;
         std::map<FlowId, std::map<Ipv4Header::DscpType, uint32_t>>::const_iterator flow =

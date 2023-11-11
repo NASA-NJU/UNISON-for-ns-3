@@ -889,7 +889,8 @@ GlobalRouteManagerImpl::SPFNext(SPFVertex* v, CandidateQueue& candidate)
             else
             {
                 NS_ASSERT_MSG(0,
-                              "SPFNexthopCalculation never " << "return false, but it does now!");
+                              "SPFNexthopCalculation never "
+                                  << "return false, but it does now!");
             }
         }
         else if (w_lsa->GetStatus() == GlobalRoutingLSA::LSA_SPF_CANDIDATE)
@@ -967,8 +968,8 @@ GlobalRouteManagerImpl::SPFNext(SPFVertex* v, CandidateQueue& candidate)
                     candidate.Reorder();
                 }
             } // new lower cost path found
-        } // end W is already on the candidate list
-    } // end loop over the links in V's LSA
+        }     // end W is already on the candidate list
+    }         // end loop over the links in V's LSA
 }
 
 //
@@ -1658,7 +1659,7 @@ GlobalRouteManagerImpl::SPFAddASExternal(GlobalRoutingLSA* extlsa, SPFVertex* v)
             }
             return;
         } // if
-    } // for
+    }     // for
 }
 
 // Processing logic from RFC 2328, page 166 and quagga ospf_spf_process_stubs ()
@@ -1824,7 +1825,7 @@ GlobalRouteManagerImpl::SPFIntraAddStub(GlobalRoutingLinkRecord* l, SPFVertex* v
             }
             return;
         } // if
-    } // for
+    }     // for
 }
 
 //
