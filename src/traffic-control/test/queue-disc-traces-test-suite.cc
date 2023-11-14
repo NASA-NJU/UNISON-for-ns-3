@@ -30,11 +30,10 @@ using namespace ns3;
 
 /**
  * \ingroup traffic-control-test
- * \ingroup tests
  *
  * \brief Queue Disc Test Item
  */
-class qdTestItem : public QueueDiscItem
+class QdTestItem : public QueueDiscItem
 {
   public:
     /**
@@ -43,35 +42,34 @@ class qdTestItem : public QueueDiscItem
      * \param p the packet
      * \param addr the address
      */
-    qdTestItem(Ptr<Packet> p, const Address& addr);
-    ~qdTestItem() override;
+    QdTestItem(Ptr<Packet> p, const Address& addr);
+    ~QdTestItem() override;
     void AddHeader() override;
     bool Mark() override;
 };
 
-qdTestItem::qdTestItem(Ptr<Packet> p, const Address& addr)
+QdTestItem::QdTestItem(Ptr<Packet> p, const Address& addr)
     : QueueDiscItem(p, addr, 0)
 {
 }
 
-qdTestItem::~qdTestItem()
+QdTestItem::~QdTestItem()
 {
 }
 
 void
-qdTestItem::AddHeader()
+QdTestItem::AddHeader()
 {
 }
 
 bool
-qdTestItem::Mark()
+QdTestItem::Mark()
 {
     return false;
 }
 
 /**
  * \ingroup traffic-control-test
- * \ingroup tests
  *
  * \brief Test Child Queue Disc that may drop packets before enqueue or after dequeue
  */
@@ -142,7 +140,6 @@ TestChildQueueDisc::InitializeParams()
 
 /**
  * \ingroup traffic-control-test
- * \ingroup tests
  *
  * \brief Test Parent Queue Disc having a child of type TestChildQueueDisc
  */
@@ -197,7 +194,6 @@ TestParentQueueDisc::InitializeParams()
 
 /**
  * \ingroup traffic-control-test
- * \ingroup tests
  *
  * \brief Keep statistics based on traces
  */
@@ -304,7 +300,6 @@ TestCounter::ConnectTraces(Ptr<QueueDisc> qd)
 
 /**
  * \ingroup traffic-control-test
- * \ingroup tests
  *
  * \brief Queue Disc Traces Test Case
  *
@@ -450,7 +445,7 @@ QueueDiscTracesTestCase::DoRun()
     // Enqueue 4 packets. They must all be enqueued
     for (uint16_t i = 1; i <= 4; i++)
     {
-        root->Enqueue(Create<qdTestItem>(Create<Packet>(pktSizeUnit * i), dest));
+        root->Enqueue(Create<QdTestItem>(Create<Packet>(pktSizeUnit * i), dest));
 
         CheckQueued(root, i, pktSizeUnit * i * (i + 1) / 2);
         CheckDroppedBeforeEnqueue(root, 0, 0);
@@ -463,7 +458,7 @@ QueueDiscTracesTestCase::DoRun()
 
     // The fifth packet is dropped before enqueue by the child queue disc.
     // The packet drop is notified to the root queue disc.
-    root->Enqueue(Create<qdTestItem>(Create<Packet>(pktSizeUnit * 5), dest));
+    root->Enqueue(Create<QdTestItem>(Create<Packet>(pktSizeUnit * 5), dest));
 
     CheckQueued(root, 4, pktSizeUnit * 10);
     CheckDroppedBeforeEnqueue(root, 1, pktSizeUnit * 5);
@@ -559,7 +554,7 @@ QueueDiscTracesTestCase::DoRun()
     CheckDroppedAfterDequeue(child, 2, pktSizeUnit * 3);
 
     // Enqueue one packet.
-    root->Enqueue(Create<qdTestItem>(Create<Packet>(pktSizeUnit), dest));
+    root->Enqueue(Create<QdTestItem>(Create<Packet>(pktSizeUnit), dest));
 
     CheckQueued(root, 1, pktSizeUnit);
     CheckDroppedBeforeEnqueue(root, 1, pktSizeUnit * 5);
@@ -590,7 +585,6 @@ QueueDiscTracesTestCase::DoRun()
 
 /**
  * \ingroup traffic-control-test
- * \ingroup tests
  *
  * \brief Queue Disc Traces Test Suite
  */

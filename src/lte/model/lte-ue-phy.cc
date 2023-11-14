@@ -126,7 +126,10 @@ UeMemberLteUePhySapProvider::NotifyConnectionSuccessful()
 ////////////////////////////////////////
 
 /// Map each of UE PHY states to its string representation.
-static const std::string g_uePhyStateName[LteUePhy::NUM_STATES] = {"CELL_SEARCH", "SYNCHRONIZED"};
+static const std::string g_uePhyStateName[LteUePhy::NUM_STATES] = {
+    "CELL_SEARCH",
+    "SYNCHRONIZED",
+};
 
 /**
  * \param s The UE PHY state.
@@ -867,7 +870,7 @@ LteUePhy::CreateDlCqiFeedbackMessage(const SpectrumValue& sinr)
         }
         dlcqi.m_rnti = m_rnti;
         dlcqi.m_ri = 1;                          // not yet used
-        dlcqi.m_cqiType = CqiListElement_s::P10; // Peridic CQI using PUCCH wideband
+        dlcqi.m_cqiType = CqiListElement_s::P10; // Periodic CQI using PUCCH wideband
         NS_ASSERT_MSG(nLayer > 0, " nLayer negative");
         NS_ASSERT_MSG(nLayer < 3, " nLayer limit is 2s");
         for (uint8_t i = 0; i < nLayer; i++)
@@ -1306,7 +1309,7 @@ LteUePhy::SubframeIndication(uint32_t frameNo, uint32_t subframeNo)
         else
         {
             // send only PUCCH (ideal: fake null bandwidth signal)
-            if (ctrlMsg.size() > 0)
+            if (!ctrlMsg.empty())
             {
                 NS_LOG_LOGIC(this << " UE - start TX PUCCH (NO PUSCH)");
                 std::vector<int> dlRb;
@@ -1477,11 +1480,11 @@ LteUePhy::DoSetDlBandwidth(uint16_t dlBandwidth)
         m_dlBandwidth = dlBandwidth;
 
         static const int Type0AllocationRbg[4] = {
-            10, // RGB size 1
-            26, // RGB size 2
-            63, // RGB size 3
-            110 // RGB size 4
-        };      // see table 7.1.6.1-1 of 36.213
+            10,  // RGB size 1
+            26,  // RGB size 2
+            63,  // RGB size 3
+            110, // RGB size 4
+        };       // see table 7.1.6.1-1 of 36.213
         for (int i = 0; i < 4; i++)
         {
             if (dlBandwidth < Type0AllocationRbg[i])
@@ -1650,7 +1653,7 @@ LteUePhy::RlfDetection(double sinrDb)
     if (m_downlinkInSync && (m_numOfFrames * 10) == m_numOfQoutEvalSf)
     {
         NS_LOG_LOGIC("At " << Simulator::Now().As(Time::MS)
-                           << " ms UE PHY sending out of snyc indication to UE RRC layer");
+                           << " ms UE PHY sending out of sync indication to UE RRC layer");
         m_ueCphySapUser->NotifyOutOfSync();
         m_numOfFrames = 0;
     }
@@ -1689,7 +1692,7 @@ LteUePhy::RlfDetection(double sinrDb)
     if (!m_downlinkInSync && (m_numOfFrames * 10) == m_numOfQinEvalSf)
     {
         NS_LOG_LOGIC("At " << Simulator::Now().As(Time::MS)
-                           << " ms UE PHY sending in snyc indication to UE RRC layer");
+                           << " ms UE PHY sending in sync indication to UE RRC layer");
         m_ueCphySapUser->NotifyInSync();
         m_numOfFrames = 0;
     }

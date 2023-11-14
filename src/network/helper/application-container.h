@@ -140,7 +140,7 @@ class ApplicationContainer
      * Applications can be retrieved from the container in two ways.  First,
      * directly by an index into the container, and second, using an iterator.
      * This method is used in the direct method and is used to retrieve the
-     * indexed Ptr<Appliation>.
+     * indexed Ptr<Application>.
      *
      * \code
      *   uint32_t nApplications = container.GetN ();
@@ -180,8 +180,8 @@ class ApplicationContainer
     void Add(std::string name);
 
     /**
-     * \brief Arrange for all of the Applications in this container to Start()
-     * at the Time given as a parameter.
+     * \brief Start all of the Applications in this container at the start time
+     * given as a parameter.
      *
      * All Applications need to be provided with a starting simulation time and
      * a stopping simulation time.  The ApplicationContainer is a convenient
@@ -189,24 +189,24 @@ class ApplicationContainer
      * up and start doing their thing (Start) at a common time.
      *
      * This method simply iterates through the contained Applications and calls
-     * their Start() methods with the provided Time.
+     * their Application::SetStartTime() methods with the provided Time.
      *
      * \param start The Time at which each of the applications should start.
      */
-    void Start(Time start);
+    void Start(Time start) const;
 
     /**
      * \brief Start all of the Applications in this container at the start time
      * given as a parameter, plus some jitter.
      *
      * This method iterates through the contained Applications and calls
-     * their Start() methods with the provided start Time, plus a jitter value
-     * drawn from the provided random variable.
+     * their Application::SetStartTime() methods with the provided start Time, plus
+     * a jitter value drawn from the provided random variable.
      *
      * \param start The Time at which each of the applications should start.
      * \param rv The random variable that adds jitter (units of seconds)
      */
-    void StartWithJitter(Time start, Ptr<RandomVariableStream> rv);
+    void StartWithJitter(Time start, Ptr<RandomVariableStream> rv) const;
 
     /**
      * \brief Arrange for all of the Applications in this container to Stop()
@@ -218,11 +218,11 @@ class ApplicationContainer
      * down and stop doing their thing (Stop) at a common time.
      *
      * This method simply iterates through the contained Applications and calls
-     * their Stop() methods with the provided Time.
+     * their Application::SetStopTime() methods with the provided Time.
      *
      * \param stop The Time at which each of the applications should stop.
      */
-    void Stop(Time stop);
+    void Stop(Time stop) const;
 
   private:
     std::vector<Ptr<Application>> m_applications; //!< Applications smart pointers

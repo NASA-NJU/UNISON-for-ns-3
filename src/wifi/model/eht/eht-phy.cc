@@ -98,6 +98,19 @@ EhtPhy::GetSigMode(WifiPpduField field, const WifiTxVector& txVector) const
     }
 }
 
+WifiMode
+EhtPhy::GetSigBMode(const WifiTxVector& txVector) const
+{
+    if (txVector.IsDlMu())
+    {
+        return HePhy::GetSigBMode(txVector);
+    }
+    // we get here in case of EHT SU transmission
+    // TODO fix the MCS used for EHT-SIG
+    auto smallestMcs = std::min<uint8_t>(5, txVector.GetMode().GetMcsValue());
+    return VhtPhy::GetVhtMcs(smallestMcs);
+}
+
 Time
 EhtPhy::GetDuration(WifiPpduField field, const WifiTxVector& txVector) const
 {
@@ -114,6 +127,25 @@ EhtPhy::GetDuration(WifiPpduField field, const WifiTxVector& txVector) const
     default:
         return HePhy::GetDuration(field, txVector);
     }
+}
+
+Time
+EhtPhy::CalculateNonOfdmaDurationForHeTb(const WifiTxVector& txVector) const
+{
+    Time duration = GetDuration(WIFI_PPDU_FIELD_PREAMBLE, txVector) +
+                    GetDuration(WIFI_PPDU_FIELD_NON_HT_HEADER, txVector) +
+                    GetDuration(WIFI_PPDU_FIELD_U_SIG, txVector);
+    return duration;
+}
+
+Time
+EhtPhy::CalculateNonOfdmaDurationForHeMu(const WifiTxVector& txVector) const
+{
+    Time duration = GetDuration(WIFI_PPDU_FIELD_PREAMBLE, txVector) +
+                    GetDuration(WIFI_PPDU_FIELD_NON_HT_HEADER, txVector) +
+                    GetDuration(WIFI_PPDU_FIELD_U_SIG, txVector) +
+                    GetDuration(WIFI_PPDU_FIELD_EHT_SIG, txVector);
+    return duration;
 }
 
 const PhyEntity::PpduFormats&
@@ -133,8 +165,7 @@ EhtPhy::BuildPpdu(const WifiConstPsduMap& psdus, const WifiTxVector& txVector, T
                            ppduDuration,
                            m_wifiPhy->GetPhyBand(),
                            ObtainNextUid(txVector),
-                           HePpdu::PSD_NON_HE_PORTION,
-                           m_wifiPhy->GetOperatingChannel().GetPrimaryChannelIndex(20));
+                           HePpdu::PSD_NON_HE_PORTION);
 }
 
 PhyEntity::PhyFieldRxStatus

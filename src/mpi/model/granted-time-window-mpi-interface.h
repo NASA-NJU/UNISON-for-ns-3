@@ -27,7 +27,6 @@
 #ifndef NS3_GRANTED_TIME_WINDOW_MPI_INTERFACE_H
 #define NS3_GRANTED_TIME_WINDOW_MPI_INTERFACE_H
 
-#include "mpi.h"
 #include "parallel-communication-interface.h"
 
 #include "ns3/buffer.h"
@@ -35,6 +34,7 @@
 
 #include <atomic>
 #include <list>
+#include <mpi.h>
 #include <stdint.h>
 
 namespace ns3

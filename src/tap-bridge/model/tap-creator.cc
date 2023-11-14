@@ -38,7 +38,7 @@
 
 #define TAP_MAGIC 95549
 
-static int gVerbose = 0; // Set to true to turn on logging messages.
+static bool gVerbose = false; // Set to true to turn on logging messages.
 
 #define LOG(msg)                                                                                   \
     if (gVerbose)                                                                                  \
@@ -474,7 +474,7 @@ main(int argc, char* argv[])
     // in order to keep the main simulation program from having to be run with
     // root privileges.  We need root privileges to be able to futz with the
     // Tap device underlying all of this.  So all of these hoops are to allow
-    // us to exeucte the following code:
+    // us to execute the following code:
     //
     LOG("Creating Tap");
     int sock = CreateTap(dev, gw, ip, mac, operatingMode, netmask);

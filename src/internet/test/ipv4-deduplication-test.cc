@@ -57,7 +57,6 @@ using namespace ns3;
 
 /**
  * \ingroup internet-test
- * \ingroup tests
  *
  * \brief IPv4 Deduplication Test
  *
@@ -447,28 +446,34 @@ void
 Ipv4DeduplicationTest::CheckPackets(const std::string& name)
 {
     // a priori determined packet receptions based on initial TTL of 4, disabled de-dup
-    std::map<std::string, uint32_t> packets = {{"A", 14},
-                                               {"B", 16},
-                                               {"C", 16},
-                                               {"D", 16},
-                                               {"E", 4}};
+    std::map<std::string, uint32_t> packets = {
+        {"A", 14},
+        {"B", 16},
+        {"C", 16},
+        {"D", 16},
+        {"E", 4},
+    };
 
     // a priori determined packet receptions based on
-    std::map<std::string, uint32_t> packetsDuped = {{"A", 0},
-                                                    {"B", 1},
-                                                    {"C", 1},
-                                                    {"D", 1},
-                                                    {"E", 1}};
+    std::map<std::string, uint32_t> packetsDuped = {
+        {"A", 0},
+        {"B", 1},
+        {"C", 1},
+        {"D", 1},
+        {"E", 1},
+    };
     // a priori determined packet receptions based on initial TTL of 4, degenerate de-dup
     // There are TTL (4) rounds of packets.  Each round a node will register a
     // received packet if another connected node transmits.  A misses the 1st round
     // since it is the only one transmitting.  D is not connected to A in 1st round
     // either.  E only hears a packet in the 3rd and 4th rounds.
-    std::map<std::string, uint32_t> degenerates = {{"A", 3},
-                                                   {"B", 4},
-                                                   {"C", 4},
-                                                   {"D", 3},
-                                                   {"E", 2}};
+    std::map<std::string, uint32_t> degenerates = {
+        {"A", 3},
+        {"B", 4},
+        {"C", 4},
+        {"D", 3},
+        {"E", 2},
+    };
 
     switch (m_mode)
     {
@@ -540,7 +545,6 @@ Ipv4DeduplicationTest::CheckDrops(const std::string& name)
 
 /**
  * \ingroup internet-test
- * \ingroup tests
  *
  * \brief IPv4 Deduplication TestSuite
  */
@@ -566,7 +570,6 @@ static Ipv4DeduplicationTestSuite
 
 /**
  * \ingroup internet-test
- * \ingroup tests
  *
  * \brief IPv4 Deduplication Performance Test
  *
@@ -724,7 +727,6 @@ Ipv4DeduplicationPerformanceTest::DoSendData(Ptr<Socket> socket, Address to, uin
 
 /**
  * \ingroup internet-test
- * \ingroup tests
  *
  * \brief IPv4 Deduplication Performance TestSuite
  */

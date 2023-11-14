@@ -217,7 +217,7 @@ std::list<Ptr<LteControlMessage>>
 LtePhy::GetControlMessages()
 {
     NS_LOG_FUNCTION(this);
-    if (m_controlMessagesQueue.at(0).size() > 0)
+    if (!m_controlMessagesQueue.at(0).empty())
     {
         std::list<Ptr<LteControlMessage>> ret = m_controlMessagesQueue.at(0);
         m_controlMessagesQueue.erase(m_controlMessagesQueue.begin());
@@ -252,7 +252,7 @@ LtePhy::SetComponentCarrierId(uint8_t index)
 }
 
 uint8_t
-LtePhy::GetComponentCarrierId()
+LtePhy::GetComponentCarrierId() const
 {
     return m_componentCarrierId;
 }

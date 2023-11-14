@@ -14,7 +14,6 @@ IEEE standard 802.15.4 (2003,2006,2011).
 Model Description
 *****************
 
-The source code for the lr-wpan module lives in the directory ``src/lr-wpan``.
 
 Design
 ======
@@ -60,20 +59,20 @@ points (SAP):
 In general, primitives are standardized as follows (e.g. Sec 7.1.1.1.1
 of IEEE 802.15.4-2006):::
 
-  MCPS-DATA.request      (
-                          SrcAddrMode,
-                          DstAddrMode,
-                          DstPANId,
-                          DstAddr,
-                          msduLength,
-                          msdu,
-                          msduHandle,
-                          TxOptions,
-                          SecurityLevel,
-                          KeyIdMode,
-                          KeySource,
-                          KeyIndex
-                          )
+  MCPS-DATA.request(
+                    SrcAddrMode,
+                    DstAddrMode,
+                    DstPANId,
+                    DstAddr,
+                    msduLength,
+                    msdu,
+                    msduHandle,
+                    TxOptions,
+                    SecurityLevel,
+                    KeyIdMode,
+                    KeySource,
+                    KeyIndex
+                   )
 
 This maps to |ns3| classes and methods such as:::
 
@@ -85,7 +84,7 @@ This maps to |ns3| classes and methods such as:::
   };
 
   void
-  LrWpanMac::McpsDataRequest (McpsDataRequestParameters params)
+  LrWpanMac::McpsDataRequest(McpsDataRequestParameters params)
   {
   ...
   }
@@ -165,7 +164,7 @@ IEEE 802.15.4 supports 4 types of scanning:
 In active and passive scans, the link quality indicator (LQI) is the main parameter used to
 determine the optimal coordinator. LQI values range from 0 to 255. Where 255 is the highest quality link value and 0 the lowest. Typically, a link lower than 127 is considered a link with poor quality.
 
-In LR-WPAN, association is used to join or leave PANs. All devices in LR-WPAN must belong to a PAN to communicate. |ns3| uses a classic association procedure described in the standard. The standard also covers a more effective association procedure known as fast association (See IEEE 802.15.4-2015, fastA) but this association is currently not supported by |ns3|. Alternatively, |ns3| can do a "quick and dirty" association using either ```LrWpanHelper::AssociateToPan``` or ```LrWpanHelper::AssociateToBeaconPan```. These functions are used when a preset association can be done. For example, when the relationships between existing nodes and coordinators are known and can be set before the begining of the simulation. In other situations, like in many networks in real deployments or in large networks, it is desirable that devices "associate themselves" with the best possible available coordinator candidates. This is a process known as bootstrap, and simulating this process makes it possible to demonstrate the kind of situations a node would face in which large networks to associate in real environment.
+In LR-WPAN, association is used to join or leave PANs. All devices in LR-WPAN must belong to a PAN to communicate. |ns3| uses a classic association procedure described in the standard. The standard also covers a more effective association procedure known as fast association (See IEEE 802.15.4-2015, fastA) but this association is currently not supported by |ns3|. Alternatively, |ns3| can do a "quick and dirty" association using either ```LrWpanHelper::AssociateToPan``` or ```LrWpanHelper::AssociateToBeaconPan```. These functions are used when a preset association can be done. For example, when the relationships between existing nodes and coordinators are known and can be set before the beginning of the simulation. In other situations, like in many networks in real deployments or in large networks, it is desirable that devices "associate themselves" with the best possible available coordinator candidates. This is a process known as bootstrap, and simulating this process makes it possible to demonstrate the kind of situations a node would face in which large networks to associate in real environment.
 
 Bootstrap (a.k.a. network initialization) is possible with a combination of scan and association MAC primitives. Details on the general process for this network initialization is described in the standard. Bootstrap is a complex process that not only requires the scanning networks, but also the exchange of command frames and the use of a pending transaction list (indirect transmissions) in the coordinator to store command frames. The following summarizes the whole process:
 
@@ -214,16 +213,33 @@ Std 802.15.4-2006, appendix E, Figure E.2. Reception of the packet will finish
 after the packet was completely transmitted. Other packets arriving during
 reception will add up to the interference/noise.
 
-Currently the receiver sensitivity is set to a fixed value of -106.58 dBm. This
-corresponds to a packet error rate of 1% for 20 byte PSDU reference packets for this
-signal power, according to IEEE Std 802.15.4-2006, section 6.1.7. In the future
-we will provide support for changing the sensitivity to different values.
+Rx sensitivity is defined as the weakest possible signal point at which a receiver can receive and decode a packet with a high success rate.
+According to the standard (IEEE Std 802.15.4-2006, section 6.1.7), this
+corresponds to the point where the packet error rate is under 1% for 20 bytes PSDU
+reference packets (11 bytes MAC header + 7 bytes payload (MSDU) + FCS 2 bytes). Setting low Rx sensitivity values (increasing the radio hearing capabilities)
+have the effect to receive more packets (and at a greater distance) but it raises the probability to have dropped packets at the
+MAC layer or the probability of corrupted packets. By default, the receiver sensitivity is set to the maximum theoretical possible value of -106.58 dBm for the supported IEEE 802.15.4 O-QPSK 250kps.
+This rx sensitivity is set for the "perfect radio" which only considers the floor noise, in essence, this do not include the noise factor (noise introduced by imperfections in the demodulator chip or external factors).
+The receiver sensitivity can be changed to different values using ``SetRxSensitivity`` function in the PHY to simulate the hearing capabilities of different compliant radio transceivers (the standard minimum compliant Rx sensitivity is -85 dBm).:::
+                                                              (defined by the standard)
+   NoiseFloor          Max Sensitivity                          Min Sensitivity
+   -106.987dBm          -106.58dBm                                   -85dBm
+    |-------------------------|------------------------------------------|
+                          Noise Factor = 1
+                              | <--------------------------------------->|
+                                    Acceptable sensitivity range
+
+The example ``lr-wpan-per-plot.cc` shows that at given Rx sensitiviy, packets are dropped regardless of their theoretical error probability.
+This program outputs a file named ``802.15.4-per-vs-rxSignal.plt``.
+Loading this file into gnuplot yields a file ``802.15.4-per-vs-rsSignal.eps``, which can
+be converted to pdf or other formats. Packet payload size, Tx power and Rx sensitivity can be configurated.
+The point where the blue line crosses with the PER indicates the Rx sensitivity. The default output is shown below.
 
 .. _fig-802-15-4-per-sens:
 
 .. figure:: figures/802-15-4-per-sens.*
 
-    Packet error rate vs. signal power
+    Default output of the program ``lr-wpan-per-plot.cc``
 
 
 NetDevice
@@ -246,7 +262,7 @@ The 64-bit addresses are unique worldwide, and set by the device vendor (in a re
 The 16-bit addresses are not guaranteed to be unique, and they are typically either assigned
 during the devices deployment, or assigned dynamically during the device bootstrap.
 
-The other relavant "address" to consider is the PanId (16 bits), which represents the PAN
+The other relevant "address" to consider is the PanId (16 bits), which represents the PAN
 the device is attached to.
 
 Due to the limited number of available bytes in a packet, IEEE 802.15.4 tries to use short
@@ -298,7 +314,7 @@ running on both, slotted and unslotted mode (CSMA/CA) of 802.15.4 operation for 
 - Devices are capable of associating with a single PAN coordinator. Interference is modeled as AWGN but this is currently not thoroughly tested.
 - The standard describes the support of multiple PHY band-modulations but currently, only 250kbps O-QPSK (channel page 0) is supported.
 - Active and passive MAC scans are able to obtain a LQI value from a beacon frame, however, the scan primitives assumes LQI is correctly implemented and does not check the validity of its value.
-- Configuration of Rx Sensitivity and ED thresholds are currently not supported.
+- Configuration of the ED thresholds are currently not supported.
 - Orphan scans are not supported.
 - Disassociation primitives are not supported.
 - Security is not supported.
@@ -338,6 +354,7 @@ The following examples have been written, which can be found in ``src/lr-wpan/ex
 
 * ``lr-wpan-data.cc``:  A simple example showing end-to-end data transfer.
 * ``lr-wpan-error-distance-plot.cc``:  An example to plot variations of the packet success ratio as a function of distance.
+* ``lr-wpan-per-plot.cc``: An example to plot the theoretical and experimental packet error rate (PER) as a function of receive signal.
 * ``lr-wpan-error-model-plot.cc``:  An example to test the phy.
 * ``lr-wpan-packet-print.cc``:  An example to print out the MAC header fields.
 * ``lr-wpan-phy-test.cc``:  An example to test the phy.
@@ -364,11 +381,14 @@ in a DataIndication on the peer node.
 The example ``lr-wpan-error-distance-plot.cc`` plots the packet success
 ratio (PSR) as a function of distance, using the default LogDistance
 propagation loss model and the 802.15.4 error model.  The channel (default 11),
-packet size (default 20 bytes) and transmit power (default 0 dBm) can be
-varied by command line arguments.  The program outputs a file named
-``802.15.4-psr-distance.plt``.  Loading this file into gnuplot yields
-a file ``802.15.4-psr-distance.eps``, which can be converted to pdf or
-other formats.  The default output is shown below.
+packet size (default PSDU 20 bytes = 11 bytes MAC header + data payload), transmit power (default 0 dBm)
+and Rx sensitivity (default -106.58 dBm) can be varied by command line arguments.
+The program outputs a file named ``802.15.4-psr-distance.plt``.
+Loading this file into gnuplot yields a file ``802.15.4-psr-distance.eps``, which can
+be converted to pdf or other formats.  The following image shows the output
+of multiple runs using different Rx sensitivity values. A higher Rx sensitivity (lower dBm) results
+in a increased communication distance but also makes the radio suceptible to more interference from
+surronding devices.
 
 .. _fig-802-15-4-psr-distance:
 
@@ -405,5 +425,3 @@ of the error model validation and can be reproduced by running
 .. figure:: figures/802-15-4-ber.*
 
     Default output of the program ``lr-wpan-error-model-plot.cc``
-
-

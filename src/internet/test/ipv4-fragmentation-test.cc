@@ -59,7 +59,6 @@ class UdpSocketImpl;
 
 /**
  * \ingroup internet-test
- * \ingroup tests
  *
  * \brief Tag used in IPv4 Fragmentation Test
  */
@@ -117,7 +116,7 @@ class IPv4TestTag : public Tag
      * \brief Get the token.
      * \returns The token.
      */
-    uint64_t GetToken()
+    uint64_t GetToken() const
     {
         return token;
     }
@@ -125,7 +124,6 @@ class IPv4TestTag : public Tag
 
 /**
  * \ingroup internet-test
- * \ingroup tests
  *
  * \brief IPv4 Fragmentation Test
  */
@@ -579,7 +577,6 @@ Ipv4FragmentationTest::DoRun()
 
 /**
  * \ingroup internet-test
- * \ingroup tests
  *
  * \brief IPv4 Fragmentation TestSuite
  */

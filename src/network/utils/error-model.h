@@ -209,7 +209,7 @@ class RateErrorModel : public ErrorModel
     /**
      * \param error_unit the ErrorUnit to be used by the underlying model
      */
-    void SetUnit(enum ErrorUnit error_unit);
+    void SetUnit(ErrorUnit error_unit);
 
     /**
      * \returns the error rate being applied by the model
@@ -257,8 +257,8 @@ class RateErrorModel : public ErrorModel
     virtual bool DoCorruptBit(Ptr<Packet> p);
     void DoReset() override;
 
-    enum ErrorUnit m_unit; //!< Error rate unit
-    double m_rate;         //!< Error rate
+    ErrorUnit m_unit; //!< Error rate unit
+    double m_rate;    //!< Error rate
 
     Ptr<RandomVariableStream> m_ranvar; //!< rng stream
 };
@@ -388,22 +388,22 @@ class ListErrorModel : public ErrorModel
     /**
      * \return a copy of the underlying list
      */
-    std::list<uint32_t> GetList() const;
+    std::list<uint64_t> GetList() const;
     /**
      * \param packetlist The list of packet uids to error.
      *
      * This method overwrites any previously provided list.
      */
-    void SetList(const std::list<uint32_t>& packetlist);
+    void SetList(const std::list<uint64_t>& packetlist);
 
   private:
     bool DoCorrupt(Ptr<Packet> p) override;
     void DoReset() override;
 
     /// Typedef: packet Uid list
-    typedef std::list<uint32_t> PacketList;
+    typedef std::list<uint64_t> PacketList;
     /// Typedef: packet Uid list const iterator
-    typedef std::list<uint32_t>::const_iterator PacketListCI;
+    typedef std::list<uint64_t>::const_iterator PacketListCI;
 
     PacketList m_packetList; //!< container of Uid of packets to corrupt
 };

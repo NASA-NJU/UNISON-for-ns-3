@@ -232,8 +232,8 @@ class EpcX2Sap
         uint16_t sourceCellId;                  ///< source cell ID
         uint16_t targetCellId;                  ///< target cell ID
         uint32_t mmeUeS1apId;                   ///< MME UE S1 AP ID
-        uint64_t ueAggregateMaxBitRateDownlink; ///< UE aggregrate max bit rate downlink
-        uint64_t ueAggregateMaxBitRateUplink;   ///< UE aggregrate max bit rate uplink
+        uint64_t ueAggregateMaxBitRateDownlink; ///< UE aggregate max bit rate downlink
+        uint64_t ueAggregateMaxBitRateUplink;   ///< UE aggregate max bit rate uplink
         std::vector<ErabToBeSetupItem> bearers; ///< bearers
         Ptr<Packet> rrcContext;                 ///< RRC context
     };
@@ -503,6 +503,9 @@ class EpcX2SpecificEpcX2SapProvider : public EpcX2SapProvider
      */
     EpcX2SpecificEpcX2SapProvider(C* x2);
 
+    // Delete default constructor to avoid misuse
+    EpcX2SpecificEpcX2SapProvider() = delete;
+
     //
     // Interface implemented from EpcX2SapProvider
     //
@@ -562,18 +565,12 @@ class EpcX2SpecificEpcX2SapProvider : public EpcX2SapProvider
     void SendHandoverCancel(HandoverCancelParams params) override;
 
   private:
-    EpcX2SpecificEpcX2SapProvider();
     C* m_x2; ///< owner class
 };
 
 template <class C>
 EpcX2SpecificEpcX2SapProvider<C>::EpcX2SpecificEpcX2SapProvider(C* x2)
     : m_x2(x2)
-{
-}
-
-template <class C>
-EpcX2SpecificEpcX2SapProvider<C>::EpcX2SpecificEpcX2SapProvider()
 {
 }
 
@@ -655,6 +652,9 @@ class EpcX2SpecificEpcX2SapUser : public EpcX2SapUser
      */
     EpcX2SpecificEpcX2SapUser(C* rrc);
 
+    // Delete default constructor to avoid misuse
+    EpcX2SpecificEpcX2SapUser() = delete;
+
     //
     // Interface implemented from EpcX2SapUser
     //
@@ -715,18 +715,12 @@ class EpcX2SpecificEpcX2SapUser : public EpcX2SapUser
     void RecvHandoverCancel(HandoverCancelParams params) override;
 
   private:
-    EpcX2SpecificEpcX2SapUser();
     C* m_rrc; ///< owner class
 };
 
 template <class C>
 EpcX2SpecificEpcX2SapUser<C>::EpcX2SpecificEpcX2SapUser(C* rrc)
     : m_rrc(rrc)
-{
-}
-
-template <class C>
-EpcX2SpecificEpcX2SapUser<C>::EpcX2SpecificEpcX2SapUser()
 {
 }
 

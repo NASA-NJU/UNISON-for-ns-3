@@ -36,7 +36,7 @@ NS_OBJECT_ENSURE_REGISTERED(PhasedArrayModel);
 std::ostream&
 operator<<(std::ostream& os, const PhasedArrayModel::ComplexVector& cv)
 {
-    size_t N = cv.size();
+    size_t N = cv.GetSize();
 
     // empty
     if (N == 0)
@@ -63,7 +63,6 @@ PhasedArrayModel::PhasedArrayModel()
 
 PhasedArrayModel::~PhasedArrayModel()
 {
-    m_beamformingVector.clear();
 }
 
 TypeId
@@ -85,8 +84,8 @@ void
 PhasedArrayModel::SetBeamformingVector(const ComplexVector& beamformingVector)
 {
     NS_LOG_FUNCTION(this << beamformingVector);
-    NS_ASSERT_MSG(beamformingVector.size() == GetNumberOfElements(),
-                  beamformingVector.size() << " != " << GetNumberOfElements());
+    NS_ASSERT_MSG(beamformingVector.GetSize() == GetNumberOfElements(),
+                  beamformingVector.GetSize() << " != " << GetNumberOfElements());
     m_beamformingVector = beamformingVector;
     m_isBfVectorValid = true;
 }
@@ -101,30 +100,17 @@ PhasedArrayModel::GetBeamformingVector() const
     return m_beamformingVector;
 }
 
-double
-PhasedArrayModel::ComputeNorm(const ComplexVector& vector)
-{
-    double norm = 0;
-
-    for (uint64_t i = 0; i < vector.size(); i++)
-    {
-        norm += std::norm(vector[i]);
-    }
-
-    return std::sqrt(norm);
-}
-
 PhasedArrayModel::ComplexVector
 PhasedArrayModel::GetBeamformingVector(Angles a) const
 {
     NS_LOG_FUNCTION(this << a);
 
     ComplexVector beamformingVector = GetSteeringVector(a);
-    double norm = ComputeNorm(beamformingVector);
+    double normRes = norm(beamformingVector);
 
-    for (uint64_t i = 0; i < beamformingVector.size(); i++)
+    for (size_t i = 0; i < GetNumberOfElements(); i++)
     {
-        beamformingVector[i] = std::conj(beamformingVector[i]) / norm;
+        beamformingVector[i] = std::conj(beamformingVector[i]) / normRes;
     }
 
     return beamformingVector;
@@ -133,9 +119,8 @@ PhasedArrayModel::GetBeamformingVector(Angles a) const
 PhasedArrayModel::ComplexVector
 PhasedArrayModel::GetSteeringVector(Angles a) const
 {
-    ComplexVector steeringVector;
-    steeringVector.resize(GetNumberOfElements());
-    for (uint64_t i = 0; i < GetNumberOfElements(); i++)
+    ComplexVector steeringVector(GetNumberOfElements());
+    for (size_t i = 0; i < GetNumberOfElements(); i++)
     {
         Vector loc = GetElementLocation(i);
         double phase = -2 * M_PI *

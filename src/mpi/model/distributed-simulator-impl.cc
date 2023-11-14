@@ -58,25 +58,25 @@ LbtsMessage::GetSmallestTime()
 }
 
 uint32_t
-LbtsMessage::GetTxCount()
+LbtsMessage::GetTxCount() const
 {
     return m_txCount;
 }
 
 uint32_t
-LbtsMessage::GetRxCount()
+LbtsMessage::GetRxCount() const
 {
     return m_rxCount;
 }
 
 uint32_t
-LbtsMessage::GetMyId()
+LbtsMessage::GetMyId() const
 {
     return m_myId;
 }
 
 bool
-LbtsMessage::IsFinished()
+LbtsMessage::IsFinished() const
 {
     return m_isFinished;
 }
@@ -164,7 +164,7 @@ DistributedSimulatorImpl::CalculateLookAhead()
 {
     NS_LOG_FUNCTION(this);
 
-    /* If runnning sequential simulation can ignore lookahead */
+    /* If running sequential simulation can ignore lookahead */
     if (MpiInterface::GetSize() <= 1)
     {
         m_lookAhead = Seconds(0);

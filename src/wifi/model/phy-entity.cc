@@ -239,11 +239,9 @@ PhyEntity::GetPhyHeaderSections(const WifiTxVector& txVector, Time ppduStart) co
 }
 
 Ptr<WifiPpdu>
-PhyEntity::BuildPpdu(const WifiConstPsduMap& psdus,
-                     const WifiTxVector& txVector,
-                     Time /* ppduDuration */)
+PhyEntity::BuildPpdu(const WifiConstPsduMap& psdus, const WifiTxVector& txVector, Time ppduDuration)
 {
-    NS_LOG_FUNCTION(this << psdus << txVector);
+    NS_LOG_FUNCTION(this << psdus << txVector << ppduDuration);
     NS_FATAL_ERROR("This method is unsupported for the base PhyEntity class. Use the overloaded "
                    "version in the amendment-specific subclasses instead!");
     return Create<WifiPpdu>(psdus.begin()->second,
@@ -410,7 +408,9 @@ PhyEntity::StartReceivePreamble(Ptr<const WifiPpdu> ppdu,
            const std::pair<WifiSpectrumBand, double>& p2) { return p1.second < p2.second; });
     NS_LOG_FUNCTION(this << ppdu << it->second);
 
-    Ptr<Event> event = DoGetEvent(ppdu, rxPowersW);
+    Ptr<Event> event = m_wifiPhy->GetPhyEntityForPpdu(ppdu)->DoGetEvent(
+        ppdu,
+        rxPowersW); // use latest PHY entity to handle MU-RTS sent with non-HT rate
     if (!event)
     {
         // PPDU should be simply considered as interference (once it has been accounted for in
@@ -1279,30 +1279,31 @@ PhyEntity::NotifyPayloadBegin(const WifiTxVector& txVector, const Time& payloadD
 }
 
 void
-PhyEntity::StartTx(Ptr<const WifiPpdu> ppdu, const WifiTxVector& txVector)
+PhyEntity::StartTx(Ptr<const WifiPpdu> ppdu)
 {
-    NS_LOG_FUNCTION(this << ppdu << txVector);
-    Transmit(ppdu->GetTxDuration(), ppdu, txVector, "transmission");
+    NS_LOG_FUNCTION(this << ppdu);
+    auto txPowerDbm = m_wifiPhy->GetTxPowerForTransmission(ppdu) + m_wifiPhy->GetTxGain();
+    auto txVector = ppdu->GetTxVector();
+    auto txPowerSpectrum = GetTxPowerSpectralDensity(DbmToW(txPowerDbm), ppdu);
+    Transmit(ppdu->GetTxDuration(), ppdu, txPowerDbm, txPowerSpectrum, "transmission");
 }
 
 void
 PhyEntity::Transmit(Time txDuration,
                     Ptr<const WifiPpdu> ppdu,
-                    const WifiTxVector& txVector,
-                    std::string type)
+                    double txPowerDbm,
+                    Ptr<SpectrumValue> txPowerSpectrum,
+                    const std::string& type)
 {
-    NS_LOG_FUNCTION(this << txDuration << ppdu << txVector << type);
-    double txPowerWatts =
-        DbmToW(m_wifiPhy->GetTxPowerForTransmission(ppdu) + m_wifiPhy->GetTxGain());
-    NS_LOG_DEBUG("Start " << type << ": signal power before antenna gain=" << WToDbm(txPowerWatts)
-                          << "dBm");
-    Ptr<SpectrumValue> txPowerSpectrum = GetTxPowerSpectralDensity(txPowerWatts, ppdu, txVector);
-    Ptr<WifiSpectrumSignalParameters> txParams = Create<WifiSpectrumSignalParameters>();
+    NS_LOG_FUNCTION(this << txDuration << ppdu << txPowerDbm << type);
+    NS_LOG_DEBUG("Start " << type << ": signal power before antenna gain=" << txPowerDbm << "dBm");
+    auto txParams = Create<WifiSpectrumSignalParameters>();
     txParams->duration = txDuration;
     txParams->psd = txPowerSpectrum;
     txParams->ppdu = ppdu;
-    txParams->txCenterFreq = GetCenterFrequencyForChannelWidth(txVector);
-    NS_LOG_DEBUG("Starting " << type << " with power " << WToDbm(txPowerWatts) << " dBm on channel "
+    txParams->txWidth = ppdu->GetTxVector().GetChannelWidth();
+    ;
+    NS_LOG_DEBUG("Starting " << type << " with power " << txPowerDbm << " dBm on channel "
                              << +m_wifiPhy->GetChannelNumber() << " for "
                              << txParams->duration.As(Time::MS));
     NS_LOG_DEBUG("Starting " << type << " with integrated spectrum power "
@@ -1333,6 +1334,36 @@ PhyEntity::CalculateTxDuration(WifiConstPsduMap psduMap,
     NS_ASSERT(psduMap.size() == 1);
     const auto& it = psduMap.begin();
     return WifiPhy::CalculateTxDuration(it->second->GetSize(), txVector, band, it->first);
+}
+
+bool
+PhyEntity::CanStartRx(Ptr<const WifiPpdu> ppdu, uint16_t txChannelWidth) const
+{
+    // The PHY shall not issue a PHY-RXSTART.indication primitive in response to a PPDU that does
+    // not overlap the primary channel
+    const auto channelWidth = m_wifiPhy->GetChannelWidth();
+    const auto primaryWidth =
+        ((channelWidth % 20 == 0) ? 20
+                                  : channelWidth); // if the channel width is a multiple of 20 MHz,
+                                                   // then we consider the primary20 channel
+    const auto p20CenterFreq =
+        m_wifiPhy->GetOperatingChannel().GetPrimaryChannelCenterFrequency(primaryWidth);
+    const auto p20MinFreq = p20CenterFreq - (primaryWidth / 2);
+    const auto p20MaxFreq = p20CenterFreq + (primaryWidth / 2);
+    const auto txCenterFreq = ppdu->GetTxCenterFreq();
+    const auto minTxFreq = txCenterFreq - txChannelWidth / 2;
+    const auto maxTxFreq = txCenterFreq + txChannelWidth / 2;
+    if (p20MinFreq < minTxFreq || p20MaxFreq > maxTxFreq)
+    {
+        return false;
+    }
+    return true;
+}
+
+Ptr<const WifiPpdu>
+PhyEntity::GetRxPpduFromTxPpdu(Ptr<const WifiPpdu> ppdu)
+{
+    return ppdu;
 }
 
 } // namespace ns3

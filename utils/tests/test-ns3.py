@@ -68,6 +68,10 @@ def run_ns3(args, env=None, generator=platform_makefiles):
                 shutil.rmtree(leftover, ignore_errors=True)
     if " -G " in args:
         args = args.format(generator=generator)
+    if env is None:
+        env = {}
+    # Disable colored output by default during tests
+    env["CLICOLOR"] = "0"
     return run_program(ns3_script, args, python=True, env=env)
 
 
@@ -140,7 +144,8 @@ def get_libraries_list(lib_outdir=usual_lib_outdir):
     @param lib_outdir: path containing libraries
     @return list of built libraries.
     """
-    return glob.glob(lib_outdir + '/*', recursive=True)
+    libraries = glob.glob(lib_outdir + '/*', recursive=True)
+    return list(filter(lambda x: "scratch-nested-subdir-lib" not in x, libraries))
 
 
 def get_headers_list(outdir=usual_outdir):
@@ -178,6 +183,71 @@ def get_enabled_modules():
     @return list of enabled modules (prefixed with 'ns3-').
     """
     return read_lock_entry("NS3_ENABLED_MODULES")
+
+
+class DockerContainerManager:
+    """!
+    Python-on-whales wrapper for Docker-based ns-3 tests
+    """
+
+    def __init__(self, currentTestCase: unittest.TestCase, containerName: str = "ubuntu:latest"):
+        """!
+        Create and start container with containerName in the current ns-3 directory
+        @param self: the current DockerContainerManager instance
+        @param currentTestCase: the test case instance creating the DockerContainerManager
+        @param containerName: name of the container image to be used
+        """
+        global DockerException
+        try:
+            from python_on_whales import docker
+            from python_on_whales.exceptions import DockerException
+        except ModuleNotFoundError:
+            docker = None  # noqa
+            DockerException = None  # noqa
+            currentTestCase.skipTest("python-on-whales was not found")
+
+        # Import rootless docker settings from .bashrc
+        with open(os.path.expanduser("~/.bashrc"), "r") as f:
+            docker_settings = re.findall("(DOCKER_.*=.*)", f.read())
+            for setting in docker_settings:
+                key, value = setting.split("=")
+                os.environ[key] = value
+            del docker_settings, setting, key, value
+
+        # Create Docker client instance and start it
+        ## The Python-on-whales container instance
+        self.container = docker.run(containerName,
+                                    interactive=True, detach=True,
+                                    tty=False,
+                                    volumes=[(ns3_path, "/ns-3-dev")]
+                                    )
+
+        # Redefine the execute command of the container
+        def split_exec(docker_container, cmd):
+            return docker_container._execute(cmd.split(), workdir="/ns-3-dev")
+
+        self.container._execute = self.container.execute
+        self.container.execute = partial(split_exec, self.container)
+
+    def __enter__(self):
+        """!
+        Return the managed container when entiring the block "with DockerContainerManager() as container"
+        @param self: the current DockerContainerManager instance
+        @return container managed by DockerContainerManager.
+        """
+        return self.container
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """!
+        Clean up the managed container at the end of the block "with DockerContainerManager() as container"
+        @param self: the current DockerContainerManager instance
+        @param exc_type: unused parameter
+        @param exc_val: unused parameter
+        @param exc_tb: unused parameter
+        @return None
+        """
+        self.container.stop()
+        self.container.remove()
 
 
 class NS3UnusedSourcesTestCase(unittest.TestCase):
@@ -596,14 +666,45 @@ class NS3ConfigureBuildProfileTestCase(unittest.TestCase):
         self.assertEqual(return_code, 2)
         self.assertIn("invalid choice: 'OPTIMIZED'", stderr)
 
+    def test_06_OverwriteDefaultSettings(self):
+        """!
+        Replace settings set by default (e.g. ASSERT/LOGs enabled in debug builds and disabled in default ones)
+        @return None
+        """
+        return_code, _, _ = run_ns3("clean")
+        self.assertEqual(return_code, 0)
+
+        return_code, stdout, stderr = run_ns3("configure -G \"{generator}\" --dry-run -d debug")
+        self.assertEqual(return_code, 0)
+        self.assertIn(
+            "-DCMAKE_BUILD_TYPE=debug -DNS3_ASSERT=ON -DNS3_LOG=ON -DNS3_WARNINGS_AS_ERRORS=ON -DNS3_NATIVE_OPTIMIZATIONS=OFF",
+            stdout)
+
+        return_code, stdout, stderr = run_ns3(
+            "configure -G \"{generator}\" --dry-run -d debug --disable-asserts --disable-logs --disable-werror")
+        self.assertEqual(return_code, 0)
+        self.assertIn(
+            "-DCMAKE_BUILD_TYPE=debug -DNS3_NATIVE_OPTIMIZATIONS=OFF -DNS3_ASSERT=OFF -DNS3_LOG=OFF -DNS3_WARNINGS_AS_ERRORS=OFF",
+            stdout)
+
+        return_code, stdout, stderr = run_ns3("configure -G \"{generator}\" --dry-run")
+        self.assertEqual(return_code, 0)
+        self.assertIn(
+            "-DCMAKE_BUILD_TYPE=default -DNS3_ASSERT=ON -DNS3_LOG=ON -DNS3_WARNINGS_AS_ERRORS=OFF -DNS3_NATIVE_OPTIMIZATIONS=OFF",
+            stdout)
+
+        return_code, stdout, stderr = run_ns3(
+            "configure -G \"{generator}\" --dry-run --enable-asserts --enable-logs --enable-werror")
+        self.assertEqual(return_code, 0)
+        self.assertIn(
+            "-DCMAKE_BUILD_TYPE=default -DNS3_ASSERT=ON -DNS3_LOG=ON -DNS3_NATIVE_OPTIMIZATIONS=OFF -DNS3_ASSERT=ON -DNS3_LOG=ON -DNS3_WARNINGS_AS_ERRORS=ON",
+            stdout)
+
 
 class NS3BaseTestCase(unittest.TestCase):
     """!
     Generic test case with basic function inherited by more complex tests.
     """
-
-    ## when cleaned_once is False, clean up build artifacts and reconfigure # noqa
-    cleaned_once = False
 
     def config_ok(self, return_code, stdout):
         """!
@@ -628,12 +729,10 @@ class NS3BaseTestCase(unittest.TestCase):
         if os.path.exists(ns3rc_script):
             os.remove(ns3rc_script)
 
-        # We only clear it once and then update the settings by changing flags or consuming ns3rc.
-        if not NS3BaseTestCase.cleaned_once:
-            NS3BaseTestCase.cleaned_once = True
-            run_ns3("clean")
-            return_code, stdout, stderr = run_ns3("configure -G \"{generator}\" -d release --enable-verbose")
-            self.config_ok(return_code, stdout)
+        # Reconfigure from scratch before each test
+        run_ns3("clean")
+        return_code, stdout, stderr = run_ns3("configure -G \"{generator}\" -d release --enable-verbose")
+        self.config_ok(return_code, stdout)
 
         # Check if .lock-ns3 exists, then read to get list of executables.
         self.assertTrue(os.path.exists(ns3_lock_filename))
@@ -651,17 +750,11 @@ class NS3ConfigureTestCase(NS3BaseTestCase):
     Test ns3 configuration options
     """
 
-    ## when cleaned_once is False, clean up build artifacts and reconfigure # noqa
-    cleaned_once = False
-
     def setUp(self):
         """!
         Reuse cleaning/release configuration from NS3BaseTestCase if flag is cleaned
         @return None
         """
-        if not NS3ConfigureTestCase.cleaned_once:
-            NS3ConfigureTestCase.cleaned_once = True
-            NS3BaseTestCase.cleaned_once = False
         super().setUp()
 
     def test_01_Examples(self):
@@ -1081,7 +1174,7 @@ class NS3ConfigureTestCase(NS3BaseTestCase):
         """
         return_code, stdout, stderr = run_ns3("show config")
         self.assertEqual(return_code, 0)
-        self.assertIn("Summary of optional ns-3 features", stdout)
+        self.assertIn("Summary of ns-3 settings", stdout)
 
     def test_11_CheckProfile(self):
         """!
@@ -1090,7 +1183,7 @@ class NS3ConfigureTestCase(NS3BaseTestCase):
         """
         return_code, stdout, stderr = run_ns3("show profile")
         self.assertEqual(return_code, 0)
-        self.assertIn("Build profile: default", stdout)
+        self.assertIn("Build profile: release", stdout)
 
     def test_12_CheckVersion(self):
         """!
@@ -1385,9 +1478,6 @@ class NS3ConfigureTestCase(NS3BaseTestCase):
             self.assertIn("--profiling-format=google-trace --profiling-output=../cmake_performance_trace.log", stdout)
         self.assertTrue(os.path.exists(os.path.join(ns3_path, "cmake_performance_trace.log")))
 
-        # Reconfigure to clean leftovers before the next test
-        NS3ConfigureTestCase.cleaned_once = False
-
     def test_18_CheckBuildVersionAndVersionCache(self):
         """!
         Check if ENABLE_BUILD_VERSION and version.cache are working
@@ -1395,35 +1485,8 @@ class NS3ConfigureTestCase(NS3BaseTestCase):
         @return None
         """
 
-        try:
-            from python_on_whales import docker
-            from python_on_whales.exceptions import DockerException
-        except ModuleNotFoundError:
-            docker = None  # noqa
-            DockerException = None  # noqa
-            self.skipTest("python-on-whales was not found")
-
-        # Import rootless docker settings from .bashrc
-        with open(os.path.expanduser("~/.bashrc"), "r") as f:
-            docker_settings = re.findall("(DOCKER_.*=.*)", f.read())
-            for setting in docker_settings:
-                key, value = setting.split("=")
-                os.environ[key] = value
-            del docker_settings, setting, key, value
-
         # Create Docker client instance and start it
-        with docker.run("ubuntu:22.04",
-                        interactive=True, detach=True,
-                        tty=False,
-                        volumes=[(ns3_path, "/ns-3-dev")]
-                        ) as container:
-            # Redefine the execute command of the container
-            def split_exec(docker_container, cmd):
-                return docker_container._execute(cmd.split(), workdir="/ns-3-dev")
-
-            container._execute = container.execute
-            container.execute = partial(split_exec, container)
-
+        with DockerContainerManager(self, "ubuntu:22.04") as container:
             # Install basic packages
             container.execute("apt-get update")
             container.execute("apt-get install -y python3 ninja-build cmake g++")
@@ -1496,9 +1559,6 @@ class NS3ConfigureTestCase(NS3BaseTestCase):
             if os.path.exists(version_cache_file):
                 os.remove(version_cache_file)
 
-        # Reconfigure to clean leftovers before the next test
-        NS3ConfigureTestCase.cleaned_once = False
-
     def test_19_FilterModuleExamplesAndTests(self):
         """!
         Test filtering in examples and tests from specific modules
@@ -1548,37 +1608,8 @@ class NS3ConfigureTestCase(NS3BaseTestCase):
         @return None
         """
 
-        try:
-            from python_on_whales import docker
-            from python_on_whales.exceptions import DockerException
-        except ModuleNotFoundError:
-            docker = None  # noqa
-            DockerException = None  # noqa
-            self.skipTest("python-on-whales was not found")
-
         run_ns3("clean")
-
-        # Import rootless docker settings from .bashrc
-        with open(os.path.expanduser("~/.bashrc"), "r") as f:
-            docker_settings = re.findall("(DOCKER_.*=.*)", f.read())
-            for setting in docker_settings:
-                key, value = setting.split("=")
-                os.environ[key] = value
-            del docker_settings, setting, key, value
-
-        # Create Docker client instance and start it
-        with docker.run("gcc:12.1",  # Debian with minimum supported version of GCC for Mold
-                        interactive=True, detach=True,
-                        tty=False,
-                        volumes=[(ns3_path, "/ns-3-dev")],
-                        ) as container:
-            # Redefine the execute command of the container
-            def split_exec(docker_container, cmd):
-                return docker_container._execute(cmd.split(), workdir="/ns-3-dev")
-
-            container._execute = container.execute
-            container.execute = partial(split_exec, container)
-
+        with DockerContainerManager(self, "gcc:12.1") as container:
             # Install basic packages
             container.execute("apt-get update")
             container.execute("apt-get install -y python3 ninja-build cmake g++ lld")
@@ -1621,8 +1652,192 @@ class NS3ConfigureTestCase(NS3BaseTestCase):
             # Delete mold leftovers
             os.remove("./mold-1.4.2-x86_64-linux.tar.gz")
 
-        # Clean leftovers before proceeding
+            # Disable use of fast linkers
+            container.execute("./ns3 configure -G Ninja -- -DNS3_FAST_LINKERS=OFF")
+
+            # Check if configuration properly disabled lld/mold usage
+            self.assertTrue(os.path.exists(os.path.join(ns3_path, "cmake-cache", "build.ninja")))
+            with open(os.path.join(ns3_path, "cmake-cache", "build.ninja"), "r") as f:
+                self.assertNotIn("-fuse-ld=mold", f.read())
+
+    def test_21_ClangTimeTrace(self):
+        """!
+        Check if NS3_CLANG_TIMETRACE feature is working
+        Clang's -ftime-trace plus ClangAnalyzer report
+        @return None
+        """
+
         run_ns3("clean")
+        with DockerContainerManager(self, "ubuntu:20.04") as container:
+            container.execute("apt-get update")
+            container.execute("apt-get install -y python3 ninja-build cmake clang-10")
+
+            # Enable ClangTimeTrace without git (it should fail)
+            try:
+                container.execute(
+                    "./ns3 configure -G Ninja --enable-modules=core --enable-examples --enable-tests -- -DCMAKE_CXX_COMPILER=/usr/bin/clang++-10 -DNS3_CLANG_TIMETRACE=ON")
+            except DockerException as e:
+                self.assertIn("could not find git for clone of ClangBuildAnalyzer", e.stderr)
+
+            container.execute("apt-get install -y git")
+
+            # Enable ClangTimeTrace without git (it should succeed)
+            try:
+                container.execute(
+                    "./ns3 configure -G Ninja --enable-modules=core --enable-examples --enable-tests -- -DCMAKE_CXX_COMPILER=/usr/bin/clang++-10 -DNS3_CLANG_TIMETRACE=ON")
+            except DockerException as e:
+                self.assertIn("could not find git for clone of ClangBuildAnalyzer", e.stderr)
+
+            # Clean leftover time trace report
+            time_trace_report_path = os.path.join(ns3_path, "ClangBuildAnalyzerReport.txt")
+            if os.path.exists(time_trace_report_path):
+                os.remove(time_trace_report_path)
+
+            # Build new time trace report
+            try:
+                container.execute("./ns3 build timeTraceReport")
+            except DockerException as e:
+                self.assertTrue(False, "Failed to build the ClangAnalyzer's time trace report")
+
+            # Check if the report exists
+            self.assertTrue(os.path.exists(time_trace_report_path))
+
+            # Now try with GCC, which should fail during the configuration
+            run_ns3("clean")
+            container.execute("apt-get install -y g++")
+            container.execute("apt-get remove -y clang-10")
+
+            try:
+                container.execute(
+                    "./ns3 configure -G Ninja --enable-modules=core --enable-examples --enable-tests -- -DNS3_CLANG_TIMETRACE=ON")
+                self.assertTrue(False, "ClangTimeTrace requires Clang, but GCC just passed the checks too")
+            except DockerException as e:
+                self.assertIn("TimeTrace is a Clang feature", e.stderr)
+
+    def test_22_NinjaTrace(self):
+        """!
+        Check if NS3_NINJA_TRACE feature is working
+        Ninja's .ninja_log conversion to about://tracing
+        json format conversion with Ninjatracing
+        @return None
+        """
+
+        run_ns3("clean")
+        with DockerContainerManager(self, "ubuntu:20.04") as container:
+            container.execute("apt-get update")
+            container.execute("apt-get install -y python3 cmake clang-10")
+
+            # Enable Ninja tracing without using the Ninja generator
+            try:
+                container.execute(
+                    "./ns3 configure --enable-modules=core --enable-ninja-tracing -- -DCMAKE_CXX_COMPILER=/usr/bin/clang++-10")
+            except DockerException as e:
+                self.assertIn("Ninjatracing requires the Ninja generator", e.stderr)
+
+            # Clean build system leftovers
+            run_ns3("clean")
+
+            container.execute("apt-get install -y ninja-build")
+            # Enable Ninjatracing support without git (should fail)
+            try:
+                container.execute(
+                    "./ns3 configure -G Ninja --enable-modules=core --enable-ninja-tracing -- -DCMAKE_CXX_COMPILER=/usr/bin/clang++-10")
+            except DockerException as e:
+                self.assertIn("could not find git for clone of NinjaTracing", e.stderr)
+
+            container.execute("apt-get install -y git")
+            # Enable Ninjatracing support with git (it should succeed)
+            try:
+                container.execute(
+                    "./ns3 configure -G Ninja --enable-modules=core --enable-ninja-tracing -- -DCMAKE_CXX_COMPILER=/usr/bin/clang++-10")
+            except DockerException as e:
+                self.assertTrue(False, "Failed to configure with Ninjatracing")
+
+            # Clean leftover ninja trace
+            ninja_trace_path = os.path.join(ns3_path, "ninja_performance_trace.json")
+            if os.path.exists(ninja_trace_path):
+                os.remove(ninja_trace_path)
+
+            # Build the core module
+            container.execute("./ns3 build core")
+
+            # Build new ninja trace
+            try:
+                container.execute("./ns3 build ninjaTrace")
+            except DockerException as e:
+                self.assertTrue(False, "Failed to run Ninjatracing's tool to build the trace")
+
+            # Check if the report exists
+            self.assertTrue(os.path.exists(ninja_trace_path))
+            trace_size = os.stat(ninja_trace_path).st_size
+            os.remove(ninja_trace_path)
+
+            run_ns3("clean")
+
+            # Enable Clang TimeTrace feature for more detailed traces
+            try:
+                container.execute(
+                    "./ns3 configure -G Ninja --enable-modules=core --enable-ninja-tracing -- -DCMAKE_CXX_COMPILER=/usr/bin/clang++-10 -DNS3_CLANG_TIMETRACE=ON")
+            except DockerException as e:
+                self.assertTrue(False, "Failed to configure Ninjatracing with Clang's TimeTrace")
+
+            # Build the core module
+            container.execute("./ns3 build core")
+
+            # Build new ninja trace
+            try:
+                container.execute("./ns3 build ninjaTrace")
+            except DockerException as e:
+                self.assertTrue(False, "Failed to run Ninjatracing's tool to build the trace")
+
+            self.assertTrue(os.path.exists(ninja_trace_path))
+            timetrace_size = os.stat(ninja_trace_path).st_size
+            os.remove(ninja_trace_path)
+
+            # Check if timetrace's trace is bigger than the original trace (it should be)
+            self.assertGreater(timetrace_size, trace_size)
+
+    def test_23_PrecompiledHeaders(self):
+        """!
+        Check if precompiled headers are being enabled correctly.
+        @return None
+        """
+
+        run_ns3("clean")
+        # Ubuntu 18.04 ships with:
+        # - cmake 3.10: does not support PCH
+        # - ccache 3.4: incompatible with pch
+        with DockerContainerManager(self, "ubuntu:18.04") as container:
+            container.execute("apt-get update")
+            container.execute("apt-get install -y python3 cmake ccache clang-10")
+            try:
+                container.execute("./ns3 configure -- -DCMAKE_CXX_COMPILER=/usr/bin/clang++-10")
+            except DockerException as e:
+                self.assertIn("does not support precompiled headers", e.stderr)
+        run_ns3("clean")
+
+        # Ubuntu 20.04 ships with:
+        # - cmake 3.16: does support PCH
+        # - ccache 3.7: incompatible with pch
+        with DockerContainerManager(self, "ubuntu:20.04") as container:
+            container.execute("apt-get update")
+            container.execute("apt-get install -y python3 cmake ccache g++")
+            try:
+                container.execute("./ns3 configure")
+            except DockerException as e:
+                self.assertIn("incompatible with ccache", e.stderr)
+        run_ns3("clean")
+
+        # Ubuntu 22.04 ships with:
+        # - cmake 3.22: does support PCH
+        # - ccache 4.5: compatible with pch
+        with DockerContainerManager(self, "ubuntu:22.04") as container:
+            container.execute("apt-get update")
+            container.execute("apt-get install -y python3 cmake ccache g++")
+            try:
+                container.execute("./ns3 configure")
+            except DockerException as e:
+                self.assertTrue(False, "Precompiled headers should have been enabled")
 
 
 class NS3BuildBaseTestCase(NS3BaseTestCase):
@@ -1630,17 +1845,11 @@ class NS3BuildBaseTestCase(NS3BaseTestCase):
     Tests ns3 regarding building the project
     """
 
-    ## when cleaned_once is False, clean up build artifacts and reconfigure # noqa
-    cleaned_once = False
-
     def setUp(self):
         """!
         Reuse cleaning/release configuration from NS3BaseTestCase if flag is cleaned
         @return None
         """
-        if not NS3BuildBaseTestCase.cleaned_once:
-            NS3BuildBaseTestCase.cleaned_once = True
-            NS3BaseTestCase.cleaned_once = False
         super().setUp()
 
         self.ns3_libraries = get_libraries_list()
@@ -1706,9 +1915,6 @@ class NS3BuildBaseTestCase(NS3BaseTestCase):
         return_code, stdout, stderr = run_ns3("build")
         self.assertEqual(return_code, 0)
 
-        # Reset flag to let it clean the build
-        NS3BuildBaseTestCase.cleaned_once = False
-
     def test_06_TestVersionFile(self):
         """!
         Test if changing the version file affects the library names
@@ -1752,9 +1958,6 @@ class NS3BuildBaseTestCase(NS3BaseTestCase):
         # Restore version file.
         with open(version_file, "w") as f:
             f.write("3-dev\n")
-
-        # Reset flag to let it clean the build.
-        NS3BuildBaseTestCase.cleaned_once = False
 
     def test_07_OutputDirectory(self):
         """!
@@ -1981,9 +2184,6 @@ class NS3BuildBaseTestCase(NS3BaseTestCase):
         with open(version_file, "w") as f:
             f.write("3-dev\n")
 
-        # Reset flag to let it clean the build
-        NS3BuildBaseTestCase.cleaned_once = False
-
     def test_09_Scratches(self):
         """!
         Tries to build scratch-simulator and subdir/scratch-simulator-subdir
@@ -2010,8 +2210,6 @@ class NS3BuildBaseTestCase(NS3BaseTestCase):
             self.assertIn(build_line, stdout)
             stdout = stdout.replace("scratch_%s" % target_cmake, "")  # remove build lines
             self.assertIn(target_to_run.split("/")[-1].replace(".cc", ""), stdout)
-
-        NS3BuildBaseTestCase.cleaned_once = False
 
     def test_10_AmbiguityCheck(self):
         """!
@@ -2067,8 +2265,6 @@ class NS3BuildBaseTestCase(NS3BaseTestCase):
         # Remove second
         os.remove("./scratch/second.cc")
 
-        NS3BuildBaseTestCase.cleaned_once = False
-
     def test_11_StaticBuilds(self):
         """!
         Test if we can build a static ns-3 library and link it to static programs
@@ -2094,7 +2290,6 @@ class NS3BuildBaseTestCase(NS3BaseTestCase):
             self.assertIn("Built target", stdout)
 
         # Maybe check the built binary for shared library references? Using objdump, otool, etc
-        NS3BuildBaseTestCase.cleaned_once = False
 
     def test_12_CppyyBindings(self):
         """!
@@ -2131,24 +2326,19 @@ class NS3ExpectedUseTestCase(NS3BaseTestCase):
     Tests ns3 usage in more realistic scenarios
     """
 
-    ## when cleaned_once is False, clean up build artifacts and reconfigure # noqa
-    cleaned_once = False
-
     def setUp(self):
         """!
         Reuse cleaning/release configuration from NS3BaseTestCase if flag is cleaned
         Here examples, tests and documentation are also enabled.
         @return None
         """
-        if not NS3ExpectedUseTestCase.cleaned_once:
-            NS3ExpectedUseTestCase.cleaned_once = True
-            NS3BaseTestCase.cleaned_once = False
-            super().setUp()
 
-            # On top of the release build configured by NS3ConfigureTestCase, also enable examples, tests and docs.
-            return_code, stdout, stderr = run_ns3(
-                "configure -d release -G \"{generator}\" --enable-examples --enable-tests")
-            self.config_ok(return_code, stdout)
+        super().setUp()
+
+        # On top of the release build configured by NS3ConfigureTestCase, also enable examples, tests and docs.
+        return_code, stdout, stderr = run_ns3(
+            "configure -d release -G \"{generator}\" --enable-examples --enable-tests")
+        self.config_ok(return_code, stdout)
 
         # Check if .lock-ns3 exists, then read to get list of executables.
         self.assertTrue(os.path.exists(ns3_lock_filename))
@@ -2210,6 +2400,9 @@ class NS3ExpectedUseTestCase(NS3BaseTestCase):
         Try to run test-runner without building
         @return None
         """
+        return_code, stdout, stderr = run_ns3('build test-runner')
+        self.assertEqual(return_code, 0)
+
         return_code, stdout, stderr = run_ns3('run "test-runner --list" --no-build --verbose')
         self.assertEqual(return_code, 0)
         self.assertNotIn("Built target test-runner", stdout)
@@ -2241,6 +2434,9 @@ class NS3ExpectedUseTestCase(NS3BaseTestCase):
         if shutil.which("gdb") is None:
             self.skipTest("Missing gdb")
 
+        return_code, stdout, stderr = run_ns3("build scratch-simulator")
+        self.assertEqual(return_code, 0)
+
         return_code, stdout, stderr = run_ns3("run scratch-simulator --gdb --verbose --no-build", env={"gdb_eval": "1"})
         self.assertEqual(return_code, 0)
         self.assertIn("scratch-simulator", stdout)
@@ -2256,6 +2452,9 @@ class NS3ExpectedUseTestCase(NS3BaseTestCase):
         """
         if shutil.which("valgrind") is None:
             self.skipTest("Missing valgrind")
+
+        return_code, stdout, stderr = run_ns3("build scratch-simulator")
+        self.assertEqual(return_code, 0)
 
         return_code, stdout, stderr = run_ns3("run scratch-simulator --valgrind --verbose --no-build")
         self.assertEqual(return_code, 0)
@@ -2321,7 +2520,7 @@ class NS3ExpectedUseTestCase(NS3BaseTestCase):
         doc_folder = os.path.abspath(os.sep.join([".", "doc"]))
 
         # For each sphinx doc target.
-        for target in ["contributing", "manual", "models", "tutorial"]:
+        for target in ["installation", "contributing", "manual", "models", "tutorial"]:
             # First we need to clean old docs, or it will not make any sense.
             doc_build_folder = os.sep.join([doc_folder, target, "build"])
             doc_temp_folder = os.sep.join([doc_folder, target, "source-temp"])
@@ -2468,9 +2667,8 @@ class NS3ExpectedUseTestCase(NS3BaseTestCase):
         return_code2, stdout2, stderr2 = run_ns3('run sample-simulator --command-template " "')
         return_code3, stdout3, stderr3 = run_ns3('run sample-simulator --command-template "echo "')
         self.assertEqual((return_code1, return_code2, return_code3), (1, 1, 1))
-        self.assertIn("not all arguments converted during string formatting", stderr1)
-        self.assertEqual(stderr1, stderr2)
-        self.assertEqual(stderr2, stderr3)
+        for stderr in [stderr1, stderr2, stderr3]:
+            self.assertIn("not all arguments converted during string formatting", stderr)
 
         # Command templates with %s should at least continue and try to run the target
         return_code4, stdout4, _ = run_ns3('run sample-simulator --command-template "%s --PrintVersion" --verbose')
@@ -2573,6 +2771,8 @@ class NS3QualityControlTestCase(unittest.TestCase):
         # Skip this test if requests library is not available
         try:
             import requests
+            import urllib3
+            urllib3.disable_warnings()
         except ImportError:
             requests = None  # noqa
             self.skipTest("Requests library is not available")
@@ -2639,7 +2839,8 @@ class NS3QualityControlTestCase(unittest.TestCase):
 
         # User agent string to make ACM and Elsevier let us check if links to papers are working
         headers = {
-            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36' # noqa
+            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36'
+            # noqa
         }
 
         def test_file_url(args):
@@ -2651,37 +2852,39 @@ class NS3QualityControlTestCase(unittest.TestCase):
                 validate_url(test_url)
             except ValidationError:
                 dead_link_msg = "%s: URL %s, invalid URL" % (test_filepath, test_url)
+            except Exception as e:
+                self.assertEqual(False, True, msg=e.__str__())
 
+            if dead_link_msg is not None:
+                return dead_link_msg
+            tries = 3
             # Check if valid URLs are alive
-            if dead_link_msg is None:
+            while tries > 0:
+                # Not verifying the certificate (verify=False) is potentially dangerous
+                # HEAD checks are not as reliable as GET ones,
+                # in some cases they may return bogus error codes and reasons
                 try:
-                    tries = 3
-                    while tries > 0:
-                        # Not verifying the certificate (verify=False) is potentially dangerous
-                        # HEAD checks are not as reliable as GET ones,
-                        # in some cases they may return bogus error codes and reasons
-                        response = requests.get(test_url, verify=False, headers=headers)
+                    response = requests.get(test_url, verify=False, headers=headers, timeout=50)
 
-                        # In case of success and redirection
-                        if response.status_code in [200, 301]:
+                    # In case of success and redirection
+                    if response.status_code in [200, 301]:
+                        dead_link_msg = None
+                        break
+
+                    # People use the wrong code, but the reason
+                    # can still be correct
+                    if response.status_code in [302, 308, 500, 503]:
+                        if response.reason.lower() in ['found',
+                                                       'moved temporarily',
+                                                       'permanent redirect',
+                                                       'ok',
+                                                       'service temporarily unavailable'
+                                                       ]:
                             dead_link_msg = None
                             break
-
-                        # People use the wrong code, but the reason
-                        # can still be correct
-                        if response.status_code in [302, 308, 500, 503]:
-                            if response.reason.lower() in ['found',
-                                                           'moved temporarily',
-                                                           'permanent redirect',
-                                                           'ok',
-                                                           'service temporarily unavailable'
-                                                           ]:
-                                dead_link_msg = None
-                                break
-                        # In case it didn't pass in any of the previous tests,
-                        # set dead_link_msg with the most recent error and try again
-                        dead_link_msg = "%s: URL %s: returned code %d" % (test_filepath, test_url, response.status_code)
-                        tries -= 1
+                    # In case it didn't pass in any of the previous tests,
+                    # set dead_link_msg with the most recent error and try again
+                    dead_link_msg = "%s: URL %s: returned code %d" % (test_filepath, test_url, response.status_code)
                 except requests.exceptions.InvalidURL:
                     dead_link_msg = "%s: URL %s: invalid URL" % (test_filepath, test_url)
                 except requests.exceptions.SSLError:
@@ -2694,11 +2897,12 @@ class NS3QualityControlTestCase(unittest.TestCase):
                     except AttributeError:
                         error_msg = e.args[0]
                     dead_link_msg = "%s: URL %s: failed with exception: %s" % (test_filepath, test_url, error_msg)
+                tries -= 1
             return dead_link_msg
 
         # Dispatch threads to test multiple URLs concurrently
         from concurrent.futures import ThreadPoolExecutor
-        with ThreadPoolExecutor(max_workers=20) as executor:
+        with ThreadPoolExecutor(max_workers=100) as executor:
             dead_links = list(executor.map(test_file_url, list(files_and_urls)))
 
         # Filter out None entries
@@ -2715,9 +2919,6 @@ class NS3QualityControlTestCase(unittest.TestCase):
         self.assertEqual(return_code, 0)
 
         test_return_code, stdout, stderr = run_program("test.py", "", python=True)
-
-        return_code, stdout, stderr = run_ns3("clean")
-        self.assertEqual(return_code, 0)
         self.assertEqual(test_return_code, 0)
 
     def test_03_CheckImageBrightness(self):

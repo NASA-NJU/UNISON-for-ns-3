@@ -551,7 +551,7 @@ DsrRouting::GetElementsFromContext(std::string context)
     std::vector<std::string> elements;
     size_t pos1 = 0;
     size_t pos2;
-    while (pos1 != context.npos)
+    while (pos1 != std::string::npos)
     {
         pos1 = context.find('/', pos1);
         pos2 = context.find('/', pos1 + 1);
@@ -743,7 +743,7 @@ DsrRouting::PrintVector(std::vector<Ipv4Address>& vec)
     /*
      * Check elements in a route vector
      */
-    if (!vec.size())
+    if (vec.empty())
     {
         NS_LOG_DEBUG("The vector is empty");
     }

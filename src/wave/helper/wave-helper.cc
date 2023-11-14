@@ -91,7 +91,7 @@ AsciiPhyReceiveSinkWithContext(Ptr<OutputStreamWrapper> stream,
                                Ptr<const Packet> p,
                                double snr,
                                WifiMode mode,
-                               enum WifiPreamble preamble)
+                               WifiPreamble preamble)
 {
     NS_LOG_FUNCTION(stream << context << p << snr << mode << preamble);
     *stream->GetStream() << "r " << Simulator::Now().GetSeconds() << " " << context << " " << *p
@@ -111,7 +111,7 @@ AsciiPhyReceiveSinkWithoutContext(Ptr<OutputStreamWrapper> stream,
                                   Ptr<const Packet> p,
                                   double snr,
                                   WifiMode mode,
-                                  enum WifiPreamble preamble)
+                                  WifiPreamble preamble)
 {
     NS_LOG_FUNCTION(stream << p << snr << mode << preamble);
     *stream->GetStream() << "r " << Simulator::Now().GetSeconds() << " " << *p << std::endl;
@@ -146,8 +146,7 @@ YansWavePhyHelper::EnablePcapInternal(std::string prefix,
     }
 
     std::vector<Ptr<WifiPhy>> phys = device->GetPhys();
-    NS_ABORT_MSG_IF(phys.size() == 0,
-                    "EnablePcapInternal(): Phy layer in WaveNetDevice must be set");
+    NS_ABORT_MSG_IF(phys.empty(), "EnablePcapInternal(): Phy layer in WaveNetDevice must be set");
 
     PcapHelper pcapHelper;
 
@@ -303,7 +302,7 @@ WaveHelper::Default()
 void
 WaveHelper::CreateMacForChannel(std::vector<uint32_t> channelNumbers)
 {
-    if (channelNumbers.size() == 0)
+    if (channelNumbers.empty())
     {
         NS_FATAL_ERROR("the WAVE MAC entities is at least one");
     }

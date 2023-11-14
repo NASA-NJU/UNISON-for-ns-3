@@ -31,7 +31,7 @@ NS_LOG_COMPONENT_DEFINE("OutdoorRandomWalkExample");
 /**
  * Print the buildings list in a format that can be used by Gnuplot to draw them.
  *
- * \param filename The ouput filename.
+ * \param filename The output filename.
  */
 void
 PrintGnuplottableBuildingListToFile(std::string filename)
@@ -131,4 +131,6 @@ main(int argc, char* argv[])
     Simulator::Stop(Seconds(1e4));
     Simulator::Run();
     Simulator::Destroy();
+
+    return 0;
 }

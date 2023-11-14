@@ -282,7 +282,10 @@ MgtProbeRequestHeader::Deserialize(Buffer::Iterator start)
     i = WifiInformationElement::DeserializeIfPresent(m_htCapability, i);
     i = WifiInformationElement::DeserializeIfPresent(m_vhtCapability, i);
     i = WifiInformationElement::DeserializeIfPresent(m_heCapability, i);
-    i = WifiInformationElement::DeserializeIfPresent(m_ehtCapability, i);
+    const bool is2_4Ghz = m_rates.IsSupportedRate(
+        1000000 /* 1 Mbit/s */); // TODO: use presence of VHT capabilities IE and HE 6 GHz Band
+                                 // Capabilities IE once the later is implemented
+    i = WifiInformationElement::DeserializeIfPresent(m_ehtCapability, i, is2_4Ghz, m_heCapability);
     return i.GetDistanceFrom(start);
 }
 
@@ -301,7 +304,7 @@ MgtProbeResponseHeader::~MgtProbeResponseHeader()
 }
 
 uint64_t
-MgtProbeResponseHeader::GetTimestamp()
+MgtProbeResponseHeader::GetTimestamp() const
 {
     return m_timestamp;
 }
@@ -484,6 +487,24 @@ const std::optional<EhtCapabilities>&
 MgtProbeResponseHeader::GetEhtCapabilities() const
 {
     return m_ehtCapability;
+}
+
+void
+MgtProbeResponseHeader::SetEhtOperation(const EhtOperation& ehtOperation)
+{
+    m_ehtOperation = ehtOperation;
+}
+
+void
+MgtProbeResponseHeader::SetEhtOperation(EhtOperation&& ehtOperation)
+{
+    m_ehtOperation = std::move(ehtOperation);
+}
+
+const std::optional<EhtOperation>&
+MgtProbeResponseHeader::GetEhtOperation() const
+{
+    return m_ehtOperation;
 }
 
 void
@@ -709,6 +730,10 @@ MgtProbeResponseHeader::GetSerializedSize() const
     {
         size += m_ehtCapability->GetSerializedSize();
     }
+    if (m_ehtOperation.has_value())
+    {
+        size += m_ehtOperation->GetSerializedSize();
+    }
     return size;
 }
 
@@ -752,6 +777,10 @@ MgtProbeResponseHeader::Print(std::ostream& os) const
     if (m_ehtCapability.has_value())
     {
         os << "EHT Capabilities=" << *m_ehtCapability;
+    }
+    if (m_ehtOperation.has_value())
+    {
+        os << "EHT Operation=" << *m_ehtOperation;
     }
 }
 
@@ -824,6 +853,10 @@ MgtProbeResponseHeader::Serialize(Buffer::Iterator start) const
     {
         i = m_ehtCapability->Serialize(i);
     }
+    if (m_ehtOperation.has_value())
+    {
+        i = m_ehtOperation->Serialize(i);
+    }
 }
 
 uint32_t
@@ -851,7 +884,11 @@ MgtProbeResponseHeader::Deserialize(Buffer::Iterator start)
     i = WifiInformationElement::DeserializeIfPresent(m_heOperation, i);
     i = WifiInformationElement::DeserializeIfPresent(m_muEdcaParameterSet, i);
     i = WifiInformationElement::DeserializeIfPresent(m_multiLinkElement, i, WIFI_MAC_MGT_BEACON);
-    i = WifiInformationElement::DeserializeIfPresent(m_ehtCapability, i);
+    const bool is2_4Ghz = m_rates.IsSupportedRate(
+        1000000 /* 1 Mbit/s */); // TODO: use presence of VHT capabilities IE and HE 6 GHz Band
+                                 // Capabilities IE once the later is implemented
+    i = WifiInformationElement::DeserializeIfPresent(m_ehtCapability, i, is2_4Ghz, m_heCapability);
+    i = WifiInformationElement::DeserializeIfPresent(m_ehtOperation, i);
 
     return i.GetDistanceFrom(start);
 }
@@ -1199,7 +1236,10 @@ MgtAssocRequestHeader::Deserialize(Buffer::Iterator start)
     i = WifiInformationElement::DeserializeIfPresent(m_multiLinkElement,
                                                      i,
                                                      WIFI_MAC_MGT_ASSOCIATION_REQUEST);
-    i = WifiInformationElement::DeserializeIfPresent(m_ehtCapability, i);
+    const bool is2_4Ghz = m_rates.IsSupportedRate(
+        1000000 /* 1 Mbit/s */); // TODO: use presence of VHT capabilities IE and HE 6 GHz Band
+                                 // Capabilities IE once the later is implemented
+    i = WifiInformationElement::DeserializeIfPresent(m_ehtCapability, i, is2_4Ghz, m_heCapability);
     return i.GetDistanceFrom(start);
 }
 
@@ -1539,7 +1579,10 @@ MgtReassocRequestHeader::Deserialize(Buffer::Iterator start)
     i = WifiInformationElement::DeserializeIfPresent(m_multiLinkElement,
                                                      i,
                                                      WIFI_MAC_MGT_REASSOCIATION_REQUEST);
-    i = WifiInformationElement::DeserializeIfPresent(m_ehtCapability, i);
+    const bool is2_4Ghz = m_rates.IsSupportedRate(
+        1000000 /* 1 Mbit/s */); // TODO: use presence of VHT capabilities IE and HE 6 GHz Band
+                                 // Capabilities IE once the later is implemented
+    i = WifiInformationElement::DeserializeIfPresent(m_ehtCapability, i, is2_4Ghz, m_heCapability);
     return i.GetDistanceFrom(start);
 }
 
@@ -1751,6 +1794,24 @@ MgtAssocResponseHeader::GetEhtCapabilities() const
 }
 
 void
+MgtAssocResponseHeader::SetEhtOperation(const EhtOperation& ehtOperation)
+{
+    m_ehtOperation = ehtOperation;
+}
+
+void
+MgtAssocResponseHeader::SetEhtOperation(EhtOperation&& ehtOperation)
+{
+    m_ehtOperation = std::move(ehtOperation);
+}
+
+const std::optional<EhtOperation>&
+MgtAssocResponseHeader::GetEhtOperation() const
+{
+    return m_ehtOperation;
+}
+
+void
 MgtAssocResponseHeader::SetMultiLinkElement(const MultiLinkElement& multiLinkElement)
 {
     m_multiLinkElement = multiLinkElement;
@@ -1910,6 +1971,10 @@ MgtAssocResponseHeader::GetSerializedSize() const
     {
         size += m_ehtCapability->GetSerializedSize();
     }
+    if (m_ehtOperation.has_value())
+    {
+        size += m_ehtOperation->GetSerializedSize();
+    }
     return size;
 }
 
@@ -1954,6 +2019,10 @@ MgtAssocResponseHeader::Print(std::ostream& os) const
     if (m_ehtCapability.has_value())
     {
         os << "EHT Capabilities=" << *m_ehtCapability;
+    }
+    if (m_ehtOperation.has_value())
+    {
+        os << "EHT Operation=" << *m_ehtOperation;
     }
 }
 
@@ -2017,6 +2086,10 @@ MgtAssocResponseHeader::Serialize(Buffer::Iterator start) const
     {
         i = m_ehtCapability->Serialize(i);
     }
+    if (m_ehtOperation.has_value())
+    {
+        i = m_ehtOperation->Serialize(i);
+    }
 }
 
 uint32_t
@@ -2042,7 +2115,11 @@ MgtAssocResponseHeader::Deserialize(Buffer::Iterator start)
     i = WifiInformationElement::DeserializeIfPresent(m_multiLinkElement,
                                                      i,
                                                      WIFI_MAC_MGT_ASSOCIATION_RESPONSE);
-    i = WifiInformationElement::DeserializeIfPresent(m_ehtCapability, i);
+    const bool is2_4Ghz = m_rates.IsSupportedRate(
+        1000000 /* 1 Mbit/s */); // TODO: use presence of VHT capabilities IE and HE 6 GHz Band
+                                 // Capabilities IE once the later is implemented
+    i = WifiInformationElement::DeserializeIfPresent(m_ehtCapability, i, is2_4Ghz, m_heCapability);
+    i = WifiInformationElement::DeserializeIfPresent(m_ehtOperation, i);
     return i.GetDistanceFrom(start);
 }
 
@@ -2111,7 +2188,7 @@ WifiActionHeader::SetAction(WifiActionHeader::CategoryValue type,
 }
 
 WifiActionHeader::CategoryValue
-WifiActionHeader::GetCategory()
+WifiActionHeader::GetCategory() const
 {
     switch (m_category)
     {
@@ -2144,7 +2221,7 @@ WifiActionHeader::GetCategory()
 }
 
 WifiActionHeader::ActionValue
-WifiActionHeader::GetAction()
+WifiActionHeader::GetAction() const
 {
     ActionValue retval;
     retval.selfProtectedAction =

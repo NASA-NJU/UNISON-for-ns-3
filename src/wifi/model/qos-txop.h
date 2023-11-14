@@ -117,16 +117,6 @@ class QosTxop : public Txop
      * \param address recipient address of the peer station
      * \param tid traffic ID.
      *
-     * \return true if a block ack agreement is established, false otherwise.
-     *
-     * Checks if a block ack agreement is established with station addressed by
-     * <i>recipient</i> for TID <i>tid</i>.
-     */
-    bool GetBaAgreementEstablished(Mac48Address address, uint8_t tid) const;
-    /**
-     * \param address recipient address of the peer station
-     * \param tid traffic ID.
-     *
      * \return the negotiated buffer size during ADDBA handshake.
      *
      * Returns the negotiated buffer size during ADDBA handshake with station addressed by
@@ -145,24 +135,6 @@ class QosTxop : public Txop
      */
     uint16_t GetBaStartingSequence(Mac48Address address, uint8_t tid) const;
     /**
-     * \param recipient MAC address of recipient
-     * \param tid traffic ID
-     *
-     * \return the type of Block Ack Requests sent to the recipient
-     *
-     * This function returns the type of Block Ack Requests sent to the recipient.
-     */
-    BlockAckReqType GetBlockAckReqType(Mac48Address recipient, uint8_t tid) const;
-    /**
-     * \param recipient MAC address
-     * \param tid traffic ID
-     *
-     * \return the type of Block Acks sent by the recipient
-     *
-     * This function returns the type of Block Acks sent by the recipient.
-     */
-    BlockAckType GetBlockAckType(Mac48Address recipient, uint8_t tid) const;
-    /**
      * \param recipient Address of recipient.
      * \param tid traffic ID.
      * \return the BlockAckRequest to send
@@ -172,15 +144,7 @@ class QosTxop : public Txop
      * corresponding to the given TID. A block ack agreement with the given recipient
      * for the given TID must have been established by such QosTxop.
      */
-    Ptr<const WifiMpdu> PrepareBlockAckRequest(Mac48Address recipient, uint8_t tid) const;
-    /**
-     * \param bar the BlockAckRequest to schedule
-     * \param skipIfNoDataQueued do not send if there is no data queued
-     *
-     * Request the block ack manager to schedule the transmission of the given
-     * BlockAckRequest.
-     */
-    void ScheduleBar(Ptr<const WifiMpdu> bar, bool skipIfNoDataQueued = false);
+    Ptr<WifiMpdu> PrepareBlockAckRequest(Mac48Address recipient, uint8_t tid) const;
 
     /* Event handlers */
     /**
@@ -189,7 +153,7 @@ class QosTxop : public Txop
      * \param respHdr ADDBA response header.
      * \param recipient address of the recipient.
      */
-    void GotAddBaResponse(const MgtAddBaResponseHeader* respHdr, Mac48Address recipient);
+    void GotAddBaResponse(const MgtAddBaResponseHeader& respHdr, Mac48Address recipient);
     /**
      * Event handler when a DELBA frame is received.
      *
@@ -197,6 +161,14 @@ class QosTxop : public Txop
      * \param recipient address of the recipient.
      */
     void GotDelBaFrame(const MgtDelBaHeader* delBaHdr, Mac48Address recipient);
+    /**
+     * Take action upon notification of ADDBA_REQUEST frame being discarded
+     * (likely due to exceeded max retry limit).
+     *
+     * \param recipient the intended recipient of the ADDBA_REQUEST frame
+     * \param tid the TID
+     */
+    void NotifyOriginatorAgreementNoReply(const Mac48Address& recipient, uint8_t tid);
     /**
      * Callback when ADDBA response is not received after timeout.
      *
@@ -291,8 +263,8 @@ class QosTxop : public Txop
     /**
      * Peek the next frame to transmit on the given link to the given receiver and of the given TID
      * from the EDCA queue. If <i>tid</i> is equal to 8 (invalid value) and <i>recipient</i>
-     * is the broadcast address, the first available frame is returned. If <i>item</i>
-     * is not a null pointer, the search starts from the packet following <i>item</i>
+     * is the broadcast address, the first available frame is returned. If <i>mpdu</i>
+     * is not a null pointer, the search starts from the MPDU following <i>mpdu</i>
      * in the queue; otherwise, the search starts from the head of the queue.
      * Note that A-MSDU aggregation is never attempted. If the frame has never been
      * transmitted, it is assigned a sequence number peeked from MacTxMiddle.
@@ -301,13 +273,13 @@ class QosTxop : public Txop
      * \param linkId the ID of the given link
      * \param tid traffic ID.
      * \param recipient the receiver station address.
-     * \param item the item after which the search starts from
+     * \param mpdu the MPDU after which the search starts from
      * \returns the peeked frame.
      */
     Ptr<WifiMpdu> PeekNextMpdu(uint8_t linkId,
                                uint8_t tid = 8,
                                Mac48Address recipient = Mac48Address::GetBroadcast(),
-                               Ptr<WifiMpdu> item = nullptr);
+                               Ptr<const WifiMpdu> mpdu = nullptr);
     /**
      * Prepare the frame to transmit on the given link starting from the MPDU that has been
      * previously peeked by calling PeekNextMpdu. A frame is only returned if it meets the
@@ -505,6 +477,9 @@ class QosTxop : public Txop
     Time m_failedAddBaTimeout;            //!< timeout after failed BA agreement
     bool m_useExplicitBarAfterMissedBlockAck; //!< flag whether explicit BlockAckRequest should be
                                               //!< sent upon missed BlockAck Response
+    uint8_t m_nMaxInflights;                  //!< the maximum number of links on which
+                                              //!< an MPDU can be in-flight at the same
+                                              //!< time
 
     /// TracedCallback for TXOP trace typedef
     typedef TracedCallback<Time /* start time */, Time /* duration */, uint8_t /* link ID*/>

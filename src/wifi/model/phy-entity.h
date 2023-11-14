@@ -454,6 +454,17 @@ class PhyEntity : public SimpleRefCount<PhyEntity>
     virtual uint16_t GetStaId(const Ptr<const WifiPpdu> ppdu) const;
 
     /**
+     * Determine whether the PHY shall issue a PHY-RXSTART.indication primitive in response to a
+     * given PPDU.
+     *
+     * \param ppdu the PPDU
+     * \param txChannelWidth the channel width (MHz) used to transmit the PPDU
+     * \return true if the PHY shall issue a PHY-RXSTART.indication primitive in response to a PPDU,
+     * false otherwise
+     */
+    virtual bool CanStartRx(Ptr<const WifiPpdu> ppdu, uint16_t txChannelWidth) const;
+
+    /**
      * Check if PHY state should move to CCA busy state based on current
      * state of interference tracker.
      *
@@ -476,9 +487,8 @@ class PhyEntity : public SimpleRefCount<PhyEntity>
      * \see SpectrumWifiPhy::StartTx
      *
      * \param ppdu the PPDU to send
-     * \param txVector the TXVECTOR used for the transmission of the PPDU
      */
-    virtual void StartTx(Ptr<const WifiPpdu> ppdu, const WifiTxVector& txVector);
+    virtual void StartTx(Ptr<const WifiPpdu> ppdu);
 
     /**
      * This function prepares most of the WifiSpectrumSignalParameters
@@ -487,13 +497,15 @@ class PhyEntity : public SimpleRefCount<PhyEntity>
      *
      * \param txDuration the duration of the transmission
      * \param ppdu the PPDU to send
-     * \param txVector the TXVECTOR used for the transmission of the PPDU
+     * \param txPowerDbm the total TX power in dBm
+     * \param txPowerSpectrum the TX PSD
      * \param type the type of transmission (for logging)
      */
     void Transmit(Time txDuration,
                   Ptr<const WifiPpdu> ppdu,
-                  const WifiTxVector& txVector,
-                  std::string type);
+                  double txPowerDbm,
+                  Ptr<SpectrumValue> txPowerSpectrum,
+                  const std::string& type);
 
     /**
      * \param psduMap the PSDU(s) to transmit indexed by STA-ID
@@ -515,6 +527,26 @@ class PhyEntity : public SimpleRefCount<PhyEntity>
      */
     virtual double GetCcaThreshold(const Ptr<const WifiPpdu> ppdu,
                                    WifiChannelListType channelType) const;
+
+    /**
+     * The WifiPpdu from the TX PHY is received by each RX PHY attached to the same channel.
+     * By default and for performance reasons, all RX PHYs will work on the same WifiPpdu instance
+     * from TX instead of a copy of it. Child classes can change that behavior and do a copy and/or
+     * change the content of the parameters stored in WifiPpdu.
+     *
+     * \param ppdu the WifiPpdu transmitted by the TX PHY
+     * \return the WifiPpdu to be used by the RX PHY
+     */
+    virtual Ptr<const WifiPpdu> GetRxPpduFromTxPpdu(Ptr<const WifiPpdu> ppdu);
+
+    /**
+     * Obtain the next UID for the PPDU to transmit.
+     * Note that the global UID counter could be incremented.
+     *
+     * \param txVector the transmission parameters
+     * \return the UID to use for the PPDU to transmit
+     */
+    virtual uint64_t ObtainNextUid(const WifiTxVector& txVector);
 
   protected:
     /**
@@ -709,7 +741,7 @@ class PhyEntity : public SimpleRefCount<PhyEntity>
                                     uint16_t staId,
                                     const std::vector<bool>& statusPerMpdu);
     /**
-     * Perform amendment-specific actions when the payload is unsuccessfully received.
+     * Perform amendment-specific actions when the payload is unsuccessfuly received.
      *
      * \param psdu the PSDU that we failed to received
      * \param snr the SNR of the received PSDU in linear scale
@@ -818,26 +850,15 @@ class PhyEntity : public SimpleRefCount<PhyEntity>
     void NotifyInterferenceRxEndAndClear(bool reset);
 
     /**
-     * Obtain the next UID for the PPDU to transmit.
-     * Note that the global UID counter could be incremented.
-     *
-     * \param txVector the transmission parameters
-     * \return the UID to use for the PPDU to transmit
-     */
-    virtual uint64_t ObtainNextUid(const WifiTxVector& txVector);
-
-    /**
      * \param txPowerW power in W to spread across the bands
      * \param ppdu the PPDU that will be transmitted
-     * \param txVector the transmission parameters
      * \return Pointer to SpectrumValue
      *
      * This is a helper function to create the right TX PSD corresponding
      * to the amendment of this PHY.
      */
     virtual Ptr<SpectrumValue> GetTxPowerSpectralDensity(double txPowerW,
-                                                         Ptr<const WifiPpdu> ppdu,
-                                                         const WifiTxVector& txVector) const = 0;
+                                                         Ptr<const WifiPpdu> ppdu) const = 0;
 
     /**
      * Get the center frequency of the channel corresponding the current TxVector rather than

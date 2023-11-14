@@ -42,6 +42,7 @@ class MultiLinkElement;
 class HtOperation;
 class VhtOperation;
 class HeOperation;
+class EhtOperation;
 class CfParameterSet;
 class UniformRandomVariable;
 class MgtAssocRequestHeader;
@@ -107,13 +108,30 @@ class ApWifiMac : public WifiMac
      * \param linkId the ID of the given link
      * \return a const reference to the map of associated stations
      */
-    const std::map<uint16_t, Mac48Address>& GetStaList(uint8_t linkId = SINGLE_LINK_OP_ID) const;
+    const std::map<uint16_t, Mac48Address>& GetStaList(uint8_t linkId) const;
     /**
      * \param addr the address of the associated station
      * \param linkId the ID of the link on which the station is associated
      * \return the Association ID allocated by the AP to the station, SU_STA_ID if unallocated
      */
     uint16_t GetAssociationId(Mac48Address addr, uint8_t linkId) const;
+
+    /**
+     * Get the ID of a link (if any) that has been setup with the station having the given MAC
+     * address. The address can be either a link address or an MLD address. In the former case,
+     * the returned ID is the ID of the link connecting the AP to the STA with the given address.
+     *
+     * \param address the given MAC address
+     * \return the ID of a link (if any) that has been setup with the given station
+     */
+    std::optional<uint8_t> IsAssociated(const Mac48Address& address) const;
+
+    /**
+     * \param aid the given AID
+     * \return the MLD address (in case of MLD) or link address (in case of single link device)
+     *         of the STA having the given AID, if any
+     */
+    std::optional<Mac48Address> GetMldOrLinkAddressByAid(uint16_t aid) const;
 
     /**
      * Return the value of the Queue Size subfield of the last QoS Data or QoS Null
@@ -182,10 +200,15 @@ class ApWifiMac : public WifiMac
      */
     ApLinkEntity& GetLink(uint8_t linkId) const;
 
+    std::map<uint16_t, Mac48Address>
+        m_aidToMldOrLinkAddress; //!< Maps AIDs to MLD addresses (for MLDs) or link addresses (in
+                                 //!< case of single link devices)
+
   private:
     std::unique_ptr<LinkEntity> CreateLinkEntity() const override;
-
+    Mac48Address DoGetLocalAddress(const Mac48Address& remoteAddr) const override;
     void Receive(Ptr<const WifiMpdu> mpdu, uint8_t linkId) override;
+
     /**
      * Check whether the supported rate set included in the received (Re)Association
      * Request frame is compatible with our Basic Rate Set. If so, record all the station's
@@ -278,9 +301,10 @@ class ApWifiMac : public WifiMac
      * \return the Association Response frame
      */
     MgtAssocResponseHeader GetAssocResp(Mac48Address to, uint8_t linkId);
+    /// Map of (link ID, remote STA address) of the links to setup
+    using LinkIdStaAddrMap = std::map<uint8_t, Mac48Address>;
     /**
-     * Set the AID field of the given Association Response frame, which is going
-     * to be sent to the STA with the given address on the given link. In case of
+     * Set the AID field of the given Association Response frame. In case of
      * multi-link setup, the selected AID value must be assigned to all the STAs
      * corresponding to the setup links. The AID value is selected among the AID
      * values that are possibly already assigned to the STAs affiliated with the
@@ -288,10 +312,34 @@ class ApWifiMac : public WifiMac
      * a new AID value is selected.
      *
      * \param assoc the given Association Response frame
-     * \param to the address of the STA receiving the Association Response frame
-     * \param linkId the ID of the given link
+     * \param linkIdStaAddrMap a map of (link ID, remote STA address) of the links to setup
      */
-    void SetAid(MgtAssocResponseHeader& assoc, const Mac48Address& to, uint8_t linkId);
+    void SetAid(MgtAssocResponseHeader& assoc, const LinkIdStaAddrMap& linkIdStaAddrMap);
+    /**
+     * Get a map of (link ID, remote STA address) of the links to setup. Information
+     * is taken from the given Association Response that is sent over the given link
+     * to the given station.
+     *
+     * \param assoc the given Association Response frame
+     * \param to the Receiver Address (RA) of the Association Response frame
+     * \param linkId the ID of the link on which the Association Response frame is sent
+     * \return a map of (link ID, remote STA address) of the links to setup
+     */
+    LinkIdStaAddrMap GetLinkIdStaAddrMap(MgtAssocResponseHeader& assoc,
+                                         const Mac48Address& to,
+                                         uint8_t linkId);
+    /**
+     * Configure the queue scheduler so that frames stored in the container queues associated
+     * with the station which we are sending an Association Response frame to are only transmitted
+     * on the setup links.
+     *
+     * \param linkIdStaAddrMap a map of (link ID, remote STA address) of the links to setup
+     * \param to the Receiver Address (RA) of the Association Response frame
+     * \param linkId the ID of the link on which the Association Response frame is being sent
+     */
+    void ConfigQueueScheduler(const LinkIdStaAddrMap& linkIdStaAddrMap,
+                              const Mac48Address& to,
+                              uint8_t linkId);
     /**
      * Forward an association or a reassociation response packet to the DCF/EDCA.
      *
@@ -377,6 +425,13 @@ class ApWifiMac : public WifiMac
      */
     HeOperation GetHeOperation(uint8_t linkId) const;
     /**
+     * Return the EHT operation of the current AP for the given link.
+     *
+     * \param linkId the ID of the given link
+     * \return the EHT operation that we support
+     */
+    EhtOperation GetEhtOperation(uint8_t linkId) const;
+    /**
      * Return an instance of SupportedRates that contains all rates that we support
      * for the given link (including HT rates).
      *
@@ -448,14 +503,14 @@ class ApWifiMac : public WifiMac
     Time m_bsrLifetime;            //!< Lifetime of Buffer Status Reports
 
     /// store value and timestamp for each Buffer Status Report
-    typedef struct
+    struct BsrType
     {
         uint8_t value;  //!< value of BSR
         Time timestamp; //!< timestamp of BSR
-    } bsrType;
+    };
 
     /// Per (MAC address, TID) buffer status reports
-    std::unordered_map<WifiAddressTidPair, bsrType, WifiAddressTidHash> m_bufferStatus;
+    std::unordered_map<WifiAddressTidPair, BsrType, WifiAddressTidHash> m_bufferStatus;
 
     /**
      * TracedCallback signature for association/deassociation events.

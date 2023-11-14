@@ -25,11 +25,13 @@
 #include "mgt-headers.h"
 #include "wifi-mac.h"
 
+#include <set>
 #include <variant>
 
 class TwoLevelAggregationTest;
 class AmpduAggregationTest;
 class HeAggregationTest;
+class MultiLinkOperationsTestBase;
 
 namespace ns3
 {
@@ -127,6 +129,8 @@ class StaWifiMac : public WifiMac
     friend class ::AmpduAggregationTest;
     /// Allow test cases to access private members
     friend class ::HeAggregationTest;
+    /// Allow test cases to access private members
+    friend class ::MultiLinkOperationsTestBase;
 
     /// type of the management frames used to get info about APs
     using MgtFrameType =
@@ -201,6 +205,13 @@ class StaWifiMac : public WifiMac
      * \return true if we are associated with an AP, false otherwise
      */
     bool IsAssociated() const;
+
+    /**
+     * Get the IDs of the setup links (if any).
+     *
+     * \return the IDs of the setup links
+     */
+    std::set<uint8_t> GetSetupLinkIds() const;
 
     /**
      * Return the association ID.
@@ -290,6 +301,7 @@ class StaWifiMac : public WifiMac
 
     void Receive(Ptr<const WifiMpdu> mpdu, uint8_t linkId) override;
     std::unique_ptr<LinkEntity> CreateLinkEntity() const override;
+    Mac48Address DoGetLocalAddress(const Mac48Address& remoteAddr) const override;
 
     /**
      * Process the Beacon frame received on the given link.

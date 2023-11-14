@@ -265,7 +265,7 @@ class AttributeObjectTest : public Object
                               MakeBooleanChecker())
                 .AddAttribute("EnumTraceSource",
                               "help text",
-                              EnumValue(false),
+                              EnumValue(TEST_A),
                               MakeEnumAccessor(&AttributeObjectTest::m_enumSrc),
                               MakeEnumChecker(TEST_A, "TestA"))
                 .AddAttribute("ValueClassSource",
@@ -495,7 +495,7 @@ class AttributeObjectTest : public Object
     Ptr<Derived> m_ptrInitialized;           //!< Pointer to Derived class.
     Ptr<Derived> m_ptrInitialized2;          //!< Pointer to Derived class.
     TracedValue<uint8_t> m_uintSrc;          //!< uint8_t Traced value.
-    TracedValue<enum Test_e> m_enumSrc;      //!< enum Traced value.
+    TracedValue<Test_e> m_enumSrc;           //!< enum Traced value.
     TracedValue<double> m_doubleSrc;         //!< double Traced value.
     TracedValue<bool> m_boolSrc;             //!< bool Traced value.
     Time m_timeWithBounds;                   //!< Time with bounds
@@ -908,16 +908,16 @@ AttributeTestCase<DoubleValue>::DoRun()
     // When the object is first created, the Attribute should have the default
     // value.
     //
-    ok = CheckGetCodePaths(p, "TestFloat", "-1.1", DoubleValue((float)-1.1));
+    ok = CheckGetCodePaths(p, "TestFloat", "-1.1", DoubleValue(-1.1F));
     NS_TEST_ASSERT_MSG_EQ(ok, true, "Attribute not set properly by default value");
 
     //
     // Set the Attribute.
     //
-    ok = p->SetAttributeFailSafe("TestFloat", DoubleValue((float)2.3));
+    ok = p->SetAttributeFailSafe("TestFloat", DoubleValue(2.3F));
     NS_TEST_ASSERT_MSG_EQ(ok, true, "Could not SetAttributeFailSafe() to 2.3");
 
-    ok = CheckGetCodePaths(p, "TestFloat", "2.3", DoubleValue((float)2.3));
+    ok = CheckGetCodePaths(p, "TestFloat", "2.3", DoubleValue(2.3F));
     NS_TEST_ASSERT_MSG_EQ(ok,
                           true,
                           "Attribute not set properly by SetAttributeFailSafe() via DoubleValue");

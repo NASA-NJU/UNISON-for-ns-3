@@ -23,6 +23,7 @@
 #include "wifi-phy-common.h"
 
 #include "ns3/abort.h"
+#include "ns3/eht-phy.h"
 
 #include <algorithm>
 #include <iterator>
@@ -31,7 +32,8 @@ namespace ns3
 {
 
 WifiTxVector::WifiTxVector()
-    : m_preamble(WIFI_PREAMBLE_LONG),
+    : m_txPowerLevel(1),
+      m_preamble(WIFI_PREAMBLE_LONG),
       m_channelWidth(20),
       m_guardInterval(800),
       m_nTx(1),
@@ -42,9 +44,11 @@ WifiTxVector::WifiTxVector()
       m_ldpc(false),
       m_bssColor(0),
       m_length(0),
+      m_triggerResponding(false),
       m_modeInitialized(false),
       m_inactiveSubchannels(),
-      m_ruAllocation()
+      m_ruAllocation(),
+      m_ehtPpduType(1) // SU transmission by default
 {
 }
 
@@ -60,7 +64,8 @@ WifiTxVector::WifiTxVector(WifiMode mode,
                            bool stbc,
                            bool ldpc,
                            uint8_t bssColor,
-                           uint16_t length)
+                           uint16_t length,
+                           bool triggerResponding)
     : m_mode(mode),
       m_txPowerLevel(powerLevel),
       m_preamble(preamble),
@@ -74,9 +79,11 @@ WifiTxVector::WifiTxVector(WifiMode mode,
       m_ldpc(ldpc),
       m_bssColor(bssColor),
       m_length(length),
+      m_triggerResponding(triggerResponding),
       m_modeInitialized(true),
       m_inactiveSubchannels(),
-      m_ruAllocation()
+      m_ruAllocation(),
+      m_ehtPpduType(1) // SU transmission by default
 {
 }
 
@@ -94,10 +101,12 @@ WifiTxVector::WifiTxVector(const WifiTxVector& txVector)
       m_ldpc(txVector.m_ldpc),
       m_bssColor(txVector.m_bssColor),
       m_length(txVector.m_length),
+      m_triggerResponding(txVector.m_triggerResponding),
       m_modeInitialized(txVector.m_modeInitialized),
       m_inactiveSubchannels(txVector.m_inactiveSubchannels),
       m_sigBMcs(txVector.m_sigBMcs),
-      m_ruAllocation(txVector.m_ruAllocation)
+      m_ruAllocation(txVector.m_ruAllocation),
+      m_ehtPpduType(txVector.m_ehtPpduType)
 {
     m_muUserInfos.clear();
     if (!txVector.m_muUserInfos.empty()) // avoids crashing for loop
@@ -127,13 +136,23 @@ WifiTxVector::GetMode(uint16_t staId) const
     {
         NS_FATAL_ERROR("WifiTxVector mode must be set before using");
     }
-    if (IsMu())
+    if (!IsMu())
     {
-        NS_ABORT_MSG_IF(staId > 2048, "STA-ID should be correctly set for MU (" << staId << ")");
-        NS_ASSERT(m_muUserInfos.find(staId) != m_muUserInfos.end());
-        return m_muUserInfos.at(staId).mcs;
+        return m_mode;
     }
-    return m_mode;
+    NS_ABORT_MSG_IF(staId > 2048, "STA-ID should be correctly set for MU (" << staId << ")");
+    const auto userInfoIt = m_muUserInfos.find(staId);
+    NS_ASSERT(userInfoIt != m_muUserInfos.cend());
+    switch (GetModulationClassForPreamble(m_preamble))
+    {
+    case WIFI_MOD_CLASS_EHT:
+        return EhtPhy::GetEhtMcs(userInfoIt->second.mcs);
+    case WIFI_MOD_CLASS_HE:
+        return HePhy::GetHeMcs(userInfoIt->second.mcs);
+    default:
+        NS_ABORT_MSG("Unsupported modulation class: " << GetModulationClassForPreamble(m_preamble));
+    }
+    return WifiMode(); // invalid WifiMode
 }
 
 WifiModulationClass
@@ -145,7 +164,7 @@ WifiTxVector::GetModulationClass() const
     {
         NS_ASSERT(!m_muUserInfos.empty());
         // all the modes belong to the same modulation class
-        return m_muUserInfos.begin()->second.mcs.GetModulationClass();
+        return GetModulationClassForPreamble(m_preamble);
     }
     return m_mode.GetModulationClass();
 }
@@ -234,6 +253,13 @@ WifiTxVector::IsLdpc() const
     return m_ldpc;
 }
 
+bool
+WifiTxVector::IsNonHtDuplicate() const
+{
+    return ((m_channelWidth >= 40) && !IsMu() &&
+            (GetMode().GetModulationClass() < WIFI_MOD_CLASS_HT));
+}
+
 void
 WifiTxVector::SetMode(WifiMode mode)
 {
@@ -246,7 +272,7 @@ WifiTxVector::SetMode(WifiMode mode, uint16_t staId)
 {
     NS_ABORT_MSG_IF(!IsMu(), "Not a MU transmission");
     NS_ABORT_MSG_IF(staId > 2048, "STA-ID should be correctly set for MU");
-    m_muUserInfos[staId].mcs = mode;
+    m_muUserInfos[staId].mcs = mode.GetMcsValue();
     m_modeInitialized = true;
 }
 
@@ -342,6 +368,18 @@ WifiTxVector::GetLength() const
     return m_length;
 }
 
+bool
+WifiTxVector::IsTriggerResponding() const
+{
+    return m_triggerResponding;
+}
+
+void
+WifiTxVector::SetTriggerResponding(bool triggerResponding)
+{
+    m_triggerResponding = triggerResponding;
+}
+
 void
 WifiTxVector::SetSigBMode(const WifiMode& mode)
 {
@@ -357,7 +395,7 @@ WifiTxVector::GetSigBMode() const
 void
 WifiTxVector::SetRuAllocation(const RuAllocation& ruAlloc)
 {
-    if (IsDlMu() && !m_muUserInfos.empty())
+    if (ns3::IsDlMu(m_preamble) && !m_muUserInfos.empty())
     {
         NS_ASSERT(ruAlloc == DeriveRuAllocation());
     }
@@ -367,11 +405,24 @@ WifiTxVector::SetRuAllocation(const RuAllocation& ruAlloc)
 const RuAllocation&
 WifiTxVector::GetRuAllocation() const
 {
-    if (IsDlMu() && m_ruAllocation.empty())
+    if (ns3::IsDlMu(m_preamble) && m_ruAllocation.empty())
     {
         m_ruAllocation = DeriveRuAllocation();
     }
     return m_ruAllocation;
+}
+
+void
+WifiTxVector::SetEhtPpduType(uint8_t type)
+{
+    NS_ASSERT(IsEht(m_preamble));
+    m_ehtPpduType = type;
+}
+
+uint8_t
+WifiTxVector::GetEhtPpduType() const
+{
+    return m_ehtPpduType;
 }
 
 bool
@@ -413,13 +464,13 @@ WifiTxVector::IsValid() const
 bool
 WifiTxVector::IsMu() const
 {
-    return ns3::IsMu(m_preamble);
+    return IsDlMu() || IsUlMu();
 }
 
 bool
 WifiTxVector::IsDlMu() const
 {
-    return ns3::IsDlMu(m_preamble);
+    return ns3::IsDlMu(m_preamble) && !(IsEht(m_preamble) && m_ehtPpduType == 1);
 }
 
 bool
@@ -456,8 +507,6 @@ WifiTxVector::SetHeMuUserInfo(uint16_t staId, HeMuUserInfo userInfo)
 {
     NS_ABORT_MSG_IF(!IsMu(), "HE MU user info only available for MU");
     NS_ABORT_MSG_IF(staId > 2048, "STA-ID should be correctly set for MU");
-    NS_ABORT_MSG_IF(userInfo.mcs.GetModulationClass() < WIFI_MOD_CLASS_HE,
-                    "Only HE (or newer) modes authorized for MU");
     m_muUserInfos[staId] = userInfo;
     m_modeInitialized = true;
     m_ruAllocation.clear();
@@ -481,6 +530,11 @@ WifiTxVector::GetHeMuUserInfoMap()
 std::pair<std::size_t, std::size_t>
 WifiTxVector::GetNumRusPerHeSigBContentChannel() const
 {
+    if (m_preamble == WIFI_PREAMBLE_EHT_MU && m_ehtPpduType == 1)
+    {
+        return {1, 0};
+    }
+
     // MU-MIMO is not handled for now, i.e. one station per RU
     auto ruAllocation = GetRuAllocation();
     NS_ASSERT_MSG(!ruAllocation.empty(), "RU allocation is not set");
@@ -563,13 +617,17 @@ operator<<(std::ostream& os, const WifiTxVector& v)
     {
         os << " Length: " << v.GetLength();
     }
+    if (ns3::IsDlMu(v.GetPreambleType()))
+    {
+        os << " SIG-B mode: " << v.GetSigBMode();
+    }
     if (v.IsMu())
     {
         WifiTxVector::HeMuUserInfoMap userInfoMap = v.GetHeMuUserInfoMap();
         os << " num User Infos: " << userInfoMap.size();
         for (auto& ui : userInfoMap)
         {
-            os << ", {STA-ID: " << ui.first << ", " << ui.second.ru << ", MCS: " << ui.second.mcs
+            os << ", {STA-ID: " << ui.first << ", " << ui.second.ru << ", MCS: " << +ui.second.mcs
                << ", Nss: " << +ui.second.nss << "}";
         }
     }
@@ -585,13 +643,17 @@ operator<<(std::ostream& os, const WifiTxVector& v)
                   puncturedSubchannels.cend(),
                   std::ostream_iterator<bool>(os, ", "));
     }
+    if (IsEht(v.GetPreambleType()))
+    {
+        os << " EHT PPDU type: " << +v.GetEhtPpduType();
+    }
     return os;
 }
 
 bool
 HeMuUserInfo::operator==(const HeMuUserInfo& other) const
 {
-    return ru == other.ru && mcs.GetMcsValue() == other.mcs.GetMcsValue() && nss == other.nss;
+    return ru == other.ru && mcs == other.mcs && nss == other.nss;
 }
 
 bool

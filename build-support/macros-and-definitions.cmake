@@ -59,6 +59,12 @@ endif()
 
 if(APPLE)
   add_definitions(-D__APPLE__)
+  # cmake-format: off
+  # Configure find_program to search for AppBundles only if programs are not found in PATH.
+  # This prevents Doxywizard from being launched when the Doxygen.app is installed.
+  # https://gitlab.kitware.com/cmake/cmake/-/blob/master/Modules/FindDoxygen.cmake
+  # cmake-format: on
+  set(CMAKE_FIND_APPBUNDLE "LAST")
 endif()
 
 if(WIN32)
@@ -135,6 +141,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_OUTPUT_DIRECTORY})
 set(CMAKE_HEADER_OUTPUT_DIRECTORY ${CMAKE_OUTPUT_DIRECTORY}/include/ns3)
 set(THIRD_PARTY_DIRECTORY ${PROJECT_SOURCE_DIR}/3rd-party)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+link_directories(${CMAKE_OUTPUT_DIRECTORY}/lib)
 
 # Get installation folder default values for each platform and include package
 # configuration macro
@@ -234,33 +241,35 @@ if(${CLANG} AND APPLE)
   set(STATIC_LINK_FLAGS)
 endif()
 
-# Search for faster linkers mold and lld, and use them if available
-mark_as_advanced(MOLD LLD)
-find_program(MOLD mold)
-find_program(LLD ld.lld)
+if(${NS3_FAST_LINKERS})
+  # Search for faster linkers mold and lld, and use them if available
+  mark_as_advanced(MOLD LLD)
+  find_program(MOLD mold)
+  find_program(LLD ld.lld)
 
-# USING_FAST_LINKER will be defined if a fast linker is being used and its
-# content will correspond to the fast linker name
+  # USING_FAST_LINKER will be defined if a fast linker is being used and its
+  # content will correspond to the fast linker name
 
-# Mold support was added in GCC 12.1.0
-if(NOT USING_FAST_LINKER
-   AND NOT (${MOLD} STREQUAL "MOLD-NOTFOUND")
-   AND LINUX
-   AND ${GCC}
-   AND (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 12.1.0)
-)
-  set(USING_FAST_LINKER MOLD)
-  add_link_options("-fuse-ld=mold")
-endif()
+  # Mold support was added in GCC 12.1.0
+  if(NOT USING_FAST_LINKER
+     AND NOT (${MOLD} STREQUAL "MOLD-NOTFOUND")
+     AND LINUX
+     AND ${GCC}
+     AND (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 12.1.0)
+  )
+    set(USING_FAST_LINKER MOLD)
+    add_link_options("-fuse-ld=mold")
+  endif()
 
-if(NOT USING_FAST_LINKER AND NOT (${LLD} STREQUAL "LLD-NOTFOUND")
-   AND (${GCC} OR ${CLANG})
-)
-  set(USING_FAST_LINKER LLD)
-  add_link_options("-fuse-ld=lld")
-  if(WIN32)
-    # Clear unsupported linker flags on Windows
-    set(LIB_AS_NEEDED_PRE)
+  if(NOT USING_FAST_LINKER AND NOT (${LLD} STREQUAL "LLD-NOTFOUND")
+     AND (${GCC} OR ${CLANG})
+  )
+    set(USING_FAST_LINKER LLD)
+    add_link_options("-fuse-ld=lld")
+    if(WIN32)
+      # Clear unsupported linker flags on Windows
+      set(LIB_AS_NEEDED_PRE)
+    endif()
   endif()
 endif()
 
@@ -317,6 +326,9 @@ macro(clear_global_cached_variables)
   )
 endmacro()
 
+# Include CMake file with common find_program HINTS
+include(build-support/3rd-party/find-program-hints.cmake)
+
 # function used to search for package and program dependencies than store list
 # of missing dependencies in the list whose name is stored in missing_deps
 function(check_deps package_deps program_deps missing_deps)
@@ -335,7 +347,9 @@ function(check_deps package_deps program_deps missing_deps)
     # here or it won't check other dependencies
     string(TOUPPER ${program} upper_${program})
     mark_as_advanced(${upper_${program}})
-    find_program(${upper_${program}} ${program})
+    find_program(
+      ${upper_${program}} ${program} HINTS ${3RD_PARTY_FIND_PROGRAM_HINTS}
+    )
     if("${${upper_${program}}}" STREQUAL "${upper_${program}}-NOTFOUND")
       list(APPEND local_missing_deps ${program})
     endif()
@@ -465,6 +479,18 @@ macro(process_options)
     if("${CLANG_TIDY}" STREQUAL "CLANG_TIDY-NOTFOUND")
       message(FATAL_ERROR "Clang-tidy was not found")
     else()
+      if((${CMAKE_VERSION} VERSION_LESS "3.12.0") AND ${NS3_CCACHE}
+         AND (NOT ("${CCACHE}" STREQUAL "CCACHE-NOTFOUND"))
+      )
+        # CMake <3.12 puts CMAKE_CXX_COMPILER_LAUNCHER in the incorrect place
+        # and CCache ends up being unable to cache anything if calling
+        # clang-tidy https://gitlab.kitware.com/cmake/cmake/-/issues/18266
+        message(
+          FATAL_ERROR
+            "The current CMake ${CMAKE_VERSION} won't ccache objects correctly when running with clang-tidy."
+            "Update CMake to at least version 3.12, or disable either ccache or clang-tidy to continue."
+        )
+      endif()
       set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY}")
     endif()
   else()
@@ -479,6 +505,7 @@ macro(process_options)
         ClangBuildAnalyzer
         GIT_REPOSITORY "https://github.com/aras-p/ClangBuildAnalyzer.git"
         GIT_TAG "47406981a1c5a89e8f8c62802b924c3e163e7cb4"
+        CMAKE_ARGS -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
         INSTALL_COMMAND cmake -E copy_if_different ClangBuildAnalyzer
                         ${PROJECT_BINARY_DIR}
       )
@@ -511,6 +538,7 @@ macro(process_options)
   else()
     file(GLOB_RECURSE MODULES_CMAKE_FILES src/**/CMakeLists.txt
          contrib/**/CMakeLists.txt examples/**/CMakeLists.txt
+         scratch/**/CMakeLists.txt
     )
     file(
       GLOB
@@ -688,6 +716,20 @@ macro(process_options)
   )
   list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/build-support/3rd-party")
 
+  set(ENABLE_EIGEN False)
+  if(${NS3_EIGEN})
+    find_package(Eigen3 QUIET)
+
+    if(${EIGEN3_FOUND})
+      set(ENABLE_EIGEN True)
+      add_definitions(-DHAVE_EIGEN3)
+      add_definitions(-DEIGEN_MPL2_ONLY)
+      include_directories(${EIGEN3_INCLUDE_DIR})
+    else()
+      message(${HIGHLIGHTED_STATUS} "Eigen was not found")
+    endif()
+  endif()
+
   # GTK3 Don't search for it if you don't have it installed, as it take an
   # insane amount of time
   if(${NS3_GTK3})
@@ -755,25 +797,35 @@ macro(process_options)
   set(Python3_EXECUTABLE)
   set(Python3_FOUND FALSE)
   set(Python3_INCLUDE_DIRS)
-  if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.12.0")
-    find_package(Python3 COMPONENTS Interpreter Development)
-  else()
-    # cmake-format: off
-    set(Python_ADDITIONAL_VERSIONS 3.1 3.2 3.3 3.4 3.5 3.6 3.7 3.8 3.9)
-    # cmake-format: on
-    find_package(PythonInterp)
-    find_package(PythonLibs)
+  if(${NS3_PYTHON_BINDINGS})
+    if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.12.0")
+      find_package(Python3 COMPONENTS Interpreter Development)
+    else()
+      # cmake-format: off
+      set(Python_ADDITIONAL_VERSIONS 3.1 3.2 3.3 3.4 3.5 3.6 3.7 3.8 3.9)
+      # cmake-format: on
+      find_package(PythonInterp)
+      find_package(PythonLibs)
 
-    # Move deprecated results into the FindPython3 resulting variables
-    set(Python3_Interpreter_FOUND ${PYTHONINTERP_FOUND})
-    set(Python3_Development_FOUND ${PYTHONLIBS_FOUND})
-    if(${PYTHONINTERP_FOUND})
-      set(Python3_EXECUTABLE ${PYTHON_EXECUTABLE})
-      set(Python3_FOUND TRUE)
+      # Move deprecated results into the FindPython3 resulting variables
+      set(Python3_Interpreter_FOUND ${PYTHONINTERP_FOUND})
+      set(Python3_Development_FOUND ${PYTHONLIBS_FOUND})
+      if(${PYTHONINTERP_FOUND})
+        set(Python3_EXECUTABLE ${PYTHON_EXECUTABLE})
+        set(Python3_FOUND TRUE)
+      endif()
+      if(${PYTHONLIBS_FOUND})
+        set(Python3_LIBRARIES ${PYTHON_LIBRARIES})
+        set(Python3_INCLUDE_DIRS ${PYTHON_INCLUDE_DIRS})
+      endif()
     endif()
-    if(${PYTHONLIBS_FOUND})
-      set(Python3_LIBRARIES ${PYTHON_LIBRARIES})
-      set(Python3_INCLUDE_DIRS ${PYTHON_INCLUDE_DIRS})
+  else()
+    # If Python was not set yet, use the version found by check_deps
+    check_deps("" "python3" python3_deps)
+    if(python3_deps)
+      message(FATAL_ERROR "Python3 was not found")
+    else()
+      set(Python3_EXECUTABLE ${PYTHON3})
     endif()
   endif()
 
@@ -863,6 +915,37 @@ macro(process_options)
         )
         add_dependencies(uninstall uninstall_bindings)
       endif()
+    endif()
+  endif()
+
+  if(${NS3_NINJA_TRACING})
+    if(${CMAKE_GENERATOR} STREQUAL Ninja)
+      include(ExternalProject)
+      ExternalProject_Add(
+        NinjaTracing
+        GIT_REPOSITORY "https://github.com/nico/ninjatracing.git"
+        GIT_TAG "f9d21e973cfdeafa913b83a927fef56258f70b9a"
+        CONFIGURE_COMMAND ""
+        BUILD_COMMAND ""
+        INSTALL_COMMAND ""
+      )
+      ExternalProject_Get_Property(NinjaTracing SOURCE_DIR)
+      set(embed_time_trace)
+      if(${NS3_CLANG_TIMETRACE} AND ${CLANG})
+        set(embed_time_trace --embed-time-trace)
+      endif()
+      add_custom_target(
+        ninjaTrace
+        COMMAND
+          ${Python3_EXECUTABLE} ${SOURCE_DIR}/ninjatracing -a
+          ${embed_time_trace} ${PROJECT_BINARY_DIR}/.ninja_log >
+          ${PROJECT_SOURCE_DIR}/ninja_performance_trace.json
+        DEPENDS NinjaTracing
+      )
+      unset(embed_time_trace)
+      unset(SOURCE_DIR)
+    else()
+      message(FATAL_ERROR "Ninjatracing requires the Ninja generator")
     endif()
   endif()
 
@@ -991,63 +1074,13 @@ macro(process_options)
     add_custom_target(doxygen-no-build COMMAND ${doxygen_missing_msg})
   else()
     # We checked this already exists, but we need the path to the executable
-    find_package(Doxygen QUIET)
-
-    # Get introspected doxygen
-    add_custom_target(
-      run-print-introspected-doxygen
-      COMMAND
-        ${CMAKE_OUTPUT_DIRECTORY}/utils/ns${NS3_VER}-print-introspected-doxygen${build_profile_suffix}
-        > ${PROJECT_SOURCE_DIR}/doc/introspected-doxygen.h
-      COMMAND
-        ${CMAKE_OUTPUT_DIRECTORY}/utils/ns${NS3_VER}-print-introspected-doxygen${build_profile_suffix}
-        --output-text > ${PROJECT_SOURCE_DIR}/doc/ns3-object.txt
-      DEPENDS print-introspected-doxygen
-    )
-    add_custom_target(
-      run-introspected-command-line
-      COMMAND ${CMAKE_COMMAND} -E env NS_COMMANDLINE_INTROSPECTION=..
-              ${Python3_EXECUTABLE} ./test.py --no-build --constrain=example
-      WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
-      DEPENDS all-test-targets # all-test-targets only exists if ENABLE_TESTS is
-                               # set to ON
-    )
-
-    file(
-      WRITE ${CMAKE_BINARY_DIR}/introspected-command-line-preamble.h
-      "/* This file is automatically generated by
-  CommandLine::PrintDoxygenUsage() from the CommandLine configuration
-  in various example programs.  Do not edit this file!  Edit the
-  CommandLine configuration in those files instead.
-  */\n"
-    )
-    add_custom_target(
-      assemble-introspected-command-line
-      # works on CMake 3.18 or newer > COMMAND ${CMAKE_COMMAND} -E cat
-      # ${PROJECT_SOURCE_DIR}/testpy-output/*.command-line >
-      # ${PROJECT_SOURCE_DIR}/doc/introspected-command-line.h
-      COMMAND
-        ${cat_command} ${CMAKE_BINARY_DIR}/introspected-command-line-preamble.h
-        ${PROJECT_SOURCE_DIR}/testpy-output/*.command-line >
-        ${PROJECT_SOURCE_DIR}/doc/introspected-command-line.h 2> NULL
-      DEPENDS run-introspected-command-line
-    )
+    set(DOXYGEN_EXECUTABLE ${DOXYGEN})
 
     add_custom_target(
       update_doxygen_version
       COMMAND bash ${PROJECT_SOURCE_DIR}/doc/ns3_html_theme/get_version.sh
       WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
     )
-
-    add_custom_target(
-      doxygen
-      COMMAND ${DOXYGEN_EXECUTABLE} ${PROJECT_SOURCE_DIR}/doc/doxygen.conf
-      WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
-      DEPENDS update_doxygen_version run-print-introspected-doxygen
-              assemble-introspected-command-line
-      USES_TERMINAL
-    )
-
     add_custom_target(
       doxygen-no-build
       COMMAND ${DOXYGEN_EXECUTABLE} ${PROJECT_SOURCE_DIR}/doc/doxygen.conf
@@ -1055,6 +1088,69 @@ macro(process_options)
       DEPENDS update_doxygen_version
       USES_TERMINAL
     )
+    # The `doxygen` target only really works if we have tests enabled, so emit a
+    # warning to use `doxygen-no-build` instead.
+    if((NOT ${ENABLE_TESTS}) AND (NOT ${ENABLE_EXAMPLES}))
+      # cmake-format: off
+      set(doxygen_target_requires_tests_msg
+              echo The \\'doxygen\\' target called by \\'./ns3 docs doxygen\\' or \\'./ns3 docs all\\' commands
+              require examples and tests to generate introspected documentation.
+              Enable examples and tests, or use \\'doxygen-no-build\\'.
+              )
+      # cmake-format: on
+      add_custom_target(doxygen COMMAND ${doxygen_target_requires_tests_msg})
+      unset(doxygen_target_requires_tests_msg)
+    else()
+      # Get introspected doxygen
+      add_custom_target(
+        run-print-introspected-doxygen
+        COMMAND
+          ${CMAKE_OUTPUT_DIRECTORY}/utils/ns${NS3_VER}-print-introspected-doxygen${build_profile_suffix}
+          > ${PROJECT_SOURCE_DIR}/doc/introspected-doxygen.h
+        COMMAND
+          ${CMAKE_OUTPUT_DIRECTORY}/utils/ns${NS3_VER}-print-introspected-doxygen${build_profile_suffix}
+          --output-text > ${PROJECT_SOURCE_DIR}/doc/ns3-object.txt
+        DEPENDS print-introspected-doxygen
+      )
+      add_custom_target(
+        run-introspected-command-line
+        COMMAND ${CMAKE_COMMAND} -E env NS_COMMANDLINE_INTROSPECTION=..
+                ${Python3_EXECUTABLE} ./test.py --no-build --constrain=example
+        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+        DEPENDS all-test-targets # all-test-targets only exists if ENABLE_TESTS
+                                 # is set to ON
+      )
+
+      file(
+        WRITE ${CMAKE_BINARY_DIR}/introspected-command-line-preamble.h
+        "/* This file is automatically generated by
+  CommandLine::PrintDoxygenUsage() from the CommandLine configuration
+  in various example programs.  Do not edit this file!  Edit the
+  CommandLine configuration in those files instead.
+  */\n"
+      )
+      add_custom_target(
+        assemble-introspected-command-line
+        # works on CMake 3.18 or newer > COMMAND ${CMAKE_COMMAND} -E cat
+        # ${PROJECT_SOURCE_DIR}/testpy-output/*.command-line >
+        # ${PROJECT_SOURCE_DIR}/doc/introspected-command-line.h
+        COMMAND
+          ${cat_command}
+          ${CMAKE_BINARY_DIR}/introspected-command-line-preamble.h
+          ${PROJECT_SOURCE_DIR}/testpy-output/*.command-line >
+          ${PROJECT_SOURCE_DIR}/doc/introspected-command-line.h 2> NULL
+        DEPENDS run-introspected-command-line
+      )
+
+      add_custom_target(
+        doxygen
+        COMMAND ${DOXYGEN_EXECUTABLE} ${PROJECT_SOURCE_DIR}/doc/doxygen.conf
+        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+        DEPENDS update_doxygen_version run-print-introspected-doxygen
+                assemble-introspected-command-line
+        USES_TERMINAL
+      )
+    endif()
   endif()
 
   # Now we check for sphinx dependencies
@@ -1087,6 +1183,7 @@ macro(process_options)
     add_custom_target(sphinx_models COMMAND ${sphinx_missing_msg})
     add_custom_target(sphinx_tutorial COMMAND ${sphinx_missing_msg})
     add_custom_target(sphinx_contributing COMMAND ${sphinx_missing_msg})
+    add_custom_target(sphinx_installation COMMAND ${sphinx_missing_msg})
   else()
     add_custom_target(sphinx COMMENT "Building sphinx documents")
     mark_as_advanced(MAKE)
@@ -1134,6 +1231,7 @@ macro(process_options)
     sphinx_target(models)
     sphinx_target(tutorial)
     sphinx_target(contributing)
+    sphinx_target(installation)
   endif()
   # end of checking for documentation dependencies and creating targets
 
@@ -1144,9 +1242,8 @@ macro(process_options)
   if(${NS3_INT64X64} MATCHES "INT128")
     check_cxx_source_compiles(
       "#include <stdint.h>
-       int main(int argc, char **argv)
+       int main()
          {
-            (void)argc; (void)argv;
             if ((uint128_t *) 0) return 0;
             if (sizeof (uint128_t)) return 0;
             return 1;
@@ -1155,9 +1252,8 @@ macro(process_options)
     )
     check_cxx_source_compiles(
       "#include <stdint.h>
-       int main(int argc, char **argv)
+       int main()
          {
-           (void)argc; (void)argv;
            if ((__uint128_t *) 0) return 0;
            if (sizeof (__uint128_t)) return 0;
            return 1;
@@ -1298,8 +1394,35 @@ macro(process_options)
         "Clang-tidy is incompatible with precompiled headers. Continuing without them."
       )
     elseif(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.16.0")
-      set(PRECOMPILE_HEADERS_ENABLED ON)
-      message(STATUS "Precompiled headers were enabled")
+      # If ccache is not enable or was not found, we can continue with
+      # precompiled headers
+      if((NOT ${NS3_CCACHE}) OR ("${CCACHE}" STREQUAL "CCACHE-NOTFOUND"))
+        set(PRECOMPILE_HEADERS_ENABLED ON)
+        message(STATUS "Precompiled headers were enabled")
+      else()
+        # If ccache was found, we need to check if it is ccache >= 4
+        execute_process(COMMAND ${CCACHE} -V OUTPUT_VARIABLE CCACHE_OUT)
+        # Extract ccache version
+        if(CCACHE_OUT MATCHES "ccache version ([0-9\.]*)")
+          # If an incompatible version is found, do not enable precompiled
+          # headers
+          if("${CMAKE_MATCH_1}" VERSION_LESS "4.0.0")
+            set(PRECOMPILE_HEADERS_ENABLED OFF)
+            message(
+              ${HIGHLIGHTED_STATUS}
+              "Precompiled headers are incompatible with ccache ${CMAKE_MATCH_1} and will be disabled."
+            )
+          else()
+            set(PRECOMPILE_HEADERS_ENABLED ON)
+            message(STATUS "Precompiled headers were enabled.")
+          endif()
+        else()
+          message(
+            FATAL_ERROR
+              "Failed to extract the ccache version while enabling precompiled headers."
+          )
+        endif()
+      endif()
     else()
       message(
         STATUS
@@ -1340,10 +1463,15 @@ macro(process_options)
         <unordered_map>
         <vector>
     )
-    add_library(stdlib_pch OBJECT ${PROJECT_SOURCE_DIR}/build-support/empty.cc)
-    target_precompile_headers(
-      stdlib_pch PUBLIC "${precompiled_header_libraries}"
+    add_library(
+      stdlib_pch${build_profile_suffix} OBJECT
+      ${PROJECT_SOURCE_DIR}/build-support/empty.cc
     )
+    target_precompile_headers(
+      stdlib_pch${build_profile_suffix} PUBLIC
+      "${precompiled_header_libraries}"
+    )
+    add_library(stdlib_pch ALIAS stdlib_pch${build_profile_suffix})
 
     add_executable(
       stdlib_pch_exec ${PROJECT_SOURCE_DIR}/build-support/empty-main.cc
@@ -1379,6 +1507,12 @@ macro(process_options)
          ${netanim_SOURCE_DIR}/CMakeLists.txt
     )
     add_subdirectory(${netanim_SOURCE_DIR} ${netanim_BINARY_DIR})
+  endif()
+
+  if(${NS3_FETCH_OPTIONAL_COMPONENTS})
+    include(
+      build-support/custom-modules/ns3-fetch-optional-modules-dependencies.cmake
+    )
   endif()
 endmacro()
 
@@ -1440,6 +1574,17 @@ function(set_runtime_outputdirectory target_name output_directory target_prefix)
   endif()
 endfunction(set_runtime_outputdirectory)
 
+function(get_scratch_prefix prefix)
+  # /path/to/ns-3-dev/scratch/nested-subdir
+  set(temp ${CMAKE_CURRENT_SOURCE_DIR})
+  # remove /path/to/ns-3-dev/ to get scratch/nested-subdir
+  string(REPLACE "${PROJECT_SOURCE_DIR}/" "" temp "${temp}")
+  # replace path separators with underlines
+  string(REPLACE "/" "_" temp "${temp}")
+  # save the prefix value to the passed variable
+  set(${prefix} ${temp}_ PARENT_SCOPE)
+endfunction()
+
 function(build_exec)
   # Argument parsing
   set(options IGNORE_PCH STANDALONE)
@@ -1450,6 +1595,13 @@ function(build_exec)
   cmake_parse_arguments(
     "BEXEC" "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN}
   )
+
+  # Resolve nested scratch prefixes without user intervention
+  if("${CMAKE_CURRENT_SOURCE_DIR}" MATCHES "scratch"
+     AND "${BEXEC_EXECNAME_PREFIX}" STREQUAL ""
+  )
+    get_scratch_prefix(BEXEC_EXECNAME_PREFIX)
+  endif()
 
   add_executable(
     ${BEXEC_EXECNAME_PREFIX}${BEXEC_EXECNAME} "${BEXEC_SOURCE_FILES}"

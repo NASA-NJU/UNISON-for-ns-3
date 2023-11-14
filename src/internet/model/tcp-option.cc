@@ -61,22 +61,24 @@ TcpOption::GetInstanceTypeId() const
 Ptr<TcpOption>
 TcpOption::CreateOption(uint8_t kind)
 {
-    struct kindToTid
+    struct KindToTid
     {
         TcpOption::Kind kind;
         TypeId tid;
     };
 
-    static kindToTid toTid[] = {{TcpOption::END, TcpOptionEnd::GetTypeId()},
-                                {TcpOption::MSS, TcpOptionMSS::GetTypeId()},
-                                {TcpOption::NOP, TcpOptionNOP::GetTypeId()},
-                                {TcpOption::TS, TcpOptionTS::GetTypeId()},
-                                {TcpOption::WINSCALE, TcpOptionWinScale::GetTypeId()},
-                                {TcpOption::SACKPERMITTED, TcpOptionSackPermitted::GetTypeId()},
-                                {TcpOption::SACK, TcpOptionSack::GetTypeId()},
-                                {TcpOption::UNKNOWN, TcpOptionUnknown::GetTypeId()}};
+    static KindToTid toTid[] = {
+        {TcpOption::END, TcpOptionEnd::GetTypeId()},
+        {TcpOption::MSS, TcpOptionMSS::GetTypeId()},
+        {TcpOption::NOP, TcpOptionNOP::GetTypeId()},
+        {TcpOption::TS, TcpOptionTS::GetTypeId()},
+        {TcpOption::WINSCALE, TcpOptionWinScale::GetTypeId()},
+        {TcpOption::SACKPERMITTED, TcpOptionSackPermitted::GetTypeId()},
+        {TcpOption::SACK, TcpOptionSack::GetTypeId()},
+        {TcpOption::UNKNOWN, TcpOptionUnknown::GetTypeId()},
+    };
 
-    for (unsigned int i = 0; i < sizeof(toTid) / sizeof(kindToTid); ++i)
+    for (unsigned int i = 0; i < sizeof(toTid) / sizeof(KindToTid); ++i)
     {
         if (toTid[i].kind == kind)
         {

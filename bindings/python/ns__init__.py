@@ -74,6 +74,10 @@ def _search_libraries() -> dict:
     library_search_paths += [os.path.dirname(library_search_paths[-1])]
     library_search_paths += [os.path.dirname(library_search_paths[-1])]
 
+    # Filter unique search paths and those that are not part of system directories
+    library_search_paths = list(filter(lambda x: x not in SYSTEM_LIBRARY_DIRECTORIES,
+                                       set(library_search_paths)))
+
     # Search for the core library in the search paths
     libraries = []
     for search_path in library_search_paths:
@@ -82,6 +86,7 @@ def _search_libraries() -> dict:
     # Search system library directories (too slow for recursive search)
     for search_path in SYSTEM_LIBRARY_DIRECTORIES:
         libraries += glob.glob("%s/**/*.%s*" % (search_path, LIBRARY_EXTENSION), recursive=False)
+        libraries += glob.glob("%s/*.%s*" % (search_path, LIBRARY_EXTENSION), recursive=False)
 
     del search_path, library_search_paths
 
@@ -343,7 +348,8 @@ def load_modules():
         for linked_lib_include_dir in extract_library_include_dirs(library, prefix):
             if linked_lib_include_dir not in known_include_dirs:
                 known_include_dirs.add(linked_lib_include_dir)
-                cppyy.add_include_path(linked_lib_include_dir)
+                if os.path.isdir(linked_lib_include_dir):
+                    cppyy.add_include_path(linked_lib_include_dir)
 
     for module in modules:
         cppyy.include("ns3/%s-module.h" % module)
@@ -389,17 +395,6 @@ def load_modules():
         return None
 
     cppyy.gbl.ns3.Node.__del__ = Node_del
-
-    # Define ns.cppyy.gbl.addressFromIpv4Address and others
-    cppyy.cppdef("""using namespace ns3;
-                    Address addressFromIpv4Address(Ipv4Address ip){ return Address(ip); };
-                    Address addressFromInetSocketAddress(InetSocketAddress addr){ return Address(addr); };
-                    Address addressFromPacketSocketAddress(PacketSocketAddress addr){ return Address(addr); };
-                    """)
-    # Expose addressFromIpv4Address as a member of the ns3 namespace (equivalent to ns)
-    setattr(cppyy.gbl.ns3, "addressFromIpv4Address", cppyy.gbl.addressFromIpv4Address)
-    setattr(cppyy.gbl.ns3, "addressFromInetSocketAddress", cppyy.gbl.addressFromInetSocketAddress)
-    setattr(cppyy.gbl.ns3, "addressFromPacketSocketAddress", cppyy.gbl.addressFromPacketSocketAddress)
 
     cppyy.cppdef("""
         using namespace ns3;

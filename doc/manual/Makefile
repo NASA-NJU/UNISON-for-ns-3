@@ -26,7 +26,7 @@ SOURCES = \
 	source/hash-functions.rst \
 	source/helpers.rst \
 	source/how-to-write-tests.rst \
-	source/logging.rst \
+	source/logging-asserts.rst \
 	source/new-models.rst \
 	source/new-modules.rst \
 	source/object-model.rst \
@@ -45,7 +45,6 @@ SOURCES = \
 	source/tracing.rst \
 	source/troubleshoot.rst \
 	source/utilities.rst \
-	source/windows.rst \
 	source/working-with-cmake.rst \
 	source/working-with-git.rst \
 	source/working-with-gitlab-ci-local.rst \

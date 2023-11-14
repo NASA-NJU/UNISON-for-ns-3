@@ -117,7 +117,7 @@ main(int argc, char* argv[])
     std::vector<std::vector<double>> coord_array;
     coord_array = readCordinatesFile(node_coordinates_file_name);
 
-    // Optionally display node co-ordinates file
+    // Optionally display node coordinates file
     // printCoordinateArray (node_coordinates_file_name.c_str (),coord_array);
 
     int n_nodes = coord_array.size();
@@ -312,7 +312,7 @@ readNxNMatrix(std::string adj_mat_file_name)
     {
         std::string line;
         getline(adj_mat_file, line);
-        if (line == "")
+        if (line.empty())
         {
             NS_LOG_WARN("WARNING: Ignoring blank row in the array: " << i);
             break;
@@ -377,7 +377,7 @@ readCordinatesFile(std::string node_coordinates_file_name)
         std::string line;
         getline(node_coordinates_file, line);
 
-        if (line == "")
+        if (line.empty())
         {
             NS_LOG_WARN("WARNING: Ignoring blank row: " << m);
             break;

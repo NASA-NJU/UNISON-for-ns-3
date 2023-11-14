@@ -18,7 +18,7 @@
 #include "ns3/core-module.h"
 
 /**
- * \defgroup string-value-formatting
+ * \defgroup string-value-formatting StringValue parsing tests
  * Check that StringValue parses complex values correctly.
  */
 
@@ -203,4 +203,6 @@ main(int argc, char* argv[])
     NS_ASSERT_MSG(val.Get() == 30, "Minimum not set to 30");
     uniformStream->GetAttribute("Max", val);
     NS_ASSERT_MSG(val.Get() == 60, "Maximum not set to 60");
+
+    return 0;
 }

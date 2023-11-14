@@ -677,7 +677,7 @@ LteEnbPhy::StartSubFrame()
     std::list<Ptr<LteControlMessage>> ctrlMsg = GetControlMessages();
     m_dlDataRbMap.clear();
     m_dlPowerAllocationMap.clear();
-    if (ctrlMsg.size() > 0)
+    if (!ctrlMsg.empty())
     {
         std::list<Ptr<LteControlMessage>>::iterator it;
         it = ctrlMsg.begin();
@@ -706,7 +706,7 @@ LteEnbPhy::StartSubFrame()
                     mask = (mask << 1);
                 }
                 // fire trace of DL Tx PHY stats
-                for (uint8_t i = 0; i < dci->GetDci().m_mcs.size(); i++)
+                for (std::size_t i = 0; i < dci->GetDci().m_mcs.size(); i++)
                 {
                     PhyTransmissionStatParameters params;
                     params.m_cellId = m_cellId;
@@ -897,11 +897,11 @@ LteEnbPhy::DoSetBandwidth(uint16_t ulBandwidth, uint16_t dlBandwidth)
     m_dlBandwidth = dlBandwidth;
 
     static const int Type0AllocationRbg[4] = {
-        10, // RGB size 1
-        26, // RGB size 2
-        63, // RGB size 3
-        110 // RGB size 4
-    };      // see table 7.1.6.1-1 of 36.213
+        10,  // RGB size 1
+        26,  // RGB size 2
+        63,  // RGB size 3
+        110, // RGB size 4
+    };       // see table 7.1.6.1-1 of 36.213
     for (int i = 0; i < 4; i++)
     {
         if (dlBandwidth < Type0AllocationRbg[i])
@@ -1086,7 +1086,7 @@ std::list<UlDciLteControlMessage>
 LteEnbPhy::DequeueUlDci()
 {
     NS_LOG_FUNCTION(this);
-    if (m_ulDciQueue.at(0).size() > 0)
+    if (!m_ulDciQueue.at(0).empty())
     {
         std::list<UlDciLteControlMessage> ret = m_ulDciQueue.at(0);
         m_ulDciQueue.erase(m_ulDciQueue.begin());

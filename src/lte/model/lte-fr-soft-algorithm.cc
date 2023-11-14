@@ -31,13 +31,16 @@ NS_LOG_COMPONENT_DEFINE("LteFrSoftAlgorithm");
 NS_OBJECT_ENSURE_REGISTERED(LteFrSoftAlgorithm);
 
 /// FrSoftDownlinkDefaultConfiguration structure
-static const struct FrSoftDownlinkDefaultConfiguration
+struct FrSoftDownlinkDefaultConfiguration
 {
     uint8_t cellId;              ///< cell ID
     uint8_t dlBandwidth;         ///< DL bandwidth
     uint8_t dlEdgeSubBandOffset; ///< DL edge subband offset
     uint8_t dlEdgeSubBandwidth;  ///< Dl edge subbandwidth
-} g_frSoftDownlinkDefaultConfiguration[] = {
+};
+
+/// Soft downlink default configuration
+static const FrSoftDownlinkDefaultConfiguration g_frSoftDownlinkDefaultConfiguration[]{
     {1, 15, 0, 4},
     {2, 15, 4, 4},
     {3, 15, 8, 6},
@@ -52,30 +55,36 @@ static const struct FrSoftDownlinkDefaultConfiguration
     {3, 75, 48, 27},
     {1, 100, 0, 32},
     {2, 100, 32, 32},
-    {3, 100, 64, 36}}; ///< soft downlink default configuration
+    {3, 100, 64, 36},
+};
 
 /// soft uplink default configuration
-static const struct FrSoftUplinkDefaultConfiguration
+struct FrSoftUplinkDefaultConfiguration
 {
     uint8_t cellId;              ///< cell ID
     uint8_t ulBandwidth;         ///< UL bandwidth
     uint8_t ulEdgeSubBandOffset; ///< UL edge subband offset
-    uint8_t ulEdgeSubBandwidth;  ///< UL endge subbandwidth
-} g_frSoftUplinkDefaultConfiguration[] = {{1, 15, 0, 5},
-                                          {2, 15, 5, 5},
-                                          {3, 15, 10, 5},
-                                          {1, 25, 0, 8},
-                                          {2, 25, 8, 8},
-                                          {3, 25, 16, 9},
-                                          {1, 50, 0, 16},
-                                          {2, 50, 16, 16},
-                                          {3, 50, 32, 18},
-                                          {1, 75, 0, 24},
-                                          {2, 75, 24, 24},
-                                          {3, 75, 48, 27},
-                                          {1, 100, 0, 32},
-                                          {2, 100, 32, 32},
-                                          {3, 100, 64, 36}}; ///< soft uplink default configuration
+    uint8_t ulEdgeSubBandwidth;  ///< UL edge subbandwidth
+};
+
+/// Soft uplink default configuration
+static const FrSoftUplinkDefaultConfiguration g_frSoftUplinkDefaultConfiguration[]{
+    {1, 15, 0, 5},
+    {2, 15, 5, 5},
+    {3, 15, 10, 5},
+    {1, 25, 0, 8},
+    {2, 25, 8, 8},
+    {3, 25, 16, 9},
+    {1, 50, 0, 16},
+    {2, 50, 16, 16},
+    {3, 50, 32, 18},
+    {1, 75, 0, 24},
+    {2, 75, 24, 24},
+    {3, 75, 48, 27},
+    {1, 100, 0, 32},
+    {2, 100, 32, 32},
+    {3, 100, 64, 36},
+};
 
 /** \returns number of downlink configurations */
 const uint16_t NUM_DOWNLINK_CONFS(sizeof(g_frSoftDownlinkDefaultConfiguration) /

@@ -55,7 +55,6 @@ class OfdmPpdu : public WifiPpdu
     {
       public:
         LSigHeader();
-        ~LSigHeader() override;
 
         /**
          * \brief Get the type ID.
@@ -118,22 +117,47 @@ class OfdmPpdu : public WifiPpdu
              WifiPhyBand band,
              uint64_t uid,
              bool instantiateLSig = true);
-    /**
-     * Destructor for OfdmPpdu.
-     */
-    ~OfdmPpdu() override;
 
     Time GetTxDuration() const override;
     Ptr<WifiPpdu> Copy() const override;
 
   protected:
-    WifiPhyBand m_band;      //!< the WifiPhyBand used to transmit that PPDU
-    uint16_t m_channelWidth; //!< the channel width used to transmit that PPDU in MHz
-    LSigHeader m_lSig;       //!< the L-SIG PHY header
+    WifiPhyBand m_band; //!< the WifiPhyBand used to transmit that PPDU
+#ifndef NS3_BUILD_PROFILE_DEBUG
+    LSigHeader m_lSig; //!< the L-SIG PHY header
+#endif
 
   private:
     WifiTxVector DoGetTxVector() const override;
-}; // class OfdmPpdu
+
+    /**
+     * Fill in the PHY headers.
+     *
+     * \param txVector the TXVECTOR that was used for this PPDU
+     * \param psduSize the size duration of the PHY payload (PSDU)
+     */
+    void SetPhyHeaders(const WifiTxVector& txVector, std::size_t psduSize);
+
+    /**
+     * Fill in the L-SIG header.
+     *
+     * \param lSig the L-SIG header to fill in
+     * \param txVector the TXVECTOR that was used for this PPDU
+     * \param psduSize the size duration of the PHY payload (PSDU)
+     */
+    void SetLSigHeader(LSigHeader& lSig, const WifiTxVector& txVector, std::size_t psduSize) const;
+
+    /**
+     * Fill in the TXVECTOR from L-SIG header.
+     *
+     * \param txVector the TXVECTOR to fill in
+     * \param lSig the L-SIG header
+     */
+    virtual void SetTxVectorFromLSigHeader(WifiTxVector& txVector, const LSigHeader& lSig) const;
+
+    uint16_t m_channelWidth; //!< the channel width used to transmit that PPDU in MHz (needed to
+                             //!< distinguish 5 MHz, 10 MHz or 20 MHz PPDUs)
+};                           // class OfdmPpdu
 
 } // namespace ns3
 

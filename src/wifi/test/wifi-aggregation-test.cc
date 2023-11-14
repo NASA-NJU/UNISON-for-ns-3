@@ -173,7 +173,7 @@ AmpduAggregationTest::DoRun()
     reqHdr.SetBufferSize(64);
     reqHdr.SetTimeout(0);
     reqHdr.SetStartingSequence(0);
-    m_mac->GetBEQueue()->GetBaManager()->CreateAgreement(&reqHdr, hdr.GetAddr1());
+    m_mac->GetBEQueue()->GetBaManager()->CreateOriginatorAgreement(reqHdr, hdr.GetAddr1());
 
     MgtAddBaResponseHeader respHdr;
     StatusCode code;
@@ -184,7 +184,7 @@ AmpduAggregationTest::DoRun()
     respHdr.SetTid(reqHdr.GetTid());
     respHdr.SetBufferSize(64);
     respHdr.SetTimeout(reqHdr.GetTimeout());
-    m_mac->GetBEQueue()->GetBaManager()->UpdateAgreement(&respHdr, hdr.GetAddr1(), 0);
+    m_mac->GetBEQueue()->GetBaManager()->UpdateOriginatorAgreement(respHdr, hdr.GetAddr1(), 0);
 
     //-----------------------------------------------------------------------------------------------------
 
@@ -210,6 +210,7 @@ AmpduAggregationTest::DoRun()
 
     // the packet has not been "transmitted", release its sequence number
     m_mac->m_txMiddle->SetSequenceNumberFor(&item->GetHeader());
+    item->UnassignSeqNo();
 
     //-----------------------------------------------------------------------------------------------------
 
@@ -501,7 +502,7 @@ TwoLevelAggregationTest::DoRun()
     reqHdr.SetBufferSize(64);
     reqHdr.SetTimeout(0);
     reqHdr.SetStartingSequence(0);
-    m_mac->GetVIQueue()->GetBaManager()->CreateAgreement(&reqHdr, hdr.GetAddr1());
+    m_mac->GetVIQueue()->GetBaManager()->CreateOriginatorAgreement(reqHdr, hdr.GetAddr1());
 
     MgtAddBaResponseHeader respHdr;
     StatusCode code;
@@ -512,7 +513,7 @@ TwoLevelAggregationTest::DoRun()
     respHdr.SetTid(reqHdr.GetTid());
     respHdr.SetBufferSize(64);
     respHdr.SetTimeout(reqHdr.GetTimeout());
-    m_mac->GetVIQueue()->GetBaManager()->UpdateAgreement(&respHdr, hdr.GetAddr1(), 0);
+    m_mac->GetVIQueue()->GetBaManager()->UpdateOriginatorAgreement(respHdr, hdr.GetAddr1(), 0);
 
     m_mac->SetAttribute("VI_MaxAmsduSize", UintegerValue(3050)); // max 2 MSDUs per A-MSDU
     m_mac->SetAttribute("VI_MaxAmpduSize", UintegerValue(65535));
@@ -584,7 +585,7 @@ TwoLevelAggregationTest::DoRun()
  * \ingroup tests
  *
  * \brief 802.11ax aggregation test which permits 64 or 256 MPDUs in A-MPDU according to the
- * negociated buffer size.
+ * negotiated buffer size.
  */
 class HeAggregationTest : public TestCase
 {
@@ -694,7 +695,7 @@ HeAggregationTest::DoRunSubTest(uint16_t bufferSize)
     reqHdr.SetBufferSize(bufferSize);
     reqHdr.SetTimeout(0);
     reqHdr.SetStartingSequence(0);
-    m_mac->GetBEQueue()->GetBaManager()->CreateAgreement(&reqHdr, hdr.GetAddr1());
+    m_mac->GetBEQueue()->GetBaManager()->CreateOriginatorAgreement(reqHdr, hdr.GetAddr1());
 
     MgtAddBaResponseHeader respHdr;
     StatusCode code;
@@ -705,10 +706,10 @@ HeAggregationTest::DoRunSubTest(uint16_t bufferSize)
     respHdr.SetTid(reqHdr.GetTid());
     respHdr.SetBufferSize(bufferSize);
     respHdr.SetTimeout(reqHdr.GetTimeout());
-    m_mac->GetBEQueue()->GetBaManager()->UpdateAgreement(&respHdr, hdr.GetAddr1(), 0);
+    m_mac->GetBEQueue()->GetBaManager()->UpdateOriginatorAgreement(respHdr, hdr.GetAddr1(), 0);
 
     /*
-     * Test behavior when 300 packets are ready for transmission but negociated buffer size is 64
+     * Test behavior when 300 packets are ready for transmission but negotiated buffer size is 64
      */
     Ptr<HtFrameExchangeManager> htFem = DynamicCast<HtFrameExchangeManager>(fem);
     Ptr<MpduAggregator> mpduAggregator = htFem->GetMpduAggregator();
@@ -741,7 +742,7 @@ HeAggregationTest::DoRunSubTest(uint16_t bufferSize)
     NS_TEST_EXPECT_MSG_EQ(mpduList.empty(), false, "MPDU aggregation failed");
     NS_TEST_EXPECT_MSG_EQ(mpduList.size(),
                           bufferSize,
-                          "A-MPDU should countain " << bufferSize << " MPDUs");
+                          "A-MPDU should contain " << bufferSize << " MPDUs");
     uint16_t expectedRemainingPacketsInQueue = 300 - bufferSize;
     NS_TEST_EXPECT_MSG_EQ(m_mac->GetBEQueue()->GetWifiMacQueue()->GetNPackets(),
                           expectedRemainingPacketsInQueue,

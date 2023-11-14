@@ -20,6 +20,7 @@
 #include "block-ack-manager.h"
 
 #include "ctrl-headers.h"
+#include "mac-rx-middle.h"
 #include "mgt-headers.h"
 #include "qos-utils.h"
 #include "wifi-mac-queue.h"
@@ -36,19 +37,6 @@ namespace ns3
 
 NS_LOG_COMPONENT_DEFINE("BlockAckManager");
 
-Bar::Bar()
-{
-    NS_LOG_FUNCTION(this);
-}
-
-Bar::Bar(Ptr<const WifiMpdu> bar, uint8_t tid, bool skipIfNoDataQueued)
-    : bar(bar),
-      tid(tid),
-      skipIfNoDataQueued(skipIfNoDataQueued)
-{
-    NS_LOG_FUNCTION(this << *bar << +tid << skipIfNoDataQueued);
-}
-
 NS_OBJECT_ENSURE_REGISTERED(BlockAckManager);
 
 TypeId
@@ -61,7 +49,7 @@ BlockAckManager::GetTypeId()
             .AddConstructor<BlockAckManager>()
             .AddTraceSource("AgreementState",
                             "The state of the ADDBA handshake",
-                            MakeTraceSourceAccessor(&BlockAckManager::m_agreementState),
+                            MakeTraceSourceAccessor(&BlockAckManager::m_originatorAgreementState),
                             "ns3::BlockAckManager::AgreementStateTracedCallback");
     return tid;
 }
@@ -80,69 +68,50 @@ void
 BlockAckManager::DoDispose()
 {
     NS_LOG_FUNCTION(this);
-    m_agreements.clear();
-    m_bars.clear();
+    m_originatorAgreements.clear();
     m_queue = nullptr;
-    m_bamMap.clear();
 }
 
-void
-BlockAckManager::SetBlockAckManagerMap(const std::map<AcIndex, Ptr<BlockAckManager>>& bamMap)
-{
-    m_bamMap = bamMap;
-}
-
-bool
-BlockAckManager::ExistsAgreement(Mac48Address recipient, uint8_t tid) const
+BlockAckManager::OriginatorAgreementOptConstRef
+BlockAckManager::GetAgreementAsOriginator(const Mac48Address& recipient, uint8_t tid) const
 {
     NS_LOG_FUNCTION(this << recipient << +tid);
-    return (m_agreements.find(std::make_pair(recipient, tid)) != m_agreements.end());
+    if (auto it = m_originatorAgreements.find({recipient, tid}); it != m_originatorAgreements.end())
+    {
+        return std::cref(it->second.first);
+    }
+
+    return std::nullopt;
 }
 
-bool
-BlockAckManager::ExistsAgreementInState(Mac48Address recipient,
-                                        uint8_t tid,
-                                        OriginatorBlockAckAgreement::State state) const
+BlockAckManager::RecipientAgreementOptConstRef
+BlockAckManager::GetAgreementAsRecipient(const Mac48Address& originator, uint8_t tid) const
 {
-    AgreementsCI it;
-    it = m_agreements.find(std::make_pair(recipient, tid));
-    if (it != m_agreements.end())
+    NS_LOG_FUNCTION(this << originator << +tid);
+    if (auto it = m_recipientAgreements.find({originator, tid}); it != m_recipientAgreements.end())
     {
-        switch (state)
-        {
-        case OriginatorBlockAckAgreement::ESTABLISHED:
-            return it->second.first.IsEstablished();
-        case OriginatorBlockAckAgreement::PENDING:
-            return it->second.first.IsPending();
-        case OriginatorBlockAckAgreement::REJECTED:
-            return it->second.first.IsRejected();
-        case OriginatorBlockAckAgreement::NO_REPLY:
-            return it->second.first.IsNoReply();
-        case OriginatorBlockAckAgreement::RESET:
-            return it->second.first.IsReset();
-        default:
-            NS_FATAL_ERROR("Invalid state for block ack agreement");
-        }
+        return std::cref(it->second);
     }
-    return false;
+
+    return std::nullopt;
 }
 
 void
-BlockAckManager::CreateAgreement(const MgtAddBaRequestHeader* reqHdr,
-                                 Mac48Address recipient,
-                                 bool htSupported)
+BlockAckManager::CreateOriginatorAgreement(const MgtAddBaRequestHeader& reqHdr,
+                                           const Mac48Address& recipient,
+                                           bool htSupported)
 {
     NS_LOG_FUNCTION(this << reqHdr << recipient << htSupported);
-    std::pair<Mac48Address, uint8_t> key(recipient, reqHdr->GetTid());
-    OriginatorBlockAckAgreement agreement(recipient, reqHdr->GetTid());
-    agreement.SetStartingSequence(reqHdr->GetStartingSequence());
+    const uint8_t tid = reqHdr.GetTid();
+    OriginatorBlockAckAgreement agreement(recipient, tid);
+    agreement.SetStartingSequence(reqHdr.GetStartingSequence());
     /* For now we assume that originator doesn't use this field. Use of this field
        is mandatory only for recipient */
-    agreement.SetBufferSize(reqHdr->GetBufferSize());
-    agreement.SetTimeout(reqHdr->GetTimeout());
-    agreement.SetAmsduSupport(reqHdr->IsAmsduSupported());
+    agreement.SetBufferSize(reqHdr.GetBufferSize());
+    agreement.SetTimeout(reqHdr.GetTimeout());
+    agreement.SetAmsduSupport(reqHdr.IsAmsduSupported());
     agreement.SetHtSupported(htSupported);
-    if (reqHdr->IsImmediateBlockAck())
+    if (reqHdr.IsImmediateBlockAck())
     {
         agreement.SetImmediateBlockAck();
     }
@@ -150,61 +119,49 @@ BlockAckManager::CreateAgreement(const MgtAddBaRequestHeader* reqHdr,
     {
         agreement.SetDelayedBlockAck();
     }
-    uint8_t tid = reqHdr->GetTid();
-    m_agreementState(Simulator::Now(), recipient, tid, OriginatorBlockAckAgreement::PENDING);
     agreement.SetState(OriginatorBlockAckAgreement::PENDING);
-    PacketQueue queue;
-    std::pair<OriginatorBlockAckAgreement, PacketQueue> value(agreement, queue);
-    if (ExistsAgreement(recipient, tid))
+    m_originatorAgreementState(Simulator::Now(),
+                               recipient,
+                               tid,
+                               OriginatorBlockAckAgreement::PENDING);
+    if (auto existingAgreement = GetAgreementAsOriginator(recipient, tid))
     {
-        // Delete agreement if it exists and in RESET state
-        NS_ASSERT(ExistsAgreementInState(recipient, tid, OriginatorBlockAckAgreement::RESET));
-        m_agreements.erase(key);
+        NS_ASSERT_MSG(existingAgreement->get().IsReset(),
+                      "Existing agreement must be in RESET state");
     }
-    m_agreements.insert(std::make_pair(key, value));
-    m_blockPackets(recipient, reqHdr->GetTid());
+    m_originatorAgreements.insert_or_assign({recipient, tid},
+                                            std::make_pair(std::move(agreement), PacketQueue{}));
+    m_blockPackets(recipient, tid);
 }
 
 void
-BlockAckManager::DestroyAgreement(Mac48Address recipient, uint8_t tid)
+BlockAckManager::DestroyOriginatorAgreement(const Mac48Address& recipient, uint8_t tid)
 {
     NS_LOG_FUNCTION(this << recipient << +tid);
-    AgreementsI it = m_agreements.find(std::make_pair(recipient, tid));
-    if (it != m_agreements.end())
+    auto it = m_originatorAgreements.find({recipient, tid});
+    if (it != m_originatorAgreements.end())
     {
-        m_agreements.erase(it);
-        // remove scheduled BAR
-        for (std::list<Bar>::const_iterator i = m_bars.begin(); i != m_bars.end();)
-        {
-            if (i->bar->GetHeader().GetAddr1() == recipient && i->tid == tid)
-            {
-                i = m_bars.erase(i);
-            }
-            else
-            {
-                i++;
-            }
-        }
+        m_originatorAgreements.erase(it);
     }
 }
 
 void
-BlockAckManager::UpdateAgreement(const MgtAddBaResponseHeader* respHdr,
-                                 Mac48Address recipient,
-                                 uint16_t startingSeq)
+BlockAckManager::UpdateOriginatorAgreement(const MgtAddBaResponseHeader& respHdr,
+                                           const Mac48Address& recipient,
+                                           uint16_t startingSeq)
 {
     NS_LOG_FUNCTION(this << respHdr << recipient << startingSeq);
-    uint8_t tid = respHdr->GetTid();
-    AgreementsI it = m_agreements.find(std::make_pair(recipient, tid));
-    if (it != m_agreements.end())
+    uint8_t tid = respHdr.GetTid();
+    auto it = m_originatorAgreements.find({recipient, tid});
+    if (it != m_originatorAgreements.end())
     {
         OriginatorBlockAckAgreement& agreement = it->second.first;
-        agreement.SetBufferSize(respHdr->GetBufferSize());
-        agreement.SetTimeout(respHdr->GetTimeout());
-        agreement.SetAmsduSupport(respHdr->IsAmsduSupported());
+        agreement.SetBufferSize(respHdr.GetBufferSize());
+        agreement.SetTimeout(respHdr.GetTimeout());
+        agreement.SetAmsduSupport(respHdr.IsAmsduSupported());
         agreement.SetStartingSequence(startingSeq);
         agreement.InitTxWindow();
-        if (respHdr->IsImmediateBlockAck())
+        if (respHdr.IsImmediateBlockAck())
         {
             agreement.SetImmediateBlockAck();
         }
@@ -214,10 +171,10 @@ BlockAckManager::UpdateAgreement(const MgtAddBaResponseHeader* respHdr,
         }
         if (!it->second.first.IsEstablished())
         {
-            m_agreementState(Simulator::Now(),
-                             recipient,
-                             tid,
-                             OriginatorBlockAckAgreement::ESTABLISHED);
+            m_originatorAgreementState(Simulator::Now(),
+                                       recipient,
+                                       tid,
+                                       OriginatorBlockAckAgreement::ESTABLISHED);
         }
         agreement.SetState(OriginatorBlockAckAgreement::ESTABLISHED);
         if (agreement.GetTimeout() != 0)
@@ -234,6 +191,50 @@ BlockAckManager::UpdateAgreement(const MgtAddBaResponseHeader* respHdr,
 }
 
 void
+BlockAckManager::CreateRecipientAgreement(const MgtAddBaResponseHeader& respHdr,
+                                          const Mac48Address& originator,
+                                          uint16_t startingSeq,
+                                          bool htSupported,
+                                          Ptr<MacRxMiddle> rxMiddle)
+{
+    NS_LOG_FUNCTION(this << respHdr << originator << startingSeq << htSupported << rxMiddle);
+    uint8_t tid = respHdr.GetTid();
+
+    RecipientBlockAckAgreement agreement(originator,
+                                         respHdr.IsAmsduSupported(),
+                                         tid,
+                                         respHdr.GetBufferSize(),
+                                         respHdr.GetTimeout(),
+                                         startingSeq,
+                                         htSupported);
+    agreement.SetMacRxMiddle(rxMiddle);
+    if (respHdr.IsImmediateBlockAck())
+    {
+        agreement.SetImmediateBlockAck();
+    }
+    else
+    {
+        agreement.SetDelayedBlockAck();
+    }
+
+    m_recipientAgreements.insert_or_assign({originator, tid}, agreement);
+}
+
+void
+BlockAckManager::DestroyRecipientAgreement(const Mac48Address& originator, uint8_t tid)
+{
+    NS_LOG_FUNCTION(this << originator << tid);
+
+    if (auto agreementIt = m_recipientAgreements.find({originator, tid});
+        agreementIt != m_recipientAgreements.end())
+    {
+        // forward up the buffered MPDUs before destroying the agreement
+        agreementIt->second.Flush();
+        m_recipientAgreements.erase(agreementIt);
+    }
+}
+
+void
 BlockAckManager::StorePacket(Ptr<WifiMpdu> mpdu)
 {
     NS_LOG_FUNCTION(this << *mpdu);
@@ -242,8 +243,8 @@ BlockAckManager::StorePacket(Ptr<WifiMpdu> mpdu)
     uint8_t tid = mpdu->GetHeader().GetQosTid();
     Mac48Address recipient = mpdu->GetHeader().GetAddr1();
 
-    AgreementsI agreementIt = m_agreements.find(std::make_pair(recipient, tid));
-    NS_ASSERT(agreementIt != m_agreements.end());
+    auto agreementIt = m_originatorAgreements.find({recipient, tid});
+    NS_ASSERT(agreementIt != m_originatorAgreements.end());
 
     uint16_t mpduDist =
         agreementIt->second.first.GetDistance(mpdu->GetHeader().GetSequenceNumber());
@@ -278,77 +279,14 @@ BlockAckManager::StorePacket(Ptr<WifiMpdu> mpdu)
     }
     agreementIt->second.second.insert(it.base(), mpdu);
     agreementIt->second.first.NotifyTransmittedMpdu(mpdu);
-    mpdu->SetInFlight();
-}
-
-Ptr<const WifiMpdu>
-BlockAckManager::GetBar(bool remove, uint8_t tid, Mac48Address address)
-{
-    Time now = Simulator::Now();
-    Ptr<const WifiMpdu> bar;
-    // remove all expired MPDUs from the MAC queue, so that
-    // BlockAckRequest frames (if needed) are scheduled
-    m_queue->WipeAllExpiredMpdus();
-
-    auto nextBar = m_bars.begin();
-
-    while (nextBar != m_bars.end())
-    {
-        Mac48Address recipient = nextBar->bar->GetHeader().GetAddr1();
-
-        if (address != Mac48Address::GetBroadcast() && tid != 8 &&
-            (!nextBar->bar->GetHeader().IsBlockAckReq() || address != recipient ||
-             tid != nextBar->tid))
-        {
-            // we can only return a BAR addressed to the given station and for the given TID
-            nextBar++;
-            continue;
-        }
-        if (nextBar->bar->GetHeader().IsBlockAckReq())
-        {
-            auto bam = m_bamMap.at(QosUtilsMapTidToAc(nextBar->tid));
-            AgreementsI it = bam->m_agreements.find(std::make_pair(recipient, nextBar->tid));
-            if (it == m_agreements.end())
-            {
-                // BA agreement was torn down; remove this BAR and continue
-                nextBar = m_bars.erase(nextBar);
-                continue;
-            }
-            if (nextBar->skipIfNoDataQueued &&
-                !m_queue->PeekByTidAndAddress(nextBar->tid, recipient))
-            {
-                // skip this BAR as there is no data queued
-                nextBar++;
-                continue;
-            }
-            // update BAR if the starting sequence number changed
-            CtrlBAckRequestHeader reqHdr;
-            nextBar->bar->GetPacket()->PeekHeader(reqHdr);
-            if (reqHdr.GetStartingSequence() != it->second.first.GetStartingSequence())
-            {
-                reqHdr.SetStartingSequence(it->second.first.GetStartingSequence());
-                Ptr<Packet> packet = Create<Packet>();
-                packet->AddHeader(reqHdr);
-                nextBar->bar = Create<const WifiMpdu>(packet, nextBar->bar->GetHeader());
-            }
-        }
-
-        bar = nextBar->bar;
-        if (remove)
-        {
-            m_bars.erase(nextBar);
-        }
-        break;
-    }
-    return bar;
 }
 
 uint32_t
-BlockAckManager::GetNBufferedPackets(Mac48Address recipient, uint8_t tid) const
+BlockAckManager::GetNBufferedPackets(const Mac48Address& recipient, uint8_t tid) const
 {
     NS_LOG_FUNCTION(this << recipient << +tid);
-    AgreementsCI it = m_agreements.find(std::make_pair(recipient, tid));
-    if (it == m_agreements.end())
+    auto it = m_originatorAgreements.find({recipient, tid});
+    if (it == m_originatorAgreements.end())
     {
         return 0;
     }
@@ -363,12 +301,13 @@ BlockAckManager::SetBlockAckThreshold(uint8_t nPackets)
 }
 
 BlockAckManager::PacketQueueI
-BlockAckManager::HandleInFlightMpdu(PacketQueueI mpduIt,
+BlockAckManager::HandleInFlightMpdu(uint8_t linkId,
+                                    PacketQueueI mpduIt,
                                     MpduStatus status,
-                                    const AgreementsI& it,
+                                    const OriginatorAgreementsI& it,
                                     const Time& now)
 {
-    NS_LOG_FUNCTION(this << **mpduIt << +static_cast<uint8_t>(status));
+    NS_LOG_FUNCTION(this << linkId << **mpduIt << +static_cast<uint8_t>(status));
 
     if (!(*mpduIt)->IsQueued())
     {
@@ -384,7 +323,7 @@ BlockAckManager::HandleInFlightMpdu(PacketQueueI mpduIt,
         return it->second.second.erase(mpduIt);
     }
 
-    WifiMacHeader& hdr = (*mpduIt)->GetHeader();
+    const WifiMacHeader& hdr = (*mpduIt)->GetHeader();
 
     NS_ASSERT(hdr.GetAddr1() == it->first.first);
     NS_ASSERT(hdr.IsQosData() && hdr.GetQosTid() == it->first.second);
@@ -423,23 +362,23 @@ BlockAckManager::HandleInFlightMpdu(PacketQueueI mpduIt,
 
     NS_ASSERT(status == TO_RETRANSMIT);
     (*mpduIt)->GetHeader().SetRetry();
-    (*mpduIt)->ResetInFlight(); // no longer in flight; will be if retransmitted
+    (*mpduIt)->ResetInFlight(linkId); // no longer in flight; will be if retransmitted
 
     return it->second.second.erase(mpduIt);
 }
 
 void
-BlockAckManager::NotifyGotAck(Ptr<const WifiMpdu> mpdu)
+BlockAckManager::NotifyGotAck(uint8_t linkId, Ptr<const WifiMpdu> mpdu)
 {
-    NS_LOG_FUNCTION(this << *mpdu);
+    NS_LOG_FUNCTION(this << linkId << *mpdu);
     NS_ASSERT(mpdu->GetHeader().IsQosData());
 
-    Mac48Address recipient = mpdu->GetHeader().GetAddr1();
+    Mac48Address recipient = mpdu->GetOriginal()->GetHeader().GetAddr1();
     uint8_t tid = mpdu->GetHeader().GetQosTid();
-    NS_ASSERT(ExistsAgreementInState(recipient, tid, OriginatorBlockAckAgreement::ESTABLISHED));
 
-    AgreementsI it = m_agreements.find(std::make_pair(recipient, tid));
-    NS_ASSERT(it != m_agreements.end());
+    auto it = m_originatorAgreements.find({recipient, tid});
+    NS_ASSERT(it != m_originatorAgreements.end());
+    NS_ASSERT(it->second.first.IsEstablished());
 
     it->second.first.NotifyAckedMpdu(mpdu);
 
@@ -449,24 +388,24 @@ BlockAckManager::NotifyGotAck(Ptr<const WifiMpdu> mpdu)
         if ((*queueIt)->GetHeader().GetSequenceNumber() == mpdu->GetHeader().GetSequenceNumber())
         {
             m_queue->DequeueIfQueued({*queueIt});
-            HandleInFlightMpdu(queueIt, ACKNOWLEDGED, it, Simulator::Now());
+            HandleInFlightMpdu(linkId, queueIt, ACKNOWLEDGED, it, Simulator::Now());
             break;
         }
     }
 }
 
 void
-BlockAckManager::NotifyMissedAck(Ptr<WifiMpdu> mpdu)
+BlockAckManager::NotifyMissedAck(uint8_t linkId, Ptr<WifiMpdu> mpdu)
 {
-    NS_LOG_FUNCTION(this << *mpdu);
+    NS_LOG_FUNCTION(this << linkId << *mpdu);
     NS_ASSERT(mpdu->GetHeader().IsQosData());
 
-    Mac48Address recipient = mpdu->GetHeader().GetAddr1();
+    Mac48Address recipient = mpdu->GetOriginal()->GetHeader().GetAddr1();
     uint8_t tid = mpdu->GetHeader().GetQosTid();
-    NS_ASSERT(ExistsAgreementInState(recipient, tid, OriginatorBlockAckAgreement::ESTABLISHED));
 
-    AgreementsI it = m_agreements.find(std::make_pair(recipient, tid));
-    NS_ASSERT(it != m_agreements.end());
+    auto it = m_originatorAgreements.find({recipient, tid});
+    NS_ASSERT(it != m_originatorAgreements.end());
+    NS_ASSERT(it->second.first.IsEstablished());
 
     // remove the frame from the queue of outstanding packets (it will be re-inserted
     // if retransmitted)
@@ -474,21 +413,20 @@ BlockAckManager::NotifyMissedAck(Ptr<WifiMpdu> mpdu)
     {
         if ((*queueIt)->GetHeader().GetSequenceNumber() == mpdu->GetHeader().GetSequenceNumber())
         {
-            HandleInFlightMpdu(queueIt, TO_RETRANSMIT, it, Simulator::Now());
+            HandleInFlightMpdu(linkId, queueIt, TO_RETRANSMIT, it, Simulator::Now());
             break;
         }
     }
 }
 
 std::pair<uint16_t, uint16_t>
-BlockAckManager::NotifyGotBlockAck(const CtrlBAckResponseHeader& blockAck,
-                                   Mac48Address recipient,
+BlockAckManager::NotifyGotBlockAck(uint8_t linkId,
+                                   const CtrlBAckResponseHeader& blockAck,
+                                   const Mac48Address& recipient,
                                    const std::set<uint8_t>& tids,
                                    size_t index)
 {
-    NS_LOG_FUNCTION(this << blockAck << recipient << index);
-    uint16_t nSuccessfulMpdus = 0;
-    uint16_t nFailedMpdus = 0;
+    NS_LOG_FUNCTION(this << linkId << blockAck << recipient << index);
 
     NS_ABORT_MSG_IF(blockAck.IsBasic(), "Basic Block Ack is not supported");
     NS_ABORT_MSG_IF(blockAck.IsMultiTid(), "Multi-TID Block Ack is not supported");
@@ -501,83 +439,104 @@ BlockAckManager::NotifyGotBlockAck(const CtrlBAckResponseHeader& blockAck,
         NS_ASSERT(blockAck.GetAckType(index) && tids.size() == 1);
         tid = *tids.begin();
     }
-    if (ExistsAgreementInState(recipient, tid, OriginatorBlockAckAgreement::ESTABLISHED))
+
+    auto it = m_originatorAgreements.find({recipient, tid});
+    if (it == m_originatorAgreements.end() || !it->second.first.IsEstablished())
     {
-        AgreementsI it = m_agreements.find(std::make_pair(recipient, tid));
+        return {0, 0};
+    }
 
-        if (it->second.first.m_inactivityEvent.IsRunning())
+    uint16_t nSuccessfulMpdus = 0;
+    uint16_t nFailedMpdus = 0;
+
+    if (it->second.first.m_inactivityEvent.IsRunning())
+    {
+        /* Upon reception of a BlockAck frame, the inactivity timer at the
+            originator must be reset.
+            For more details see section 11.5.3 in IEEE802.11e standard */
+        it->second.first.m_inactivityEvent.Cancel();
+        Time timeout = MicroSeconds(1024 * it->second.first.GetTimeout());
+        it->second.first.m_inactivityEvent =
+            Simulator::Schedule(timeout, &BlockAckManager::InactivityTimeout, this, recipient, tid);
+    }
+
+    NS_ASSERT(blockAck.IsCompressed() || blockAck.IsExtendedCompressed() || blockAck.IsMultiSta());
+    Time now = Simulator::Now();
+    std::list<Ptr<const WifiMpdu>> acked;
+
+    for (auto queueIt = it->second.second.begin(); queueIt != it->second.second.end();)
+    {
+        uint16_t currentSeq = (*queueIt)->GetHeader().GetSequenceNumber();
+        NS_LOG_DEBUG("Current seq=" << currentSeq);
+        if (blockAck.IsPacketReceived(currentSeq, index))
         {
-            /* Upon reception of a BlockAck frame, the inactivity timer at the
-                originator must be reset.
-                For more details see section 11.5.3 in IEEE802.11e standard */
-            it->second.first.m_inactivityEvent.Cancel();
-            Time timeout = MicroSeconds(1024 * it->second.first.GetTimeout());
-            it->second.first.m_inactivityEvent =
-                Simulator::Schedule(timeout,
-                                    &BlockAckManager::InactivityTimeout,
-                                    this,
-                                    recipient,
-                                    tid);
+            it->second.first.NotifyAckedMpdu(*queueIt);
+            nSuccessfulMpdus++;
+            if (!m_txOkCallback.IsNull())
+            {
+                m_txOkCallback(*queueIt);
+            }
+            acked.emplace_back(*queueIt);
+            queueIt = HandleInFlightMpdu(linkId, queueIt, ACKNOWLEDGED, it, now);
         }
-
-        NS_ASSERT(blockAck.IsCompressed() || blockAck.IsExtendedCompressed() ||
-                  blockAck.IsMultiSta());
-        Time now = Simulator::Now();
-        std::list<Ptr<const WifiMpdu>> acked;
-
-        for (auto queueIt = it->second.second.begin(); queueIt != it->second.second.end();)
+        else
         {
-            uint16_t currentSeq = (*queueIt)->GetHeader().GetSequenceNumber();
-            NS_LOG_DEBUG("Current seq=" << currentSeq);
-            if (blockAck.IsPacketReceived(currentSeq, index))
-            {
-                it->second.first.NotifyAckedMpdu(*queueIt);
-                nSuccessfulMpdus++;
-                if (!m_txOkCallback.IsNull())
-                {
-                    m_txOkCallback(*queueIt);
-                }
-                acked.emplace_back(*queueIt);
-                queueIt = HandleInFlightMpdu(queueIt, ACKNOWLEDGED, it, now);
-            }
-            else
-            {
-                ++queueIt;
-            }
+            ++queueIt;
         }
+    }
 
-        // Dequeue all acknowledged MPDUs at once
-        m_queue->DequeueIfQueued(acked);
+    // Dequeue all acknowledged MPDUs at once
+    m_queue->DequeueIfQueued(acked);
 
-        // Remaining outstanding MPDUs have not been acknowledged
-        for (auto queueIt = it->second.second.begin(); queueIt != it->second.second.end();)
+    // Remaining outstanding MPDUs have not been acknowledged
+    for (auto queueIt = it->second.second.begin(); queueIt != it->second.second.end();)
+    {
+        // transmission actually failed if the MPDU is inflight only on the same link on
+        // which we received the BlockAck frame
+        auto linkIds = (*queueIt)->GetInFlightLinkIds();
+
+        if (linkIds.size() == 1 && *linkIds.begin() == linkId)
         {
             nFailedMpdus++;
             if (!m_txFailedCallback.IsNull())
             {
                 m_txFailedCallback(*queueIt);
             }
-            queueIt = HandleInFlightMpdu(queueIt, TO_RETRANSMIT, it, now);
+            queueIt = HandleInFlightMpdu(linkId, queueIt, TO_RETRANSMIT, it, now);
+            continue;
         }
+
+        queueIt = HandleInFlightMpdu(linkId, queueIt, STAY_INFLIGHT, it, now);
     }
+
     return {nSuccessfulMpdus, nFailedMpdus};
 }
 
 void
-BlockAckManager::NotifyMissedBlockAck(Mac48Address recipient, uint8_t tid)
+BlockAckManager::NotifyMissedBlockAck(uint8_t linkId, const Mac48Address& recipient, uint8_t tid)
 {
-    NS_LOG_FUNCTION(this << recipient << +tid);
-    if (ExistsAgreementInState(recipient, tid, OriginatorBlockAckAgreement::ESTABLISHED))
-    {
-        AgreementsI it = m_agreements.find(std::make_pair(recipient, tid));
-        Time now = Simulator::Now();
+    NS_LOG_FUNCTION(this << linkId << recipient << +tid);
 
-        // remove all packets from the queue of outstanding packets (they will be
-        // re-inserted if retransmitted)
-        for (auto mpduIt = it->second.second.begin(); mpduIt != it->second.second.end();)
+    auto it = m_originatorAgreements.find({recipient, tid});
+    if (it == m_originatorAgreements.end() || !it->second.first.IsEstablished())
+    {
+        return;
+    }
+
+    Time now = Simulator::Now();
+
+    // remove all packets from the queue of outstanding packets (they will be
+    // re-inserted if retransmitted)
+    for (auto mpduIt = it->second.second.begin(); mpduIt != it->second.second.end();)
+    {
+        // MPDUs that were transmitted on another link shall stay inflight
+        auto linkIds = (*mpduIt)->GetInFlightLinkIds();
+        if (linkIds.count(linkId) == 0)
         {
-            mpduIt = HandleInFlightMpdu(mpduIt, TO_RETRANSMIT, it, now);
+            mpduIt = HandleInFlightMpdu(linkId, mpduIt, STAY_INFLIGHT, it, now);
+            continue;
         }
+        mpduIt = HandleInFlightMpdu(linkId, mpduIt, TO_RETRANSMIT, it, now);
     }
 }
 
@@ -598,15 +557,15 @@ BlockAckManager::NotifyDiscardedMpdu(Ptr<const WifiMpdu> mpdu)
         return;
     }
 
-    Mac48Address recipient = mpdu->GetHeader().GetAddr1();
+    Mac48Address recipient = mpdu->GetOriginal()->GetHeader().GetAddr1();
     uint8_t tid = mpdu->GetHeader().GetQosTid();
-    if (!ExistsAgreementInState(recipient, tid, OriginatorBlockAckAgreement::ESTABLISHED))
+    auto it = m_originatorAgreements.find({recipient, tid});
+    if (it == m_originatorAgreements.end() || !it->second.first.IsEstablished())
     {
         NS_LOG_DEBUG("No established Block Ack agreement");
         return;
     }
 
-    AgreementsI it = m_agreements.find(std::make_pair(recipient, tid));
     uint16_t currStartingSeq = it->second.first.GetStartingSequence();
     if (QosUtilsIsOldPacket(currStartingSeq, mpdu->GetHeader().GetSequenceNumber()))
     {
@@ -647,22 +606,51 @@ BlockAckManager::NotifyDiscardedMpdu(Ptr<const WifiMpdu> mpdu)
     WifiMacHeader hdr;
     hdr.SetType(WIFI_MAC_CTL_BACKREQ);
     hdr.SetAddr1(recipient);
-    hdr.SetAddr2(mpdu->GetHeader().GetAddr2());
-    hdr.SetAddr3(mpdu->GetHeader().GetAddr3());
+    hdr.SetAddr2(mpdu->GetOriginal()->GetHeader().GetAddr2());
     hdr.SetDsNotTo();
     hdr.SetDsNotFrom();
     hdr.SetNoRetry();
     hdr.SetNoMoreFragments();
 
-    ScheduleBar(Create<const WifiMpdu>(bar, hdr));
+    ScheduleBar(Create<WifiMpdu>(bar, hdr));
+}
+
+void
+BlockAckManager::NotifyGotBlockAckRequest(const Mac48Address& originator,
+                                          uint8_t tid,
+                                          uint16_t startingSeq)
+{
+    NS_LOG_FUNCTION(this << originator << tid << startingSeq);
+    auto it = m_recipientAgreements.find({originator, tid});
+    if (it == m_recipientAgreements.end())
+    {
+        return;
+    }
+    it->second.NotifyReceivedBar(startingSeq);
+}
+
+void
+BlockAckManager::NotifyGotMpdu(Ptr<const WifiMpdu> mpdu)
+{
+    NS_LOG_FUNCTION(this << *mpdu);
+    auto originator = mpdu->GetOriginal()->GetHeader().GetAddr2();
+    NS_ASSERT(mpdu->GetHeader().IsQosData());
+    auto tid = mpdu->GetHeader().GetQosTid();
+
+    auto it = m_recipientAgreements.find({originator, tid});
+    if (it == m_recipientAgreements.end())
+    {
+        return;
+    }
+    it->second.NotifyReceivedMpdu(mpdu);
 }
 
 CtrlBAckRequestHeader
-BlockAckManager::GetBlockAckReqHeader(Mac48Address recipient, uint8_t tid) const
+BlockAckManager::GetBlockAckReqHeader(const Mac48Address& recipient, uint8_t tid) const
 {
     NS_LOG_FUNCTION(this << recipient << +tid);
-    AgreementsCI it = m_agreements.find(std::make_pair(recipient, tid));
-    NS_ASSERT(it != m_agreements.end());
+    auto it = m_originatorAgreements.find({recipient, tid});
+    NS_ASSERT(it != m_originatorAgreements.end());
 
     CtrlBAckRequestHeader reqHdr;
     reqHdr.SetType((*it).second.first.GetBlockAckReqType());
@@ -672,116 +660,150 @@ BlockAckManager::GetBlockAckReqHeader(Mac48Address recipient, uint8_t tid) const
 }
 
 void
-BlockAckManager::ScheduleBar(Ptr<const WifiMpdu> bar, bool skipIfNoDataQueued)
+BlockAckManager::ScheduleBar(Ptr<WifiMpdu> bar)
 {
     NS_LOG_FUNCTION(this << *bar);
-    NS_ASSERT(bar->GetHeader().IsBlockAckReq() || bar->GetHeader().IsTrigger());
+    NS_ASSERT(bar->GetHeader().IsBlockAckReq());
 
-    uint8_t tid = 0;
-    if (bar->GetHeader().IsBlockAckReq())
-    {
-        CtrlBAckRequestHeader reqHdr;
-        bar->GetPacket()->PeekHeader(reqHdr);
-        tid = reqHdr.GetTidInfo();
-    }
-#ifdef NS3_BUILD_PROFILE_DEBUG
-    else
-    {
-        CtrlTriggerHeader triggerHdr;
-        bar->GetPacket()->PeekHeader(triggerHdr);
-        NS_ASSERT(triggerHdr.IsMuBar());
-    }
-#endif
-    Bar request(bar, tid, skipIfNoDataQueued);
+    CtrlBAckRequestHeader reqHdr;
+    bar->GetPacket()->PeekHeader(reqHdr);
+    uint8_t tid = reqHdr.GetTidInfo();
+
+    WifiContainerQueueId queueId(WIFI_CTL_QUEUE, bar->GetHeader().GetAddr2(), std::nullopt);
+    Ptr<WifiMpdu> item = nullptr;
 
     // if a BAR for the given agreement is present, replace it with the new one
-    std::list<Bar>::const_iterator i = m_bars.end();
-
-    if (bar->GetHeader().IsBlockAckReq())
+    while ((item = m_queue->PeekByQueueId(queueId, item)))
     {
-        for (i = m_bars.begin(); i != m_bars.end(); i++)
+        if (item->GetHeader().IsBlockAckReq() &&
+            item->GetHeader().GetAddr1() == bar->GetHeader().GetAddr1())
         {
-            if (i->bar->GetHeader().IsBlockAckReq() &&
-                i->bar->GetHeader().GetAddr1() == bar->GetHeader().GetAddr1() && i->tid == tid)
+            CtrlBAckRequestHeader otherHdr;
+            item->GetPacket()->PeekHeader(otherHdr);
+            if (otherHdr.GetTidInfo() == tid)
             {
-                i = m_bars.erase(i);
-                break;
+                // replace item with bar
+                m_queue->Replace(item, bar);
+                return;
             }
         }
     }
 
-    if (bar->GetHeader().IsRetry())
+    m_queue->Enqueue(bar);
+}
+
+void
+BlockAckManager::ScheduleMuBar(Ptr<WifiMpdu> muBar)
+{
+    NS_LOG_FUNCTION(this << *muBar);
+    NS_ASSERT(muBar->GetHeader().IsTrigger());
+
+#ifdef NS3_BUILD_PROFILE_DEBUG
+    CtrlTriggerHeader triggerHdr;
+    muBar->GetPacket()->PeekHeader(triggerHdr);
+    NS_ASSERT(triggerHdr.IsMuBar());
+#endif
+
+    m_queue->Enqueue(muBar);
+}
+
+const std::list<BlockAckManager::AgreementKey>&
+BlockAckManager::GetSendBarIfDataQueuedList() const
+{
+    return m_sendBarIfDataQueued;
+}
+
+void
+BlockAckManager::AddToSendBarIfDataQueuedList(const Mac48Address& recipient, uint8_t tid)
+{
+    NS_LOG_FUNCTION(this << recipient << tid);
+    // do nothing if the given pair is already in the list
+    if (std::find(m_sendBarIfDataQueued.begin(),
+                  m_sendBarIfDataQueued.end(),
+                  BlockAckManager::AgreementKey{recipient, tid}) == m_sendBarIfDataQueued.end())
     {
-        m_bars.push_front(request);
-    }
-    else
-    {
-        m_bars.insert(i, request);
+        m_sendBarIfDataQueued.emplace_back(recipient, tid);
     }
 }
 
 void
-BlockAckManager::InactivityTimeout(Mac48Address recipient, uint8_t tid)
+BlockAckManager::RemoveFromSendBarIfDataQueuedList(const Mac48Address& recipient, uint8_t tid)
+{
+    NS_LOG_FUNCTION(this << recipient << tid);
+    m_sendBarIfDataQueued.remove({recipient, tid});
+}
+
+void
+BlockAckManager::InactivityTimeout(const Mac48Address& recipient, uint8_t tid)
 {
     NS_LOG_FUNCTION(this << recipient << +tid);
     m_blockAckInactivityTimeout(recipient, tid, true);
 }
 
 void
-BlockAckManager::NotifyAgreementEstablished(Mac48Address recipient,
-                                            uint8_t tid,
-                                            uint16_t startingSeq)
+BlockAckManager::NotifyOriginatorAgreementEstablished(const Mac48Address& recipient,
+                                                      uint8_t tid,
+                                                      uint16_t startingSeq)
 {
     NS_LOG_FUNCTION(this << recipient << +tid << startingSeq);
-    AgreementsI it = m_agreements.find(std::make_pair(recipient, tid));
-    NS_ASSERT(it != m_agreements.end());
+    auto it = m_originatorAgreements.find({recipient, tid});
+    NS_ASSERT(it != m_originatorAgreements.end());
     if (!it->second.first.IsEstablished())
     {
-        m_agreementState(Simulator::Now(),
-                         recipient,
-                         tid,
-                         OriginatorBlockAckAgreement::ESTABLISHED);
+        m_originatorAgreementState(Simulator::Now(),
+                                   recipient,
+                                   tid,
+                                   OriginatorBlockAckAgreement::ESTABLISHED);
     }
     it->second.first.SetState(OriginatorBlockAckAgreement::ESTABLISHED);
     it->second.first.SetStartingSequence(startingSeq);
 }
 
 void
-BlockAckManager::NotifyAgreementRejected(Mac48Address recipient, uint8_t tid)
+BlockAckManager::NotifyOriginatorAgreementRejected(const Mac48Address& recipient, uint8_t tid)
 {
     NS_LOG_FUNCTION(this << recipient << +tid);
-    AgreementsI it = m_agreements.find(std::make_pair(recipient, tid));
-    NS_ASSERT(it != m_agreements.end());
+    auto it = m_originatorAgreements.find({recipient, tid});
+    NS_ASSERT(it != m_originatorAgreements.end());
     if (!it->second.first.IsRejected())
     {
-        m_agreementState(Simulator::Now(), recipient, tid, OriginatorBlockAckAgreement::REJECTED);
+        m_originatorAgreementState(Simulator::Now(),
+                                   recipient,
+                                   tid,
+                                   OriginatorBlockAckAgreement::REJECTED);
     }
     it->second.first.SetState(OriginatorBlockAckAgreement::REJECTED);
 }
 
 void
-BlockAckManager::NotifyAgreementNoReply(Mac48Address recipient, uint8_t tid)
+BlockAckManager::NotifyOriginatorAgreementNoReply(const Mac48Address& recipient, uint8_t tid)
 {
     NS_LOG_FUNCTION(this << recipient << +tid);
-    AgreementsI it = m_agreements.find(std::make_pair(recipient, tid));
-    NS_ASSERT(it != m_agreements.end());
+    auto it = m_originatorAgreements.find({recipient, tid});
+    NS_ASSERT(it != m_originatorAgreements.end());
     if (!it->second.first.IsNoReply())
     {
-        m_agreementState(Simulator::Now(), recipient, tid, OriginatorBlockAckAgreement::NO_REPLY);
+        m_originatorAgreementState(Simulator::Now(),
+                                   recipient,
+                                   tid,
+                                   OriginatorBlockAckAgreement::NO_REPLY);
     }
     it->second.first.SetState(OriginatorBlockAckAgreement::NO_REPLY);
     m_unblockPackets(recipient, tid);
 }
 
 void
-BlockAckManager::NotifyAgreementReset(Mac48Address recipient, uint8_t tid)
+BlockAckManager::NotifyOriginatorAgreementReset(const Mac48Address& recipient, uint8_t tid)
 {
     NS_LOG_FUNCTION(this << recipient << +tid);
-    AgreementsI it = m_agreements.find(std::make_pair(recipient, tid));
-    NS_ASSERT(it != m_agreements.end());
+    auto it = m_originatorAgreements.find({recipient, tid});
+    NS_ASSERT(it != m_originatorAgreements.end());
     if (!it->second.first.IsReset())
     {
-        m_agreementState(Simulator::Now(), recipient, tid, OriginatorBlockAckAgreement::RESET);
+        m_originatorAgreementState(Simulator::Now(),
+                                   recipient,
+                                   tid,
+                                   OriginatorBlockAckAgreement::RESET);
     }
     it->second.first.SetState(OriginatorBlockAckAgreement::RESET);
 }
@@ -794,50 +816,31 @@ BlockAckManager::SetQueue(const Ptr<WifiMacQueue> queue)
 }
 
 bool
-BlockAckManager::SwitchToBlockAckIfNeeded(Mac48Address recipient, uint8_t tid, uint16_t startingSeq)
+BlockAckManager::NeedBarRetransmission(uint8_t tid, const Mac48Address& recipient)
 {
-    NS_LOG_FUNCTION(this << recipient << +tid << startingSeq);
-    NS_ASSERT(!ExistsAgreementInState(recipient, tid, OriginatorBlockAckAgreement::PENDING));
-    if (!ExistsAgreementInState(recipient, tid, OriginatorBlockAckAgreement::REJECTED) &&
-        ExistsAgreement(recipient, tid))
+    auto it = m_originatorAgreements.find({recipient, tid});
+    if (it == m_originatorAgreements.end() || !it->second.first.IsEstablished())
     {
-        WifiContainerQueueId queueId{WIFI_QOSDATA_UNICAST_QUEUE, recipient, tid};
-        uint32_t packets = m_queue->GetNPackets(queueId) + GetNBufferedPackets(recipient, tid);
-        if (packets >= m_blockAckThreshold)
+        // If the inactivity timer has expired, QosTxop::SendDelbaFrame has been called and
+        // has destroyed the agreement, hence we get here and correctly return false
+        return false;
+    }
+
+    Time now = Simulator::Now();
+
+    // A BAR needs to be retransmitted if there is at least a non-expired in flight MPDU
+    for (auto mpduIt = it->second.second.begin(); mpduIt != it->second.second.end();)
+    {
+        // remove MPDU if old or with expired lifetime
+        mpduIt = HandleInFlightMpdu(SINGLE_LINK_OP_ID, mpduIt, STAY_INFLIGHT, it, now);
+
+        if (mpduIt != it->second.second.begin())
         {
-            NotifyAgreementEstablished(recipient, tid, startingSeq);
+            // the MPDU has not been removed
             return true;
         }
     }
-    return false;
-}
 
-bool
-BlockAckManager::NeedBarRetransmission(uint8_t tid, Mac48Address recipient)
-{
-    if (ExistsAgreementInState(recipient, tid, OriginatorBlockAckAgreement::ESTABLISHED))
-    {
-        AgreementsI it = m_agreements.find(std::make_pair(recipient, tid));
-        NS_ASSERT(it != m_agreements.end());
-
-        Time now = Simulator::Now();
-
-        // A BAR needs to be retransmitted if there is at least a non-expired in flight MPDU
-        for (auto mpduIt = it->second.second.begin(); mpduIt != it->second.second.end();)
-        {
-            // remove MPDU if old or with expired lifetime
-            mpduIt = HandleInFlightMpdu(mpduIt, STAY_INFLIGHT, it, now);
-
-            if (mpduIt != it->second.second.begin())
-            {
-                // the MPDU has not been removed
-                return true;
-            }
-        }
-    }
-
-    // If the inactivity timer has expired, QosTxop::SendDelbaFrame has been called and
-    // has destroyed the agreement, hence we get here and correctly return false
     return false;
 }
 
@@ -881,39 +884,23 @@ BlockAckManager::SetDroppedOldMpduCallback(DroppedOldMpdu callback)
 }
 
 uint16_t
-BlockAckManager::GetRecipientBufferSize(Mac48Address recipient, uint8_t tid) const
+BlockAckManager::GetRecipientBufferSize(const Mac48Address& recipient, uint8_t tid) const
 {
     uint16_t size = 0;
-    AgreementsCI it = m_agreements.find(std::make_pair(recipient, tid));
-    if (it != m_agreements.end())
+    auto it = m_originatorAgreements.find({recipient, tid});
+    if (it != m_originatorAgreements.end())
     {
         size = it->second.first.GetBufferSize();
     }
     return size;
 }
 
-BlockAckReqType
-BlockAckManager::GetBlockAckReqType(Mac48Address recipient, uint8_t tid) const
-{
-    AgreementsCI it = m_agreements.find(std::make_pair(recipient, tid));
-    NS_ABORT_MSG_IF(it == m_agreements.end(), "No established Block Ack agreement");
-    return it->second.first.GetBlockAckReqType();
-}
-
-BlockAckType
-BlockAckManager::GetBlockAckType(Mac48Address recipient, uint8_t tid) const
-{
-    AgreementsCI it = m_agreements.find(std::make_pair(recipient, tid));
-    NS_ABORT_MSG_IF(it == m_agreements.end(), "No established Block Ack agreement");
-    return it->second.first.GetBlockAckType();
-}
-
 uint16_t
-BlockAckManager::GetOriginatorStartingSequence(Mac48Address recipient, uint8_t tid) const
+BlockAckManager::GetOriginatorStartingSequence(const Mac48Address& recipient, uint8_t tid) const
 {
     uint16_t seqNum = 0;
-    AgreementsCI it = m_agreements.find(std::make_pair(recipient, tid));
-    if (it != m_agreements.end())
+    auto it = m_originatorAgreements.find({recipient, tid});
+    if (it != m_originatorAgreements.end())
     {
         seqNum = it->second.first.GetStartingSequence();
     }

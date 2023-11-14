@@ -63,6 +63,13 @@ class Mac8Address
     static Mac8Address ConvertFrom(const Address& address);
 
     /**
+     * Convert to a generic Address.
+     *
+     * \return The Address value.
+     */
+    Address ConvertTo() const;
+
+    /**
      * Check that a generic Address is compatible with Mac8Address.
      *
      * \param address  Address to test.
@@ -133,12 +140,6 @@ class Mac8Address
      * \return The type value.
      */
     static uint8_t GetType();
-    /**
-     * Convert to a generic Address.
-     *
-     * \return The Address value.
-     */
-    Address ConvertTo() const;
 
     friend bool operator<(const Mac8Address& a, const Mac8Address& b);
     friend bool operator==(const Mac8Address& a, const Mac8Address& b);
@@ -158,7 +159,7 @@ class Mac8Address
 bool operator<(const Mac8Address& a, const Mac8Address& b);
 
 /**
- * Address comparison, equalit.
+ * Address comparison, equality.
  *
  * \param a First address to compare.
  * \param b Second address to compare.

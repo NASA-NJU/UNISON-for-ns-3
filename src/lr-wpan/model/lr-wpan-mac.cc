@@ -24,6 +24,7 @@
  */
 #include "lr-wpan-mac.h"
 
+#include "lr-wpan-constants.h"
 #include "lr-wpan-csmaca.h"
 #include "lr-wpan-mac-header.h"
 #include "lr-wpan-mac-pl-headers.h"
@@ -202,7 +203,7 @@ LrWpanMac::LrWpanMac()
     m_channelScanIndex = 0;
     m_maxEnergyLevel = 0;
 
-    m_macResponseWaitTime = aBaseSuperframeDuration * 32;
+    m_macResponseWaitTime = lrwpan::aBaseSuperframeDuration * 32;
     m_assocRespCmdWaitTime = 960;
 
     m_maxTxQueueSize = m_txQueue.max_size();
@@ -213,7 +214,9 @@ LrWpanMac::LrWpanMac()
     uniformVar->SetAttribute("Max", DoubleValue(255.0));
     m_macDsn = SequenceNumber8(uniformVar->GetValue());
     m_macBsn = SequenceNumber8(uniformVar->GetValue());
-    m_shortAddress = Mac16Address("00:00");
+    m_macBeaconPayload = nullptr;
+    m_macBeaconPayloadLength = 0;
+    m_shortAddress = Mac16Address("FF:FF"); // FF:FF = The address is not assigned.
 }
 
 LrWpanMac::~LrWpanMac()
@@ -266,7 +269,7 @@ LrWpanMac::DoDispose()
     m_mcpsDataIndicationCallback = MakeNullCallback<void, McpsDataIndicationParams, Ptr<Packet>>();
     m_mlmeStartConfirmCallback = MakeNullCallback<void, MlmeStartConfirmParams>();
     m_mlmeBeaconNotifyIndicationCallback =
-        MakeNullCallback<void, MlmeBeaconNotifyIndicationParams, Ptr<Packet>>();
+        MakeNullCallback<void, MlmeBeaconNotifyIndicationParams>();
     m_mlmeSyncLossIndicationCallback = MakeNullCallback<void, MlmeSyncLossIndicationParams>();
     m_mlmePollConfirmCallback = MakeNullCallback<void, MlmePollConfirmParams>();
     m_mlmeScanConfirmCallback = MakeNullCallback<void, MlmeScanConfirmParams>();
@@ -280,7 +283,7 @@ LrWpanMac::DoDispose()
 }
 
 bool
-LrWpanMac::GetRxOnWhenIdle()
+LrWpanMac::GetRxOnWhenIdle() const
 {
     return m_macRxOnWhenIdle;
 }
@@ -348,7 +351,7 @@ LrWpanMac::McpsDataRequest(McpsDataRequestParams params, Ptr<Packet> p)
     LrWpanMacHeader macHdr(LrWpanMacHeader::LRWPAN_MAC_DATA, m_macDsn.GetValue());
     m_macDsn++;
 
-    if (p->GetSize() > LrWpanPhy::aMaxPhyPacketSize - aMinMPDUOverhead)
+    if (p->GetSize() > lrwpan::aMaxPhyPacketSize - lrwpan::aMinMPDUOverhead)
     {
         // Note, this is just testing maximum theoretical frame size per the spec
         // The frame could still be too large once headers are put on
@@ -795,7 +798,8 @@ LrWpanMac::MlmeSyncRequest(MlmeSyncRequestParams params)
     {
         m_numLostBeacons = 0;
         // search for a beacon for a time = incomingSuperframe symbols + 960 symbols
-        searchSymbols = ((uint64_t)1 << m_incomingBeaconOrder) + 1 * aBaseSuperframeDuration;
+        searchSymbols =
+            ((uint64_t)1 << m_incomingBeaconOrder) + 1 * lrwpan::aBaseSuperframeDuration;
         searchBeaconTime = Seconds((double)searchSymbols / symbolRate);
         m_beaconTrackingOn = true;
         m_trackingEvent =
@@ -823,6 +827,40 @@ LrWpanMac::MlmePollRequest(MlmePollRequestParams params)
 }
 
 void
+LrWpanMac::MlmeSetRequest(LrWpanMacPibAttributeIdentifier id, Ptr<LrWpanMacPibAttributes> attribute)
+{
+    MlmeSetConfirmParams confirmParams;
+    switch (id)
+    {
+    case macBeaconPayload:
+        if (attribute->macBeaconPayload->GetSize() > lrwpan::aMaxBeaconPayloadLenght)
+        {
+            confirmParams.m_status = MLMESET_INVALID_PARAMETER;
+        }
+        else
+        {
+            confirmParams.m_status = MLMESET_SUCCESS;
+            m_macBeaconPayload = attribute->macBeaconPayload;
+            m_macBeaconPayloadLength = attribute->macBeaconPayload->GetSize();
+        }
+        break;
+    case macBeaconPayloadLength:
+        confirmParams.m_status = MLMESET_INVALID_PARAMETER;
+        break;
+    default:
+        // TODO: Add support for setting other attributes
+        confirmParams.m_status = MLMESET_UNSUPPORTED_ATTRIBUTE;
+        break;
+    }
+
+    if (!m_mlmeSetConfirmCallback.IsNull())
+    {
+        confirmParams.id = id;
+        m_mlmeSetConfirmCallback(confirmParams);
+    }
+}
+
+void
 LrWpanMac::SendOneBeacon()
 {
     NS_LOG_FUNCTION(this);
@@ -831,8 +869,17 @@ LrWpanMac::SendOneBeacon()
     LrWpanMacHeader macHdr(LrWpanMacHeader::LRWPAN_MAC_BEACON, m_macBsn.GetValue());
     m_macBsn++;
     BeaconPayloadHeader macPayload;
-    Ptr<Packet> beaconPacket = Create<Packet>();
+    Ptr<Packet> beaconPacket;
     LrWpanMacTrailer macTrailer;
+
+    if (m_macBeaconPayload == nullptr)
+    {
+        beaconPacket = Create<Packet>();
+    }
+    else
+    {
+        beaconPacket = m_macBeaconPayload;
+    }
 
     macHdr.SetDstAddrMode(LrWpanMacHeader::SHORTADDR);
     macHdr.SetDstAddrFields(GetPanId(), Mac16Address("ff:ff"));
@@ -1140,9 +1187,9 @@ LrWpanMac::EndStartRequest()
             m_fnlCapSlot = 15;
 
             m_beaconInterval =
-                (static_cast<uint32_t>(1 << m_macBeaconOrder)) * aBaseSuperframeDuration;
-            m_superframeDuration =
-                (static_cast<uint32_t>(1 << m_macSuperframeOrder)) * aBaseSuperframeDuration;
+                (static_cast<uint32_t>(1 << m_macBeaconOrder)) * lrwpan::aBaseSuperframeDuration;
+            m_superframeDuration = (static_cast<uint32_t>(1 << m_macSuperframeOrder)) *
+                                   lrwpan::aBaseSuperframeDuration;
 
             // TODO: change the beacon sending according to the startTime parameter (if not PAN
             // coordinator)
@@ -1415,7 +1462,7 @@ LrWpanMac::BeaconSearchTimeout()
 {
     uint64_t symbolRate = (uint64_t)m_phy->GetDataOrSymbolRate(false); // symbols per second
 
-    if (m_numLostBeacons > aMaxLostBeacons)
+    if (m_numLostBeacons > lrwpan::aMaxLostBeacons)
     {
         MlmeSyncLossIndicationParams syncLossParams;
         // syncLossParams.m_logCh =
@@ -1433,7 +1480,8 @@ LrWpanMac::BeaconSearchTimeout()
         // Search for one more beacon
         uint64_t searchSymbols;
         Time searchBeaconTime;
-        searchSymbols = ((uint64_t)1 << m_incomingBeaconOrder) + 1 * aBaseSuperframeDuration;
+        searchSymbols =
+            ((uint64_t)1 << m_incomingBeaconOrder) + 1 * lrwpan::aBaseSuperframeDuration;
         searchBeaconTime = Seconds((double)searchSymbols / symbolRate);
         m_trackingEvent =
             Simulator::Schedule(searchBeaconTime, &LrWpanMac::BeaconSearchTimeout, this);
@@ -1588,6 +1636,12 @@ void
 LrWpanMac::SetMlmePollConfirmCallback(MlmePollConfirmCallback c)
 {
     m_mlmePollConfirmCallback = c;
+}
+
+void
+LrWpanMac::SetMlmeSetConfirmCallback(MlmeSetConfirmCallback c)
+{
+    m_mlmeSetConfirmCallback = c;
 }
 
 void
@@ -1785,7 +1839,7 @@ LrWpanMac::PdDataIndication(uint32_t psduLength, Ptr<Packet> p, uint8_t lqi)
                 if (acceptFrame && (m_csmaCa->IsSlottedCsmaCa() && m_capEvent.IsRunning()))
                 {
                     Time timeLeftInCap = Simulator::GetDelayLeft(m_capEvent);
-                    uint64_t ackSymbols = m_phy->aTurnaroundTime + m_phy->GetPhySHRDuration() +
+                    uint64_t ackSymbols = lrwpan::aTurnaroundTime + m_phy->GetPhySHRDuration() +
                                           ceil(6 * m_phy->GetPhySymbolsPerOctet());
                     Time ackTime = Seconds((double)ackSymbols / symbolRate);
 
@@ -1935,9 +1989,9 @@ LrWpanMac::PdDataIndication(uint32_t psduLength, Ptr<Packet> p, uint8_t lqi)
 
                         m_incomingBeaconInterval =
                             (static_cast<uint32_t>(1 << m_incomingBeaconOrder)) *
-                            aBaseSuperframeDuration;
+                            lrwpan::aBaseSuperframeDuration;
                         m_incomingSuperframeDuration =
-                            aBaseSuperframeDuration *
+                            lrwpan::aBaseSuperframeDuration *
                             (static_cast<uint32_t>(1 << m_incomingSuperframeOrder));
 
                         if (incomingSuperframe.IsBattLifeExt())
@@ -1982,7 +2036,7 @@ LrWpanMac::PdDataIndication(uint32_t psduLength, Ptr<Packet> p, uint8_t lqi)
                                 beaconParams.m_panDescriptor = panDescriptor;
                                 beaconParams.m_sduLength = p->GetSize();
                                 beaconParams.m_sdu = p;
-                                m_mlmeBeaconNotifyIndicationCallback(beaconParams, originalPkt);
+                                m_mlmeBeaconNotifyIndicationCallback(beaconParams);
                             }
                         }
 
@@ -2039,7 +2093,7 @@ LrWpanMac::PdDataIndication(uint32_t psduLength, Ptr<Packet> p, uint8_t lqi)
 
                                 searchSymbols =
                                     (static_cast<uint64_t>(1 << m_incomingBeaconOrder)) +
-                                    1 * aBaseSuperframeDuration;
+                                    1 * lrwpan::aBaseSuperframeDuration;
                                 searchBeaconTime =
                                     Seconds(static_cast<double>(searchSymbols / symbolRate));
                                 m_trackingEvent =
@@ -2068,7 +2122,9 @@ LrWpanMac::PdDataIndication(uint32_t psduLength, Ptr<Packet> p, uint8_t lqi)
                             MlmeBeaconNotifyIndicationParams beaconParams;
                             beaconParams.m_bsn = receivedMacHdr.GetSeqNum();
                             beaconParams.m_panDescriptor = panDescriptor;
-                            m_mlmeBeaconNotifyIndicationCallback(beaconParams, originalPkt);
+                            beaconParams.m_sduLength = p->GetSize();
+                            beaconParams.m_sdu = p;
+                            m_mlmeBeaconNotifyIndicationCallback(beaconParams);
                         }
                     }
                 }
@@ -2507,12 +2563,12 @@ LrWpanMac::EnqueueInd(Ptr<Packet> p)
     if (m_macBeaconOrder == 15)
     {
         // Non-beacon enabled mode
-        unit = aBaseSuperframeDuration * m_macTransactionPersistenceTime;
+        unit = lrwpan::aBaseSuperframeDuration * m_macTransactionPersistenceTime;
     }
     else
     {
         // Beacon-enabled mode
-        unit = ((static_cast<uint32_t>(1) << m_macBeaconOrder) * aBaseSuperframeDuration) *
+        unit = ((static_cast<uint32_t>(1) << m_macBeaconOrder) * lrwpan::aBaseSuperframeDuration) *
                m_macTransactionPersistenceTime;
     }
 
@@ -2789,7 +2845,7 @@ LrWpanMac::PdDataConfirm(LrWpanPhyEnumeration status)
                 if (!m_mcpsDataConfirmCallback.IsNull())
                 {
                     McpsDataConfirmParams confirmParams;
-                    NS_ASSERT_MSG(m_txQueue.size() > 0, "TxQsize = 0");
+                    NS_ASSERT_MSG(!m_txQueue.empty(), "TxQsize = 0");
                     Ptr<TxQueueElement> txQElement = m_txQueue.front();
                     confirmParams.m_msduHandle = txQElement->txQMsduHandle;
                     confirmParams.m_status = IEEE_802_15_4_SUCCESS;
@@ -2838,12 +2894,12 @@ LrWpanMac::PdDataConfirm(LrWpanPhyEnumeration status)
                     case CommandPayloadHeader::SUCCESSFUL:
                         confirmParams.m_status =
                             LrWpanMlmeAssociateConfirmStatus::MLMEASSOC_SUCCESS;
-                        confirmParams.m_assocShortAddr =
-                            GetShortAddress(); // the original short address used in the association
-                                               // request
-                        SetShortAddress(
-                            receivedMacPayload
-                                .GetShortAddr()); // the assigned short address by the coordinator
+                        // The original short address used in the association
+                        // used in the association request
+                        confirmParams.m_assocShortAddr = GetShortAddress();
+
+                        // The assigned short address by the coordinator
+                        SetShortAddress(receivedMacPayload.GetShortAddr());
                         m_macPanId = receivedMacHdr.GetSrcPanId();
                         break;
                     case CommandPayloadHeader::FULL_CAPACITY:
@@ -2894,7 +2950,7 @@ LrWpanMac::PdDataConfirm(LrWpanPhyEnumeration status)
     {
         if (!macHdr.IsAcknowledgment())
         {
-            NS_ASSERT_MSG(m_txQueue.size() > 0, "TxQsize = 0");
+            NS_ASSERT_MSG(!m_txQueue.empty(), "TxQsize = 0");
             Ptr<TxQueueElement> txQElement = m_txQueue.front();
             m_macTxDropTrace(txQElement->txQPkt);
             if (!m_mcpsDataConfirmCallback.IsNull())
@@ -3059,7 +3115,7 @@ LrWpanMac::PlmeSetAttributeConfirm(LrWpanPhyEnumeration status, LrWpanPibAttribu
         if (status == LrWpanPhyEnumeration::IEEE_802_15_4_PHY_SUCCESS)
         {
             uint64_t symbolRate = static_cast<uint64_t>(m_phy->GetDataOrSymbolRate(false));
-            uint64_t scanDuration = aBaseSuperframeDuration *
+            uint64_t scanDuration = lrwpan::aBaseSuperframeDuration *
                                     ((static_cast<uint32_t>(1 << m_scanParams.m_scanDuration)) + 1);
             Time nextScanTime = Seconds(static_cast<double>(scanDuration / symbolRate));
 
@@ -3432,7 +3488,7 @@ LrWpanMac::ChangeMacState(LrWpanMacState newState)
 uint64_t
 LrWpanMac::GetMacAckWaitDuration() const
 {
-    return m_csmaCa->GetUnitBackoffPeriod() + m_phy->aTurnaroundTime + m_phy->GetPhySHRDuration() +
+    return lrwpan::aUnitBackoffPeriod + lrwpan::aTurnaroundTime + m_phy->GetPhySHRDuration() +
            ceil(6 * m_phy->GetPhySymbolsPerOctet());
 }
 
@@ -3483,7 +3539,7 @@ LrWpanMac::GetIfsSize()
 {
     NS_ASSERT(m_txPkt);
 
-    if (m_txPkt->GetSize() <= aMaxSIFSFrameSize)
+    if (m_txPkt->GetSize() <= lrwpan::aMaxSIFSFrameSize)
     {
         return m_macSIFSPeriod;
     }

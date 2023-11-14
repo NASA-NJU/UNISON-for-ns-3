@@ -581,7 +581,7 @@ SubscriberStationNetDevice::SetScheduler(Ptr<SSScheduler> scheduler)
 bool
 SubscriberStationNetDevice::HasServiceFlows() const
 {
-    return GetServiceFlowManager()->GetServiceFlows(ServiceFlow::SF_TYPE_ALL).size() > 0;
+    return !GetServiceFlowManager()->GetServiceFlows(ServiceFlow::SF_TYPE_ALL).empty();
 }
 
 Ptr<IpcsClassifier>
@@ -640,13 +640,13 @@ SubscriberStationNetDevice::Stop()
 }
 
 void
-SubscriberStationNetDevice::AddServiceFlow(ServiceFlow sf)
+SubscriberStationNetDevice::AddServiceFlow(ServiceFlow sf) const
 {
     GetServiceFlowManager()->AddServiceFlow(sf);
 }
 
 void
-SubscriberStationNetDevice::AddServiceFlow(ServiceFlow* sf)
+SubscriberStationNetDevice::AddServiceFlow(ServiceFlow* sf) const
 {
     GetServiceFlowManager()->AddServiceFlow(sf);
 }
@@ -1313,7 +1313,7 @@ SubscriberStationNetDevice::ProcessUcd(const Ucd& ucd)
         return; // nothing new in UCD so don't read
     }
     SetCurrentUcd(ucd);
-    m_linkManager->SetRangingCW((uint8_t)std::pow((double)2, (double)ucd.GetRangingBackoffStart()) -
+    m_linkManager->SetRangingCW((uint8_t)std::pow(2.0, (double)ucd.GetRangingBackoffStart()) -
                                 1); // initializing ranging CW
     OfdmUcdChannelEncodings ucdChnlEncodings = ucd.GetChannelEncodings();
 

@@ -25,6 +25,7 @@
 #include "ns3/nstime.h"
 
 #include <list>
+#include <optional>
 #include <unordered_map>
 
 /**
@@ -37,6 +38,7 @@
 namespace ns3
 {
 
+class Packet;
 class WifiPsdu;
 
 /**
@@ -87,7 +89,19 @@ class WifiPpdu : public SimpleRefCount<WifiPpdu>
      *
      * \return the TXVECTOR of the PPDU.
      */
-    WifiTxVector GetTxVector() const;
+    const WifiTxVector& GetTxVector() const;
+
+    /**
+     * Reset the TXVECTOR.
+     */
+    void ResetTxVector() const;
+
+    /**
+     * Update the TXVECTOR based on some information known at the receiver.
+     *
+     * \param updatedTxVector the updated TXVECTOR.
+     */
+    void UpdateTxVector(const WifiTxVector& updatedTxVector) const;
 
     /**
      * Get the payload of the PPDU.
@@ -122,6 +136,11 @@ class WifiPpdu : public SimpleRefCount<WifiPpdu>
     virtual uint16_t GetTransmissionChannelWidth() const;
 
     /**
+     * \return the center frequency (MHz) used for the transmission of this PPDU
+     */
+    uint16_t GetTxCenterFreq() const;
+
+    /**
      * Check whether the given PPDU overlaps a given channel.
      *
      * \param minFreq the minimum frequency (MHz) of the channel
@@ -129,17 +148,6 @@ class WifiPpdu : public SimpleRefCount<WifiPpdu>
      * \return true if this PPDU overlaps the channel, false otherwise
      */
     bool DoesOverlapChannel(uint16_t minFreq, uint16_t maxFreq) const;
-
-    /**
-     * Check whether the given PPDU can be received on the specified primary
-     * channel. Normally, a PPDU can be received if it is transmitted over a
-     * channel that overlaps the primary20 channel of a PHY entity.
-     *
-     * \param p20MinFreq the minimum frequency (MHz) of the primary channel
-     * \param p20MaxFreq the maximum frequency (MHz) of the primary channel
-     * \return true if this PPDU can be received, false otherwise
-     */
-    virtual bool CanBeReceived(uint16_t p20MinFreq, uint16_t p20MaxFreq) const;
 
     /**
      * Get the modulation used for the PPDU.
@@ -195,6 +203,13 @@ class WifiPpdu : public SimpleRefCount<WifiPpdu>
     WifiConstPsduMap m_psdus;         //!< the PSDUs contained in this PPDU
     uint16_t m_txCenterFreq; //!< the center frequency (MHz) used for the transmission of this PPDU
     uint64_t m_uid;          //!< the unique ID of this PPDU
+    mutable std::optional<WifiTxVector>
+        m_txVector; //!< the TXVECTOR at TX PHY or the reconstructed TXVECTOR at RX PHY (or
+                    //!< std::nullopt if TXVECTOR has not been reconstructed yet)
+
+#ifdef NS3_BUILD_PROFILE_DEBUG
+    Ptr<Packet> m_phyHeaders; //!< the PHY headers contained in this PPDU
+#endif
 
   private:
     /**

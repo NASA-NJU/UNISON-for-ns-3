@@ -75,9 +75,9 @@ class PsrExperiment
                  RxSignalInfo rxSignalInfo,
                  WifiTxVector txVector,
                  std::vector<bool> statusPerMpdu);
-    Ptr<WifiPhy> m_tx;      ///< transmit
-    struct Input m_input;   ///< input
-    struct Output m_output; ///< output
+    Ptr<WifiPhy> m_tx; ///< transmit
+    Input m_input;     ///< input
+    Output m_output;   ///< output
 };
 
 void
@@ -175,7 +175,7 @@ class CollisionExperiment
         uint32_t nPackets;     ///< number of packets
     };
 
-    /// Output struture
+    /// Output structure
     struct Output
     {
         uint32_t receivedA; ///< received A
@@ -207,12 +207,12 @@ class CollisionExperiment
                  RxSignalInfo rxSignalInfo,
                  WifiTxVector txVector,
                  std::vector<bool> statusPerMpdu);
-    Ptr<WifiPhy> m_txA;     ///< transmit A
-    Ptr<WifiPhy> m_txB;     ///< transmit B
-    uint32_t m_flowIdA;     ///< flow ID A
-    uint32_t m_flowIdB;     ///< flow ID B
-    struct Input m_input;   ///< input
-    struct Output m_output; ///< output
+    Ptr<WifiPhy> m_txA; ///< transmit A
+    Ptr<WifiPhy> m_txB; ///< transmit B
+    uint32_t m_flowIdA; ///< flow ID A
+    uint32_t m_flowIdB; ///< flow ID B
+    Input m_input;      ///< input
+    Output m_output;    ///< output
 };
 
 void

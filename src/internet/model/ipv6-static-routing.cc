@@ -128,7 +128,7 @@ Ipv6StaticRouting::PrintRoutingTable(Ptr<OutputStreamWrapper> stream, Time::Unit
             // Use not implemented
             *os << "-"
                 << "   ";
-            if (Names::FindName(m_ipv6->GetNetDevice(route.GetInterface())) != "")
+            if (!Names::FindName(m_ipv6->GetNetDevice(route.GetInterface())).empty())
             {
                 *os << Names::FindName(m_ipv6->GetNetDevice(route.GetInterface()));
             }
@@ -458,7 +458,7 @@ Ipv6StaticRouting::LookupStatic(Ipv6Address dst, Ptr<NetDevice> interface)
                 else
                 {
                     rtentry->SetSource(
-                        m_ipv6->SourceAddressSelection(interfaceIdx, route->GetGateway()));
+                        m_ipv6->SourceAddressSelection(interfaceIdx, route->GetDest()));
                 }
 
                 rtentry->SetDestination(route->GetDest());

@@ -125,7 +125,8 @@ function(build_lib)
     ${lib${BLIB_LIBNAME}}
     PROPERTIES
       PUBLIC_HEADER
-      "${BLIB_HEADER_FILES};${BLIB_DEPRECATED_HEADER_FILES};${config_headers};${BLIB_PRIVATE_HEADER_FILES};${CMAKE_HEADER_OUTPUT_DIRECTORY}/${BLIB_LIBNAME}-module.h"
+      "${BLIB_HEADER_FILES};${BLIB_DEPRECATED_HEADER_FILES};${config_headers};${CMAKE_HEADER_OUTPUT_DIRECTORY}/${BLIB_LIBNAME}-module.h"
+      PRIVATE_HEADER "${BLIB_PRIVATE_HEADER_FILES}"
       RUNTIME_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY} # set output
                                                                  # directory for
                                                                  # DLLs
@@ -225,11 +226,35 @@ function(build_lib)
   # Write a module header that includes all headers from that module
   write_module_header("${BLIB_LIBNAME}" "${BLIB_HEADER_FILES}")
 
+  # Check if headers actually exist to prevent copying errors during
+  # installation
+  get_target_property(headers_to_check ${lib${BLIB_LIBNAME}} PUBLIC_HEADER)
+  set(missing_headers)
+  foreach(header ${headers_to_check})
+    if(NOT ((EXISTS ${header}) OR (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${header})
+           )
+    )
+      list(APPEND missing_headers ${header})
+    endif()
+  endforeach()
+  if(missing_headers)
+    message(
+      FATAL_ERROR "Missing header files for ${BLIB_LIBNAME}: ${missing_headers}"
+    )
+  endif()
+
   # Copy all header files to outputfolder/include before each build
   copy_headers_before_building_lib(
-    ${BLIB_LIBNAME} ${CMAKE_HEADER_OUTPUT_DIRECTORY}
-    "${BLIB_HEADER_FILES};${BLIB_PRIVATE_HEADER_FILES}" public
+    ${BLIB_LIBNAME} ${CMAKE_HEADER_OUTPUT_DIRECTORY} "${BLIB_HEADER_FILES}"
+    public
   )
+  if(BLIB_PRIVATE_HEADER_FILES)
+    copy_headers_before_building_lib(
+      ${BLIB_LIBNAME} ${CMAKE_HEADER_OUTPUT_DIRECTORY}
+      "${BLIB_PRIVATE_HEADER_FILES}" private
+    )
+  endif()
+
   if(BLIB_DEPRECATED_HEADER_FILES)
     copy_headers_before_building_lib(
       ${BLIB_LIBNAME} ${CMAKE_HEADER_OUTPUT_DIRECTORY}
@@ -337,6 +362,7 @@ function(build_lib)
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}/
     RUNTIME DESTINATION ${CMAKE_INSTALL_LIBDIR}/
     PUBLIC_HEADER DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/ns3"
+    PRIVATE_HEADER DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/ns3"
   )
   if(${NS3_VERBOSE})
     message(STATUS "Processed ${FOLDER}")

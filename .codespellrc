@@ -1,0 +1,4 @@
+[codespell]
+skip = .git,.gitlab-ci-local,*.eps,*.pdf,*.css_t,AUTHORS
+ignore-words = ./utils/codespell-ignored-words
+exclude-file = ./utils/codespell-ignored-lines

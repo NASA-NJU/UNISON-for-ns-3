@@ -29,7 +29,6 @@ using namespace ns3;
 
 /**
  * \ingroup lte-test
- * \ingroup tests
  *
  * \brief This system test program creates different test cases with a single eNB and
  * several UEs, all having the same Radio Bearer specification. In each test
@@ -62,7 +61,7 @@ class LenaTdBetFfMacSchedulerTestCase1 : public TestCase
     /**
      * Builds the test name string based on provided parameter values
      * \param nUser the number of UE nodes
-     * \param dist the distnace between UE nodes and eNodeB
+     * \param dist the distance between UE nodes and eNodeB
      * \returns the name string
      */
     static std::string BuildNameString(uint16_t nUser, double dist);
@@ -76,7 +75,6 @@ class LenaTdBetFfMacSchedulerTestCase1 : public TestCase
 
 /**
  * \ingroup lte-test
- * \ingroup tests
  *
  * \brief Lena TdBet Ff Mac Scheduler Test Case
  */
@@ -115,7 +113,6 @@ class LenaTdBetFfMacSchedulerTestCase2 : public TestCase
 
 /**
  * \ingroup lte-test
- * \ingroup tests
  *
  * \brief Test suite for TdBetFfMacScheduler tests.
  */

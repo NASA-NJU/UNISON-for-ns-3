@@ -49,7 +49,7 @@ const PhyEntity::PpduFormats DsssPhy::m_dsssPpduFormats {
                              WIFI_PPDU_FIELD_DATA } },
     { WIFI_PREAMBLE_SHORT, { WIFI_PPDU_FIELD_PREAMBLE,      // Short PHY preamble
                              WIFI_PPDU_FIELD_NON_HT_HEADER, // Short PHY header
-                             WIFI_PPDU_FIELD_DATA } }
+                             WIFI_PPDU_FIELD_DATA } },
 };
 
 const PhyEntity::ModulationLookupTable DsssPhy::m_dsssModulationLookupTable {
@@ -57,7 +57,7 @@ const PhyEntity::ModulationLookupTable DsssPhy::m_dsssModulationLookupTable {
   { "DsssRate1Mbps",   { WIFI_CODE_RATE_UNDEFINED, 2 } },
   { "DsssRate2Mbps",   { WIFI_CODE_RATE_UNDEFINED, 4 } },
   { "DsssRate5_5Mbps", { WIFI_CODE_RATE_UNDEFINED, 16 } },
-  { "DsssRate11Mbps",  { WIFI_CODE_RATE_UNDEFINED, 256 } }
+  { "DsssRate11Mbps",  { WIFI_CODE_RATE_UNDEFINED, 256 } },
 };
 
 // clang-format on
@@ -265,10 +265,9 @@ DsssPhy::GetMeasurementChannelWidth(const Ptr<const WifiPpdu> ppdu) const
 }
 
 Ptr<SpectrumValue>
-DsssPhy::GetTxPowerSpectralDensity(double txPowerW,
-                                   Ptr<const WifiPpdu> /* ppdu */,
-                                   const WifiTxVector& txVector) const
+DsssPhy::GetTxPowerSpectralDensity(double txPowerW, Ptr<const WifiPpdu> ppdu) const
 {
+    const auto& txVector = ppdu->GetTxVector();
     uint16_t centerFrequency = GetCenterFrequencyForChannelWidth(txVector);
     uint16_t channelWidth = txVector.GetChannelWidth();
     NS_LOG_FUNCTION(this << centerFrequency << channelWidth << txPowerW);

@@ -1392,7 +1392,7 @@ UeManager::RecvMeasurementReport(LteRrcSap::MeasurementReport msg)
         m_rrc->m_anrSapProvider->ReportUeMeas(msg.measResults);
     }
 
-    if ((m_rrc->m_ffrRrcSapProvider.size() > 0) &&
+    if ((!m_rrc->m_ffrRrcSapProvider.empty()) &&
         (m_rrc->m_ffrMeasIds.find(measId) != m_rrc->m_ffrMeasIds.end()))
     {
         // this measurement was requested by the FFR function
@@ -2224,7 +2224,7 @@ void
 LteEnbRrc::SetLteFfrRrcSapProvider(LteFfrRrcSapProvider* s)
 {
     NS_LOG_FUNCTION(this << s);
-    if (m_ffrRrcSapProvider.size() > 0)
+    if (!m_ffrRrcSapProvider.empty())
     {
         m_ffrRrcSapProvider.at(0) = s;
     }
@@ -2306,7 +2306,7 @@ void
 LteEnbRrc::SetLteEnbCphySapProvider(LteEnbCphySapProvider* s)
 {
     NS_LOG_FUNCTION(this << s);
-    if (m_cphySapProvider.size() > 0)
+    if (!m_cphySapProvider.empty())
     {
         m_cphySapProvider.at(0) = s;
     }
@@ -2904,7 +2904,7 @@ LteEnbRrc::DoRecvHandoverRequest(EpcX2SapUser::HandoverRequestParams req)
         Ptr<UeManager> ueManager = GetUeManager(rnti);
         EpcX2Sap::HandoverPreparationFailureParams msg = ueManager->BuildHoPrepFailMsg();
         m_x2SapProvider->SendHandoverPreparationFailure(msg);
-        RemoveUe(rnti); // reomve the UE from the target eNB
+        RemoveUe(rnti); // remove the UE from the target eNB
         return;
     }
 
@@ -3052,7 +3052,7 @@ LteEnbRrc::DoRecvLoadInformation(EpcX2SapUser::LoadInformationParams params)
 
     NS_LOG_LOGIC("Number of cellInformationItems = " << params.cellInformationList.size());
 
-    NS_ABORT_IF(m_ffrRrcSapProvider.size() == 0);
+    NS_ABORT_IF(m_ffrRrcSapProvider.empty());
     m_ffrRrcSapProvider.at(0)->RecvLoadInformation(params);
 }
 
@@ -3476,7 +3476,7 @@ LteEnbRrc::RemoveSrsConfigurationIndex(uint16_t srcCi)
     NS_LOG_FUNCTION(this << srcCi);
     std::set<uint16_t>::iterator it = m_ueSrsConfigurationIndexSet.find(srcCi);
     NS_ASSERT_MSG(it != m_ueSrsConfigurationIndexSet.end(),
-                  "request to remove unkwown SRS CI " << srcCi);
+                  "request to remove unknown SRS CI " << srcCi);
     m_ueSrsConfigurationIndexSet.erase(it);
 }
 

@@ -255,6 +255,10 @@ TestCarrierAggregationSuite::TestCarrierAggregationSuite()
     }
 }
 
+/**
+ * \ingroup lte-test
+ * Static variable for test initialization
+ */
 static TestCarrierAggregationSuite lenaTestRrFfMacSchedulerSuite;
 
 std::string
@@ -533,7 +537,7 @@ CarrierAggregationTestCase::UlScheduling(uint32_t frameNo,
 }
 
 void
-CarrierAggregationTestCase::WriteResultToFile()
+CarrierAggregationTestCase::WriteResultToFile() const
 {
     std::ofstream dlOutFile;
     dlOutFile.open(dlResultsFileName, std::ofstream::out | std::ofstream::app);

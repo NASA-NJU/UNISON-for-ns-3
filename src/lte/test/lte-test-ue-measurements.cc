@@ -232,6 +232,10 @@ LteUeMeasurementsTestSuite::LteUeMeasurementsTestSuite()
                 TestCase::EXTENSIVE);
 }
 
+/**
+ * \ingroup lte-test
+ * Static variable for test initialization
+ */
 static LteUeMeasurementsTestSuite lteUeMeasurementsTestSuite;
 
 /*
@@ -693,6 +697,10 @@ LteUeMeasurementsPiecewiseTestSuite1::LteUeMeasurementsPiecewiseTestSuite1()
 
 } // end of LteUeMeasurementsPiecewiseTestSuite1::LteUeMeasurementsPiecewiseTestSuite1
 
+/**
+ * \ingroup lte-test
+ * Static variable for test initialization
+ */
 static LteUeMeasurementsPiecewiseTestSuite1 lteUeMeasurementsPiecewiseTestSuite1;
 
 /*
@@ -1392,6 +1400,10 @@ LteUeMeasurementsPiecewiseTestSuite2::LteUeMeasurementsPiecewiseTestSuite2()
 
 } // end of LteUeMeasurementsPiecewiseTestSuite2::LteUeMeasurementsPiecewiseTestSuite2
 
+/**
+ * \ingroup lte-test
+ * Static variable for test initialization
+ */
 static LteUeMeasurementsPiecewiseTestSuite2 lteUeMeasurementsPiecewiseTestSuite2;
 
 /*
@@ -1584,7 +1596,7 @@ LteUeMeasurementsPiecewiseTestCase2::RecvMeasurementReportCallback(
                  << " dB)");
 
         // verifying reported best cells
-        if (measResults.measResultListEutra.size() == 0)
+        if (measResults.measResultListEutra.empty())
         {
             NS_TEST_ASSERT_MSG_EQ(measResults.haveMeasResultNeighCells,
                                   false,
@@ -1716,6 +1728,10 @@ LteUeMeasurementsPiecewiseTestSuite3::LteUeMeasurementsPiecewiseTestSuite3()
                 TestCase::QUICK);
 } // end of LteUeMeasurementsPiecewiseTestSuite3::LteUeMeasurementsPiecewiseTestSuite3
 
+/**
+ * \ingroup lte-test
+ * Static variable for test initialization
+ */
 static LteUeMeasurementsPiecewiseTestSuite3 lteUeMeasurementsPiecewiseTestSuite3;
 
 /*
@@ -1873,7 +1889,7 @@ LteUeMeasurementsPiecewiseTestCase3::RecvMeasurementReportCallback(
                  << " dB)");
 
         // verifying reported best cells
-        if (measResults.measResultListEutra.size() == 0)
+        if (measResults.measResultListEutra.empty())
         {
             NS_TEST_ASSERT_MSG_EQ(measResults.haveMeasResultNeighCells,
                                   false,
@@ -2264,6 +2280,10 @@ LteUeMeasurementsHandoverTestSuite::LteUeMeasurementsHandoverTestSuite()
 
 } // end of LteUeMeasurementsHandoverTestSuite::LteUeMeasurementsHandoverTestSuite
 
+/**
+ * \ingroup lte-test
+ * Static variable for test initialization
+ */
 static LteUeMeasurementsHandoverTestSuite lteUeMeasurementsHandoverTestSuite;
 
 /*
@@ -2497,7 +2517,7 @@ LteUeMeasurementsHandoverTestCase::RecvMeasurementReportCallback(
                  << " dB)");
 
         // verifying reported best cells
-        if (measResults.measResultListEutra.size() == 0)
+        if (measResults.measResultListEutra.empty())
         {
             NS_TEST_ASSERT_MSG_EQ(measResults.haveMeasResultNeighCells,
                                   false,

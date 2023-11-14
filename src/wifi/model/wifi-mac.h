@@ -51,6 +51,8 @@ class FrameExchangeManager;
 class ChannelAccessManager;
 class ExtendedCapabilities;
 class WifiMacQueueScheduler;
+class OriginatorBlockAckAgreement;
+class RecipientBlockAckAgreement;
 
 /**
  * Enumeration for type of station
@@ -146,6 +148,29 @@ class WifiMac : public Object
      * \return the ID of the link having the given MAC address, if any
      */
     virtual std::optional<uint8_t> GetLinkIdByAddress(const Mac48Address& address) const;
+
+    /**
+     * \param remoteAddr the (MLD or link) address of a remote device
+     * \return the MLD address of the remote device having the given (MLD or link) address, if
+     *         the remote device is an MLD.
+     */
+    std::optional<Mac48Address> GetMldAddress(const Mac48Address& remoteAddr) const;
+
+    /**
+     * Get the local MAC address used to communicate with a remote STA. Specifically:
+     * - If the given remote address is the address of a STA affiliated with a remote MLD
+     * and operating on a setup link, the address of the local STA operating on such a link
+     * is returned.
+     * - If the given remote address is the MLD address of a remote MLD (with which some link
+     * has been setup), the MLD address of this device is returned.
+     * - If this is a single link device, the unique MAC address of this device is returned.
+     * - Otherwise, return the MAC address of the affiliated STA (which must exists) that
+     * can be used to communicate with the remote device.
+     *
+     * \param remoteAddr the MAC address of the remote device
+     * \return the local MAC address used to communicate with the remote device
+     */
+    Mac48Address GetLocalAddress(const Mac48Address& remoteAddr) const;
 
     /**
      * Accessor for the Txop object
@@ -494,6 +519,27 @@ class WifiMac : public Object
     bool GetEhtSupported() const;
 
     /**
+     * \param address the (link or MLD) address of a remote station
+     * \return true if the remote station with the given address supports HT
+     */
+    bool GetHtSupported(const Mac48Address& address) const;
+    /**
+     * \param address the (link or MLD) address of a remote station
+     * \return true if the remote station with the given address supports VHT
+     */
+    bool GetVhtSupported(const Mac48Address& address) const;
+    /**
+     * \param address the (link or MLD) address of a remote station
+     * \return true if the remote station with the given address supports HE
+     */
+    bool GetHeSupported(const Mac48Address& address) const;
+    /**
+     * \param address the (link or MLD) address of a remote station
+     * \return true if the remote station with the given address supports EHT
+     */
+    bool GetEhtSupported(const Mac48Address& address) const;
+
+    /**
      * Return the maximum A-MPDU size of the given Access Category.
      *
      * \param ac Access Category index
@@ -507,6 +553,73 @@ class WifiMac : public Object
      * \return the maximum A-MSDU size
      */
     uint16_t GetMaxAmsduSize(AcIndex ac) const;
+
+    /// optional const reference to OriginatorBlockAckAgreement
+    using OriginatorAgreementOptConstRef =
+        std::optional<std::reference_wrapper<const OriginatorBlockAckAgreement>>;
+    /// optional const reference to RecipientBlockAckAgreement
+    using RecipientAgreementOptConstRef =
+        std::optional<std::reference_wrapper<const RecipientBlockAckAgreement>>;
+
+    /**
+     * \param recipient (link or device) MAC address of the recipient
+     * \param tid traffic ID.
+     *
+     * \return the originator block ack agreement, if one has been established
+     *
+     * Checks if an originator block ack agreement is established with station addressed by
+     * <i>recipient</i> for TID <i>tid</i>.
+     */
+    OriginatorAgreementOptConstRef GetBaAgreementEstablishedAsOriginator(Mac48Address recipient,
+                                                                         uint8_t tid) const;
+    /**
+     * \param originator (link or device) MAC address of the originator
+     * \param tid traffic ID.
+     *
+     * \return the recipient block ack agreement, if one has been established
+     *
+     * Checks if a recipient block ack agreement is established with station addressed by
+     * <i>originator</i> for TID <i>tid</i>.
+     */
+    RecipientAgreementOptConstRef GetBaAgreementEstablishedAsRecipient(Mac48Address originator,
+                                                                       uint8_t tid) const;
+
+    /**
+     * \param recipient MAC address
+     * \param tid traffic ID
+     *
+     * \return the type of Block Acks sent by the recipient
+     *
+     * This function returns the type of Block Acks sent by the recipient.
+     */
+    BlockAckType GetBaTypeAsOriginator(const Mac48Address& recipient, uint8_t tid) const;
+    /**
+     * \param recipient MAC address of recipient
+     * \param tid traffic ID
+     *
+     * \return the type of Block Ack Requests sent to the recipient
+     *
+     * This function returns the type of Block Ack Requests sent to the recipient.
+     */
+    BlockAckReqType GetBarTypeAsOriginator(const Mac48Address& recipient, uint8_t tid) const;
+    /**
+     * \param originator MAC address of originator
+     * \param tid traffic ID
+     *
+     * \return the type of Block Acks sent to the originator
+     *
+     * This function returns the type of Block Acks sent to the originator.
+     */
+    BlockAckType GetBaTypeAsRecipient(Mac48Address originator, uint8_t tid) const;
+    /**
+     * \param originator MAC address of originator
+     * \param tid traffic ID
+     *
+     * \return the type of Block Ack Requests sent by the originator
+     *
+     * This function returns the type of Block Ack Requests sent by the originator.
+     */
+    BlockAckReqType GetBarTypeAsRecipient(Mac48Address originator, uint8_t tid) const;
 
   protected:
     void DoInitialize() override;
@@ -689,6 +802,17 @@ class WifiMac : public Object
      * \return a unique pointer to the created LinkEntity object
      */
     virtual std::unique_ptr<LinkEntity> CreateLinkEntity() const;
+
+    /**
+     * This method is called if this device is an MLD to determine the MAC address of
+     * the affiliated STA used to communicate with the single link device having the
+     * given MAC address. This method is overridden because its implementation depends
+     * on the type of station.
+     *
+     * \param remoteAddr the MAC address of the remote single link device
+     * \return the MAC address of the affiliated STA used to communicate with the remote device
+     */
+    virtual Mac48Address DoGetLocalAddress(const Mac48Address& remoteAddr) const;
 
     /**
      * Enable or disable ERP support for the given link.

@@ -183,23 +183,23 @@ class IpcsClassifierRecord
         uint16_t PortHigh; ///< port high
     };
 
-    /// ipv4Addr structure
-    struct ipv4Addr
+    /// Ipv4Addr structure
+    struct Ipv4Addr
     {
         Ipv4Address Address; ///< IP address
         Ipv4Mask Mask;       ///< net mask
     };
 
-    uint8_t m_priority;                           ///< priority
-    uint16_t m_index;                             ///< index
-    uint8_t m_tosLow;                             ///< TOS low
-    uint8_t m_tosHigh;                            ///< TOS high
-    uint8_t m_tosMask;                            ///< TOS mask
-    std::vector<uint8_t> m_protocol;              ///< protocol
-    std::vector<struct ipv4Addr> m_srcAddr;       ///< source address
-    std::vector<struct ipv4Addr> m_dstAddr;       ///< destination address
-    std::vector<struct PortRange> m_srcPortRange; ///< surce port range
-    std::vector<struct PortRange> m_dstPortRange; ///< destination port range
+    uint8_t m_priority;                    ///< priority
+    uint16_t m_index;                      ///< index
+    uint8_t m_tosLow;                      ///< TOS low
+    uint8_t m_tosHigh;                     ///< TOS high
+    uint8_t m_tosMask;                     ///< TOS mask
+    std::vector<uint8_t> m_protocol;       ///< protocol
+    std::vector<Ipv4Addr> m_srcAddr;       ///< source address
+    std::vector<Ipv4Addr> m_dstAddr;       ///< destination address
+    std::vector<PortRange> m_srcPortRange; ///< source port range
+    std::vector<PortRange> m_dstPortRange; ///< destination port range
 
     uint16_t m_cid; ///< the CID
 };

@@ -22,6 +22,7 @@
 #include "ns3/config.h"
 #include "ns3/double.h"
 #include "ns3/enum.h"
+#include "ns3/he-phy.h"
 #include "ns3/internet-stack-helper.h"
 #include "ns3/ipv4-address-helper.h"
 #include "ns3/ipv4-global-routing-helper.h"
@@ -132,6 +133,7 @@ main(int argc, char* argv[])
     if (useRts)
     {
         Config::SetDefault("ns3::WifiRemoteStationManager::RtsCtsThreshold", StringValue("0"));
+        Config::SetDefault("ns3::WifiDefaultProtectionManager::EnableMuRts", BooleanValue(true));
     }
 
     if (dlAckSeqType == "ACK-SU-FORMAT")
@@ -208,10 +210,16 @@ main(int argc, char* argv[])
                 WifiMacHelper mac;
                 WifiHelper wifi;
                 std::string channelStr("{0, " + std::to_string(channelWidth) + ", ");
+                StringValue ctrlRate;
+                auto nonHtRefRateMbps = HePhy::GetNonHtReferenceRate(mcs) / 1e6;
+
+                std::ostringstream ossDataMode;
+                ossDataMode << "HeMcs" << mcs;
 
                 if (frequency == 6)
                 {
                     wifi.SetStandard(WIFI_STANDARD_80211ax);
+                    ctrlRate = StringValue(ossDataMode.str());
                     channelStr += "BAND_6GHZ, 0}";
                     Config::SetDefault("ns3::LogDistancePropagationLossModel::ReferenceLoss",
                                        DoubleValue(48));
@@ -219,11 +227,17 @@ main(int argc, char* argv[])
                 else if (frequency == 5)
                 {
                     wifi.SetStandard(WIFI_STANDARD_80211ax);
+                    std::ostringstream ossControlMode;
+                    ossControlMode << "OfdmRate" << nonHtRefRateMbps << "Mbps";
+                    ctrlRate = StringValue(ossControlMode.str());
                     channelStr += "BAND_5GHZ, 0}";
                 }
                 else if (frequency == 2.4)
                 {
                     wifi.SetStandard(WIFI_STANDARD_80211ax);
+                    std::ostringstream ossControlMode;
+                    ossControlMode << "ErpOfdmRate" << nonHtRefRateMbps << "Mbps";
+                    ctrlRate = StringValue(ossControlMode.str());
                     channelStr += "BAND_2_4GHZ, 0}";
                     Config::SetDefault("ns3::LogDistancePropagationLossModel::ReferenceLoss",
                                        DoubleValue(40));
@@ -234,13 +248,11 @@ main(int argc, char* argv[])
                     return 0;
                 }
 
-                std::ostringstream oss;
-                oss << "HeMcs" << mcs;
                 wifi.SetRemoteStationManager("ns3::ConstantRateWifiManager",
                                              "DataMode",
-                                             StringValue(oss.str()),
+                                             StringValue(ossDataMode.str()),
                                              "ControlMode",
-                                             StringValue(oss.str()));
+                                             ctrlRate);
                 // Set guard interval and MPDU buffer size
                 wifi.ConfigHeOptions("GuardInterval",
                                      TimeValue(NanoSeconds(gi)),
@@ -259,6 +271,11 @@ main(int argc, char* argv[])
                      */
                     Ptr<MultiModelSpectrumChannel> spectrumChannel =
                         CreateObject<MultiModelSpectrumChannel>();
+
+                    Ptr<LogDistancePropagationLossModel> lossModel =
+                        CreateObject<LogDistancePropagationLossModel>();
+                    spectrumChannel->AddPropagationLossModel(lossModel);
+
                     SpectrumWifiPhyHelper phy;
                     phy.SetPcapDataLinkType(WifiPhyHelper::DLT_IEEE802_11_RADIO);
                     phy.SetChannel(spectrumChannel);

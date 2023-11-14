@@ -71,7 +71,7 @@ NS_LOG_COMPONENT_DEFINE("CoDelPfifoFastAsymmetricTest");
 /**
  * TCP Congestion window tracker.
  *
- * \param stream The ouput stream.
+ * \param stream The output stream.
  * \param oldval Old value.
  * \param newval New value.
  */
@@ -90,7 +90,7 @@ static void
 TraceCwnd(std::string cwndTrFileName)
 {
     AsciiTraceHelper ascii;
-    if (cwndTrFileName == "")
+    if (cwndTrFileName.empty())
     {
         NS_LOG_DEBUG("No trace file for cwnd provided");
         return;
@@ -107,7 +107,7 @@ TraceCwnd(std::string cwndTrFileName)
 /**
  * Traffic Control Sojourn tracker.
  *
- * \param stream The ouput stream.
+ * \param stream The output stream.
  * \param newval New value.
  */
 static void
@@ -125,7 +125,7 @@ static void
 TraceSojourn(std::string sojournTrFileName)
 {
     AsciiTraceHelper ascii;
-    if (sojournTrFileName == "")
+    if (sojournTrFileName.empty())
     {
         NS_LOG_DEBUG("No trace file for sojourn provided");
         return;
@@ -142,7 +142,7 @@ TraceSojourn(std::string sojournTrFileName)
 /**
  * Traffic Control Queue length tracker.
  *
- * \param stream The ouput stream.
+ * \param stream The output stream.
  * \param oldval Old value.
  * \param newval New value.
  */
@@ -161,7 +161,7 @@ static void
 TraceQueueLength(std::string queueLengthTrFileName)
 {
     AsciiTraceHelper ascii;
-    if (queueLengthTrFileName == "")
+    if (queueLengthTrFileName.empty())
     {
         NS_LOG_DEBUG("No trace file for queue length provided");
         return;
@@ -178,7 +178,7 @@ TraceQueueLength(std::string queueLengthTrFileName)
 /**
  * Traffic control drop trace.
  *
- * \param stream The ouput stream.
+ * \param stream The output stream.
  * \param item The dropped item.
  */
 static void
@@ -196,7 +196,7 @@ static void
 TraceEveryDrop(std::string everyDropTrFileName)
 {
     AsciiTraceHelper ascii;
-    if (everyDropTrFileName == "")
+    if (everyDropTrFileName.empty())
     {
         NS_LOG_DEBUG("No trace file for every drop event provided");
         return;
@@ -213,7 +213,7 @@ TraceEveryDrop(std::string everyDropTrFileName)
 /**
  * Traffic Control Dropping state trace.
  *
- * \param stream The ouput stream.
+ * \param stream The output stream.
  * \param oldVal Old value.
  * \param newVal New value.
  */
@@ -241,7 +241,7 @@ static void
 TraceDroppingState(std::string dropStateTrFileName)
 {
     AsciiTraceHelper ascii;
-    if (dropStateTrFileName == "")
+    if (dropStateTrFileName.empty())
     {
         NS_LOG_DEBUG("No trace file for dropping state provided");
         return;

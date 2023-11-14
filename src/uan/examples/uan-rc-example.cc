@@ -95,7 +95,7 @@ Experiment::ReceivePacket(Ptr<Socket> socket)
 }
 
 UanTxMode
-Experiment::CreateMode(uint32_t kass, uint32_t fc, bool upperblock, std::string name)
+Experiment::CreateMode(uint32_t kass, uint32_t fc, bool upperblock, std::string name) const
 {
     std::ostringstream buf;
     buf << name << " " << kass;
@@ -307,4 +307,6 @@ main(int argc, char* argv[])
         NS_FATAL_ERROR("Can not open GNU Plot outfile: " << exp.m_gnuplotfile);
     }
     gp.GenerateOutput(of);
+
+    return 0;
 }

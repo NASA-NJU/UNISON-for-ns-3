@@ -476,29 +476,13 @@ uint16_t ConvertGuardIntervalToNanoSeconds(WifiMode mode,
 WifiPreamble GetPreambleForTransmission(WifiModulationClass modulation, bool useShortPreamble);
 
 /**
- * Return the channel width that is allowed based on the selected mode and the given
- * maximum channel width. This is especially useful when using non-HT modes with
- * HT/VHT/HE capable stations (with default width above 20 MHz).
+ * Return the modulation class corresponding to the given preamble type.
+ * Only preamble types used by HT/VHT/HE/EHT can be passed to this function.
  *
- * \param mode selected WifiMode
- * \param maxAllowedChannelWidth maximum channel width allowed for the transmission
- * \return channel width adapted to the selected mode
+ * \param preamble the given preamble type (must be one defined by HT standard or later)
+ * \return the modulation class corresponding to the given preamble type
  */
-uint16_t GetChannelWidthForTransmission(WifiMode mode, uint16_t maxAllowedChannelWidth);
-/**
- * Return the channel width that is allowed based on the selected mode, the current
- * width of the operating channel and the maximum channel width supported by the
- * receiver. This is especially useful when using non-HT modes with HT/VHT/HE
- * capable stations (with default width above 20 MHz).
- *
- * \param mode selected WifiMode
- * \param operatingChannelWidth operating channel width
- * \param maxSupportedChannelWidth maximum channel width supported by the receiver
- * \return channel width adapted to the selected mode
- */
-uint16_t GetChannelWidthForTransmission(WifiMode mode,
-                                        uint16_t operatingChannelWidth,
-                                        uint16_t maxSupportedChannelWidth);
+WifiModulationClass GetModulationClassForPreamble(WifiPreamble preamble);
 
 /**
  * Return whether the modulation class of the selected mode for the
@@ -555,6 +539,22 @@ bool IsUlMu(WifiPreamble preamble);
  * \return the modulation class corresponding to the standard
  */
 WifiModulationClass GetModulationClassForStandard(WifiStandard standard);
+
+/**
+ * Get the maximum channel width in MHz allowed for the given modulation class.
+ *
+ * \param modulation the modulation class
+ * \return the maximum channel width in MHz allowed for the given modulation class
+ */
+uint16_t GetMaximumChannelWidth(WifiModulationClass modulation);
+
+/**
+ * Return true if a preamble corresponds to an EHT transmission.
+ *
+ * \param preamble the preamble
+ * \return true if the provided preamble corresponds to an EHT transmission
+ */
+bool IsEht(WifiPreamble preamble);
 
 } // namespace ns3
 

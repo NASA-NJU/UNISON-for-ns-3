@@ -68,7 +68,7 @@ NS_LOG_COMPONENT_DEFINE("EnergyWithHarvestingExample");
  * Print a received packet
  *
  * \param from sender address
- * \return a sting with the details of the packet: dst {IP, port}, time.
+ * \return a string with the details of the packet: dst {IP, port}, time.
  */
 static inline std::string
 PrintReceivedPacket(Address& from)
@@ -234,7 +234,7 @@ main(int argc, char* argv[])
     WifiHelper wifi;
     if (verbose)
     {
-        wifi.EnableLogComponents();
+        WifiHelper::EnableLogComponents();
     }
     wifi.SetStandard(WIFI_STANDARD_80211b);
 

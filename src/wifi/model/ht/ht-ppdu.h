@@ -52,7 +52,6 @@ class HtPpdu : public OfdmPpdu
     {
       public:
         HtSigHeader();
-        ~HtSigHeader() override;
 
         /**
          * \brief Get the type ID.
@@ -151,10 +150,6 @@ class HtPpdu : public OfdmPpdu
            Time ppduDuration,
            WifiPhyBand band,
            uint64_t uid);
-    /**
-     * Destructor for HtPpdu.
-     */
-    ~HtPpdu() override;
 
     Time GetTxDuration() const override;
     Ptr<WifiPpdu> Copy() const override;
@@ -162,8 +157,49 @@ class HtPpdu : public OfdmPpdu
   private:
     WifiTxVector DoGetTxVector() const override;
 
+    /**
+     * Fill in the PHY headers.
+     *
+     * \param txVector the TXVECTOR that was used for this PPDU
+     * \param ppduDuration the transmission duration of this PPDU
+     * \param psduSize the size duration of the PHY payload (PSDU)
+     */
+    void SetPhyHeaders(const WifiTxVector& txVector, Time ppduDuration, std::size_t psduSize);
+
+    /**
+     * Fill in the L-SIG header.
+     *
+     * \param lSig the L-SIG header to fill in
+     * \param ppduDuration the transmission duration of this PPDU
+     */
+    virtual void SetLSigHeader(LSigHeader& lSig, Time ppduDuration) const;
+
+    /**
+     * Fill in the HT-SIG header.
+     *
+     * \param htSig the HT-SIG header to fill in
+     * \param txVector the TXVECTOR that was used for this PPDU
+     * \param psduSize the size duration of the PHY payload (PSDU)
+     */
+    void SetHtSigHeader(HtSigHeader& htSig,
+                        const WifiTxVector& txVector,
+                        std::size_t psduSize) const;
+
+    /**
+     * Fill in the TXVECTOR from PHY headers.
+     *
+     * \param txVector the TXVECTOR to fill in
+     * \param lSig the L-SIG header
+     * \param htSig the HT-SIG header
+     */
+    void SetTxVectorFromPhyHeaders(WifiTxVector& txVector,
+                                   const LSigHeader& lSig,
+                                   const HtSigHeader& htSig) const;
+
+#ifndef NS3_BUILD_PROFILE_DEBUG
     HtSigHeader m_htSig; //!< the HT-SIG PHY header
-};                       // class HtPpdu
+#endif
+}; // class HtPpdu
 
 } // namespace ns3
 

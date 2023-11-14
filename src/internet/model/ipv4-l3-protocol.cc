@@ -1395,7 +1395,7 @@ Ipv4L3Protocol::SetUp(uint32_t i)
         NS_LOG_LOGIC(
             "Interface "
             << int(i)
-            << " is set to be down for IPv4. Reason: not respecting minimum IPv4 MTU (68 octects)");
+            << " is set to be down for IPv4. Reason: not respecting minimum IPv4 MTU (68 octets)");
     }
 }
 
@@ -1650,7 +1650,7 @@ Ipv4L3Protocol::Fragments::IsEntire() const
 {
     NS_LOG_FUNCTION(this);
 
-    bool ret = !m_moreFragment && m_fragments.size() > 0;
+    bool ret = !m_moreFragment && !m_fragments.empty();
 
     if (ret)
     {

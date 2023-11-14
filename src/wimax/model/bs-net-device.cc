@@ -920,7 +920,7 @@ BaseStationNetDevice::CreateMapMessages()
 
     /*either DCD and UCD must be created first because CCC is set during their
      creation, or CCC must be calculated first so that it could be set during
-     creation of DL-MAP and UL-MAP and then set duirng creation of DCD and UCD*/
+     creation of DL-MAP and UL-MAP and then set during creation of DCD and UCD*/
 
     if (sendDcd)
     {
@@ -990,7 +990,7 @@ BaseStationNetDevice::SendBursts()
     OfdmDlMapIe* dlMapIe;
     Cid cid;
 
-    while (downlinkBursts->size())
+    while (!downlinkBursts->empty())
     {
         pair = downlinkBursts->front();
         burst = pair.second;
@@ -1001,18 +1001,9 @@ BaseStationNetDevice::SendBursts()
         if (cid != GetInitialRangingConnection()->GetCid() &&
             cid != GetBroadcastConnection()->GetCid())
         {
-            if (m_serviceFlowManager->GetServiceFlow(cid) != nullptr)
-            {
-                modulationType =
-                    GetBurstProfileManager()->GetModulationType(diuc,
-                                                                WimaxNetDevice::DIRECTION_DOWNLINK);
-            }
-            else
-            {
-                modulationType =
-                    GetBurstProfileManager()->GetModulationType(diuc,
-                                                                WimaxNetDevice::DIRECTION_DOWNLINK);
-            }
+            modulationType =
+                GetBurstProfileManager()->GetModulationType(diuc,
+                                                            WimaxNetDevice::DIRECTION_DOWNLINK);
         }
         else
         {

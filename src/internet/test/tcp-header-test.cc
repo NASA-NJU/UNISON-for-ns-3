@@ -41,7 +41,6 @@ using namespace ns3;
 
 /**
  * \ingroup internet-test
- * \ingroup tests
  *
  * \brief TCP header Get/Set test.
  */
@@ -159,7 +158,6 @@ TcpHeaderGetSetTestCase::DoTeardown()
 
 /**
  * \ingroup internet-test
- * \ingroup tests
  *
  * \brief TCP header with RFC793 Options test.
  */
@@ -386,9 +384,8 @@ TcpHeaderWithRFC793OptionTestCase::DoTeardown()
 
 /**
  * \ingroup internet-test
- * \ingroup tests
  *
- * \brief TCP header Flags to Striing test.
+ * \brief TCP header Flags to String test.
  */
 class TcpHeaderFlagsToString : public TestCase
 {
@@ -456,7 +453,6 @@ TcpHeaderFlagsToString::DoRun()
 
 /**
  * \ingroup internet-test
- * \ingroup tests
  *
  * \brief TCP header TestSuite
  */

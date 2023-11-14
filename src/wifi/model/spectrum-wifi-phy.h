@@ -69,7 +69,7 @@ class SpectrumWifiPhy : public WifiPhy
     ~SpectrumWifiPhy() override;
 
     // Implementation of pure virtual method.
-    void StartTx(Ptr<const WifiPpdu> ppdu, const WifiTxVector& txVector) override;
+    void StartTx(Ptr<const WifiPpdu> ppdu) override;
     Ptr<Channel> GetChannel() const override;
     uint16_t GetGuardBandwidth(uint16_t currentChannelWidth) const override;
     std::tuple<double, double, double> GetTxMaskRejectionParams() const override;
@@ -152,6 +152,14 @@ class SpectrumWifiPhy : public WifiPhy
      */
     void Transmit(Ptr<WifiSpectrumSignalParameters> txParams);
 
+    /**
+     * Determine the WifiPpdu to be used by the RX PHY based on the WifiPpdu sent by the TX PHY.
+     *
+     * \param ppdu the WifiPpdu transmitted by the TX PHY
+     * \return the WifiPpdu to be used by the RX PHY
+     */
+    Ptr<const WifiPpdu> GetRxPpduFromTxPpdu(Ptr<const WifiPpdu> ppdu);
+
   protected:
     void DoDispose() override;
     void DoInitialize() override;
@@ -191,6 +199,17 @@ class SpectrumWifiPhy : public WifiPhy
      * This function is called to update the bands handled by the InterferenceHelper.
      */
     void UpdateInterferenceHelperBands();
+
+    /**
+     * Determine whether the PHY shall issue a PHY-RXSTART.indication primitive in response to a
+     * given PPDU.
+     *
+     * \param ppdu the PPDU
+     * \param txChannelWidth the channel width (MHz) used to transmit the PPDU
+     * \return true if the PHY shall issue a PHY-RXSTART.indication primitive in response to a PPDU,
+     * false otherwise
+     */
+    bool CanStartRx(Ptr<const WifiPpdu> ppdu, uint16_t txChannelWidth) const;
 
     Ptr<SpectrumChannel> m_channel; //!< SpectrumChannel that this SpectrumWifiPhy is connected to
 

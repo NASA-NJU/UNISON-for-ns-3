@@ -97,8 +97,7 @@ Disable formatting in specific files or lines
 =============================================
 
 To disable formatting in specific lines, surround them with the following
-C++ comments [example adopted from
-`official clang-format documentation <https://clang.llvm.org/docs/ClangFormat.html>`_]:
+C++ comments:
 
 .. sourcecode:: cpp
 
@@ -326,8 +325,8 @@ Indent constructor's initialization list with 4 spaces.
 .. sourcecode:: cpp
 
   MyClass::MyClass(int x, int y)
-      : m_x (x),
-        m_y (y)
+      : m_x(x),
+        m_y(y)
   {
   }
 
@@ -798,6 +797,70 @@ that usage is consistent within a file.
       MyClass(int n);
   };
 
+All the functions and variables must be documented, with the exception of
+member functions inherited from parent classes (the documentation is copied
+automatically from the parent class), and default constructor/destructor.
+
+It is strongly suggested to use grouping to bind together logically related
+classes (e.g., all the classes in a module). E.g.;
+
+.. sourcecode:: cpp
+
+  /**
+   * \defgroup mynewmodule This is a new module
+   */
+
+  /**
+   * \ingroup mynewmodule
+   *
+   * MyClassOne description.
+   */
+  class MyClassOne
+  {
+  };
+
+  /**
+   * \ingroup mynewmodule
+   *
+   * MyClassTwo description.
+   */
+  class MyClassTwo
+  {
+  };
+
+In the tests for the module, it is suggested to add an ancillary group:
+
+.. sourcecode:: cpp
+
+  /**
+   * \defgroup mynewmodule-test Tests for new module
+   * \ingroup mynewmodule
+   * \ingroup tests
+   */
+
+  /**
+   * \ingroup mynewmodule-tests
+   * \brief MyNewModule Test
+   */
+  class MyNewModuleTest : public TestCase
+  {
+  };
+
+  /**
+   * \ingroup mynewmodule-tests
+   * \brief MyNewModule TestSuite
+   */
+  class MyNewModuleTestSuite : public TestSuite
+  {
+    public:
+      MyNewModuleTestSuite();
+  };
+
+  /**
+   * \ingroup mynewmodule-tests
+   * Static variable for test initialization
+   */
+  static MyNewModuleTestSuite g_myNewModuleTestSuite;
 
 As for comments within the code, comments should be used to describe intention
 or algorithmic overview where is it not immediately obvious from reading the
@@ -837,7 +900,7 @@ Casts
 =====
 
 Where casts are necessary, use the Google C++ guidance:  "Use C++-style casts
-like ``static_cast<float> (double_value)``, or brace initialization for
+like ``static_cast<float>(double_value)``, or brace initialization for
 conversion of arithmetic types like ``int64 y = int64{1} << 42``."
 Do not use C-style casts, since they can be unsafe.
 
@@ -853,17 +916,21 @@ to print the numeric value of any variable, such as:
 
 Avoid unnecessary casts if minor changes to variable declarations can solve
 the issue. In the following example, ``x`` can be declared as ``float`` instead of
-``int`` to avoid the cast:
+``int`` to avoid the cast, or write numbers in decimal format:
 
 .. sourcecode:: cpp
 
   // Do not declare x as int, to avoid casting it to float
   int x = 3;
-  return 1 / static_cast<float>(x);
+  float y = 1 / static_cast<float>(x);
 
   // Prefer to declare x as float
   float x = 3.0;
-  return 1 / x;
+  float y = 1 / x;
+
+  // Or use 1.0 instead of just 1
+  int x = 3;
+  float y = 1.0 / x;
 
 Namespaces
 ==========
@@ -1023,7 +1090,7 @@ can be rewritten as:
 
   if (n < 0)
   {
-      return n;
+      return false;
   }
 
   n += 3;
@@ -1047,13 +1114,13 @@ the |ns3| smart pointer class ``Ptr`` should be used in boolean comparisons as f
   if (p == NULL)    {...}
   if (p == 0)       {...}
 
-  NS_ASSERT... (p != nullptr, ...)    NS_ASSERT... (p, ...)
-  NS_ABORT...  (p != nullptr, ...)    NS_ABORT...  (p, ...)
+  NS_ASSERT...(p != nullptr, ...)    NS_ASSERT...(p, ...)
+  NS_ABORT... (p != nullptr, ...)    NS_ABORT... (p, ...)
 
-  NS_ASSERT... (p == nullptr, ...)    NS_ASSERT... (!p, ...)
-  NS_ABORT...  (p == nullptr, ...)    NS_ABORT...  (!p, ...)
+  NS_ASSERT...(p == nullptr, ...)    NS_ASSERT...(!p, ...)
+  NS_ABORT... (p == nullptr, ...)    NS_ABORT... (!p, ...)
 
-  NS_TEST...   (p, nullptr, ...)      NS_TEST...   (p, nullptr, ...)
+  NS_TEST...  (p, nullptr, ...)      NS_TEST...  (p, nullptr, ...)
 
 C++ standard
 ============
@@ -1069,9 +1136,9 @@ Miscellaneous items
 ===================
 
 - ``NS_LOG_COMPONENT_DEFINE("log-component-name");`` statements should be
-  placed within namespace ns3 (for module code) and after the
+  placed within ``namespace ns3`` (for module code) and after the
   ``using namespace ns3;``.  In examples,
-  ``NS_OBJECT_ENSURE_REGISTERED()`` should also be placed within namespace ``ns3``.
+  ``NS_OBJECT_ENSURE_REGISTERED()`` should also be placed within ``namespace ns3``.
 
 - Pointers and references are left-aligned:
 
@@ -1080,6 +1147,23 @@ Miscellaneous items
     int x = 1;
     int* ptr = &x;
     int& ref = x;
+
+- Use a trailing comma in braced-init-lists, so that each item is positioned in a new line.
+
+  .. sourcecode:: cpp
+
+    const std::vector<std::string> myVector{
+      "string-1",
+      "string-2",
+      "string-3",
+    };
+
+    const std::map<int, std::string> myMap{
+      {1, "string-1"},
+      {2, "string-2"},
+      {3, "string-3"},
+    };
+
 
 - Const reference syntax:
 
@@ -1131,6 +1215,24 @@ Miscellaneous items
   using the ``using namespace std;`` directive.
 
 - Do not use the C++ ``goto`` statement.
+
+- Do not add the ``enum`` or ``struct`` specifiers when declaring the variable's type.
+
+- Do not unnecessarily add ``typedef`` to ``struct`` or ``enum``.
+
+  .. sourcecode:: cpp
+
+    // Avoid
+    typedef struct
+    {
+        ...
+    } MyStruct;
+
+    // Prefer
+    struct MyStruct
+    {
+        ...
+    };
 
 Clang-tidy rules
 ================
@@ -1200,6 +1302,10 @@ of rules that should be observed while developing code.
     myVector.emplace_back(2);
     myVector.emplace_back(3);
 
+- Prefer to use the ``empty()`` function of STL containers (e.g., ``std::vector``),
+  instead of the condition ``size() > 0``, to avoid unnecessarily calculating the
+  size of the container.
+
 - Avoid unnecessary calls to the functions ``.c_str()`` and ``.data()`` of
   ``std::string``.
 
@@ -1218,6 +1324,18 @@ of rules that should be observed while developing code.
     if (ptr.get()) { ... }
 
 - Avoid declaring trivial destructors, to optimize performance.
+
+- Avoid accessing class static functions and members through objects.
+  Instead, prefer to access them through the class.
+
+  .. sourcecode:: cpp
+
+    // OK
+    MyClass::StaticFunction();
+
+    // Avoid
+    MyClass myClass;
+    MyClass.StaticFunction();
 
 - Prefer to use ``static_assert()`` over ``NS_ASSERT()`` when conditions can be
   evaluated at compile-time.

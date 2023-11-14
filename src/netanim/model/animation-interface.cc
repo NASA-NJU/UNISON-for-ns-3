@@ -301,7 +301,7 @@ AnimationInterface::IsInitialized()
 }
 
 bool
-AnimationInterface::IsStarted()
+AnimationInterface::IsStarted() const
 {
     return m_started;
 }
@@ -374,6 +374,12 @@ AnimationInterface::SetBackgroundImage(std::string fileName,
         NS_FATAL_ERROR("Opacity must be between 0.0 and 1.0");
     }
     WriteXmlUpdateBackground(fileName, x, y, scaleX, scaleY, opacity);
+}
+
+void
+AnimationInterface::UpdateNodeSize(Ptr<Node> n, double width, double height)
+{
+    UpdateNodeSize(n->GetId(), width, height);
 }
 
 void
@@ -605,13 +611,13 @@ AnimationInterface::GetElementsFromContext(const std::string& context) const
     std::vector<std::string> elements;
     std::size_t pos1 = 0;
     std::size_t pos2;
-    while (pos1 != context.npos)
+    while (pos1 != std::string::npos)
     {
         pos1 = context.find('/', pos1);
         pos2 = context.find('/', pos1 + 1);
         elements.push_back(context.substr(pos1 + 1, pos2 - (pos1 + 1)));
         pos1 = pos2;
-        pos2 = context.npos;
+        pos2 = std::string::npos;
     }
     return elements;
 }
@@ -1498,7 +1504,7 @@ AnimationInterface::GetPacketMetadata(Ptr<const Packet> p)
 }
 
 uint64_t
-AnimationInterface::GetTracePktCount()
+AnimationInterface::GetTracePktCount() const
 {
     return m_currentPktCount;
 }
@@ -2193,7 +2199,7 @@ AnimationInterface::SetOutputFile(const std::string& fn, bool routing)
 void
 AnimationInterface::CheckMaxPktsPerTraceFile()
 {
-    // Start a new trace file if the current packet count exceeded nax packets per file
+    // Start a new trace file if the current packet count exceeded max packets per file
     ++m_currentPktCount;
     if (m_currentPktCount <= m_maxPktsPerFile)
     {

@@ -46,13 +46,13 @@ Histogram::GetNBins() const
 }
 
 double
-Histogram::GetBinStart(uint32_t index)
+Histogram::GetBinStart(uint32_t index) const
 {
     return index * m_binWidth;
 }
 
 double
-Histogram::GetBinEnd(uint32_t index)
+Histogram::GetBinEnd(uint32_t index) const
 {
     return (index + 1) * m_binWidth;
 }
@@ -66,7 +66,7 @@ Histogram::GetBinWidth(uint32_t index) const
 void
 Histogram::SetDefaultBinWidth(double binWidth)
 {
-    NS_ASSERT(m_histogram.size() == 0); // we can only change the bin width if no values were added
+    NS_ASSERT(m_histogram.empty()); // we can only change the bin width if no values were added
     m_binWidth = binWidth;
 }
 

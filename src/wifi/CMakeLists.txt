@@ -27,6 +27,9 @@ set(source_files
     model/edca-parameter-set.cc
     model/eht/eht-capabilities.cc
     model/eht/eht-configuration.cc
+    model/eht/eht-frame-exchange-manager.cc
+    model/eht/eht-operation.cc
+    model/eht/tid-to-link-mapping-element.cc
     model/eht/eht-phy.cc
     model/eht/eht-ppdu.cc
     model/eht/multi-link-element.cc
@@ -173,6 +176,9 @@ set(header_files
     model/edca-parameter-set.h
     model/eht/eht-capabilities.h
     model/eht/eht-configuration.h
+    model/eht/eht-frame-exchange-manager.h
+    model/eht/eht-operation.h
+    model/eht/tid-to-link-mapping-element.h
     model/eht/eht-phy.h
     model/eht/eht-ppdu.h
     model/eht/multi-link-element.h
@@ -335,9 +341,11 @@ build_lib(
     test/wifi-phy-reception-test.cc
     test/wifi-phy-thresholds-test.cc
     test/wifi-primary-channels-test.cc
+    test/wifi-ru-allocation-test.cc
     test/wifi-channel-switching-test.cc
     test/wifi-test.cc
     test/wifi-transmit-mask-test.cc
     test/wifi-txop-test.cc
     test/wifi-phy-cca-test.cc
+    test/wifi-non-ht-dup-test.cc
 )

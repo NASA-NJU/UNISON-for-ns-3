@@ -47,9 +47,11 @@ LteRlcAmE2eTestSuite::LteRlcAmE2eTestSuite()
     // NS_LOG_INFO ("Creating LteRlcAmE2eTestSuite");
 
     double losses[] = {0.0, 0.05, 0.10, 0.15, 0.25, 0.50, 0.75, 0.90, 0.95};
-    uint32_t runs[] = {1111,  2222,  3333,  4444,  5555,  6666,  7777,  8888,  9999,  11110,
-                       12221, 13332, 14443, 15554, 16665, 17776, 18887, 19998, 21109, 22220,
-                       23331, 24442, 25553, 26664, 27775, 28886, 29997, 31108, 32219, 33330};
+    uint32_t runs[] = {
+        1111,  2222,  3333,  4444,  5555,  6666,  7777,  8888,  9999,  11110,
+        12221, 13332, 14443, 15554, 16665, 17776, 18887, 19998, 21109, 22220,
+        23331, 24442, 25553, 26664, 27775, 28886, 29997, 31108, 32219, 33330,
+    };
 
     for (uint32_t l = 0; l < (sizeof(losses) / sizeof(double)); l++)
     {
@@ -96,6 +98,10 @@ LteRlcAmE2eTestSuite::LteRlcAmE2eTestSuite()
     }
 }
 
+/**
+ * \ingroup lte-test
+ * Static variable for test initialization
+ */
 static LteRlcAmE2eTestSuite lteRlcAmE2eTestSuite;
 
 LteRlcAmE2eTestCase::LteRlcAmE2eTestCase(std::string name,
@@ -264,7 +270,7 @@ LteRlcAmE2eTestCase::DoRun()
     //      retransmitted is much lower. This effect can be best noteed
     //      at very high loss rates, and can be adjusted by timers and
     //      params.
-    //   2) throuhgput is not meaningful, you need to evaluate the time
+    //   2) throughput is not meaningful, you need to evaluate the time
     //      it takes for all PDUs to be (re)transmitted successfully,
     //      i.e., how long it takes for the TX and reTX queues to deplete.
 

@@ -38,6 +38,7 @@ class Packet;
 class WifiMac;
 class WifiMpdu;
 class WifiTxParameters;
+class HtFrameExchangeManager;
 
 /**
  * \brief Aggregator used to construct A-MPDUs
@@ -57,8 +58,8 @@ class MpduAggregator : public Object
      */
     static TypeId GetTypeId();
 
-    MpduAggregator();
-    ~MpduAggregator() override;
+    MpduAggregator() = default;
+    ~MpduAggregator() override = default;
 
     /**
      * Aggregate an MPDU to an A-MPDU.
@@ -68,6 +69,13 @@ class MpduAggregator : public Object
      * \param isSingle whether it is a single MPDU.
      */
     static void Aggregate(Ptr<const WifiMpdu> mpdu, Ptr<Packet> ampdu, bool isSingle);
+
+    /**
+     * Set the ID of the link this MPDU aggregator is associated with.
+     *
+     * \param linkId the ID of the link this MPDU aggregator is associated with
+     */
+    void SetLinkId(uint8_t linkId);
 
     /**
      * Compute the size of the A-MPDU resulting from the aggregation of an MPDU of
@@ -158,7 +166,9 @@ class MpduAggregator : public Object
     void DoDispose() override;
 
   private:
-    Ptr<WifiMac> m_mac; //!< the MAC of this station
+    Ptr<WifiMac> m_mac;                  //!< the MAC of this station
+    Ptr<HtFrameExchangeManager> m_htFem; //!< the HT Frame Exchange Manager of this station
+    uint8_t m_linkId{0};                 //!< ID of the link this object is connected to
 };
 
 } // namespace ns3

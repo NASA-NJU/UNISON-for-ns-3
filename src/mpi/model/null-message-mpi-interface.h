@@ -26,13 +26,13 @@
 #ifndef NS3_NULLMESSAGE_MPI_INTERFACE_H
 #define NS3_NULLMESSAGE_MPI_INTERFACE_H
 
-#include "mpi.h"
 #include "parallel-communication-interface.h"
 
 #include <ns3/buffer.h>
 #include <ns3/nstime.h>
 
 #include <list>
+#include <mpi.h>
 
 namespace ns3
 {
@@ -72,7 +72,7 @@ class NullMessageMpiInterface : public ParallelCommunicationInterface, Object
     MPI_Comm GetCommunicator() override;
 
   private:
-    /**
+    /*
      * The null message implementation is a collaboration of several
      * classes.  Methods that should be invoked only by the
      * collaborators are private to restrict use.

@@ -21,6 +21,7 @@
 
 #include "config.h"
 #include "des-metrics.h"
+#include "environment-variable.h"
 #include "global-value.h"
 #include "log.h"
 #include "string.h"
@@ -33,7 +34,7 @@
 
 #include <algorithm> // transform
 #include <cctype>    // tolower
-#include <cstdlib>   // exit, getenv
+#include <cstdlib>   // exit
 #include <cstring>   // strlen
 #include <iomanip>   // setw, boolalpha
 #include <set>
@@ -198,7 +199,7 @@ CommandLine::Parse(std::vector<std::string> args)
 
     m_nonOptionCount = 0;
 
-    if (args.size() > 0)
+    if (!args.empty())
     {
         args.erase(args.begin()); // discard the program name
 
@@ -385,8 +386,9 @@ CommandLine::PrintHelp(std::ostream& os) const
 
     // Hack to show just the declared non-options
     Items nonOptions(m_nonOptions.begin(), m_nonOptions.begin() + m_NNonOptions);
-    os << m_shortName << (m_options.size() ? " [Program Options]" : "")
-       << (nonOptions.size() ? " [Program Arguments]" : "") << " [General Arguments]" << std::endl;
+    os << m_shortName << (!m_options.empty() ? " [Program Options]" : "")
+       << (!nonOptions.empty() ? " [Program Arguments]" : "") << " [General Arguments]"
+       << std::endl;
 
     if (!m_usage.empty())
     {
@@ -461,13 +463,13 @@ CommandLine::PrintDoxygenUsage() const
 {
     NS_LOG_FUNCTION(this);
 
-    const char* envVar = std::getenv("NS_COMMANDLINE_INTROSPECTION");
-    if (envVar == nullptr || std::strlen(envVar) == 0)
+    auto [found, path] = EnvironmentVariable::Get("NS_COMMANDLINE_INTROSPECTION");
+    if (!found)
     {
         return;
     }
 
-    if (m_shortName.size() == 0)
+    if (m_shortName.empty())
     {
         NS_FATAL_ERROR("No file name on example-to-run; forgot to use CommandLine var (__FILE__)?");
         return;
@@ -476,7 +478,7 @@ CommandLine::PrintDoxygenUsage() const
     // Hack to show just the declared non-options
     Items nonOptions(m_nonOptions.begin(), m_nonOptions.begin() + m_NNonOptions);
 
-    std::string outf = SystemPath::Append(std::string(envVar), m_shortName + ".command-line");
+    std::string outf = SystemPath::Append(path, m_shortName + ".command-line");
 
     NS_LOG_INFO("Writing CommandLine doxy to " << outf);
 
@@ -484,8 +486,8 @@ CommandLine::PrintDoxygenUsage() const
 
     os << "/**\n \\file " << m_shortName << ".cc\n"
        << "<h3>Usage</h3>\n"
-       << "<code>$ ./ns3 run \"" << m_shortName << (m_options.size() ? " [Program Options]" : "")
-       << (nonOptions.size() ? " [Program Arguments]" : "") << "\"</code>\n";
+       << "<code>$ ./ns3 run \"" << m_shortName << (!m_options.empty() ? " [Program Options]" : "")
+       << (!nonOptions.empty() ? " [Program Arguments]" : "") << "\"</code>\n";
 
     if (!m_usage.empty())
     {
@@ -691,7 +693,7 @@ CommandLine::HandleArgument(const std::string& name, const std::string& value) c
 
     auto errorExit = [this, name, value]() {
         std::cerr << "Invalid command-line argument: --" << name;
-        if (value != "")
+        if (!value.empty())
         {
             std::cerr << "=" << value;
         }
@@ -723,7 +725,7 @@ CommandLine::HandleArgument(const std::string& name, const std::string& value) c
 bool
 CommandLine::CallbackItem::HasDefault() const
 {
-    return m_default != "";
+    return !m_default.empty();
 }
 
 std::string
@@ -759,7 +761,7 @@ CommandLine::AddValue(const std::string& name,
 void
 CommandLine::AddValue(const std::string& name,
                       const std::string& help,
-                      ns3::Callback<bool, std::string> callback,
+                      ns3::Callback<bool, const std::string&> callback,
                       const std::string& defaultValue /* = "" */)
 
 {

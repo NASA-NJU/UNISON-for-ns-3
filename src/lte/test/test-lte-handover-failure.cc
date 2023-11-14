@@ -46,7 +46,6 @@ NS_LOG_COMPONENT_DEFINE("LteHandoverFailureTest");
 
 /**
  * \ingroup lte-test
- * \ingroup tests
  *
  * \brief Verifying that a handover failure occurs due to various causes
  *
@@ -124,7 +123,7 @@ class LteHandoverFailureTestCase : public TestCase
 
     /**
      * \brief Called at the end of simulation and verifies that a handover
-     *        and a handover failure has occured in the simulation.
+     *        and a handover failure has occurred in the simulation.
      */
     void DoTeardown() override;
 
@@ -200,7 +199,7 @@ class LteHandoverFailureTestCase : public TestCase
     Time m_handoverJoiningTimeout;  ///< handover joining timeout duration at target eNodeB
     Time m_handoverLeavingTimeout;  ///< handover leaving timeout duration at source eNodeB
     uint16_t m_targeteNodeBPosition;  ///< position of the target eNodeB
-    bool m_hasHandoverFailureOccured; ///< has handover failure occured in simulation
+    bool m_hasHandoverFailureOccured; ///< has handover failure occurred in simulation
 
 }; // end of class LteHandoverFailureTestCase
 
@@ -364,7 +363,6 @@ LteHandoverFailureTestCase::DoTeardown()
 
 /**
  * \ingroup lte-test
- * \ingroup tests
  *
  * The following log components can be used to debug this test's behavior:
  * LteHandoverFailureTest:LteEnbRrc:LteEnbMac:LteUeRrc:EpcX2

@@ -74,13 +74,13 @@ class TcpBbr : public TcpCongestionOps
     /**
      * \brief BBR has the following 4 modes for deciding how fast to send:
      */
-    typedef enum
+    enum BbrMode_t
     {
         BBR_STARTUP,   /**< Ramp up sending rate rapidly to fill pipe */
         BBR_DRAIN,     /**< Drain any queue created during startup */
         BBR_PROBE_BW,  /**< Discover, share bw: pace around estimated bw */
         BBR_PROBE_RTT, /**< Cut inflight to min to probe min_rtt */
-    } BbrMode_t;
+    };
 
     typedef WindowedFilter<DataRate,
                            MaxFilter<DataRate>,
@@ -217,18 +217,18 @@ class TcpBbr : public TcpCongestionOps
     uint32_t InFlight(Ptr<TcpSocketState> tcb, double gain);
 
     /**
-     * \brief Intializes the full pipe estimator.
+     * \brief Initializes the full pipe estimator.
      */
     void InitFullPipe();
 
     /**
-     * \brief Intializes the pacing rate.
+     * \brief Initializes the pacing rate.
      * \param tcb  the socket state.
      */
     void InitPacingRate(Ptr<TcpSocketState> tcb);
 
     /**
-     * \brief Intializes the round counting related variables.
+     * \brief Initializes the round counting related variables.
      */
     void InitRoundCounting();
 

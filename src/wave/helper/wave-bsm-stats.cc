@@ -32,7 +32,7 @@ WaveBsmStats::WaveBsmStats()
     : m_wavePktSendCount(0),
       m_waveByteSendCount(0),
       m_wavePktReceiveCount(0),
-      m_log(0)
+      m_log(false)
 {
     m_wavePktExpectedReceiveCounts.resize(10, 0);
     m_wavePktInCoverageReceiveCounts.resize(10, 0);
@@ -58,7 +58,7 @@ WaveBsmStats::IncTxPktCount()
 }
 
 int
-WaveBsmStats::GetTxPktCount()
+WaveBsmStats::GetTxPktCount() const
 {
     return m_wavePktSendCount;
 }
@@ -84,7 +84,7 @@ WaveBsmStats::IncRxPktInRangeCount(int index)
 }
 
 int
-WaveBsmStats::GetRxPktCount()
+WaveBsmStats::GetRxPktCount() const
 {
     return m_wavePktReceiveCount;
 }
@@ -120,7 +120,7 @@ WaveBsmStats::IncTxByteCount(int bytes)
 }
 
 int
-WaveBsmStats::GetTxByteCount()
+WaveBsmStats::GetTxByteCount() const
 {
     return m_waveByteSendCount;
 }
@@ -170,13 +170,13 @@ WaveBsmStats::GetCumulativeBsmPdr(int index)
 }
 
 void
-WaveBsmStats::SetLogging(int log)
+WaveBsmStats::SetLogging(bool log)
 {
     m_log = log;
 }
 
-int
-WaveBsmStats::GetLogging()
+bool
+WaveBsmStats::GetLogging() const
 {
     return m_log;
 }

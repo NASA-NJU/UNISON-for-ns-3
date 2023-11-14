@@ -280,6 +280,7 @@ QosFrameExchangeManager::StartFrameExchange(Ptr<QosTxop> edca,
         return false;
     }
 
+    mpdu = CreateAliasIfNeeded(mpdu);
     WifiTxParameters txParams;
     txParams.m_txVector =
         GetWifiRemoteStationManager()->GetDataTxVector(mpdu->GetHeader(), m_allowedWidth);
@@ -310,6 +311,12 @@ QosFrameExchangeManager::StartFrameExchange(Ptr<QosTxop> edca,
     SendMpduWithProtection(item, txParams);
 
     return true;
+}
+
+Ptr<WifiMpdu>
+QosFrameExchangeManager::CreateAliasIfNeeded(Ptr<WifiMpdu> mpdu) const
+{
+    return mpdu;
 }
 
 bool
@@ -637,8 +644,6 @@ QosFrameExchangeManager::PreProcessFrame(Ptr<const WifiPsdu> psdu, const WifiTxV
 {
     NS_LOG_FUNCTION(this << psdu << txVector);
 
-    SetTxopHolder(psdu, txVector);
-
     // APs store buffer size report of associated stations
     if (m_mac->GetTypeOfStation() == AP && psdu->GetAddr1() == m_self)
     {
@@ -651,14 +656,28 @@ QosFrameExchangeManager::PreProcessFrame(Ptr<const WifiPsdu> psdu, const WifiTxV
                 NS_LOG_DEBUG("Station " << hdr.GetAddr2() << " reported a buffer status of "
                                         << +hdr.GetQosQueueSize()
                                         << " for tid=" << +hdr.GetQosTid());
-                StaticCast<ApWifiMac>(m_mac)->SetBufferStatus(hdr.GetQosTid(),
-                                                              hdr.GetAddr2(),
-                                                              hdr.GetQosQueueSize());
+                StaticCast<ApWifiMac>(m_mac)->SetBufferStatus(
+                    hdr.GetQosTid(),
+                    mpdu->GetOriginal()->GetHeader().GetAddr2(),
+                    hdr.GetQosQueueSize());
             }
         }
     }
 
+    // before updating the NAV, check if the NAV counted down to zero. In such a
+    // case, clear the saved TXOP holder address.
+    ClearTxopHolderIfNeeded();
+
     FrameExchangeManager::PreProcessFrame(psdu, txVector);
+}
+
+void
+QosFrameExchangeManager::PostProcessFrame(Ptr<const WifiPsdu> psdu, const WifiTxVector& txVector)
+{
+    NS_LOG_FUNCTION(this << psdu << txVector);
+
+    SetTxopHolder(psdu, txVector);
+    FrameExchangeManager::PostProcessFrame(psdu, txVector);
 }
 
 void
@@ -668,14 +687,37 @@ QosFrameExchangeManager::SetTxopHolder(Ptr<const WifiPsdu> psdu, const WifiTxVec
 
     const WifiMacHeader& hdr = psdu->GetHeader(0);
 
-    if (hdr.IsQosData() || hdr.IsMgt() || hdr.IsRts())
+    // A STA shall save the TXOP holder address for the BSS in which it is associated.
+    // The TXOP holder address is the MAC address from the Address 2 field of the frame
+    // that initiated a frame exchange sequence, except if this is a CTS frame, in which
+    // case the TXOP holder address is the Address 1 field. (Sec. 10.23.2.4 of 802.11-2020)
+    if ((hdr.IsQosData() || hdr.IsMgt() || hdr.IsRts()) &&
+        (hdr.GetAddr1() == m_bssid || hdr.GetAddr2() == m_bssid))
     {
         m_txopHolder = psdu->GetAddr2();
     }
-    else if (hdr.IsCts() || hdr.IsAck())
+    else if (hdr.IsCts() && hdr.GetAddr1() == m_bssid)
     {
         m_txopHolder = psdu->GetAddr1();
     }
+}
+
+void
+QosFrameExchangeManager::ClearTxopHolderIfNeeded()
+{
+    NS_LOG_FUNCTION(this);
+    if (m_navEnd <= Simulator::Now())
+    {
+        m_txopHolder.reset();
+    }
+}
+
+void
+QosFrameExchangeManager::NavResetTimeout()
+{
+    NS_LOG_FUNCTION(this);
+    FrameExchangeManager::NavResetTimeout();
+    ClearTxopHolderIfNeeded();
 }
 
 void
@@ -706,7 +748,7 @@ QosFrameExchangeManager::ReceiveMpdu(Ptr<const WifiMpdu> mpdu,
         // frame matches the saved TXOP holder address, then the STA shall send the
         // CTS frame after SIFS, without regard for, and without resetting, its NAV.
         // (sec. 10.22.2.4 of 802.11-2016)
-        if (hdr.GetAddr2() == m_txopHolder || m_navEnd <= Simulator::Now())
+        if (hdr.GetAddr2() == m_txopHolder || VirtualCsMediumIdle())
         {
             NS_LOG_DEBUG("Received RTS from=" << hdr.GetAddr2() << ", schedule CTS");
             Simulator::Schedule(m_phy->GetSifs(),

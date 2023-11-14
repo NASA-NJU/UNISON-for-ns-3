@@ -93,13 +93,15 @@ class LteRrcSap
     struct RlcConfig
     {
         /// the direction choice
-        enum direction
+        enum Direction
         {
             AM,
             UM_BI_DIRECTIONAL,
             UM_UNI_DIRECTIONAL_UL,
             UM_UNI_DIRECTIONAL_DL
-        } choice; ///< direction choice
+        };
+
+        Direction choice; ///< direction choice
     };
 
     /// LogicalChannelConfig structure
@@ -115,11 +117,13 @@ class LteRrcSap
     struct SoundingRsUlConfigCommon
     {
         /// the config action
-        enum action
+        enum Action
         {
             SETUP,
             RESET
-        } type; ///< action type
+        };
+
+        Action type; ///< action type
 
         uint16_t srsBandwidthConfig; ///< SRS bandwidth config
         uint8_t srsSubframeConfig;   ///< SRS subframe config
@@ -129,11 +133,13 @@ class LteRrcSap
     struct SoundingRsUlConfigDedicated
     {
         /// the config action
-        enum action
+        enum Action
         {
             SETUP,
             RESET
-        } type; ///< action type
+        };
+
+        Action type; ///< action type
 
         uint16_t srsBandwidth;   ///< SRS bandwidth
         uint16_t srsConfigIndex; ///< SRS config index
@@ -159,7 +165,7 @@ class LteRrcSap
          * P_A values, TS 36.331 6.3.2 PDSCH-Config
          * ENUMERATED { dB-6, dB-4dot77, dB-3, dB-1dot77, dB0, dB1, dB2, dB3 }
          */
-        enum db
+        enum Db
         {
             dB_6,
             dB_4dot77,
@@ -405,11 +411,13 @@ class LteRrcSap
         uint16_t timeToTrigger;
 
         /// the report purpose
-        enum report
+        enum Report
         {
             REPORT_STRONGEST_CELLS,
             REPORT_CGI
-        } purpose; ///< purpose
+        };
+
+        Report purpose; ///< purpose
 
         /// Trigger type enumeration
         enum
@@ -487,18 +495,22 @@ class LteRrcSap
     struct MeasGapConfig
     {
         /// the action type
-        enum action
+        enum Action
         {
             SETUP,
             RESET
-        } type; ///< action type
+        };
 
-        /// the gap offest
-        enum gap
+        Action type; ///< action type
+
+        /// the gap offset
+        enum Gap
         {
             GP0,
             GP1
-        } gapOffsetChoice; ///< gap offset
+        };
+
+        Gap gapOffsetChoice; ///< gap offset
 
         uint8_t gapOffsetValue; ///< gap offset value
     };
@@ -524,11 +536,13 @@ class LteRrcSap
     struct SpeedStatePars
     {
         /// the action type
-        enum action
+        enum Action
         {
             SETUP,
             RESET
-        } type; ///< action type
+        };
+
+        Action type; ///< action type
 
         MobilityStateParameters mobilityStateParameters; ///< mobility state parameters
         SpeedStateScaleFactors timeToTriggerSf;          ///< time to trigger scale factors
@@ -1336,6 +1350,9 @@ class MemberLteUeRrcSapUser : public LteUeRrcSapUser
      */
     MemberLteUeRrcSapUser(C* owner);
 
+    // Delete default constructor to avoid misuse
+    MemberLteUeRrcSapUser() = delete;
+
     // inherited from LteUeRrcSapUser
     void Setup(SetupParameters params) override;
     void SendRrcConnectionRequest(RrcConnectionRequest msg) override;
@@ -1349,18 +1366,12 @@ class MemberLteUeRrcSapUser : public LteUeRrcSapUser
     void SendIdealUeContextRemoveRequest(uint16_t rnti) override;
 
   private:
-    MemberLteUeRrcSapUser();
     C* m_owner; ///< the owner class
 };
 
 template <class C>
 MemberLteUeRrcSapUser<C>::MemberLteUeRrcSapUser(C* owner)
     : m_owner(owner)
-{
-}
-
-template <class C>
-MemberLteUeRrcSapUser<C>::MemberLteUeRrcSapUser()
 {
 }
 
@@ -1438,6 +1449,9 @@ class MemberLteUeRrcSapProvider : public LteUeRrcSapProvider
      */
     MemberLteUeRrcSapProvider(C* owner);
 
+    // Delete default constructor to avoid misuse
+    MemberLteUeRrcSapProvider() = delete;
+
     // methods inherited from LteUeRrcSapProvider go here
     void CompleteSetup(CompleteSetupParameters params) override;
     void RecvSystemInformation(SystemInformation msg) override;
@@ -1449,18 +1463,12 @@ class MemberLteUeRrcSapProvider : public LteUeRrcSapProvider
     void RecvRrcConnectionReject(RrcConnectionReject msg) override;
 
   private:
-    MemberLteUeRrcSapProvider();
     C* m_owner; ///< the owner class
 };
 
 template <class C>
 MemberLteUeRrcSapProvider<C>::MemberLteUeRrcSapProvider(C* owner)
     : m_owner(owner)
-{
-}
-
-template <class C>
-MemberLteUeRrcSapProvider<C>::MemberLteUeRrcSapProvider()
 {
 }
 
@@ -1537,8 +1545,10 @@ class MemberLteEnbRrcSapUser : public LteEnbRrcSapUser
      */
     MemberLteEnbRrcSapUser(C* owner);
 
-    // inherited from LteEnbRrcSapUser
+    // Delete default constructor to avoid misuse
+    MemberLteEnbRrcSapUser() = delete;
 
+    // inherited from LteEnbRrcSapUser
     void SetupUe(uint16_t rnti, SetupUeParameters params) override;
     void RemoveUe(uint16_t rnti) override;
     void SendSystemInformation(uint16_t cellId, SystemInformation msg) override;
@@ -1555,18 +1565,12 @@ class MemberLteEnbRrcSapUser : public LteEnbRrcSapUser
     RrcConnectionReconfiguration DecodeHandoverCommand(Ptr<Packet> p) override;
 
   private:
-    MemberLteEnbRrcSapUser();
     C* m_owner; ///< the owner class
 };
 
 template <class C>
 MemberLteEnbRrcSapUser<C>::MemberLteEnbRrcSapUser(C* owner)
     : m_owner(owner)
-{
-}
-
-template <class C>
-MemberLteEnbRrcSapUser<C>::MemberLteEnbRrcSapUser()
 {
 }
 
@@ -1680,8 +1684,10 @@ class MemberLteEnbRrcSapProvider : public LteEnbRrcSapProvider
      */
     MemberLteEnbRrcSapProvider(C* owner);
 
-    // methods inherited from LteEnbRrcSapProvider go here
+    // Delete default constructor to avoid misuse
+    MemberLteEnbRrcSapProvider() = delete;
 
+    // methods inherited from LteEnbRrcSapProvider go here
     void CompleteSetupUe(uint16_t rnti, CompleteSetupUeParameters params) override;
     void RecvRrcConnectionRequest(uint16_t rnti, RrcConnectionRequest msg) override;
     void RecvRrcConnectionSetupCompleted(uint16_t rnti, RrcConnectionSetupCompleted msg) override;
@@ -1697,18 +1703,12 @@ class MemberLteEnbRrcSapProvider : public LteEnbRrcSapProvider
     void RecvIdealUeContextRemoveRequest(uint16_t rnti) override;
 
   private:
-    MemberLteEnbRrcSapProvider();
     C* m_owner; ///< the owner class
 };
 
 template <class C>
 MemberLteEnbRrcSapProvider<C>::MemberLteEnbRrcSapProvider(C* owner)
     : m_owner(owner)
-{
-}
-
-template <class C>
-MemberLteEnbRrcSapProvider<C>::MemberLteEnbRrcSapProvider()
 {
 }
 

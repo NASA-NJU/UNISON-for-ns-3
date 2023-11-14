@@ -53,7 +53,6 @@ class DsssPpdu : public WifiPpdu
     {
       public:
         DsssSigHeader();
-        ~DsssSigHeader() override;
 
         /**
          * \brief Get the type ID.
@@ -111,10 +110,6 @@ class DsssPpdu : public WifiPpdu
              uint16_t txCenterFreq,
              Time ppduDuration,
              uint64_t uid);
-    /**
-     * Destructor for DsssPpdu.
-     */
-    ~DsssPpdu() override;
 
     Time GetTxDuration() const override;
     Ptr<WifiPpdu> Copy() const override;
@@ -122,8 +117,38 @@ class DsssPpdu : public WifiPpdu
   private:
     WifiTxVector DoGetTxVector() const override;
 
+    /**
+     * Fill in the PHY headers.
+     *
+     * \param txVector the TXVECTOR that was used for this PPDU
+     * \param ppduDuration the transmission duration of this PPDU
+     */
+    void SetPhyHeaders(const WifiTxVector& txVector, Time ppduDuration);
+
+    /**
+     * Fill in the DSSS header.
+     *
+     * \param dsssSig the DSSS header to fill in
+     * \param txVector the TXVECTOR that was used for this PPDU
+     * \param ppduDuration the transmission duration of this PPDU
+     */
+    void SetDsssHeader(DsssSigHeader& dsssSig,
+                       const WifiTxVector& txVector,
+                       Time ppduDuration) const;
+
+    /**
+     * Fill in the TXVECTOR from DSSS header.
+     *
+     * \param txVector the TXVECTOR to fill in
+     * \param dsssSig the DSSS header
+     */
+    virtual void SetTxVectorFromDsssHeader(WifiTxVector& txVector,
+                                           const DsssSigHeader& dsssSig) const;
+
+#ifndef NS3_BUILD_PROFILE_DEBUG
     DsssSigHeader m_dsssSig; //!< the DSSS SIG PHY header
-};                           // class DsssPpdu
+#endif
+}; // class DsssPpdu
 
 } // namespace ns3
 

@@ -401,7 +401,7 @@ PeerManagementProtocol::IsActiveLink(uint32_t interface, Mac48Address peerAddres
 }
 
 bool
-PeerManagementProtocol::ShouldSendOpen(uint32_t interface, Mac48Address peerAddress)
+PeerManagementProtocol::ShouldSendOpen(uint32_t interface, Mac48Address peerAddress) const
 {
     return (m_stats.linksTotal < m_maxNumberOfPeerLinks);
 }
@@ -409,7 +409,7 @@ PeerManagementProtocol::ShouldSendOpen(uint32_t interface, Mac48Address peerAddr
 bool
 PeerManagementProtocol::ShouldAcceptOpen(uint32_t interface,
                                          Mac48Address peerAddress,
-                                         PmpReasonCode& reasonCode)
+                                         PmpReasonCode& reasonCode) const
 {
     if (m_stats.linksTotal >= m_maxNumberOfPeerLinks)
     {
@@ -443,7 +443,7 @@ PeerManagementProtocol::CheckBeaconCollisions(uint32_t interface)
     NS_ASSERT_MSG(TuToTime(m_maxBeaconShift) <= m_beaconInterval[interface],
                   "Wrong beacon shift parameters");
 
-    if (iface->second.size() == 0)
+    if (iface->second.empty())
     {
         // I have no peers - may be our beacons are in collision
         ShiftOwnBeacon(interface);
@@ -574,7 +574,7 @@ PeerManagementProtocol::PeerLinkStatus(uint32_t interface,
 }
 
 uint8_t
-PeerManagementProtocol::GetNumberOfLinks()
+PeerManagementProtocol::GetNumberOfLinks() const
 {
     return m_stats.linksTotal;
 }

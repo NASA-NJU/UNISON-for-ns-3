@@ -131,10 +131,12 @@ TcpBbr::TcpBbr(const TcpBbr& sock)
     NS_LOG_FUNCTION(this);
 }
 
-const char* const TcpBbr::BbrModeName[BBR_PROBE_RTT + 1] = {"BBR_STARTUP",
-                                                            "BBR_DRAIN",
-                                                            "BBR_PROBE_BW",
-                                                            "BBR_PROBE_RTT"};
+const char* const TcpBbr::BbrModeName[BBR_PROBE_RTT + 1] = {
+    "BBR_STARTUP",
+    "BBR_DRAIN",
+    "BBR_PROBE_BW",
+    "BBR_PROBE_RTT",
+};
 
 void
 TcpBbr::SetStream(uint32_t stream)
@@ -409,7 +411,9 @@ void
 TcpBbr::HandleProbeRTT(Ptr<TcpSocketState> tcb)
 {
     NS_LOG_FUNCTION(this << tcb);
-    m_appLimited = (m_delivered + tcb->m_bytesInFlight.Get()) ?: 1;
+
+    uint32_t totalBytes = m_delivered + tcb->m_bytesInFlight.Get();
+    m_appLimited = (totalBytes > 0 ? totalBytes : 1);
 
     if (m_probeRttDoneStamp == Seconds(0) && tcb->m_bytesInFlight <= m_minPipeCwnd)
     {

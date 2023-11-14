@@ -374,7 +374,7 @@ DsrRouteCache::RebuildBestRouteTable(Ipv4Address source)
             if (s.find(ip) == s.end())
             {
                 /*
-                 * \brief The followings are for comparison
+                 * \brief The following are for comparison
                  */
                 if (j->second <= temp)
                 {
@@ -821,7 +821,7 @@ DsrRouteCache::DeleteAllRoutesIncludeLink(Ipv4Address errorSrc,
         // Purge the link node cache first
         PurgeLinkNode();
         /*
-         * The followings are for cleaning the broken link in link cache
+         * The following are for cleaning the broken link in link cache
          * We basically remove the link between errorSrc and unreachNode
          */
         Link link1(errorSrc, unreachNode);
@@ -837,7 +837,7 @@ DsrRouteCache::DeleteAllRoutesIncludeLink(Ipv4Address errorSrc,
         std::map<Ipv4Address, DsrNodeStab>::iterator i = m_nodeCache.find(errorSrc);
         if (i == m_nodeCache.end())
         {
-            NS_LOG_LOGIC("Update the node stability unsuccessfully");
+            NS_LOG_LOGIC("Update the node stability unsuccessfuly");
         }
         else
         {
@@ -846,7 +846,7 @@ DsrRouteCache::DeleteAllRoutesIncludeLink(Ipv4Address errorSrc,
         i = m_nodeCache.find(unreachNode);
         if (i == m_nodeCache.end())
         {
-            NS_LOG_LOGIC("Update the node stability unsuccessfully");
+            NS_LOG_LOGIC("Update the node stability unsuccessfuly");
         }
         else
         {
@@ -858,7 +858,7 @@ DsrRouteCache::DeleteAllRoutesIncludeLink(Ipv4Address errorSrc,
     else
     {
         /*
-         * the followings are for cleaning the broken link in pathcache
+         * the following are for cleaning the broken link in pathcache
          *
          */
         Purge();
@@ -960,7 +960,7 @@ DsrRouteCache::DeleteAllRoutesIncludeLink(Ipv4Address errorSrc,
             {
                 m_sortedRoutes.erase(jtmp);
             }
-            if (rtVector.size())
+            if (!rtVector.empty())
             {
                 /*
                  * Save the new route cache along with the destination address in map
@@ -983,7 +983,7 @@ DsrRouteCache::PrintVector(std::vector<Ipv4Address>& vec)
     /*
      * Check elements in a route vector, used when one wants to check the IP addresses saved in
      */
-    if (!vec.size())
+    if (vec.empty())
     {
         NS_LOG_DEBUG("The vector is empty");
     }
@@ -1030,7 +1030,7 @@ DsrRouteCache::Purge()
         Ipv4Address dst = i->first;
         std::list<DsrRouteCacheEntry> rtVector = i->second;
         NS_LOG_DEBUG("The route vector size of 1 " << dst << " " << rtVector.size());
-        if (rtVector.size())
+        if (!rtVector.empty())
         {
             for (std::list<DsrRouteCacheEntry>::iterator j = rtVector.begin(); j != rtVector.end();)
             {
@@ -1054,7 +1054,7 @@ DsrRouteCache::Purge()
                 }
             }
             NS_LOG_DEBUG("The route vector size of 2 " << dst << " " << rtVector.size());
-            if (rtVector.size())
+            if (!rtVector.empty())
             {
                 ++i;
                 m_sortedRoutes.erase(itmp); // erase the entry first

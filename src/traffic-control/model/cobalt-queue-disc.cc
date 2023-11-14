@@ -403,7 +403,7 @@ CobaltQueueDisc::CobaltQueueFull(int64_t now)
     if (CoDelTimeAfter((now - m_lastUpdateTimeBlue), Time2CoDel(m_target)))
     {
         NS_LOG_LOGIC("inside IF block");
-        m_pDrop = std::min(m_pDrop + m_increment, (double)1.0);
+        m_pDrop = std::min(m_pDrop + m_increment, 1.0);
         m_lastUpdateTimeBlue = now;
     }
     m_dropping = true;
@@ -421,7 +421,7 @@ CobaltQueueDisc::CobaltQueueEmpty(int64_t now)
     NS_LOG_FUNCTION(this);
     if (m_pDrop && CoDelTimeAfter((now - m_lastUpdateTimeBlue), Time2CoDel(m_target)))
     {
-        m_pDrop = std::max(m_pDrop - m_decrement, (double)0.0);
+        m_pDrop = std::max(m_pDrop - m_decrement, 0.0);
         m_lastUpdateTimeBlue = now;
     }
     m_dropping = false;
@@ -452,7 +452,7 @@ CobaltQueueDisc::CobaltShouldDrop(Ptr<QueueDiscItem> item, int64_t now)
 
     // If L4S mode is enabled then check if the packet is ECT1 or CE and
     // if sojourn time is greater than CE threshold then the packet is marked.
-    // If packet is marked succesfully then the CoDel steps can be skipped.
+    // If packet is marked successfully then the CoDel steps can be skipped.
     if (item && m_useL4s)
     {
         uint8_t tosByte = 0;
@@ -534,7 +534,7 @@ CobaltQueueDisc::CobaltShouldDrop(Ptr<QueueDiscItem> item, int64_t now)
     if (CoDelTimeAfter(sojournTime, Time2CoDel(m_blueThreshold)) &&
         CoDelTimeAfter((now - m_lastUpdateTimeBlue), Time2CoDel(m_target)))
     {
-        m_pDrop = std::min(m_pDrop + m_increment, (double)1.0);
+        m_pDrop = std::min(m_pDrop + m_increment, 1.0);
         m_lastUpdateTimeBlue = now;
     }
 

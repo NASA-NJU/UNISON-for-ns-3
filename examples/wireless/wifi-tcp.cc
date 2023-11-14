@@ -44,7 +44,7 @@
 #include "ns3/packet-sink.h"
 #include "ns3/ssid.h"
 #include "ns3/string.h"
-#include "ns3/tcp-westwood.h"
+#include "ns3/tcp-westwood-plus.h"
 #include "ns3/yans-wifi-channel.h"
 #include "ns3/yans-wifi-helper.h"
 
@@ -56,13 +56,13 @@ Ptr<PacketSink> sink;     //!< Pointer to the packet sink application
 uint64_t lastTotalRx = 0; //!< The value of the last total received bytes
 
 /**
- * Calulate the throughput
+ * Calculate the throughput
  */
 void
 CalculateThroughput()
 {
     Time now = Simulator::Now(); /* Return the simulator's virtual time. */
-    double cur = (sink->GetTotalRx() - lastTotalRx) * (double)8 /
+    double cur = (sink->GetTotalRx() - lastTotalRx) * 8.0 /
                  1e5; /* Convert Application RX Packets to MBits. */
     std::cout << now.GetSeconds() << "s: \t" << cur << " Mbit/s" << std::endl;
     lastTotalRx = sink->GetTotalRx();
@@ -95,21 +95,11 @@ main(int argc, char* argv[])
 
     tcpVariant = std::string("ns3::") + tcpVariant;
     // Select TCP variant
-    if (tcpVariant == "ns3::TcpWestwoodPlus")
-    {
-        // TcpWestwoodPlus is not an actual TypeId name; we need TcpWestwood here
-        Config::SetDefault("ns3::TcpL4Protocol::SocketType", TypeIdValue(TcpWestwood::GetTypeId()));
-        // the default protocol type in ns3::TcpWestwood is WESTWOOD
-        Config::SetDefault("ns3::TcpWestwood::ProtocolType", EnumValue(TcpWestwood::WESTWOODPLUS));
-    }
-    else
-    {
-        TypeId tcpTid;
-        NS_ABORT_MSG_UNLESS(TypeId::LookupByNameFailSafe(tcpVariant, &tcpTid),
-                            "TypeId " << tcpVariant << " not found");
-        Config::SetDefault("ns3::TcpL4Protocol::SocketType",
-                           TypeIdValue(TypeId::LookupByName(tcpVariant)));
-    }
+    TypeId tcpTid;
+    NS_ABORT_MSG_UNLESS(TypeId::LookupByNameFailSafe(tcpVariant, &tcpTid),
+                        "TypeId " << tcpVariant << " not found");
+    Config::SetDefault("ns3::TcpL4Protocol::SocketType",
+                       TypeIdValue(TypeId::LookupByName(tcpVariant)));
 
     /* Configure TCP Options */
     Config::SetDefault("ns3::TcpSocket::SegmentSize", UintegerValue(payloadSize));

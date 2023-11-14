@@ -66,7 +66,7 @@ RrcAsn1Header::GetInstanceTypeId() const
 }
 
 int
-RrcAsn1Header::GetMessageType()
+RrcAsn1Header::GetMessageType() const
 {
     return m_messageType;
 }
@@ -142,7 +142,7 @@ RrcAsn1Header::SerializeDrbToAddModList(std::list<LteRrcSap::DrbToAddMod> drbToA
     for (; it != drbToAddModList.end(); it++)
     {
         // Serialize DRB-ToAddMod sequence
-        // 5 otional fields. Extension marker is present.
+        // 5 optional fields. Extension marker is present.
         std::bitset<5> drbToAddModListOptionalFieldsPresent = std::bitset<5>();
         drbToAddModListOptionalFieldsPresent.set(4, 1); // eps-BearerIdentity present
         drbToAddModListOptionalFieldsPresent.set(3, 0); // pdcp-Config not present
@@ -230,7 +230,7 @@ RrcAsn1Header::SerializeSrbToAddModList(std::list<LteRrcSap::SrbToAddMod> srbToA
     for (; it != srbToAddModList.end(); it++)
     {
         // Serialize SRB-ToAddMod sequence
-        // 2 otional fields. Extension marker is present.
+        // 2 optional fields. Extension marker is present.
         std::bitset<2> srbToAddModListOptionalFieldsPresent = std::bitset<2>();
         srbToAddModListOptionalFieldsPresent.set(1, 0); // rlc-Config not present
         srbToAddModListOptionalFieldsPresent.set(0, 1); // logicalChannelConfig present
@@ -5912,7 +5912,7 @@ RrcConnectionReconfigurationHeader::GetRrcTransactionIdentifier() const
 }
 
 bool
-RrcConnectionReconfigurationHeader::GetHaveMeasConfig()
+RrcConnectionReconfigurationHeader::GetHaveMeasConfig() const
 {
     return m_haveMeasConfig;
 }
@@ -5924,7 +5924,7 @@ RrcConnectionReconfigurationHeader::GetMeasConfig()
 }
 
 bool
-RrcConnectionReconfigurationHeader::GetHaveMobilityControlInfo()
+RrcConnectionReconfigurationHeader::GetHaveMobilityControlInfo() const
 {
     return m_haveMobilityControlInfo;
 }
@@ -5936,7 +5936,7 @@ RrcConnectionReconfigurationHeader::GetMobilityControlInfo()
 }
 
 bool
-RrcConnectionReconfigurationHeader::GetHaveRadioResourceConfigDedicated()
+RrcConnectionReconfigurationHeader::GetHaveRadioResourceConfigDedicated() const
 {
     return m_haveRadioResourceConfigDedicated;
 }
@@ -5948,7 +5948,7 @@ RrcConnectionReconfigurationHeader::GetRadioResourceConfigDedicated()
 }
 
 bool
-RrcConnectionReconfigurationHeader::GetHaveNonCriticalExtensionConfig()
+RrcConnectionReconfigurationHeader::GetHaveNonCriticalExtensionConfig() const
 {
     return m_haveNonCriticalExtension;
 }

@@ -571,14 +571,15 @@ class ProtocolTlvValue : public TlvValue
 class Ipv4AddressTlvValue : public TlvValue
 {
   public:
-    /// ipv4Addr structure
-    struct ipv4Addr
+    /// Ipv4Addr structure
+    struct Ipv4Addr
     {
         Ipv4Address Address; ///< address
         Ipv4Mask Mask;       ///< mask
     };
+
     /// IPv4 address vector iterator typedef
-    typedef std::vector<struct ipv4Addr>::const_iterator Iterator;
+    typedef std::vector<Ipv4Addr>::const_iterator Iterator;
     Ipv4AddressTlvValue();
     ~Ipv4AddressTlvValue() override;
     uint32_t GetSerializedSize() const override;
@@ -587,9 +588,9 @@ class Ipv4AddressTlvValue : public TlvValue
     /**
      * Add IPv4 address and mask
      * \param address the IPv4 address
-     * \param Mask the IPv4 mask
+     * \param mask the IPv4 mask
      */
-    void Add(Ipv4Address address, Ipv4Mask Mask);
+    void Add(Ipv4Address address, Ipv4Mask mask);
     /**
      * Begin iterator
      * \returns the beginning element
@@ -603,7 +604,7 @@ class Ipv4AddressTlvValue : public TlvValue
     Ipv4AddressTlvValue* Copy() const override;
 
   private:
-    std::vector<struct ipv4Addr>* m_ipv4Addr; ///< ipv4 addr
+    std::vector<Ipv4Addr>* m_ipv4Addr; ///< ipv4 addr
 };
 
 } // namespace ns3

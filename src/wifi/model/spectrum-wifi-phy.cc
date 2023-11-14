@@ -210,8 +210,9 @@ SpectrumWifiPhy::UpdateInterferenceHelperBands()
                                               (primary80IsLower80 && phyIndex <= nRus / 2) ||
                                               (!primary80IsLower80 && phyIndex > nRus / 2));
                             HeRu::RuSpec ru(ruType, index, primary80);
-                            ru.SetPhyIndex(bw, GetOperatingChannel().GetPrimaryChannelIndex(20));
-                            NS_ABORT_IF(ru.GetPhyIndex() != phyIndex);
+                            NS_ABORT_IF(ru.GetPhyIndex(bw,
+                                                       GetOperatingChannel().GetPrimaryChannelIndex(
+                                                           20)) != phyIndex);
                             m_ruBands[channelWidth].insert({band, ru});
                         }
                     }
@@ -264,6 +265,12 @@ SpectrumWifiPhy::DoChannelSwitch()
     {
         ResetSpectrumModel();
     }
+}
+
+bool
+SpectrumWifiPhy::CanStartRx(Ptr<const WifiPpdu> ppdu, uint16_t txWidth) const
+{
+    return GetLatestPhyEntity()->CanStartRx(ppdu, txWidth);
 }
 
 void
@@ -385,44 +392,36 @@ SpectrumWifiPhy::StartRx(Ptr<SpectrumSignalParameters> rxParams)
     // Do no further processing if signal is too weak
     // Current implementation assumes constant RX power over the PPDU duration
     // Compare received TX power per MHz to normalized RX sensitivity
-    uint16_t txWidth = wifiRxParams->ppdu->GetTransmissionChannelWidth();
+    const auto txWidth = wifiRxParams->txWidth;
+    const auto& ppdu = GetRxPpduFromTxPpdu(wifiRxParams->ppdu);
+    const auto& txVector = ppdu->GetTxVector();
     if (totalRxPowerW < DbmToW(GetRxSensitivity()) * (txWidth / 20.0))
     {
         NS_LOG_INFO("Received signal too weak to process: " << WToDbm(totalRxPowerW) << " dBm");
-        m_interference->Add(wifiRxParams->ppdu,
-                            wifiRxParams->ppdu->GetTxVector(),
-                            rxDuration,
-                            rxPowerW);
+        m_interference->Add(ppdu, txVector, rxDuration, rxPowerW);
         SwitchMaybeToCcaBusy(nullptr);
         return;
     }
 
-    // Unless we are receiving a TB PPDU, do not sync with this signal if the PPDU
-    // does not overlap with the receiver's primary20 channel
     if (wifiRxParams->txPhy)
     {
-        // if the channel width is a multiple of 20 MHz, then we consider the primary20 channel
-        uint16_t width = (GetChannelWidth() % 20 == 0 ? 20 : GetChannelWidth());
-        uint16_t p20MinFreq =
-            GetOperatingChannel().GetPrimaryChannelCenterFrequency(width) - width / 2;
-        uint16_t p20MaxFreq =
-            GetOperatingChannel().GetPrimaryChannelCenterFrequency(width) + width / 2;
-
-        if (!wifiRxParams->ppdu->CanBeReceived(p20MinFreq, p20MaxFreq))
+        if (!CanStartRx(ppdu, txWidth))
         {
-            NS_LOG_INFO("Cannot receive the PPDU, consider it as interference");
-            m_interference->Add(wifiRxParams->ppdu,
-                                wifiRxParams->ppdu->GetTxVector(),
-                                rxDuration,
-                                rxPowerW);
-            SwitchMaybeToCcaBusy(wifiRxParams->ppdu);
+            NS_LOG_INFO("Cannot start reception of the PPDU, consider it as interference");
+            m_interference->Add(ppdu, txVector, rxDuration, rxPowerW);
+            SwitchMaybeToCcaBusy(ppdu);
             return;
         }
     }
 
     NS_LOG_INFO("Received Wi-Fi signal");
-    Ptr<WifiPpdu> ppdu = wifiRxParams->ppdu->Copy();
     StartReceivePreamble(ppdu, rxPowerW, rxDuration);
+}
+
+Ptr<const WifiPpdu>
+SpectrumWifiPhy::GetRxPpduFromTxPpdu(Ptr<const WifiPpdu> ppdu)
+{
+    return GetPhyEntityForPpdu(ppdu)->GetRxPpduFromTxPpdu(ppdu);
 }
 
 Ptr<Object>
@@ -448,10 +447,10 @@ SpectrumWifiPhy::CreateWifiSpectrumPhyInterface(Ptr<NetDevice> device)
 }
 
 void
-SpectrumWifiPhy::StartTx(Ptr<const WifiPpdu> ppdu, const WifiTxVector& txVector)
+SpectrumWifiPhy::StartTx(Ptr<const WifiPpdu> ppdu)
 {
     NS_LOG_FUNCTION(this << ppdu);
-    GetPhyEntity(ppdu->GetModulation())->StartTx(ppdu, txVector);
+    GetPhyEntity(ppdu->GetModulation())->StartTx(ppdu);
 }
 
 void

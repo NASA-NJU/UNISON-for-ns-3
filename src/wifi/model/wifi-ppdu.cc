@@ -37,6 +37,10 @@ WifiPpdu::WifiPpdu(Ptr<const WifiPsdu> psdu,
       m_modulation(txVector.IsValid() ? txVector.GetModulationClass() : WIFI_MOD_CLASS_UNKNOWN),
       m_txCenterFreq(txCenterFreq),
       m_uid(uid),
+      m_txVector(txVector),
+#ifdef NS3_BUILD_PROFILE_DEBUG
+      m_phyHeaders(Create<Packet>()),
+#endif
       m_truncatedTx(false),
       m_txPowerLevel(txVector.GetTxPowerLevel())
 {
@@ -53,6 +57,10 @@ WifiPpdu::WifiPpdu(const WifiConstPsduMap& psdus,
                                       : WIFI_MOD_CLASS_UNKNOWN),
       m_txCenterFreq(txCenterFreq),
       m_uid(uid),
+      m_txVector(txVector),
+#ifdef NS3_BUILD_PROFILE_DEBUG
+      m_phyHeaders(Create<Packet>()),
+#endif
       m_truncatedTx(false),
       m_txPowerLevel(txVector.GetTxPowerLevel()),
       m_txAntennas(txVector.GetNTx())
@@ -70,13 +78,16 @@ WifiPpdu::~WifiPpdu()
     m_psdus.clear();
 }
 
-WifiTxVector
+const WifiTxVector&
 WifiPpdu::GetTxVector() const
 {
-    WifiTxVector txVector = DoGetTxVector();
-    txVector.SetTxPowerLevel(m_txPowerLevel);
-    txVector.SetNTx(m_txAntennas);
-    return txVector;
+    if (!m_txVector.has_value())
+    {
+        m_txVector = DoGetTxVector();
+        m_txVector->SetTxPowerLevel(m_txPowerLevel);
+        m_txVector->SetNTx(m_txAntennas);
+    }
+    return m_txVector.value();
 }
 
 WifiTxVector
@@ -85,6 +96,21 @@ WifiPpdu::DoGetTxVector() const
     NS_FATAL_ERROR("This method should not be called for the base WifiPpdu class. Use the "
                    "overloaded version in the amendment-specific PPDU subclasses instead!");
     return WifiTxVector(); // should be overloaded
+}
+
+void
+WifiPpdu::ResetTxVector() const
+{
+    NS_LOG_FUNCTION(this);
+    m_txVector.reset();
+}
+
+void
+WifiPpdu::UpdateTxVector(const WifiTxVector& updatedTxVector) const
+{
+    NS_LOG_FUNCTION(this << updatedTxVector);
+    ResetTxVector();
+    m_txVector = updatedTxVector;
 }
 
 Ptr<const WifiPsdu>
@@ -116,6 +142,12 @@ uint16_t
 WifiPpdu::GetTransmissionChannelWidth() const
 {
     return GetTxVector().GetChannelWidth();
+}
+
+uint16_t
+WifiPpdu::GetTxCenterFreq() const
+{
+    return m_txCenterFreq;
 }
 
 bool
@@ -156,19 +188,6 @@ WifiPpdu::DoesOverlapChannel(uint16_t minFreq, uint16_t maxFreq) const
      */
     if (minTxFreq >= maxFreq || maxTxFreq <= minFreq)
     {
-        return false;
-    }
-    return true;
-}
-
-bool
-WifiPpdu::CanBeReceived(uint16_t p20MinFreq, uint16_t p20MaxFreq) const
-{
-    NS_LOG_FUNCTION(this << p20MinFreq << p20MaxFreq);
-    const bool overlap = DoesOverlapChannel(p20MinFreq, p20MaxFreq);
-    if (!overlap)
-    {
-        NS_LOG_INFO("Received PPDU does not overlap with the primary20 channel");
         return false;
     }
     return true;
@@ -227,7 +246,7 @@ WifiPpdu::Copy() const
 {
     NS_FATAL_ERROR("This method should not be called for the base WifiPpdu class. Use the "
                    "overloaded version in the amendment-specific PPDU subclasses instead!");
-    return Create<WifiPpdu>(GetPsdu(), GetTxVector(), m_txCenterFreq);
+    return Ptr<WifiPpdu>(new WifiPpdu(*this), false);
 }
 
 std::ostream&

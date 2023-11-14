@@ -38,11 +38,11 @@ NS_LOG_COMPONENT_DEFINE("FdTbfqFfMacScheduler");
 
 /// FdTbfqType0AllocationRbg value array
 static const int FdTbfqType0AllocationRbg[4] = {
-    10, // RGB size 1
-    26, // RGB size 2
-    63, // RGB size 3
-    110 // RGB size 4
-};      // see table 7.1.6.1-1 of 36.213
+    10,  // RGB size 1
+    26,  // RGB size 2
+    63,  // RGB size 3
+    110, // RGB size 4
+};       // see table 7.1.6.1-1 of 36.213
 
 NS_OBJECT_ENSURE_REGISTERED(FdTbfqFfMacScheduler);
 
@@ -423,7 +423,7 @@ FdTbfqFfMacScheduler::LcActivePerFlow(uint16_t rnti)
     return (lcActive);
 }
 
-uint8_t
+bool
 FdTbfqFfMacScheduler::HarqProcessAvailability(uint16_t rnti)
 {
     NS_LOG_FUNCTION(this << rnti);
@@ -700,9 +700,9 @@ FdTbfqFfMacScheduler::DoSchedDlTriggerReq(
     // Process DL HARQ feedback
     RefreshHarqProcesses();
     // retrieve past HARQ retx buffered
-    if (m_dlInfoListBuffered.size() > 0)
+    if (!m_dlInfoListBuffered.empty())
     {
-        if (params.m_dlInfoList.size() > 0)
+        if (!params.m_dlInfoList.empty())
         {
             NS_LOG_INFO(this << " Received DL-HARQ feedback");
             m_dlInfoListBuffered.insert(m_dlInfoListBuffered.end(),
@@ -712,7 +712,7 @@ FdTbfqFfMacScheduler::DoSchedDlTriggerReq(
     }
     else
     {
-        if (params.m_dlInfoList.size() > 0)
+        if (!params.m_dlInfoList.empty())
         {
             m_dlInfoListBuffered = params.m_dlInfoList;
         }
@@ -940,7 +940,7 @@ FdTbfqFfMacScheduler::DoSchedDlTriggerReq(
                     }
                 }
 
-                if (rlcPduListPerLc.size() > 0)
+                if (!rlcPduListPerLc.empty())
                 {
                     newEl.m_rlcPduList.push_back(rlcPduListPerLc);
                 }
@@ -990,7 +990,7 @@ FdTbfqFfMacScheduler::DoSchedDlTriggerReq(
     if (rbgAllocatedNum == rbgNum)
     {
         // all the RBGs are already allocated -> exit
-        if ((ret.m_buildDataList.size() > 0) || (ret.m_buildRarList.size() > 0))
+        if (!ret.m_buildDataList.empty() || !ret.m_buildRarList.empty())
         {
             m_schedSapUser->SchedDlConfigInd(ret);
         }
@@ -1036,11 +1036,11 @@ FdTbfqFfMacScheduler::DoSchedDlTriggerReq(
                 // UE already allocated for HARQ or without HARQ process available -> drop it
                 if (itRnti != rntiAllocated.end())
                 {
-                    NS_LOG_DEBUG(this << " RNTI discared for HARQ tx" << (uint16_t)(*it).first);
+                    NS_LOG_DEBUG(this << " RNTI discarded for HARQ tx" << (uint16_t)(*it).first);
                 }
                 if (!HarqProcessAvailability((*it).first))
                 {
-                    NS_LOG_DEBUG(this << " RNTI discared for HARQ id" << (uint16_t)(*it).first);
+                    NS_LOG_DEBUG(this << " RNTI discarded for HARQ id" << (uint16_t)(*it).first);
                 }
                 continue;
             }
@@ -1132,7 +1132,7 @@ FdTbfqFfMacScheduler::DoSchedDlTriggerReq(
         }
         budget = budget + (*itMax).second.tokenPoolSize;
 
-        // calculate how much bytes this UE actally need
+        // calculate how much bytes this UE actually need
         if (budget == 0)
         {
             // there are no tokens for this UE
@@ -1368,7 +1368,7 @@ FdTbfqFfMacScheduler::DoSchedDlTriggerReq(
             rbgMap.at(rbgIndex) = false; // unmark this RBG
             // If all the RBGs are removed from the allocation
             // of this RNTI, we remove the UE from the allocation map
-            if ((*itMap).second.size() == 0)
+            if ((*itMap).second.empty())
             {
                 itMap = allocationMap.erase(itMap);
             }
@@ -1837,7 +1837,7 @@ FdTbfqFfMacScheduler::DoSchedUlTriggerReq(
 
     if (nflows == 0)
     {
-        if (ret.m_dciList.size() > 0)
+        if (!ret.m_dciList.empty())
         {
             m_allocationMaps.insert(
                 std::pair<uint16_t, std::vector<uint16_t>>(params.m_sfnSf, rbgAllocationMap));
@@ -1886,7 +1886,8 @@ FdTbfqFfMacScheduler::DoSchedUlTriggerReq(
         if ((itRnti != rntiAllocated.end()) || ((*it).second == 0))
         {
             // UE already allocated for UL-HARQ -> skip it
-            NS_LOG_DEBUG(this << " UE already allocated in HARQ -> discared, RNTI " << (*it).first);
+            NS_LOG_DEBUG(this << " UE already allocated in HARQ -> discarded, RNTI "
+                              << (*it).first);
             it++;
             if (it == m_ceBsrRxed.end())
             {
@@ -1984,7 +1985,7 @@ FdTbfqFfMacScheduler::DoSchedUlTriggerReq(
         else
         {
             // take the lowest CQI value (worst RB)
-            NS_ABORT_MSG_IF((*itCqi).second.size() == 0,
+            NS_ABORT_MSG_IF((*itCqi).second.empty(),
                             "CQI of RNTI = " << (*it).first << " has expired");
             double minSinr = (*itCqi).second.at(uldci.m_rbStart);
             if (minSinr == NO_SINR)
@@ -2239,7 +2240,7 @@ FdTbfqFfMacScheduler::DoSchedUlCqiInfoReq(
     case UlCqi_s::SRS: {
         // get the RNTI from vendor specific parameters
         uint16_t rnti = 0;
-        NS_ASSERT(params.m_vendorSpecificList.size() > 0);
+        NS_ASSERT(!params.m_vendorSpecificList.empty());
         for (std::size_t i = 0; i < params.m_vendorSpecificList.size(); i++)
         {
             if (params.m_vendorSpecificList.at(i).m_type == SRS_CQI_RNTI_VSP)

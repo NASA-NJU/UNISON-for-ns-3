@@ -70,7 +70,7 @@ class WaveBsmStats : public Object
      * \brief Returns the count of transmitted packets
      * \return count of packets transmitted
      */
-    int GetTxPktCount();
+    int GetTxPktCount() const;
 
     /*
      * Note:
@@ -129,7 +129,7 @@ class WaveBsmStats : public Object
      * \brief Returns the count of packets received
      * \return the count of packets received
      */
-    int GetRxPktCount();
+    int GetRxPktCount() const;
 
     /**
      * \brief Returns the count of expected packets received within range(index)
@@ -190,7 +190,7 @@ class WaveBsmStats : public Object
      * not include MAC/PHY overhead
      * \return number of bytes of application-data transmitted
      */
-    int GetTxByteCount();
+    int GetTxByteCount() const;
 
     /**
      * \brief Returns the BSM Packet Delivery Ratio (PDR)
@@ -212,26 +212,26 @@ class WaveBsmStats : public Object
 
     /**
      * \brief Enables/disables logging
-     * \param log
+     * \param log logging state
      */
-    void SetLogging(int log);
+    void SetLogging(bool log);
 
     /**
      * \brief Gets logging state
      * \return logging state
      */
-    int GetLogging();
+    bool GetLogging() const;
 
   private:
     int m_wavePktSendCount;                            ///< packet sent count
     int m_waveByteSendCount;                           ///< byte sent count
     int m_wavePktReceiveCount;                         ///< packet receive count
-    std::vector<int> m_wavePktInCoverageReceiveCounts; ///< packet in ceoverage receive counts
+    std::vector<int> m_wavePktInCoverageReceiveCounts; ///< packet in coverage receive counts
     std::vector<int> m_wavePktExpectedReceiveCounts;   ///< packet expected receive counts
     std::vector<int>
         m_waveTotalPktInCoverageReceiveCounts; ///< total packet in coverage receive counts
     std::vector<int> m_waveTotalPktExpectedReceiveCounts; ///< total packet expected receive counts
-    int m_log;                                            ///< log
+    bool m_log;                                           ///< logging state
 };
 
 } // namespace ns3

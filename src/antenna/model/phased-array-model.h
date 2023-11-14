@@ -20,6 +20,7 @@
 
 #include <ns3/angles.h>
 #include <ns3/antenna-model.h>
+#include <ns3/matrix-array.h>
 #include <ns3/object.h>
 
 #include <complex>
@@ -51,8 +52,24 @@ class PhasedArrayModel : public Object
      */
     static TypeId GetTypeId();
 
-    typedef std::vector<std::complex<double>>
-        ComplexVector; //!< type definition for complex vectors
+    //!< type definition for complex vectors
+    using ComplexVector = ComplexMatrixArray; //!< the underlying Valarray
+
+    /**
+     * \brief Computes the Frobenius norm of the complex vector
+     *
+     * \param complexVector on which to calculate Frobenius norm
+     * \return the Frobenius norm of the complex vector
+     */
+    double norm(const ComplexVector& complexVector) const
+    {
+        double norm = 0;
+        for (size_t i = 0; i < complexVector.GetSize(); i++)
+        {
+            norm += std::norm(complexVector[i]);
+        }
+        return std::sqrt(norm);
+    }
 
     /**
      * Returns the horizontal and vertical components of the antenna element field
@@ -76,7 +93,7 @@ class PhasedArrayModel : public Object
      * Returns the number of antenna elements
      * \return the number of antenna elements
      */
-    virtual uint64_t GetNumberOfElements() const = 0;
+    virtual size_t GetNumberOfElements() const = 0;
 
     /**
      * Sets the beamforming vector to be used

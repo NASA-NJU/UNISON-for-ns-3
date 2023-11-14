@@ -63,13 +63,13 @@ class OcbWifiMac : public WifiMac
      * \param oi Organization Identifier field
      * see 7.3.1.31 Organization Identifier field and 10.3.29 Vendor-specific action
      *
-     * management information can be transmitted over vender specific action frame.
+     * management information can be transmitted over vendor specific action frame.
      * This will be mainly called by IEEE Std 1609.4 to send WSA from IEEE Std 1609.3
      */
     void SendVsc(Ptr<Packet> vsc, Mac48Address peer, OrganizationIdentifier oi);
     /**
      * \param oi Organization Identifier
-     * \param cb callback to invoke whenever a vender specific action frame has been received and
+     * \param cb callback to invoke whenever a vendor specific action frame has been received and
      * must be forwarded to the higher layers. every node shall register first if it wants to
      * receive specific vendor specific content.
      */
@@ -136,7 +136,7 @@ class OcbWifiMac : public WifiMac
      *
      * configure EDCA queue parameters
      */
-    void ConfigureEdca(uint32_t cwmin, uint32_t cwmax, uint32_t aifsn, enum AcIndex ac);
+    void ConfigureEdca(uint32_t cwmin, uint32_t cwmax, uint32_t aifsn, AcIndex ac);
 
     // below six public methods are used for MAC extension defined in IEEE 1609.4
     /**
@@ -169,7 +169,7 @@ class OcbWifiMac : public WifiMac
      * To support MAC extension for multiple channel operation,
      * Cancel transmit operation for internal queue associated with a specified Access Category.
      */
-    void CancleTx(enum AcIndex ac);
+    void CancleTx(AcIndex ac);
     /**
      * To support MAC extension for multiple channel operation,
      * Reset current MAC entity and flush its internal queues.
@@ -183,7 +183,7 @@ class OcbWifiMac : public WifiMac
     void SetWifiPhy(Ptr<WifiPhy> phy);
 
     // Inherited from base class
-    void ConfigureStandard(enum WifiStandard standard) override;
+    void ConfigureStandard(WifiStandard standard) override;
 
   protected:
     void DoDispose() override;

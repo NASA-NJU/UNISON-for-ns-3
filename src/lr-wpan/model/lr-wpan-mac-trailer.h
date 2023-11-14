@@ -39,11 +39,6 @@ class LrWpanMacTrailer : public Trailer
 {
   public:
     /**
-     * The length in octets of the IEEE 802.15.4 MAC FCS field
-     */
-    static const uint16_t LR_WPAN_MAC_FCS_LENGTH;
-
-    /**
      * Get the type ID.
      *
      * \return the object TypeId
@@ -99,7 +94,7 @@ class LrWpanMacTrailer : public Trailer
      *
      * \return true, if FCS calculation is enabled, false otherwise.
      */
-    bool IsFcsEnabled();
+    bool IsFcsEnabled() const;
 
   private:
     /**

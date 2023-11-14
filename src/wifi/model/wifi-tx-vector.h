@@ -36,7 +36,7 @@ namespace ns3
 struct HeMuUserInfo
 {
     HeRu::RuSpec ru; ///< RU specification
-    WifiMode mcs;    ///< MCS
+    uint8_t mcs;     ///< MCS index
     uint8_t nss;     ///< number of spatial streams
 
     /**
@@ -100,7 +100,7 @@ using RuAllocation = std::vector<uint8_t>;
 class WifiTxVector
 {
   public:
-    /// map of HE MU specific user info paramters indexed by STA-ID
+    /// map of HE MU specific user info parameters indexed by STA-ID
     typedef std::map<uint16_t /* staId */, HeMuUserInfo /* HE MU specific user info */>
         HeMuUserInfoMap;
 
@@ -122,6 +122,7 @@ class WifiTxVector
      * \param ldpc enable or disable LDPC (BCC is used otherwise)
      * \param bssColor the BSS color
      * \param length the LENGTH field of the L-SIG
+     * \param triggerResponding the Trigger Responding parameter
      */
     WifiTxVector(WifiMode mode,
                  uint8_t powerLevel,
@@ -135,7 +136,8 @@ class WifiTxVector
                  bool stbc = false,
                  bool ldpc = false,
                  uint8_t bssColor = 0,
-                 uint16_t length = 0);
+                 uint16_t length = 0,
+                 bool triggerResponding = false);
     /**
      * Copy constructor
      * \param txVector the TXVECTOR to copy
@@ -267,13 +269,13 @@ class WifiTxVector
     /**
      * Checks whether the PSDU contains A-MPDU.
      * \returns true if this PSDU has A-MPDU aggregation,
-     *          false otherwise.
+     *          false otherwise
      */
     bool IsAggregation() const;
     /**
      * Sets if PSDU contains A-MPDU.
      *
-     * \param aggregation whether the PSDU contains A-MPDU or not.
+     * \param aggregation whether the PSDU contains A-MPDU or not
      */
     void SetAggregation(bool aggregation);
     /**
@@ -303,6 +305,12 @@ class WifiTxVector
      */
     void SetLdpc(bool ldpc);
     /**
+     * Checks whether this TXVECTOR corresponds to a non-HT duplicate.
+     * \returns true if this TXVECTOR corresponds to a non-HT duplicate,
+     *          false otherwise.
+     */
+    bool IsNonHtDuplicate() const;
+    /**
      * Set the BSS color
      * \param color the BSS color
      */
@@ -323,6 +331,16 @@ class WifiTxVector
      */
     uint16_t GetLength() const;
     /**
+     * Return true if the Trigger Responding parameter is set to true, false otherwise.
+     * \return true if the Trigger Responding parameter is set to true, false otherwise
+     */
+    bool IsTriggerResponding() const;
+    /**
+     * Set the Trigger Responding parameter to the given value
+     * \param triggerResponding the value for the Trigger Responding parameter
+     */
+    void SetTriggerResponding(bool triggerResponding);
+    /**
      * The standard disallows certain combinations of WifiMode, number of
      * spatial streams, and channel widths.  This method can be used to
      * check whether this WifiTxVector contains an invalid combination.
@@ -331,21 +349,17 @@ class WifiTxVector
      */
     bool IsValid() const;
     /**
-     * Return true if this TX vector is used for a multi-user transmission.
-     *
-     * \return true if this TX vector is used for a multi-user transmission
+     * \return true if this TX vector is used for a multi-user (OFDMA and/or MU-MIMO) transmission
      */
     bool IsMu() const;
     /**
-     * Return true if this TX vector is used for a downlink multi-user transmission.
-     *
-     * \return true if this TX vector is used for a downlink multi-user transmission
+     * \return true if this TX vector is used for a downlink multi-user (OFDMA and/or MU-MIMO)
+     * transmission
      */
     bool IsDlMu() const;
     /**
-     * Return true if this TX vector is used for an uplink multi-user transmission.
-     *
-     * \return true if this TX vector is used for an uplink multi-user transmission
+     * \return true if this TX vector is used for an uplink multi-user (OFDMA and/or MU-MIMO)
+     * transmission
      */
     bool IsUlMu() const;
     /**
@@ -452,6 +466,17 @@ class WifiTxVector
      */
     ContentChannelAllocation GetContentChannelAllocation() const;
 
+    /**
+     * Set the EHT_PPDU_TYPE parameter
+     * \param type the EHT_PPDU_TYPE parameter
+     */
+    void SetEhtPpduType(uint8_t type);
+    /**
+     * Get the EHT_PPDU_TYPE parameter
+     * \return the EHT_PPDU_TYPE parameter
+     */
+    uint8_t GetEhtPpduType() const;
+
   private:
     /**
      * Derive the RU allocation from the TXVECTOR for which its RU allocation has not been set yet.
@@ -478,6 +503,7 @@ class WifiTxVector
     bool m_ldpc;              /**< LDPC FEC coding if true, BCC otherwise*/
     uint8_t m_bssColor;       /**< BSS color */
     uint16_t m_length;        /**< LENGTH field of the L-SIG */
+    bool m_triggerResponding; /**< The Trigger Responding parameter */
 
     bool m_modeInitialized; /**< Internal initialization flag */
 
@@ -493,6 +519,7 @@ class WifiTxVector
 
     mutable RuAllocation m_ruAllocation; /**< RU allocations that are going to be carried
                                               in SIG-B common field per Table 27-1 IEEE */
+    uint8_t m_ehtPpduType;               /**< EHT_PPDU_TYPE per Table 36-1 IEEE 802.11be D2.3 */
 };
 
 /**
@@ -501,7 +528,7 @@ class WifiTxVector
  * \param os the output stream
  * \param v the WifiTxVector to stringify
  *
- * \return ouput stream
+ * \return output stream
  */
 std::ostream& operator<<(std::ostream& os, const WifiTxVector& v);
 

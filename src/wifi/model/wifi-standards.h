@@ -95,7 +95,8 @@ const std::map<WifiStandard, std::list<WifiPhyBand>> wifiStandards = {
     {WIFI_STANDARD_80211ac, {WIFI_PHY_BAND_5GHZ}},
     {WIFI_STANDARD_80211ad, {WIFI_PHY_BAND_60GHZ}},
     {WIFI_STANDARD_80211ax, {WIFI_PHY_BAND_2_4GHZ, WIFI_PHY_BAND_5GHZ, WIFI_PHY_BAND_6GHZ}},
-    {WIFI_STANDARD_80211be, {WIFI_PHY_BAND_2_4GHZ, WIFI_PHY_BAND_5GHZ, WIFI_PHY_BAND_6GHZ}}};
+    {WIFI_STANDARD_80211be, {WIFI_PHY_BAND_2_4GHZ, WIFI_PHY_BAND_5GHZ, WIFI_PHY_BAND_6GHZ}},
+};
 
 /**
  * \ingroup wifi
@@ -125,38 +126,6 @@ GetFrequencyChannelType(WifiStandard standard)
         return WIFI_PHY_80211p_CHANNEL;
     default:
         return WIFI_PHY_OFDM_CHANNEL;
-    }
-}
-
-/**
- * Get the maximum channel width in MHz allowed for the given standard.
- *
- * \param standard the standard
- * \return the maximum channel width in MHz allowed for the given standard
- */
-inline uint16_t
-GetMaximumChannelWidth(WifiStandard standard)
-{
-    switch (standard)
-    {
-    case WIFI_STANDARD_80211b:
-        return 22;
-    case WIFI_STANDARD_80211p:
-        return 10;
-    case WIFI_STANDARD_80211a:
-    case WIFI_STANDARD_80211g:
-        return 20;
-    case WIFI_STANDARD_80211n:
-        return 40;
-    case WIFI_STANDARD_80211ac:
-    case WIFI_STANDARD_80211ax:
-    case WIFI_STANDARD_80211be:
-        return 160;
-    case WIFI_STANDARD_80211ad:
-        return 2160;
-    default:
-        NS_ABORT_MSG("Unknown standard: " << standard);
-        return 0;
     }
 }
 

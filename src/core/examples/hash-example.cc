@@ -137,7 +137,7 @@ class Collider
      * \param [in] hash Hash function.
      * \param [in] bits Which hash length to use.
      */
-    Collider(const std::string name, Hasher hash, const enum Bits bits)
+    Collider(const std::string name, Hasher hash, const Bits bits)
         : m_name(name),
           m_hash(hash),
           m_bits(bits)
@@ -245,7 +245,7 @@ class Collider
     }
 
     /** Hash function. */
-    enum Bits m_bits;
+    Bits m_bits;
 
     /** Hashed dictionary of first instance of each hash. */
     typedef std::map<uint64_t, std::string> hashdict_t;
@@ -291,7 +291,7 @@ class Dictionary
      */
     void Add(const std::string phrase)
     {
-        if (phrase.size() == 0)
+        if (phrase.empty())
         {
             return;
         }
@@ -437,7 +437,7 @@ class DictFiles
      * \param [in] file The word file to add.
      * \return \c true If the file is new to the list.
      */
-    bool Add(const std::string file)
+    bool Add(const std::string& file)
     {
         if (std::find(m_files.begin(), m_files.end(), file) == m_files.end())
         {
@@ -460,7 +460,7 @@ class DictFiles
      */
     void ReadInto(Dictionary& dict)
     {
-        if (m_files.size() == 0)
+        if (m_files.empty())
         {
             Add(GetDefault());
         }
@@ -545,4 +545,5 @@ main(int argc, char* argv[])
         dict.Time();
     } // if (timing)
 
+    return 0;
 } // main

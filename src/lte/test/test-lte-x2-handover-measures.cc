@@ -32,7 +32,6 @@ NS_LOG_COMPONENT_DEFINE("LteX2HandoverMeasuresTest");
 
 /**
  * \ingroup lte-test
- * \ingroup tests
  *
  * \brief CheckPointEvent structure
  */
@@ -65,7 +64,6 @@ struct CheckPointEvent
 
 /**
  * \ingroup lte-test
- * \ingroup tests
  *
  * \brief Test different X2 handover measures and algorithms, e.g. A2A4RsrqHandoverAlgorithm and
  * A3RsrpHandoverAlgorithm. Test defines different handover parameters and scenario configurations.
@@ -137,7 +135,7 @@ class LteX2HandoverMeasuresTestCase : public TestCase
     std::list<CheckPointEvent> m_checkPointEventList; ///< check point event list
     std::string m_checkPointEventListName;            ///< check point event list name
     bool m_epc;                                       ///< whether to use EPC
-    bool m_useUdp;                                    ///<  whether to use UDP traffic
+    bool m_useUdp;                                    ///< whether to use UDP traffic
     std::string m_schedulerType;                      ///< scheduler type
     std::string m_handoverAlgorithmType;              ///< handover algorithm type
     bool m_admitHo;                                   ///< whether to configure to admit handover
@@ -147,7 +145,6 @@ class LteX2HandoverMeasuresTestCase : public TestCase
 
     /**
      * \ingroup lte-test
-     * \ingroup tests
      *
      * \brief BearerData structure
      */
@@ -162,7 +159,6 @@ class LteX2HandoverMeasuresTestCase : public TestCase
 
     /**
      * \ingroup lte-test
-     * \ingroup tests
      *
      * \brief UeData structure
      */
@@ -721,7 +717,7 @@ LteX2HandoverMeasuresTestCase::CheckStats(uint32_t ueIndex)
 
         NS_LOG_LOGIC("expBytes " << expectedBytes << " dlRx " << dlRx << " ulRx " << ulRx);
 
-        //                                tolerance
+        // tolerance
         if (it->dlSink)
         {
             NS_TEST_ASSERT_MSG_GT(dlRx,
@@ -740,7 +736,6 @@ LteX2HandoverMeasuresTestCase::CheckStats(uint32_t ueIndex)
 
 /**
  * \ingroup lte-test
- * \ingroup tests
  *
  * \brief Lte X2 Handover Measures Test Suite
  */
@@ -781,8 +776,7 @@ LteX2HandoverMeasuresTestSuite::LteX2HandoverMeasuresTestSuite()
     std::string ho = "ns3::A2A4RsrqHandoverAlgorithm";
     for (useIdealRrc = 1; useIdealRrc >= 0; --useIdealRrc)
     {
-        //                                          nEnbs, nUes, nDBearers, celist, name, useUdp,
-        //                                          sched, ho, admitHo, idealRrc
+        // nEnbs, nUes, nDBearers, celist, name, useUdp, sched, ho, admitHo, idealRrc
         AddTestCase(new LteX2HandoverMeasuresTestCase(2,
                                                       1,
                                                       0,
@@ -887,8 +881,7 @@ LteX2HandoverMeasuresTestSuite::LteX2HandoverMeasuresTestSuite()
     sched = "ns3::RrFfMacScheduler";
     for (useIdealRrc = 1; useIdealRrc >= 0; --useIdealRrc)
     {
-        //                                          nEnbs, nUes, nDBearers, celist, name, useUdp,
-        //                                          sched, admitHo, idealRrc
+        // nEnbs, nUes, nDBearers, celist, name, useUdp, sched, admitHo, idealRrc
         AddTestCase(new LteX2HandoverMeasuresTestCase(2,
                                                       1,
                                                       0,
@@ -928,8 +921,7 @@ LteX2HandoverMeasuresTestSuite::LteX2HandoverMeasuresTestSuite()
     sched = "ns3::PfFfMacScheduler";
     for (useIdealRrc = 1; useIdealRrc >= 0; --useIdealRrc)
     {
-        //                                          nEnbs, nUes, nDBearers, celist, name, useUdp,
-        //                                          sched, admitHo, idealRrc
+        // nEnbs, nUes, nDBearers, celist, name, useUdp, sched, admitHo, idealRrc
         AddTestCase(new LteX2HandoverMeasuresTestCase(2,
                                                       1,
                                                       0,
@@ -968,8 +960,7 @@ LteX2HandoverMeasuresTestSuite::LteX2HandoverMeasuresTestSuite()
     sched = "ns3::RrFfMacScheduler";
     for (useIdealRrc = 1; useIdealRrc >= 0; --useIdealRrc)
     {
-        //                                          nEnbs, nUes, nDBearers, celist, name, useUdp,
-        //                                          sched, admitHo, idealRrc
+        // nEnbs, nUes, nDBearers, celist, name, useUdp, sched, admitHo, idealRrc
         AddTestCase(new LteX2HandoverMeasuresTestCase(2,
                                                       1,
                                                       0,
@@ -1007,4 +998,8 @@ LteX2HandoverMeasuresTestSuite::LteX2HandoverMeasuresTestSuite()
 
 } // end of LteX2HandoverMeasuresTestSuite ()
 
+/**
+ * \ingroup lte-test
+ * Static variable for test initialization
+ */
 static LteX2HandoverMeasuresTestSuite g_lteX2HandoverMeasuresTestSuiteInstance;

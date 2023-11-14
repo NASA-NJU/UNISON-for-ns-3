@@ -28,6 +28,8 @@
 
 #include "ns3/error-model.h"
 
+#include <limits>
+
 namespace ns3
 {
 
@@ -151,9 +153,8 @@ class WifiPhy : public Object
 
     /**
      * \param ppdu the PPDU to send
-     * \param txVector the TXVECTOR to use to send the PPDU
      */
-    virtual void StartTx(Ptr<const WifiPpdu> ppdu, const WifiTxVector& txVector) = 0;
+    virtual void StartTx(Ptr<const WifiPpdu> ppdu) = 0;
 
     /**
      * Put in sleep mode.
@@ -898,6 +899,18 @@ class WifiPhy : public Object
      */
     uint8_t GetPrimary20Index() const;
     /**
+     * Get the bandwidth for a transmission occurring on the current operating channel and
+     * using the given WifiMode, subject to the constraint that the TX bandwidth cannot exceed
+     * the given maximum allowed value.
+     *
+     * \param mode the given WifiMode
+     * \param maxAllowedBandWidth the maximum allowed TX bandwidth
+     * \return the bandwidth for the transmission
+     */
+    uint16_t GetTxBandwidth(
+        WifiMode mode,
+        uint16_t maxAllowedBandWidth = std::numeric_limits<uint16_t>::max()) const;
+    /**
      * \param antennas the number of antennas on this node.
      */
     void SetNumberOfAntennas(uint8_t antennas);
@@ -1058,6 +1071,19 @@ class WifiPhy : public Object
     static const Ptr<const PhyEntity> GetStaticPhyEntity(WifiModulationClass modulation);
 
     /**
+     * Get the supported PHY entity to use for a received PPDU.
+     * This typically returns the entity corresponding to the modulation class used to transmit the
+     * PPDU. If the modulation class used to transmit the PPDU is not supported by the PHY, the
+     * latest PHY entity corresponding to the configured standard is returned. If the modulation
+     * used to transmit the PPDU is non-HT (duplicate), the latest PHY entity corresponding to the
+     * configured standard is also returned.
+     *
+     * \param ppdu the received PPDU
+     * \return the pointer to the supported PHY entity
+     */
+    Ptr<PhyEntity> GetPhyEntityForPpdu(const Ptr<const WifiPpdu> ppdu) const;
+
+    /**
      * Get the supported PHY entity corresponding to the modulation class.
      *
      * \param modulation the modulation class
@@ -1071,6 +1097,12 @@ class WifiPhy : public Object
      * \return the pointer to the supported PHY entity
      */
     Ptr<PhyEntity> GetPhyEntity(WifiStandard standard) const;
+    /**
+     * Get the latest PHY entity supported by this PHY instance.
+     *
+     * \return the latest PHY entity supported by this PHY instance
+     */
+    Ptr<PhyEntity> GetLatestPhyEntity() const;
 
     /**
      * \return the UID of the previously received PPDU (reset to UINT64_MAX upon transmission)
@@ -1120,6 +1152,7 @@ class WifiPhy : public Object
     virtual WifiSpectrumBand GetBand(uint16_t bandWidth, uint8_t bandIndex = 0);
 
   protected:
+    void DoInitialize() override;
     void DoDispose() override;
 
     /**

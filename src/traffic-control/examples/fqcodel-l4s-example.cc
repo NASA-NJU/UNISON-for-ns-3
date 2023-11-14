@@ -257,7 +257,7 @@
  * ---------------
  *    --n0TcpType:           First TCP type (bic, dctcp, or reno) [bic]
  *    --n1TcpType:           Second TCP type (cubic, dctcp, or reno) []
- *    --scenarioNum:         Scenario number from the scenarios avalaible in the file (1-9) [0]
+ *    --scenarioNum:         Scenario number from the scenarios available in the file (1-9) [0]
  *    --bottleneckQueueType: n2 queue type (fq or codel) [fq]
  *    --baseRtt:             base RTT [80ms]
  *    --useCeThreshold:      use CE threshold [false]
@@ -322,9 +322,10 @@ TraceN1Rtt(std::ofstream* ofStream, Time oldRtt, Time newRtt)
 }
 
 void
-TracePingRtt(std::ofstream* ofStream, Time rtt)
+TracePingRtt(std::ofstream* ofStream, uint16_t seqNo, Time rtt)
 {
-    *ofStream << Simulator::Now().GetSeconds() << " " << rtt.GetSeconds() * 1000 << std::endl;
+    *ofStream << Simulator::Now().GetSeconds() << " " << seqNo << " " << rtt.GetSeconds() * 1000
+              << std::endl;
 }
 
 void
@@ -531,7 +532,7 @@ main(int argc, char* argv[])
     cmd.AddValue("n0TcpType", "n0 TCP type (bic, dctcp, or reno)", n0TcpType);
     cmd.AddValue("n1TcpType", "n1 TCP type (bic, dctcp, or reno)", n1TcpType);
     cmd.AddValue("scenarioNum",
-                 "Scenario number from the scenarios avalaible in the file (1-9)",
+                 "Scenario number from the scenarios available in the file (1-9)",
                  scenarioNum);
     cmd.AddValue("bottleneckQueueType", "n2 queue type (fq or codel)", queueType);
     cmd.AddValue("baseRtt", "base RTT", baseRtt);
@@ -612,7 +613,7 @@ main(int argc, char* argv[])
             enableN1Tcp = true;
             n1TcpTypeId = TypeId::LookupByName("ns3::TcpDctcp");
         }
-        else if (n1TcpType == "")
+        else if (n1TcpType.empty())
         {
             NS_LOG_DEBUG("No N1 TCP selected");
         }
@@ -816,12 +817,12 @@ main(int argc, char* argv[])
     // application setup                                      //
     ////////////////////////////////////////////////////////////
 
-    V4PingHelper pingHelper("192.168.1.2");
+    PingHelper pingHelper(Ipv4Address("192.168.1.2"));
     pingHelper.SetAttribute("Interval", TimeValue(pingInterval));
     pingHelper.SetAttribute("Size", UintegerValue(pingSize));
     ApplicationContainer pingContainer = pingHelper.Install(pingServer);
-    Ptr<V4Ping> v4Ping = pingContainer.Get(0)->GetObject<V4Ping>();
-    v4Ping->TraceConnectWithoutContext("Rtt", MakeBoundCallback(&TracePingRtt, &pingOfStream));
+    Ptr<Ping> ping = pingContainer.Get(0)->GetObject<Ping>();
+    ping->TraceConnectWithoutContext("Rtt", MakeBoundCallback(&TracePingRtt, &pingOfStream));
     pingContainer.Start(Seconds(1));
     pingContainer.Stop(stopTime - Seconds(1));
 
@@ -935,4 +936,6 @@ main(int argc, char* argv[])
     lengthOfStream.close();
     queueDelayN0OfStream.close();
     queueDelayN1OfStream.close();
+
+    return 0;
 }

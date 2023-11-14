@@ -58,7 +58,6 @@ _reciprocal_scale(uint32_t val, uint32_t ep_ro)
 
 /**
  * \ingroup traffic-control-test
- * \ingroup tests
  *
  * \brief Codel Queue Disc Test Item
  */
@@ -88,7 +87,7 @@ class CodelQueueDiscTestItem : public QueueDiscItem
 };
 
 CodelQueueDiscTestItem::CodelQueueDiscTestItem(Ptr<Packet> p, const Address& addr, bool ecnCapable)
-    : QueueDiscItem(p, addr, ecnCapable),
+    : QueueDiscItem(p, addr, 0),
       m_ecnCapablePacket(ecnCapable)
 {
 }
@@ -114,7 +113,6 @@ CodelQueueDiscTestItem::Mark()
 
 /**
  * \ingroup traffic-control-test
- * \ingroup tests
  *
  * \brief Test 1: simple enqueue/dequeue with no drops
  */
@@ -277,7 +275,6 @@ CoDelQueueDiscBasicEnqueueDequeue::DoRun()
 
 /**
  * \ingroup traffic-control-test
- * \ingroup tests
  *
  * \brief Test 2: enqueue with drops due to queue overflow
  */
@@ -369,7 +366,6 @@ CoDelQueueDiscBasicOverflow::Enqueue(Ptr<CoDelQueueDisc> queue, uint32_t size, u
 
 /**
  * \ingroup traffic-control-test
- * \ingroup tests
  *
  * \brief Test 3: NewtonStep unit test - test against explicit port of Linux implementation
  */
@@ -408,7 +404,6 @@ CoDelQueueDiscNewtonStepTest::DoRun()
 
 /**
  * \ingroup traffic-control-test
- * \ingroup tests
  *
  * \brief Test 4: ControlLaw unit test - test against explicit port of Linux implementation
  */
@@ -440,7 +435,7 @@ CoDelQueueDiscControlLawTest::_codel_control_law(uint32_t t, uint32_t interval, 
     return t + _reciprocal_scale(interval, recInvSqrt << REC_INV_SQRT_SHIFT_ns3);
 }
 
-// End Linux borrrow
+// End Linux borrow
 
 void
 CoDelQueueDiscControlLawTest::DoRun()
@@ -467,7 +462,6 @@ CoDelQueueDiscControlLawTest::DoRun()
 
 /**
  * \ingroup traffic-control-test
- * \ingroup tests
  *
  * \brief Test 5: enqueue/dequeue with drops according to CoDel algorithm
  */
@@ -680,7 +674,6 @@ CoDelQueueDiscBasicDrop::Dequeue(Ptr<CoDelQueueDisc> queue, uint32_t modeSize)
 
 /**
  * \ingroup traffic-control-test
- * \ingroup tests
  *
  * \brief Test 6: enqueue/dequeue with marks according to CoDel algorithm
  */
@@ -1132,7 +1125,7 @@ CoDelQueueDiscBasicMark::Dequeue(Ptr<CoDelQueueDisc> queue, uint32_t modeSize, u
                         nPacketsBeforeFirstMark,
                         "Number of packets in the queue before drop should be equal"
                         "to number of packets in the queue before first mark as the behavior "
-                        "untill packet N should be the same.");
+                        "until packet N should be the same.");
                     NS_TEST_ASSERT_MSG_EQ(
                         currentCeThreshMarkCount,
                         0,
@@ -1333,7 +1326,6 @@ CoDelQueueDiscBasicMark::Dequeue(Ptr<CoDelQueueDisc> queue, uint32_t modeSize, u
 
 /**
  * \ingroup traffic-control-test
- * \ingroup tests
  *
  * \brief CoDel Queue Disc Test Suite
  */

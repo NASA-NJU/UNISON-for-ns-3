@@ -76,14 +76,14 @@ std::map<Mac48Address, uint64_t>
 std::map<Mac48Address, uint64_t>
     packetsTransmitted; ///< Map that stores the total packets transmitted per STA
 std::map<Mac48Address, uint64_t>
-    psduFailed; ///< Map that stores the total number of unsuccessfully received PSDUS (for which
+    psduFailed; ///< Map that stores the total number of unsuccessfuly received PSDUS (for which
                 ///< the PHY header was successfully received)  per STA (including PSDUs not
                 ///< addressed to that STA)
 std::map<Mac48Address, uint64_t>
     psduSucceeded; ///< Map that stores the total number of successfully received PSDUs per STA
                    ///< (including PSDUs not addressed to that STA)
 std::map<Mac48Address, uint64_t> phyHeaderFailed; ///< Map that stores the total number of
-                                                  ///< unsuccessfully received PHY headers per STA
+                                                  ///< unsuccessfuly received PHY headers per STA
 std::map<Mac48Address, uint64_t>
     rxEventWhileTxing; ///< Map that stores the number of reception events per STA that occurred
                        ///< while PHY was already transmitting a PPDU
@@ -2532,10 +2532,10 @@ Experiment::Run(const WifiHelper& helper,
     MobilityHelper mobility;
     Ptr<ListPositionAllocator> positionAlloc = CreateObject<ListPositionAllocator>();
     mobility.SetMobilityModel("ns3::ConstantPositionMobilityModel");
-    // Set postion for AP
+    // Set position for AP
     positionAlloc->Add(Vector(1.0, 1.0, 0.0));
 
-    // Set postion for STAs
+    // Set position for STAs
     double angle = (static_cast<double>(360) / (nNodes - 1));
     for (uint32_t i = 0; i < (nNodes - 1); ++i)
     {
@@ -2593,13 +2593,18 @@ Experiment::Run(const WifiHelper& helper,
                         MakeCallback(&DisassociationLog));
     }
 
+    std::string txop =
+        StaticCast<WifiNetDevice>(wifiNodes.Get(0)->GetDevice(0))->GetMac()->GetQosSupported()
+            ? "BE_Txop"
+            : "Txop";
     // Trace CW evolution
-    Config::Connect("/NodeList/*/DeviceList/*/$ns3::WifiNetDevice/Mac/$ns3::WifiMac/Txop/CwTrace",
+    Config::Connect("/NodeList/*/DeviceList/*/$ns3::WifiNetDevice/Mac/$ns3::WifiMac/" + txop +
+                        "/CwTrace",
                     MakeCallback(&CwTrace));
     // Trace backoff evolution
-    Config::Connect(
-        "/NodeList/*/DeviceList/*/$ns3::WifiNetDevice/Mac/$ns3::WifiMac/Txop/BackoffTrace",
-        MakeCallback(&BackoffTrace));
+    Config::Connect("/NodeList/*/DeviceList/*/$ns3::WifiNetDevice/Mac/$ns3::WifiMac/" + txop +
+                        "/BackoffTrace",
+                    MakeCallback(&BackoffTrace));
     // Trace PHY Tx start events
     Config::Connect("/NodeList/*/DeviceList/*/$ns3::WifiNetDevice/Phy/$ns3::WifiPhy/PhyTxBegin",
                     MakeCallback(&PhyTxTrace));

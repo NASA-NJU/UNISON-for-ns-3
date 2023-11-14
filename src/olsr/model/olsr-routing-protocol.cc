@@ -248,12 +248,6 @@ RoutingProtocol::SetIpv4(Ptr<Ipv4> ipv4)
     m_hnaRoutingTable->SetIpv4(ipv4);
 }
 
-Ptr<Ipv4>
-RoutingProtocol::GetIpv4() const
-{
-    return m_ipv4;
-}
-
 void
 RoutingProtocol::DoDispose()
 {
@@ -305,7 +299,7 @@ RoutingProtocol::PrintRoutingTable(Ptr<OutputStreamWrapper> stream, Time::Unit u
         *os << std::setw(16) << iter->first;
         *os << std::setw(16) << iter->second.nextAddr;
         *os << std::setw(16);
-        if (Names::FindName(m_ipv4->GetNetDevice(iter->second.interface)) != "")
+        if (!Names::FindName(m_ipv4->GetNetDevice(iter->second.interface)).empty())
         {
             *os << Names::FindName(m_ipv4->GetNetDevice(iter->second.interface));
         }
@@ -1889,7 +1883,7 @@ RoutingProtocol::SendMid()
             mid.interfaceAddresses.push_back(addr);
         }
     }
-    if (mid.interfaceAddresses.size() == 0)
+    if (mid.interfaceAddresses.empty())
     {
         return;
     }
@@ -1927,7 +1921,7 @@ RoutingProtocol::SendHna()
         associations.push_back(assoc);
     }
     // If there is no HNA associations to send, return without queuing the message
-    if (associations.size() == 0)
+    if (associations.empty())
     {
         return;
     }
@@ -2671,7 +2665,7 @@ RoutingProtocol::HelloTimerExpire()
 void
 RoutingProtocol::TcTimerExpire()
 {
-    if (m_state.GetMprSelectors().size() > 0)
+    if (!m_state.GetMprSelectors().empty())
     {
         SendTc();
     }
@@ -2692,7 +2686,7 @@ RoutingProtocol::MidTimerExpire()
 void
 RoutingProtocol::HnaTimerExpire()
 {
-    if (m_state.GetAssociations().size() > 0)
+    if (!m_state.GetAssociations().empty())
     {
         SendHna();
     }

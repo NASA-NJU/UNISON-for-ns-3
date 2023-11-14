@@ -249,7 +249,7 @@ UniformPlanarArray::GetElementLocation(uint64_t index) const
     return loc;
 }
 
-uint64_t
+size_t
 UniformPlanarArray::GetNumberOfElements() const
 {
     return m_numRows * m_numColumns;

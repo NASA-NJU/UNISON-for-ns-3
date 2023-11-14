@@ -88,7 +88,7 @@ Event::GetDuration() const
 double
 Event::GetRxPowerW() const
 {
-    NS_ASSERT(m_rxPowerW.size() > 0);
+    NS_ASSERT(!m_rxPowerW.empty());
     // The total RX power corresponds to the maximum over all the bands
     auto it = std::max_element(
         m_rxPowerW.begin(),
@@ -628,7 +628,7 @@ InterferenceHelper::CalculatePhyHeaderPer(Ptr<const Event> event,
     }
 
     double psr = 1.0;
-    if (!sections.empty() > 0)
+    if (!sections.empty())
     {
         psr = CalculatePhyHeaderSectionPsr(event, nis, channelWidth, band, sections);
     }

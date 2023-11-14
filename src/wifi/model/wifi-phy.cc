@@ -364,6 +364,31 @@ WifiPhy::~WifiPhy()
 }
 
 void
+WifiPhy::DoInitialize()
+{
+    NS_LOG_FUNCTION(this);
+
+    // This method ensures that the local mobility model pointer holds
+    // a pointer to the Node's aggregated mobility model (if one exists)
+    // in the case that the user has not directly called SetMobility()
+    // on this WifiPhy during simulation setup.  If the mobility model
+    // needs to be added or changed during simulation runtime, users must
+    // call SetMobility() on this object.
+
+    if (!m_mobility)
+    {
+        NS_ABORT_MSG_UNLESS(m_device && m_device->GetNode(),
+                            "Either install a MobilityModel on this object or ensure that this "
+                            "object is part of a Node and NetDevice");
+        m_mobility = m_device->GetNode()->GetObject<MobilityModel>();
+        if (!m_mobility)
+        {
+            NS_LOG_WARN("Mobility not found, propagation models might not work properly");
+        }
+    }
+}
+
+void
 WifiPhy::DoDispose()
 {
     NS_LOG_FUNCTION(this);
@@ -592,14 +617,7 @@ WifiPhy::SetMobility(const Ptr<MobilityModel> mobility)
 Ptr<MobilityModel>
 WifiPhy::GetMobility() const
 {
-    if (m_mobility)
-    {
-        return m_mobility;
-    }
-    else
-    {
-        return m_device->GetNode()->GetObject<MobilityModel>();
-    }
+    return m_mobility;
 }
 
 void
@@ -677,7 +695,8 @@ const Ptr<const PhyEntity>
 WifiPhy::GetStaticPhyEntity(WifiModulationClass modulation)
 {
     const auto it = GetStaticPhyEntities().find(modulation);
-    NS_ABORT_MSG_IF(it == GetStaticPhyEntities().end(), "Unimplemented Wi-Fi modulation class");
+    NS_ABORT_MSG_IF(it == GetStaticPhyEntities().cend(),
+                    "Unimplemented Wi-Fi modulation class " << modulation);
     return it->second;
 }
 
@@ -685,7 +704,8 @@ Ptr<PhyEntity>
 WifiPhy::GetPhyEntity(WifiModulationClass modulation) const
 {
     const auto it = m_phyEntities.find(modulation);
-    NS_ABORT_MSG_IF(it == m_phyEntities.end(), "Unsupported Wi-Fi modulation class " << modulation);
+    NS_ABORT_MSG_IF(it == m_phyEntities.cend(),
+                    "Unsupported Wi-Fi modulation class " << modulation);
     return it->second;
 }
 
@@ -693,6 +713,32 @@ Ptr<PhyEntity>
 WifiPhy::GetPhyEntity(WifiStandard standard) const
 {
     return GetPhyEntity(GetModulationClassForStandard(standard));
+}
+
+Ptr<PhyEntity>
+WifiPhy::GetLatestPhyEntity() const
+{
+    return GetPhyEntity(m_standard);
+}
+
+Ptr<PhyEntity>
+WifiPhy::GetPhyEntityForPpdu(const Ptr<const WifiPpdu> ppdu) const
+{
+    NS_ABORT_IF(!ppdu);
+    const auto modulation = ppdu->GetModulation();
+    if (modulation > m_phyEntities.rbegin()->first)
+    {
+        // unsupported modulation: start reception process with latest PHY entity
+        return GetLatestPhyEntity();
+    }
+    if (modulation < WIFI_MOD_CLASS_HT)
+    {
+        // for non-HT (duplicate), call the latest PHY entity since some extra processing can be
+        // done in PHYs implemented in HT and later (e.g. channel width selection for non-HT
+        // duplicates)
+        return GetLatestPhyEntity();
+    }
+    return GetPhyEntity(modulation);
 }
 
 void
@@ -998,6 +1044,18 @@ bool
 WifiPhy::HasFixedPhyBand() const
 {
     return m_fixedPhyBand;
+}
+
+uint16_t
+WifiPhy::GetTxBandwidth(WifiMode mode, uint16_t maxAllowedWidth) const
+{
+    auto modulation = mode.GetModulationClass();
+    if (modulation == WIFI_MOD_CLASS_DSSS || modulation == WIFI_MOD_CLASS_HR_DSSS)
+    {
+        return 22;
+    }
+
+    return std::min({GetChannelWidth(), GetMaximumChannelWidth(modulation), maxAllowedWidth});
 }
 
 void
@@ -1727,7 +1785,8 @@ WifiPhy::Send(WifiConstPsduMap psdus, const WifiTxVector& txVector)
     m_endTxEvent =
         Simulator::Schedule(txDuration, &WifiPhy::NotifyTxEnd, this, psdus); // TODO: fix for MU
 
-    StartTx(ppdu, txVector);
+    StartTx(ppdu);
+    ppdu->ResetTxVector();
 
     m_channelAccessRequested = false;
     m_powerRestricted = false;
@@ -1759,7 +1818,8 @@ WifiPhy::StartReceivePreamble(Ptr<const WifiPpdu> ppdu,
                               RxPowerWattPerChannelBand& rxPowersW,
                               Time rxDuration)
 {
-    WifiModulationClass modulation = ppdu->GetTxVector().GetModulationClass();
+    NS_LOG_FUNCTION(this << ppdu << rxDuration);
+    WifiModulationClass modulation = ppdu->GetModulation();
     auto it = m_phyEntities.find(modulation);
     if (it != m_phyEntities.end())
     {
@@ -1998,14 +2058,14 @@ void
 WifiPhy::SwitchMaybeToCcaBusy(const Ptr<const WifiPpdu> ppdu)
 {
     NS_LOG_FUNCTION(this);
-    GetPhyEntity(m_standard)->SwitchMaybeToCcaBusy(ppdu);
+    GetLatestPhyEntity()->SwitchMaybeToCcaBusy(ppdu);
 }
 
 void
 WifiPhy::NotifyCcaBusy(const Ptr<const WifiPpdu> ppdu, Time duration)
 {
     NS_LOG_FUNCTION(this << duration);
-    GetPhyEntity(m_standard)->NotifyCcaBusy(ppdu, duration, WIFI_CHANLIST_PRIMARY);
+    GetLatestPhyEntity()->NotifyCcaBusy(ppdu, duration, WIFI_CHANLIST_PRIMARY);
 }
 
 void
@@ -2072,7 +2132,7 @@ double
 WifiPhy::GetTxPowerForTransmission(Ptr<const WifiPpdu> ppdu) const
 {
     NS_LOG_FUNCTION(this << m_powerRestricted << ppdu);
-    const WifiTxVector& txVector = ppdu->GetTxVector();
+    const auto& txVector = ppdu->GetTxVector();
     // Get transmit power before antenna gain
     double txPowerDbm;
     if (!m_powerRestricted)
@@ -2108,7 +2168,7 @@ Ptr<const WifiPsdu>
 WifiPhy::GetAddressedPsduInPpdu(Ptr<const WifiPpdu> ppdu) const
 {
     // TODO: wrapper. See if still needed
-    return GetPhyEntity(ppdu->GetModulation())->GetAddressedPsduInPpdu(ppdu);
+    return GetPhyEntityForPpdu(ppdu)->GetAddressedPsduInPpdu(ppdu);
 }
 
 WifiSpectrumBand

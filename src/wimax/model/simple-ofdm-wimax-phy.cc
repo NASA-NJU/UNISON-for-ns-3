@@ -171,10 +171,10 @@ SimpleOfdmWimaxPhy::InitSimpleOfdmWimaxPhy()
     m_rxGain = 0;
     m_txGain = 0;
     m_nfft = 256;
-    m_g = (double)1 / 4;
+    m_g = 1.0 / 4;
     SetNrCarriers(192);
-    m_fecBlocks = new std::list<bvec>;
-    m_receivedFecBlocks = new std::list<bvec>;
+    m_fecBlocks = new std::list<Bvec>;
+    m_receivedFecBlocks = new std::list<Bvec>;
     m_currentBurstSize = 0;
     m_noiseFigure = 5;      // dB
     m_txPower = 30;         // dBm
@@ -379,7 +379,7 @@ SimpleOfdmWimaxPhy::StartReceive(uint32_t burstSize,
                                  double rxPower,
                                  Ptr<PacketBurst> burst)
 {
-    uint8_t drop = 0;
+    bool drop = false;
     double Nwb = -114 + m_noiseFigure + 10 * std::log(GetBandwidth() / 1000000000.0) / 2.303;
     double SNR = rxPower - Nwb;
 
@@ -394,26 +394,26 @@ SimpleOfdmWimaxPhy::StartReceive(uint32_t burstSize,
 
     if (rand < blockErrorRate)
     {
-        drop = 1;
+        drop = true;
     }
     if (rand > blockErrorRate)
     {
-        drop = 0;
+        drop = false;
     }
 
     if (blockErrorRate == 1.0)
     {
-        drop = 1;
+        drop = true;
     }
     if (blockErrorRate == 0.0)
     {
-        drop = 0;
+        drop = false;
     }
     delete record;
 
     NS_LOG_INFO("PHY: Receive rxPower=" << rxPower << ", Nwb=" << Nwb << ", SNR=" << SNR
                                         << ", Modulation=" << modulationType << ", BlocErrorRate="
-                                        << blockErrorRate << ", drop=" << (int)drop);
+                                        << blockErrorRate << ", drop=" << std::boolalpha << drop);
 
     switch (GetState())
     {
@@ -465,7 +465,7 @@ void
 SimpleOfdmWimaxPhy::EndReceiveFecBlock(uint32_t burstSize,
                                        WimaxPhy::ModulationType modulationType,
                                        uint8_t direction,
-                                       uint8_t drop,
+                                       bool drop,
                                        Ptr<PacketBurst> burst)
 {
     SetState(PHY_STATE_IDLE);
@@ -500,10 +500,10 @@ SimpleOfdmWimaxPhy::EndReceive(Ptr<const PacketBurst> burst)
     m_traceRx(burst);
 }
 
-bvec
+Bvec
 SimpleOfdmWimaxPhy::ConvertBurstToBits(Ptr<const PacketBurst> burst)
 {
-    bvec buffer(burst->GetSize() * 8, 0);
+    Bvec buffer(burst->GetSize() * 8, 0);
 
     std::list<Ptr<Packet>> packets = burst->GetPackets();
 
@@ -514,7 +514,7 @@ SimpleOfdmWimaxPhy::ConvertBurstToBits(Ptr<const PacketBurst> burst)
         uint8_t* pstart = (uint8_t*)std::malloc(packet->GetSize());
         std::memset(pstart, 0, packet->GetSize());
         packet->CopyData(pstart, packet->GetSize());
-        bvec temp(8);
+        Bvec temp(8);
         temp.resize(0, 0);
         temp.resize(8, 0);
         for (uint32_t i = 0; i < packet->GetSize(); i++)
@@ -533,21 +533,21 @@ SimpleOfdmWimaxPhy::ConvertBurstToBits(Ptr<const PacketBurst> burst)
 }
 
 /*
- Converts back the bit buffer (bvec) to the actual burst.
- Actually creates byte buffer from the bvec and resets the buffer
- of each packet in the copy of the orifinal burst stored before transmitting.
+ Converts back the bit buffer (Bvec) to the actual burst.
+ Actually creates byte buffer from the Bvec and resets the buffer
+ of each packet in the copy of the original burst stored before transmitting.
  By doing this it preserves the metadata and tags in the packet.
  Function could also be named DeserializeBurst because actually it
  copying to the burst's byte buffer.
  */
 Ptr<PacketBurst>
-SimpleOfdmWimaxPhy::ConvertBitsToBurst(bvec buffer)
+SimpleOfdmWimaxPhy::ConvertBitsToBurst(Bvec buffer)
 {
     uint8_t init[buffer.size() / 8];
     uint8_t* pstart = init;
     uint8_t temp;
     int32_t j = 0;
-    // recreating byte buffer from bit buffer (bvec)
+    // recreating byte buffer from bit buffer (Bvec)
     for (uint32_t i = 0; i < buffer.size(); i += 8)
     {
         temp = 0;
@@ -592,34 +592,34 @@ SimpleOfdmWimaxPhy::ConvertBitsToBurst(bvec buffer)
 }
 
 void
-SimpleOfdmWimaxPhy::CreateFecBlocks(const bvec& buffer, WimaxPhy::ModulationType modulationType)
+SimpleOfdmWimaxPhy::CreateFecBlocks(const Bvec& buffer, WimaxPhy::ModulationType modulationType)
 {
-    bvec fecBlock(m_blockSize);
+    Bvec fecBlock(m_blockSize);
     for (uint32_t i = 0, j = m_nrBlocks; j > 0; i += m_blockSize, j--)
     {
         if (j == 1 && m_paddingBits > 0) // last block can be smaller than block size
         {
-            fecBlock = bvec(buffer.begin() + i, buffer.end());
+            fecBlock = Bvec(buffer.begin() + i, buffer.end());
             fecBlock.resize(m_blockSize, 0);
         }
         else
         {
-            fecBlock = bvec(buffer.begin() + i, buffer.begin() + i + m_blockSize);
+            fecBlock = Bvec(buffer.begin() + i, buffer.begin() + i + m_blockSize);
         }
 
         m_fecBlocks->push_back(fecBlock);
     }
 }
 
-bvec
+Bvec
 SimpleOfdmWimaxPhy::RecreateBuffer()
 {
-    bvec buffer(m_blockSize * (unsigned long)m_nrBlocks);
-    bvec block(m_blockSize);
+    Bvec buffer(m_blockSize * (unsigned long)m_nrBlocks);
+    Bvec block(m_blockSize);
     uint32_t i = 0;
     for (uint32_t j = 0; j < m_nrBlocks; j++)
     {
-        bvec tmpRecFecBloc = m_receivedFecBlocks->front();
+        Bvec tmpRecFecBloc = m_receivedFecBlocks->front();
         buffer.insert(buffer.begin() + i, tmpRecFecBloc.begin(), tmpRecFecBloc.end());
         m_receivedFecBlocks->pop_front();
         i += m_blockSize;
@@ -648,27 +648,27 @@ SimpleOfdmWimaxPhy::GetModulationFecParams(WimaxPhy::ModulationType modulationTy
     {
     case MODULATION_TYPE_BPSK_12:
         bitsPerSymbol = 1;
-        fecCode = (double)1 / 2;
+        fecCode = 1.0 / 2;
         break;
     case MODULATION_TYPE_QPSK_12:
         bitsPerSymbol = 2;
-        fecCode = (double)1 / 2;
+        fecCode = 1.0 / 2;
         break;
     case MODULATION_TYPE_QPSK_34:
         bitsPerSymbol = 2;
-        fecCode = (double)3 / 4;
+        fecCode = 3.0 / 4;
         break;
     case MODULATION_TYPE_QAM16_12:
         bitsPerSymbol = 4;
-        fecCode = (double)1 / 2;
+        fecCode = 1.0 / 2;
         break;
     case MODULATION_TYPE_QAM16_34:
         bitsPerSymbol = 4;
-        fecCode = (double)3 / 4;
+        fecCode = 3.0 / 4;
         break;
     case MODULATION_TYPE_QAM64_23:
         bitsPerSymbol = 6;
-        fecCode = (double)2 / 3;
+        fecCode = 2.0 / 3;
         break;
     case MODULATION_TYPE_QAM64_34:
         bitsPerSymbol = 6;
@@ -926,7 +926,7 @@ SimpleOfdmWimaxPhy::DoGetFrameDuration(uint8_t frameDurationCode) const
 }
 
 /*
- Retruns number of blocks (FEC blocks) the burst will be split in.
+ Returns number of blocks (FEC blocks) the burst will be split in.
  The size of the block is specific for each modulation type.
  */
 uint16_t
@@ -954,20 +954,20 @@ SimpleOfdmWimaxPhy::DoSetPhyParameters()
      frequency is 23040000, symbol (OFDM symbol) duration is 1.388888888888889e-05 seconds, PS
      duration is 1.7361111111111112e-07 seconds. Hence PSs per frame is 57600, symbols per frame is
      720 and PSs per symbol is 80. Note that defining these parameters (symbol and PS duration) as
-     Time may not result in exaclty these values therefore lrint has been used (otherwise should be
+     Time may not result in exactly these values therefore lrint has been used (otherwise should be
      defined as double). For licensed bands set channel bandwidth according to Table B.26, page
      810.*/
 
     double samplingFrequency = DoGetSamplingFrequency();
-    Time psDuration = Seconds((double)4 / samplingFrequency);
+    Time psDuration = Seconds(4.0 / samplingFrequency);
 
     SetPsDuration(psDuration);
     uint16_t psPerFrame = (uint16_t)(GetFrameDuration().GetSeconds() / psDuration.GetSeconds());
     SetPsPerFrame(psPerFrame);
     double subcarrierSpacing = samplingFrequency / DoGetNfft();
-    double tb = (double)1 / subcarrierSpacing; // Tb (useful symbol time)
-    double tg = DoGetGValue() * tb;            // Tg (cyclic prefix time)
-    Time symbolDuration = Seconds(tb + tg);    // OFDM Symbol Time
+    double tb = 1.0 / subcarrierSpacing;    // Tb (useful symbol time)
+    double tg = DoGetGValue() * tb;         // Tg (cyclic prefix time)
+    Time symbolDuration = Seconds(tb + tg); // OFDM Symbol Time
     SetSymbolDuration(symbolDuration);
     uint16_t psPerSymbol = lrint(symbolDuration.GetSeconds() / psDuration.GetSeconds());
     SetPsPerSymbol(psPerSymbol);
@@ -996,23 +996,23 @@ SimpleOfdmWimaxPhy::DoGetSamplingFactor() const
 
     if (channelBandwidth % 1750000 == 0)
     {
-        return (double)8 / 7;
+        return 8.0 / 7;
     }
     else if (channelBandwidth % 1500000 == 0)
     {
-        return (double)86 / 75;
+        return 86.0 / 75;
     }
     else if (channelBandwidth % 1250000 == 0)
     {
-        return (double)144 / 125;
+        return 144.0 / 125;
     }
     else if (channelBandwidth % 2750000 == 0)
     {
-        return (double)316 / 275;
+        return 316.0 / 275;
     }
     else if (channelBandwidth % 2000000 == 0)
     {
-        return (double)57 / 50;
+        return 57.0 / 50;
     }
     else
     {
@@ -1020,7 +1020,7 @@ SimpleOfdmWimaxPhy::DoGetSamplingFactor() const
         NS_FATAL_ERROR("wrong channel bandwidth for OFDM PHY");
     }
 
-    return (double)8 / 7;
+    return 8.0 / 7;
 }
 
 double

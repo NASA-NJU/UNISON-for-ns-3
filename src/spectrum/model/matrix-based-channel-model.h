@@ -22,6 +22,7 @@
 #define MATRIX_BASED_CHANNEL_H
 
 // #include <complex>
+#include <ns3/matrix-array.h>
 #include <ns3/nstime.h>
 #include <ns3/object.h>
 #include <ns3/phased-array-model.h>
@@ -49,31 +50,47 @@ class MatrixBasedChannelModel : public Object
      */
     ~MatrixBasedChannelModel() override;
 
-    typedef std::vector<double> DoubleVector;         //!< type definition for vectors of doubles
-    typedef std::vector<DoubleVector> Double2DVector; //!< type definition for matrices of doubles
-    typedef std::vector<Double2DVector>
-        Double3DVector; //!< type definition for 3D matrices of doubles
-    typedef std::vector<PhasedArrayModel::ComplexVector>
-        Complex2DVector; //!< type definition for complex matrices
-    typedef std::vector<Complex2DVector>
-        Complex3DVector; //!< type definition for complex 3D matrices
+    /// Type definition for vectors of doubles
+    using DoubleVector = std::vector<double>;
+
+    /// Type definition for matrices of doubles
+    using Double2DVector = std::vector<DoubleVector>;
+
+    /// Type definition for 3D matrices of doubles
+    using Double3DVector = std::vector<Double2DVector>;
+
+    using Complex2DVector = ComplexMatrixArray; //!< Create an alias for 2D complex vectors
+    using Complex3DVector = ComplexMatrixArray; //!< Create an alias for 3D complex vectors
 
     /**
      * Data structure that stores a channel realization
      */
     struct ChannelMatrix : public SimpleRefCount<ChannelMatrix>
     {
-        Complex3DVector m_channel; //!< channel matrix H[u][s][n].
-        Time m_generatedTime;      //!< generation time
-        std::pair<uint32_t, uint32_t>
-            m_antennaPair; //!< the first element is the ID of the antenna of the s-node (the
-                           //!< antenna of the transmitter when the channel was generated), the
-                           //!< second element is ID of the antenna of the u-node antenna (the
-                           //!< antenna of the receiver when the channel was generated)
-        std::pair<uint32_t, uint32_t>
-            m_nodeIds; //!< the first element is the s-node ID (the transmitter when the channel was
-                       //!< generated), the second element is the u-node ID (the receiver when the
-                       //!< channel was generated)
+        /**
+         * Channel matrix H[u][s][n].
+         */
+        Complex3DVector m_channel;
+
+        /**
+         * Generation time.
+         */
+        Time m_generatedTime;
+
+        /**
+         * The first element is the ID of the antenna of the s-node (the
+         * antenna of the transmitter when the channel was generated), the
+         * second element is ID of the antenna of the u-node antenna (the
+         * antenna of the receiver when the channel was generated).
+         */
+        std::pair<uint32_t, uint32_t> m_antennaPair;
+
+        /**
+         * The first element is the s-node ID (the transmitter when the channel was
+         * generated), the second element is the u-node ID (the receiver when the
+         * channel was generated).
+         */
+        std::pair<uint32_t, uint32_t> m_nodeIds;
 
         /**
          * Destructor for ChannelMatrix
@@ -105,18 +122,41 @@ class MatrixBasedChannelModel : public Object
      */
     struct ChannelParams : public SimpleRefCount<ChannelParams>
     {
-        Time m_generatedTime;   //!< generation time
-        DoubleVector m_delay;   //!< cluster delay in nanoseconds.
-        Double2DVector m_angle; //!< cluster angle angle[direction][n], where direction = 0(AOA),
-                                //!< 1(ZOA), 2(AOD), 3(ZOD) in degree.
-        DoubleVector m_alpha;   //!< alpha term per cluster as described in 3GPP TR 37.885 v15.3.0,
-                                //!< Sec. 6.2.3 for calculating doppler
-        DoubleVector m_D; //!< D term per cluster as described in 3GPP TR 37.885 v15.3.0, Sec. 6.2.3
-                          //!< for calculating doppler
-        std::pair<uint32_t, uint32_t>
-            m_nodeIds; //!< the first element is the s-node ID (the transmitter when the channel
-                       //!< params were generated), the second element is the u-node ID (the
-                       //!< receiver when the channel params were generated generated)
+        /**
+         * Generation time.
+         */
+        Time m_generatedTime;
+
+        /**
+         * Cluster delay in nanoseconds.
+         */
+        DoubleVector m_delay;
+
+        /**
+         * Cluster angle angle[direction][n], where direction = 0(AOA), 1(ZOA), 2(AOD), 3(ZOD)
+         * in degree.
+         */
+        Double2DVector m_angle;
+
+        /**
+         * Alpha term per cluster as described in 3GPP TR 37.885 v15.3.0, Sec. 6.2.3
+         * for calculating doppler.
+         */
+        DoubleVector m_alpha;
+
+        /**
+         * D term per cluster as described in 3GPP TR 37.885 v15.3.0, Sec. 6.2.3
+         * for calculating doppler.
+         */
+        DoubleVector m_D;
+
+        /**
+         * The first element is the s-node ID (the transmitter when the channel params were
+         * generated), the second element is the u-node ID (the receiver when the channel params
+         * were generated generated).
+         */
+        std::pair<uint32_t, uint32_t> m_nodeIds;
+
         /**
          * Destructor for ChannelParams
          */

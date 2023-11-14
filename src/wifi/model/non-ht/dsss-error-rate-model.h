@@ -20,13 +20,6 @@
 #ifndef DSSS_ERROR_RATE_MODEL_H
 #define DSSS_ERROR_RATE_MODEL_H
 
-#ifdef HAVE_GSL
-#include <gsl/gsl_cdf.h>
-#include <gsl/gsl_integration.h>
-#include <gsl/gsl_math.h>
-#include <gsl/gsl_sf_bessel.h>
-#endif
-
 #include <cstdint>
 
 namespace ns3
@@ -36,11 +29,11 @@ namespace ns3
 /**
  * Structure for integral function parameters
  */
-typedef struct FunctionParameterType
+struct FunctionParameters
 {
     double beta; ///< Beta parameter
     double n;    ///< n parameter
-} FunctionParameters;
+};
 
 /**
  * Integral function using GSL library

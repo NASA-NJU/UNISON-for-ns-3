@@ -511,7 +511,7 @@ In downlink, the SINR used to generate CQI feedback can be calculated in two dif
 
 To switch between this two CQI generation approaches, ``LteHelper::UsePdschForCqiGeneration`` needs to be configured: false for first approach and true for second approach (true is default value)::
 
-   Config::SetDefault ("ns3::LteHelper::UsePdschForCqiGeneration", BooleanValue (true));
+   Config::SetDefault("ns3::LteHelper::UsePdschForCqiGeneration", BooleanValue(true));
 
 In uplink, two types of CQIs are implemented:
 
@@ -683,7 +683,7 @@ The model implemented uses the curves for the LSM of the recently LTE PHY Error 
 
 The model can be disabled for working with a zero-losses channel by setting the ``DataErrorModelEnabled`` attribute of the ``LteSpectrumPhy`` class (by default is active). This can be done according to the standard ns3 attribute system procedure, that is::
 
-  Config::SetDefault ("ns3::LteSpectrumPhy::DataErrorModelEnabled", BooleanValue (false));
+  Config::SetDefault("ns3::LteSpectrumPhy::DataErrorModelEnabled", BooleanValue(false));
 
 .. _sec-control-channles-phy-error-model:
 
@@ -707,7 +707,7 @@ MIMO Model
 
 The use of multiple antennas both at transmitter and receiver side, known as multiple-input and multiple-output (MIMO), is a problem well studied in literature during the past years. Most of the work concentrate on evaluating analytically the gain that the different MIMO schemes might have in term of capacity; however someones provide also information of the gain in terms of received power [CatreuxMIMO]_.
 
-According to the considerations above, a model more flexible can be obtained considering the gain that MIMO schemes bring in the system from a statistical point of view. As highlighted before, [CatreuxMIMO]_ presents the statistical gain of several MIMO solutions respect to the SISO one in case of no correlation between the antennas. In the work the gain is presented as the cumulative distribution function (CDF) of the output SINR for what concern SISO, MIMO-Alamouti, MIMO-MMSE, MIMO-OSIC-MMSE and MIMO-ZF schemes. Elaborating the results, the output SINR distribution can be approximated with a log-normal one with different mean and variance as function of the scheme considered. However, the variances are not so different and they are approximatively equal to the one of the SISO mode already included in the shadowing component of the ``BuildingsPropagationLossModel``, in detail:
+According to the considerations above, a model more flexible can be obtained considering the gain that MIMO schemes bring in the system from a statistical point of view. As highlighted before, [CatreuxMIMO]_ presents the statistical gain of several MIMO solutions respect to the SISO one in case of no correlation between the antennas. In the work the gain is presented as the cumulative distribution function (CDF) of the output SINR for what concern SISO, MIMO-Alamouti, MIMO-MMSE, MIMO-OSIC-MMSE and MIMO-ZF schemes. Elaborating the results, the output SINR distribution can be approximated with a log-normal one with different mean and variance as function of the scheme considered. However, the variances are not so different and they are approximately equal to the one of the SISO mode already included in the shadowing component of the ``BuildingsPropagationLossModel``, in detail:
 
  * SISO: :math:`\mu = 13.5` and :math:`\sigma = 20` [dB].
  * MIMO-Alamouti: :math:`\mu = 17.7` and :math:`\sigma = 11.1` [dB].
@@ -1000,7 +1000,7 @@ available resources among the active flows, i.e., those logical channels which h
 
 For what concern the HARQ, RR implements the non adaptive version, which implies that in allocating the retransmission attempts RR uses the same allocation configuration of the original block, which means maintaining the same RBGs and MCS. UEs that are allocated for HARQ retransmissions are not considered for the transmission of new data in case they have a transmission opportunity available in the same TTI. Finally, HARQ can be disabled with ns3 attribute system for maintaining backward compatibility with old test cases and code, in detail::
 
-   Config::SetDefault ("ns3::RrFfMacScheduler::HarqEnabled", BooleanValue (false));
+   Config::SetDefault("ns3::RrFfMacScheduler::HarqEnabled", BooleanValue(false));
 
 The scheduler implements the filtering of the uplink CQIs according to their nature with ``UlCqiFilter`` attribute, in detail:
 
@@ -1037,7 +1037,7 @@ In detail, the index :math:`\widehat{i}_{k}(t)` to which RBG :math:`k` is assign
    \widehat{i}_{k}(t) = \underset{j=1,...,N}{\operatorname{argmax}}
     \left( \frac{ R_{j}(k,t) }{ T_\mathrm{j}(t) } \right)
 
-where :math:`T_{j}(t)` is the past througput performance perceived by the
+where :math:`T_{j}(t)` is the past throughput performance perceived by the
 user :math:`j`.
 According to the above scheduling algorithm, a user can be allocated to
 different RBGs, which can be either adjacent or not, depending on the current
@@ -1079,7 +1079,7 @@ where :math:`|\cdot|` indicates the cardinality of the set; finally,
 
 For what concern the HARQ, PF implements the non adaptive version, which implies that in allocating the retransmission attempts the scheduler uses the same allocation configuration of the original block, which means maintaining the same RBGs and MCS. UEs that are allocated for HARQ retransmissions are not considered for the transmission of new data in case they have a transmission opportunity available in the same TTI. Finally, HARQ can be disabled with ns3 attribute system for maintaining backward compatibility with old test cases and code, in detail::
 
-   Config::SetDefault ("ns3::PfFfMacScheduler::HarqEnabled", BooleanValue (false));
+   Config::SetDefault("ns3::PfFfMacScheduler::HarqEnabled", BooleanValue(false));
 
 
 
@@ -1256,7 +1256,7 @@ quality UE tend towards the TBR.
 
 ::
 
-  Config::SetDefault ("ns3::PfFfMacScheduler::HarqEnabled", BooleanValue (false));
+  Config::SetDefault("ns3::PfFfMacScheduler::HarqEnabled", BooleanValue(false));
 
 The scheduler implements the filtering of the uplink CQIs according to their nature with ``UlCqiFilter`` attribute, in detail:
 
@@ -2269,7 +2269,7 @@ the PCFICH errors [R4-081920]_ (also refer to
 :ref:`sec-control-channles-phy-error-model`). Once, the UE is unable to decode
 20 consecutive frames, i.e., the Qout evaluation period (200ms) is reached, an
 out-of-sync indication is sent to the UE RRC layer (see ``LteUeRrc::DoNotifyOutOfSync``).
-Else, the counter for the unsuccessfully decoded frames is reset to zero. At the
+Else, the counter for the unsuccessfuly decoded frames is reset to zero. At the
 LteUeRrc, when the number of consecutive out-of-sync indications matches with the
 value of N310 parameter, the T310 timer is started and LteUePhy is notified to start
 measuring for in-sync indications (see ``LteUePhy::DoStartInSnycDetection``). We note
@@ -3371,7 +3371,7 @@ SGW node, it is delivered locally (as the destination address of
 the outmost IP header matches the address of the point-to-point net
 device). The local delivery process will forward the packet to the
 EpcSgwApplication via the corresponding UDP socket. The
-EpcSgwApplication then perfoms the following operations:
+EpcSgwApplication then performs the following operations:
 
  #. it removes the GTP header and retrieves the S1-U TEID;
  #. it maps the S1-U TEID to get the S5 TEID to which the packet
@@ -3604,7 +3604,7 @@ The X2 service interface is used by the RRC entity to send and receive messages 
 
   * the ``EpcX2SapProvider`` part is provided by the X2 entity and used by the RRC entity and
 
-  * the ``EpcX2SapUser`` part is provided by the RRC entity and used by the RRC enity.
+  * the ``EpcX2SapUser`` part is provided by the RRC entity and used by the RRC entity.
 
 The primitives that are supported in our X2-C model are described in the following subsections.
 
@@ -3646,7 +3646,7 @@ the following new member variables::
 
   std::vector<EpcX2Sap::UlInterferenceOverloadIndicationItem>
     m_currentUlInterferenceOverloadIndicationList;
-  std::vector <EpcX2Sap::UlHighInterferenceInformationItem>
+  std::vector<EpcX2Sap::UlHighInterferenceInformationItem>
     m_currentUlHighInterferenceInformationList;
   EpcX2Sap::RelativeNarrowbandTxBand m_currentRelativeNarrowbandTxBand;
 
@@ -3667,8 +3667,8 @@ implementation in order to send a load information primitive::
 
   EpcX2Sap::LoadInformationParams params;
   params.targetCellId = cellId;
-  params.cellInformationList.push_back (cii);
-  m_x2SapProvider->SendLoadInformation (params);
+  params.cellInformationList.push_back(cii);
+  m_x2SapProvider->SendLoadInformation(params);
 
 
 The above code allows the source eNB to send the message. The method
@@ -3691,8 +3691,8 @@ send a resource status update::
 
   EpcX2Sap::ResourceStatusUpdateParams params;
   params.targetCellId = cellId;
-  params.cellMeasurementResultList.push_back (m_cmri);
-  m_x2SapProvider->SendResourceStatusUpdate (params);
+  params.cellMeasurementResultList.push_back(m_cmri);
+  m_x2SapProvider->SendResourceStatusUpdate(params);
 
 
 The method ``eEnbRrc::DoRecvResourceStatusUpdate`` will be called when
@@ -3805,7 +3805,7 @@ channels. This functionality is described in 3GPP TS 36.213 section 5.
 
 Uplink Power Control is enabled by default, and can be disabled by attribute system::
 
-   Config::SetDefault ("ns3::LteUePhy::EnableUplinkPowerControl", BooleanValue (false));
+   Config::SetDefault("ns3::LteUePhy::EnableUplinkPowerControl", BooleanValue(false));
 
 
 Two Uplink Power Control mechanisms are implemented:
@@ -3818,7 +3818,7 @@ Two Uplink Power Control mechanisms are implemented:
 
 To switch between these two mechanism types, one should change parameter::
 
-  Config::SetDefault ("ns3::LteUePowerControl::ClosedLoop", BooleanValue (true));
+  Config::SetDefault("ns3::LteUePowerControl::ClosedLoop", BooleanValue(true));
 
 By default, Closed Loop Power Control is enabled.
 
@@ -3829,7 +3829,7 @@ Two modes of Closed Loop Uplink Power Control are available:
 
 To switch between these two modes, one should change parameter::
 
-  Config::SetDefault ("ns3::LteUePowerControl::AccumulationEnabled", BooleanValue (true));
+  Config::SetDefault("ns3::LteUePowerControl::AccumulationEnabled", BooleanValue(true));
 
 By default, Accumulation Mode is enabled and TPC commands in DL-DCI are set by all schedulers to 1,
 what is mapped to value of 0 in Accumulation Mode.
@@ -3894,15 +3894,15 @@ where:
    layers for :math:`j={0,1}` for serving cell :math:`c`. SIB2 message needs to be extended to carry these two
    components, but currently they can be set via attribute system::
 
-      Config::SetDefault ("ns3::LteUePowerControl::PoNominalPusch", IntegerValue (-90));
-      Config::SetDefault ("ns3::LteUePowerControl::PoUePusch", IntegerValue (7));
+      Config::SetDefault("ns3::LteUePowerControl::PoNominalPusch", IntegerValue(-90));
+      Config::SetDefault("ns3::LteUePowerControl::PoUePusch", IntegerValue(7));
 
  * :math:`\alpha_{c} (j)` is a 3-bit parameter provided by higher layers for serving cell :math:`c`.
    For :math:`j=0,1`,   :math:`\alpha_c \in \left \{ 0, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1 \right \}`
    For :math:`j=2`,   :math:`\alpha_{c} (j) = 1`.
    This parameter is configurable by attribute system::
 
-      Config::SetDefault ("ns3::LteUePowerControl::Alpha", DoubleValue (0.8));
+      Config::SetDefault("ns3::LteUePowerControl::Alpha", DoubleValue(0.8));
 
  * :math:`PL_{c}` is the downlink pathloss estimate calculated in the UE for serving cell :math:`c` in dB
    and :math:`PL_{c} = referenceSignalPower – higher layer filtered RSRP`, where :math:`referenceSignalPower`
@@ -3979,7 +3979,7 @@ where:
 
    This parameter is configurable by attribute system::
 
-      Config::SetDefault ("ns3::LteUePowerControl::PsrsOffset", IntegerValue (7));
+      Config::SetDefault("ns3::LteUePowerControl::PsrsOffset", IntegerValue(7));
 
  * :math:`M_{SRS,c}` is the bandwidth of the SRS transmission in subframe :math:`i` for serving
    cell :math:`c` expressed in number of resource blocks. In current implementation SRS is sent
@@ -4252,7 +4252,7 @@ Distributed Fractional Frequency Reuse
 This Distributed Fractional Frequency Reuse Algorithm was presented in [DKimura2012]_. It
 automatically optimizes cell-edge sub-bands by focusing on user distribution (in particular,
 receive-power distribution). This algorithm adaptively selects RBs for cell-edge sub-band on
-basis of coordination information from adjecent cells and notifies the base stations of the
+basis of coordination information from adjacent cells and notifies the base stations of the
 adjacent cells, which RBs it selected to use in edge sub-band. The base station of each cell
 uses the received information and the following equation to compute cell-edge-band metric
 :math:`A_{k}` for each RB.
@@ -4742,4 +4742,3 @@ called by the ``LteHelper``. The exact interactions are displayed in the Figure 
    :align: center
 
    Sequence diagram of the interaction between ``LteHelper`` and ``EpcHelper``.
-

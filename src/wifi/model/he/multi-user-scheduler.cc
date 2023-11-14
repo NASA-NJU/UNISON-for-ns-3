@@ -92,11 +92,8 @@ MultiUserScheduler::DoDispose()
 {
     NS_LOG_FUNCTION(this);
     m_apMac = nullptr;
-    m_heFem = nullptr;
     m_edca = nullptr;
-    m_dlInfo.psduMap.clear();
-    m_dlInfo.txParams.Clear();
-    m_ulInfo.txParams.Clear();
+    m_lastTxInfo.clear();
     m_accessReqTimer.Cancel();
     Object::DoDispose();
 }
@@ -131,6 +128,19 @@ MultiUserScheduler::DoInitialize()
 }
 
 void
+MultiUserScheduler::SetAccessReqInterval(Time interval)
+{
+    NS_LOG_FUNCTION(this << interval.As(Time::MS));
+    m_accessReqInterval = interval;
+    // start the timer if past initialization
+    if (m_accessReqInterval.IsStrictlyPositive() && IsInitialized())
+    {
+        m_accessReqTimer =
+            Simulator::Schedule(m_accessReqInterval, &MultiUserScheduler::AccessReqTimeout, this);
+    }
+}
+
+void
 MultiUserScheduler::SetWifiMac(Ptr<ApWifiMac> mac)
 {
     NS_LOG_FUNCTION(this << mac);
@@ -141,14 +151,24 @@ MultiUserScheduler::SetWifiMac(Ptr<ApWifiMac> mac)
     NS_ABORT_MSG_IF(!m_apMac || !m_apMac->GetHeConfiguration(),
                     "MultiUserScheduler can only be installed on HE APs");
 
-    m_heFem = DynamicCast<HeFrameExchangeManager>(m_apMac->GetFrameExchangeManager());
-    m_heFem->SetMultiUserScheduler(this);
+    for (uint8_t linkId = 0; linkId < m_apMac->GetNLinks(); linkId++)
+    {
+        auto heFem = DynamicCast<HeFrameExchangeManager>(m_apMac->GetFrameExchangeManager(linkId));
+        NS_ASSERT(heFem);
+        heFem->SetMultiUserScheduler(this);
+    }
 }
 
 Ptr<WifiRemoteStationManager>
-MultiUserScheduler::GetWifiRemoteStationManager() const
+MultiUserScheduler::GetWifiRemoteStationManager(uint8_t linkId) const
 {
-    return m_apMac->GetWifiRemoteStationManager();
+    return m_apMac->GetWifiRemoteStationManager(linkId);
+}
+
+Ptr<HeFrameExchangeManager>
+MultiUserScheduler::GetHeFem(uint8_t linkId) const
+{
+    return StaticCast<HeFrameExchangeManager>(m_apMac->GetFrameExchangeManager(linkId));
 }
 
 void
@@ -159,92 +179,108 @@ MultiUserScheduler::AccessReqTimeout()
     // request channel access if not requested yet
     auto edca = m_apMac->GetQosTxop(m_accessReqAc);
 
-    if (edca->GetAccessStatus(SINGLE_LINK_OP_ID) == Txop::NOT_REQUESTED)
+    for (uint8_t linkId = 0; linkId < m_apMac->GetNLinks(); linkId++)
     {
-        m_apMac->GetChannelAccessManager()->RequestAccess(edca);
+        if (edca->GetAccessStatus(linkId) == Txop::NOT_REQUESTED)
+        {
+            m_apMac->GetChannelAccessManager(linkId)->RequestAccess(edca);
+        }
     }
 
     // restart timer
-    m_accessReqTimer =
-        Simulator::Schedule(m_accessReqInterval, &MultiUserScheduler::AccessReqTimeout, this);
+    if (m_accessReqInterval.IsStrictlyPositive())
+    {
+        m_accessReqTimer =
+            Simulator::Schedule(m_accessReqInterval, &MultiUserScheduler::AccessReqTimeout, this);
+    }
 }
 
 MultiUserScheduler::TxFormat
 MultiUserScheduler::NotifyAccessGranted(Ptr<QosTxop> edca,
                                         Time availableTime,
                                         bool initialFrame,
-                                        uint16_t allowedWidth)
+                                        uint16_t allowedWidth,
+                                        uint8_t linkId)
 {
-    NS_LOG_FUNCTION(this << edca << availableTime << initialFrame << allowedWidth);
+    NS_LOG_FUNCTION(this << edca << availableTime << initialFrame << allowedWidth << linkId);
 
     m_edca = edca;
     m_availableTime = availableTime;
     m_initialFrame = initialFrame;
     m_allowedWidth = allowedWidth;
+    m_linkId = linkId;
 
     if (m_accessReqTimer.IsRunning() && m_restartTimerUponAccess)
     {
         // restart access timer
         m_accessReqTimer.Cancel();
-        m_accessReqTimer =
-            Simulator::Schedule(m_accessReqInterval, &MultiUserScheduler::AccessReqTimeout, this);
+        if (m_accessReqInterval.IsStrictlyPositive())
+        {
+            m_accessReqTimer = Simulator::Schedule(m_accessReqInterval,
+                                                   &MultiUserScheduler::AccessReqTimeout,
+                                                   this);
+        }
     }
 
     TxFormat txFormat = SelectTxFormat();
 
     if (txFormat == DL_MU_TX)
     {
-        m_dlInfo = ComputeDlMuInfo();
+        m_lastTxInfo[linkId].dlInfo = ComputeDlMuInfo();
     }
     else if (txFormat == UL_MU_TX)
     {
-        NS_ABORT_MSG_IF(!m_heFem, "UL MU PPDUs are only supported by HE APs");
-        m_ulInfo = ComputeUlMuInfo();
+        m_lastTxInfo[linkId].ulInfo = ComputeUlMuInfo();
         CheckTriggerFrame();
     }
 
     if (txFormat != NO_TX)
     {
-        m_lastTxFormat = txFormat;
+        m_lastTxInfo[linkId].lastTxFormat = txFormat;
     }
     return txFormat;
 }
 
 MultiUserScheduler::TxFormat
-MultiUserScheduler::GetLastTxFormat() const
+MultiUserScheduler::GetLastTxFormat(uint8_t linkId)
 {
-    return m_lastTxFormat;
+    return m_lastTxInfo[linkId].lastTxFormat;
 }
 
 MultiUserScheduler::DlMuInfo&
-MultiUserScheduler::GetDlMuInfo()
+MultiUserScheduler::GetDlMuInfo(uint8_t linkId)
 {
-    NS_ABORT_MSG_IF(m_lastTxFormat != DL_MU_TX, "Next transmission is not DL MU");
+    NS_ABORT_MSG_IF(m_lastTxInfo[linkId].lastTxFormat != DL_MU_TX,
+                    "Next transmission is not DL MU");
 
 #ifdef NS3_BUILD_PROFILE_DEBUG
     // check that all the addressed stations support HE
-    for (auto& psdu : m_dlInfo.psduMap)
+    for (auto& psdu : m_lastTxInfo[linkId].dlInfo.psduMap)
     {
-        NS_ABORT_MSG_IF(!GetWifiRemoteStationManager()->GetHeSupported(psdu.second->GetAddr1()),
+        auto receiver = psdu.second->GetAddr1();
+        auto linkId = m_apMac->IsAssociated(receiver);
+        NS_ABORT_MSG_IF(!linkId, "Station " << receiver << " should be associated");
+        NS_ABORT_MSG_IF(!GetWifiRemoteStationManager(*linkId)->GetHeSupported(receiver),
                         "Station " << psdu.second->GetAddr1() << " does not support HE");
     }
 #endif
 
-    return m_dlInfo;
+    return m_lastTxInfo[linkId].dlInfo;
 }
 
 MultiUserScheduler::UlMuInfo&
-MultiUserScheduler::GetUlMuInfo()
+MultiUserScheduler::GetUlMuInfo(uint8_t linkId)
 {
-    NS_ABORT_MSG_IF(m_lastTxFormat != UL_MU_TX, "Next transmission is not UL MU");
+    NS_ABORT_MSG_IF(m_lastTxInfo[linkId].lastTxFormat != UL_MU_TX,
+                    "Next transmission is not UL MU");
 
-    return m_ulInfo;
+    return m_lastTxInfo[linkId].ulInfo;
 }
 
 Ptr<WifiMpdu>
-MultiUserScheduler::GetTriggerFrame(const CtrlTriggerHeader& trigger) const
+MultiUserScheduler::GetTriggerFrame(const CtrlTriggerHeader& trigger, uint8_t linkId) const
 {
-    NS_LOG_FUNCTION(this);
+    NS_LOG_FUNCTION(this << linkId);
 
     Ptr<Packet> packet = Create<Packet>();
     packet->AddHeader(trigger);
@@ -253,14 +289,14 @@ MultiUserScheduler::GetTriggerFrame(const CtrlTriggerHeader& trigger) const
     if (trigger.GetNUserInfoFields() == 1)
     {
         auto aid = trigger.begin()->GetAid12();
-        auto aidAddrMapIt = m_apMac->GetStaList().find(aid);
-        NS_ASSERT(aidAddrMapIt != m_apMac->GetStaList().end());
+        auto aidAddrMapIt = m_apMac->GetStaList(linkId).find(aid);
+        NS_ASSERT(aidAddrMapIt != m_apMac->GetStaList(linkId).end());
         receiver = aidAddrMapIt->second;
     }
 
     WifiMacHeader hdr(WIFI_MAC_CTL_TRIGGER);
     hdr.SetAddr1(receiver);
-    hdr.SetAddr2(m_apMac->GetAddress());
+    hdr.SetAddr2(GetHeFem(linkId)->GetAddress());
     hdr.SetDsNotTo();
     hdr.SetDsNotFrom();
 
@@ -274,9 +310,10 @@ MultiUserScheduler::CheckTriggerFrame()
 
     // Set the CS Required subfield to true, unless the UL Length subfield is less
     // than or equal to 76 (see Section 26.5.2.5 of 802.11ax-2021)
-    m_ulInfo.trigger.SetCsRequired(m_ulInfo.trigger.GetUlLength() > 76);
+    m_lastTxInfo[m_linkId].ulInfo.trigger.SetCsRequired(
+        m_lastTxInfo[m_linkId].ulInfo.trigger.GetUlLength() > 76);
 
-    m_heFem->SetTargetRssi(m_ulInfo.trigger);
+    GetHeFem(m_linkId)->SetTargetRssi(m_lastTxInfo[m_linkId].ulInfo.trigger);
 }
 
 uint32_t
@@ -287,12 +324,13 @@ MultiUserScheduler::GetMaxSizeOfQosNullAmpdu(const CtrlTriggerHeader& trigger) c
     uint8_t maxNTids = 0;
     for (const auto& userInfo : trigger)
     {
-        const auto staIt = m_apMac->GetStaList().find(userInfo.GetAid12());
-        NS_ASSERT(staIt != m_apMac->GetStaList().cend());
+        auto address = m_apMac->GetMldOrLinkAddressByAid(userInfo.GetAid12());
+        NS_ASSERT_MSG(address, "AID " << userInfo.GetAid12() << " not found");
+
         uint8_t staNTids = 0;
         for (uint8_t tid = 0; tid < 8; tid++)
         {
-            if (m_heFem->GetBaAgreementEstablished(staIt->second, tid))
+            if (m_apMac->GetBaAgreementEstablishedAsRecipient(*address, tid))
             {
                 staNTids++;
             }

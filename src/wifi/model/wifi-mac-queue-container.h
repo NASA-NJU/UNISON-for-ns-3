@@ -25,6 +25,7 @@
 #include "ns3/mac48-address.h"
 
 #include <list>
+#include <optional>
 #include <tuple>
 #include <unordered_map>
 
@@ -34,16 +35,22 @@ namespace ns3
 /// enumeration of container queue types
 enum WifiContainerQueueType
 {
-    WIFI_MGT_QUEUE = 0,
-    WIFI_QOSDATA_UNICAST_QUEUE = 1,
-    WIFI_QOSDATA_BROADCAST_QUEUE = 2,
-    WIFI_DATA_QUEUE = 3
+    WIFI_CTL_QUEUE = 0,
+    WIFI_MGT_QUEUE = 1,
+    WIFI_QOSDATA_UNICAST_QUEUE = 2,
+    WIFI_QOSDATA_BROADCAST_QUEUE = 3,
+    WIFI_DATA_QUEUE = 4
 };
 
 /**
  * Tuple (queue type, Address, TID) identifying a container queue.
  *
  * \note that Address has a different meaning depending on container queue type:
+ * - if container queue type is WIFI_CTL_QUEUE, Address is the Transmitter Address
+ * (TA) of the frames stored in the queue. We have distinct control queues
+ * depending on TA to distinguish among control frames that need to be sent
+ * over different links by 11be MLDs. MLD address as TA indicates that the frames
+ * can be sent on any link. TID is ignored.
  * - if container queue type is WIFI_MGT_QUEUE, Address is the Transmitter Address
  * (TA) of the frames stored in the queue. We have distinct management queues
  * depending on TA to distinguish among management frames that need to be sent
@@ -59,7 +66,8 @@ enum WifiContainerQueueType
  * Transmitter Address (TA) because 11be stations are QoS stations and hence do
  * not send non-QoS Data frames. TID is ignored.
  */
-using WifiContainerQueueId = std::tuple<WifiContainerQueueType, Mac48Address, uint8_t>;
+using WifiContainerQueueId =
+    std::tuple<WifiContainerQueueType, Mac48Address, std::optional<uint8_t>>;
 
 } // namespace ns3
 
@@ -162,7 +170,7 @@ class WifiMacQueueContainer
     uint32_t GetNBytes(const WifiContainerQueueId& queueId) const;
 
     /**
-     * Transfer MPDUs with expired lifetime in the container queue identified by
+     * Transfer non-inflight MPDUs with expired lifetime in the container queue identified by
      * the given QueueId to the container queue storing MPDUs with expired lifetime.
      *
      * \param queueId the QueueId identifying the container queue
@@ -171,8 +179,8 @@ class WifiMacQueueContainer
      */
     std::pair<iterator, iterator> ExtractExpiredMpdus(const WifiContainerQueueId& queueId) const;
     /**
-     * Transfer MPDUs with expired lifetime in all the container queues to the container
-     * queue storing MPDUs with expired lifetime.
+     * Transfer non-inflight MPDUs with expired lifetime in all the container queues to the
+     * container queue storing MPDUs with expired lifetime.
      *
      * \return the range [first, last) of iterators pointing to the MPDUs transferred
      *         to the container queue storing MPDUs with expired lifetime
@@ -189,7 +197,7 @@ class WifiMacQueueContainer
 
   private:
     /**
-     * Transfer MPDUs with expired lifetime in the given container queue to the
+     * Transfer non-inflight MPDUs with expired lifetime in the given container queue to the
      * container queue storing MPDUs with expired lifetime.
      *
      * \param queue the given container queue

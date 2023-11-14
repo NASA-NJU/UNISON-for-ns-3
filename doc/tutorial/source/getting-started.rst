@@ -70,13 +70,13 @@ You may want to take this opportunity to explore the |ns3| wiki
 a bit, or the main web site at https://www.nsnam.org, since there is a
 wealth of information there.
 
-As of the most recent |ns3| release (ns-3.37), the following tools
+As of the most recent |ns3| release (ns-3.38), the following tools
 are needed to get started with |ns3|:
 
 ============  ===========================================================
 Prerequisite  Package/version
 ============  ===========================================================
-C++ compiler  ``clang++`` or ``g++`` (g++ version 8 or greater)
+C++ compiler  ``clang++`` or ``g++`` (g++ version 9 or greater)
 Python        ``python3`` version >=3.6
 CMake         ``cmake`` version >=3.10
 Build system  ``make``, ``ninja``, ``xcodebuild`` (XCode)
@@ -124,21 +124,21 @@ get a copy of a release by typing the following into your Linux shell
   $ cd
   $ mkdir workspace
   $ cd workspace
-  $ wget https://www.nsnam.org/release/ns-allinone-3.37.tar.bz2
-  $ tar xjf ns-allinone-3.37.tar.bz2
+  $ wget https://www.nsnam.org/release/ns-allinone-3.38.tar.bz2
+  $ tar xjf ns-allinone-3.38.tar.bz2
 
 Notice the use above of the ``wget`` utility, which is a command-line
 tool to fetch objects from the web; if you do not have this installed,
 you can use a browser for this step.
 
 Following these steps, if you change into the directory
-``ns-allinone-3.37``, you should see a number of files and directories
+``ns-allinone-3.38``, you should see a number of files and directories
 
 .. sourcecode:: text
 
-  $ cd ns-allinone-3.37
+  $ cd ns-allinone-3.38
   $ ls
-  bake  build.py  constants.py  netanim-3.108 ns-3.37  README.md  util.py
+  bake  build.py  constants.py  netanim-3.109 ns-3.38  README.md  util.py
 
 You are now ready to build the base |ns3| distribution and may skip ahead
 to the section on building |ns3|.
@@ -188,7 +188,7 @@ release number:
 
 .. sourcecode:: console
 
-  $ python3 download.py -n ns-3.37
+  $ python3 download.py -n ns-3.38
 
 After this step, the additional repositories of |ns3|, bake, pybindgen,
 and netanim will be downloaded to the ``ns-3-allinone`` directory.
@@ -199,7 +199,7 @@ Downloading ns-3 Using Bake
 The above two techniques (source archive, or ns-3-allinone repository
 via Git) are useful to get the most basic installation of |ns3| with a
 few addons (pybindgen for generating Python bindings, and netanim
-for network animiations).  The third repository provided by default in
+for network animations).  The third repository provided by default in
 ns-3-allinone is called ``bake``.
 
 Bake is a tool for coordinated software building from multiple repositories,
@@ -257,9 +257,9 @@ distribution of your choice.
 
 There are a few configuration targets available:
 
-1.  ``ns-3.37``:  the code corresponding to the release
+1.  ``ns-3.38``:  the code corresponding to the release
 2.  ``ns-3-dev``:  a similar module but using the development code tree
-3.  ``ns-allinone-3.37``:  the module that includes other optional features
+3.  ``ns-allinone-3.38``:  the module that includes other optional features
     such as bake build system, netanim animator, and pybindgen
 4.  ``ns-3-allinone``:  similar to the released version of the allinone
     module, but for development code.
@@ -276,7 +276,7 @@ code either by inspection of the repository list or by going to the
 `"ns-3 Releases"
 <https://www.nsnam.org/releases>`_
 web page and clicking on the latest release link.  We'll proceed in
-this tutorial example with ``ns-3.37``.
+this tutorial example with ``ns-3.38``.
 
 We are now going to use the bake tool to pull down the various pieces of
 |ns3| you will be using.  First, we'll say a word about running bake.
@@ -305,7 +305,7 @@ Step into the workspace directory and type the following into your shell:
 
 .. sourcecode:: console
 
-  $ ./bake.py configure -e ns-allinone-3.37
+  $ ./bake.py configure -e ns-allinone-3.38
 
 Next, we'll ask bake to check whether we have enough tools to download
 various components.  Type:
@@ -351,11 +351,11 @@ should yield something like:
   >> Searching for system dependency qt - OK
   >> Searching for system dependency g++ - OK
   >> Searching for system dependency cmake - OK
-  >> Downloading netanim-3.108 - OK
-  >> Downloading click-ns-3.37 - OK
+  >> Downloading netanim-3.109 - OK
+  >> Downloading click-ns-3.38 - OK
   >> Downloading BRITE - OK
   >> Downloading openflow-dev - OK
-  >> Downloading ns-3.37 (target directory:ns-3.37) - OK
+  >> Downloading ns-3.38 (target directory:ns-3.38) - OK
 
 The above suggests that three sources have been downloaded.  Check the
 ``source`` directory now and type ``ls``; one should see:
@@ -364,7 +364,7 @@ The above suggests that three sources have been downloaded.  Check the
 
   $ cd source
   $ ls
-  BRITE  click-ns-3.37  netanim-3.108  ns-3.37  openflow-dev
+  BRITE  click-ns-3.37  netanim-3.109  ns-3.38  openflow-dev
 
 You are now ready to build the |ns3| distribution.
 
@@ -394,7 +394,7 @@ native |ns3| build system, CMake, to be introduced later in this tutorial.
 
 If you downloaded
 using a tarball you should have a directory called something like
-``ns-allinone-3.37`` under your ``~/workspace`` directory.
+``ns-allinone-3.38`` under your ``~/workspace`` directory.
 Type the following:
 
 .. sourcecode:: console
@@ -426,8 +426,8 @@ and you should see something like:
 
 .. sourcecode:: text
 
-  >> Building netanim-3.108 - OK
-  >> Building ns-3.37 - OK
+  >> Building netanim-3.109 - OK
+  >> Building ns-3.38 - OK
 
 There may be failures to build all components, but the build will proceed
 anyway if the component is optional.
@@ -735,7 +735,7 @@ that a compiler warning will cause the build to fail.
 
 For instance, ns-3.28 was released prior to Fedora 28, which included
 a new major version of gcc (gcc-8).  Building ns-3.28 or older releases
-on Fedora 28, when Gtk2+ is installed, will result in an error such as::
+on Fedora 28, when GTK+2 is installed, will result in an error such as::
 
   /usr/include/gtk-2.0/gtk/gtkfilechooserbutton.h:59:8: error: unnecessary parentheses in declaration of ‘__gtk_reserved1’ [-Werror=parentheses]
    void (*__gtk_reserved1);
@@ -822,9 +822,9 @@ use the indicated Code Wrapper macro:
 
 .. sourcecode:: cpp
 
-  NS_BUILD_DEBUG (std::cout << "Part of an output line..." << std::flush; timer.Start ());
-  DoLongInvolvedComputation ();
-  NS_BUILD_DEBUG (timer.Stop (); std::cout << "Done: " << timer << std::endl;)
+  NS_BUILD_DEBUG(std::cout << "Part of an output line..." << std::flush; timer.Start());
+  DoLongInvolvedComputation();
+  NS_BUILD_DEBUG(timer.Stop(); std::cout << "Done: " << timer << std::endl;)
 
 By default ns3 puts the build artifacts in the ``build`` directory.
 You can specify a different output directory with the ``--out``
@@ -932,6 +932,44 @@ Most users will not need this command since ns3 will pick up the
 current libraries from the ``build`` directory, but some users may find
 it useful if their use case involves working with programs outside
 of the |ns3| directory.
+
+Clean
+=====
+
+Cleaning refers to the removal of artifacts (e.g. files) generated or edited
+by the build process.  There are different levels of cleaning possible:
+
++----------+-------------------+--------------------------------------------------------------------------------+
+| Scope    | Command           | Description                                                                    |
++==========+===================+================================================================================+
+| clean    | `./ns3 clean`     | Remove artifacts generated by the CMake configuration and the build            |
++----------+-------------------+--------------------------------------------------------------------------------+
+| distclean| `./ns3 distclean` | Remove artifacts from the configuration, build, documentation, test and Python |
++----------+-------------------+--------------------------------------------------------------------------------+
+| ccache   | `ccache -C`       | Remove all compiled artifacts from the ccache                                  |
++----------+-------------------+--------------------------------------------------------------------------------+
+
+`clean` can be used if the focus is on reconfiguring the way that ns-3 is
+presently being compiled.  `distclean` can be used if the focus is
+on restoring the ns-3 directory to an original state.
+
+The ccache lies outside of the ns-3 directory (typically in a hidden
+directory at `~/.cache/ccache`) and is shared across projects.
+Users should be aware that cleaning the ccache will cause cache misses
+on other build directories outside of the current working directory.
+Cleaning this cache periodically may be helpful to reclaim disk space.
+Cleaning the ccache is completely separate from cleaning any files
+within the ns-3 directory.
+
+Because clean operations involve removing files, the option conservatively
+refuses to remove files if one of the deleted files or directories lies
+outside of the current working directory.  Users may wish to precede the
+actual clean with a `--dry-run`, when in doubt about what the clean
+command will do, because a dry run will print the warning if one exists.
+For example::
+
+  ./ns3 clean --dry-run
+  ./ns3 clean
 
 One ns3
 =======
@@ -1043,11 +1081,11 @@ Note: the command above would fail if ``./ns3 build`` was not executed first,
 since the examples won't be built by the test-runner target.
 
 On Windows, the Msys2/MinGW64/bin directory path must be on the PATH environment variable,
-otherwise the dll's required by the C++ runtime will not be found, resulting in crashes
+otherwise the DLL's required by the C++ runtime will not be found, resulting in crashes
 without any explicit reasoning.
 
 Note: The ns-3 script adds only the ns-3 lib directory path to the PATH,
-ensuring the ns-3 dlls will be found by running programs. If you are using CMake directly or
+ensuring the ns-3 DLLs will be found by running programs. If you are using CMake directly or
 an IDE, make sure to also include the path to ns-3-dev/build/lib in the PATH variable.
 
 .. _setx : https://docs.microsoft.com/en-us/windows-server/administration/windows-commands/setx/
@@ -1626,4 +1664,3 @@ The resulting text file can then be saved with any corresponding
   then
       echo "$gitDiff" >> version.txt
   fi
-

@@ -73,7 +73,7 @@ class BatteryLifetimeTest
      * Runs simulation with constant load and checks the battery lifetime with
      * known results.
      */
-    bool ConstantLoadTest(double load, Time expLifetime);
+    bool ConstantLoadTest(double load, Time expLifetime) const;
 
     /**
      * \param loads Load profile.
@@ -86,16 +86,16 @@ class BatteryLifetimeTest
      */
     bool VariableLoadTest(std::vector<double> loads,
                           std::vector<Time> timeStamps,
-                          Time expLifetime);
+                          Time expLifetime) const;
 
     /// Load profile of the battery
-    typedef struct LoadProfile
+    struct LoadProfile
     {
         std::vector<double> loads;    //!< Loads container
         std::vector<Time> timeStamps; //!< Timestamps container
         Time itsyLifetime;            //!< Expected lifetime for an ITSY battery
         Time dualFoilLifeTime;        //!< Expected lifetime for a Dualfoil battery
-    } LoadProfile;
+    };
 
     std::vector<LoadProfile> m_loadProfiles; //!< Load profiles
     double m_alpha;                          //!< Alpha parameter of the battery model
@@ -715,7 +715,7 @@ main(int argc, char** argv)
 }
 
 bool
-BatteryLifetimeTest::ConstantLoadTest(double load, Time expLifetime)
+BatteryLifetimeTest::ConstantLoadTest(double load, Time expLifetime) const
 {
     // create single node
     NodeContainer c;
@@ -800,7 +800,7 @@ BatteryLifetimeTest::ConstantLoadTest(double load, Time expLifetime)
 bool
 BatteryLifetimeTest::VariableLoadTest(std::vector<double> loads,
                                       std::vector<Time> timeStamps,
-                                      Time expLifetime)
+                                      Time expLifetime) const
 {
     NS_ASSERT(loads.size() == timeStamps.size());
 

@@ -35,17 +35,24 @@ EhtPpdu::EhtPpdu(const WifiConstPsduMap& psdus,
                  Time ppduDuration,
                  WifiPhyBand band,
                  uint64_t uid,
-                 TxPsdFlag flag,
-                 uint8_t p20Index)
-    : HePpdu(psdus, txVector, txCenterFreq, ppduDuration, band, uid, flag, p20Index)
+                 TxPsdFlag flag)
+    : HePpdu(psdus, txVector, txCenterFreq, ppduDuration, band, uid, flag)
 {
-    NS_LOG_FUNCTION(this << psdus << txVector << txCenterFreq << ppduDuration << band << uid << flag
-                         << p20Index);
-}
+    NS_LOG_FUNCTION(this << psdus << txVector << txCenterFreq << ppduDuration << band << uid
+                         << flag);
 
-EhtPpdu::~EhtPpdu()
-{
-    NS_LOG_FUNCTION(this);
+    // For EHT SU transmissions (carried in EHT MU PPDUs), we have to:
+    // - store the EHT-SIG content channels
+    // - store the MCS and the number of streams for the data field
+    // because this is not done by the parent class.
+    // This is a workaround needed until we properly implement 11be PHY headers.
+    if (ns3::IsDlMu(m_preamble) && !txVector.IsDlMu())
+    {
+        m_contentChannelAlloc = txVector.GetContentChannelAllocation();
+        m_ruAllocation = txVector.GetRuAllocation();
+        m_ehtSuMcs = txVector.GetMode().GetMcsValue();
+        m_ehtSuNStreams = txVector.GetNss();
+    }
 }
 
 WifiPpduType
@@ -79,30 +86,37 @@ EhtPpdu::IsUlMu() const
     return (m_preamble == WIFI_PREAMBLE_EHT_TB) && !m_muUserInfos.empty();
 }
 
-WifiTxVector
-EhtPpdu::DoGetTxVector() const
+void
+EhtPpdu::SetTxVectorFromPhyHeaders(WifiTxVector& txVector,
+                                   const LSigHeader& lSig,
+                                   const HeSigHeader& heSig) const
 {
-    // FIXME: define EHT PHY headers
-    WifiTxVector txVector;
-    txVector.SetPreambleType(m_preamble);
-    txVector.SetMode(EhtPhy::GetEhtMcs(m_heSig.GetMcs()));
-    txVector.SetChannelWidth(m_heSig.GetChannelWidth());
-    txVector.SetNss(m_heSig.GetNStreams());
-    txVector.SetGuardInterval(m_heSig.GetGuardInterval());
-    txVector.SetBssColor(m_heSig.GetBssColor());
-    txVector.SetLength(m_lSig.GetLength());
+    txVector.SetMode(EhtPhy::GetEhtMcs(m_ehtSuMcs));
+    txVector.SetChannelWidth(heSig.GetChannelWidth());
+    txVector.SetNss(m_ehtSuNStreams);
+    txVector.SetGuardInterval(heSig.GetGuardInterval());
+    txVector.SetBssColor(heSig.GetBssColor());
+    txVector.SetLength(lSig.GetLength());
     txVector.SetAggregation(m_psdus.size() > 1 || m_psdus.begin()->second->IsAggregate());
+    if (!m_muUserInfos.empty())
+    {
+        txVector.SetEhtPpduType(0); // FIXME set to 2 for DL MU-MIMO (non-OFDMA) transmission
+    }
     for (const auto& muUserInfo : m_muUserInfos)
     {
         txVector.SetHeMuUserInfo(muUserInfo.first, muUserInfo.second);
     }
-    return txVector;
+    if (ns3::IsDlMu(m_preamble))
+    {
+        txVector.SetSigBMode(HePhy::GetVhtMcs(heSig.GetMcs()));
+        txVector.SetRuAllocation(m_ruAllocation);
+    }
 }
 
 Ptr<WifiPpdu>
 EhtPpdu::Copy() const
 {
-    return ns3::Copy(Ptr(this));
+    return Ptr<WifiPpdu>(new EhtPpdu(*this), false);
 }
 
 } // namespace ns3

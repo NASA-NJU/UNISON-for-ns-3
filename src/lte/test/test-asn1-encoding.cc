@@ -28,13 +28,14 @@
 #include "ns3/string.h"
 #include "ns3/test.h"
 
+#include <iomanip>
+
 using namespace ns3;
 
 NS_LOG_COMPONENT_DEFINE("Asn1EncodingTest");
 
 /**
  * \ingroup lte-test
- * \ingroup tests
  *
  * \brief Contains ASN encoding test utility functions.
  */
@@ -50,13 +51,13 @@ class TestUtils
     {
         uint32_t psize = pkt->GetSize();
         uint8_t buffer[psize];
-        char sbuffer[psize * 3];
+        std::ostringstream oss(std::ostringstream::out);
         pkt->CopyData(buffer, psize);
         for (uint32_t i = 0; i < psize; i++)
         {
-            sprintf(&sbuffer[i * 3], "%02x ", buffer[i]);
+            oss << std::setfill('0') << std::setw(2) << std::hex << +(buffer[i]) << " ";
         }
-        return std::string(sbuffer);
+        return std::string(oss.str() + "\n");
     }
 
     /**
@@ -106,7 +107,6 @@ class TestUtils
 // --------------------------- CLASS RrcHeaderTestCase -----------------------------
 /**
  * \ingroup lte-test
- * \ingroup tests
  *
  * \brief This class provides common functions to be inherited
  * by the children TestCases
@@ -324,7 +324,6 @@ RrcHeaderTestCase::AssertEqualRadioResourceConfigDedicated(
 
 /**
  * \ingroup lte-test
- * \ingroup tests
  *
  * \brief Rrc Connection Request Test Case
  */
@@ -377,7 +376,6 @@ RrcConnectionRequestTestCase::DoRun()
 
 /**
  * \ingroup lte-test
- * \ingroup tests
  *
  * \brief Rrc Connection Setup Test Case
  */
@@ -435,7 +433,6 @@ RrcConnectionSetupTestCase::DoRun()
 
 /**
  * \ingroup lte-test
- * \ingroup tests
  *
  * \brief Rrc Connection Setup Complete Test Case
  */
@@ -489,7 +486,6 @@ RrcConnectionSetupCompleteTestCase::DoRun()
 
 /**
  * \ingroup lte-test
- * \ingroup tests
  *
  * \brief Rrc Connection Reconfiguration Complete Test Case
  */
@@ -544,7 +540,6 @@ RrcConnectionReconfigurationCompleteTestCase::DoRun()
 
 /**
  * \ingroup lte-test
- * \ingroup tests
  *
  * \brief Rrc Connection Reconfiguration Test Case
  */
@@ -783,7 +778,6 @@ RrcConnectionReconfigurationTestCase::DoRun()
 
 /**
  * \ingroup lte-test
- * \ingroup tests
  *
  * \brief Handover Preparation Info Test Case
  */
@@ -893,7 +887,6 @@ HandoverPreparationInfoTestCase::DoRun()
 
 /**
  * \ingroup lte-test
- * \ingroup tests
  *
  * \brief Rrc Connection Reestablishment Request Test Case
  */
@@ -953,7 +946,6 @@ RrcConnectionReestablishmentRequestTestCase::DoRun()
 
 /**
  * \ingroup lte-test
- * \ingroup tests
  *
  * \brief Rrc Connection Reestablishment Test Case
  */
@@ -1010,7 +1002,6 @@ RrcConnectionReestablishmentTestCase::DoRun()
 
 /**
  * \ingroup lte-test
- * \ingroup tests
  *
  * \brief Rrc Connection Reestablishment Complete Test Case
  */
@@ -1065,7 +1056,6 @@ RrcConnectionReestablishmentCompleteTestCase::DoRun()
 
 /**
  * \ingroup lte-test
- * \ingroup tests
  *
  * \brief Rrc Connection Reject Test Case
  */
@@ -1119,7 +1109,6 @@ RrcConnectionRejectTestCase::DoRun()
 
 /**
  * \ingroup lte-test
- * \ingroup tests
  *
  * \brief Measurement Report Test Case
  */
@@ -1257,7 +1246,6 @@ MeasurementReportTestCase::DoRun()
 
 /**
  * \ingroup lte-test
- * \ingroup tests
  *
  * \brief Asn1Encoding Test Suite
  */
@@ -1284,4 +1272,8 @@ Asn1EncodingSuite::Asn1EncodingSuite()
     AddTestCase(new MeasurementReportTestCase(), TestCase::QUICK);
 }
 
-Asn1EncodingSuite asn1EncodingSuite;
+/**
+ * \ingroup lte-test
+ * Static variable for test initialization
+ */
+Asn1EncodingSuite g_asn1EncodingSuite;

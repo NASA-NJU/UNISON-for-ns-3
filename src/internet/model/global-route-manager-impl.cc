@@ -150,7 +150,7 @@ SPFVertex::~SPFVertex()
     }
 
     // delete children
-    while (m_children.size() > 0)
+    while (!m_children.empty())
     {
         // pop out children one by one. Some children may disappear
         // when deleting some other children in the list. As a result,
@@ -347,7 +347,7 @@ SPFVertex::InheritAllRootExitDirections(const SPFVertex* vertex)
 
     // discard all exit direction currently associated with this vertex,
     // and copy all the exit directions from the given vertex
-    if (m_ecmpRootExits.size() > 0)
+    if (!m_ecmpRootExits.empty())
     {
         NS_LOG_WARN("x root exit directions in this vertex are going to be discarded");
     }
@@ -1139,7 +1139,7 @@ GlobalRouteManagerImpl::SPFNexthopCalculation(SPFVertex* v,
         // Above, when we were considering the root node, we calculated the next hop
         // address and outgoing interface required to get off of the root network.
         // At this point, we are further away from the root network along one of the
-        // (shortest) paths.  So the next hop and outoing interface remain the same
+        // (shortest) paths.  So the next hop and outgoing interface remain the same
         // (are inherited).
         //
         w->InheritAllRootExitDirections(v);
@@ -1704,7 +1704,7 @@ GlobalRouteManagerImpl::SPFIntraAddStub(GlobalRoutingLinkRecord* l, SPFVertex* v
 
     NS_ASSERT_MSG(m_spfroot, "GlobalRouteManagerImpl::SPFIntraAddStub (): Root pointer not set");
 
-    // XXX simplifed logic for the moment.  There are two cases to consider:
+    // XXX simplified logic for the moment.  There are two cases to consider:
     // 1) the stub network is on this router; do nothing for now
     //    (already handled above)
     // 2) the stub network is on a remote router, so I should use the

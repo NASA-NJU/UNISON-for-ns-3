@@ -129,7 +129,7 @@ MatchContainer::Connect(std::string name, const CallbackBase& cb)
 {
     if (!ConnectFailSafe(name, cb))
     {
-        NS_FATAL_ERROR("Cound not connect callback to " << name);
+        NS_FATAL_ERROR("Could not connect callback to " << name);
     }
 }
 
@@ -605,7 +605,7 @@ void
 Resolver::DoArrayResolve(std::string path, const ObjectPtrContainerValue& container)
 {
     NS_LOG_FUNCTION(this << path << &container);
-    NS_ASSERT(path != "");
+    NS_ASSERT(!path.empty());
     NS_ASSERT((path.find('/')) == 0);
     std::string::size_type next = path.find('/', 1);
     if (next == std::string::npos)

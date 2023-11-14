@@ -56,7 +56,8 @@ static const Time DL_CTRL_DURATION = NanoSeconds(214286 - 1);
 /// Effective coding rate
 static const double EffectiveCodingRate[29] = {
     0.08, 0.1, 0.11, 0.15, 0.19, 0.24, 0.3, 0.37, 0.44, 0.51, 0.3, 0.33, 0.37, 0.42, 0.48,
-    0.54, 0.6, 0.43, 0.45, 0.5,  0.55, 0.6, 0.65, 0.7,  0.75, 0.8, 0.85, 0.89, 0.92};
+    0.54, 0.6, 0.43, 0.45, 0.5,  0.55, 0.6, 0.65, 0.7,  0.75, 0.8, 0.85, 0.89, 0.92,
+};
 
 TbId_t::TbId_t()
 {
@@ -922,7 +923,7 @@ LteSpectrumPhy::AddExpectedTb(uint16_t rnti,
     it = m_expectedTbs.find(tbId);
     if (it != m_expectedTbs.end())
     {
-        // migth be a TB of an unreceived packet (due to high progpalosses)
+        // might be a TB of an unreceived packet (due to high progpalosses)
         m_expectedTbs.erase(it);
     }
     // insert new entry
@@ -972,9 +973,9 @@ LteSpectrumPhy::EndRxData()
 
     while (itTb != m_expectedTbs.end())
     {
-        if ((m_dataErrorModelEnabled) &&
-            (m_rxPacketBurstList.size() >
-             0)) // avoid to check for errors when there is no actual data transmitted
+        if (m_dataErrorModelEnabled &&
+            !m_rxPacketBurstList
+                 .empty()) // avoid to check for errors when there is no actual data transmitted
         {
             // retrieve HARQ info
             HarqProcessInfoList_t harqInfoList;

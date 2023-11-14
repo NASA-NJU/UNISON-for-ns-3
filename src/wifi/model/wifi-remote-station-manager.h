@@ -878,7 +878,7 @@ class WifiRemoteStationManager : public Object
      * \param address the address of the receiver
      * \param nSuccessfulMpdus number of successfully transmitted MPDUs
      * A value of 0 means that the Block ACK was missed.
-     * \param nFailedMpdus number of unsuccessfully transmitted MPDUs
+     * \param nFailedMpdus number of unsuccessfuly transmitted MPDUs
      * \param rxSnr received SNR of the block ack frame itself
      * \param dataSnr data SNR reported by remote station
      * \param dataTxVector the TXVECTOR of the MPDUs we sent
@@ -973,7 +973,7 @@ class WifiRemoteStationManager : public Object
      * to estimate the target UL RSSI info to put in the
      * Trigger frame to send to the remote station.
      */
-    double GetMostRecentRssi(Mac48Address address) const;
+    std::optional<double> GetMostRecentRssi(Mac48Address address) const;
     /**
      * Set the default transmission power level
      *
@@ -1342,7 +1342,7 @@ class WifiRemoteStationManager : public Object
      * \param station the station that sent the DATA to us
      * \param nSuccessfulMpdus number of successfully transmitted MPDUs.
      *        A value of 0 means that the Block ACK was missed.
-     * \param nFailedMpdus number of unsuccessfully transmitted MPDUs.
+     * \param nFailedMpdus number of unsuccessfuly transmitted MPDUs.
      * \param rxSnr received SNR of the block ack frame itself
      * \param dataSnr data SNR reported by remote station
      * \param dataChannelWidth the channel width (in MHz) of the A-MPDU we sent

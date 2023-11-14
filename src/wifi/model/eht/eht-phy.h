@@ -64,6 +64,7 @@ class EhtPhy : public HePhy
     Ptr<WifiPpdu> BuildPpdu(const WifiConstPsduMap& psdus,
                             const WifiTxVector& txVector,
                             Time ppduDuration) override;
+    WifiMode GetSigBMode(const WifiTxVector& txVector) const override;
 
     /**
      * Initialize all EHT modes.
@@ -259,6 +260,9 @@ class EhtPhy : public HePhy
                                 PhyFieldRxStatus status,
                                 WifiPpduField field) override;
     WifiPhyRxfailureReason GetFailureReason(WifiPpduField field) const override;
+    Time CalculateNonOfdmaDurationForHeTb(const WifiTxVector& txVector) const override;
+    Time CalculateNonOfdmaDurationForHeMu(const WifiTxVector& txVector) const override;
+
     /**
      * Create and return the EHT MCS corresponding to
      * the provided index.

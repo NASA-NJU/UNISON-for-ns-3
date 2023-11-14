@@ -37,7 +37,6 @@ using namespace ns3;
 
 /**
  * \ingroup lte-test
- * \ingroup tests
  *
  * \brief Test the fractional frequency reuse algorithms.
  */
@@ -49,7 +48,6 @@ class LteFrequencyReuseTestSuite : public TestSuite
 
 /**
  * \ingroup lte-test
- * \ingroup tests
  *
  * \brief Test frequency reuse algorithm. Test fails if the muted frequencies
  *  are being used.
@@ -77,12 +75,12 @@ class LteFrTestCase : public TestCase
 
     /**
      * DL data receive start function
-     * \param spectrumValue the DL data reeive spectrum value
+     * \param spectrumValue the DL data receive spectrum value
      */
     void DlDataRxStart(Ptr<const SpectrumValue> spectrumValue);
     /**
      * UL data receive start function
-     * \param spectrumValue the UL data reeive spectrum value
+     * \param spectrumValue the UL data receive spectrum value
      */
     void UlDataRxStart(Ptr<const SpectrumValue> spectrumValue);
 
@@ -102,7 +100,6 @@ class LteFrTestCase : public TestCase
 
 /**
  * \ingroup lte-test
- * \ingroup tests
  *
  * \brief Test hard frequency reuse algorithm. Test fails if the muted
  *  frequencies are being used.
@@ -123,7 +120,7 @@ class LteHardFrTestCase : public LteFrTestCase
      * \param ulSubBandOffset UL subband offset
      * \param ulSubBandwidth UL subbandwidth
      * \param availableDlRb the available DL per RB
-     * \param availableUlRb the avaialbel UL per RB
+     * \param availableUlRb the available UL per RB
      */
     LteHardFrTestCase(std::string name,
                       uint32_t userNum,
@@ -152,9 +149,8 @@ class LteHardFrTestCase : public LteFrTestCase
 
 /**
  * \ingroup lte-test
- * \ingroup tests
  *
- * \brief Test stric frequency reuse algorithm. Test fails if the muted frequencies
+ * \brief Test strict frequency reuse algorithm. Test fails if the muted frequencies
  *  are being used.
  */
 class LteStrictFrTestCase : public LteFrTestCase
@@ -175,7 +171,7 @@ class LteStrictFrTestCase : public LteFrTestCase
      * \param ulEdgeSubBandOffset UL subband offset
      * \param ulEdgeSubBandwidth UL subbandwidth
      * \param availableDlRb the available DL per RB
-     * \param availableUlRb the avaialbel UL per RB
+     * \param availableUlRb the available UL per RB
      */
     LteStrictFrTestCase(std::string name,
                         uint32_t userNum,
@@ -208,9 +204,8 @@ class LteStrictFrTestCase : public LteFrTestCase
 
 /**
  * \ingroup lte-test
- * \ingroup tests
  *
- * \brief Test frequency reuse algorithm by teleporing UEs to different
+ * \brief Test frequency reuse algorithm by teleporting UEs to different
  * parts of area and checking if the frequency is used according to the
  * frequency pattern for different parts of area. Test fails if the muted
  * frequencies for a given part of area are being used by UE.
@@ -229,12 +224,12 @@ class LteFrAreaTestCase : public TestCase
 
     /**
      * DL data receive start function
-     * \param spectrumValue the DL receive specturm value
+     * \param spectrumValue the DL receive spectrum value
      */
     void DlDataRxStart(Ptr<const SpectrumValue> spectrumValue);
     /**
      * UL data receive start function
-     * \param spectrumValue the UL receive specturm value
+     * \param spectrumValue the UL receive spectrum value
      */
     void UlDataRxStart(Ptr<const SpectrumValue> spectrumValue);
 
@@ -287,7 +282,7 @@ class LteFrAreaTestCase : public TestCase
     uint16_t m_dlBandwidth; ///< the DL bandwidth
     uint16_t m_ulBandwidth; ///< the UL bandwidth
 
-    Time m_teleportTime;             ///< the telport time
+    Time m_teleportTime;             ///< the teleport time
     Ptr<MobilityModel> m_ueMobility; ///< the UE mobility model
 
     double m_expectedDlPower;         ///< the expected DL power
@@ -303,7 +298,6 @@ class LteFrAreaTestCase : public TestCase
 
 /**
  * \ingroup lte-test
- * \ingroup tests
  *
  * \brief Lte Fr Area Test Case
  */
@@ -325,7 +319,6 @@ class LteStrictFrAreaTestCase : public LteFrAreaTestCase
 
 /**
  * \ingroup lte-test
- * \ingroup tests
  *
  * \brief Lte Soft Fr Area Test Case
  */
@@ -347,7 +340,6 @@ class LteSoftFrAreaTestCase : public LteFrAreaTestCase
 
 /**
  * \ingroup lte-test
- * \ingroup tests
  *
  * \brief Lte Soft Ffr Area Test Case
  */
@@ -369,7 +361,6 @@ class LteSoftFfrAreaTestCase : public LteFrAreaTestCase
 
 /**
  * \ingroup lte-test
- * \ingroup tests
  *
  * \brief Lte Enhanced Ffr Area Test Case
  */
@@ -391,7 +382,6 @@ class LteEnhancedFfrAreaTestCase : public LteFrAreaTestCase
 
 /**
  * \ingroup lte-test
- * \ingroup tests
  *
  * \brief Lte Distributed Ffr Area Test Case
  */

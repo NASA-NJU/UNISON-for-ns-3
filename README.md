@@ -1,6 +1,9 @@
 # UNISON for ns-3
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.10077300.svg)](https://doi.org/10.5281/zenodo.10077300)
+[![CI](https://github.com/NASA-NJU/UNISON-for-ns-3/actions/workflows/per_commit.yml/badge.svg)](https://github.com/NASA-NJU/UNISON-for-ns-3/actions/workflows/per_commit.yml)
+
+## Table of Contents
 
 A fast and user-transparent parallel simulator implementation for ns-3.
 More information about UNISON can be found in our EuroSys '24 paper (coming soon).

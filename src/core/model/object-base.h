@@ -21,6 +21,7 @@
 
 #include "callback.h"
 #include "type-id.h"
+#include "warnings.h"
 
 #include <list>
 #include <string>
@@ -29,7 +30,7 @@
  * \file
  * \ingroup object
  * ns3::ObjectBase declaration and
- * NS_OBJECT_ENSURE_REGISTERED() madro definition.
+ * NS_OBJECT_ENSURE_REGISTERED() macro definition.
  */
 
 /**
@@ -47,9 +48,11 @@
     {                                                                                              \
         Object##type##RegistrationClass()                                                          \
         {                                                                                          \
+            NS_WARNING_PUSH_DEPRECATED;                                                            \
             ns3::TypeId tid = type::GetTypeId();                                                   \
             tid.SetSize(sizeof(type));                                                             \
             tid.GetParent();                                                                       \
+            NS_WARNING_POP;                                                                        \
         }                                                                                          \
     } Object##type##RegistrationVariable
 
@@ -235,7 +238,7 @@ class ObjectBase
      */
     void GetAttribute(std::string name, AttributeValue& value) const;
     /**
-     * Get the value of an attribute without raising erros.
+     * Get the value of an attribute without raising errors.
      *
      * If the attribute could not be read this will return \c false,
      * but not raise any errors.

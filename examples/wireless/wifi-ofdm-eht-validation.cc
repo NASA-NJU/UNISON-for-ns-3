@@ -124,25 +124,30 @@ main(int argc, char* argv[])
     std::stringstream plotExtra;
     plotExtra << "set xrange [-5:55]\n\
 set yrange [0:1]\n";
-    uint8_t lineNumber = 1;
-    const std::string colors[14] = {"green",
-                                    "blue",
-                                    "red",
-                                    "black",
-                                    "orange",
-                                    "purple",
-                                    "yellow",
-                                    "pink",
-                                    "grey",
-                                    "magenta",
-                                    "brown",
-                                    "turquoise",
-                                    "olive",
-                                    "beige"};
-    for (uint32_t i = 0; i < modes.size(); i++)
+
+    const std::vector<std::string> colors{
+        "green",
+        "blue",
+        "red",
+        "black",
+        "orange",
+        "purple",
+        "yellow",
+        "pink",
+        "grey",
+        "magenta",
+        "brown",
+        "turquoise",
+        "olive",
+        "beige",
+    };
+
+    NS_ASSERT_MSG(colors.size() == modes.size(), "Colors and modes vectors have different sizes");
+
+    for (std::size_t i = 0; i < modes.size(); i++)
     {
-        plotExtra << "set style line " << +lineNumber++ << " linewidth 5 linecolor rgb \""
-                  << colors[i] << "\" \n";
+        plotExtra << "set style line " << (i + 1) << " linewidth 5 linecolor rgb \"" << colors[i]
+                  << "\" \n";
     }
     plotExtra << "set style increment user";
 

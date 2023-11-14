@@ -97,7 +97,7 @@ main(int argc, char** argv)
         LogComponentEnable("Icmpv4L4Protocol", LOG_LEVEL_ALL);
         LogComponentEnable("Ipv4L3Protocol", LOG_LEVEL_ALL);
         LogComponentEnable("ArpCache", LOG_LEVEL_ALL);
-        LogComponentEnable("V4Ping", LOG_LEVEL_ALL);
+        LogComponentEnable("Ping", LOG_LEVEL_ALL);
     }
 
     if (SplitHorizon == "NoSplitHorizon")
@@ -213,36 +213,34 @@ main(int argc, char** argv)
 
     if (printRoutingTables)
     {
-        RipHelper routingHelper;
-
         Ptr<OutputStreamWrapper> routingStream = Create<OutputStreamWrapper>(&std::cout);
 
-        routingHelper.PrintRoutingTableAt(Seconds(30.0), a, routingStream);
-        routingHelper.PrintRoutingTableAt(Seconds(30.0), b, routingStream);
-        routingHelper.PrintRoutingTableAt(Seconds(30.0), c, routingStream);
-        routingHelper.PrintRoutingTableAt(Seconds(30.0), d, routingStream);
+        Ipv4RoutingHelper::PrintRoutingTableAt(Seconds(30.0), a, routingStream);
+        Ipv4RoutingHelper::PrintRoutingTableAt(Seconds(30.0), b, routingStream);
+        Ipv4RoutingHelper::PrintRoutingTableAt(Seconds(30.0), c, routingStream);
+        Ipv4RoutingHelper::PrintRoutingTableAt(Seconds(30.0), d, routingStream);
 
-        routingHelper.PrintRoutingTableAt(Seconds(60.0), a, routingStream);
-        routingHelper.PrintRoutingTableAt(Seconds(60.0), b, routingStream);
-        routingHelper.PrintRoutingTableAt(Seconds(60.0), c, routingStream);
-        routingHelper.PrintRoutingTableAt(Seconds(60.0), d, routingStream);
+        Ipv4RoutingHelper::PrintRoutingTableAt(Seconds(60.0), a, routingStream);
+        Ipv4RoutingHelper::PrintRoutingTableAt(Seconds(60.0), b, routingStream);
+        Ipv4RoutingHelper::PrintRoutingTableAt(Seconds(60.0), c, routingStream);
+        Ipv4RoutingHelper::PrintRoutingTableAt(Seconds(60.0), d, routingStream);
 
-        routingHelper.PrintRoutingTableAt(Seconds(90.0), a, routingStream);
-        routingHelper.PrintRoutingTableAt(Seconds(90.0), b, routingStream);
-        routingHelper.PrintRoutingTableAt(Seconds(90.0), c, routingStream);
-        routingHelper.PrintRoutingTableAt(Seconds(90.0), d, routingStream);
+        Ipv4RoutingHelper::PrintRoutingTableAt(Seconds(90.0), a, routingStream);
+        Ipv4RoutingHelper::PrintRoutingTableAt(Seconds(90.0), b, routingStream);
+        Ipv4RoutingHelper::PrintRoutingTableAt(Seconds(90.0), c, routingStream);
+        Ipv4RoutingHelper::PrintRoutingTableAt(Seconds(90.0), d, routingStream);
     }
 
     NS_LOG_INFO("Create Applications.");
     uint32_t packetSize = 1024;
     Time interPacketInterval = Seconds(1.0);
-    V4PingHelper ping("10.0.6.2");
+    PingHelper ping(Ipv4Address("10.0.6.2"));
 
     ping.SetAttribute("Interval", TimeValue(interPacketInterval));
     ping.SetAttribute("Size", UintegerValue(packetSize));
     if (showPings)
     {
-        ping.SetAttribute("Verbose", BooleanValue(true));
+        ping.SetAttribute("VerboseMode", EnumValue(Ping::VerboseMode::VERBOSE));
     }
     ApplicationContainer apps = ping.Install(src);
     apps.Start(Seconds(1.0));

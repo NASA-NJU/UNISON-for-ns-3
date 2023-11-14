@@ -30,13 +30,16 @@ NS_LOG_COMPONENT_DEFINE("LteFrHardAlgorithm");
 NS_OBJECT_ENSURE_REGISTERED(LteFrHardAlgorithm);
 
 /// FrHardDownlinkDefaultConfiguration structure
-static const struct FrHardDownlinkDefaultConfiguration
+struct FrHardDownlinkDefaultConfiguration
 {
     uint8_t m_cellId;      ///< cell ID
     uint8_t m_dlBandwidth; ///< DL bandwidth
     uint8_t m_dlOffset;    ///< DL offset
     uint8_t m_dlSubBand;   ///< DL subband
-} g_frHardDownlinkDefaultConfiguration[] = {
+};
+
+/// The hard downlink default configuration
+static const FrHardDownlinkDefaultConfiguration g_frHardDownlinkDefaultConfiguration[]{
     {1, 15, 0, 4},
     {2, 15, 4, 4},
     {3, 15, 8, 6},
@@ -51,16 +54,20 @@ static const struct FrHardDownlinkDefaultConfiguration
     {3, 75, 48, 27},
     {1, 100, 0, 32},
     {2, 100, 32, 32},
-    {3, 100, 64, 36}}; ///< the hard downlink default configuration
+    {3, 100, 64, 36},
+};
 
 /// FrHardUplinkDefaultConfiguration structure
-static const struct FrHardUplinkDefaultConfiguration
+struct FrHardUplinkDefaultConfiguration
 {
     uint8_t m_cellId;      ///< cell ID
     uint8_t m_ulBandwidth; ///< UL bandwidth
     uint8_t m_ulOffset;    ///< Ul offset
     uint8_t m_ulSubBand;   ///< UL subband
-} g_frHardUplinkDefaultConfiguration[] = {
+};
+
+/// The hard uplink default configuration
+static const FrHardUplinkDefaultConfiguration g_frHardUplinkDefaultConfiguration[]{
     {1, 15, 0, 5},
     {2, 15, 5, 5},
     {3, 15, 10, 5},
@@ -75,7 +82,8 @@ static const struct FrHardUplinkDefaultConfiguration
     {3, 75, 48, 27},
     {1, 100, 0, 32},
     {2, 100, 32, 32},
-    {3, 100, 64, 36}}; ///< the hard uplink default configuration
+    {3, 100, 64, 36},
+};
 
 /** \returns number of downlink configurations */
 const uint16_t NUM_DOWNLINK_CONFS(sizeof(g_frHardDownlinkDefaultConfiguration) /

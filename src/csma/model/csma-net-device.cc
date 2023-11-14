@@ -223,7 +223,7 @@ CsmaNetDevice::DoDispose()
 }
 
 void
-CsmaNetDevice::SetEncapsulationMode(enum EncapsulationMode mode)
+CsmaNetDevice::SetEncapsulationMode(EncapsulationMode mode)
 {
     NS_LOG_FUNCTION(mode);
 
@@ -274,14 +274,14 @@ CsmaNetDevice::SetReceiveEnable(bool receiveEnable)
 }
 
 bool
-CsmaNetDevice::IsSendEnabled()
+CsmaNetDevice::IsSendEnabled() const
 {
     NS_LOG_FUNCTION_NOARGS();
     return m_sendEnable;
 }
 
 bool
-CsmaNetDevice::IsReceiveEnabled()
+CsmaNetDevice::IsReceiveEnabled() const
 {
     NS_LOG_FUNCTION_NOARGS();
     return m_receiveEnable;
@@ -368,7 +368,7 @@ CsmaNetDevice::AddHeader(Ptr<Packet> p,
 
         //
         // All Ethernet frames must carry a minimum payload of 46 bytes.  The
-        // LLC SNAP header counts as part of this payload.  We need to padd out
+        // LLC SNAP header counts as part of this payload.  We need to pad out
         // if we don't have enough bytes.  These must be real bytes since they
         // will be written to pcap files and compared in regression trace files.
         //

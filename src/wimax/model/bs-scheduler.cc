@@ -68,7 +68,7 @@ BSScheduler::~BSScheduler()
 {
     std::list<std::pair<OfdmDlMapIe*, Ptr<PacketBurst>>>* downlinkBursts = m_downlinkBursts;
     std::pair<OfdmDlMapIe*, Ptr<PacketBurst>> pair;
-    while (downlinkBursts->size())
+    while (!downlinkBursts->empty())
     {
         pair = downlinkBursts->front();
         pair.second = nullptr;
@@ -99,7 +99,7 @@ BSScheduler::CheckForFragmentation(Ptr<WimaxConnection> connection,
     NS_LOG_INFO("BS Scheduler, CheckForFragmentation");
     if (connection->GetType() != Cid::TRANSPORT)
     {
-        NS_LOG_INFO("\t No Transport connction, Fragmentation IS NOT possible");
+        NS_LOG_INFO("\t No Transport connection, Fragmentation IS NOT possible");
         return false;
     }
     uint32_t availableByte = GetBs()->GetPhy()->GetNrBytes(availableSymbols, modulationType);

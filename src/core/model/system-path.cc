@@ -19,12 +19,12 @@
 #include "system-path.h"
 
 #include "assert.h"
+#include "environment-variable.h"
 #include "fatal-error.h"
 #include "log.h"
+#include "string.h"
 
 #include <algorithm>
-#include <cstdlib> // getenv
-#include <cstring> // strlen
 #include <ctime>
 #include <regex>
 #include <sstream>
@@ -61,6 +61,7 @@ namespace fs = std::experimental::filesystem;
 #endif
 
 #ifdef __linux__
+#include <cstring>
 #include <unistd.h>
 #endif
 
@@ -257,19 +258,8 @@ std::list<std::string>
 Split(std::string path)
 {
     NS_LOG_FUNCTION(path);
-    std::list<std::string> retval;
-    std::string::size_type current = 0;
-    std::string::size_type next = 0;
-    next = path.find(SYSTEM_PATH_SEP, current);
-    while (next != std::string::npos)
-    {
-        std::string item = path.substr(current, next - current);
-        retval.push_back(item);
-        current = next + 1;
-        next = path.find(SYSTEM_PATH_SEP, current);
-    }
-    std::string item = path.substr(current, next - current);
-    retval.push_back(item);
+    std::vector<std::string> items = SplitString(path, SYSTEM_PATH_SEP);
+    std::list<std::string> retval(items.begin(), items.end());
     return retval;
 }
 
@@ -280,7 +270,7 @@ Join(std::list<std::string>::const_iterator begin, std::list<std::string>::const
     std::string retval = "";
     for (std::list<std::string>::const_iterator i = begin; i != end; i++)
     {
-        if (*i == "")
+        if ((*i).empty())
         {
             // skip empty strings in the path list
             continue;
@@ -315,15 +305,13 @@ std::string
 MakeTemporaryDirectoryName()
 {
     NS_LOG_FUNCTION_NOARGS();
-    char* path = nullptr;
-
-    path = std::getenv("TMP");
-    if (!path || std::strlen(path) == 0)
+    auto [found, path] = EnvironmentVariable::Get("TMP");
+    if (!found)
     {
-        path = std::getenv("TEMP");
-        if (!path || std::strlen(path) == 0)
+        std::tie(found, path) = EnvironmentVariable::Get("TEMP");
+        if (!found)
         {
-            path = const_cast<char*>("/tmp");
+            path = "/tmp";
         }
     }
 
@@ -396,7 +384,7 @@ Exists(const std::string path)
     auto tokens = Split(path);
     std::string file = tokens.back();
 
-    if (file == "")
+    if (file.empty())
     {
         // Last component was a directory, not a file name
         // We already checked that the directory exists,

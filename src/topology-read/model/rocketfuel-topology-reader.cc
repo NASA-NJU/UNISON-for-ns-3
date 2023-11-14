@@ -20,6 +20,7 @@
 #include "rocketfuel-topology-reader.h"
 
 #include "ns3/log.h"
+#include "ns3/names.h"
 #include "ns3/node-container.h"
 
 #include <cstdlib>
@@ -87,13 +88,13 @@ RocketfuelTopologyReader::~RocketfuelTopologyReader()
  * Build a Regex object for RocketFuel topology maps file type
  * \return a static regex object for maps file type
  */
-static const std::regex rocketfuel_maps_regex(ROCKETFUEL_MAPS_LINE, std::regex::extended);
+static const std::regex rocketfuel_maps_regex(ROCKETFUEL_MAPS_LINE);
 
 /**
  * Build a Regex object for RocketFuel topology weights file type
  * \return a static regex object for weights file type
  */
-static const std::regex rocketfuel_weights_regex(ROCKETFUEL_WEIGHTS_LINE, std::regex::extended);
+static const std::regex rocketfuel_weights_regex(ROCKETFUEL_WEIGHTS_LINE);
 
 /**
  * \brief Print node info
@@ -212,6 +213,8 @@ RocketfuelTopologyReader::GenerateFromMapsFile(const std::vector<std::string>& a
         if (!m_nodeMap[uid])
         {
             Ptr<Node> tmpNode = CreateObject<Node>();
+            std::string nodename = "RocketFuelTopology/NodeName/" + uid;
+            Names::Add(nodename, tmpNode);
             m_nodeMap[uid] = tmpNode;
             nodes.Add(tmpNode);
             m_nodesNumber++;
@@ -227,6 +230,8 @@ RocketfuelTopologyReader::GenerateFromMapsFile(const std::vector<std::string>& a
             if (!m_nodeMap[nuid])
             {
                 Ptr<Node> tmpNode = CreateObject<Node>();
+                std::string nodename = "RocketFuelTopology/NodeName/" + nuid;
+                Names::Add(nodename, tmpNode);
                 m_nodeMap[nuid] = tmpNode;
                 nodes.Add(tmpNode);
                 m_nodesNumber++;
@@ -270,6 +275,8 @@ RocketfuelTopologyReader::GenerateFromWeightsFile(const std::vector<std::string>
         if (!m_nodeMap[sname])
         {
             Ptr<Node> tmpNode = CreateObject<Node>();
+            std::string nodename = "RocketFuelTopology/NodeName/" + sname;
+            Names::Add(nodename, tmpNode);
             m_nodeMap[sname] = tmpNode;
             nodes.Add(tmpNode);
             m_nodesNumber++;
@@ -278,6 +285,8 @@ RocketfuelTopologyReader::GenerateFromWeightsFile(const std::vector<std::string>
         if (!m_nodeMap[tname])
         {
             Ptr<Node> tmpNode = CreateObject<Node>();
+            std::string nodename = "RocketFuelTopology/NodeName/" + tname;
+            Names::Add(nodename, tmpNode);
             m_nodeMap[tname] = tmpNode;
             nodes.Add(tmpNode);
             m_nodesNumber++;

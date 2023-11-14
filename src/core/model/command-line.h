@@ -322,7 +322,7 @@ class CommandLine
      */
     void AddValue(const std::string& name,
                   const std::string& help,
-                  ns3::Callback<bool, std::string> callback,
+                  ns3::Callback<bool, const std::string&> callback,
                   const std::string& defaultValue = "");
 
     /**
@@ -533,7 +533,7 @@ class CommandLine
         bool HasDefault() const override;
         std::string GetDefault() const override;
 
-        ns3::Callback<bool, std::string> m_callback; /**< The Callback */
+        ns3::Callback<bool, const std::string&> m_callback; /**< The Callback */
         std::string m_default; /**< The default value, as a string, if it exists. */
     };                         // class CallbackItem
 
@@ -777,7 +777,7 @@ template <typename T>
 bool
 CommandLine::UserItem<T>::HasDefault() const
 {
-    return (m_default.size() > 0);
+    return !m_default.empty();
 }
 
 template <typename T>
