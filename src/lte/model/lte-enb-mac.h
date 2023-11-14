@@ -24,17 +24,19 @@
 #ifndef LTE_ENB_MAC_H
 #define LTE_ENB_MAC_H
 
-#include "ns3/trace-source-accessor.h"
-#include "ns3/traced-value.h"
-#include <ns3/ff-mac-csched-sap.h>
-#include <ns3/ff-mac-sched-sap.h>
-#include <ns3/lte-ccm-mac-sap.h>
-#include <ns3/lte-common.h>
-#include <ns3/lte-enb-cmac-sap.h>
-#include <ns3/lte-enb-phy-sap.h>
-#include <ns3/lte-mac-sap.h>
+#include "ff-mac-csched-sap.h"
+#include "ff-mac-sched-sap.h"
+#include "lte-ccm-mac-sap.h"
+#include "lte-common.h"
+#include "lte-enb-cmac-sap.h"
+#include "lte-enb-phy-sap.h"
+#include "lte-mac-sap.h"
+
+#include <ns3/nstime.h>
 #include <ns3/packet-burst.h>
 #include <ns3/packet.h>
+#include <ns3/trace-source-accessor.h>
+#include <ns3/traced-value.h>
 
 #include <map>
 #include <vector>
@@ -365,12 +367,12 @@ class LteEnbMac : public Object
      * \brief UL Info List ELements HARQ Feedback function
      * \param params UlInfoListElement_s
      */
-    void DoUlInfoListElementHarqFeeback(UlInfoListElement_s params);
+    void DoUlInfoListElementHarqFeedback(UlInfoListElement_s params);
     /**
      * \brief DL Info List ELements HARQ Feedback function
      * \param params DlInfoListElement_s
      */
-    void DoDlInfoListElementHarqFeeback(DlInfoListElement_s params);
+    void DoDlInfoListElementHarqFeedback(DlInfoListElement_s params);
 
     /// RNTI, LC ID, SAP of the RLC instance
     std::map<uint16_t, std::map<uint8_t, LteMacSapUser*>> m_rlcAttached;

@@ -117,13 +117,13 @@ WifiAssocManager::MatchScanParams(const StaWifiMac::ApInfo& apInfo) const
         Ssid apSsid;
         if (auto beacon = std::get_if<MgtBeaconHeader>(&apInfo.m_frame); beacon)
         {
-            apSsid = beacon->GetSsid();
+            apSsid = beacon->Get<Ssid>().value();
         }
         else
         {
             auto probeResp = std::get_if<MgtProbeResponseHeader>(&apInfo.m_frame);
             NS_ASSERT(probeResp);
-            apSsid = probeResp->GetSsid();
+            apSsid = probeResp->Get<Ssid>().value();
         }
         if (!apSsid.IsEqual(m_scanParams.ssid))
         {
@@ -234,10 +234,10 @@ WifiAssocManager::ScanningTimeout()
     m_mac->ScanningTimeout(std::move(bestAp));
 }
 
-std::list<std::pair<std::uint8_t, uint8_t>>&
+std::list<std::pair<uint8_t, uint8_t>>&
 WifiAssocManager::GetSetupLinks(const StaWifiMac::ApInfo& apInfo)
 {
-    return const_cast<std::list<std::pair<std::uint8_t, uint8_t>>&>(apInfo.m_setupLinks);
+    return const_cast<std::list<std::pair<uint8_t, uint8_t>>&>(apInfo.m_setupLinks);
 }
 
 bool
@@ -254,15 +254,15 @@ WifiAssocManager::CanSetupMultiLink(OptMleConstRef& mle, OptRnrConstRef& rnr)
     // from Beacon or Probe Response
     if (auto beacon = std::get_if<MgtBeaconHeader>(&m_apList.begin()->m_frame); beacon)
     {
-        mle = beacon->GetMultiLinkElement();
-        rnr = beacon->GetReducedNeighborReport();
+        mle = beacon->Get<MultiLinkElement>();
+        rnr = beacon->Get<ReducedNeighborReport>();
     }
     else
     {
         auto probeResp = std::get_if<MgtProbeResponseHeader>(&m_apList.begin()->m_frame);
         NS_ASSERT(probeResp);
-        mle = probeResp->GetMultiLinkElement();
-        rnr = probeResp->GetReducedNeighborReport();
+        mle = probeResp->Get<MultiLinkElement>();
+        rnr = probeResp->Get<ReducedNeighborReport>();
     }
 
     if (!mle.has_value())

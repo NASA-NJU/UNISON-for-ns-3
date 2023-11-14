@@ -24,13 +24,13 @@
 
 #include "ipv6-interface.h"
 #include "ipv6-l3-protocol.h"
+#include "ipv6-route.h"
+#include "ipv6-routing-protocol.h"
 
 #include "ns3/assert.h"
 #include "ns3/boolean.h"
 #include "ns3/double.h"
 #include "ns3/integer.h"
-#include "ns3/ipv6-route.h"
-#include "ns3/ipv6-routing-protocol.h"
 #include "ns3/log.h"
 #include "ns3/node.h"
 #include "ns3/packet.h"
@@ -284,7 +284,7 @@ Icmpv6L4Protocol::DoDAD(Ipv6Address target, Ptr<Ipv6Interface> interface)
                         Ipv6Address::MakeSolicitedAddress(target));
 }
 
-enum IpL4Protocol::RxStatus
+IpL4Protocol::RxStatus
 Icmpv6L4Protocol::Receive(Ptr<Packet> packet,
                           const Ipv4Header& header,
                           Ptr<Ipv4Interface> interface)
@@ -293,7 +293,7 @@ Icmpv6L4Protocol::Receive(Ptr<Packet> packet,
     return IpL4Protocol::RX_ENDPOINT_UNREACH;
 }
 
-enum IpL4Protocol::RxStatus
+IpL4Protocol::RxStatus
 Icmpv6L4Protocol::Receive(Ptr<Packet> packet,
                           const Ipv6Header& header,
                           Ptr<Ipv6Interface> interface)
@@ -446,7 +446,7 @@ Icmpv6L4Protocol::HandleRA(Ptr<Packet> packet,
         defaultRouter = src;
     }
 
-    while (next == true)
+    while (next)
     {
         uint8_t type = 0;
         p->CopyData(&type, sizeof(type));
@@ -688,7 +688,7 @@ Icmpv6L4Protocol::HandleNS(Ptr<Packet> packet,
     bool next = true;
     bool hasSllao = false;
 
-    while (next == true)
+    while (next)
     {
         uint8_t type;
         packet->CopyData(&type, sizeof(type));

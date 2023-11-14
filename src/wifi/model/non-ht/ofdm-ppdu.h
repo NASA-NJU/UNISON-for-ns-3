@@ -22,7 +22,6 @@
 #ifndef OFDM_PPDU_H
 #define OFDM_PPDU_H
 
-#include "ns3/header.h"
 #include "ns3/wifi-phy-band.h"
 #include "ns3/wifi-ppdu.h"
 
@@ -51,22 +50,10 @@ class OfdmPpdu : public WifiPpdu
      * OFDM and ERP OFDM L-SIG PHY header.
      * See section 17.3.4 in IEEE 802.11-2016.
      */
-    class LSigHeader : public Header
+    class LSigHeader
     {
       public:
         LSigHeader();
-
-        /**
-         * \brief Get the type ID.
-         * \return the object TypeId
-         */
-        static TypeId GetTypeId();
-
-        TypeId GetInstanceTypeId() const override;
-        void Print(std::ostream& os) const override;
-        uint32_t GetSerializedSize() const override;
-        void Serialize(Buffer::Iterator start) const override;
-        uint32_t Deserialize(Buffer::Iterator start) override;
 
         /**
          * Fill the RATE field of L-SIG (in bit/s).
@@ -105,16 +92,14 @@ class OfdmPpdu : public WifiPpdu
      *
      * \param psdu the PHY payload (PSDU)
      * \param txVector the TXVECTOR that was used for this PPDU
-     * \param txCenterFreq the center frequency (MHz) that was used for this PPDU
-     * \param band the WifiPhyBand used for the transmission of this PPDU
+     * \param channel the operating channel of the PHY used to transmit this PPDU
      * \param uid the unique ID of this PPDU
      * \param instantiateLSig flag used to instantiate LSigHeader (set LSigHeader's
      *                        rate and length), should be disabled by child classes
      */
     OfdmPpdu(Ptr<const WifiPsdu> psdu,
              const WifiTxVector& txVector,
-             uint16_t txCenterFreq,
-             WifiPhyBand band,
+             const WifiPhyOperatingChannel& channel,
              uint64_t uid,
              bool instantiateLSig = true);
 
@@ -122,10 +107,7 @@ class OfdmPpdu : public WifiPpdu
     Ptr<WifiPpdu> Copy() const override;
 
   protected:
-    WifiPhyBand m_band; //!< the WifiPhyBand used to transmit that PPDU
-#ifndef NS3_BUILD_PROFILE_DEBUG
     LSigHeader m_lSig; //!< the L-SIG PHY header
-#endif
 
   private:
     WifiTxVector DoGetTxVector() const override;

@@ -26,19 +26,15 @@
 
 #include "ff-mac-common.h"
 #include "lte-amc.h"
-#include "lte-chunk-processor.h"
-#include "lte-enb-net-device.h"
-#include "lte-enb-phy.h"
+#include "lte-common.h"
 #include "lte-net-device.h"
 #include "lte-spectrum-value-helper.h"
-#include "lte-ue-mac.h"
 #include "lte-ue-net-device.h"
+#include "lte-ue-power-control.h"
 
 #include <ns3/boolean.h>
 #include <ns3/double.h>
 #include <ns3/log.h>
-#include <ns3/lte-common.h>
-#include <ns3/lte-ue-power-control.h>
 #include <ns3/node.h>
 #include <ns3/object-factory.h>
 #include <ns3/pointer.h>
@@ -1585,7 +1581,7 @@ LteUePhy::DoResetRlfParams()
 }
 
 void
-LteUePhy::DoStartInSnycDetection()
+LteUePhy::DoStartInSyncDetection()
 {
     NS_LOG_FUNCTION(this);
     // indicates that the downlink radio link quality has to be monitored for in-sync indications
@@ -1617,7 +1613,7 @@ LteUePhy::RlfDetection(double sinrDb)
     m_numOfSubframes++;
     NS_LOG_LOGIC("No of Subframes: " << m_numOfSubframes
                                      << " UE synchronized: " << m_downlinkInSync);
-    // check for out_of_snyc indications first when UE is both DL and UL synchronized
+    // check for out_of_sync indications first when UE is both DL and UL synchronized
     // m_downlinkInSync=true indicates that the evaluation is for out-of-sync indications
     if (m_downlinkInSync && m_numOfSubframes == 10)
     {
@@ -1657,7 +1653,7 @@ LteUePhy::RlfDetection(double sinrDb)
         m_ueCphySapUser->NotifyOutOfSync();
         m_numOfFrames = 0;
     }
-    // check for in_snyc indications when T310 timer is started
+    // check for in_sync indications when T310 timer is started
     // m_downlinkInSync=false indicates that the evaluation is for in-sync indications
     if (!m_downlinkInSync && m_numOfSubframes == 10)
     {

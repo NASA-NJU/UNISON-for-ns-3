@@ -26,13 +26,13 @@
 #ifndef LTE_UE_RRC_H
 #define LTE_UE_RRC_H
 
-#include "ns3/component-carrier-ue.h"
-#include <ns3/lte-as-sap.h>
-#include <ns3/lte-pdcp-sap.h>
-#include <ns3/lte-rrc-sap.h>
-#include <ns3/lte-ue-ccm-rrc-sap.h>
-#include <ns3/lte-ue-cmac-sap.h>
-#include <ns3/lte-ue-cphy-sap.h>
+#include "lte-as-sap.h"
+#include "lte-pdcp-sap.h"
+#include "lte-rrc-sap.h"
+#include "lte-ue-ccm-rrc-sap.h"
+#include "lte-ue-cmac-sap.h"
+#include "lte-ue-cphy-sap.h"
+
 #include <ns3/object.h>
 #include <ns3/packet.h>
 #include <ns3/traced-callback.h>
@@ -40,9 +40,6 @@
 #include <map>
 #include <set>
 #include <vector>
-
-#define MIN_NO_CC 1
-#define MAX_NO_CC 5 // this is the maximum number of carrier components allowed by 3GPP up to R13
 
 namespace ns3
 {
@@ -347,7 +344,7 @@ class LteUeRrc : public Object
     typedef void (*ImsiCidRntiTracedCallback)(uint64_t imsi, uint16_t cellId, uint16_t rnti);
 
     /**
-     * TracedCallback signature for MIBRecieved, Sib1Received and
+     * TracedCallback signature for MIBReceived, Sib1Received and
      * HandoverStart events.
      *
      * \param [in] imsi

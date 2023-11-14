@@ -19,18 +19,19 @@
 
 #include "rip.h"
 
+#include "ipv4-packet-info-tag.h"
+#include "ipv4-route.h"
+#include "loopback-net-device.h"
+#include "rip-header.h"
+#include "udp-header.h"
+
 #include "ns3/abort.h"
 #include "ns3/assert.h"
 #include "ns3/enum.h"
-#include "ns3/ipv4-packet-info-tag.h"
-#include "ns3/ipv4-route.h"
 #include "ns3/log.h"
-#include "ns3/loopback-net-device.h"
 #include "ns3/names.h"
 #include "ns3/node.h"
 #include "ns3/random-variable-stream.h"
-#include "ns3/rip-header.h"
-#include "ns3/udp-header.h"
 #include "ns3/uinteger.h"
 
 #include <iomanip>
@@ -153,7 +154,7 @@ Rip::DoInitialize()
         for (uint32_t j = 0; j < m_ipv4->GetNAddresses(i); j++)
         {
             Ipv4InterfaceAddress address = m_ipv4->GetAddress(i, j);
-            if (address.GetScope() != Ipv4InterfaceAddress::HOST && activeInterface == true)
+            if (address.GetScope() != Ipv4InterfaceAddress::HOST && activeInterface)
             {
                 NS_LOG_LOGIC("RIP: adding socket to " << address.GetLocal());
                 TypeId tid = TypeId::LookupByName("ns3::UdpSocketFactory");
@@ -241,10 +242,10 @@ bool
 Rip::RouteInput(Ptr<const Packet> p,
                 const Ipv4Header& header,
                 Ptr<const NetDevice> idev,
-                UnicastForwardCallback ucb,
-                MulticastForwardCallback mcb,
-                LocalDeliverCallback lcb,
-                ErrorCallback ecb)
+                const UnicastForwardCallback& ucb,
+                const MulticastForwardCallback& mcb,
+                const LocalDeliverCallback& lcb,
+                const ErrorCallback& ecb)
 {
     NS_LOG_FUNCTION(this << p << header << header.GetSource() << header.GetDestination() << idev);
 
@@ -290,7 +291,7 @@ Rip::RouteInput(Ptr<const Packet> p,
     }
 
     // Check if input device supports IP forwarding
-    if (m_ipv4->IsForwarding(iif) == false)
+    if (!m_ipv4->IsForwarding(iif))
     {
         NS_LOG_LOGIC("Forwarding disabled for this interface");
         if (!ecb.IsNull())
@@ -365,8 +366,7 @@ Rip::NotifyInterfaceUp(uint32_t i)
     {
         Ipv4InterfaceAddress address = m_ipv4->GetAddress(i, j);
 
-        if (address.GetScope() != Ipv4InterfaceAddress::HOST && sendSocketFound == false &&
-            activeInterface == true)
+        if (address.GetScope() != Ipv4InterfaceAddress::HOST && !sendSocketFound && activeInterface)
         {
             NS_LOG_LOGIC("RIP: adding sending socket to " << address.GetLocal());
             TypeId tid = TypeId::LookupByName("ns3::UdpSocketFactory");

@@ -21,9 +21,6 @@
 #ifndef LTE_ENB_CMAC_SAP_H
 #define LTE_ENB_CMAC_SAP_H
 
-#include <ns3/eps-bearer.h>
-#include <ns3/ff-mac-common.h>
-#include <ns3/lte-common.h>
 #include <ns3/packet.h>
 
 namespace ns3
@@ -70,15 +67,16 @@ class LteEnbCmacSapProvider
      */
     struct LcInfo
     {
-        uint16_t rnti;   /**< C-RNTI identifying the UE */
-        uint8_t lcId;    /**< logical channel identifier */
-        uint8_t lcGroup; /**< logical channel group */
-        uint8_t qci;     /**< QoS Class Identifier */
-        bool isGbr;      /**< true if the bearer is GBR, false if the bearer is NON-GBR */
-        uint64_t mbrUl;  /**< maximum bitrate in uplink */
-        uint64_t mbrDl;  /**< maximum bitrate in downlink */
-        uint64_t gbrUl;  /**< guaranteed bitrate in uplink */
-        uint64_t gbrDl;  /**< guaranteed bitrate in downlink */
+        uint16_t rnti;        /**< C-RNTI identifying the UE */
+        uint8_t lcId;         /**< logical channel identifier */
+        uint8_t lcGroup;      /**< logical channel group */
+        uint8_t qci;          /**< QoS Class Identifier */
+        uint8_t resourceType; /**< 0 if the bearer is NON-GBR, 1 if the bearer
+                                   is GBR, 2 if the bearer in DC-GBR */
+        uint64_t mbrUl;       /**< maximum bitrate in uplink */
+        uint64_t mbrDl;       /**< maximum bitrate in downlink */
+        uint64_t gbrUl;       /**< guaranteed bitrate in uplink */
+        uint64_t gbrDl;       /**< guaranteed bitrate in downlink */
     };
 
     /**

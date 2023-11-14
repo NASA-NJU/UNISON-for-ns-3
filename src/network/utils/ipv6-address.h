@@ -24,7 +24,6 @@
 
 #include "ns3/address.h"
 #include "ns3/attribute-helper.h"
-#include "ns3/deprecated.h"
 #include "ns3/ipv4-address.h"
 
 #include <cstring>
@@ -647,7 +646,7 @@ std::istream& operator>>(std::istream& is, Ipv6Address& address);
  * \brief Stream extraction operator.
  *
  * \param is the reference to the input stream
- * \param prefix the Ipv6Preofix
+ * \param prefix the Ipv6Prefix
  * \returns the reference to the input stream
  */
 std::istream& operator>>(std::istream& is, Ipv6Prefix& prefix);

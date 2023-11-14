@@ -20,6 +20,8 @@
 #ifndef OLSR_HEADER_H
 #define OLSR_HEADER_H
 
+#include "olsr-repositories.h"
+
 #include "ns3/header.h"
 #include "ns3/ipv4-address.h"
 #include "ns3/nstime.h"
@@ -412,8 +414,8 @@ class MessageHeader : public Header
             return Seconds(EmfToSeconds(this->hTime));
         }
 
-        uint8_t willingness; //!< The willingness of a node to carry and forward traffic for other
-                             //!< nodes.
+        Willingness willingness; //!< The willingness of a node to carry and forward traffic for
+                                 //!< other nodes.
         std::vector<LinkMessage> linkMessages; //!< Link messages container.
 
         /**
@@ -684,14 +686,14 @@ class MessageHeader : public Header
     }
 };
 
-static inline std::ostream&
+inline std::ostream&
 operator<<(std::ostream& os, const PacketHeader& packet)
 {
     packet.Print(os);
     return os;
 }
 
-static inline std::ostream&
+inline std::ostream&
 operator<<(std::ostream& os, const MessageHeader& message)
 {
     message.Print(os);
@@ -700,7 +702,7 @@ operator<<(std::ostream& os, const MessageHeader& message)
 
 typedef std::vector<MessageHeader> MessageList;
 
-static inline std::ostream&
+inline std::ostream&
 operator<<(std::ostream& os, const MessageList& messages)
 {
     os << "[";

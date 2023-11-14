@@ -129,6 +129,20 @@ EhtPhy::GetDuration(WifiPpduField field, const WifiTxVector& txVector) const
     }
 }
 
+uint32_t
+EhtPhy::GetSigBSize(const WifiTxVector& txVector) const
+{
+    if (ns3::IsDlMu(txVector.GetPreambleType()) && ns3::IsEht(txVector.GetPreambleType()))
+    {
+        return EhtPpdu::GetEhtSigFieldSize(
+            txVector.GetChannelWidth(),
+            txVector.GetRuAllocation(
+                m_wifiPhy ? m_wifiPhy->GetOperatingChannel().GetPrimaryChannelIndex(20) : 0),
+            txVector.GetEhtPpduType());
+    }
+    return HePhy::GetSigBSize(txVector);
+}
+
 Time
 EhtPhy::CalculateNonOfdmaDurationForHeTb(const WifiTxVector& txVector) const
 {
@@ -160,10 +174,8 @@ EhtPhy::BuildPpdu(const WifiConstPsduMap& psdus, const WifiTxVector& txVector, T
     NS_LOG_FUNCTION(this << psdus << txVector << ppduDuration);
     return Create<EhtPpdu>(psdus,
                            txVector,
-                           m_wifiPhy->GetOperatingChannel().GetPrimaryChannelCenterFrequency(
-                               txVector.GetChannelWidth()),
+                           m_wifiPhy->GetOperatingChannel(),
                            ppduDuration,
-                           m_wifiPhy->GetPhyBand(),
                            ObtainNextUid(txVector),
                            HePpdu::PSD_NON_HE_PORTION);
 }

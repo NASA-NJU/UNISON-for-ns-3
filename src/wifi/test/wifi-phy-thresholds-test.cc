@@ -19,14 +19,18 @@
 
 #include "ns3/interference-helper.h"
 #include "ns3/log.h"
+#include "ns3/multi-model-spectrum-channel.h"
 #include "ns3/nist-error-rate-model.h"
 #include "ns3/ofdm-phy.h"
 #include "ns3/ofdm-ppdu.h"
+#include "ns3/spectrum-phy.h"
 #include "ns3/spectrum-wifi-helper.h"
 #include "ns3/spectrum-wifi-phy.h"
 #include "ns3/test.h"
 #include "ns3/wifi-mac-header.h"
+#include "ns3/wifi-net-device.h"
 #include "ns3/wifi-psdu.h"
+#include "ns3/wifi-spectrum-phy-interface.h"
 #include "ns3/wifi-spectrum-signal-parameters.h"
 #include "ns3/wifi-spectrum-value-helper.h"
 #include "ns3/wifi-utils.h"
@@ -63,9 +67,11 @@ class WifiPhyThresholdsTest : public TestCase
     /**
      * Make wifi signal function
      * \param txPowerWatts the transmit power in watts
+     * \param channel the operating channel of the PHY used for the transmission
      * \returns Ptr<SpectrumSignalParameters>
      */
-    virtual Ptr<SpectrumSignalParameters> MakeWifiSignal(double txPowerWatts);
+    virtual Ptr<SpectrumSignalParameters> MakeWifiSignal(double txPowerWatts,
+                                                         const WifiPhyOperatingChannel& channel);
     /**
      * Make foreign signal function
      * \param txPowerWatts the transmit power in watts
@@ -139,10 +145,17 @@ WifiPhyThresholdsTest::~WifiPhyThresholdsTest()
 }
 
 Ptr<SpectrumSignalParameters>
-WifiPhyThresholdsTest::MakeWifiSignal(double txPowerWatts)
+WifiPhyThresholdsTest::MakeWifiSignal(double txPowerWatts, const WifiPhyOperatingChannel& channel)
 {
-    WifiTxVector txVector =
-        WifiTxVector(OfdmPhy::GetOfdmRate6Mbps(), 0, WIFI_PREAMBLE_LONG, 800, 1, 1, 0, 20, false);
+    WifiTxVector txVector = WifiTxVector(OfdmPhy::GetOfdmRate6Mbps(),
+                                         0,
+                                         WIFI_PREAMBLE_LONG,
+                                         800,
+                                         1,
+                                         1,
+                                         0,
+                                         CHANNEL_WIDTH,
+                                         false);
 
     Ptr<Packet> pkt = Create<Packet>(1000);
     WifiMacHeader hdr;
@@ -153,13 +166,14 @@ WifiPhyThresholdsTest::MakeWifiSignal(double txPowerWatts)
     Ptr<WifiPsdu> psdu = Create<WifiPsdu>(pkt, hdr);
     Time txDuration = m_phy->CalculateTxDuration(psdu->GetSize(), txVector, m_phy->GetPhyBand());
 
-    Ptr<WifiPpdu> ppdu = Create<OfdmPpdu>(psdu, txVector, FREQUENCY, WIFI_PHY_BAND_5GHZ, 0);
+    Ptr<WifiPpdu> ppdu = Create<OfdmPpdu>(psdu, txVector, channel, 0);
 
     Ptr<SpectrumValue> txPowerSpectrum =
-        WifiSpectrumValueHelper::CreateHeOfdmTxPowerSpectralDensity(FREQUENCY,
-                                                                    CHANNEL_WIDTH,
-                                                                    txPowerWatts,
-                                                                    CHANNEL_WIDTH);
+        WifiSpectrumValueHelper::CreateHeOfdmTxPowerSpectralDensity(
+            channel.GetPrimaryChannelCenterFrequency(CHANNEL_WIDTH),
+            CHANNEL_WIDTH,
+            txPowerWatts,
+            CHANNEL_WIDTH);
     Ptr<WifiSpectrumSignalParameters> txParams = Create<WifiSpectrumSignalParameters>();
     txParams->psd = txPowerSpectrum;
     txParams->txPhy = nullptr;
@@ -189,11 +203,11 @@ WifiPhyThresholdsTest::SendSignal(double txPowerWatts, bool wifiSignal)
 {
     if (wifiSignal)
     {
-        m_phy->StartRx(MakeWifiSignal(txPowerWatts));
+        m_phy->StartRx(MakeWifiSignal(txPowerWatts, m_phy->GetOperatingChannel()), nullptr);
     }
     else
     {
-        m_phy->StartRx(MakeForeignSignal(txPowerWatts));
+        m_phy->StartRx(MakeForeignSignal(txPowerWatts), nullptr);
     }
 }
 
@@ -243,13 +257,18 @@ WifiPhyThresholdsTest::PhyStateChanged(Time start, Time duration, WifiPhyState n
 void
 WifiPhyThresholdsTest::DoSetup()
 {
+    Ptr<MultiModelSpectrumChannel> spectrumChannel = CreateObject<MultiModelSpectrumChannel>();
+    Ptr<Node> node = CreateObject<Node>();
+    Ptr<WifiNetDevice> dev = CreateObject<WifiNetDevice>();
     m_phy = CreateObject<SpectrumWifiPhy>();
-    m_phy->ConfigureStandard(WIFI_STANDARD_80211ax);
     Ptr<InterferenceHelper> interferenceHelper = CreateObject<InterferenceHelper>();
     m_phy->SetInterferenceHelper(interferenceHelper);
     Ptr<ErrorRateModel> error = CreateObject<NistErrorRateModel>();
     m_phy->SetErrorRateModel(error);
+    m_phy->SetDevice(dev);
+    m_phy->AddChannel(spectrumChannel);
     m_phy->SetOperatingChannel(WifiPhy::ChannelTuple{CHANNEL_NUMBER, 0, WIFI_PHY_BAND_5GHZ, 0});
+    m_phy->ConfigureStandard(WIFI_STANDARD_80211ax);
     m_phy->SetReceiveOkCallback(MakeCallback(&WifiPhyThresholdsTest::RxSuccess, this));
     m_phy->SetReceiveErrorCallback(MakeCallback(&WifiPhyThresholdsTest::RxFailure, this));
     m_phy->TraceConnectWithoutContext("PhyRxDrop",
@@ -257,6 +276,8 @@ WifiPhyThresholdsTest::DoSetup()
     m_phy->GetState()->TraceConnectWithoutContext(
         "State",
         MakeCallback(&WifiPhyThresholdsTest::PhyStateChanged, this));
+    dev->SetPhy(m_phy);
+    node->AddDevice(dev);
 }
 
 void

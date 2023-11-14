@@ -104,6 +104,13 @@ Mac16Address::Mac16Address(const char* str)
     NS_ASSERT(i == 2);
 }
 
+Mac16Address::Mac16Address(uint16_t addr)
+{
+    NS_LOG_FUNCTION(this);
+    m_address[1] = addr & 0xFF;
+    m_address[0] = (addr >> 8) & 0xFF;
+}
+
 void
 Mac16Address::CopyFrom(const uint8_t buffer[2])
 {
@@ -145,6 +152,15 @@ Mac16Address::ConvertTo() const
 {
     NS_LOG_FUNCTION(this);
     return Address(GetType(), m_address, 2);
+}
+
+uint16_t
+Mac16Address::ConvertToInt() const
+{
+    uint16_t addr = m_address[1] & (0xFF);
+    addr |= (m_address[0] << 8) & (0xFF << 8);
+
+    return addr;
 }
 
 Mac16Address
@@ -212,11 +228,7 @@ bool
 Mac16Address::IsBroadcast() const
 {
     NS_LOG_FUNCTION(this);
-    if (m_address[0] == 0xff && m_address[1] == 0xff)
-    {
-        return true;
-    }
-    return false;
+    return m_address[0] == 0xff && m_address[1] == 0xff;
 }
 
 bool
@@ -225,11 +237,7 @@ Mac16Address::IsMulticast() const
     NS_LOG_FUNCTION(this);
     uint8_t val = m_address[0];
     val >>= 5;
-    if (val == 0x4)
-    {
-        return true;
-    }
-    return false;
+    return val == 0x4;
 }
 
 std::ostream&

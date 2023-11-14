@@ -19,18 +19,19 @@
 
 #include "ripng.h"
 
+#include "ipv6-packet-info-tag.h"
+#include "ipv6-route.h"
+#include "ripng-header.h"
+#include "udp-header.h"
+
 #include "ns3/abort.h"
 #include "ns3/assert.h"
 #include "ns3/enum.h"
-#include "ns3/ipv6-packet-info-tag.h"
-#include "ns3/ipv6-route.h"
 #include "ns3/log.h"
 #include "ns3/names.h"
 #include "ns3/node.h"
 #include "ns3/random-variable-stream.h"
-#include "ns3/ripng-header.h"
 #include "ns3/simulator.h"
-#include "ns3/udp-header.h"
 #include "ns3/uinteger.h"
 
 #include <iomanip>
@@ -147,7 +148,7 @@ RipNg::DoInitialize()
         for (uint32_t j = 0; j < m_ipv6->GetNAddresses(i); j++)
         {
             Ipv6InterfaceAddress address = m_ipv6->GetAddress(i, j);
-            if (address.GetScope() == Ipv6InterfaceAddress::LINKLOCAL && activeInterface == true)
+            if (address.GetScope() == Ipv6InterfaceAddress::LINKLOCAL && activeInterface)
             {
                 NS_LOG_LOGIC("RIPng: adding socket to " << address.GetAddress());
                 TypeId tid = TypeId::LookupByName("ns3::UdpSocketFactory");
@@ -233,10 +234,10 @@ bool
 RipNg::RouteInput(Ptr<const Packet> p,
                   const Ipv6Header& header,
                   Ptr<const NetDevice> idev,
-                  UnicastForwardCallback ucb,
-                  MulticastForwardCallback mcb,
-                  LocalDeliverCallback lcb,
-                  ErrorCallback ecb)
+                  const UnicastForwardCallback& ucb,
+                  const MulticastForwardCallback& mcb,
+                  const LocalDeliverCallback& lcb,
+                  const ErrorCallback& ecb)
 {
     NS_LOG_FUNCTION(this << p << header << header.GetSource() << header.GetDestination() << idev);
 
@@ -263,7 +264,7 @@ RipNg::RouteInput(Ptr<const Packet> p,
     }
 
     // Check if input device supports IP forwarding
-    if (m_ipv6->IsForwarding(iif) == false)
+    if (!m_ipv6->IsForwarding(iif))
     {
         NS_LOG_LOGIC("Forwarding disabled for this interface");
         if (!ecb.IsNull())
@@ -332,8 +333,8 @@ RipNg::NotifyInterfaceUp(uint32_t i)
     {
         Ipv6InterfaceAddress address = m_ipv6->GetAddress(i, j);
 
-        if (address.GetScope() == Ipv6InterfaceAddress::LINKLOCAL && sendSocketFound == false &&
-            activeInterface == true)
+        if (address.GetScope() == Ipv6InterfaceAddress::LINKLOCAL && !sendSocketFound &&
+            activeInterface)
         {
             NS_LOG_LOGIC("RIPng: adding sending socket to " << address.GetAddress());
             TypeId tid = TypeId::LookupByName("ns3::UdpSocketFactory");

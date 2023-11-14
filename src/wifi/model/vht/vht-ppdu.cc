@@ -24,6 +24,7 @@
 #include "vht-phy.h"
 
 #include "ns3/log.h"
+#include "ns3/wifi-phy-operating-channel.h"
 #include "ns3/wifi-phy.h"
 #include "ns3/wifi-psdu.h"
 
@@ -34,18 +35,16 @@ NS_LOG_COMPONENT_DEFINE("VhtPpdu");
 
 VhtPpdu::VhtPpdu(Ptr<const WifiPsdu> psdu,
                  const WifiTxVector& txVector,
-                 uint16_t txCenterFreq,
+                 const WifiPhyOperatingChannel& channel,
                  Time ppduDuration,
-                 WifiPhyBand band,
                  uint64_t uid)
     : OfdmPpdu(psdu,
                txVector,
-               txCenterFreq,
-               band,
+               channel,
                uid,
                false) // don't instantiate LSigHeader of OfdmPpdu
 {
-    NS_LOG_FUNCTION(this << psdu << txVector << txCenterFreq << ppduDuration << band << uid);
+    NS_LOG_FUNCTION(this << psdu << txVector << channel << ppduDuration << uid);
     SetPhyHeaders(txVector, ppduDuration);
 }
 
@@ -53,20 +52,8 @@ void
 VhtPpdu::SetPhyHeaders(const WifiTxVector& txVector, Time ppduDuration)
 {
     NS_LOG_FUNCTION(this << txVector << ppduDuration);
-
-#ifdef NS3_BUILD_PROFILE_DEBUG
-    LSigHeader lSig;
-    SetLSigHeader(lSig, ppduDuration);
-
-    VhtSigHeader vhtSig;
-    SetVhtSigHeader(vhtSig, txVector, ppduDuration);
-
-    m_phyHeaders->AddHeader(vhtSig);
-    m_phyHeaders->AddHeader(lSig);
-#else
     SetLSigHeader(m_lSig, ppduDuration);
     SetVhtSigHeader(m_vhtSig, txVector, ppduDuration);
-#endif
 }
 
 void
@@ -105,27 +92,7 @@ VhtPpdu::DoGetTxVector() const
 {
     WifiTxVector txVector;
     txVector.SetPreambleType(m_preamble);
-
-#ifdef NS3_BUILD_PROFILE_DEBUG
-    auto phyHeaders = m_phyHeaders->Copy();
-
-    LSigHeader lSig;
-    if (phyHeaders->RemoveHeader(lSig) == 0)
-    {
-        NS_FATAL_ERROR("Missing L-SIG header in VHT PPDU");
-    }
-
-    VhtSigHeader vhtSig;
-    if (phyHeaders->RemoveHeader(vhtSig) == 0)
-    {
-        NS_FATAL_ERROR("Missing VHT-SIG header in VHT PPDU");
-    }
-
-    SetTxVectorFromPhyHeaders(txVector, lSig, vhtSig);
-#else
     SetTxVectorFromPhyHeaders(txVector, m_lSig, m_vhtSig);
-#endif
-
     return txVector;
 }
 
@@ -144,32 +111,14 @@ VhtPpdu::SetTxVectorFromPhyHeaders(WifiTxVector& txVector,
 Time
 VhtPpdu::GetTxDuration() const
 {
-    Time ppduDuration = Seconds(0);
     const WifiTxVector& txVector = GetTxVector();
-
-    uint16_t length = 0;
-    bool sgi = false;
-    bool sgiDisambiguation = false;
-#ifdef NS3_BUILD_PROFILE_DEBUG
-    auto phyHeaders = m_phyHeaders->Copy();
-
-    LSigHeader lSig;
-    phyHeaders->RemoveHeader(lSig);
-    VhtSigHeader vhtSig;
-    phyHeaders->RemoveHeader(vhtSig);
-
-    length = lSig.GetLength();
-    sgi = vhtSig.GetShortGuardInterval();
-    sgiDisambiguation = vhtSig.GetShortGuardIntervalDisambiguation();
-#else
-    length = m_lSig.GetLength();
-    sgi = m_vhtSig.GetShortGuardInterval();
-    sgiDisambiguation = m_vhtSig.GetShortGuardIntervalDisambiguation();
-#endif
-
-    Time tSymbol = NanoSeconds(3200 + txVector.GetGuardInterval());
-    Time preambleDuration = WifiPhy::CalculatePhyPreambleAndHeaderDuration(txVector);
-    Time calculatedDuration = MicroSeconds(((ceil(static_cast<double>(length + 3) / 3)) * 4) + 20);
+    const auto length = m_lSig.GetLength();
+    const auto sgi = m_vhtSig.GetShortGuardInterval();
+    const auto sgiDisambiguation = m_vhtSig.GetShortGuardIntervalDisambiguation();
+    const auto tSymbol = NanoSeconds(3200 + txVector.GetGuardInterval());
+    const auto preambleDuration = WifiPhy::CalculatePhyPreambleAndHeaderDuration(txVector);
+    const auto calculatedDuration =
+        MicroSeconds(((ceil(static_cast<double>(length + 3) / 3)) * 4) + 20);
     uint32_t nSymbols =
         floor(static_cast<double>((calculatedDuration - preambleDuration).GetNanoSeconds()) /
               tSymbol.GetNanoSeconds());
@@ -177,8 +126,7 @@ VhtPpdu::GetTxDuration() const
     {
         nSymbols--;
     }
-    ppduDuration = preambleDuration + (nSymbols * tSymbol);
-    return ppduDuration;
+    return (preambleDuration + (nSymbols * tSymbol));
 }
 
 Ptr<WifiPpdu>
@@ -201,42 +149,6 @@ VhtPpdu::VhtSigHeader::VhtSigHeader()
       m_suMcs(0),
       m_mu(false)
 {
-}
-
-TypeId
-VhtPpdu::VhtSigHeader::GetTypeId()
-{
-    static TypeId tid = TypeId("ns3::VhtSigHeader")
-                            .SetParent<Header>()
-                            .SetGroupName("Wifi")
-                            .AddConstructor<VhtSigHeader>();
-    return tid;
-}
-
-TypeId
-VhtPpdu::VhtSigHeader::GetInstanceTypeId() const
-{
-    return GetTypeId();
-}
-
-void
-VhtPpdu::VhtSigHeader::Print(std::ostream& os) const
-{
-    os << "SU_MCS=" << +m_suMcs << " CHANNEL_WIDTH=" << GetChannelWidth() << " SGI=" << +m_sgi
-       << " NSTS=" << +m_nsts << " MU=" << +m_mu;
-}
-
-uint32_t
-VhtPpdu::VhtSigHeader::GetSerializedSize() const
-{
-    uint32_t size = 0;
-    size += 3; // VHT-SIG-A1
-    size += 3; // VHT-SIG-A2
-    if (m_mu)
-    {
-        size += 4; // VHT-SIG-B
-    }
-    return size;
 }
 
 void
@@ -335,59 +247,6 @@ uint8_t
 VhtPpdu::VhtSigHeader::GetSuMcs() const
 {
     return m_suMcs;
-}
-
-void
-VhtPpdu::VhtSigHeader::Serialize(Buffer::Iterator start) const
-{
-    // VHT-SIG-A1
-    uint8_t byte = m_bw;
-    byte |= (0x01 << 2); // Set Reserved bit #2 to 1
-    start.WriteU8(byte);
-    uint16_t bytes = (m_nsts & 0x07) << 2;
-    bytes |= (0x01 << (23 - 8)); // Set Reserved bit #23 to 1
-    start.WriteU16(bytes);
-
-    // VHT-SIG-A2
-    byte = m_sgi & 0x01;
-    byte |= ((m_sgi_disambiguation & 0x01) << 1);
-    byte |= ((m_suMcs & 0x0f) << 4);
-    start.WriteU8(byte);
-    bytes = (0x01 << (9 - 8)); // Set Reserved bit #9 to 1
-    start.WriteU16(bytes);
-
-    if (m_mu)
-    {
-        // VHT-SIG-B
-        start.WriteU32(0);
-    }
-}
-
-uint32_t
-VhtPpdu::VhtSigHeader::Deserialize(Buffer::Iterator start)
-{
-    Buffer::Iterator i = start;
-
-    // VHT-SIG-A1
-    uint8_t byte = i.ReadU8();
-    m_bw = byte & 0x03;
-    uint16_t bytes = i.ReadU16();
-    m_nsts = ((bytes >> 2) & 0x07);
-
-    // VHT-SIG-A2
-    byte = i.ReadU8();
-    m_sgi = byte & 0x01;
-    m_sgi_disambiguation = ((byte >> 1) & 0x01);
-    m_suMcs = ((byte >> 4) & 0x0f);
-    i.ReadU16();
-
-    if (m_mu)
-    {
-        // VHT-SIG-B
-        i.ReadU32();
-    }
-
-    return i.GetDistanceFrom(start);
 }
 
 } // namespace ns3

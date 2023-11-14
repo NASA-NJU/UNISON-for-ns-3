@@ -501,6 +501,8 @@ class WifiPhy : public Object
 
     /**
      * Configure the PHY-level parameters for different Wi-Fi standard.
+     * Note that, in case a Spectrum PHY is used, this method must be called after adding
+     * a spectrum channel covering the operating channel bandwidth.
      *
      * \param standard the Wi-Fi standard
      */
@@ -834,7 +836,7 @@ class WifiPhy : public Object
      *
      * \param device the device this PHY is associated with
      */
-    void SetDevice(const Ptr<WifiNetDevice> device);
+    virtual void SetDevice(const Ptr<WifiNetDevice> device);
     /**
      * Return the device this PHY is associated with
      *
@@ -876,9 +878,27 @@ class WifiPhy : public Object
      * Otherwise, set the operating channel based on the given channel settings and
      * call ConfigureStandard if the PHY band has changed.
      *
+     * Note that, in case a Spectrum PHY is used, a spectrum channel covering the
+     * operating channel bandwidth must have been already added when actually setting
+     * the operating channel.
+     *
      * \param channelTuple the given channel settings
      */
     void SetOperatingChannel(const ChannelTuple& channelTuple);
+    /**
+     * If the standard for this object has not been set yet, store the channel settings
+     * corresponding to the given operating channel. Otherwise, check if a channel switch
+     * can be performed now. If not, schedule another call to this method when channel switch
+     * can be performed. Otherwise, set the given operating channel and call ConfigureStandard
+     * if the PHY band has changed.
+     *
+     * Note that, in case a Spectrum PHY is used, a spectrum channel covering the
+     * operating channel bandwidth must have been already added when actually setting
+     * the operating channel.
+     *
+     * \param channel the given operating channel
+     */
+    void SetOperatingChannel(const WifiPhyOperatingChannel& channel);
     /**
      * Configure whether it is prohibited to change PHY band after initialization.
      *
@@ -1034,20 +1054,13 @@ class WifiPhy : public Object
     void NotifyChannelAccessRequested();
 
     /**
-     * \param bandWidth the width (MHz) of the band used for the OFDMA transmission. Must be
-     *                  a multiple of 20 MHz
-     * \param guardBandwidth width of the guard band (MHz)
-     * \param range the subcarrier range of the HE RU
-     * \param bandIndex the index (starting at 0) of the band within the operating channel
-     * \return the converted subcarriers
+     * This is a helper function to convert start and stop indices to start and stop frequencies.
      *
-     * This is a helper function to convert HE RU subcarriers, which are relative to the center
-     * frequency subcarrier, to the indexes used by the Spectrum model.
+     * \param indices the start/stop indices to convert
+     * \return the converted frequencies
      */
-    virtual WifiSpectrumBand ConvertHeRuSubcarriers(uint16_t bandWidth,
-                                                    uint16_t guardBandwidth,
-                                                    HeRu::SubcarrierRange range,
-                                                    uint8_t bandIndex = 0) const;
+    virtual WifiSpectrumBandFrequencies ConvertIndicesToFrequencies(
+        const WifiSpectrumBandIndices& indices) const = 0;
 
     /**
      * Add the PHY entity to the map of __implemented__ PHY entities for the
@@ -1142,14 +1155,26 @@ class WifiPhy : public Object
     uint8_t GetPrimaryChannelNumber(uint16_t primaryChannelWidth) const;
 
     /**
-     * Get the start band index and the stop band index for a given band
+     * Get the info of a given band
      *
      * \param bandWidth the width of the band to be returned (MHz)
      * \param bandIndex the index of the band to be returned
      *
-     * \return a pair of start and stop indexes that defines the band
+     * \return the info that defines the band
      */
-    virtual WifiSpectrumBand GetBand(uint16_t bandWidth, uint8_t bandIndex = 0);
+    virtual WifiSpectrumBandInfo GetBand(uint16_t bandWidth, uint8_t bandIndex = 0) = 0;
+
+    /**
+     * Get the frequency range of the current RF interface.
+     *
+     * \return the frequency range of the current RF interface
+     */
+    virtual FrequencyRange GetCurrentFrequencyRange() const = 0;
+
+    /**
+     * \return the subcarrier spacing corresponding to the configure standard (Hz)
+     */
+    uint32_t GetSubcarrierSpacing() const;
 
   protected:
     void DoInitialize() override;

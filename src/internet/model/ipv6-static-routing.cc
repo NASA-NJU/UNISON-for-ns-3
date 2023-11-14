@@ -19,9 +19,9 @@
 
 #include "ipv6-static-routing.h"
 
+#include "ipv6-route.h"
 #include "ipv6-routing-table-entry.h"
 
-#include "ns3/ipv6-route.h"
 #include "ns3/log.h"
 #include "ns3/names.h"
 #include "ns3/net-device.h"
@@ -715,10 +715,10 @@ bool
 Ipv6StaticRouting::RouteInput(Ptr<const Packet> p,
                               const Ipv6Header& header,
                               Ptr<const NetDevice> idev,
-                              UnicastForwardCallback ucb,
-                              MulticastForwardCallback mcb,
-                              LocalDeliverCallback lcb,
-                              ErrorCallback ecb)
+                              const UnicastForwardCallback& ucb,
+                              const MulticastForwardCallback& mcb,
+                              const LocalDeliverCallback& lcb,
+                              const ErrorCallback& ecb)
 {
     NS_LOG_FUNCTION(this << p << header << header.GetSource() << header.GetDestination() << idev);
     NS_ASSERT(m_ipv6);
@@ -750,7 +750,7 @@ Ipv6StaticRouting::RouteInput(Ptr<const Packet> p,
     }
 
     // Check if input device supports IP forwarding
-    if (m_ipv6->IsForwarding(iif) == false)
+    if (!m_ipv6->IsForwarding(iif))
     {
         NS_LOG_LOGIC("Forwarding disabled for this interface");
         if (!ecb.IsNull())

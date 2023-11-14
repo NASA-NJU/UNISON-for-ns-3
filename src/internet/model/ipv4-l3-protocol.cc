@@ -22,16 +22,15 @@
 #include "arp-cache.h"
 #include "arp-l3-protocol.h"
 #include "icmpv4-l4-protocol.h"
+#include "ipv4-header.h"
 #include "ipv4-interface.h"
 #include "ipv4-raw-socket-impl.h"
+#include "ipv4-route.h"
 #include "loopback-net-device.h"
 
 #include "ns3/boolean.h"
 #include "ns3/callback.h"
 #include "ns3/ipv4-address.h"
-#include "ns3/ipv4-header.h"
-#include "ns3/ipv4-route.h"
-#include "ns3/ipv4-routing-table-entry.h"
 #include "ns3/log.h"
 #include "ns3/net-device.h"
 #include "ns3/node.h"
@@ -134,6 +133,10 @@ Ipv4L3Protocol::GetTypeId()
 Ipv4L3Protocol::Ipv4L3Protocol()
 {
     NS_LOG_FUNCTION(this);
+    m_ucb = MakeCallback(&Ipv4L3Protocol::IpForward, this);
+    m_mcb = MakeCallback(&Ipv4L3Protocol::IpMulticastForward, this);
+    m_lcb = MakeCallback(&Ipv4L3Protocol::LocalDeliver, this);
+    m_ecb = MakeCallback(&Ipv4L3Protocol::RouteInputError, this);
 }
 
 Ipv4L3Protocol::~Ipv4L3Protocol()
@@ -535,11 +538,10 @@ Ipv4L3Protocol::IsDestinationAddress(Ipv4Address address, uint32_t iif) const
 #ifdef NOTYET
         if (MulticastCheckGroup(iif, address))
 #endif
-            if (true)
-            {
-                NS_LOG_LOGIC("For me (Ipv4Addr multicast address)");
-                return true;
-            }
+        {
+            NS_LOG_LOGIC("For me (Ipv4Addr multicast address)");
+            return true;
+        }
     }
 
     if (address.IsBroadcast())
@@ -674,13 +676,7 @@ Ipv4L3Protocol::Receive(Ptr<NetDevice> device,
     }
 
     NS_ASSERT_MSG(m_routingProtocol, "Need a routing protocol object to process packets");
-    if (!m_routingProtocol->RouteInput(packet,
-                                       ipHeader,
-                                       device,
-                                       MakeCallback(&Ipv4L3Protocol::IpForward, this),
-                                       MakeCallback(&Ipv4L3Protocol::IpMulticastForward, this),
-                                       MakeCallback(&Ipv4L3Protocol::LocalDeliver, this),
-                                       MakeCallback(&Ipv4L3Protocol::RouteInputError, this)))
+    if (!m_routingProtocol->RouteInput(packet, ipHeader, device, m_ucb, m_mcb, m_lcb, m_ecb))
     {
         NS_LOG_WARN("No route found for forwarding packet.  Drop.");
         m_dropTrace(ipHeader, packet, DROP_NO_ROUTE, this, interface);
@@ -963,7 +959,7 @@ Ipv4L3Protocol::BuildHeader(Ipv4Address source,
     uint64_t srcDst = dst | (src << 32);
     std::pair<uint64_t, uint8_t> key = std::make_pair(srcDst, protocol);
 
-    if (mayFragment == true)
+    if (mayFragment)
     {
         ipHeader.SetMayFragment();
         ipHeader.SetIdentification(m_identification[key]);
@@ -1092,8 +1088,7 @@ Ipv4L3Protocol::IpForward(Ptr<Ipv4Route> rtentry, Ptr<const Packet> p, const Ipv
     if (ipHeader.GetTtl() == 0)
     {
         // Do not reply to multicast/broadcast IP address
-        if (ipHeader.GetDestination().IsBroadcast() == false &&
-            ipHeader.GetDestination().IsMulticast() == false)
+        if (!ipHeader.GetDestination().IsBroadcast() && !ipHeader.GetDestination().IsMulticast())
         {
             Ptr<Icmpv4L4Protocol> icmp = GetIcmp();
             icmp->SendTimeExceededTtl(ipHeader, packet, false);
@@ -1129,7 +1124,7 @@ Ipv4L3Protocol::LocalDeliver(Ptr<const Packet> packet, const Ipv4Header& ip, uin
         NS_LOG_LOGIC("Received a fragment, processing " << *p);
         bool isPacketComplete;
         isPacketComplete = ProcessFragment(p, ipHeader, iif);
-        if (isPacketComplete == false)
+        if (!isPacketComplete)
         {
             return;
         }
@@ -1146,7 +1141,7 @@ Ipv4L3Protocol::LocalDeliver(Ptr<const Packet> packet, const Ipv4Header& ip, uin
         // we need to make a copy in the unlikely event we hit the
         // RX_ENDPOINT_UNREACH codepath
         Ptr<Packet> copy = p->Copy();
-        enum IpL4Protocol::RxStatus status = protocol->Receive(p, ipHeader, GetInterface(iif));
+        IpL4Protocol::RxStatus status = protocol->Receive(p, ipHeader, GetInterface(iif));
         switch (status)
         {
         case IpL4Protocol::RX_OK:
@@ -1156,8 +1151,7 @@ Ipv4L3Protocol::LocalDeliver(Ptr<const Packet> packet, const Ipv4Header& ip, uin
         case IpL4Protocol::RX_CSUM_FAILED:
             break;
         case IpL4Protocol::RX_ENDPOINT_UNREACH:
-            if (ipHeader.GetDestination().IsBroadcast() == true ||
-                ipHeader.GetDestination().IsMulticast() == true)
+            if (ipHeader.GetDestination().IsBroadcast() || ipHeader.GetDestination().IsMulticast())
             {
                 break; // Do not reply to broadcast or multicast
             }
@@ -1173,7 +1167,7 @@ Ipv4L3Protocol::LocalDeliver(Ptr<const Packet> packet, const Ipv4Header& ip, uin
                     subnetDirected = true;
                 }
             }
-            if (subnetDirected == false)
+            if (!subnetDirected)
             {
                 GetIcmp()->SendDestUnreachPort(ipHeader, copy);
             }
@@ -1268,7 +1262,7 @@ Ipv4L3Protocol::SourceAddressSelection(uint32_t interfaceIdx, Ipv4Address dest)
         Ipv4InterfaceAddress test = GetAddress(interfaceIdx, i);
         if (test.GetLocal().CombineMask(test.GetMask()) == dest.CombineMask(test.GetMask()))
         {
-            if (test.IsSecondary() == false)
+            if (!test.IsSecondary())
             {
                 return test.GetLocal();
             }

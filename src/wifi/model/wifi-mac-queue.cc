@@ -22,12 +22,12 @@
 
 #include "wifi-mac-queue.h"
 
-#include "qos-blocked-destinations.h"
 #include "wifi-mac-queue-scheduler.h"
 
 #include "ns3/simulator.h"
 
 #include <functional>
+#include <optional>
 
 namespace ns3
 {
@@ -98,6 +98,21 @@ Ptr<WifiMpdu>
 WifiMacQueue::GetOriginal(Ptr<WifiMpdu> mpdu)
 {
     return GetIt(mpdu)->mpdu;
+}
+
+Ptr<WifiMpdu>
+WifiMacQueue::GetAlias(Ptr<const WifiMpdu> mpdu, uint8_t linkId)
+{
+    if (!mpdu->IsQueued())
+    {
+        return nullptr;
+    }
+    if (auto aliasIt = GetIt(mpdu)->inflights.find(linkId);
+        aliasIt != GetIt(mpdu)->inflights.cend())
+    {
+        return aliasIt->second;
+    }
+    return nullptr;
 }
 
 void
@@ -303,7 +318,7 @@ WifiMacQueue::PeekByTidAndAddress(uint8_t tid, Mac48Address dest, Ptr<const Wifi
 {
     NS_LOG_FUNCTION(this << +tid << dest << item);
     NS_ABORT_IF(dest.IsGroup());
-    WifiContainerQueueId queueId(WIFI_QOSDATA_UNICAST_QUEUE, dest, tid);
+    WifiContainerQueueId queueId(WIFI_QOSDATA_QUEUE, WIFI_UNICAST, dest, tid);
     return PeekByQueueId(queueId, item);
 }
 
@@ -331,18 +346,13 @@ WifiMacQueue::PeekByQueueId(const WifiContainerQueueId& queueId, Ptr<const WifiM
 }
 
 Ptr<WifiMpdu>
-WifiMacQueue::PeekFirstAvailable(uint8_t linkId,
-                                 const Ptr<QosBlockedDestinations> blockedPackets,
-                                 Ptr<const WifiMpdu> item) const
+WifiMacQueue::PeekFirstAvailable(uint8_t linkId, Ptr<const WifiMpdu> item) const
 {
     NS_LOG_FUNCTION(this << +linkId << item);
     NS_ASSERT(!item || item->IsQueued());
 
     if (item)
     {
-        NS_ASSERT(!item->GetHeader().IsQosData() || !blockedPackets ||
-                  !blockedPackets->IsBlocked(item->GetHeader().GetAddr1(),
-                                             item->GetHeader().GetQosTid()));
         // check if there are other MPDUs in the same container queue as item
         auto mpdu = PeekByQueueId(WifiMacQueueContainer::GetQueueId(item), item);
 
@@ -361,19 +371,6 @@ WifiMacQueue::PeekFirstAvailable(uint8_t linkId,
     else
     {
         queueId = m_scheduler->GetNext(m_ac, linkId);
-    }
-
-    NS_ASSERT(!queueId || std::get<0>(*queueId) != WIFI_QOSDATA_UNICAST_QUEUE ||
-              std::get<2>(*queueId));
-
-    while (queueId.has_value() && blockedPackets &&
-           std::get<0>(queueId.value()) == WIFI_QOSDATA_UNICAST_QUEUE &&
-           blockedPackets->IsBlocked(std::get<1>(queueId.value()), *std::get<2>(queueId.value())))
-    {
-        queueId = m_scheduler->GetNext(m_ac, linkId, queueId.value());
-
-        NS_ASSERT(!queueId || std::get<0>(*queueId) != WIFI_QOSDATA_UNICAST_QUEUE ||
-                  std::get<2>(*queueId));
     }
 
     if (!queueId.has_value())

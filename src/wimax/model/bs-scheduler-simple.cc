@@ -109,7 +109,7 @@ BSSchedulerSimple::AddDownlinkBurst(Ptr<const WimaxConnection> connection,
     }
     NS_LOG_INFO(", modulation: " << modulationType << ", DIUC: " << (uint32_t)diuc);
 
-    m_downlinkBursts->push_back(std::make_pair(dlMapIe, burst));
+    m_downlinkBursts->emplace_back(dlMapIe, burst);
 }
 
 void
@@ -187,7 +187,7 @@ BSSchedulerSimple::Schedule()
         else
         {
             burst = Create<PacketBurst>();
-            while (connection->HasPackets() == true)
+            while (connection->HasPackets())
             {
                 uint32_t FirstPacketSize = connection->GetQueue()->GetFirstPacketRequiredByte(
                     MacHeaderType::HEADER_TYPE_GENERIC);

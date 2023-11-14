@@ -28,9 +28,9 @@ namespace ns3
 {
 
 /**
- * typedef for a pair of start and stop sub-band indexes
+ * typedef for a pair of start and stop sub-band indices
  */
-typedef std::pair<uint32_t, uint32_t> WifiSpectrumBand;
+using WifiSpectrumBandIndices = std::pair<uint32_t, uint32_t>;
 
 /**
  * \ingroup spectrum
@@ -45,7 +45,7 @@ class WifiSpectrumValueHelper
     /**
      * Destructor
      */
-    virtual ~WifiSpectrumValueHelper();
+    virtual ~WifiSpectrumValueHelper() = default;
 
     /**
      * Return a SpectrumModel instance corresponding to the center frequency
@@ -55,7 +55,7 @@ class WifiSpectrumValueHelper
      *
      * \param centerFrequency center frequency (MHz)
      * \param channelWidth channel width (MHz)
-     * \param bandBandwidth width of each band (Hz)
+     * \param carrierSpacing carrier spacing (Hz)
      * \param guardBandwidth width of the guard band (MHz)
      *
      * \return the static SpectrumModel instance corresponding to the
@@ -63,7 +63,7 @@ class WifiSpectrumValueHelper
      */
     static Ptr<SpectrumModel> GetSpectrumModel(uint32_t centerFrequency,
                                                uint16_t channelWidth,
-                                               uint32_t bandBandwidth,
+                                               uint32_t carrierSpacing,
                                                uint16_t guardBandwidth);
 
     /**
@@ -198,18 +198,19 @@ class WifiSpectrumValueHelper
      * \return a pointer to a newly allocated SpectrumValue representing the HE OFDM Transmit Power
      * Spectral Density on the RU used by the STA in W/Hz for each Band
      */
-    static Ptr<SpectrumValue> CreateHeMuOfdmTxPowerSpectralDensity(uint32_t centerFrequency,
-                                                                   uint16_t channelWidth,
-                                                                   double txPowerW,
-                                                                   uint16_t guardBandwidth,
-                                                                   WifiSpectrumBand ru);
+    static Ptr<SpectrumValue> CreateHeMuOfdmTxPowerSpectralDensity(
+        uint32_t centerFrequency,
+        uint16_t channelWidth,
+        double txPowerW,
+        uint16_t guardBandwidth,
+        const WifiSpectrumBandIndices& ru);
 
     /**
      * Create a power spectral density corresponding to the noise
      *
      * \param centerFrequency center frequency (MHz)
      * \param channelWidth channel width (MHz)
-     * \param bandBandwidth width of each band (Hz)
+     * \param carrierSpacing carrier spacing (Hz)
      * \param noiseFigure the noise figure in dB w.r.t. a reference temperature of 290K
      * \param guardBandwidth width of the guard band (MHz)
      * \return a pointer to a newly allocated SpectrumValue representing the noise Power Spectral
@@ -217,7 +218,7 @@ class WifiSpectrumValueHelper
      */
     static Ptr<SpectrumValue> CreateNoisePowerSpectralDensity(uint32_t centerFrequency,
                                                               uint16_t channelWidth,
-                                                              uint32_t bandBandwidth,
+                                                              uint32_t carrierSpacing,
                                                               double noiseFigure,
                                                               uint16_t guardBandwidth);
 
@@ -231,24 +232,6 @@ class WifiSpectrumValueHelper
      */
     static Ptr<SpectrumValue> CreateNoisePowerSpectralDensity(double noiseFigure,
                                                               Ptr<SpectrumModel> spectrumModel);
-
-    /**
-     * Create a spectral density corresponding to the RF filter
-     *
-     * \param centerFrequency the center frequency (MHz)
-     * \param totalChannelWidth the total channel width (MHz)
-     * \param bandBandwidth the width of each band (MHz)
-     * \param guardBandwidth the width of the guard band (MHz)
-     * \param band the pair of start and stop indexes that defines the band to be filtered
-     *
-     * \return a pointer to a SpectrumValue representing the RF filter applied
-     * to an received power spectral density
-     */
-    static Ptr<SpectrumValue> CreateRfFilter(uint32_t centerFrequency,
-                                             uint16_t totalChannelWidth,
-                                             uint32_t bandBandwidth,
-                                             uint16_t guardBandwidth,
-                                             WifiSpectrumBand band);
 
     /**
      * Create a transmit power spectral density corresponding to OFDM
@@ -299,15 +282,16 @@ class WifiSpectrumValueHelper
      */
     static void CreateSpectrumMaskForOfdm(
         Ptr<SpectrumValue> c,
-        const std::vector<WifiSpectrumBand>& allocatedSubBands,
-        WifiSpectrumBand maskBand,
+        const std::vector<WifiSpectrumBandIndices>& allocatedSubBands,
+        const WifiSpectrumBandIndices& maskBand,
         double txPowerPerBandW,
         uint32_t nGuardBands,
         uint32_t innerSlopeWidth,
         double minInnerBandDbr,
         double minOuterbandDbr,
         double lowestPointDbr,
-        const std::vector<WifiSpectrumBand>& puncturedSubBands = std::vector<WifiSpectrumBand>{},
+        const std::vector<WifiSpectrumBandIndices>& puncturedSubBands =
+            std::vector<WifiSpectrumBandIndices>{},
         uint32_t puncturedSlopeWidth = 0);
 
     /**
@@ -338,62 +322,72 @@ class WifiSpectrumValueHelper
      *
      * \return band power in W
      */
-    static double GetBandPowerW(Ptr<SpectrumValue> psd, const WifiSpectrumBand& band);
+    static double GetBandPowerW(Ptr<SpectrumValue> psd, const WifiSpectrumBandIndices& band);
 };
 
 /**
  * \ingroup spectrum
- *
- * Implements Wifi SpectrumValue for the 2.4 GHz ISM band only, with a
- * 5 MHz spectrum resolution.
- *
+ * Struct defining a frequency range between minFrequency (MHz) and maxFrequency (MHz).
  */
-class WifiSpectrumValue5MhzFactory
+struct FrequencyRange
 {
-  public:
-    /**
-     * Destructor
-     */
-    virtual ~WifiSpectrumValue5MhzFactory();
-    /**
-     * Creates a SpectrumValue instance with a constant value for all frequencies
-     *
-     * @param psd the constant value
-     *
-     * @return a Ptr to a newly created SpectrumValue
-     */
-    virtual Ptr<SpectrumValue> CreateConstant(double psd);
-    /**
-     * Creates a SpectrumValue instance that represents the TX Power Spectral
-     * Density  of a wifi device corresponding to the provided parameters
-     *
-     * Since the spectrum model has a resolution of 5 MHz, we model
-     * the transmitted signal with a constant density over a 20MHz
-     * bandwidth centered on the center frequency of the channel. The
-     * transmission power outside the transmission power density is
-     * calculated considering the transmit spectrum mask, see IEEE
-     * Std. 802.11-2007, Annex I.  The two bands just outside of the main
-     * 20 MHz are allocated power at -28 dB down from the center 20 MHz,
-     * and the two bands outside of this are allocated power at -40 dB down
-     * (with a total bandwidth of 60 MHz containing non-zero power allocation).
-     *
-     * @param txPower the total TX power in W
-     * @param channel the number of the channel (1 <= channel <= 13)
-     *
-     * @return a Ptr to a newly created SpectrumValue
-     */
-    virtual Ptr<SpectrumValue> CreateTxPowerSpectralDensity(double txPower, uint8_t channel);
-    /**
-     * Creates a SpectrumValue instance which
-     * represents the frequency response of the RF filter which is used
-     * by a wifi device to receive signals when tuned to a particular channel
-     *
-     * @param channel the number of the channel (1 <= channel <= 13)
-     *
-     * @return a Ptr to a newly created SpectrumValue
-     */
-    virtual Ptr<SpectrumValue> CreateRfFilter(uint8_t channel);
+    uint16_t minFrequency{0}; ///< the minimum frequency in MHz
+    uint16_t maxFrequency{0}; ///< the maximum frequency in MHz
 };
+
+/**
+ * Compare two FrequencyRange values
+ *
+ * \param lhs the FrequencyRange value on the left of operator
+ * \param rhs the FrequencyRange value on the right of operator
+ *
+ * \return true if minFrequency of left is less than minFrequency of right, false otherwise
+ */
+bool operator<(const FrequencyRange& lhs, const FrequencyRange& rhs);
+
+/**
+ * Compare two FrequencyRange values
+ *
+ * \param lhs the FrequencyRange value on the left of operator
+ * \param rhs the FrequencyRange value on the right of operator
+ *
+ * \return true if both minFrequency and maxFrequency of left are equal to minFrequency and
+ * maxFrequency of right respectively, false otherwise
+ */
+bool operator==(const FrequencyRange& lhs, const FrequencyRange& rhs);
+
+/**
+ * Compare two FrequencyRange values
+ *
+ * \param lhs the FrequencyRange value on the left of operator
+ * \param rhs the FrequencyRange value on the right of operator
+ *
+ * \return true if either minFrequency or maxFrequency of left different from minFrequency or
+ * maxFrequency of right respectively, false otherwise
+ */
+bool operator!=(const FrequencyRange& lhs, const FrequencyRange& rhs);
+
+/**
+ * Serialize FrequencyRange values to ostream (human-readable).
+ *
+ * \param os the output stream
+ * \param freqRange the FrequencyRange
+ *
+ * \return std::ostream
+ */
+std::ostream& operator<<(std::ostream& os, const FrequencyRange& freqRange);
+
+/// Identifier for the frequency range covering the whole wifi spectrum
+constexpr FrequencyRange WHOLE_WIFI_SPECTRUM = {2401, 7125};
+
+/// Identifier for the frequency range covering the wifi spectrum in the 2.4 GHz band
+constexpr FrequencyRange WIFI_SPECTRUM_2_4_GHZ = {2401, 2483};
+
+/// Identifier for the frequency range covering the wifi spectrum in the 5 GHz band
+constexpr FrequencyRange WIFI_SPECTRUM_5_GHZ = {5170, 5915};
+
+/// Identifier for the frequency range covering the wifi spectrum in the 6 GHz band
+constexpr FrequencyRange WIFI_SPECTRUM_6_GHZ = {5945, 7125};
 
 } // namespace ns3
 

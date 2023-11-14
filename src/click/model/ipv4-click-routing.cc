@@ -227,14 +227,7 @@ Ipv4ClickRouting::GetInterfaceId(const char* ifname)
 bool
 Ipv4ClickRouting::IsInterfaceReady(int ifid)
 {
-    if (ifid >= 0 && ifid < (int)m_ipv4->GetNInterfaces())
-    {
-        return true;
-    }
-    else
-    {
-        return false;
-    }
+    return ifid >= 0 && ifid < static_cast<int>(m_ipv4->GetNInterfaces());
 }
 
 std::string
@@ -285,19 +278,21 @@ Ipv4ClickRouting::GetTimevalFromNow() const
     struct timeval curtime;
     uint64_t remainder = 0;
 
-    curtime.tv_sec = Simulator::Now().GetSeconds();
-    curtime.tv_usec = Simulator::Now().GetMicroSeconds() % 1000000;
+    Time now = Simulator::Now();
 
-    switch (Simulator::Now().GetResolution())
+    curtime.tv_sec = now.GetSeconds();
+    curtime.tv_usec = now.GetMicroSeconds() % 1000000;
+
+    switch (Time::GetResolution())
     {
     case Time::NS:
-        remainder = Simulator::Now().GetNanoSeconds() % 1000;
+        remainder = now.GetNanoSeconds() % 1000;
         break;
     case Time::PS:
-        remainder = Simulator::Now().GetPicoSeconds() % 1000000;
+        remainder = now.GetPicoSeconds() % 1000000;
         break;
     case Time::FS:
-        remainder = Simulator::Now().GetFemtoSeconds() % 1000000000;
+        remainder = now.GetFemtoSeconds() % 1000000000;
         break;
     default:
         break;
@@ -563,10 +558,10 @@ bool
 Ipv4ClickRouting::RouteInput(Ptr<const Packet> p,
                              const Ipv4Header& header,
                              Ptr<const NetDevice> idev,
-                             UnicastForwardCallback ucb,
-                             MulticastForwardCallback mcb,
-                             LocalDeliverCallback lcb,
-                             ErrorCallback ecb)
+                             const UnicastForwardCallback& ucb,
+                             const MulticastForwardCallback& mcb,
+                             const LocalDeliverCallback& lcb,
+                             const ErrorCallback& ecb)
 {
     NS_FATAL_ERROR("Click router does not have a RouteInput() interface!");
     return false;

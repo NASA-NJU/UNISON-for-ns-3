@@ -31,7 +31,6 @@
 namespace ns3
 {
 
-class QosBlockedDestinations;
 class MgtAddBaResponseHeader;
 class MgtDelBaHeader;
 class AggregationCapableTransmissionListener;
@@ -137,14 +136,15 @@ class QosTxop : public Txop
     /**
      * \param recipient Address of recipient.
      * \param tid traffic ID.
-     * \return the BlockAckRequest to send
+     * \return the BlockAckRequest header and the MAC header for the BlockAckReq
      *
      * Prepare a BlockAckRequest to be sent to <i>recipient</i> for Traffic ID
      * <i>tid</i>. The header for the BlockAckRequest is requested to the QosTxop
      * corresponding to the given TID. A block ack agreement with the given recipient
      * for the given TID must have been established by such QosTxop.
      */
-    Ptr<WifiMpdu> PrepareBlockAckRequest(Mac48Address recipient, uint8_t tid) const;
+    std::pair<CtrlBAckRequestHeader, WifiMacHeader> PrepareBlockAckRequest(Mac48Address recipient,
+                                                                           uint8_t tid) const;
 
     /* Event handlers */
     /**
@@ -464,9 +464,8 @@ class QosTxop : public Txop
      */
     bool IsQosOldPacket(Ptr<const WifiMpdu> mpdu);
 
-    AcIndex m_ac;                                         //!< the access category
-    Ptr<QosBlockedDestinations> m_qosBlockedDestinations; //!< the QoS blocked destinations
-    Ptr<BlockAckManager> m_baManager;                     //!< the block ack manager
+    AcIndex m_ac;                     //!< the access category
+    Ptr<BlockAckManager> m_baManager; //!< the block ack manager
     uint8_t m_blockAckThreshold; /**< the block ack threshold (use BA mechanism if number of packets
                                     in queue reaches this value. If this value is 0, block ack is
                                     never used. When A-MPDU is enabled, block ack mechanism is used

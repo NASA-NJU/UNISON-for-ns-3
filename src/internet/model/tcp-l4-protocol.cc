@@ -21,10 +21,12 @@
 
 #include "ipv4-end-point-demux.h"
 #include "ipv4-end-point.h"
-#include "ipv4-l3-protocol.h"
+#include "ipv4-route.h"
+#include "ipv4-routing-protocol.h"
 #include "ipv6-end-point-demux.h"
 #include "ipv6-end-point.h"
 #include "ipv6-l3-protocol.h"
+#include "ipv6-route.h"
 #include "ipv6-routing-protocol.h"
 #include "rtt-estimator.h"
 #include "tcp-congestion-ops.h"
@@ -37,17 +39,16 @@
 
 #include "ns3/assert.h"
 #include "ns3/boolean.h"
-#include "ns3/ipv4-route.h"
-#include "ns3/ipv6-route.h"
 #include "ns3/log.h"
 #include "ns3/node.h"
 #include "ns3/nstime.h"
-#include "ns3/object-vector.h"
+#include "ns3/object-map.h"
 #include "ns3/packet.h"
 #include "ns3/simulator.h"
 
 #include <iomanip>
 #include <sstream>
+#include <unordered_map>
 #include <vector>
 
 namespace ns3
@@ -72,30 +73,33 @@ const uint8_t TcpL4Protocol::PROT_NUMBER = 6;
 TypeId
 TcpL4Protocol::GetTypeId()
 {
-    static TypeId tid = TypeId("ns3::TcpL4Protocol")
-                            .SetParent<IpL4Protocol>()
-                            .SetGroupName("Internet")
-                            .AddConstructor<TcpL4Protocol>()
-                            .AddAttribute("RttEstimatorType",
-                                          "Type of RttEstimator objects.",
-                                          TypeIdValue(RttMeanDeviation::GetTypeId()),
-                                          MakeTypeIdAccessor(&TcpL4Protocol::m_rttTypeId),
-                                          MakeTypeIdChecker())
-                            .AddAttribute("SocketType",
-                                          "Socket type of TCP objects.",
-                                          TypeIdValue(TcpCubic::GetTypeId()),
-                                          MakeTypeIdAccessor(&TcpL4Protocol::m_congestionTypeId),
-                                          MakeTypeIdChecker())
-                            .AddAttribute("RecoveryType",
-                                          "Recovery type of TCP objects.",
-                                          TypeIdValue(TcpPrrRecovery::GetTypeId()),
-                                          MakeTypeIdAccessor(&TcpL4Protocol::m_recoveryTypeId),
-                                          MakeTypeIdChecker())
-                            .AddAttribute("SocketList",
-                                          "The list of sockets associated to this protocol.",
-                                          ObjectVectorValue(),
-                                          MakeObjectVectorAccessor(&TcpL4Protocol::m_sockets),
-                                          MakeObjectVectorChecker<TcpSocketBase>());
+    static TypeId tid =
+        TypeId("ns3::TcpL4Protocol")
+            .SetParent<IpL4Protocol>()
+            .SetGroupName("Internet")
+            .AddConstructor<TcpL4Protocol>()
+            .AddAttribute("RttEstimatorType",
+                          "Type of RttEstimator objects.",
+                          TypeIdValue(RttMeanDeviation::GetTypeId()),
+                          MakeTypeIdAccessor(&TcpL4Protocol::m_rttTypeId),
+                          MakeTypeIdChecker())
+            .AddAttribute("SocketType",
+                          "Socket type of TCP objects.",
+                          TypeIdValue(TcpCubic::GetTypeId()),
+                          MakeTypeIdAccessor(&TcpL4Protocol::m_congestionTypeId),
+                          MakeTypeIdChecker())
+            .AddAttribute("RecoveryType",
+                          "Recovery type of TCP objects.",
+                          TypeIdValue(TcpPrrRecovery::GetTypeId()),
+                          MakeTypeIdAccessor(&TcpL4Protocol::m_recoveryTypeId),
+                          MakeTypeIdChecker())
+            .AddAttribute("SocketList",
+                          "A container of sockets associated to this protocol. "
+                          "The underlying type is an unordered map, the attribute name "
+                          "is kept for backward compatibility.",
+                          ObjectMapValue(),
+                          MakeObjectMapAccessor(&TcpL4Protocol::m_sockets),
+                          MakeObjectMapChecker<TcpSocketBase>());
     return tid;
 }
 
@@ -213,7 +217,7 @@ TcpL4Protocol::CreateSocket(TypeId congestionTypeId, TypeId recoveryTypeId)
     socket->SetCongestionControlAlgorithm(algo);
     socket->SetRecoveryAlgorithm(recovery);
 
-    m_sockets.push_back(socket);
+    m_sockets[m_socketIndex++] = socket;
     return socket;
 }
 
@@ -380,7 +384,7 @@ TcpL4Protocol::ReceiveIcmp(Ipv6Address icmpSource,
     }
 }
 
-enum IpL4Protocol::RxStatus
+IpL4Protocol::RxStatus
 TcpL4Protocol::PacketReceived(Ptr<Packet> packet,
                               TcpHeader& incomingTcpHeader,
                               const Address& source,
@@ -448,7 +452,7 @@ TcpL4Protocol::NoEndPointsFound(const TcpHeader& incomingHeader,
     }
 }
 
-enum IpL4Protocol::RxStatus
+IpL4Protocol::RxStatus
 TcpL4Protocol::Receive(Ptr<Packet> packet,
                        const Ipv4Header& incomingIpHeader,
                        Ptr<Ipv4Interface> incomingInterface)
@@ -519,7 +523,7 @@ TcpL4Protocol::Receive(Ptr<Packet> packet,
     return IpL4Protocol::RX_OK;
 }
 
-enum IpL4Protocol::RxStatus
+IpL4Protocol::RxStatus
 TcpL4Protocol::Receive(Ptr<Packet> packet,
                        const Ipv6Header& incomingIpHeader,
                        Ptr<Ipv6Interface> interface)
@@ -747,36 +751,30 @@ void
 TcpL4Protocol::AddSocket(Ptr<TcpSocketBase> socket)
 {
     NS_LOG_FUNCTION(this << socket);
-    std::vector<Ptr<TcpSocketBase>>::iterator it = m_sockets.begin();
 
-    while (it != m_sockets.end())
+    for (auto& socketItem : m_sockets)
     {
-        if (*it == socket)
+        if (socketItem.second == socket)
         {
             return;
         }
-
-        ++it;
     }
-
-    m_sockets.push_back(socket);
+    m_sockets[m_socketIndex++] = socket;
 }
 
 bool
 TcpL4Protocol::RemoveSocket(Ptr<TcpSocketBase> socket)
 {
     NS_LOG_FUNCTION(this << socket);
-    std::vector<Ptr<TcpSocketBase>>::iterator it = m_sockets.begin();
 
-    while (it != m_sockets.end())
+    for (auto& socketItem : m_sockets)
     {
-        if (*it == socket)
+        if (socketItem.second == socket)
         {
-            m_sockets.erase(it);
+            socketItem.second = nullptr;
+            m_sockets.erase(socketItem.first);
             return true;
         }
-
-        ++it;
     }
 
     return false;

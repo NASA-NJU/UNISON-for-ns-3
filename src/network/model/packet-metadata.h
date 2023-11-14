@@ -118,12 +118,12 @@ class PacketMetadata
          * how many bytes were trimmed from the start of a fragment.
          * if isFragment is true, this field is zero.
          */
-        uint32_t currentTrimedFromStart;
+        uint32_t currentTrimmedFromStart;
         /**
          * how many bytes were trimmed from the end of a fragment.
          * if isFragment is true, this field is zero.
          */
-        uint32_t currentTrimedFromEnd;
+        uint32_t currentTrimmedFromEnd;
         /**
          * an iterator which can be fed to Deserialize. Valid only
          * if isFragment and isPayload are false.
@@ -517,7 +517,7 @@ class PacketMetadata
     /**
      * \brief Class to hold all the metadata
      */
-    class DataFreeList : public std::vector<struct Data*>
+    class DataFreeList : public std::vector<Data*>
     {
       public:
         ~DataFreeList();
@@ -631,8 +631,8 @@ class PacketMetadata
      * \returns the number of bytes read.
      */
     uint32_t ReadItems(uint16_t current,
-                       struct PacketMetadata::SmallItem* item,
-                       struct PacketMetadata::ExtraItem* extraItem) const;
+                       PacketMetadata::SmallItem* item,
+                       PacketMetadata::ExtraItem* extraItem) const;
     /**
      * \brief Add an header
      * \param uid header's uid to add
@@ -661,24 +661,24 @@ class PacketMetadata
      * \brief Recycle the buffer memory
      * \param data the buffer data storage
      */
-    static void Recycle(struct PacketMetadata::Data* data);
+    static void Recycle(PacketMetadata::Data* data);
     /**
      * \brief Create a buffer data storage
      * \param size the storage size to create
      * \returns a pointer to the created buffer storage
      */
-    static struct PacketMetadata::Data* Create(uint32_t size);
+    static PacketMetadata::Data* Create(uint32_t size);
     /**
      * \brief Allocate a buffer data storage
      * \param n the storage size to create
      * \returns a pointer to the allocated buffer storage
      */
-    static struct PacketMetadata::Data* Allocate(uint32_t n);
+    static PacketMetadata::Data* Allocate(uint32_t n);
     /**
      * \brief Deallocate the buffer memory
      * \param data the buffer data storage
      */
-    static void Deallocate(struct PacketMetadata::Data* data);
+    static void Deallocate(PacketMetadata::Data* data);
 
 #ifdef NS3_MTP
     static std::atomic<bool> m_freeListUsing;
@@ -697,7 +697,7 @@ class PacketMetadata
     static uint32_t m_maxSize;  //!< maximum metadata size
     static uint16_t m_chunkUid; //!< Chunk Uid
 
-    struct Data* m_data; //!< Metadata storage
+    Data* m_data; //!< Metadata storage
     /*
        head -(next)-> tail
          ^             |

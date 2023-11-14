@@ -118,6 +118,28 @@ struct CommonInfoBasicMle
      * \return the number of bytes read
      */
     uint8_t Deserialize(Buffer::Iterator start, uint16_t presence);
+
+    /**
+     * \param delay the EMLSR Padding delay
+     * \return the encoded value for the EMLSR Padding Delay subfield
+     */
+    static uint8_t EncodeEmlsrPaddingDelay(Time delay);
+    /**
+     * \param value the value for the EMLSR Padding Delay subfield
+     * \return the corresponding EMLSR Padding delay
+     */
+    static Time DecodeEmlsrPaddingDelay(uint8_t value);
+
+    /**
+     * \param delay the EMLSR Transition delay
+     * \return the encoded value for the EMLSR Transition Delay subfield
+     */
+    static uint8_t EncodeEmlsrTransitionDelay(Time delay);
+    /**
+     * \param value the value for the EMLSR Transition Delay subfield
+     * \return the corresponding EMLSR Transition delay
+     */
+    static Time DecodeEmlsrTransitionDelay(uint8_t value);
 };
 
 /**
@@ -162,19 +184,25 @@ class MultiLinkElement : public WifiInformationElement
         PER_STA_PROFILE_SUBELEMENT_ID = 0
     };
 
+    /// Typedef for structure holding a reference to the containing frame
+    using ContainingFrame = std::variant<std::monostate,
+                                         std::reference_wrapper<const MgtAssocRequestHeader>,
+                                         std::reference_wrapper<const MgtReassocRequestHeader>,
+                                         std::reference_wrapper<const MgtAssocResponseHeader>>;
+
     /**
      * Construct a Multi-Link Element with no variant set.
      *
-     * \param frameType the type of the frame containing the Multi-Link Element
+     * \param frame the management frame containing this Multi-Link Element
      */
-    MultiLinkElement(WifiMacType frameType);
+    MultiLinkElement(ContainingFrame frame = {});
     /**
      * Constructor
      *
      * \param variant the Multi-Link element variant (cannot be UNSET)
-     * \param frameType the type of the frame containing the Multi-Link Element
+     * \param frame the management frame containing this Multi-Link Element
      */
-    MultiLinkElement(Variant variant, WifiMacType frameType);
+    MultiLinkElement(Variant variant, ContainingFrame frame = {});
 
     WifiInformationElementId ElementId() const override;
     WifiInformationElementId ElementIdExt() const override;
@@ -310,6 +338,77 @@ class MultiLinkElement : public WifiInformationElement
     uint8_t GetMediumSyncMaxNTxops() const;
 
     /**
+     * Set the EMLSR Support subfield of the EML Capabilities subfield in the Common Info field
+     * to 1 if EMLSR mode is supported and set it to 0 otherwise. Make sure that this is a Basic
+     * Multi-Link Element.
+     *
+     * \param supported whether EMLSR mode is supported
+     */
+    void SetEmlsrSupported(bool supported);
+    /**
+     * Set the EMLSR Padding Delay subfield of the EML Capabilities subfield in the
+     * Common Info field. Make sure that this is a Basic Multi-Link Element.
+     *
+     * \param delay the EMLSR Padding delay (0us, 32us, 64us, 128us or 256us)
+     */
+    void SetEmlsrPaddingDelay(Time delay);
+    /**
+     * Set the EMLSR Transition Delay subfield of the EML Capabilities subfield in the
+     * Common Info field. Make sure that this is a Basic Multi-Link Element.
+     *
+     * \param delay the EMLSR Transition delay (0us, 16us, 32us, 64us, 128us or 256us)
+     */
+    void SetEmlsrTransitionDelay(Time delay);
+    /**
+     * Set the Transition Timeout subfield of the EML Capabilities subfield in the
+     * Common Info field. Make sure that this is a Basic Multi-Link Element.
+     *
+     * \param timeout the Transition Timeout (0us or 2^n us, with n=7..16)
+     */
+    void SetTransitionTimeout(Time timeout);
+    /**
+     * Return true if the EML Capabilities subfield in the Common Info field is present
+     * and false otherwise. Make sure that this is a Basic Multi-Link Element.
+     *
+     * \return whether the EML Capabilities subfield in the Common Info field is present
+     */
+    bool HasEmlCapabilities() const;
+    /**
+     * Return true if the EMLSR Support subfield of the EML Capabilities subfield in the
+     * Common Info field is set to 1 and false otherwise. Make sure that this is a Basic
+     * Multi-Link Element and the EML Capabilities subfield is present.
+     *
+     * \return whether the EMLSR Support subfield is set to 1
+     */
+    bool IsEmlsrSupported() const;
+    /**
+     * Get the EMLSR Padding Delay subfield of the EML Capabilities subfield in the
+     * Common Info field. Make sure that this is a Basic Multi-Link Element and the
+     * EML Capabilities subfield is present.
+     *
+     * \return the EMLSR Padding Delay
+     */
+    Time GetEmlsrPaddingDelay() const;
+    /**
+     * Get the EMLSR Transition Delay subfield of the EML Capabilities subfield in the
+     * Common Info field. Make sure that this is a Basic Multi-Link Element and the
+     * EML Capabilities subfield is present.
+     *
+     * \return the EMLSR Transition Delay
+     */
+    Time GetEmlsrTransitionDelay() const;
+    /**
+     * Get the Transition Timeout subfield of the EML Capabilities subfield in the
+     * Common Info field. Make sure that this is a Basic Multi-Link Element and the
+     * EML Capabilities subfield is present.
+     *
+     * \return the Transition Timeout
+     */
+    Time GetTransitionTimeout() const;
+
+    mutable ContainingFrame m_containingFrame; //!< reference to the mgt frame containing this MLE
+
+    /**
      * \ingroup wifi
      * Per-STA Profile Subelement of Multi-Link element.
      * See Sec. 9.4.2.312.2.3 of 802.11be D1.5
@@ -328,9 +427,8 @@ class MultiLinkElement : public WifiInformationElement
          * Constructor
          *
          * \param variant the Multi-Link element variant
-         * \param frameType the type of the frame containing the Multi-Link Element
          */
-        PerStaProfileSubelement(Variant variant, WifiMacType frameType);
+        PerStaProfileSubelement(Variant variant);
 
         /**
          * Copy constructor performing a deep copy of the object
@@ -460,18 +558,23 @@ class MultiLinkElement : public WifiInformationElement
          */
         uint8_t GetStaInfoLength() const;
 
+        mutable ContainingFrame
+            m_containingFrame; //!< the mgt frame containing this Per-STA Profile
+
       private:
         uint16_t GetInformationFieldSize() const override;
         void SerializeInformationField(Buffer::Iterator start) const override;
         uint16_t DeserializeInformationField(Buffer::Iterator start, uint16_t length) override;
 
         Variant m_variant;            //!< Multi-Link element variant
-        WifiMacType m_frameType;      //!< type of the frame containing the Multi-Link Element
         uint16_t m_staControl;        //!< STA Control field
         Mac48Address m_staMacAddress; //!< STA MAC address
-        std::unique_ptr<Header> m_staProfile; /**< STA Profile field, containing the frame body of a
-                                                   frame of the same type as the frame containing
-                                                 the Multi-Link Element */
+        std::variant<std::monostate,
+                     std::unique_ptr<MgtAssocRequestHeader>,
+                     std::unique_ptr<MgtReassocRequestHeader>,
+                     std::unique_ptr<MgtAssocResponseHeader>>
+            m_staProfile; /**< STA Profile field, containing the frame body of a frame of the
+                               same type as the frame containing the Multi-Link Element */
     };
 
     /**
@@ -506,8 +609,6 @@ class MultiLinkElement : public WifiInformationElement
      * \param variant the variant of this Multi-Link Element
      */
     void SetVariant(Variant variant);
-
-    WifiMacType m_frameType; //!< type of the frame containing the Multi-Link Element
 
     /// Typedef for structure holding a Common Info field
     using CommonInfo = std::variant<CommonInfoBasicMle,

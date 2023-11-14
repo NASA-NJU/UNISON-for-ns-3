@@ -1,4 +1,3 @@
-/* -*-  Mode: C++; c-file-style: "gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2022
  *
@@ -161,6 +160,7 @@ class EhtOperation : public WifiInformationElement
     EhtOperation();
     WifiInformationElementId ElementId() const override;
     WifiInformationElementId ElementIdExt() const override;
+    void Print(std::ostream& os) const override;
 
     /**
      * Set the max Rx NSS for input MCS index range
@@ -186,16 +186,6 @@ class EhtOperation : public WifiInformationElement
     void SerializeInformationField(Buffer::Iterator start) const override;
     uint16_t DeserializeInformationField(Buffer::Iterator start, uint16_t length) override;
 };
-
-/**
- * output stream output operator
- *
- * \param os output stream
- * \param ehtOperation the EHT operation
- *
- * \returns output stream
- */
-std::ostream& operator<<(std::ostream& os, const EhtOperation& ehtOperation);
 
 } // namespace ns3
 

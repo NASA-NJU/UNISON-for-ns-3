@@ -22,17 +22,14 @@
 #include "icmpv6-l4-protocol.h"
 #include "ipv6-extension-demux.h"
 #include "ipv6-extension-header.h"
+#include "ipv6-header.h"
+#include "ipv6-l3-protocol.h"
 #include "ipv6-option-demux.h"
 #include "ipv6-option.h"
-#include "udp-header.h"
+#include "ipv6-route.h"
 
 #include "ns3/assert.h"
 #include "ns3/ipv6-address.h"
-#include "ns3/ipv6-header.h"
-#include "ns3/ipv6-l3-protocol.h"
-#include "ns3/ipv6-list-routing.h"
-#include "ns3/ipv6-route.h"
-#include "ns3/ipv6-static-routing.h"
 #include "ns3/log.h"
 #include "ns3/object-vector.h"
 #include "ns3/trace-source-accessor.h"
@@ -513,11 +510,16 @@ Ipv6ExtensionFragment::GetFragments(Ptr<Packet> packet,
         }
         else if (nextHeader == Ipv6Header::IPV6_EXT_ROUTING)
         {
-            uint8_t buf[2];
+            Ptr<Ipv6ExtensionRoutingDemux> ipv6ExtensionRoutingDemux =
+                GetNode()->GetObject<Ipv6ExtensionRoutingDemux>();
+
+            uint8_t buf[4];
             p->CopyData(buf, sizeof(buf));
-            uint8_t numberAddress = buf[1] / 2;
-            Ipv6ExtensionLooseRoutingHeader* routingHeader = new Ipv6ExtensionLooseRoutingHeader();
-            routingHeader->SetNumberAddress(numberAddress);
+            uint8_t routingType = buf[2];
+
+            Ipv6ExtensionRoutingHeader* routingHeader =
+                ipv6ExtensionRoutingDemux->GetExtensionRoutingHeaderPtr(routingType);
+
             p->RemoveHeader(*routingHeader);
 
             nextHeader = routingHeader->GetNextHeader();
@@ -885,6 +887,12 @@ Ipv6ExtensionRouting::GetTypeRouting() const
     return 0;
 }
 
+Ipv6ExtensionRoutingHeader*
+Ipv6ExtensionRouting::GetExtensionRoutingHeaderPtr()
+{
+    return nullptr;
+}
+
 uint8_t
 Ipv6ExtensionRouting::Process(Ptr<Packet>& packet,
                               uint8_t offset,
@@ -1014,15 +1022,30 @@ Ipv6ExtensionRoutingDemux::Insert(Ptr<Ipv6ExtensionRouting> extensionRouting)
 Ptr<Ipv6ExtensionRouting>
 Ipv6ExtensionRoutingDemux::GetExtensionRouting(uint8_t typeRouting)
 {
-    for (Ipv6ExtensionRoutingList_t::iterator i = m_extensionsRouting.begin();
-         i != m_extensionsRouting.end();
-         i++)
+    for (const auto& extRouting : m_extensionsRouting)
     {
-        if ((*i)->GetTypeRouting() == typeRouting)
+        if (extRouting->GetTypeRouting() == typeRouting)
         {
-            return *i;
+            return extRouting;
         }
     }
+
+    return nullptr;
+}
+
+Ipv6ExtensionRoutingHeader*
+Ipv6ExtensionRoutingDemux::GetExtensionRoutingHeaderPtr(uint8_t typeRouting)
+{
+    NS_LOG_FUNCTION(this << typeRouting);
+
+    for (const auto& extRouting : m_extensionsRouting)
+    {
+        if (extRouting->GetTypeRouting() == typeRouting)
+        {
+            return extRouting->GetExtensionRoutingHeaderPtr();
+        }
+    }
+
     return nullptr;
 }
 
@@ -1059,6 +1082,12 @@ Ipv6ExtensionLooseRouting::GetTypeRouting() const
     return TYPE_ROUTING;
 }
 
+Ipv6ExtensionRoutingHeader*
+Ipv6ExtensionLooseRouting::GetExtensionRoutingHeaderPtr()
+{
+    return new Ipv6ExtensionLooseRoutingHeader();
+}
+
 uint8_t
 Ipv6ExtensionLooseRouting::Process(Ptr<Packet>& packet,
                                    uint8_t offset,
@@ -1089,9 +1118,7 @@ Ipv6ExtensionLooseRouting::Process(Ptr<Packet>& packet,
     // Get the number of routers' address field
     uint8_t buf[2];
     p->CopyData(buf, sizeof(buf));
-    uint8_t numberAddress = buf[1] / 2;
     Ipv6ExtensionLooseRoutingHeader routingHeader;
-    routingHeader.SetNumberAddress(numberAddress);
     p->RemoveHeader(routingHeader);
 
     if (nextHeader)

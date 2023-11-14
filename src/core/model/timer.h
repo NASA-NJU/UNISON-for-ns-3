@@ -198,7 +198,7 @@ class Timer
     /**
      * \returns The current state of the timer.
      */
-    enum Timer::State GetState() const;
+    Timer::State GetState() const;
     /**
      * Schedule a new event using the currently-configured delay, function,
      * and arguments.
@@ -233,11 +233,8 @@ class Timer
     void Resume();
 
   private:
-    /** Internal bit marking the suspended state. */
-    enum InternalSuspended
-    {
-        TIMER_SUSPENDED = (1 << 7) /** Timer suspended. */
-    };
+    /** Internal bit marking the suspended timer state */
+    static constexpr auto TIMER_SUSPENDED{1 << 7};
 
     /**
      * Bitfield for Timer State, DestroyPolicy and InternalSuspended.

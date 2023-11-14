@@ -94,9 +94,15 @@ WifiDefaultAssocManager::DoStartScanning()
     m_probeRequestEvent.Cancel();
     m_waitBeaconEvent.Cancel();
 
-    if (GetScanParams().type == WifiScanParams::ACTIVE)
+    if (GetScanParams().type == WifiScanType::ACTIVE)
     {
-        Simulator::Schedule(GetScanParams().probeDelay, &StaWifiMac::SendProbeRequest, m_mac);
+        for (uint8_t linkId = 0; linkId < m_mac->GetNLinks(); linkId++)
+        {
+            Simulator::Schedule(GetScanParams().probeDelay,
+                                &StaWifiMac::SendProbeRequest,
+                                m_mac,
+                                linkId);
+        }
         m_probeRequestEvent =
             Simulator::Schedule(GetScanParams().probeDelay + GetScanParams().maxChannelTime,
                                 &WifiDefaultAssocManager::EndScanning,
@@ -180,10 +186,7 @@ WifiDefaultAssocManager::EndScanning()
             }
 
             bool needChannelSwitch = false;
-            if (const auto& channel = phy->GetOperatingChannel();
-                channel.GetNumber() != apChannel.GetNumber() ||
-                channel.GetWidth() != apChannel.GetWidth() ||
-                channel.GetPhyBand() != apChannel.GetPhyBand())
+            if (phy->GetOperatingChannel() != apChannel)
             {
                 needChannelSwitch = true;
             }
@@ -218,11 +221,7 @@ WifiDefaultAssocManager::EndScanning()
                 }
                 // switch this link to using the channel used by a reported AP
                 // TODO check if the STA only supports a narrower channel width
-                NS_LOG_DEBUG("Switch link "
-                             << +linkId << " to using channel " << +apChannel.GetNumber()
-                             << " in band " << apChannel.GetPhyBand() << " frequency "
-                             << apChannel.GetFrequency() << "MHz width " << apChannel.GetWidth()
-                             << "MHz");
+                NS_LOG_DEBUG("Switch link " << +linkId << " to using " << apChannel);
                 WifiPhy::ChannelTuple chTuple{apChannel.GetNumber(),
                                               apChannel.GetWidth(),
                                               apChannel.GetPhyBand(),

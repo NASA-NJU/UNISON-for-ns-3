@@ -521,7 +521,7 @@ LteFfrSoftAlgorithm::DoIsUlRbgAvailableForUe(int rbgId, uint16_t rnti)
 
 void
 LteFfrSoftAlgorithm::DoReportDlCqiInfo(
-    const struct FfMacSchedSapProvider::SchedDlCqiInfoReqParameters& params)
+    const FfMacSchedSapProvider::SchedDlCqiInfoReqParameters& params)
 {
     NS_LOG_FUNCTION(this);
     NS_LOG_WARN("Method should not be called, because it is empty");
@@ -529,7 +529,7 @@ LteFfrSoftAlgorithm::DoReportDlCqiInfo(
 
 void
 LteFfrSoftAlgorithm::DoReportUlCqiInfo(
-    const struct FfMacSchedSapProvider::SchedUlCqiInfoReqParameters& params)
+    const FfMacSchedSapProvider::SchedUlCqiInfoReqParameters& params)
 {
     NS_LOG_FUNCTION(this);
     NS_LOG_WARN("Method should not be called, because it is empty");
@@ -601,7 +601,7 @@ LteFfrSoftAlgorithm::DoGetMinContinuousUlBandwidth()
 
     for (std::size_t i = 0; i < m_ulCenterRbgMap.size(); i++)
     {
-        if (m_ulCenterRbgMap[i] == true)
+        if (m_ulCenterRbgMap[i])
         {
             centerSubBandwidth++;
         }
@@ -609,7 +609,7 @@ LteFfrSoftAlgorithm::DoGetMinContinuousUlBandwidth()
 
     for (std::size_t i = 0; i < m_ulMediumRbgMap.size(); i++)
     {
-        if (m_ulMediumRbgMap[i] == true)
+        if (m_ulMediumRbgMap[i])
         {
             mediumSubBandwidth++;
         }
@@ -617,7 +617,7 @@ LteFfrSoftAlgorithm::DoGetMinContinuousUlBandwidth()
 
     for (std::size_t i = 0; i < m_ulEdgeRbgMap.size(); i++)
     {
-        if (m_ulEdgeRbgMap[i] == true)
+        if (m_ulEdgeRbgMap[i])
         {
             edgeSubBandwidth++;
         }

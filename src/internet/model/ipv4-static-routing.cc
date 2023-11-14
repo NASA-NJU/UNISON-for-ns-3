@@ -26,9 +26,9 @@
 
 #include "ipv4-static-routing.h"
 
+#include "ipv4-route.h"
 #include "ipv4-routing-table-entry.h"
 
-#include "ns3/ipv4-route.h"
 #include "ns3/log.h"
 #include "ns3/names.h"
 #include "ns3/node.h"
@@ -503,10 +503,10 @@ bool
 Ipv4StaticRouting::RouteInput(Ptr<const Packet> p,
                               const Ipv4Header& ipHeader,
                               Ptr<const NetDevice> idev,
-                              UnicastForwardCallback ucb,
-                              MulticastForwardCallback mcb,
-                              LocalDeliverCallback lcb,
-                              ErrorCallback ecb)
+                              const UnicastForwardCallback& ucb,
+                              const MulticastForwardCallback& mcb,
+                              const LocalDeliverCallback& lcb,
+                              const ErrorCallback& ecb)
 {
     NS_LOG_FUNCTION(this << p << ipHeader << ipHeader.GetSource() << ipHeader.GetDestination()
                          << idev << &ucb << &mcb << &lcb << &ecb);
@@ -558,7 +558,7 @@ Ipv4StaticRouting::RouteInput(Ptr<const Packet> p,
     }
 
     // Check if input device supports IP forwarding
-    if (m_ipv4->IsForwarding(iif) == false)
+    if (!m_ipv4->IsForwarding(iif))
     {
         NS_LOG_LOGIC("Forwarding disabled for this interface");
         ecb(p, ipHeader, Socket::ERROR_NOROUTETOHOST);

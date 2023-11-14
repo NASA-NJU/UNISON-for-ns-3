@@ -104,7 +104,9 @@ function(build_lib)
       )
     endif()
 
-    if(NOT FILESYSTEM_LIBRARY_IS_LINKED)
+    if((NOT FILESYSTEM_LIBRARY_IS_LINKED) OR (${GCC} AND ${GCC8}))
+      # The GCC8 alternative is necessary since when installed alongside newer
+      # releases, the incorrect shared library can end up being linked.
       list(APPEND BLIB_LIBRARIES_TO_LINK -lstdc++fs)
     endif()
 
@@ -143,6 +145,15 @@ function(build_lib)
 
   foreach(library ${BLIB_LIBRARIES_TO_LINK})
     remove_lib_prefix("${library}" module_name)
+
+    # Ignore the case where the library dependency name match the ns-3 module
+    # since it is most likely is due to brite, click and openflow collisions.
+    # All the ns-3 module targets should be prefixed with 'lib' to be
+    # differentiable.
+    if("${library}" STREQUAL "${BLIB_LIBNAME}")
+      list(APPEND non_ns_libraries_to_link ${library})
+      continue()
+    endif()
 
     # Check if the module exists in the ns-3 modules list or if it is a
     # 3rd-party library
@@ -192,6 +203,20 @@ function(build_lib)
   target_link_libraries(
     ${lib${BLIB_LIBNAME}} ${exported_libraries} ${private_libraries}
   )
+
+  if(NOT ${XCODE})
+    # Since linking libraries to object libraries in not allowed in older CMake
+    # releases, we need to import each of their include directories. Otherwise,
+    # include directories won't be properly propagated
+    set(temp)
+    foreach(target ${ns_libraries_to_link})
+      list(APPEND temp
+           "$<TARGET_PROPERTY:${target},INTERFACE_INCLUDE_DIRECTORIES>"
+      )
+    endforeach()
+    target_include_directories(${lib${BLIB_LIBNAME}}-obj PRIVATE ${temp})
+    unset(temp)
+  endif()
 
   # set output name of library
   set_target_properties(

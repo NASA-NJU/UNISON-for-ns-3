@@ -402,7 +402,7 @@ UplinkSchedulerMBQoS::Schedule()
         Ptr<UlJob> job = m_uplinkJobs_high.front();
         OfdmUlMapIe ulMapIe;
         SSRecord* ssRecord = job->GetSsRecord();
-        enum ServiceFlow::SchedulingType schedulingType = job->GetSchedulingType();
+        ServiceFlow::SchedulingType schedulingType = job->GetSchedulingType();
 
         Cid cid = ssRecord->GetBasicCid();
         ulMapIe.SetCid(cid);
@@ -447,7 +447,7 @@ UplinkSchedulerMBQoS::Schedule()
         Ptr<UlJob> job = m_uplinkJobs_inter.front();
         OfdmUlMapIe ulMapIe;
         SSRecord* ssRecord = job->GetSsRecord();
-        enum ServiceFlow::SchedulingType schedulingType = job->GetSchedulingType();
+        ServiceFlow::SchedulingType schedulingType = job->GetSchedulingType();
 
         Cid cid = ssRecord->GetBasicCid();
         ulMapIe.SetCid(cid);
@@ -481,7 +481,7 @@ UplinkSchedulerMBQoS::Schedule()
         Ptr<UlJob> job = m_uplinkJobs_low.front();
         OfdmUlMapIe ulMapIe;
         SSRecord* ssRecord = job->GetSsRecord();
-        enum ServiceFlow::SchedulingType schedulingType = job->GetSchedulingType();
+        ServiceFlow::SchedulingType schedulingType = job->GetSchedulingType();
 
         Cid cid = ssRecord->GetBasicCid();
         ulMapIe.SetCid(cid);
@@ -522,7 +522,7 @@ UplinkSchedulerMBQoS::Schedule()
 
 bool
 UplinkSchedulerMBQoS::ServiceBandwidthRequestsBytes(ServiceFlow* serviceFlow,
-                                                    enum ServiceFlow::SchedulingType schedulingType,
+                                                    ServiceFlow::SchedulingType schedulingType,
                                                     OfdmUlMapIe& ulMapIe,
                                                     const WimaxPhy::ModulationType modulationType,
                                                     uint32_t& symbolsToAllocation,
@@ -587,7 +587,7 @@ UplinkSchedulerMBQoS::CountSymbolsQueue(std::list<Ptr<UlJob>> jobs)
 
 Ptr<UlJob>
 UplinkSchedulerMBQoS::CreateUlJob(SSRecord* ssRecord,
-                                  enum ServiceFlow::SchedulingType schedType,
+                                  ServiceFlow::SchedulingType schedType,
                                   ReqType reqType)
 {
     Ptr<UlJob> job = CreateObject<UlJob>();
@@ -680,7 +680,7 @@ UplinkSchedulerMBQoS::DequeueJob(UlJob::JobPriority priority)
 void
 UplinkSchedulerMBQoS::CheckDeadline(uint32_t& availableSymbols)
 {
-    // for each request in the imermediate queue
+    // for each request in the intermediate queue
     if (!m_uplinkJobs_inter.empty())
     {
         std::list<Ptr<UlJob>>::iterator iter = m_uplinkJobs_inter.begin();
@@ -869,7 +869,7 @@ UplinkSchedulerMBQoS::CheckMinimumBandwidth(uint32_t& availableSymbols)
 
 void
 UplinkSchedulerMBQoS::ServiceUnsolicitedGrants(const SSRecord* ssRecord,
-                                               enum ServiceFlow::SchedulingType schedulingType,
+                                               ServiceFlow::SchedulingType schedulingType,
                                                OfdmUlMapIe& ulMapIe,
                                                const WimaxPhy::ModulationType modulationType,
                                                uint32_t& symbolsToAllocation,
@@ -937,7 +937,7 @@ UplinkSchedulerMBQoS::ServiceUnsolicitedGrants(const SSRecord* ssRecord,
 
 void
 UplinkSchedulerMBQoS::ServiceBandwidthRequests(const SSRecord* ssRecord,
-                                               enum ServiceFlow::SchedulingType schedulingType,
+                                               ServiceFlow::SchedulingType schedulingType,
                                                OfdmUlMapIe& ulMapIe,
                                                const WimaxPhy::ModulationType modulationType,
                                                uint32_t& symbolsToAllocation,
@@ -963,7 +963,7 @@ UplinkSchedulerMBQoS::ServiceBandwidthRequests(const SSRecord* ssRecord,
 
 bool
 UplinkSchedulerMBQoS::ServiceBandwidthRequests(ServiceFlow* serviceFlow,
-                                               enum ServiceFlow::SchedulingType schedulingType,
+                                               ServiceFlow::SchedulingType schedulingType,
                                                OfdmUlMapIe& ulMapIe,
                                                const WimaxPhy::ModulationType modulationType,
                                                uint32_t& symbolsToAllocation,
@@ -1079,7 +1079,7 @@ UplinkSchedulerMBQoS::SetupServiceFlow(SSRecord* ssRecord, ServiceFlow* serviceF
     switch (serviceFlow->GetSchedulingType())
     {
     case ServiceFlow::SF_TYPE_UGS: {
-        if (serviceFlow->GetIsMulticast() == true)
+        if (serviceFlow->GetIsMulticast())
         {
             modulation = serviceFlow->GetModulation();
         }
@@ -1172,7 +1172,7 @@ UplinkSchedulerMBQoS::ProcessBandwidthRequest(const BandwidthRequestHeader& bwRe
 
     Time deadline = DetermineDeadline(serviceFlow);
     Time currentTime = Simulator::Now();
-    Time period = deadline; // So that deadline is properly updated..
+    const Time& period = deadline; // So that deadline is properly updated..
 
     NS_LOG_DEBUG("At " << Simulator::Now().As(Time::S)
                        << " at BS uplink scheduler, processing bandwidth request from."

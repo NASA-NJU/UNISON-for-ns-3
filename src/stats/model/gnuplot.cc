@@ -109,7 +109,7 @@ GnuplotDataset::Data::~Data()
 
 std::string GnuplotDataset::m_defaultExtra = "";
 
-GnuplotDataset::GnuplotDataset(struct Data* data)
+GnuplotDataset::GnuplotDataset(Data* data)
     : m_data(data)
 {
 }
@@ -340,9 +340,9 @@ Gnuplot2dDataset::Data2d::IsEmpty() const
 // --- Gnuplot2dDataset ---------------------------------------------------- //
 
 /// Default plot style static instance
-enum Gnuplot2dDataset::Style Gnuplot2dDataset::m_defaultStyle = LINES;
+Gnuplot2dDataset::Style Gnuplot2dDataset::m_defaultStyle = LINES;
 /// Default error bars type static instance
-enum Gnuplot2dDataset::ErrorBars Gnuplot2dDataset::m_defaultErrorBars = NONE;
+Gnuplot2dDataset::ErrorBars Gnuplot2dDataset::m_defaultErrorBars = NONE;
 
 Gnuplot2dDataset::Gnuplot2dDataset(const std::string& title)
     : GnuplotDataset(new Data2d(title))

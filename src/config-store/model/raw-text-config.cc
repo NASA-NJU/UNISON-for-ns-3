@@ -93,7 +93,7 @@ RawTextConfigSave::Default()
             ns3::TypeId::SupportLevel supportLevel = TypeId::SupportLevel::SUPPORTED;
             for (std::size_t i = 0; i < tid.GetAttributeN(); i++)
             {
-                struct TypeId::AttributeInformation tmp = tid.GetAttribute(i);
+                TypeId::AttributeInformation tmp = tid.GetAttribute(i);
                 if (tmp.name == name)
                 {
                     supportLevel = tmp.supportLevel;
@@ -105,8 +105,7 @@ RawTextConfigSave::Default()
                 NS_LOG_WARN("Global attribute " << m_typeId << "::" << name
                                                 << " was not saved because it is OBSOLETE");
             }
-            else if ((supportLevel == TypeId::SupportLevel::DEPRECATED) &&
-                     (m_saveDeprecated == false))
+            else if (supportLevel == TypeId::SupportLevel::DEPRECATED && !m_saveDeprecated)
             {
                 NS_LOG_WARN("Global attribute " << m_typeId << "::" << name
                                                 << " was not saved because it is DEPRECATED");
@@ -169,7 +168,7 @@ RawTextConfigSave::Attributes()
 
             for (std::size_t i = 0; i < tid.GetAttributeN(); i++)
             {
-                struct TypeId::AttributeInformation tmp = tid.GetAttribute(i);
+                TypeId::AttributeInformation tmp = tid.GetAttribute(i);
                 if (tmp.name == name)
                 {
                     supportLevel = tmp.supportLevel;
@@ -181,8 +180,7 @@ RawTextConfigSave::Attributes()
                 NS_LOG_WARN("Attribute " << GetCurrentPath()
                                          << " was not saved because it is OBSOLETE");
             }
-            else if ((supportLevel == TypeId::SupportLevel::DEPRECATED) &&
-                     (m_saveDeprecated == false))
+            else if (supportLevel == TypeId::SupportLevel::DEPRECATED && !m_saveDeprecated)
             {
                 NS_LOG_WARN("Attribute " << GetCurrentPath()
                                          << " was not saved because it is DEPRECATED");

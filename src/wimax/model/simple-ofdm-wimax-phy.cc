@@ -180,7 +180,7 @@ SimpleOfdmWimaxPhy::InitSimpleOfdmWimaxPhy()
     m_txPower = 30;         // dBm
     SetBandwidth(10000000); // 10Mhz
     m_nbErroneousBlock = 0;
-    m_nrRecivedFecBlocks = 0;
+    m_nrReceivedFecBlocks = 0;
     m_snrToBlockErrorRateManager = new SNRToBlockErrorRateManager();
 }
 
@@ -319,14 +319,7 @@ SimpleOfdmWimaxPhy::StartSendDummyFecBlock(bool isFirstBlock,
         dynamic_cast<SimpleOfdmWimaxChannel*>(PeekPointer(GetChannel()));
     NS_ASSERT(channel != nullptr);
 
-    if (m_nrRemainingBlocksToSend == 1)
-    {
-        isLastFecBlock = true;
-    }
-    else
-    {
-        isLastFecBlock = false;
-    }
+    isLastFecBlock = (m_nrRemainingBlocksToSend == 1);
     channel->Send(m_blockTime,
                   m_currentBurstSize,
                   this,
@@ -412,7 +405,7 @@ SimpleOfdmWimaxPhy::StartReceive(uint32_t burstSize,
     delete record;
 
     NS_LOG_INFO("PHY: Receive rxPower=" << rxPower << ", Nwb=" << Nwb << ", SNR=" << SNR
-                                        << ", Modulation=" << modulationType << ", BlocErrorRate="
+                                        << ", Modulation=" << modulationType << ", BlockErrorRate="
                                         << blockErrorRate << ", drop=" << std::boolalpha << drop);
 
     switch (GetState())
@@ -433,7 +426,7 @@ SimpleOfdmWimaxPhy::StartReceive(uint32_t burstSize,
             {
                 NotifyRxBegin(burst);
                 m_receivedFecBlocks->clear();
-                m_nrRecivedFecBlocks = 0;
+                m_nrReceivedFecBlocks = 0;
                 SetBlockParameters(burstSize, modulationType);
                 m_blockTime = GetBlockTransmissionTime(modulationType);
             }
@@ -469,14 +462,14 @@ SimpleOfdmWimaxPhy::EndReceiveFecBlock(uint32_t burstSize,
                                        Ptr<PacketBurst> burst)
 {
     SetState(PHY_STATE_IDLE);
-    m_nrRecivedFecBlocks++;
+    m_nrReceivedFecBlocks++;
 
-    if (drop == true)
+    if (drop)
     {
         m_nbErroneousBlock++;
     }
 
-    if ((uint32_t)m_nrRecivedFecBlocks * m_blockSize == burstSize * 8 + m_paddingBits)
+    if ((uint32_t)m_nrReceivedFecBlocks * m_blockSize == burstSize * 8 + m_paddingBits)
     {
         NotifyRxEnd(burst);
         if (m_nbErroneousBlock == 0)
@@ -488,7 +481,7 @@ SimpleOfdmWimaxPhy::EndReceiveFecBlock(uint32_t burstSize,
             NotifyRxDrop(burst);
         }
         m_nbErroneousBlock = 0;
-        m_nrRecivedFecBlocks = 0;
+        m_nrReceivedFecBlocks = 0;
     }
 }
 
@@ -554,7 +547,7 @@ SimpleOfdmWimaxPhy::ConvertBitsToBurst(Bvec buffer)
         for (int l = 0; l < 8; l++)
         {
             bool bin = buffer.at(i + l);
-            temp += (uint8_t)(bin * std::pow(2.0, (7 - l)));
+            temp |= (bin << (7 - l));
         }
 
         *(pstart + j) = temp;
@@ -619,8 +612,8 @@ SimpleOfdmWimaxPhy::RecreateBuffer()
     uint32_t i = 0;
     for (uint32_t j = 0; j < m_nrBlocks; j++)
     {
-        Bvec tmpRecFecBloc = m_receivedFecBlocks->front();
-        buffer.insert(buffer.begin() + i, tmpRecFecBloc.begin(), tmpRecFecBloc.end());
+        Bvec tmpRecFecBlock = m_receivedFecBlocks->front();
+        buffer.insert(buffer.begin() + i, tmpRecFecBlock.begin(), tmpRecFecBlock.end());
         m_receivedFecBlocks->pop_front();
         i += m_blockSize;
     }
@@ -697,25 +690,18 @@ SimpleOfdmWimaxPhy::DoGetDataRate(WimaxPhy::ModulationType modulationType) const
     {
     case MODULATION_TYPE_BPSK_12:
         return m_dataRateBpsk12;
-        break;
     case MODULATION_TYPE_QPSK_12:
         return m_dataRateQpsk12;
-        break;
     case MODULATION_TYPE_QPSK_34:
         return m_dataRateQpsk34;
-        break;
     case MODULATION_TYPE_QAM16_12:
         return m_dataRateQam16_12;
-        break;
     case MODULATION_TYPE_QAM16_34:
         return m_dataRateQam16_34;
-        break;
     case MODULATION_TYPE_QAM64_23:
         return m_dataRateQam64_23;
-        break;
     case MODULATION_TYPE_QAM64_34:
         return m_dataRateQam64_34;
-        break;
     }
     NS_FATAL_ERROR("Invalid modulation type");
     return 0;
@@ -900,25 +886,18 @@ SimpleOfdmWimaxPhy::DoGetFrameDuration(uint8_t frameDurationCode) const
     {
     case FRAME_DURATION_2_POINT_5_MS:
         return Seconds(2.5);
-        break;
     case FRAME_DURATION_4_MS:
         return Seconds(4);
-        break;
     case FRAME_DURATION_5_MS:
         return Seconds(5);
-        break;
     case FRAME_DURATION_8_MS:
         return Seconds(8);
-        break;
     case FRAME_DURATION_10_MS:
         return Seconds(10);
-        break;
     case FRAME_DURATION_12_POINT_5_MS:
         return Seconds(12.5);
-        break;
     case FRAME_DURATION_20_MS:
         return Seconds(20);
-        break;
     default:
         NS_FATAL_ERROR("Invalid modulation type");
     }

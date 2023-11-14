@@ -21,8 +21,7 @@
 #ifndef LTE_FFR_SAP_H
 #define LTE_FFR_SAP_H
 
-#include <ns3/ff-mac-sched-sap.h>
-#include <ns3/lte-rrc-sap.h>
+#include "ff-mac-sched-sap.h"
 
 #include <map>
 
@@ -101,14 +100,14 @@ class LteFfrSapProvider
      * \param params the struct FfMacSchedSapProvider::SchedDlCqiInfoReqParameters
      */
     virtual void ReportDlCqiInfo(
-        const struct FfMacSchedSapProvider::SchedDlCqiInfoReqParameters& params) = 0;
+        const FfMacSchedSapProvider::SchedDlCqiInfoReqParameters& params) = 0;
 
     /**
      * \brief ReportUlCqiInfo
      * \param params the struct FfMacSchedSapProvider::SchedUlCqiInfoReqParameters
      */
     virtual void ReportUlCqiInfo(
-        const struct FfMacSchedSapProvider::SchedUlCqiInfoReqParameters& params) = 0;
+        const FfMacSchedSapProvider::SchedUlCqiInfoReqParameters& params) = 0;
 
     /**
      * \brief ReportUlCqiInfo
@@ -168,10 +167,8 @@ class MemberLteFfrSapProvider : public LteFfrSapProvider
     bool IsDlRbgAvailableForUe(int i, uint16_t rnti) override;
     std::vector<bool> GetAvailableUlRbg() override;
     bool IsUlRbgAvailableForUe(int i, uint16_t rnti) override;
-    void ReportDlCqiInfo(
-        const struct FfMacSchedSapProvider::SchedDlCqiInfoReqParameters& params) override;
-    void ReportUlCqiInfo(
-        const struct FfMacSchedSapProvider::SchedUlCqiInfoReqParameters& params) override;
+    void ReportDlCqiInfo(const FfMacSchedSapProvider::SchedDlCqiInfoReqParameters& params) override;
+    void ReportUlCqiInfo(const FfMacSchedSapProvider::SchedUlCqiInfoReqParameters& params) override;
     void ReportUlCqiInfo(std::map<uint16_t, std::vector<double>> ulCqiMap) override;
     uint8_t GetTpc(uint16_t rnti) override;
     uint16_t GetMinContinuousUlBandwidth() override;
@@ -218,7 +215,7 @@ MemberLteFfrSapProvider<C>::IsUlRbgAvailableForUe(int i, uint16_t rnti)
 template <class C>
 void
 MemberLteFfrSapProvider<C>::ReportDlCqiInfo(
-    const struct FfMacSchedSapProvider::SchedDlCqiInfoReqParameters& params)
+    const FfMacSchedSapProvider::SchedDlCqiInfoReqParameters& params)
 {
     m_owner->DoReportDlCqiInfo(params);
 }
@@ -226,7 +223,7 @@ MemberLteFfrSapProvider<C>::ReportDlCqiInfo(
 template <class C>
 void
 MemberLteFfrSapProvider<C>::ReportUlCqiInfo(
-    const struct FfMacSchedSapProvider::SchedUlCqiInfoReqParameters& params)
+    const FfMacSchedSapProvider::SchedUlCqiInfoReqParameters& params)
 {
     m_owner->DoReportUlCqiInfo(params);
 }

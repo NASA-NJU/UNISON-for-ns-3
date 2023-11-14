@@ -20,8 +20,9 @@
 #ifndef LTE_RLC_H
 #define LTE_RLC_H
 
-#include "ns3/lte-mac-sap.h"
-#include "ns3/lte-rlc-sap.h"
+#include "lte-mac-sap.h"
+#include "lte-rlc-sap.h"
+
 #include "ns3/nstime.h"
 #include "ns3/object.h"
 #include "ns3/trace-source-accessor.h"
@@ -74,6 +75,11 @@ class LteRlc : public Object // SimpleRefCount<LteRlc>
      * \param lcId
      */
     void SetLcId(uint8_t lcId);
+
+    /**
+     * \param packetDelayBudget
+     */
+    void SetPacketDelayBudgetMs(uint16_t packetDelayBudget);
 
     /**
      *
@@ -165,6 +171,8 @@ class LteRlc : public Object // SimpleRefCount<LteRlc>
 
     uint16_t m_rnti; ///< RNTI
     uint8_t m_lcid;  ///< LCID
+    uint16_t m_packetDelayBudgetMs{
+        UINT16_MAX}; //!< the packet delay budget in ms of the corresponding logical channel
 
     /**
      * Used to inform of a PDU delivery to the MAC SAP provider

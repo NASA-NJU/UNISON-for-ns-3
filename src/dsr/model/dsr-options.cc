@@ -58,6 +58,7 @@
 #include "ns3/udp-header.h"
 #include "ns3/uinteger.h"
 
+#include <algorithm>
 #include <ctime>
 #include <list>
 #include <map>
@@ -164,18 +165,10 @@ bool
 DsrOptions::ReverseRoutes(std::vector<Ipv4Address>& vec)
 {
     NS_LOG_FUNCTION(this);
-    std::vector<Ipv4Address> vec2(vec);
-    vec.clear(); // To ensure vec is empty before start
-    for (std::vector<Ipv4Address>::reverse_iterator ri = vec2.rbegin(); ri != vec2.rend(); ++ri)
-    {
-        vec.push_back(*ri);
-    }
 
-    if ((vec.size() == vec2.size()) && (vec.front() == vec2.back()))
-    {
-        return true;
-    }
-    return false;
+    std::reverse(vec.begin(), vec.end());
+
+    return true;
 }
 
 Ipv4Address
@@ -190,23 +183,22 @@ DsrOptions::SearchNextHop(Ipv4Address ipv4Address, std::vector<Ipv4Address>& vec
         nextHop = vec[1];
         return nextHop;
     }
-    else
+
+    if (ipv4Address == vec.back())
     {
-        if (ipv4Address == vec.back())
+        NS_LOG_DEBUG("We have reached to the final destination " << ipv4Address << " "
+                                                                 << vec.back());
+        return ipv4Address;
+    }
+    for (std::vector<Ipv4Address>::const_iterator i = vec.begin(); i != vec.end(); ++i)
+    {
+        if (ipv4Address == (*i))
         {
-            NS_LOG_DEBUG("We have reached to the final destination " << ipv4Address << " "
-                                                                     << vec.back());
-            return ipv4Address;
-        }
-        for (std::vector<Ipv4Address>::const_iterator i = vec.begin(); i != vec.end(); ++i)
-        {
-            if (ipv4Address == (*i))
-            {
-                nextHop = *(++i);
-                return nextHop;
-            }
+            nextHop = *(++i);
+            return nextHop;
         }
     }
+
     NS_LOG_DEBUG("next hop address not found, route corrupted");
     Ipv4Address none = "0.0.0.0";
     return none;
@@ -223,17 +215,16 @@ DsrOptions::ReverseSearchNextHop(Ipv4Address ipv4Address, std::vector<Ipv4Addres
         nextHop = vec[0];
         return nextHop;
     }
-    else
+
+    for (std::vector<Ipv4Address>::reverse_iterator ri = vec.rbegin(); ri != vec.rend(); ++ri)
     {
-        for (std::vector<Ipv4Address>::reverse_iterator ri = vec.rbegin(); ri != vec.rend(); ++ri)
+        if (ipv4Address == (*ri))
         {
-            if (ipv4Address == (*ri))
-            {
-                nextHop = *(++ri);
-                return nextHop;
-            }
+            nextHop = *(++ri);
+            return nextHop;
         }
     }
+
     NS_LOG_DEBUG("next hop address not found, route corrupted");
     Ipv4Address none = "0.0.0.0";
     return none;
@@ -292,10 +283,6 @@ DsrOptions::IfDuplicates(std::vector<Ipv4Address>& vec, std::vector<Ipv4Address>
             {
                 return true;
             }
-            else
-            {
-                continue;
-            }
         }
     }
     return false;
@@ -310,10 +297,6 @@ DsrOptions::CheckDuplicates(Ipv4Address ipv4Address, std::vector<Ipv4Address>& v
         if ((*i) == ipv4Address)
         {
             return true;
-        }
-        else
-        {
-            continue;
         }
     }
     return false;
@@ -335,31 +318,22 @@ DsrOptions::RemoveDuplicates(std::vector<Ipv4Address>& vec)
             vec.push_back(*i);
             continue;
         }
-        else
+
+        for (std::vector<Ipv4Address>::iterator j = vec.begin(); j != vec.end(); ++j)
         {
-            for (std::vector<Ipv4Address>::iterator j = vec.begin(); j != vec.end(); ++j)
+            if ((*i) == (*j))
             {
-                if ((*i) == (*j))
+                if ((j + 1) != vec.end())
                 {
-                    if ((j + 1) != vec.end())
-                    {
-                        vec.erase(j + 1, vec.end()); // Automatic shorten the route
-                        break;
-                    }
-                    else
-                    {
-                        break;
-                    }
+                    vec.erase(j + 1, vec.end()); // Automatic shorten the route
                 }
-                else if (j == (vec.end() - 1))
-                {
-                    vec.push_back(*i);
-                    break;
-                }
-                else
-                {
-                    continue;
-                }
+
+                break;
+            }
+            else if (j == (vec.end() - 1))
+            {
+                vec.push_back(*i);
+                break;
             }
         }
     }
@@ -1634,12 +1608,12 @@ DsrOptionRerr::Process(Ptr<Packet> packet,
         /*
          * Remove the route error header from the packet, and get the error type
          */
-        DsrOptionRerrUnsupportHeader rerrUnsupport;
-        p->RemoveHeader(rerrUnsupport);
+        DsrOptionRerrUnsupportedHeader rerrUnsupported;
+        p->RemoveHeader(rerrUnsupported);
 
         /// \todo This is for the other two error options, not supporting for now
-        // uint32_t rerrSize = rerrUnsupport.GetSerializedSize();
-        // uint32_t serialized = DoSendError (p, rerrUnsupport, rerrSize, ipv4Address, protocol);
+        // uint32_t rerrSize = rerrUnsupported.GetSerializedSize();
+        // uint32_t serialized = DoSendError (p, rerrUnsupported, rerrSize, ipv4Address, protocol);
         uint32_t serialized = 0;
         return serialized;
     }

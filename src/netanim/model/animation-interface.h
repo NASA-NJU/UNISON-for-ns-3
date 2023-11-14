@@ -50,7 +50,7 @@ namespace ns3
 
 #define MAX_PKTS_PER_TRACE_FILE 100000
 #define PURGE_INTERVAL 5
-#define NETANIM_VERSION "netanim-3.108"
+#define NETANIM_VERSION "netanim-3.109"
 #define CHECK_STARTED_INTIMEWINDOW                                                                 \
     {                                                                                              \
         if (!m_started || !IsInTimeWindow())                                                       \
@@ -544,8 +544,7 @@ class AnimationInterface
         WIFI,
         WIMAX,
         CSMA,
-        LRWPAN,
-        WAVE
+        LRWPAN
     };
 
     /// NodeSize structure
@@ -669,7 +668,6 @@ class AnimationInterface
     AnimUidPacketInfoMap m_pendingLtePackets;    ///< pending LTE packets
     AnimUidPacketInfoMap m_pendingCsmaPackets;   ///< pending CSMA packets
     AnimUidPacketInfoMap m_pendingUanPackets;    ///< pending UAN packets
-    AnimUidPacketInfoMap m_pendingWavePackets;   ///< pending WAVE packets
 
     std::map<uint32_t, Vector> m_nodeLocation;         ///< node location
     std::map<std::string, uint32_t> m_macToNodeIdMap;  ///< MAC to node ID map
@@ -1077,19 +1075,6 @@ class AnimationInterface
     void WifiPhyRxBeginTrace(std::string context,
                              Ptr<const Packet> p,
                              RxPowerWattPerChannelBand rxPowersW);
-    /**
-     * WAVE Phy transmit begin trace function
-     * \param context the context
-     * \param p the packet
-     */
-    void WavePhyTxBeginTrace(std::string context, Ptr<const Packet> p);
-    /**
-     * WAVE Phy receive begin trace function
-     *
-     * \param context the context
-     * \param p the packet
-     */
-    void WavePhyRxBeginTrace(std::string context, Ptr<const Packet> p);
     /**
      * LR-WPAN Phy receive begin trace function
      *

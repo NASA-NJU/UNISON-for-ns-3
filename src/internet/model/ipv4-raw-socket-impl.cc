@@ -1,18 +1,18 @@
 #include "ipv4-raw-socket-impl.h"
 
 #include "icmpv4.h"
-#include "ipv4-l3-protocol.h"
+#include "ipv4-packet-info-tag.h"
+#include "ipv4-routing-protocol.h"
 
 #include "ns3/boolean.h"
 #include "ns3/inet-socket-address.h"
-#include "ns3/ipv4-packet-info-tag.h"
 #include "ns3/log.h"
 #include "ns3/node.h"
 #include "ns3/packet.h"
 #include "ns3/uinteger.h"
 
 #ifdef __WIN32__
-#include "ns3/win32-internet.h"
+#include "win32-internet.h"
 #else
 #include <netinet/in.h>
 #include <sys/socket.h>
@@ -88,14 +88,14 @@ Ipv4RawSocketImpl::DoDispose()
     Socket::DoDispose();
 }
 
-enum Socket::SocketErrno
+Socket::SocketErrno
 Ipv4RawSocketImpl::GetErrno() const
 {
     NS_LOG_FUNCTION(this);
     return m_err;
 }
 
-enum Socket::SocketType
+Socket::SocketType
 Ipv4RawSocketImpl::GetSocketType() const
 {
     NS_LOG_FUNCTION(this);
@@ -526,11 +526,7 @@ bool
 Ipv4RawSocketImpl::SetAllowBroadcast(bool allowBroadcast)
 {
     NS_LOG_FUNCTION(this << allowBroadcast);
-    if (!allowBroadcast)
-    {
-        return false;
-    }
-    return true;
+    return allowBroadcast;
 }
 
 bool

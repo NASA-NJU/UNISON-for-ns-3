@@ -672,7 +672,7 @@ SubscriberStationNetDevice::DoSend(Ptr<Packet> packet,
     else
     {
         NS_LOG_DEBUG("SS (" << GetMacAddress() << ")");
-        NS_LOG_INFO("\tCan't send packet! (NotRegitered with the network)");
+        NS_LOG_INFO("\tCan't send packet! (NotRegistered with the network)");
         return false;
     }
 
@@ -742,7 +742,7 @@ SubscriberStationNetDevice::Enqueue(Ptr<Packet> packet,
         if (connection->GetSchedulingType() == ServiceFlow::SF_TYPE_UGS && m_scheduler->GetPollMe())
         {
             NS_ASSERT_MSG(hdrType.GetType() != MacHeaderType::HEADER_TYPE_BANDWIDTH,
-                          "Error while equeuing  packet: incorrect header type");
+                          "Error while enqueuing  packet: incorrect header type");
 
             GrantManagementSubheader grantMgmntSubhdr;
             grantMgmntSubhdr.SetPm(true);
@@ -819,7 +819,7 @@ SubscriberStationNetDevice::DoReceive(Ptr<Packet> packet)
 
     if (gnrcMacHdr.GetHt() == MacHeaderType::HEADER_TYPE_GENERIC)
     {
-        if (gnrcMacHdr.check_hcs() == false)
+        if (!gnrcMacHdr.check_hcs())
         {
             // The header is noisy
             NS_LOG_INFO("Header HCS ERROR");

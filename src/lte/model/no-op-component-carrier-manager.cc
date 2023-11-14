@@ -22,6 +22,8 @@
 
 #include "no-op-component-carrier-manager.h"
 
+#include "lte-common.h"
+
 #include <ns3/log.h>
 #include <ns3/random-variable-stream.h>
 
@@ -205,7 +207,7 @@ NoOpComponentCarrierManager::DoSetupDataRadioBearer(EpsBearer bearer,
         lci.qci = bearer.qci;
         if (ncc == 0)
         {
-            lci.isGbr = bearer.IsGbr();
+            lci.resourceType = bearer.GetResourceType();
             lci.mbrUl = bearer.gbrQosInfo.mbrUl;
             lci.mbrDl = bearer.gbrQosInfo.mbrDl;
             lci.gbrUl = bearer.gbrQosInfo.gbrUl;
@@ -213,7 +215,7 @@ NoOpComponentCarrierManager::DoSetupDataRadioBearer(EpsBearer bearer,
         }
         else
         {
-            lci.isGbr = 0;
+            lci.resourceType = 0;
             lci.mbrUl = 0;
             lci.mbrDl = 0;
             lci.gbrUl = 0;
@@ -234,7 +236,7 @@ NoOpComponentCarrierManager::DoSetupDataRadioBearer(EpsBearer bearer,
         lcinfo.lcId = lcid;
         lcinfo.lcGroup = lcGroup;
         lcinfo.qci = bearer.qci;
-        lcinfo.isGbr = bearer.IsGbr();
+        lcinfo.resourceType = bearer.GetResourceType();
         lcinfo.mbrUl = bearer.gbrQosInfo.mbrUl;
         lcinfo.mbrDl = bearer.gbrQosInfo.mbrDl;
         lcinfo.gbrUl = bearer.gbrQosInfo.gbrUl;

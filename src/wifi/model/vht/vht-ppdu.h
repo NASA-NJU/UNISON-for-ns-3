@@ -23,6 +23,7 @@
 #define VHT_PPDU_H
 
 #include "ns3/ofdm-ppdu.h"
+#include "ns3/wifi-phy-operating-channel.h"
 
 /**
  * \file
@@ -48,22 +49,10 @@ class VhtPpdu : public OfdmPpdu
      * VHT PHY header (VHT-SIG-A1/A2/B).
      * See section 21.3.8 in IEEE 802.11-2016.
      */
-    class VhtSigHeader : public Header
+    class VhtSigHeader
     {
       public:
         VhtSigHeader();
-
-        /**
-         * \brief Get the type ID.
-         * \return the object TypeId
-         */
-        static TypeId GetTypeId();
-
-        TypeId GetInstanceTypeId() const override;
-        void Print(std::ostream& os) const override;
-        uint32_t GetSerializedSize() const override;
-        void Serialize(Buffer::Iterator start) const override;
-        uint32_t Deserialize(Buffer::Iterator start) override;
 
         /**
          * Set the Multi-User (MU) flag.
@@ -153,16 +142,14 @@ class VhtPpdu : public OfdmPpdu
      *
      * \param psdu the PHY payload (PSDU)
      * \param txVector the TXVECTOR that was used for this PPDU
-     * \param txCenterFreq the center frequency (MHz) that was used for this PPDU
+     * \param channel the operating channel of the PHY used to transmit this PPDU
      * \param ppduDuration the transmission duration of this PPDU
-     * \param band the WifiPhyBand used for the transmission of this PPDU
      * \param uid the unique ID of this PPDU
      */
     VhtPpdu(Ptr<const WifiPsdu> psdu,
             const WifiTxVector& txVector,
-            uint16_t txCenterFreq,
+            const WifiPhyOperatingChannel& channel,
             Time ppduDuration,
-            WifiPhyBand band,
             uint64_t uid);
 
     Time GetTxDuration() const override;
@@ -210,10 +197,8 @@ class VhtPpdu : public OfdmPpdu
                                    const LSigHeader& lSig,
                                    const VhtSigHeader& vhtSig) const;
 
-#ifndef NS3_BUILD_PROFILE_DEBUG
     VhtSigHeader m_vhtSig; //!< the VHT-SIG PHY header
-#endif
-}; // class VhtPpdu
+};                         // class VhtPpdu
 
 } // namespace ns3
 

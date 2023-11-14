@@ -21,7 +21,8 @@
 #include "ns3/ipv6-routing-protocol.h"
 #include "ns3/test.h"
 
-using namespace ns3;
+namespace ns3
+{
 
 /**
  * \ingroup internet-test
@@ -42,10 +43,10 @@ class Ipv6ARouting : public Ipv6RoutingProtocol
     bool RouteInput(Ptr<const Packet> p,
                     const Ipv6Header& header,
                     Ptr<const NetDevice> idev,
-                    UnicastForwardCallback ucb,
-                    MulticastForwardCallback mcb,
-                    LocalDeliverCallback lcb,
-                    ErrorCallback ecb) override
+                    const UnicastForwardCallback& ucb,
+                    const MulticastForwardCallback& mcb,
+                    const LocalDeliverCallback& lcb,
+                    const ErrorCallback& ecb) override
     {
         return false;
     }
@@ -108,10 +109,10 @@ class Ipv6BRouting : public Ipv6RoutingProtocol
     bool RouteInput(Ptr<const Packet> p,
                     const Ipv6Header& header,
                     Ptr<const NetDevice> idev,
-                    UnicastForwardCallback ucb,
-                    MulticastForwardCallback mcb,
-                    LocalDeliverCallback lcb,
-                    ErrorCallback ecb) override
+                    const UnicastForwardCallback& ucb,
+                    const MulticastForwardCallback& mcb,
+                    const LocalDeliverCallback& lcb,
+                    const ErrorCallback& ecb) override
     {
         return false;
     }
@@ -246,3 +247,5 @@ class Ipv6ListRoutingTestSuite : public TestSuite
 
 static Ipv6ListRoutingTestSuite
     g_ipv6ListRoutingTestSuite; //!< Static variable for test initialization
+
+} // namespace ns3

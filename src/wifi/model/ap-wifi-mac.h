@@ -31,7 +31,7 @@
 namespace ns3
 {
 
-class SupportedRates;
+struct AllSupportedRates;
 class CapabilityInformation;
 class DsssParameterSet;
 class ErpInformation;
@@ -48,6 +48,7 @@ class UniformRandomVariable;
 class MgtAssocRequestHeader;
 class MgtReassocRequestHeader;
 class MgtAssocResponseHeader;
+class MgtEmlOperatingModeNotification;
 
 /// variant holding a  reference to a (Re)Association Request
 using AssocReqRefVariant = std::variant<std::reference_wrapper<MgtAssocRequestHeader>,
@@ -238,6 +239,18 @@ class ApWifiMac : public WifiMac
     void ParseReportedStaInfo(const AssocReqRefVariant& assoc, Mac48Address from, uint8_t linkId);
 
     /**
+     * Take necessary actions upon receiving the given EML Operating Mode Notification frame
+     * from the given station on the given link.
+     *
+     * \param frame the received EML Operating Mode Notification frame
+     * \param sender the MAC address of the sender of the frame
+     * \param linkId the ID of the link over which the frame was received
+     */
+    void ReceiveEmlNotification(MgtEmlOperatingModeNotification& frame,
+                                const Mac48Address& sender,
+                                uint8_t linkId);
+
+    /**
      * The packet we sent was successfully received by the receiver
      * (i.e. we received an Ack from the receiver).  If the packet
      * was an association response to the receiver, we record that
@@ -329,18 +342,6 @@ class ApWifiMac : public WifiMac
                                          const Mac48Address& to,
                                          uint8_t linkId);
     /**
-     * Configure the queue scheduler so that frames stored in the container queues associated
-     * with the station which we are sending an Association Response frame to are only transmitted
-     * on the setup links.
-     *
-     * \param linkIdStaAddrMap a map of (link ID, remote STA address) of the links to setup
-     * \param to the Receiver Address (RA) of the Association Response frame
-     * \param linkId the ID of the link on which the Association Response frame is being sent
-     */
-    void ConfigQueueScheduler(const LinkIdStaAddrMap& linkIdStaAddrMap,
-                              const Mac48Address& to,
-                              uint8_t linkId);
-    /**
      * Forward an association or a reassociation response packet to the DCF/EDCA.
      *
      * \param to the address of the STA we are sending an association response to
@@ -355,6 +356,31 @@ class ApWifiMac : public WifiMac
      * \param linkId the ID of the given link
      */
     void SendOneBeacon(uint8_t linkId);
+
+    /**
+     * Process the Power Management bit in the Frame Control field of an MPDU
+     * successfully received on the given link.
+     *
+     * \param mpdu the successfully received MPDU
+     * \param linkId the ID of the given link
+     */
+    void ProcessPowerManagementFlag(Ptr<const WifiMpdu> mpdu, uint8_t linkId);
+    /**
+     * Perform the necessary actions when a given station switches from active mode
+     * to powersave mode.
+     *
+     * \param staAddr the MAC address of the given station
+     * \param linkId the ID of the link on which the given station is operating
+     */
+    void StaSwitchingToPsMode(const Mac48Address& staAddr, uint8_t linkId);
+    /**
+     * Perform the necessary actions when a given station deassociates or switches
+     * from powersave mode to active mode.
+     *
+     * \param staAddr the MAC address of the given station
+     * \param linkId the ID of the link on which the given station is operating
+     */
+    void StaSwitchingToActiveModeOrDeassociated(const Mac48Address& staAddr, uint8_t linkId);
 
     /**
      * Return the Capability information of the current AP for the given link.
@@ -438,7 +464,7 @@ class ApWifiMac : public WifiMac
      * \param linkId the ID of the given link
      * \return all rates that we support
      */
-    SupportedRates GetSupportedRates(uint8_t linkId) const;
+    AllSupportedRates GetSupportedRates(uint8_t linkId) const;
     /**
      * Return the DSSS Parameter Set that we support on the given link
      *
@@ -501,6 +527,8 @@ class ApWifiMac : public WifiMac
     bool m_enableNonErpProtection; //!< Flag whether protection mechanism is used or not when
                                    //!< non-ERP STAs are present within the BSS
     Time m_bsrLifetime;            //!< Lifetime of Buffer Status Reports
+    /// transition timeout events running for EMLSR clients
+    std::map<Mac48Address, EventId> m_transitionTimeoutEvents;
 
     /// store value and timestamp for each Buffer Status Report
     struct BsrType

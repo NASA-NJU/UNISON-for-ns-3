@@ -1,5 +1,4 @@
 #! /usr/bin/env python3
-## -*- Mode: python; py-indent-offset: 4; indent-tabs-mode: nil; coding: utf-8; -*-
 
 # A list of C++ examples to run in order to ensure that they remain
 # buildable and runnable over time.  Each tuple in the list contains
@@ -30,6 +29,9 @@ cpp_examples = [
     ("wifi-power-adaptation-distance --manager=ns3::ParfWifiManager --outputFileName=parf --steps=5 --stepsSize=10", "True", "True"),
     ("wifi-power-adaptation-distance --manager=ns3::AparfWifiManager --outputFileName=aparf --steps=5 --stepsSize=10", "True", "False"),
     ("wifi-power-adaptation-distance --manager=ns3::RrpaaWifiManager --outputFileName=rrpaa --steps=5 --stepsSize=10", "True", "False"),
+    ("wifi-rate-adaptation-distance --standard=802.11a --staManager=ns3::MinstrelWifiManager --apManager=ns3::MinstrelWifiManager --outputFileName=minstrel --stepsSize=50 --stepsTime=0.1", "True", "False"),
+    ("wifi-rate-adaptation-distance --standard=802.11a --staManager=ns3::MinstrelWifiManager --apManager=ns3::MinstrelWifiManager --outputFileName=minstrel --stepsSize=50 --stepsTime=0.1 --STA1_x=-200", "True", "False"),
+    ("wifi-rate-adaptation-distance --staManager=ns3::MinstrelHtWifiManager --apManager=ns3::MinstrelHtWifiManager --outputFileName=minstrelHt --shortGuardInterval=true --channelWidth=40 --stepsSize=50 --stepsTime=0.1", "True", "False"),
     ("wifi-power-adaptation-interference --simuTime=5", "True", "False"),
     ("wifi-dsss-validation", "True", "True"),
     ("wifi-ofdm-validation", "True", "True"),
@@ -58,7 +60,7 @@ cpp_examples = [
     ("wifi-eht-network --simulationTime=0.1 --frequency=5 --useRts=1 --minExpectedThroughput=6 --maxExpectedThroughput=547", "True", "True"),
     ("wifi-eht-network --simulationTime=0.1 --frequency=2.4 --useRts=0 --useExtendedBlockAck=1 --frequency2=5 --minExpectedThroughput=12 --maxExpectedThroughput=500", "True", "True"),
     ("wifi-eht-network --simulationTime=0.1 --frequency=2.4 --useRts=1 --minExpectedThroughput=6 --maxExpectedThroughput=212", "True", "True"),
-    ("wifi-eht-network --simulationTime=0.2 --udp=0 --downlink=1 --useRts=0 --nStations=4 --dlAckType=ACK-SU-FORMAT --enableUlOfdma=1 --enableBsrp=0 --mcs=4 --frequency2=6  --minExpectedThroughput=35 --maxExpectedThroughput=280", "True", "True"),
+    ("wifi-eht-network --simulationTime=0.22 --udp=0 --downlink=1 --useRts=0 --nStations=4 --dlAckType=ACK-SU-FORMAT --enableUlOfdma=1 --enableBsrp=0 --mcs=4 --frequency2=6  --minExpectedThroughput=35 --maxExpectedThroughput=280", "True", "True"),
     ("wifi-eht-network --simulationTime=0.25 --frequency=2.4 --udp=0 --downlink=1 --useRts=0 --nStations=5 --dlAckType=MU-BAR --enableUlOfdma=1 --enableBsrp=1 --mcs=5 --frequency2=5 --useExtendedBlockAck=1 --minExpectedThroughput=40 --maxExpectedThroughput=100", "True", "True"),
     ("wifi-eht-network --simulationTime=0.3 --udp=0 --downlink=1 --useRts=1 --nStations=5 --dlAckType=AGGR-MU-BAR --enableUlOfdma=1 --enableBsrp=0 --mcs=6 --muSchedAccessReqInterval=50ms --frequency2=2.4 --minExpectedThroughput=50 --maxExpectedThroughput=140", "True", "True"),
     ("wifi-eht-network --simulationTime=0.2 --udp=1 --downlink=0 --useRts=0 --nStations=5 --dlAckType=AGGR-MU-BAR --enableUlOfdma=1 --enableBsrp=1 --mcs=5 --muSchedAccessReqInterval=50ms --frequency2=6 --minExpectedThroughput=70 --maxExpectedThroughput=715", "True", "True"),

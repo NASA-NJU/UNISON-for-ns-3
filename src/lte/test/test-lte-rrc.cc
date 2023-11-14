@@ -389,7 +389,7 @@ LteRrcConnectionEstablishmentTestCase::Connect(Ptr<NetDevice> ueDevice, Ptr<NetD
 
     for (uint32_t b = 0; b < m_nBearers; ++b)
     {
-        enum EpsBearer::Qci q = EpsBearer::NGBR_VIDEO_TCP_DEFAULT;
+        EpsBearer::Qci q = EpsBearer::NGBR_VIDEO_TCP_DEFAULT;
         EpsBearer bearer(q);
         m_lteHelper->ActivateDataRadioBearer(ueDevice, bearer);
     }
@@ -784,13 +784,10 @@ LteRrcTestSuite::LteRrcTestSuite()
 
     for (uint32_t useIdealRrc = 0; useIdealRrc <= 1; ++useIdealRrc)
     {
-        //         <----- all times in ms ----------------->
+        // <----- all times in ms ----------------->
 
-        //                                                     nUes      tConnBase delayDiscStart
-        //                                                     useIdealRrc
-        //                                                        nBearers       tConnIncrPerUe
-        //                                                        errorExpected
-        //                                                        admitRrcConnectionRequest
+        // nUes tConnBase delayDiscStart useIdealRrc nBearers tConnIncrPerUe errorExpected
+        // admitRrcConnectionRequest
         AddTestCase(
             new LteRrcConnectionEstablishmentTestCase(1, 0, 0, 0, 1, false, useIdealRrc, true),
             TestCase::EXTENSIVE);

@@ -90,7 +90,7 @@ class Event : public SimpleRefCount<Event>
      * \param band the band for which the power should be returned
      * \return the received power (W) for a given band
      */
-    double GetRxPowerW(WifiSpectrumBand band) const;
+    double GetRxPowerW(const WifiSpectrumBandInfo& band) const;
     /**
      * Return the received power (W) for all bands.
      *
@@ -147,14 +147,26 @@ class InterferenceHelper : public Object
     /**
      * Add a frequency band.
      *
-     * \param band the band to be created
+     * \param band the band to be added
      */
-    void AddBand(WifiSpectrumBand band);
+    void AddBand(const WifiSpectrumBandInfo& band);
 
     /**
-     * Remove the frequency bands.
+     * Check whether bands are already tracked by this interference helper.
+     *
+     * \return true if bands are tracked by this interference helper, false otherwise
      */
-    void RemoveBands();
+    bool HasBands() const;
+
+    /**
+     * Update the frequency bands that belongs to a given frequency range when the spectrum model is
+     * changed.
+     *
+     * \param bands the bands to be added in the new spectrum model
+     * \param freqRange the frequency range the bands belong to
+     */
+    void UpdateBands(const std::vector<WifiSpectrumBandInfo>& bands,
+                     const FrequencyRange& freqRange);
 
     /**
      * Set the noise figure.
@@ -191,7 +203,7 @@ class InterferenceHelper : public Object
      *          energy on the medium for a given band will
      *          be higher than the requested threshold.
      */
-    Time GetEnergyDuration(double energyW, WifiSpectrumBand band);
+    Time GetEnergyDuration(double energyW, const WifiSpectrumBandInfo& band);
 
     /**
      * Add the PPDU-related signal to interference helper.
@@ -234,12 +246,11 @@ class InterferenceHelper : public Object
      *
      * \return struct of SNR and PER (with PER being evaluated over the provided time window)
      */
-    struct PhyEntity::SnrPer CalculatePayloadSnrPer(
-        Ptr<Event> event,
-        uint16_t channelWidth,
-        WifiSpectrumBand band,
-        uint16_t staId,
-        std::pair<Time, Time> relativeMpduStartStop) const;
+    PhyEntity::SnrPer CalculatePayloadSnrPer(Ptr<Event> event,
+                                             uint16_t channelWidth,
+                                             const WifiSpectrumBandInfo& band,
+                                             uint16_t staId,
+                                             std::pair<Time, Time> relativeMpduStartStop) const;
     /**
      * Calculate the SNIR for the event (starting from now until the event end).
      *
@@ -253,7 +264,7 @@ class InterferenceHelper : public Object
     double CalculateSnr(Ptr<Event> event,
                         uint16_t channelWidth,
                         uint8_t nss,
-                        WifiSpectrumBand band) const;
+                        const WifiSpectrumBandInfo& band) const;
     /**
      * Calculate the SNIR at the start of the PHY header and accumulate
      * all SNIR changes in the SNIR vector.
@@ -265,10 +276,10 @@ class InterferenceHelper : public Object
      *
      * \return struct of SNR and PER
      */
-    struct PhyEntity::SnrPer CalculatePhyHeaderSnrPer(Ptr<Event> event,
-                                                      uint16_t channelWidth,
-                                                      WifiSpectrumBand band,
-                                                      WifiPpduField header) const;
+    PhyEntity::SnrPer CalculatePhyHeaderSnrPer(Ptr<Event> event,
+                                               uint16_t channelWidth,
+                                               const WifiSpectrumBandInfo& band,
+                                               WifiPpduField header) const;
 
     /**
      * Notify that RX has started.
@@ -278,12 +289,9 @@ class InterferenceHelper : public Object
      * Notify that RX has ended.
      *
      * \param endTime the end time of the signal
+     * \param freqRange the frequency range in which the received signal event had been detected
      */
-    void NotifyRxEnd(Time endTime);
-    /**
-     * Erase all events.
-     */
-    void EraseEvents();
+    void NotifyRxEnd(Time endTime, const FrequencyRange& freqRange);
 
     /**
      * Update event to scale its received power (W) per band.
@@ -386,12 +394,35 @@ class InterferenceHelper : public Object
     /**
      * typedef for a multimap of NiChange
      */
-    typedef std::multimap<Time, NiChange> NiChanges;
+    using NiChanges = std::multimap<Time, NiChange>;
 
     /**
      * Map of NiChanges per band
      */
-    typedef std::map<WifiSpectrumBand, NiChanges> NiChangesPerBand;
+    using NiChangesPerBand = std::map<WifiSpectrumBandInfo, NiChanges>;
+
+    /**
+     * Map of first power per band
+     */
+    using FirstPowerPerBand = std::map<WifiSpectrumBandInfo, double>;
+
+    /**
+     * Check whether a given band is tracked by this interference helper.
+     *
+     * \param band the band to be checked
+     * \return true if the band is already tracked by this interference helper, false otherwise
+     */
+    bool HasBand(const WifiSpectrumBandInfo& band) const;
+
+    /**
+     * Check whether a given band belongs to a given frequency range.
+     *
+     * \param band the band to be checked
+     * \param freqRange the frequency range to check whether the band belong to
+     * \return true if the band belongs to the frequency range, false otherwise
+     */
+    bool IsBandInFrequencyRange(const WifiSpectrumBandInfo& band,
+                                const FrequencyRange& freqRange) const;
 
     /**
      * Append the given Event.
@@ -413,7 +444,7 @@ class InterferenceHelper : public Object
      */
     double CalculateNoiseInterferenceW(Ptr<Event> event,
                                        NiChangesPerBand* nis,
-                                       WifiSpectrumBand band) const;
+                                       const WifiSpectrumBandInfo& band) const;
     /**
      * Calculate the error rate of the given PHY payload only in the provided time
      * window (thus enabling per MPDU PER information). The PHY payload can be divided into
@@ -431,7 +462,7 @@ class InterferenceHelper : public Object
     double CalculatePayloadPer(Ptr<const Event> event,
                                uint16_t channelWidth,
                                NiChangesPerBand* nis,
-                               WifiSpectrumBand band,
+                               const WifiSpectrumBandInfo& band,
                                uint16_t staId,
                                std::pair<Time, Time> window) const;
     /**
@@ -449,7 +480,7 @@ class InterferenceHelper : public Object
     double CalculatePhyHeaderPer(Ptr<const Event> event,
                                  NiChangesPerBand* nis,
                                  uint16_t channelWidth,
-                                 WifiSpectrumBand band,
+                                 const WifiSpectrumBandInfo& band,
                                  WifiPpduField header) const;
     /**
      * Calculate the success rate of the PHY header sections for the provided event.
@@ -465,15 +496,15 @@ class InterferenceHelper : public Object
     double CalculatePhyHeaderSectionPsr(Ptr<const Event> event,
                                         NiChangesPerBand* nis,
                                         uint16_t channelWidth,
-                                        WifiSpectrumBand band,
+                                        const WifiSpectrumBandInfo& band,
                                         PhyEntity::PhyHeaderSections phyHeaderSections) const;
 
     double m_noiseFigure;                 //!< noise figure (linear)
     Ptr<ErrorRateModel> m_errorRateModel; //!< error rate model
-    uint8_t m_numRxAntennas; //!< the number of RX antennas in the corresponding receiver
-    NiChangesPerBand m_niChangesPerBand;                    //!< NI Changes for each band
-    std::map<WifiSpectrumBand, double> m_firstPowerPerBand; //!< first power of each band in watts
-    bool m_rxing; //!< flag whether it is in receiving state
+    uint8_t m_numRxAntennas;         //!< the number of RX antennas in the corresponding receiver
+    NiChangesPerBand m_niChanges;    //!< NI Changes for each band
+    FirstPowerPerBand m_firstPowers; //!< first power of each band in watts
+    bool m_rxing;                    //!< flag whether it is in receiving state
 
     /**
      * Returns an iterator to the first NiChange that is later than moment

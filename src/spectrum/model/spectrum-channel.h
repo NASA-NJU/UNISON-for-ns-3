@@ -30,6 +30,7 @@
 #include <ns3/spectrum-phy.h>
 #include <ns3/spectrum-propagation-loss-model.h>
 #include <ns3/spectrum-signal-parameters.h>
+#include <ns3/spectrum-transmit-filter.h>
 #include <ns3/traced-callback.h>
 
 namespace ns3
@@ -113,6 +114,23 @@ class SpectrumChannel : public Channel
      * \returns a pointer to the propagation loss model.
      */
     Ptr<PropagationLossModel> GetPropagationLossModel();
+
+    /**
+     * Add the transmit filter to be used to filter possible signal receptions
+     * at the StartTx() time.  This method may be called multiple
+     * times to chain multiple filters together; the last filter added will
+     * be the first one used in the chain.
+     *
+     * \param filter an instance of a SpectrumTransmitFilter
+     */
+    void AddSpectrumTransmitFilter(Ptr<SpectrumTransmitFilter> filter);
+
+    /**
+     * Get the transmit filter, or first in a chain of transmit filters
+     * if more than one is present.
+     * \returns a pointer to the transmit filter.
+     */
+    Ptr<const SpectrumTransmitFilter> GetSpectrumTransmitFilter() const;
 
     /**
      * Used by attached PHY instances to transmit signals on the channel
@@ -237,6 +255,11 @@ class SpectrumChannel : public Channel
      * Frequency-dependent propagation loss model to be used with this channel.
      */
     Ptr<PhasedArraySpectrumPropagationLossModel> m_phasedArraySpectrumPropagationLoss;
+
+    /**
+     * Transmit filter to be used with this channel
+     */
+    Ptr<SpectrumTransmitFilter> m_filter{nullptr};
 };
 
 } // namespace ns3

@@ -340,7 +340,7 @@ UplinkSchedulerSimple::Schedule()
 
 void
 UplinkSchedulerSimple::ServiceUnsolicitedGrants(const SSRecord* ssRecord,
-                                                enum ServiceFlow::SchedulingType schedulingType,
+                                                ServiceFlow::SchedulingType schedulingType,
                                                 OfdmUlMapIe& ulMapIe,
                                                 const WimaxPhy::ModulationType modulationType,
                                                 uint32_t& symbolsToAllocation,
@@ -415,7 +415,7 @@ UplinkSchedulerSimple::ServiceUnsolicitedGrants(const SSRecord* ssRecord,
 
 void
 UplinkSchedulerSimple::ServiceBandwidthRequests(const SSRecord* ssRecord,
-                                                enum ServiceFlow::SchedulingType schedulingType,
+                                                ServiceFlow::SchedulingType schedulingType,
                                                 OfdmUlMapIe& ulMapIe,
                                                 const WimaxPhy::ModulationType modulationType,
                                                 uint32_t& symbolsToAllocation,
@@ -441,7 +441,7 @@ UplinkSchedulerSimple::ServiceBandwidthRequests(const SSRecord* ssRecord,
 
 bool
 UplinkSchedulerSimple::ServiceBandwidthRequests(ServiceFlow* serviceFlow,
-                                                enum ServiceFlow::SchedulingType schedulingType,
+                                                ServiceFlow::SchedulingType schedulingType,
                                                 OfdmUlMapIe& ulMapIe,
                                                 const WimaxPhy::ModulationType modulationType,
                                                 uint32_t& symbolsToAllocation,
@@ -542,7 +542,7 @@ UplinkSchedulerSimple::SetupServiceFlow(SSRecord* ssRecord, ServiceFlow* service
     switch (serviceFlow->GetSchedulingType())
     {
     case ServiceFlow::SF_TYPE_UGS: {
-        if (serviceFlow->GetIsMulticast() == true)
+        if (serviceFlow->GetIsMulticast())
         {
             modulation = serviceFlow->GetModulation();
         }

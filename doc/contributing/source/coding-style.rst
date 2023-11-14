@@ -129,6 +129,9 @@ their code and for the GitLab CI/CD pipeline to check if the codebase is well fo
 All checks are enabled by default. Users can disable specific checks using the corresponding
 flags: ``--no-formatting``, ``--no-whitespace`` and ``--no-tabs``.
 
+Additional information about the formatting issues detected by the script can be enabled
+by adding the ``-v, --verbose`` flag.
+
 In addition to checking the files, the script can automatically fix detected issues in-place.
 This mode is enabled by adding the ``--fix`` flag.
 
@@ -148,16 +151,16 @@ For quick-reference, the most used commands are listed below:
 .. sourcecode:: console
 
   # Entire codebase (using paths relative to the ns-3 main directory)
-  ./utils/check-style-clang-format.py [--fix] [--no-formatting] [--no-whitespace] [--no-tabs] .
+  ./utils/check-style-clang-format.py [--fix] [--verbose] [--no-formatting] [--no-whitespace] [--no-tabs] .
 
   # Entire codebase (using absolute paths)
-  /path/to/utils/check-style-clang-format.py [--fix] [--no-formatting] [--no-whitespace] [--no-tabs] /path/to/ns3
+  /path/to/utils/check-style-clang-format.py [--fix] [--verbose] [--no-formatting] [--no-whitespace] [--no-tabs] /path/to/ns3
 
   # Specific directory
-  /path/to/utils/check-style-clang-format.py [--fix] [--no-formatting] [--no-whitespace] [--no-tabs] absolute_or_relative/path/to/directory
+  /path/to/utils/check-style-clang-format.py [--fix] [--verbose] [--no-formatting] [--no-whitespace] [--no-tabs] absolute_or_relative/path/to/directory
 
   # Individual file
-  /path/to/utils/check-style-clang-format.py [--fix] [--no-formatting] [--no-whitespace] [--no-tabs] absolute_or_relative/path/to/file
+  /path/to/utils/check-style-clang-format.py [--fix] [--verbose] [--no-formatting] [--no-whitespace] [--no-tabs] absolute_or_relative/path/to/file
 
 
 Clang-tidy
@@ -752,8 +755,8 @@ For standard headers, use the C++ style of inclusion:
 
     #include <ns3/header.h>
 
-Variables
-=========
+Variables and constants
+=======================
 
 Each variable declaration is on a separate line.
 Variables should be declared at the point in the code where they are needed,
@@ -767,6 +770,34 @@ and should be assigned an initial value at the time of declaration.
   // Declare one variable per line and assign an initial value
   int x = 0;
   int y = 0;
+
+Named constants defined in classes should be declared as ``static constexpr`` instead of
+macros, const, or enums. Use of ``static constexpr`` allows a single instance to be
+evaluated at compile-time. Declaring the constant in the class enables it to share the scope
+of the class.
+
+If the constant is only used in one file, consider declaring the constant in the implementation
+file (``*.cc``).
+
+.. sourcecode:: cpp
+
+  // Avoid declaring constants as enum
+  class LteRlcAmHeader : public Header
+  {
+      enum ControlPduType_t
+      {
+          STATUS_PDU = 000,
+      };
+  };
+
+  // Prefer to declare them as static constexpr (in class)
+  class LteRlcAmHeader : public Header
+  {
+      static constexpr uint8_t STATUS_PDU{0};
+  };
+
+  // Or as constexpr (in implementation files)
+  constexpr uint8_t STATUS_PDU{0};
 
 Comments
 ========
@@ -1095,6 +1126,53 @@ can be rewritten as:
 
   n += 3;
   return n;
+
+Boolean Simplifications
+=======================
+
+In order to increase readability and performance, avoid unnecessarily complex boolean
+expressions in if statements and variable declarations.
+
+For instance, the following code:
+
+  .. sourcecode:: cpp
+
+    bool IsPositive(int n)
+    {
+        if (n > 0)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    void ProcessNumber(int n)
+    {
+        if (IsPositive(n) == true)
+        {
+            ...
+        }
+    }
+
+can be rewritten as:
+
+  .. sourcecode:: cpp
+
+    bool IsPositive(int n)
+    {
+        return n > 0;
+    }
+
+    void ProcessNumber(int n)
+    {
+        if (IsPositive(n))
+        {
+            ...
+        }
+    }
 
 Smart pointer boolean comparisons
 =================================

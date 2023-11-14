@@ -18,9 +18,9 @@
 
 #include "ipv6-list-routing.h"
 
-#include "ns3/ipv6-route.h"
-#include "ns3/ipv6-static-routing.h"
-#include "ns3/ipv6.h"
+#include "ipv6-route.h"
+#include "ipv6.h"
+
 #include "ns3/log.h"
 #include "ns3/node.h"
 #include "ns3/simulator.h"
@@ -74,7 +74,7 @@ Ptr<Ipv6Route>
 Ipv6ListRouting::RouteOutput(Ptr<Packet> p,
                              const Ipv6Header& header,
                              Ptr<NetDevice> oif,
-                             enum Socket::SocketErrno& sockerr)
+                             Socket::SocketErrno& sockerr)
 {
     NS_LOG_FUNCTION(this << header.GetDestination() << header.GetSource() << oif);
     Ptr<Ipv6Route> route;
@@ -105,10 +105,10 @@ bool
 Ipv6ListRouting::RouteInput(Ptr<const Packet> p,
                             const Ipv6Header& header,
                             Ptr<const NetDevice> idev,
-                            UnicastForwardCallback ucb,
-                            MulticastForwardCallback mcb,
-                            LocalDeliverCallback lcb,
-                            ErrorCallback ecb)
+                            const UnicastForwardCallback& ucb,
+                            const MulticastForwardCallback& mcb,
+                            const LocalDeliverCallback& lcb,
+                            const ErrorCallback& ecb)
 {
     NS_LOG_FUNCTION(p << header << idev);
     NS_LOG_LOGIC("RouteInput logic for node: " << m_ipv6->GetObject<Node>()->GetId());
@@ -120,7 +120,7 @@ Ipv6ListRouting::RouteInput(Ptr<const Packet> p,
 
     // Check if input device supports IP forwarding
     uint32_t iif = m_ipv6->GetInterfaceForDevice(idev);
-    if (m_ipv6->IsForwarding(iif) == false)
+    if (!m_ipv6->IsForwarding(iif))
     {
         NS_LOG_LOGIC("Forwarding disabled for this interface");
         ecb(p, header, Socket::ERROR_NOROUTETOHOST);

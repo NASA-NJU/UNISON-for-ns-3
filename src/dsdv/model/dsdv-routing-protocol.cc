@@ -391,10 +391,10 @@ bool
 RoutingProtocol::RouteInput(Ptr<const Packet> p,
                             const Ipv4Header& header,
                             Ptr<const NetDevice> idev,
-                            UnicastForwardCallback ucb,
-                            MulticastForwardCallback mcb,
-                            LocalDeliverCallback lcb,
-                            ErrorCallback ecb)
+                            const UnicastForwardCallback& ucb,
+                            const MulticastForwardCallback& mcb,
+                            const LocalDeliverCallback& lcb,
+                            const ErrorCallback& ecb)
 {
     NS_LOG_FUNCTION(m_mainAddress << " received packet " << p->GetUid() << " from "
                                   << header.GetSource() << " on interface " << idev->GetAddress()
@@ -419,7 +419,7 @@ RoutingProtocol::RouteInput(Ptr<const Packet> p,
     }
 
     // Deferred route request
-    if (EnableBuffering == true && idev == m_lo)
+    if (EnableBuffering && idev == m_lo)
     {
         DeferredRouteOutputTag tag;
         if (p->PeekPacketTag(tag))
@@ -449,7 +449,7 @@ RoutingProtocol::RouteInput(Ptr<const Packet> p,
             if (dst == iface.GetBroadcast() || dst.IsBroadcast())
             {
                 Ptr<Packet> packet = p->Copy();
-                if (lcb.IsNull() == false)
+                if (!lcb.IsNull())
                 {
                     NS_LOG_LOGIC("Broadcast local delivery to " << iface.GetLocal());
                     lcb(p, header, iif);
@@ -482,7 +482,7 @@ RoutingProtocol::RouteInput(Ptr<const Packet> p,
 
     if (m_ipv4->IsDestinationAddress(dst, iif))
     {
-        if (lcb.IsNull() == false)
+        if (!lcb.IsNull())
         {
             NS_LOG_LOGIC("Unicast local delivery to " << dst);
             lcb(p, header, iif);
@@ -497,7 +497,7 @@ RoutingProtocol::RouteInput(Ptr<const Packet> p,
     }
 
     // Check if input device supports IP forwarding
-    if (m_ipv4->IsForwarding(iif) == false)
+    if (!m_ipv4->IsForwarding(iif))
     {
         NS_LOG_LOGIC("Forwarding disabled for this interface");
         ecb(p, header, Socket::ERROR_NOROUTETOHOST);
@@ -627,7 +627,7 @@ RoutingProtocol::RecvDsdv(Ptr<Socket> socket)
         EventId event;
         bool permanentTableVerifier =
             m_routingTable.LookupRoute(dsdvHeader.GetDst(), fwdTableEntry);
-        if (permanentTableVerifier == false)
+        if (!permanentTableVerifier)
         {
             if (dsdvHeader.GetDstSeqno() % 2 != 1)
             {
@@ -860,8 +860,8 @@ RoutingProtocol::SendTriggeredUpdate()
                                          << " SeqNo:" << i->second.GetSeqNo()
                                          << " HopCount:" << i->second.GetHop() + 1);
             RoutingTableEntry temp = i->second;
-            if ((i->second.GetEntriesChanged() == true) &&
-                (!m_advRoutingTable.AnyRunningEvent(temp.GetDestination())))
+            if (i->second.GetEntriesChanged() &&
+                !m_advRoutingTable.AnyRunningEvent(temp.GetDestination()))
             {
                 dsdvHeader.SetDst(i->second.GetDestination());
                 dsdvHeader.SetDstSeqno(i->second.GetSeqNo());
@@ -1287,8 +1287,8 @@ RoutingProtocol::MergeTriggerPeriodicUpdates()
              ++i)
         {
             RoutingTableEntry advEntry = i->second;
-            if ((advEntry.GetEntriesChanged() == true) &&
-                (!m_advRoutingTable.AnyRunningEvent(advEntry.GetDestination())))
+            if (advEntry.GetEntriesChanged() &&
+                !m_advRoutingTable.AnyRunningEvent(advEntry.GetDestination()))
             {
                 if (!(advEntry.GetSeqNo() % 2))
                 {

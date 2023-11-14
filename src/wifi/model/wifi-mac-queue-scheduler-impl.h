@@ -73,11 +73,27 @@ class WifiMacQueueSchedulerImpl : public WifiMacQueueScheduler
                                                 uint8_t linkId,
                                                 const WifiContainerQueueId& prevQueueId) final;
     /** \copydoc ns3::WifiMacQueueScheduler::GetLinkIds */
-    std::list<uint8_t> GetLinkIds(AcIndex ac, const WifiContainerQueueId& queueId) final;
-    /** \copydoc ns3::WifiMacQueueScheduler::SetLinkIds */
-    void SetLinkIds(AcIndex ac,
-                    const WifiContainerQueueId& queueId,
-                    const std::list<uint8_t>& linkIds) final;
+    std::list<uint8_t> GetLinkIds(AcIndex ac, Ptr<const WifiMpdu> mpdu) final;
+    /** \copydoc ns3::WifiMacQueueScheduler::BlockQueues */
+    void BlockQueues(WifiQueueBlockedReason reason,
+                     AcIndex ac,
+                     const std::list<WifiContainerQueueType>& types,
+                     const Mac48Address& rxAddress,
+                     const Mac48Address& txAddress,
+                     const std::set<uint8_t>& tids,
+                     const std::set<uint8_t>& linkIds) final;
+    /** \copydoc ns3::WifiMacQueueScheduler::UnblockQueues */
+    void UnblockQueues(WifiQueueBlockedReason reason,
+                       AcIndex ac,
+                       const std::list<WifiContainerQueueType>& types,
+                       const Mac48Address& rxAddress,
+                       const Mac48Address& txAddress,
+                       const std::set<uint8_t>& tids,
+                       const std::set<uint8_t>& linkIds) final;
+    /** \copydoc ns3::WifiMacQueueScheduler::GetQueueLinkMask */
+    std::optional<Mask> GetQueueLinkMask(AcIndex ac,
+                                         const WifiContainerQueueId& queueId,
+                                         uint8_t linkId) final;
     /** \copydoc ns3::WifiMacQueueScheduler::HasToDropBeforeEnqueue */
     Ptr<WifiMpdu> HasToDropBeforeEnqueue(AcIndex ac, Ptr<WifiMpdu> mpdu) final;
     /** \copydoc ns3::WifiMacQueueScheduler::NotifyEnqueue */
@@ -130,11 +146,12 @@ class WifiMacQueueSchedulerImpl : public WifiMacQueueScheduler
     struct QueueInfo
     {
         std::optional<typename SortedQueues::iterator>
-            priorityIt;             /**< iterator pointing to the entry
-                                         for this queue in the sorted list */
-        std::list<uint8_t> linkIds; /**< IDs of the links over which packets contained in this
-                                         queue can be sent over. Empty means that packets in this
-                                         queue can be sent over any link */
+            priorityIt;                  /**< iterator pointing to the entry
+                                              for this queue in the sorted list */
+        std::map<uint8_t, Mask> linkIds; /**< Maps ID of each link on which packets contained
+                                              in this queue can be sent to a bitset indicating
+                                              whether the link is blocked (at least one bit is
+                                              non-zero) and for which reason */
     };
 
     /**
@@ -167,16 +184,17 @@ class WifiMacQueueSchedulerImpl : public WifiMacQueueScheduler
 
   private:
     /**
-     * Add the information associated with the given container queue (if not already
-     * present) to the map corresponding to the given Access Category and Initialize
-     * the list of the IDs of the links over which packets contained in the given
-     * container queue can be sent over.
+     * If no information for the container queue used to store the given MPDU of the given
+     * Access Category is present in the queue info map, add the information for such a
+     * container queue and initialize the list of the IDs of the links over which packets
+     * contained in that container queue can be sent.
      *
      * \param ac the given Access Category
-     * \param queueId the ID of the given container queue
-     * \return an iterator to the information associated with the given container queue
+     * \param mpdu the given MPDU
+     * \return an iterator to the information associated with the container queue used to
+     *         store the given MPDU of the given Access Category
      */
-    typename QueueInfoMap::iterator InitQueueInfo(AcIndex ac, const WifiContainerQueueId& queueId);
+    typename QueueInfoMap::iterator InitQueueInfo(AcIndex ac, Ptr<const WifiMpdu> mpdu);
 
     /**
      * Get the next queue to serve. The search starts from the given one. The returned
@@ -227,6 +245,29 @@ class WifiMacQueueSchedulerImpl : public WifiMacQueueScheduler
      * \param mpdus the list of removed MPDUs
      */
     virtual void DoNotifyRemove(AcIndex ac, const std::list<Ptr<WifiMpdu>>& mpdus) = 0;
+
+    /**
+     * Block or unblock the given set of links for the container queues of the given types and
+     * Access Category that hold frames having the given Receiver Address (RA),
+     * Transmitter Address (TA) and TID (if needed) for the given reason.
+     *
+     * \param block true to block the queues, false to unblock
+     * \param reason the reason for blocking the queues
+     * \param ac the given Access Category
+     * \param types the types of the queues to block
+     * \param rxAddress the Receiver Address (RA) of the frames
+     * \param txAddress the Transmitter Address (TA) of the frames
+     * \param tids the TIDs optionally identifying the queues to block
+     * \param linkIds set of links to block (empty to block all setup links)
+     */
+    void DoBlockQueues(bool block,
+                       WifiQueueBlockedReason reason,
+                       AcIndex ac,
+                       const std::list<WifiContainerQueueType>& types,
+                       const Mac48Address& rxAddress,
+                       const Mac48Address& txAddress,
+                       const std::set<uint8_t>& tids,
+                       const std::set<uint8_t>& linkIds);
 
     std::vector<PerAcInfo> m_perAcInfo{AC_UNDEF}; //!< vector of per-AC information
     NS_LOG_TEMPLATE_DECLARE;                      //!< the log component
@@ -293,32 +334,67 @@ WifiMacQueueSchedulerImpl<Priority, Compare>::GetSortedQueues(AcIndex ac) const
 
 template <class Priority, class Compare>
 typename WifiMacQueueSchedulerImpl<Priority, Compare>::QueueInfoMap::iterator
-WifiMacQueueSchedulerImpl<Priority, Compare>::InitQueueInfo(AcIndex ac,
-                                                            const WifiContainerQueueId& queueId)
+WifiMacQueueSchedulerImpl<Priority, Compare>::InitQueueInfo(AcIndex ac, Ptr<const WifiMpdu> mpdu)
 {
-    NS_LOG_FUNCTION(this);
+    NS_LOG_FUNCTION(this << ac << *mpdu);
 
+    auto queueId = WifiMacQueueContainer::GetQueueId(mpdu);
     // insert queueId in the queue info map if not present yet
     auto [queueInfoIt, ret] = m_perAcInfo[ac].queueInfoMap.insert({queueId, QueueInfo()});
 
-    if (ret)
+    // Initialize/update the set of link IDs depending on the container queue type
+    if (GetMac() && GetMac()->GetNLinks() > 1 &&
+        mpdu->GetHeader().GetAddr2() == GetMac()->GetAddress())
     {
-        // The given queueid has just been inserted in the queue info map.
-        // Initialize the set of link IDs depending on the container queue type
-        auto queueType = std::get<WifiContainerQueueType>(queueId);
-        auto address = std::get<Mac48Address>(queueId);
+        // this is an MLD and the TA field of the frame contains the MLD address,
+        // which means that the frame can be sent on multiple links
+        const auto rxAddr = mpdu->GetHeader().GetAddr1();
 
-        if (queueType == WIFI_MGT_QUEUE ||
-            (queueType == WIFI_CTL_QUEUE && GetMac() && address != GetMac()->GetAddress()) ||
-            queueType == WIFI_QOSDATA_BROADCAST_QUEUE)
+        // this assert checks that the RA field also contain an MLD address, unless
+        // it contains the broadcast address
+        NS_ASSERT_MSG(rxAddr.IsGroup() || GetMac()->GetMldAddress(rxAddr),
+                      "Address 1 (" << rxAddr << ") is not an MLD address");
+
+        // this assert checks that association (ML setup) has been established
+        // between sender and receiver (unless the receiver is the broadcast address)
+        NS_ASSERT_MSG(GetMac()->CanForwardPacketsTo(rxAddr), "Cannot forward frame to " << rxAddr);
+
+        // we have to include all the links in case of broadcast frame (we are an AP)
+        // and the links that have been setup with the receiver in case of unicast frame
+        for (uint8_t linkId = 0; linkId < GetMac()->GetNLinks(); linkId++)
         {
-            // these queue types are associated with just one link
-            NS_ASSERT(GetMac());
-            auto linkId = GetMac()->GetLinkIdByAddress(address);
-            NS_ASSERT(linkId.has_value());
-            queueInfoIt->second.linkIds = {*linkId};
+            if (rxAddr.IsGroup() ||
+                GetMac()->GetWifiRemoteStationManager(linkId)->GetAffiliatedStaAddress(rxAddr))
+            {
+                // the mask is not modified if linkId is already in the map
+                queueInfoIt->second.linkIds.emplace(linkId, Mask{});
+            }
+            else
+            {
+                // this link is no (longer) setup
+                queueInfoIt->second.linkIds.erase(linkId);
+            }
         }
     }
+    else
+    {
+        // the TA field of the frame contains a link address, which means that the
+        // frame can only be sent on the corresponding link
+        auto linkId = GetMac() ? GetMac()->GetLinkIdByAddress(mpdu->GetHeader().GetAddr2())
+                               : SINGLE_LINK_OP_ID; // make unit test happy
+        NS_ASSERT(linkId.has_value());
+        auto& linkIdsMap = queueInfoIt->second.linkIds;
+        NS_ASSERT_MSG(linkIdsMap.size() <= 1,
+                      "At most one link can be associated with this container queue");
+        // set the link map to contain one entry corresponding to the computed link ID;
+        // unless the link map already contained such an entry (in which case the mask
+        // is preserved)
+        if (linkIdsMap.empty() || linkIdsMap.cbegin()->first != *linkId)
+        {
+            linkIdsMap = {{*linkId, Mask{}}};
+        }
+    }
+
     return queueInfoIt;
 }
 
@@ -334,8 +410,9 @@ WifiMacQueueSchedulerImpl<Priority, Compare>::SetPriority(AcIndex ac,
     NS_ABORT_MSG_IF(GetWifiMacQueue(ac)->GetNBytes(queueId) == 0,
                     "Cannot set the priority of an empty queue");
 
-    // insert queueId in the queue info map if not present yet
-    auto queueInfoIt = InitQueueInfo(ac, queueId);
+    auto queueInfoIt = m_perAcInfo[ac].queueInfoMap.find(queueId);
+    NS_ASSERT_MSG(queueInfoIt != m_perAcInfo[ac].queueInfoMap.end(),
+                  "No queue info for the given container queue");
     typename SortedQueues::iterator sortedQueuesIt;
 
     if (queueInfoIt->second.priorityIt.has_value())
@@ -363,31 +440,129 @@ WifiMacQueueSchedulerImpl<Priority, Compare>::SetPriority(AcIndex ac,
 
 template <class Priority, class Compare>
 std::list<uint8_t>
-WifiMacQueueSchedulerImpl<Priority, Compare>::GetLinkIds(AcIndex ac,
-                                                         const WifiContainerQueueId& queueId)
+WifiMacQueueSchedulerImpl<Priority, Compare>::GetLinkIds(AcIndex ac, Ptr<const WifiMpdu> mpdu)
 {
-    auto queueInfoIt = InitQueueInfo(ac, queueId);
+    auto queueInfoIt = InitQueueInfo(ac, mpdu);
+    std::list<uint8_t> linkIds;
 
-    if (queueInfoIt->second.linkIds.empty())
+    // include only links that are not blocked in the returned list
+    for (const auto [linkId, mask] : queueInfoIt->second.linkIds)
     {
-        // return the IDs of all available links
-        NS_ASSERT(GetMac() != nullptr);
-        std::list<uint8_t> linkIds(GetMac()->GetNLinks());
-        std::iota(linkIds.begin(), linkIds.end(), 0);
-        return linkIds;
+        if (mask.none())
+        {
+            linkIds.emplace_back(linkId);
+        }
     }
-    return queueInfoIt->second.linkIds;
+
+    return linkIds;
 }
 
 template <class Priority, class Compare>
 void
-WifiMacQueueSchedulerImpl<Priority, Compare>::SetLinkIds(AcIndex ac,
-                                                         const WifiContainerQueueId& queueId,
-                                                         const std::list<uint8_t>& linkIds)
+WifiMacQueueSchedulerImpl<Priority, Compare>::DoBlockQueues(
+    bool block,
+    WifiQueueBlockedReason reason,
+    AcIndex ac,
+    const std::list<WifiContainerQueueType>& types,
+    const Mac48Address& rxAddress,
+    const Mac48Address& txAddress,
+    const std::set<uint8_t>& tids,
+    const std::set<uint8_t>& linkIds)
 {
-    NS_LOG_FUNCTION(this << +ac);
-    auto [queueInfoIt, ret] = m_perAcInfo[ac].queueInfoMap.insert({queueId, QueueInfo()});
-    queueInfoIt->second.linkIds = linkIds;
+    NS_LOG_FUNCTION(this << block << reason << ac << rxAddress << txAddress);
+    std::list<WifiMacHeader> headers;
+
+    for (const auto queueType : types)
+    {
+        switch (queueType)
+        {
+        case WIFI_CTL_QUEUE:
+            headers.emplace_back(WIFI_MAC_CTL_BACKREQ);
+            break;
+        case WIFI_MGT_QUEUE:
+            headers.emplace_back(WIFI_MAC_MGT_ACTION);
+            break;
+        case WIFI_QOSDATA_QUEUE:
+            NS_ASSERT_MSG(!tids.empty(),
+                          "TID must be specified for queues containing QoS data frames");
+            for (const auto tid : tids)
+            {
+                headers.emplace_back(WIFI_MAC_QOSDATA);
+                headers.back().SetQosTid(tid);
+            }
+            break;
+        case WIFI_DATA_QUEUE:
+            headers.emplace_back(WIFI_MAC_DATA);
+            break;
+        }
+    }
+    for (auto& hdr : headers)
+    {
+        hdr.SetAddr1(rxAddress);
+        hdr.SetAddr2(txAddress);
+
+        auto queueInfoIt = InitQueueInfo(ac, Create<WifiMpdu>(Create<Packet>(), hdr));
+        for (auto& [linkId, mask] : queueInfoIt->second.linkIds)
+        {
+            if (linkIds.empty() || linkIds.count(linkId) > 0)
+            {
+                mask.set(static_cast<std::size_t>(reason), block);
+            }
+        }
+    }
+}
+
+template <class Priority, class Compare>
+void
+WifiMacQueueSchedulerImpl<Priority, Compare>::BlockQueues(
+    WifiQueueBlockedReason reason,
+    AcIndex ac,
+    const std::list<WifiContainerQueueType>& types,
+    const Mac48Address& rxAddress,
+    const Mac48Address& txAddress,
+    const std::set<uint8_t>& tids,
+    const std::set<uint8_t>& linkIds)
+{
+    DoBlockQueues(true, reason, ac, types, rxAddress, txAddress, tids, linkIds);
+}
+
+template <class Priority, class Compare>
+void
+WifiMacQueueSchedulerImpl<Priority, Compare>::UnblockQueues(
+    WifiQueueBlockedReason reason,
+    AcIndex ac,
+    const std::list<WifiContainerQueueType>& types,
+    const Mac48Address& rxAddress,
+    const Mac48Address& txAddress,
+    const std::set<uint8_t>& tids,
+    const std::set<uint8_t>& linkIds)
+{
+    DoBlockQueues(false, reason, ac, types, rxAddress, txAddress, tids, linkIds);
+}
+
+template <class Priority, class Compare>
+std::optional<WifiMacQueueScheduler::Mask>
+WifiMacQueueSchedulerImpl<Priority, Compare>::GetQueueLinkMask(AcIndex ac,
+                                                               const WifiContainerQueueId& queueId,
+                                                               uint8_t linkId)
+{
+    NS_LOG_FUNCTION(this << +ac << +linkId);
+
+    const auto queueInfoIt = m_perAcInfo[ac].queueInfoMap.find(queueId);
+
+    if (queueInfoIt == m_perAcInfo[ac].queueInfoMap.cend())
+    {
+        // the given container queue does not exist
+        return std::nullopt;
+    }
+
+    const auto& linkIds = queueInfoIt->second.linkIds;
+    if (const auto linkIt = linkIds.find(linkId); linkIt != linkIds.cend())
+    {
+        return linkIt->second;
+    }
+
+    return std::nullopt;
 }
 
 template <class Priority, class Compare>
@@ -431,7 +606,8 @@ WifiMacQueueSchedulerImpl<Priority, Compare>::DoGetNext(
         const auto& queueInfoPair = sortedQueuesIt->second.get();
         const auto& linkIds = queueInfoPair.second.linkIds;
 
-        if (linkIds.empty() || std::find(linkIds.begin(), linkIds.end(), linkId) != linkIds.end())
+        if (const auto linkIt = linkIds.find(linkId);
+            linkIt != linkIds.cend() && linkIt->second.none())
         {
             // Packets in this queue can be sent over the link we got channel access on.
             // Now remove packets with expired lifetime from this queue.
@@ -482,12 +658,12 @@ WifiMacQueueSchedulerImpl<Priority, Compare>::NotifyEnqueue(AcIndex ac, Ptr<Wifi
     NS_LOG_FUNCTION(this << +ac << *mpdu);
     NS_ASSERT(static_cast<uint8_t>(ac) < AC_UNDEF);
 
+    // add information for the queue storing the MPDU to the queue info map, if not present yet
+    auto queueInfoIt = InitQueueInfo(ac, mpdu);
+
     DoNotifyEnqueue(ac, mpdu);
 
-    if (auto queueInfoIt =
-            m_perAcInfo[ac].queueInfoMap.find(WifiMacQueueContainer::GetQueueId(mpdu));
-        queueInfoIt == m_perAcInfo[ac].queueInfoMap.end() ||
-        !queueInfoIt->second.priorityIt.has_value())
+    if (!queueInfoIt->second.priorityIt.has_value())
     {
         NS_ABORT_MSG(
             "No info for the queue the MPDU was stored into (forgot to call SetPriority()?)");

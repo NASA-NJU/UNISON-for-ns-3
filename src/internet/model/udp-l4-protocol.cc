@@ -21,24 +21,24 @@
 
 #include "ipv4-end-point-demux.h"
 #include "ipv4-end-point.h"
-#include "ipv4-l3-protocol.h"
+#include "ipv4-route.h"
+#include "ipv4.h"
 #include "ipv6-end-point-demux.h"
 #include "ipv6-end-point.h"
-#include "ipv6-l3-protocol.h"
+#include "ipv6-route.h"
+#include "ipv6.h"
 #include "udp-header.h"
 #include "udp-socket-factory-impl.h"
 #include "udp-socket-impl.h"
 
 #include "ns3/assert.h"
 #include "ns3/boolean.h"
-#include "ns3/ipv4-route.h"
-#include "ns3/ipv6-header.h"
-#include "ns3/ipv6-route.h"
-#include "ns3/ipv6.h"
 #include "ns3/log.h"
 #include "ns3/node.h"
-#include "ns3/object-vector.h"
+#include "ns3/object-map.h"
 #include "ns3/packet.h"
+
+#include <unordered_map>
 
 namespace ns3
 {
@@ -53,15 +53,18 @@ const uint8_t UdpL4Protocol::PROT_NUMBER = 17;
 TypeId
 UdpL4Protocol::GetTypeId()
 {
-    static TypeId tid = TypeId("ns3::UdpL4Protocol")
-                            .SetParent<IpL4Protocol>()
-                            .SetGroupName("Internet")
-                            .AddConstructor<UdpL4Protocol>()
-                            .AddAttribute("SocketList",
-                                          "The list of sockets associated to this protocol.",
-                                          ObjectVectorValue(),
-                                          MakeObjectVectorAccessor(&UdpL4Protocol::m_sockets),
-                                          MakeObjectVectorChecker<UdpSocketImpl>());
+    static TypeId tid =
+        TypeId("ns3::UdpL4Protocol")
+            .SetParent<IpL4Protocol>()
+            .SetGroupName("Internet")
+            .AddConstructor<UdpL4Protocol>()
+            .AddAttribute("SocketList",
+                          "A container of sockets associated to this protocol. "
+                          "The underlying type is an unordered map, the attribute name "
+                          "is kept for backward compatibility.",
+                          ObjectMapValue(),
+                          MakeObjectMapAccessor(&UdpL4Protocol::m_sockets),
+                          MakeObjectMapChecker<UdpSocketImpl>());
     return tid;
 }
 
@@ -135,9 +138,9 @@ void
 UdpL4Protocol::DoDispose()
 {
     NS_LOG_FUNCTION(this);
-    for (std::vector<Ptr<UdpSocketImpl>>::iterator i = m_sockets.begin(); i != m_sockets.end(); i++)
+    for (auto i = m_sockets.begin(); i != m_sockets.end(); i++)
     {
-        *i = nullptr;
+        i->second = nullptr;
     }
     m_sockets.clear();
 
@@ -167,7 +170,7 @@ UdpL4Protocol::CreateSocket()
     Ptr<UdpSocketImpl> socket = CreateObject<UdpSocketImpl>();
     socket->SetNode(m_node);
     socket->SetUdp(this);
-    m_sockets.push_back(socket);
+    m_sockets[m_socketIndex++] = socket;
     return socket;
 }
 
@@ -328,7 +331,7 @@ UdpL4Protocol::ReceiveIcmp(Ipv6Address icmpSource,
     }
 }
 
-enum IpL4Protocol::RxStatus
+IpL4Protocol::RxStatus
 UdpL4Protocol::Receive(Ptr<Packet> packet, const Ipv4Header& header, Ptr<Ipv4Interface> interface)
 {
     NS_LOG_FUNCTION(this << packet << header);
@@ -362,7 +365,7 @@ UdpL4Protocol::Receive(Ptr<Packet> packet, const Ipv4Header& header, Ptr<Ipv4Int
                                                                  interface);
     if (endPoints.empty())
     {
-        if (this->GetObject<Ipv6L3Protocol>())
+        if (this->GetObject<Ipv6>())
         {
             NS_LOG_LOGIC("  No Ipv4 endpoints matched on UdpL4Protocol, trying Ipv6 " << this);
             Ptr<Ipv6Interface> fakeInterface;
@@ -387,7 +390,7 @@ UdpL4Protocol::Receive(Ptr<Packet> packet, const Ipv4Header& header, Ptr<Ipv4Int
     return IpL4Protocol::RX_OK;
 }
 
-enum IpL4Protocol::RxStatus
+IpL4Protocol::RxStatus
 UdpL4Protocol::Receive(Ptr<Packet> packet, const Ipv6Header& header, Ptr<Ipv6Interface> interface)
 {
     NS_LOG_FUNCTION(this << packet << header.GetSource() << header.GetDestination());
@@ -545,6 +548,23 @@ IpL4Protocol::DownTargetCallback6
 UdpL4Protocol::GetDownTarget6() const
 {
     return m_downTarget6;
+}
+
+bool
+UdpL4Protocol::RemoveSocket(Ptr<UdpSocketImpl> socket)
+{
+    NS_LOG_FUNCTION(this << socket);
+
+    for (auto& socketItem : m_sockets)
+    {
+        if (socketItem.second == socket)
+        {
+            socketItem.second = nullptr;
+            m_sockets.erase(socketItem.first);
+            return true;
+        }
+    }
+    return false;
 }
 
 } // namespace ns3

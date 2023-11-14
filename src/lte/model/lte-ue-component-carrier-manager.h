@@ -21,16 +21,13 @@
 #ifndef LTE_UE_COMPONENT_CARRIER_MANAGER_H
 #define LTE_UE_COMPONENT_CARRIER_MANAGER_H
 
-#include <ns3/lte-mac-sap.h>
-#include <ns3/lte-rrc-sap.h>
-#include <ns3/lte-ue-ccm-rrc-sap.h>
+#include "lte-mac-sap.h"
+#include "lte-ue-ccm-rrc-sap.h"
+
 #include <ns3/object.h>
 
 #include <map>
 #include <vector>
-
-#define MIN_NO_CC 1
-#define MAX_NO_CC 5 // this is the maximum number of carrier components allowed by 3GPP up to R13
 
 namespace ns3
 {

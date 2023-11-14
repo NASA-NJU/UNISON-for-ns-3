@@ -48,22 +48,10 @@ class HtPpdu : public OfdmPpdu
      * HT PHY header (HT-SIG1/2).
      * See section 19.3.9 in IEEE 802.11-2016.
      */
-    class HtSigHeader : public Header
+    class HtSigHeader
     {
       public:
         HtSigHeader();
-
-        /**
-         * \brief Get the type ID.
-         * \return the object TypeId
-         */
-        static TypeId GetTypeId();
-
-        TypeId GetInstanceTypeId() const override;
-        void Print(std::ostream& os) const override;
-        uint32_t GetSerializedSize() const override;
-        void Serialize(Buffer::Iterator start) const override;
-        uint32_t Deserialize(Buffer::Iterator start) override;
 
         /**
          * Fill the MCS field of HT-SIG.
@@ -139,16 +127,14 @@ class HtPpdu : public OfdmPpdu
      *
      * \param psdu the PHY payload (PSDU)
      * \param txVector the TXVECTOR that was used for this PPDU
-     * \param txCenterFreq the center frequency (MHz) that was used for this PPDU
+     * \param channel the operating channel of the PHY used to transmit this PPDU
      * \param ppduDuration the transmission duration of this PPDU
-     * \param band the WifiPhyBand used for the transmission of this PPDU
      * \param uid the unique ID of this PPDU
      */
     HtPpdu(Ptr<const WifiPsdu> psdu,
            const WifiTxVector& txVector,
-           uint16_t txCenterFreq,
+           const WifiPhyOperatingChannel& channel,
            Time ppduDuration,
-           WifiPhyBand band,
            uint64_t uid);
 
     Time GetTxDuration() const override;
@@ -196,10 +182,8 @@ class HtPpdu : public OfdmPpdu
                                    const LSigHeader& lSig,
                                    const HtSigHeader& htSig) const;
 
-#ifndef NS3_BUILD_PROFILE_DEBUG
     HtSigHeader m_htSig; //!< the HT-SIG PHY header
-#endif
-}; // class HtPpdu
+};                       // class HtPpdu
 
 } // namespace ns3
 

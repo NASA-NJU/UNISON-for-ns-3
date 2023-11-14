@@ -168,15 +168,12 @@ LogComponent::LogComponent(const std::string& name,
     EnvVarCheck();
 
     LogComponent::ComponentList* components = GetComponentList();
-    for (LogComponent::ComponentList::const_iterator i = components->begin();
-         i != components->end();
-         i++)
+
+    if (components->find(name) != components->end())
     {
-        if (i->first == name)
-        {
-            NS_FATAL_ERROR("Log component \"" << name << "\" has already been registered once.");
-        }
+        NS_FATAL_ERROR("Log component \"" << name << "\" has already been registered once.");
     }
+
     components->insert(std::make_pair(name, this));
 }
 
@@ -305,24 +302,18 @@ void
 LogComponentEnable(const std::string& name, LogLevel level)
 {
     LogComponent::ComponentList* components = LogComponent::GetComponentList();
-    LogComponent::ComponentList::const_iterator i;
-    for (i = components->begin(); i != components->end(); i++)
+    auto logComponent = components->find(name);
+
+    if (logComponent == components->end())
     {
-        if (i->first == name)
-        {
-            i->second->Enable(level);
-            return;
-        }
-    }
-    if (i == components->end())
-    {
-        // nothing matched
         NS_LOG_UNCOND("Logging component \"" << name << "\" not found.");
         LogComponentPrintList();
         NS_FATAL_ERROR("Logging component \""
                        << name << "\" not found."
                        << " See above for a list of available log components");
     }
+
+    logComponent->second->Enable(level);
 }
 
 void
@@ -341,15 +332,11 @@ void
 LogComponentDisable(const std::string& name, LogLevel level)
 {
     LogComponent::ComponentList* components = LogComponent::GetComponentList();
-    for (LogComponent::ComponentList::const_iterator i = components->begin();
-         i != components->end();
-         i++)
+    auto logComponent = components->find(name);
+
+    if (logComponent != components->end())
     {
-        if (i->first == name)
-        {
-            i->second->Disable(level);
-            break;
-        }
+        logComponent->second->Disable(level);
     }
 }
 
@@ -368,67 +355,73 @@ LogComponentDisableAll(LogLevel level)
 void
 LogComponentPrintList()
 {
-    LogComponent::ComponentList* components = LogComponent::GetComponentList();
-    for (LogComponent::ComponentList::const_iterator i = components->begin();
-         i != components->end();
-         i++)
+    // Create sorted map of components by inserting them into a map
+    std::map<std::string, LogComponent*> componentsSorted;
+
+    for (const auto& component : *LogComponent::GetComponentList())
     {
-        std::cout << i->first << "=";
-        if (i->second->IsNoneEnabled())
+        componentsSorted.insert(component);
+    }
+
+    // Iterate through sorted components
+    for (const auto& [name, component] : componentsSorted)
+    {
+        std::cout << name << "=";
+        if (component->IsNoneEnabled())
         {
             std::cout << "0" << std::endl;
             continue;
         }
-        if (i->second->IsEnabled(LOG_LEVEL_ALL))
+        if (component->IsEnabled(LOG_LEVEL_ALL))
         {
             std::cout << "all";
         }
         else
         {
-            if (i->second->IsEnabled(LOG_ERROR))
+            if (component->IsEnabled(LOG_ERROR))
             {
                 std::cout << "error";
             }
-            if (i->second->IsEnabled(LOG_WARN))
+            if (component->IsEnabled(LOG_WARN))
             {
                 std::cout << "|warn";
             }
-            if (i->second->IsEnabled(LOG_DEBUG))
+            if (component->IsEnabled(LOG_DEBUG))
             {
                 std::cout << "|debug";
             }
-            if (i->second->IsEnabled(LOG_INFO))
+            if (component->IsEnabled(LOG_INFO))
             {
                 std::cout << "|info";
             }
-            if (i->second->IsEnabled(LOG_FUNCTION))
+            if (component->IsEnabled(LOG_FUNCTION))
             {
                 std::cout << "|function";
             }
-            if (i->second->IsEnabled(LOG_LOGIC))
+            if (component->IsEnabled(LOG_LOGIC))
             {
                 std::cout << "|logic";
             }
         }
-        if (i->second->IsEnabled(LOG_PREFIX_ALL))
+        if (component->IsEnabled(LOG_PREFIX_ALL))
         {
             std::cout << "|prefix_all";
         }
         else
         {
-            if (i->second->IsEnabled(LOG_PREFIX_FUNC))
+            if (component->IsEnabled(LOG_PREFIX_FUNC))
             {
                 std::cout << "|func";
             }
-            if (i->second->IsEnabled(LOG_PREFIX_TIME))
+            if (component->IsEnabled(LOG_PREFIX_TIME))
             {
                 std::cout << "|time";
             }
-            if (i->second->IsEnabled(LOG_PREFIX_NODE))
+            if (component->IsEnabled(LOG_PREFIX_NODE))
             {
                 std::cout << "|node";
             }
-            if (i->second->IsEnabled(LOG_PREFIX_LEVEL))
+            if (component->IsEnabled(LOG_PREFIX_LEVEL))
             {
                 std::cout << "|level";
             }
@@ -449,17 +442,8 @@ static bool
 ComponentExists(std::string componentName)
 {
     LogComponent::ComponentList* components = LogComponent::GetComponentList();
-    LogComponent::ComponentList::const_iterator i;
-    for (i = components->begin(); i != components->end(); i++)
-    {
-        if (i->first == componentName)
-        {
-            return true;
-        }
-    }
-    NS_ASSERT(i == components->end());
-    // nothing matched
-    return false;
+
+    return components->find(componentName) != components->end();
 }
 
 /**

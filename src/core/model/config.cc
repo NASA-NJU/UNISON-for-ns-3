@@ -542,7 +542,7 @@ Resolver::DoResolve(std::string path, Ptr<Object> root)
 
             for (uint32_t i = 0; i < tid.GetAttributeN(); i++)
             {
-                struct TypeId::AttributeInformation info;
+                TypeId::AttributeInformation info;
                 info = tid.GetAttribute(i);
                 if (info.name != item && item != "*")
                 {
@@ -638,7 +638,7 @@ class ConfigImpl : public Singleton<ConfigImpl>
 {
   public:
     // Keep Set and SetFailSafe since their errors are triggered
-    // by the underlying ObjecBase functions.
+    // by the underlying ObjectBase functions.
     /** \copydoc ns3::Config::Set() */
     void Set(std::string path, const AttributeValue& value);
     /** \copydoc ns3::Config::SetFailSafe() */
@@ -862,7 +862,7 @@ Reset()
         TypeId tid = TypeId::GetRegistered(i);
         for (uint32_t j = 0; j < tid.GetAttributeN(); j++)
         {
-            struct TypeId::AttributeInformation info = tid.GetAttribute(j);
+            TypeId::AttributeInformation info = tid.GetAttribute(j);
             tid.SetAttributeInitialValue(j, info.originalInitialValue);
         }
     }
@@ -914,11 +914,11 @@ SetDefaultFailSafe(std::string fullName, const AttributeValue& value)
     {
         return false;
     }
-    struct TypeId::AttributeInformation info;
+    TypeId::AttributeInformation info;
     tid.LookupAttributeByName(paramName, &info);
     for (uint32_t j = 0; j < tid.GetAttributeN(); j++)
     {
-        struct TypeId::AttributeInformation tmp = tid.GetAttribute(j);
+        TypeId::AttributeInformation tmp = tid.GetAttribute(j);
         if (tmp.name == paramName)
         {
             Ptr<AttributeValue> v = tmp.checker->CreateValidValue(value);

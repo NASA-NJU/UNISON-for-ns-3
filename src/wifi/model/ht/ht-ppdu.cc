@@ -24,6 +24,7 @@
 #include "ht-phy.h"
 
 #include "ns3/log.h"
+#include "ns3/wifi-phy-operating-channel.h"
 #include "ns3/wifi-phy.h"
 #include "ns3/wifi-psdu.h"
 #include "ns3/wifi-utils.h"
@@ -35,18 +36,16 @@ NS_LOG_COMPONENT_DEFINE("HtPpdu");
 
 HtPpdu::HtPpdu(Ptr<const WifiPsdu> psdu,
                const WifiTxVector& txVector,
-               uint16_t txCenterFreq,
+               const WifiPhyOperatingChannel& channel,
                Time ppduDuration,
-               WifiPhyBand band,
                uint64_t uid)
     : OfdmPpdu(psdu,
                txVector,
-               txCenterFreq,
-               band,
+               channel,
                uid,
                false) // don't instantiate LSigHeader of OfdmPpdu
 {
-    NS_LOG_FUNCTION(this << psdu << txVector << txCenterFreq << ppduDuration << band << uid);
+    NS_LOG_FUNCTION(this << psdu << txVector << channel << ppduDuration << uid);
     SetPhyHeaders(txVector, ppduDuration, psdu->GetSize());
 }
 
@@ -54,27 +53,16 @@ void
 HtPpdu::SetPhyHeaders(const WifiTxVector& txVector, Time ppduDuration, std::size_t psduSize)
 {
     NS_LOG_FUNCTION(this << txVector << ppduDuration << psduSize);
-
-#ifdef NS3_BUILD_PROFILE_DEBUG
-    LSigHeader lSig;
-    SetLSigHeader(lSig, ppduDuration);
-
-    HtSigHeader htSig;
-    SetHtSigHeader(htSig, txVector, psduSize);
-
-    m_phyHeaders->AddHeader(htSig);
-    m_phyHeaders->AddHeader(lSig);
-#else
     SetLSigHeader(m_lSig, ppduDuration);
     SetHtSigHeader(m_htSig, txVector, psduSize);
-#endif
 }
 
 void
 HtPpdu::SetLSigHeader(LSigHeader& lSig, Time ppduDuration) const
 {
     uint8_t sigExtension = 0;
-    if (m_band == WIFI_PHY_BAND_2_4GHZ)
+    NS_ASSERT(m_operatingChannel.IsSet());
+    if (m_operatingChannel.GetPhyBand() == WIFI_PHY_BAND_2_4GHZ)
     {
         sigExtension = 6;
     }
@@ -102,27 +90,7 @@ HtPpdu::DoGetTxVector() const
 {
     WifiTxVector txVector;
     txVector.SetPreambleType(m_preamble);
-
-#ifdef NS3_BUILD_PROFILE_DEBUG
-    auto phyHeaders = m_phyHeaders->Copy();
-
-    LSigHeader lSig;
-    if (phyHeaders->RemoveHeader(lSig) == 0)
-    {
-        NS_FATAL_ERROR("Missing L-SIG header in HT PPDU");
-    }
-
-    HtSigHeader htSig;
-    if (phyHeaders->RemoveHeader(htSig) == 0)
-    {
-        NS_FATAL_ERROR("Missing HT-SIG header in HT PPDU");
-    }
-
-    SetTxVectorFromPhyHeaders(txVector, lSig, htSig);
-#else
     SetTxVectorFromPhyHeaders(txVector, m_lSig, m_htSig);
-#endif
-
     return txVector;
 }
 
@@ -141,25 +109,10 @@ HtPpdu::SetTxVectorFromPhyHeaders(WifiTxVector& txVector,
 Time
 HtPpdu::GetTxDuration() const
 {
-    Time ppduDuration = Seconds(0);
     const WifiTxVector& txVector = GetTxVector();
-
-    uint16_t htLength = 0;
-#ifdef NS3_BUILD_PROFILE_DEBUG
-    auto phyHeaders = m_phyHeaders->Copy();
-
-    LSigHeader lSig;
-    phyHeaders->RemoveHeader(lSig);
-    HtSigHeader htSig;
-    phyHeaders->RemoveHeader(htSig);
-
-    htLength = htSig.GetHtLength();
-#else
-    htLength = m_htSig.GetHtLength();
-#endif
-
-    ppduDuration = WifiPhy::CalculateTxDuration(htLength, txVector, m_band);
-    return ppduDuration;
+    const auto htLength = m_htSig.GetHtLength();
+    NS_ASSERT(m_operatingChannel.IsSet());
+    return WifiPhy::CalculateTxDuration(htLength, txVector, m_operatingChannel.GetPhyBand());
 }
 
 Ptr<WifiPpdu>
@@ -175,35 +128,6 @@ HtPpdu::HtSigHeader::HtSigHeader()
       m_aggregation(0),
       m_sgi(0)
 {
-}
-
-TypeId
-HtPpdu::HtSigHeader::GetTypeId()
-{
-    static TypeId tid = TypeId("ns3::HtSigHeader")
-                            .SetParent<Header>()
-                            .SetGroupName("Wifi")
-                            .AddConstructor<HtSigHeader>();
-    return tid;
-}
-
-TypeId
-HtPpdu::HtSigHeader::GetInstanceTypeId() const
-{
-    return GetTypeId();
-}
-
-void
-HtPpdu::HtSigHeader::Print(std::ostream& os) const
-{
-    os << "MCS=" << +m_mcs << " HT_LENGTH=" << m_htLength << " CHANNEL_WIDTH=" << GetChannelWidth()
-       << " SGI=" << +m_sgi << " AGGREGATION=" << +m_aggregation;
-}
-
-uint32_t
-HtPpdu::HtSigHeader::GetSerializedSize() const
-{
-    return 6;
 }
 
 void
@@ -265,35 +189,6 @@ bool
 HtPpdu::HtSigHeader::GetShortGuardInterval() const
 {
     return m_sgi;
-}
-
-void
-HtPpdu::HtSigHeader::Serialize(Buffer::Iterator start) const
-{
-    uint8_t byte = m_mcs;
-    byte |= ((m_cbw20_40 & 0x01) << 7);
-    start.WriteU8(byte);
-    start.WriteU16(m_htLength);
-    byte = (0x01 << 2); // Set Reserved bit #2 to 1
-    byte |= ((m_aggregation & 0x01) << 3);
-    byte |= ((m_sgi & 0x01) << 7);
-    start.WriteU8(byte);
-    start.WriteU16(0);
-}
-
-uint32_t
-HtPpdu::HtSigHeader::Deserialize(Buffer::Iterator start)
-{
-    Buffer::Iterator i = start;
-    uint8_t byte = i.ReadU8();
-    m_mcs = byte & 0x7f;
-    m_cbw20_40 = ((byte >> 7) & 0x01);
-    m_htLength = i.ReadU16();
-    byte = i.ReadU8();
-    m_aggregation = ((byte >> 3) & 0x01);
-    m_sgi = ((byte >> 7) & 0x01);
-    i.ReadU16();
-    return i.GetDistanceFrom(start);
 }
 
 } // namespace ns3

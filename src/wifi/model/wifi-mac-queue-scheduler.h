@@ -25,6 +25,7 @@
 
 #include "ns3/object.h"
 
+#include <bitset>
 #include <optional>
 
 namespace ns3
@@ -32,6 +33,48 @@ namespace ns3
 
 class WifiMpdu;
 class WifiMac;
+
+/**
+ * \ingroup wifi
+ *
+ * Enumeration of the reasons to block container queues.
+ */
+enum class WifiQueueBlockedReason : uint8_t
+{
+    WAITING_ADDBA_RESP = 0,
+    POWER_SAVE_MODE,
+    USING_OTHER_EMLSR_LINK,
+    WAITING_EMLSR_TRANSITION_DELAY,
+    REASONS_COUNT
+};
+
+/**
+ * \brief Stream insertion operator.
+ *
+ * \param os the stream
+ * \param reason the reason to block container queues
+ * \returns a reference to the stream
+ */
+inline std::ostream&
+operator<<(std::ostream& os, WifiQueueBlockedReason reason)
+{
+    switch (reason)
+    {
+    case WifiQueueBlockedReason::WAITING_ADDBA_RESP:
+        return (os << "WAITING_ADDBA_RESP");
+    case WifiQueueBlockedReason::POWER_SAVE_MODE:
+        return (os << "POWER_SAVE_MODE");
+    case WifiQueueBlockedReason::USING_OTHER_EMLSR_LINK:
+        return (os << "USING_OTHER_EMLSR_LINK");
+    case WifiQueueBlockedReason::WAITING_EMLSR_TRANSITION_DELAY:
+        return (os << "WAITING_EMLSR_TRANSITION_DELAY");
+    case WifiQueueBlockedReason::REASONS_COUNT:
+        return (os << "REASONS_COUNT");
+    default:
+        NS_ABORT_MSG("Unknown queue blocked reason");
+        return (os << "unknown");
+    }
+}
 
 /**
  * \ingroup wifi
@@ -81,25 +124,74 @@ class WifiMacQueueScheduler : public Object
         const WifiContainerQueueId& prevQueueId) = 0;
 
     /**
-     * Get the list of the IDs of the links the given container queue (belonging to
-     * the given Access Category) is associated with.
+     * Get the list of the IDs of the links the given MPDU (belonging to the given
+     * Access Category) can be sent over.
      *
      * \param ac the given Access Category
-     * \param queueId the given container queue
-     * \return the list of the IDs of the links the given container queue is associated with
+     * \param mpdu the given MPDU
+     * \return the list of the IDs of the links the given MPDU can be sent over
      */
-    virtual std::list<uint8_t> GetLinkIds(AcIndex ac, const WifiContainerQueueId& queueId) = 0;
+    virtual std::list<uint8_t> GetLinkIds(AcIndex ac, Ptr<const WifiMpdu> mpdu) = 0;
+
     /**
-     * Set the list of the IDs of the links the given container queue (belonging to
-     * the given Access Category) is associated with.
+     * Block the given set of links for the container queues of the given types and
+     * Access Category that hold frames having the given Receiver Address (RA),
+     * Transmitter Address (TA) and TID (if needed) for the given reason, such that
+     * frames in these queues are not transmitted on the given set of links.
+     *
+     * \param reason the reason for blocking the queues
+     * \param ac the given Access Category
+     * \param types the types of the queues to block
+     * \param rxAddress the Receiver Address (RA) of the frames
+     * \param txAddress the Transmitter Address (TA) of the frames
+     * \param tids the TIDs optionally identifying the queues to block
+     * \param linkIds set of links to block (empty to block all setup links)
+     */
+    virtual void BlockQueues(WifiQueueBlockedReason reason,
+                             AcIndex ac,
+                             const std::list<WifiContainerQueueType>& types,
+                             const Mac48Address& rxAddress,
+                             const Mac48Address& txAddress,
+                             const std::set<uint8_t>& tids = {},
+                             const std::set<uint8_t>& linkIds = {}) = 0;
+    /**
+     * Unblock the given set of links for the container queues of the given types and
+     * Access Category that hold frames having the given Receiver Address (RA),
+     * Transmitter Address (TA) and TID (if needed) for the given reason, such that
+     * frames in these queues can be transmitted on the given set of links.
+     *
+     * \param reason the reason for unblocking the queues
+     * \param ac the given Access Category
+     * \param types the types of the queues to unblock
+     * \param rxAddress the Receiver Address (RA) of the frames
+     * \param txAddress the Transmitter Address (TA) of the frames
+     * \param tids the TIDs optionally identifying the queues to unblock
+     * \param linkIds set of links to unblock (empty to unblock all setup links)
+     */
+    virtual void UnblockQueues(WifiQueueBlockedReason reason,
+                               AcIndex ac,
+                               const std::list<WifiContainerQueueType>& types,
+                               const Mac48Address& rxAddress,
+                               const Mac48Address& txAddress,
+                               const std::set<uint8_t>& tids = {},
+                               const std::set<uint8_t>& linkIds = {}) = 0;
+
+    /// Bitset identifying the reasons to block individual links for a container queue
+    using Mask = std::bitset<static_cast<std::size_t>(WifiQueueBlockedReason::REASONS_COUNT)>;
+
+    /**
+     * Get the mask associated with the given container queue indicating whether the given link
+     * is blocked and for which reason, provided that the given container queue exists and has
+     * a mask for the given link.
      *
      * \param ac the given Access Category
-     * \param queueId the given container queue
-     * \param linkIds the list of the IDs of the links the given container queue is associated with
+     * \param queueId the ID of the given container queue
+     * \param linkId the ID of the given link
+     * \return the mask associated with the given container queue for the given link
      */
-    virtual void SetLinkIds(AcIndex ac,
-                            const WifiContainerQueueId& queueId,
-                            const std::list<uint8_t>& linkIds) = 0;
+    virtual std::optional<Mask> GetQueueLinkMask(AcIndex ac,
+                                                 const WifiContainerQueueId& queueId,
+                                                 uint8_t linkId) = 0;
 
     /**
      * Check whether an MPDU has to be dropped before enqueuing the given MPDU.

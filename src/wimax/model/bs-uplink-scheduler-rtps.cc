@@ -361,7 +361,7 @@ UplinkSchedulerRtps::Schedule()
 
 void
 UplinkSchedulerRtps::ServiceUnsolicitedGrants(const SSRecord* ssRecord,
-                                              enum ServiceFlow::SchedulingType schedulingType,
+                                              ServiceFlow::SchedulingType schedulingType,
                                               OfdmUlMapIe& ulMapIe,
                                               const WimaxPhy::ModulationType modulationType,
                                               uint32_t& symbolsToAllocation,
@@ -450,7 +450,7 @@ UplinkSchedulerRtps::ServiceUnsolicitedGrants(const SSRecord* ssRecord,
 
 void
 UplinkSchedulerRtps::ServiceBandwidthRequests(const SSRecord* ssRecord,
-                                              enum ServiceFlow::SchedulingType schedulingType,
+                                              ServiceFlow::SchedulingType schedulingType,
                                               OfdmUlMapIe& ulMapIe,
                                               const WimaxPhy::ModulationType modulationType,
                                               uint32_t& symbolsToAllocation,
@@ -476,7 +476,7 @@ UplinkSchedulerRtps::ServiceBandwidthRequests(const SSRecord* ssRecord,
 
 bool
 UplinkSchedulerRtps::ServiceBandwidthRequests(ServiceFlow* serviceFlow,
-                                              enum ServiceFlow::SchedulingType schedulingType,
+                                              ServiceFlow::SchedulingType schedulingType,
                                               OfdmUlMapIe& ulMapIe,
                                               const WimaxPhy::ModulationType modulationType,
                                               uint32_t& symbolsToAllocation,
@@ -632,7 +632,7 @@ UplinkSchedulerRtps::ULSchedulerRTPSConnection(uint32_t& symbolsToAllocation,
         NS_LOG_INFO("\t\tUpdateGrantedBandwidth for " << i << " = " << allocSizeBytes);
         if (record_[i]->GetRequestedBandwidth() < allocSizeBytes)
         {
-            // the flow need new poll to set the newer requredBandwidth
+            // the flow need new poll to set the newer requiredBandwidth
             record_[i]->SetGrantedBandwidth(0);
             record_[i]->SetRequestedBandwidth(0);
         }
@@ -697,7 +697,7 @@ UplinkSchedulerRtps::SetupServiceFlow(SSRecord* ssRecord, ServiceFlow* serviceFl
     switch (serviceFlow->GetSchedulingType())
     {
     case ServiceFlow::SF_TYPE_UGS: {
-        if (serviceFlow->GetIsMulticast() == true)
+        if (serviceFlow->GetIsMulticast())
         {
             modulation = serviceFlow->GetModulation();
         }

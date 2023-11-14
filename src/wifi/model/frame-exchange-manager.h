@@ -241,6 +241,11 @@ class FrameExchangeManager : public Object
     virtual bool VirtualCsMediumIdle() const;
 
     /**
+     * \return the set of stations that have successfully received an RTS in this TXOP.
+     */
+    const std::set<Mac48Address>& GetProtectedStas() const;
+
+    /**
      * Notify that an internal collision has occurred for the given Txop
      *
      * \param txop the Txop for which an internal collision has occurred
@@ -298,6 +303,18 @@ class FrameExchangeManager : public Object
      * \param txParams the TX parameters to use to transmit the MPDU
      */
     void SendMpduWithProtection(Ptr<WifiMpdu> mpdu, WifiTxParameters& txParams);
+
+    /**
+     * Start the protection mechanism indicated by the given TX parameters
+     *
+     * \param txParams the TX parameters
+     */
+    virtual void StartProtection(const WifiTxParameters& txParams);
+
+    /**
+     * Transmit prepared frame upon successful protection mechanism.
+     */
+    virtual void ProtectionCompleted();
 
     /**
      * Update the NAV, if needed, based on the Duration/ID of the given <i>psdu</i>.
@@ -438,6 +455,13 @@ class FrameExchangeManager : public Object
      */
     virtual uint32_t GetPsduSize(Ptr<const WifiMpdu> mpdu, const WifiTxVector& txVector) const;
 
+    /**
+     * Notify the given Txop that channel has been released.
+     *
+     * \param txop the given Txop
+     */
+    virtual void NotifyChannelReleased(Ptr<Txop> txop);
+
     Ptr<Txop> m_dcf;                                  //!< the DCF/EDCAF that gained channel access
     WifiTxTimer m_txTimer;                            //!< the timer set upon frame transmission
     EventId m_navResetEvent;                          //!< the event to reset the NAV after an RTS
@@ -449,11 +473,21 @@ class FrameExchangeManager : public Object
     Mac48Address m_self;                              //!< the MAC address of this device
     Mac48Address m_bssid;                             //!< BSSID address (Mac48Address)
     Time m_navEnd;                                    //!< NAV expiration time
-    uint8_t m_linkId;                  //!< the ID of the link this object is associated with
+    std::set<Mac48Address> m_sentRtsTo; //!< the STA(s) which we sent an RTS to (waiting for CTS)
+    std::set<Mac48Address> m_protectedStas; //!< STAs that have replied to an RTS in this TXOP
+    uint8_t m_linkId;                       //!< the ID of the link this object is associated with
     uint16_t m_allowedWidth;           //!< the allowed width in MHz for the current transmission
     bool m_promisc;                    //!< Flag if the device is operating in promiscuous mode
     DroppedMpdu m_droppedMpduCallback; //!< the dropped MPDU callback
     AckedMpdu m_ackedMpduCallback;     //!< the acknowledged MPDU callback
+
+    /**
+     * Finalize the MAC header of the MPDUs in the given PSDU before transmission. Tasks
+     * performed by this method include setting the Power Management flag in the MAC header.
+     *
+     * \param psdu the given PSDU
+     */
+    virtual void FinalizeMacHeader(Ptr<const WifiPsdu> psdu);
 
     /**
      * Forward an MPDU down to the PHY layer.

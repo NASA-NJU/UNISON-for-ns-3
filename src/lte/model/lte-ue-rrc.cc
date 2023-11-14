@@ -25,14 +25,16 @@
 
 #include "lte-ue-rrc.h"
 
+#include "lte-common.h"
+#include "lte-pdcp.h"
+#include "lte-radio-bearer-info.h"
+#include "lte-rlc-am.h"
+#include "lte-rlc-tm.h"
+#include "lte-rlc-um.h"
+#include "lte-rlc.h"
+
 #include <ns3/fatal-error.h>
 #include <ns3/log.h>
-#include <ns3/lte-pdcp.h>
-#include <ns3/lte-radio-bearer-info.h>
-#include <ns3/lte-rlc-am.h>
-#include <ns3/lte-rlc-tm.h>
-#include <ns3/lte-rlc-um.h>
-#include <ns3/lte-rlc.h>
 #include <ns3/object-factory.h>
 #include <ns3/object-map.h>
 #include <ns3/simulator.h>
@@ -1307,7 +1309,7 @@ LteUeRrc::EvaluateCellForSelection()
         uint32_t cellCsgId = m_lastSib1.cellAccessRelatedInfo.csgIdentity;
         bool cellCsgIndication = m_lastSib1.cellAccessRelatedInfo.csgIndication;
 
-        isSuitableCell = (cellCsgIndication == false) || (cellCsgId == m_csgWhiteList);
+        isSuitableCell = (!cellCsgIndication || cellCsgId == m_csgWhiteList);
 
         NS_LOG_LOGIC(this << " csg(ue/cell/indication)=" << m_csgWhiteList << "/" << cellCsgId
                           << "/" << cellCsgIndication);
@@ -1415,7 +1417,7 @@ void
 LteUeRrc::ApplyRadioResourceConfigDedicated(LteRrcSap::RadioResourceConfigDedicated rrcd)
 {
     NS_LOG_FUNCTION(this);
-    const struct LteRrcSap::PhysicalConfigDedicated& pcd = rrcd.physicalConfigDedicated;
+    const LteRrcSap::PhysicalConfigDedicated& pcd = rrcd.physicalConfigDedicated;
 
     if (pcd.haveAntennaInfoDedicated)
     {
@@ -1473,7 +1475,7 @@ LteUeRrc::ApplyRadioResourceConfigDedicated(LteRrcSap::RadioResourceConfigDedica
             m_srb1->m_logicalChannelConfig.logicalChannelGroup =
                 stamIt->logicalChannelConfig.logicalChannelGroup;
 
-            struct LteUeCmacSapProvider::LogicalChannelConfig lcConfig;
+            LteUeCmacSapProvider::LogicalChannelConfig lcConfig;
             lcConfig.priority = stamIt->logicalChannelConfig.priority;
             lcConfig.prioritizedBitRateKbps = stamIt->logicalChannelConfig.prioritizedBitRateKbps;
             lcConfig.bucketSizeDurationMs = stamIt->logicalChannelConfig.bucketSizeDurationMs;
@@ -1567,7 +1569,7 @@ LteUeRrc::ApplyRadioResourceConfigDedicated(LteRrcSap::RadioResourceConfigDedica
 
             m_drbCreatedTrace(m_imsi, m_cellId, m_rnti, dtamIt->drbIdentity);
 
-            struct LteUeCmacSapProvider::LogicalChannelConfig lcConfig;
+            LteUeCmacSapProvider::LogicalChannelConfig lcConfig;
             lcConfig.priority = dtamIt->logicalChannelConfig.priority;
             lcConfig.prioritizedBitRateKbps = dtamIt->logicalChannelConfig.prioritizedBitRateKbps;
             lcConfig.bucketSizeDurationMs = dtamIt->logicalChannelConfig.bucketSizeDurationMs;
@@ -3374,7 +3376,7 @@ LteUeRrc::DoNotifyOutOfSync()
         {
             NS_LOG_INFO("t310 started");
         }
-        m_cphySapProvider.at(0)->StartInSnycDetection();
+        m_cphySapProvider.at(0)->StartInSyncDetection();
         m_noOfSyncIndications = 0;
     }
 }

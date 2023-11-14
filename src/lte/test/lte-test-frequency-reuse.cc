@@ -487,7 +487,7 @@ LteFrTestCase::DlDataRxStart(Ptr<const SpectrumValue> spectrumValue)
         NS_LOG_DEBUG("RB " << i << " POWER: "
                            << " " << power << " isAvailable: " << m_availableDlRb[i]);
 
-        if (m_availableDlRb[i] == false && power > 0)
+        if (!m_availableDlRb[i] && power > 0)
         {
             m_usedMutedDlRbg = true;
         }
@@ -507,7 +507,7 @@ LteFrTestCase::UlDataRxStart(Ptr<const SpectrumValue> spectrumValue)
         NS_LOG_DEBUG("RB " << i << " POWER: "
                            << " " << power << " isAvailable: " << m_availableUlRb[i]);
 
-        if (m_availableUlRb[i] == false && power > 0)
+        if (!m_availableUlRb[i] && power > 0)
         {
             m_usedMutedUlRbg = true;
         }
@@ -598,7 +598,7 @@ LteHardFrTestCase::DoRun()
     qos.gbrUl = 1e4;
     qos.gbrDl = 1e4;
 
-    enum EpsBearer::Qci q = EpsBearer::GBR_CONV_VOICE;
+    EpsBearer::Qci q = EpsBearer::GBR_CONV_VOICE;
     EpsBearer bearer(q, qos);
     lteHelper->ActivateDataRadioBearer(ueDevs, bearer);
 
@@ -736,7 +736,7 @@ LteStrictFrTestCase::DoRun()
     qos.gbrUl = 1e4;
     qos.gbrDl = 1e4;
 
-    enum EpsBearer::Qci q = EpsBearer::GBR_CONV_VOICE;
+    EpsBearer::Qci q = EpsBearer::GBR_CONV_VOICE;
     EpsBearer bearer(q, qos);
     lteHelper->ActivateDataRadioBearer(ueDevs, bearer);
 
@@ -832,11 +832,11 @@ LteFrAreaTestCase::DlDataRxStart(Ptr<const SpectrumValue> spectrumValue)
                            << " " << power << " Available: " << m_expectedDlRb[i]
                            << " Expected Power: " << m_expectedDlPower);
 
-        if (m_expectedDlRb[i] == false && power > 0)
+        if (!m_expectedDlRb[i] && power > 0)
         {
             m_usedWrongDlRbg = true;
         }
-        else if (m_expectedDlRb[i] == true && power > 0)
+        else if (m_expectedDlRb[i] && power > 0)
         {
             NS_TEST_ASSERT_MSG_EQ_TOL(power,
                                       m_expectedDlPower,
@@ -869,7 +869,7 @@ LteFrAreaTestCase::UlDataRxStart(Ptr<const SpectrumValue> spectrumValue)
     {
         // Count the RB as active if it is part of
         // the expected UL RBs and has Power Spectral Density (PSD) > 0
-        if (m_expectedUlRb[numActiveRbs] == true && (*it) > 0)
+        if (m_expectedUlRb[numActiveRbs] && (*it) > 0)
         {
             numActiveRbs++;
         }
@@ -883,11 +883,11 @@ LteFrAreaTestCase::UlDataRxStart(Ptr<const SpectrumValue> spectrumValue)
         double power = (*it) * (numActiveRbs * 180000);
         NS_LOG_DEBUG("RB " << i << " POWER: " << power
                            << " expectedUlPower: " << m_expectedUlPower);
-        if (m_expectedUlRb[i] == false && power > 0)
+        if (!m_expectedUlRb[i] && power > 0)
         {
             m_usedWrongUlRbg = true;
         }
-        else if (m_expectedUlRb[i] == true && power > 0)
+        else if (m_expectedUlRb[i] && power > 0)
         {
             NS_TEST_ASSERT_MSG_EQ_TOL(power,
                                       m_expectedUlPower,
@@ -1066,7 +1066,7 @@ LteStrictFrAreaTestCase::DoRun()
     qos.gbrUl = 1e4;
     qos.gbrDl = 1e4;
 
-    enum EpsBearer::Qci q = EpsBearer::GBR_CONV_VOICE;
+    EpsBearer::Qci q = EpsBearer::GBR_CONV_VOICE;
     EpsBearer bearer(q, qos);
 
     lteHelper->ActivateDataRadioBearer(ueDevs1, bearer);
@@ -1283,7 +1283,7 @@ LteSoftFrAreaTestCase::DoRun()
     qos.gbrUl = 1e4;
     qos.gbrDl = 1e4;
 
-    enum EpsBearer::Qci q = EpsBearer::GBR_CONV_VOICE;
+    EpsBearer::Qci q = EpsBearer::GBR_CONV_VOICE;
     EpsBearer bearer(q, qos);
     lteHelper->ActivateDataRadioBearer(ueDevs1, bearer);
     lteHelper->ActivateDataRadioBearer(ueDevs2, bearer);
@@ -1512,7 +1512,7 @@ LteSoftFfrAreaTestCase::DoRun()
     qos.gbrUl = 1e4;
     qos.gbrDl = 1e4;
 
-    enum EpsBearer::Qci q = EpsBearer::GBR_CONV_VOICE;
+    EpsBearer::Qci q = EpsBearer::GBR_CONV_VOICE;
     EpsBearer bearer(q, qos);
     lteHelper->ActivateDataRadioBearer(ueDevs1, bearer);
     lteHelper->ActivateDataRadioBearer(ueDevs2, bearer);
@@ -1783,7 +1783,7 @@ LteEnhancedFfrAreaTestCase::DoRun()
     qos.gbrUl = 1e4;
     qos.gbrDl = 1e4;
 
-    enum EpsBearer::Qci q = EpsBearer::GBR_CONV_VOICE;
+    EpsBearer::Qci q = EpsBearer::GBR_CONV_VOICE;
     EpsBearer bearer(q, qos);
     lteHelper->ActivateDataRadioBearer(ueDevs1, bearer);
     lteHelper->ActivateDataRadioBearer(ueDevs2, bearer);
@@ -2159,7 +2159,7 @@ LteDistributedFfrAreaTestCase::DoRun()
             qos.gbrUl = 1e4;
             qos.gbrDl = 1e4;
 
-            enum EpsBearer::Qci q = EpsBearer::GBR_CONV_VOICE;
+            EpsBearer::Qci q = EpsBearer::GBR_CONV_VOICE;
             EpsBearer bearer(q, qos);
             lteHelper->ActivateDedicatedEpsBearer(ueLteDevs.Get(u), bearer, tft);
 

@@ -155,17 +155,13 @@ ThreeGppHttpServer::GetStateString(ThreeGppHttpServer::State_t state)
     {
     case NOT_STARTED:
         return "NOT_STARTED";
-        break;
     case STARTED:
         return "STARTED";
-        break;
     case STOPPED:
         return "STOPPED";
-        break;
     default:
         NS_FATAL_ERROR("Unknown state");
         return "FATAL_ERROR";
-        break;
     }
 }
 
@@ -197,7 +193,7 @@ ThreeGppHttpServer::StartApplication()
             const TypeId tcpSocketTid = TcpSocket::GetTypeId();
             for (uint32_t i = 0; i < tcpSocketTid.GetAttributeN(); i++)
             {
-                struct TypeId::AttributeInformation attrInfo = tcpSocketTid.GetAttribute(i);
+                TypeId::AttributeInformation attrInfo = tcpSocketTid.GetAttribute(i);
                 if (attrInfo.name == "SegmentSize")
                 {
                     previousSocketMtu = attrInfo.initialValue;

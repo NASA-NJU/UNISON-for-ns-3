@@ -26,6 +26,7 @@
 
 #include "ns3/fatal-error.h"
 #include "ns3/ptr.h"
+#include "ns3/wifi-spectrum-value-helper.h"
 
 #include <ostream>
 
@@ -48,28 +49,114 @@ class WifiMode;
 class Time;
 
 /**
+ * typedef for a pair of start and stop frequencies in Hz to represent a band
+ */
+using WifiSpectrumBandFrequencies = std::pair<uint64_t, uint64_t>;
+
+/// WifiSpectrumBandInfo structure containing info about a spectrum band
+struct WifiSpectrumBandInfo
+{
+    WifiSpectrumBandIndices indices;         //!< the start and stop indices of the band
+    WifiSpectrumBandFrequencies frequencies; //!< the start and stop frequencies of the band
+};
+
+/**
+ * \ingroup wifi
+ * Compare two bands.
+ *
+ * \param lhs the band on the left of operator<
+ * \param rhs the band on the right of operator<
+ * \return true if the start/stop frequencies of left are lower than the start/stop frequencies of
+ * right, false otherwise
+ */
+inline bool
+operator<(const WifiSpectrumBandInfo& lhs, const WifiSpectrumBandInfo& rhs)
+{
+    return lhs.frequencies < rhs.frequencies;
+}
+
+/**
+ * \brief Stream insertion operator.
+ *
+ * \param os the stream
+ * \param band the band
+ * \returns a reference to the stream
+ */
+inline std::ostream&
+operator<<(std::ostream& os, const WifiSpectrumBandInfo& band)
+{
+    os << "indices: [" << band.indices.first << "-" << band.indices.second << "], frequencies: ["
+       << band.frequencies.first << "Hz-" << band.frequencies.second << "Hz]";
+    return os;
+}
+
+/**
  * These constants define the various convolutional coding rates
  * used for the OFDM transmission modes in the IEEE 802.11
  * standard. DSSS (for example) rates which do not have an explicit
  * coding stage in their generation should have this parameter set to
  * WIFI_CODE_RATE_UNDEFINED.
- * \note This typedef and constants could be converted to an enum or scoped
- * enum if pybindgen is upgraded to support Callback<WifiCodeRate>
  */
-typedef uint16_t WifiCodeRate;
-const uint16_t WIFI_CODE_RATE_UNDEFINED = 0; //!< undefined coding rate
-const uint16_t WIFI_CODE_RATE_1_2 = 1;       //!< 1/2 coding rate
-const uint16_t WIFI_CODE_RATE_2_3 = 2;       //!< 2/3 coding rate
-const uint16_t WIFI_CODE_RATE_3_4 = 3;       //!< 3/4 coding rate
-const uint16_t WIFI_CODE_RATE_5_6 = 4;       //!< 5/6 coding rate
-const uint16_t WIFI_CODE_RATE_5_8 = 5;       //!< 5/8 coding rate
-const uint16_t WIFI_CODE_RATE_13_16 = 6;     //!< 13/16 coding rate
-const uint16_t WIFI_CODE_RATE_1_4 = 7;       //!< 1/4 coding rate
-const uint16_t WIFI_CODE_RATE_13_28 = 8;     //!< 13/28 coding rate
-const uint16_t WIFI_CODE_RATE_13_21 = 9;     //!< 13/21 coding rate
-const uint16_t WIFI_CODE_RATE_52_63 = 10;    //!< 52/63 coding rate
-const uint16_t WIFI_CODE_RATE_13_14 = 11;    //!< 13/14 coding rate
-const uint16_t WIFI_CODE_RATE_7_8 = 12;      //!< 7/8 coding rate
+enum WifiCodeRate : uint16_t
+{
+    WIFI_CODE_RATE_UNDEFINED, //!< undefined coding rate
+    WIFI_CODE_RATE_1_2,       //!< 1/2 coding rate
+    WIFI_CODE_RATE_2_3,       //!< 2/3 coding rate
+    WIFI_CODE_RATE_3_4,       //!< 3/4 coding rate
+    WIFI_CODE_RATE_5_6,       //!< 5/6 coding rate
+    WIFI_CODE_RATE_5_8,       //!< 5/8 coding rate
+    WIFI_CODE_RATE_13_16,     //!< 13/16 coding rate
+    WIFI_CODE_RATE_1_4,       //!< 1/4 coding rate
+    WIFI_CODE_RATE_13_28,     //!< 13/28 coding rate
+    WIFI_CODE_RATE_13_21,     //!< 13/21 coding rate
+    WIFI_CODE_RATE_52_63,     //!< 52/63 coding rate
+    WIFI_CODE_RATE_13_14,     //!< 13/14 coding rate
+    WIFI_CODE_RATE_7_8,       //!< 7/8 coding rate
+};
+
+/**
+ * \brief Stream insertion operator.
+ *
+ * \param os the stream
+ * \param codeRate the code rate
+ * \returns a reference to the stream
+ */
+inline std::ostream&
+operator<<(std::ostream& os, const WifiCodeRate& codeRate)
+{
+    switch (codeRate)
+    {
+    case WIFI_CODE_RATE_UNDEFINED:
+        return (os << "Code rate undefined");
+    case WIFI_CODE_RATE_1_2:
+        return (os << "Code rate 1/2");
+    case WIFI_CODE_RATE_2_3:
+        return (os << "Code rate 2/3");
+    case WIFI_CODE_RATE_3_4:
+        return (os << "Code rate 3/4");
+    case WIFI_CODE_RATE_5_6:
+        return (os << "Code rate 5/6");
+    case WIFI_CODE_RATE_5_8:
+        return (os << "Code rate 5/8");
+    case WIFI_CODE_RATE_13_16:
+        return (os << "Code rate 13/16");
+    case WIFI_CODE_RATE_1_4:
+        return (os << "Code rate 1/4");
+    case WIFI_CODE_RATE_13_28:
+        return (os << "Code rate 13/28");
+    case WIFI_CODE_RATE_13_21:
+        return (os << "Code rate 13/21");
+    case WIFI_CODE_RATE_52_63:
+        return (os << "Code rate 52/63");
+    case WIFI_CODE_RATE_13_14:
+        return (os << "Code rate 13/14");
+    case WIFI_CODE_RATE_7_8:
+        return (os << "Code rate 7/8");
+    default:
+        NS_FATAL_ERROR("Unknown code rate");
+        return (os << "Unknown");
+    }
+}
 
 /**
  * \ingroup wifi
@@ -332,7 +419,7 @@ enum WifiPhyRxfailureReason
     PREAMBLE_DETECTION_PACKET_SWITCH,
     FRAME_CAPTURE_PACKET_SWITCH,
     OBSS_PD_CCA_RESET,
-    HE_TB_PPDU_TOO_LATE,
+    PPDU_TOO_LATE,
     FILTERED,
     DMG_HEADER_FAILURE,
     DMG_ALLOCATION_ENDED
@@ -388,8 +475,8 @@ operator<<(std::ostream& os, const WifiPhyRxfailureReason& reason)
         return (os << "FRAME_CAPTURE_PACKET_SWITCH");
     case OBSS_PD_CCA_RESET:
         return (os << "OBSS_PD_CCA_RESET");
-    case HE_TB_PPDU_TOO_LATE:
-        return (os << "HE_TB_PPDU_TOO_LATE");
+    case PPDU_TOO_LATE:
+        return (os << "PPDU_TOO_LATE");
     case FILTERED:
         return (os << "FILTERED");
     case DMG_HEADER_FAILURE:

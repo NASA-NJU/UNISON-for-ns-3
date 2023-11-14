@@ -22,6 +22,7 @@
 #include "mgt-headers.h"
 
 #include "ns3/address-utils.h"
+#include "ns3/packet.h"
 #include "ns3/simulator.h"
 
 namespace ns3
@@ -32,169 +33,6 @@ namespace ns3
  ***********************************************************/
 
 NS_OBJECT_ENSURE_REGISTERED(MgtProbeRequestHeader);
-
-MgtProbeRequestHeader::~MgtProbeRequestHeader()
-{
-}
-
-void
-MgtProbeRequestHeader::SetSsid(const Ssid& ssid)
-{
-    m_ssid = ssid;
-}
-
-void
-MgtProbeRequestHeader::SetSsid(Ssid&& ssid)
-{
-    m_ssid = std::move(ssid);
-}
-
-const Ssid&
-MgtProbeRequestHeader::GetSsid() const
-{
-    return m_ssid;
-}
-
-void
-MgtProbeRequestHeader::SetSupportedRates(const SupportedRates& rates)
-{
-    m_rates = rates;
-}
-
-void
-MgtProbeRequestHeader::SetSupportedRates(SupportedRates&& rates)
-{
-    m_rates = std::move(rates);
-}
-
-void
-MgtProbeRequestHeader::SetExtendedCapabilities(const ExtendedCapabilities& extendedCapabilities)
-{
-    m_extendedCapability = extendedCapabilities;
-}
-
-void
-MgtProbeRequestHeader::SetExtendedCapabilities(ExtendedCapabilities&& extendedCapabilities)
-{
-    m_extendedCapability = std::move(extendedCapabilities);
-}
-
-const std::optional<ExtendedCapabilities>&
-MgtProbeRequestHeader::GetExtendedCapabilities() const
-{
-    return m_extendedCapability;
-}
-
-void
-MgtProbeRequestHeader::SetHtCapabilities(const HtCapabilities& htCapabilities)
-{
-    m_htCapability = htCapabilities;
-}
-
-void
-MgtProbeRequestHeader::SetHtCapabilities(HtCapabilities&& htCapabilities)
-{
-    m_htCapability = std::move(htCapabilities);
-}
-
-const std::optional<HtCapabilities>&
-MgtProbeRequestHeader::GetHtCapabilities() const
-{
-    return m_htCapability;
-}
-
-void
-MgtProbeRequestHeader::SetVhtCapabilities(const VhtCapabilities& vhtCapabilities)
-{
-    m_vhtCapability = vhtCapabilities;
-}
-
-void
-MgtProbeRequestHeader::SetVhtCapabilities(VhtCapabilities&& vhtCapabilities)
-{
-    m_vhtCapability = std::move(vhtCapabilities);
-}
-
-const std::optional<VhtCapabilities>&
-MgtProbeRequestHeader::GetVhtCapabilities() const
-{
-    return m_vhtCapability;
-}
-
-void
-MgtProbeRequestHeader::SetHeCapabilities(const HeCapabilities& heCapabilities)
-{
-    m_heCapability = heCapabilities;
-}
-
-void
-MgtProbeRequestHeader::SetHeCapabilities(HeCapabilities&& heCapabilities)
-{
-    m_heCapability = std::move(heCapabilities);
-}
-
-const std::optional<HeCapabilities>&
-MgtProbeRequestHeader::GetHeCapabilities() const
-{
-    return m_heCapability;
-}
-
-void
-MgtProbeRequestHeader::SetEhtCapabilities(const EhtCapabilities& ehtCapabilities)
-{
-    m_ehtCapability = ehtCapabilities;
-}
-
-void
-MgtProbeRequestHeader::SetEhtCapabilities(EhtCapabilities&& ehtCapabilities)
-{
-    m_ehtCapability = std::move(ehtCapabilities);
-}
-
-const std::optional<EhtCapabilities>&
-MgtProbeRequestHeader::GetEhtCapabilities() const
-{
-    return m_ehtCapability;
-}
-
-const SupportedRates&
-MgtProbeRequestHeader::GetSupportedRates() const
-{
-    return m_rates;
-}
-
-uint32_t
-MgtProbeRequestHeader::GetSerializedSize() const
-{
-    uint32_t size = 0;
-    size += m_ssid.GetSerializedSize();
-    size += m_rates.GetSerializedSize();
-    if (m_rates.GetNRates() > 8)
-    {
-        size += m_rates.extended->GetSerializedSize();
-    }
-    if (m_extendedCapability.has_value())
-    {
-        size += m_extendedCapability->GetSerializedSize();
-    }
-    if (m_htCapability.has_value())
-    {
-        size += m_htCapability->GetSerializedSize();
-    }
-    if (m_vhtCapability.has_value())
-    {
-        size += m_vhtCapability->GetSerializedSize();
-    }
-    if (m_heCapability.has_value())
-    {
-        size += m_heCapability->GetSerializedSize();
-    }
-    if (m_ehtCapability.has_value())
-    {
-        size += m_ehtCapability->GetSerializedSize();
-    }
-    return size;
-}
 
 TypeId
 MgtProbeRequestHeader::GetTypeId()
@@ -212,438 +50,11 @@ MgtProbeRequestHeader::GetInstanceTypeId() const
     return GetTypeId();
 }
 
-void
-MgtProbeRequestHeader::Print(std::ostream& os) const
-{
-    os << "ssid=" << m_ssid << ", "
-       << "rates=" << m_rates << ", ";
-    if (m_extendedCapability.has_value())
-    {
-        os << "Extended Capabilities=" << *m_extendedCapability << " , ";
-    }
-    if (m_htCapability.has_value())
-    {
-        os << "HT Capabilities=" << *m_htCapability << " , ";
-    }
-    if (m_vhtCapability.has_value())
-    {
-        os << "VHT Capabilities=" << *m_vhtCapability << " , ";
-    }
-    if (m_heCapability.has_value())
-    {
-        os << "HE Capabilities=" << *m_heCapability << " , ";
-    }
-    if (m_ehtCapability.has_value())
-    {
-        os << "EHT Capabilities=" << *m_ehtCapability;
-    }
-}
-
-void
-MgtProbeRequestHeader::Serialize(Buffer::Iterator start) const
-{
-    Buffer::Iterator i = start;
-    i = m_ssid.Serialize(i);
-    i = m_rates.Serialize(i);
-    if (m_rates.GetNRates() > 8)
-    {
-        i = m_rates.extended->Serialize(i);
-    }
-    if (m_extendedCapability.has_value())
-    {
-        i = m_extendedCapability->Serialize(i);
-    }
-    if (m_htCapability.has_value())
-    {
-        i = m_htCapability->Serialize(i);
-    }
-    if (m_vhtCapability.has_value())
-    {
-        i = m_vhtCapability->Serialize(i);
-    }
-    if (m_heCapability.has_value())
-    {
-        i = m_heCapability->Serialize(i);
-    }
-    if (m_ehtCapability.has_value())
-    {
-        i = m_ehtCapability->Serialize(i);
-    }
-}
-
-uint32_t
-MgtProbeRequestHeader::Deserialize(Buffer::Iterator start)
-{
-    Buffer::Iterator i = start;
-    i = m_ssid.Deserialize(i);
-    i = m_rates.Deserialize(i);
-    i = WifiInformationElement::DeserializeIfPresent(m_rates.extended, i, &m_rates);
-    i = WifiInformationElement::DeserializeIfPresent(m_extendedCapability, i);
-    i = WifiInformationElement::DeserializeIfPresent(m_htCapability, i);
-    i = WifiInformationElement::DeserializeIfPresent(m_vhtCapability, i);
-    i = WifiInformationElement::DeserializeIfPresent(m_heCapability, i);
-    const bool is2_4Ghz = m_rates.IsSupportedRate(
-        1000000 /* 1 Mbit/s */); // TODO: use presence of VHT capabilities IE and HE 6 GHz Band
-                                 // Capabilities IE once the later is implemented
-    i = WifiInformationElement::DeserializeIfPresent(m_ehtCapability, i, is2_4Ghz, m_heCapability);
-    return i.GetDistanceFrom(start);
-}
-
 /***********************************************************
  *          Probe Response
  ***********************************************************/
 
 NS_OBJECT_ENSURE_REGISTERED(MgtProbeResponseHeader);
-
-MgtProbeResponseHeader::MgtProbeResponseHeader()
-{
-}
-
-MgtProbeResponseHeader::~MgtProbeResponseHeader()
-{
-}
-
-uint64_t
-MgtProbeResponseHeader::GetTimestamp() const
-{
-    return m_timestamp;
-}
-
-const Ssid&
-MgtProbeResponseHeader::GetSsid() const
-{
-    return m_ssid;
-}
-
-uint64_t
-MgtProbeResponseHeader::GetBeaconIntervalUs() const
-{
-    return m_beaconInterval;
-}
-
-const SupportedRates&
-MgtProbeResponseHeader::GetSupportedRates() const
-{
-    return m_rates;
-}
-
-void
-MgtProbeResponseHeader::SetCapabilities(const CapabilityInformation& capabilities)
-{
-    m_capability = capabilities;
-}
-
-void
-MgtProbeResponseHeader::SetCapabilities(CapabilityInformation&& capabilities)
-{
-    m_capability = std::move(capabilities);
-}
-
-const CapabilityInformation&
-MgtProbeResponseHeader::GetCapabilities() const
-{
-    return m_capability;
-}
-
-void
-MgtProbeResponseHeader::SetExtendedCapabilities(const ExtendedCapabilities& extendedCapabilities)
-{
-    m_extendedCapability = extendedCapabilities;
-}
-
-void
-MgtProbeResponseHeader::SetExtendedCapabilities(ExtendedCapabilities&& extendedCapabilities)
-{
-    m_extendedCapability = std::move(extendedCapabilities);
-}
-
-const std::optional<ExtendedCapabilities>&
-MgtProbeResponseHeader::GetExtendedCapabilities() const
-{
-    return m_extendedCapability;
-}
-
-void
-MgtProbeResponseHeader::SetHtCapabilities(const HtCapabilities& htCapabilities)
-{
-    m_htCapability = htCapabilities;
-}
-
-void
-MgtProbeResponseHeader::SetHtCapabilities(HtCapabilities&& htCapabilities)
-{
-    m_htCapability = std::move(htCapabilities);
-}
-
-const std::optional<HtCapabilities>&
-MgtProbeResponseHeader::GetHtCapabilities() const
-{
-    return m_htCapability;
-}
-
-void
-MgtProbeResponseHeader::SetHtOperation(const HtOperation& htOperation)
-{
-    m_htOperation = htOperation;
-}
-
-void
-MgtProbeResponseHeader::SetHtOperation(HtOperation&& htOperation)
-{
-    m_htOperation = std::move(htOperation);
-}
-
-const std::optional<HtOperation>&
-MgtProbeResponseHeader::GetHtOperation() const
-{
-    return m_htOperation;
-}
-
-void
-MgtProbeResponseHeader::SetVhtCapabilities(const VhtCapabilities& vhtCapabilities)
-{
-    m_vhtCapability = vhtCapabilities;
-}
-
-void
-MgtProbeResponseHeader::SetVhtCapabilities(VhtCapabilities&& vhtCapabilities)
-{
-    m_vhtCapability = std::move(vhtCapabilities);
-}
-
-const std::optional<VhtCapabilities>&
-MgtProbeResponseHeader::GetVhtCapabilities() const
-{
-    return m_vhtCapability;
-}
-
-void
-MgtProbeResponseHeader::SetVhtOperation(const VhtOperation& vhtOperation)
-{
-    m_vhtOperation = vhtOperation;
-}
-
-void
-MgtProbeResponseHeader::SetVhtOperation(VhtOperation&& vhtOperation)
-{
-    m_vhtOperation = std::move(vhtOperation);
-}
-
-const std::optional<VhtOperation>&
-MgtProbeResponseHeader::GetVhtOperation() const
-{
-    return m_vhtOperation;
-}
-
-void
-MgtProbeResponseHeader::SetHeCapabilities(const HeCapabilities& heCapabilities)
-{
-    m_heCapability = heCapabilities;
-}
-
-void
-MgtProbeResponseHeader::SetHeCapabilities(HeCapabilities&& heCapabilities)
-{
-    m_heCapability = std::move(heCapabilities);
-}
-
-const std::optional<HeCapabilities>&
-MgtProbeResponseHeader::GetHeCapabilities() const
-{
-    return m_heCapability;
-}
-
-void
-MgtProbeResponseHeader::SetHeOperation(const HeOperation& heOperation)
-{
-    m_heOperation = heOperation;
-}
-
-void
-MgtProbeResponseHeader::SetHeOperation(HeOperation&& heOperation)
-{
-    m_heOperation = std::move(heOperation);
-}
-
-const std::optional<HeOperation>&
-MgtProbeResponseHeader::GetHeOperation() const
-{
-    return m_heOperation;
-}
-
-void
-MgtProbeResponseHeader::SetEhtCapabilities(const EhtCapabilities& ehtCapabilities)
-{
-    m_ehtCapability = ehtCapabilities;
-}
-
-void
-MgtProbeResponseHeader::SetEhtCapabilities(EhtCapabilities&& ehtCapabilities)
-{
-    m_ehtCapability = std::move(ehtCapabilities);
-}
-
-const std::optional<EhtCapabilities>&
-MgtProbeResponseHeader::GetEhtCapabilities() const
-{
-    return m_ehtCapability;
-}
-
-void
-MgtProbeResponseHeader::SetEhtOperation(const EhtOperation& ehtOperation)
-{
-    m_ehtOperation = ehtOperation;
-}
-
-void
-MgtProbeResponseHeader::SetEhtOperation(EhtOperation&& ehtOperation)
-{
-    m_ehtOperation = std::move(ehtOperation);
-}
-
-const std::optional<EhtOperation>&
-MgtProbeResponseHeader::GetEhtOperation() const
-{
-    return m_ehtOperation;
-}
-
-void
-MgtProbeResponseHeader::SetSsid(const Ssid& ssid)
-{
-    m_ssid = ssid;
-}
-
-void
-MgtProbeResponseHeader::SetSsid(Ssid&& ssid)
-{
-    m_ssid = std::move(ssid);
-}
-
-void
-MgtProbeResponseHeader::SetBeaconIntervalUs(uint64_t us)
-{
-    m_beaconInterval = us;
-}
-
-void
-MgtProbeResponseHeader::SetSupportedRates(const SupportedRates& rates)
-{
-    m_rates = rates;
-}
-
-void
-MgtProbeResponseHeader::SetSupportedRates(SupportedRates&& rates)
-{
-    m_rates = std::move(rates);
-}
-
-void
-MgtProbeResponseHeader::SetDsssParameterSet(const DsssParameterSet& dsssParameterSet)
-{
-    m_dsssParameterSet = dsssParameterSet;
-}
-
-void
-MgtProbeResponseHeader::SetDsssParameterSet(DsssParameterSet&& dsssParameterSet)
-{
-    m_dsssParameterSet = std::move(dsssParameterSet);
-}
-
-const std::optional<DsssParameterSet>&
-MgtProbeResponseHeader::GetDsssParameterSet() const
-{
-    return m_dsssParameterSet;
-}
-
-void
-MgtProbeResponseHeader::SetErpInformation(const ErpInformation& erpInformation)
-{
-    m_erpInformation = erpInformation;
-}
-
-void
-MgtProbeResponseHeader::SetErpInformation(ErpInformation&& erpInformation)
-{
-    m_erpInformation = std::move(erpInformation);
-}
-
-const std::optional<ErpInformation>&
-MgtProbeResponseHeader::GetErpInformation() const
-{
-    return m_erpInformation;
-}
-
-void
-MgtProbeResponseHeader::SetEdcaParameterSet(const EdcaParameterSet& edcaParameters)
-{
-    m_edcaParameterSet = edcaParameters;
-}
-
-void
-MgtProbeResponseHeader::SetEdcaParameterSet(EdcaParameterSet&& edcaParameters)
-{
-    m_edcaParameterSet = std::move(edcaParameters);
-}
-
-void
-MgtProbeResponseHeader::SetMuEdcaParameterSet(const MuEdcaParameterSet& muEdcaParameters)
-{
-    m_muEdcaParameterSet = muEdcaParameters;
-}
-
-void
-MgtProbeResponseHeader::SetMuEdcaParameterSet(MuEdcaParameterSet&& muEdcaParameters)
-{
-    m_muEdcaParameterSet = std::move(muEdcaParameters);
-}
-
-void
-MgtProbeResponseHeader::SetReducedNeighborReport(const ReducedNeighborReport& reducedNeighborReport)
-{
-    m_reducedNeighborReport = reducedNeighborReport;
-}
-
-void
-MgtProbeResponseHeader::SetReducedNeighborReport(ReducedNeighborReport&& reducedNeighborReport)
-{
-    m_reducedNeighborReport = std::move(reducedNeighborReport);
-}
-
-void
-MgtProbeResponseHeader::SetMultiLinkElement(const MultiLinkElement& multiLinkElement)
-{
-    m_multiLinkElement = multiLinkElement;
-}
-
-void
-MgtProbeResponseHeader::SetMultiLinkElement(MultiLinkElement&& multiLinkElement)
-{
-    m_multiLinkElement = std::move(multiLinkElement);
-}
-
-const std::optional<EdcaParameterSet>&
-MgtProbeResponseHeader::GetEdcaParameterSet() const
-{
-    return m_edcaParameterSet;
-}
-
-const std::optional<MuEdcaParameterSet>&
-MgtProbeResponseHeader::GetMuEdcaParameterSet() const
-{
-    return m_muEdcaParameterSet;
-}
-
-const std::optional<ReducedNeighborReport>&
-MgtProbeResponseHeader::GetReducedNeighborReport() const
-{
-    return m_reducedNeighborReport;
-}
-
-const std::optional<MultiLinkElement>&
-MgtProbeResponseHeader::GetMultiLinkElement() const
-{
-    return m_multiLinkElement;
-}
 
 TypeId
 MgtProbeResponseHeader::GetTypeId()
@@ -661,236 +72,65 @@ MgtProbeResponseHeader::GetInstanceTypeId() const
     return GetTypeId();
 }
 
-uint32_t
-MgtProbeResponseHeader::GetSerializedSize() const
+uint64_t
+MgtProbeResponseHeader::GetBeaconIntervalUs() const
 {
-    uint32_t size = 0;
-    size += 8; // timestamp
-    size += 2; // beacon interval
+    return m_beaconInterval;
+}
+
+void
+MgtProbeResponseHeader::SetBeaconIntervalUs(uint64_t us)
+{
+    m_beaconInterval = us;
+}
+
+const CapabilityInformation&
+MgtProbeResponseHeader::Capabilities() const
+{
+    return m_capability;
+}
+
+CapabilityInformation&
+MgtProbeResponseHeader::Capabilities()
+{
+    return m_capability;
+}
+
+uint64_t
+MgtProbeResponseHeader::GetTimestamp() const
+{
+    return m_timestamp;
+}
+
+uint32_t
+MgtProbeResponseHeader::GetSerializedSizeImpl() const
+{
+    uint32_t size = 8 /* timestamp */ + 2 /* beacon interval */;
     size += m_capability.GetSerializedSize();
-    size += m_ssid.GetSerializedSize();
-    size += m_rates.GetSerializedSize();
-    if (m_dsssParameterSet.has_value())
-    {
-        size += m_dsssParameterSet->GetSerializedSize();
-    }
-    if (m_erpInformation.has_value())
-    {
-        size += m_erpInformation->GetSerializedSize();
-    }
-    if (m_rates.GetNRates() > 8)
-    {
-        size += m_rates.extended->GetSerializedSize();
-    }
-    if (m_edcaParameterSet.has_value())
-    {
-        size += m_edcaParameterSet->GetSerializedSize();
-    }
-    if (m_extendedCapability.has_value())
-    {
-        size += m_extendedCapability->GetSerializedSize();
-    }
-    if (m_htCapability.has_value())
-    {
-        size += m_htCapability->GetSerializedSize();
-    }
-    if (m_htOperation.has_value())
-    {
-        size += m_htOperation->GetSerializedSize();
-    }
-    if (m_vhtCapability.has_value())
-    {
-        size += m_vhtCapability->GetSerializedSize();
-    }
-    if (m_vhtOperation.has_value())
-    {
-        size += m_vhtOperation->GetSerializedSize();
-    }
-    if (m_reducedNeighborReport.has_value())
-    {
-        size += m_reducedNeighborReport->GetSerializedSize();
-    }
-    if (m_heCapability.has_value())
-    {
-        size += m_heCapability->GetSerializedSize();
-    }
-    if (m_heOperation.has_value())
-    {
-        size += m_heOperation->GetSerializedSize();
-    }
-    if (m_muEdcaParameterSet.has_value())
-    {
-        size += m_muEdcaParameterSet->GetSerializedSize();
-    }
-    if (m_multiLinkElement.has_value())
-    {
-        size += m_multiLinkElement->GetSerializedSize();
-    }
-    if (m_ehtCapability.has_value())
-    {
-        size += m_ehtCapability->GetSerializedSize();
-    }
-    if (m_ehtOperation.has_value())
-    {
-        size += m_ehtOperation->GetSerializedSize();
-    }
+    size += WifiMgtHeader<MgtProbeResponseHeader, ProbeResponseElems>::GetSerializedSizeImpl();
     return size;
 }
 
 void
-MgtProbeResponseHeader::Print(std::ostream& os) const
-{
-    os << "ssid=" << m_ssid << ", "
-       << "rates=" << m_rates << ", ";
-    if (m_erpInformation.has_value())
-    {
-        os << "ERP information=" << *m_erpInformation << ", ";
-    }
-    if (m_extendedCapability.has_value())
-    {
-        os << "Extended Capabilities=" << *m_extendedCapability << " , ";
-    }
-    if (m_htCapability.has_value())
-    {
-        os << "HT Capabilities=" << *m_htCapability << " , ";
-    }
-    if (m_htOperation.has_value())
-    {
-        os << "HT Operation=" << *m_htOperation << " , ";
-    }
-    if (m_vhtCapability.has_value())
-    {
-        os << "VHT Capabilities=" << *m_vhtCapability << " , ";
-    }
-    if (m_vhtOperation.has_value())
-    {
-        os << "VHT Operation=" << *m_vhtOperation << " , ";
-    }
-    if (m_heCapability.has_value())
-    {
-        os << "HE Capabilities=" << *m_heCapability << " , ";
-    }
-    if (m_heOperation.has_value())
-    {
-        os << "HE Operation=" << *m_heOperation << " , ";
-    }
-    if (m_ehtCapability.has_value())
-    {
-        os << "EHT Capabilities=" << *m_ehtCapability;
-    }
-    if (m_ehtOperation.has_value())
-    {
-        os << "EHT Operation=" << *m_ehtOperation;
-    }
-}
-
-void
-MgtProbeResponseHeader::Serialize(Buffer::Iterator start) const
+MgtProbeResponseHeader::SerializeImpl(Buffer::Iterator start) const
 {
     Buffer::Iterator i = start;
     i.WriteHtolsbU64(Simulator::Now().GetMicroSeconds());
     i.WriteHtolsbU16(static_cast<uint16_t>(m_beaconInterval / 1024));
     i = m_capability.Serialize(i);
-    i = m_ssid.Serialize(i);
-    i = m_rates.Serialize(i);
-    if (m_dsssParameterSet.has_value())
-    {
-        i = m_dsssParameterSet->Serialize(i);
-    }
-    if (m_erpInformation.has_value())
-    {
-        i = m_erpInformation->Serialize(i);
-    }
-    if (m_rates.GetNRates() > 8)
-    {
-        i = m_rates.extended->Serialize(i);
-    }
-    if (m_edcaParameterSet.has_value())
-    {
-        i = m_edcaParameterSet->Serialize(i);
-    }
-    if (m_extendedCapability.has_value())
-    {
-        i = m_extendedCapability->Serialize(i);
-    }
-    if (m_htCapability.has_value())
-    {
-        i = m_htCapability->Serialize(i);
-    }
-    if (m_htOperation.has_value())
-    {
-        i = m_htOperation->Serialize(i);
-    }
-    if (m_vhtCapability.has_value())
-    {
-        i = m_vhtCapability->Serialize(i);
-    }
-    if (m_vhtOperation.has_value())
-    {
-        i = m_vhtOperation->Serialize(i);
-    }
-    if (m_reducedNeighborReport.has_value())
-    {
-        i = m_reducedNeighborReport->Serialize(i);
-    }
-    if (m_heCapability.has_value())
-    {
-        i = m_heCapability->Serialize(i);
-    }
-    if (m_heOperation.has_value())
-    {
-        i = m_heOperation->Serialize(i);
-    }
-    if (m_muEdcaParameterSet.has_value())
-    {
-        i = m_muEdcaParameterSet->Serialize(i);
-    }
-    if (m_multiLinkElement.has_value())
-    {
-        i = m_multiLinkElement->Serialize(i);
-    }
-    if (m_ehtCapability.has_value())
-    {
-        i = m_ehtCapability->Serialize(i);
-    }
-    if (m_ehtOperation.has_value())
-    {
-        i = m_ehtOperation->Serialize(i);
-    }
+    WifiMgtHeader<MgtProbeResponseHeader, ProbeResponseElems>::SerializeImpl(i);
 }
 
 uint32_t
-MgtProbeResponseHeader::Deserialize(Buffer::Iterator start)
+MgtProbeResponseHeader::DeserializeImpl(Buffer::Iterator start)
 {
-    Buffer::Iterator tmp;
     Buffer::Iterator i = start;
     m_timestamp = i.ReadLsbtohU64();
     m_beaconInterval = i.ReadLsbtohU16();
     m_beaconInterval *= 1024;
     i = m_capability.Deserialize(i);
-    i = m_ssid.Deserialize(i);
-    i = m_rates.Deserialize(i);
-    i = WifiInformationElement::DeserializeIfPresent(m_dsssParameterSet, i);
-    i = WifiInformationElement::DeserializeIfPresent(m_erpInformation, i);
-    i = WifiInformationElement::DeserializeIfPresent(m_rates.extended, i, &m_rates);
-    i = WifiInformationElement::DeserializeIfPresent(m_edcaParameterSet, i);
-    i = WifiInformationElement::DeserializeIfPresent(m_extendedCapability, i);
-    i = WifiInformationElement::DeserializeIfPresent(m_htCapability, i);
-    i = WifiInformationElement::DeserializeIfPresent(m_htOperation, i);
-    i = WifiInformationElement::DeserializeIfPresent(m_vhtCapability, i);
-    i = WifiInformationElement::DeserializeIfPresent(m_vhtOperation, i);
-    i = WifiInformationElement::DeserializeIfPresent(m_reducedNeighborReport, i);
-    i = WifiInformationElement::DeserializeIfPresent(m_heCapability, i);
-    i = WifiInformationElement::DeserializeIfPresent(m_heOperation, i);
-    i = WifiInformationElement::DeserializeIfPresent(m_muEdcaParameterSet, i);
-    i = WifiInformationElement::DeserializeIfPresent(m_multiLinkElement, i, WIFI_MAC_MGT_BEACON);
-    const bool is2_4Ghz = m_rates.IsSupportedRate(
-        1000000 /* 1 Mbit/s */); // TODO: use presence of VHT capabilities IE and HE 6 GHz Band
-                                 // Capabilities IE once the later is implemented
-    i = WifiInformationElement::DeserializeIfPresent(m_ehtCapability, i, is2_4Ghz, m_heCapability);
-    i = WifiInformationElement::DeserializeIfPresent(m_ehtOperation, i);
-
-    return i.GetDistanceFrom(start);
+    auto distance = i.GetDistanceFrom(start);
+    return distance + WifiMgtHeader<MgtProbeResponseHeader, ProbeResponseElems>::DeserializeImpl(i);
 }
 
 /***********************************************************
@@ -916,189 +156,6 @@ MgtBeaconHeader::GetTypeId()
 
 NS_OBJECT_ENSURE_REGISTERED(MgtAssocRequestHeader);
 
-MgtAssocRequestHeader::MgtAssocRequestHeader()
-    : m_listenInterval(0)
-{
-}
-
-MgtAssocRequestHeader::~MgtAssocRequestHeader()
-{
-}
-
-void
-MgtAssocRequestHeader::SetSsid(const Ssid& ssid)
-{
-    m_ssid = ssid;
-}
-
-void
-MgtAssocRequestHeader::SetSsid(Ssid&& ssid)
-{
-    m_ssid = std::move(ssid);
-}
-
-void
-MgtAssocRequestHeader::SetSupportedRates(const SupportedRates& rates)
-{
-    m_rates = rates;
-}
-
-void
-MgtAssocRequestHeader::SetSupportedRates(SupportedRates&& rates)
-{
-    m_rates = std::move(rates);
-}
-
-void
-MgtAssocRequestHeader::SetListenInterval(uint16_t interval)
-{
-    m_listenInterval = interval;
-}
-
-void
-MgtAssocRequestHeader::SetCapabilities(const CapabilityInformation& capabilities)
-{
-    m_capability = capabilities;
-}
-
-void
-MgtAssocRequestHeader::SetCapabilities(CapabilityInformation&& capabilities)
-{
-    m_capability = std::move(capabilities);
-}
-
-const CapabilityInformation&
-MgtAssocRequestHeader::GetCapabilities() const
-{
-    return m_capability;
-}
-
-void
-MgtAssocRequestHeader::SetExtendedCapabilities(const ExtendedCapabilities& extendedCapabilities)
-{
-    m_extendedCapability = extendedCapabilities;
-}
-
-void
-MgtAssocRequestHeader::SetExtendedCapabilities(ExtendedCapabilities&& extendedCapabilities)
-{
-    m_extendedCapability = std::move(extendedCapabilities);
-}
-
-const std::optional<ExtendedCapabilities>&
-MgtAssocRequestHeader::GetExtendedCapabilities() const
-{
-    return m_extendedCapability;
-}
-
-void
-MgtAssocRequestHeader::SetHtCapabilities(const HtCapabilities& htCapabilities)
-{
-    m_htCapability = htCapabilities;
-}
-
-void
-MgtAssocRequestHeader::SetHtCapabilities(HtCapabilities&& htCapabilities)
-{
-    m_htCapability = std::move(htCapabilities);
-}
-
-const std::optional<HtCapabilities>&
-MgtAssocRequestHeader::GetHtCapabilities() const
-{
-    return m_htCapability;
-}
-
-void
-MgtAssocRequestHeader::SetVhtCapabilities(const VhtCapabilities& vhtCapabilities)
-{
-    m_vhtCapability = vhtCapabilities;
-}
-
-void
-MgtAssocRequestHeader::SetVhtCapabilities(VhtCapabilities&& vhtCapabilities)
-{
-    m_vhtCapability = std::move(vhtCapabilities);
-}
-
-const std::optional<VhtCapabilities>&
-MgtAssocRequestHeader::GetVhtCapabilities() const
-{
-    return m_vhtCapability;
-}
-
-void
-MgtAssocRequestHeader::SetHeCapabilities(const HeCapabilities& heCapabilities)
-{
-    m_heCapability = heCapabilities;
-}
-
-void
-MgtAssocRequestHeader::SetHeCapabilities(HeCapabilities&& heCapabilities)
-{
-    m_heCapability = std::move(heCapabilities);
-}
-
-const std::optional<HeCapabilities>&
-MgtAssocRequestHeader::GetHeCapabilities() const
-{
-    return m_heCapability;
-}
-
-void
-MgtAssocRequestHeader::SetEhtCapabilities(const EhtCapabilities& ehtCapabilities)
-{
-    m_ehtCapability = ehtCapabilities;
-}
-
-void
-MgtAssocRequestHeader::SetEhtCapabilities(EhtCapabilities&& ehtCapabilities)
-{
-    m_ehtCapability = std::move(ehtCapabilities);
-}
-
-const std::optional<EhtCapabilities>&
-MgtAssocRequestHeader::GetEhtCapabilities() const
-{
-    return m_ehtCapability;
-}
-
-void
-MgtAssocRequestHeader::SetMultiLinkElement(const MultiLinkElement& multiLinkElement)
-{
-    m_multiLinkElement = multiLinkElement;
-}
-
-void
-MgtAssocRequestHeader::SetMultiLinkElement(MultiLinkElement&& multiLinkElement)
-{
-    m_multiLinkElement = std::move(multiLinkElement);
-}
-
-const std::optional<MultiLinkElement>&
-MgtAssocRequestHeader::GetMultiLinkElement() const
-{
-    return m_multiLinkElement;
-}
-
-const Ssid&
-MgtAssocRequestHeader::GetSsid() const
-{
-    return m_ssid;
-}
-
-const SupportedRates&
-MgtAssocRequestHeader::GetSupportedRates() const
-{
-    return m_rates;
-}
-
-uint16_t
-MgtAssocRequestHeader::GetListenInterval() const
-{
-    return m_listenInterval;
-}
-
 TypeId
 MgtAssocRequestHeader::GetTypeId()
 {
@@ -1115,132 +172,114 @@ MgtAssocRequestHeader::GetInstanceTypeId() const
     return GetTypeId();
 }
 
+uint16_t
+MgtAssocRequestHeader::GetListenInterval() const
+{
+    return m_listenInterval;
+}
+
+void
+MgtAssocRequestHeader::SetListenInterval(uint16_t interval)
+{
+    m_listenInterval = interval;
+}
+
+const CapabilityInformation&
+MgtAssocRequestHeader::Capabilities() const
+{
+    return m_capability;
+}
+
+CapabilityInformation&
+MgtAssocRequestHeader::Capabilities()
+{
+    return m_capability;
+}
+
 uint32_t
-MgtAssocRequestHeader::GetSerializedSize() const
+MgtAssocRequestHeader::GetSerializedSizeImpl() const
+{
+    SetMleContainingFrame();
+
+    uint32_t size = 0;
+    size += m_capability.GetSerializedSize();
+    size += 2; // listen interval
+    size += WifiMgtHeader<MgtAssocRequestHeader, AssocRequestElems>::GetSerializedSizeImpl();
+    return size;
+}
+
+uint32_t
+MgtAssocRequestHeader::GetSerializedSizeInPerStaProfileImpl(
+    const MgtAssocRequestHeader& frame) const
 {
     uint32_t size = 0;
     size += m_capability.GetSerializedSize();
-    size += 2;
-    size += m_ssid.GetSerializedSize();
-    size += m_rates.GetSerializedSize();
-    if (m_rates.GetNRates() > 8)
-    {
-        size += m_rates.extended->GetSerializedSize();
-    }
-    if (m_extendedCapability.has_value())
-    {
-        size += m_extendedCapability->GetSerializedSize();
-    }
-    if (m_htCapability.has_value())
-    {
-        size += m_htCapability->GetSerializedSize();
-    }
-    if (m_vhtCapability.has_value())
-    {
-        size += m_vhtCapability->GetSerializedSize();
-    }
-    if (m_heCapability.has_value())
-    {
-        size += m_heCapability->GetSerializedSize();
-    }
-    if (m_multiLinkElement.has_value())
-    {
-        size += m_multiLinkElement->GetSerializedSize();
-    }
-    if (m_ehtCapability.has_value())
-    {
-        size += m_ehtCapability->GetSerializedSize();
-    }
+    size +=
+        MgtHeaderInPerStaProfile<MgtAssocRequestHeader,
+                                 AssocRequestElems>::GetSerializedSizeInPerStaProfileImpl(frame);
     return size;
 }
 
 void
-MgtAssocRequestHeader::Print(std::ostream& os) const
+MgtAssocRequestHeader::SerializeImpl(Buffer::Iterator start) const
 {
-    os << "ssid=" << m_ssid << ", "
-       << "rates=" << m_rates << ", ";
-    if (m_extendedCapability.has_value())
-    {
-        os << "Extended Capabilities=" << *m_extendedCapability << " , ";
-    }
-    if (m_htCapability.has_value())
-    {
-        os << "HT Capabilities=" << *m_htCapability << " , ";
-    }
-    if (m_vhtCapability.has_value())
-    {
-        os << "VHT Capabilities=" << *m_vhtCapability << " , ";
-    }
-    if (m_heCapability.has_value())
-    {
-        os << "HE Capabilities=" << *m_heCapability << " , ";
-    }
-    if (m_ehtCapability.has_value())
-    {
-        os << "EHT Capabilities=" << *m_ehtCapability;
-    }
-}
+    SetMleContainingFrame();
 
-void
-MgtAssocRequestHeader::Serialize(Buffer::Iterator start) const
-{
     Buffer::Iterator i = start;
     i = m_capability.Serialize(i);
     i.WriteHtolsbU16(m_listenInterval);
-    i = m_ssid.Serialize(i);
-    i = m_rates.Serialize(i);
-    if (m_rates.GetNRates() > 8)
-    {
-        i = m_rates.extended->Serialize(i);
-    }
-    if (m_extendedCapability.has_value())
-    {
-        i = m_extendedCapability->Serialize(i);
-    }
-    if (m_htCapability.has_value())
-    {
-        i = m_htCapability->Serialize(i);
-    }
-    if (m_vhtCapability.has_value())
-    {
-        i = m_vhtCapability->Serialize(i);
-    }
-    if (m_heCapability.has_value())
-    {
-        i = m_heCapability->Serialize(i);
-    }
-    if (m_multiLinkElement.has_value())
-    {
-        i = m_multiLinkElement->Serialize(i);
-    }
-    if (m_ehtCapability.has_value())
-    {
-        i = m_ehtCapability->Serialize(i);
-    }
+    WifiMgtHeader<MgtAssocRequestHeader, AssocRequestElems>::SerializeImpl(i);
+}
+
+void
+MgtAssocRequestHeader::SerializeInPerStaProfileImpl(Buffer::Iterator start,
+                                                    const MgtAssocRequestHeader& frame) const
+{
+    Buffer::Iterator i = start;
+    i = m_capability.Serialize(i);
+    MgtHeaderInPerStaProfile<MgtAssocRequestHeader,
+                             AssocRequestElems>::SerializeInPerStaProfileImpl(i, frame);
 }
 
 uint32_t
-MgtAssocRequestHeader::Deserialize(Buffer::Iterator start)
+MgtAssocRequestHeader::DeserializeImpl(Buffer::Iterator start)
 {
-    Buffer::Iterator tmp;
     Buffer::Iterator i = start;
     i = m_capability.Deserialize(i);
     m_listenInterval = i.ReadLsbtohU16();
-    i = m_ssid.Deserialize(i);
-    i = m_rates.Deserialize(i);
-    i = WifiInformationElement::DeserializeIfPresent(m_rates.extended, i, &m_rates);
-    i = WifiInformationElement::DeserializeIfPresent(m_extendedCapability, i);
-    i = WifiInformationElement::DeserializeIfPresent(m_htCapability, i);
-    i = WifiInformationElement::DeserializeIfPresent(m_vhtCapability, i);
-    i = WifiInformationElement::DeserializeIfPresent(m_heCapability, i);
-    i = WifiInformationElement::DeserializeIfPresent(m_multiLinkElement,
-                                                     i,
-                                                     WIFI_MAC_MGT_ASSOCIATION_REQUEST);
-    const bool is2_4Ghz = m_rates.IsSupportedRate(
-        1000000 /* 1 Mbit/s */); // TODO: use presence of VHT capabilities IE and HE 6 GHz Band
-                                 // Capabilities IE once the later is implemented
-    i = WifiInformationElement::DeserializeIfPresent(m_ehtCapability, i, is2_4Ghz, m_heCapability);
-    return i.GetDistanceFrom(start);
+    auto distance = i.GetDistanceFrom(start) +
+                    WifiMgtHeader<MgtAssocRequestHeader, AssocRequestElems>::DeserializeImpl(i);
+    if (auto& mle = Get<MultiLinkElement>())
+    {
+        for (std::size_t id = 0; id < mle->GetNPerStaProfileSubelements(); id++)
+        {
+            auto& perStaProfile = mle->GetPerStaProfile(id);
+            if (perStaProfile.HasAssocRequest())
+            {
+                auto& frameInPerStaProfile =
+                    std::get<std::reference_wrapper<MgtAssocRequestHeader>>(
+                        perStaProfile.GetAssocRequest())
+                        .get();
+                frameInPerStaProfile.CopyIesFromContainingFrame(*this);
+            }
+        }
+    }
+    return distance;
+}
+
+uint32_t
+MgtAssocRequestHeader::DeserializeFromPerStaProfileImpl(Buffer::Iterator start,
+                                                        uint16_t length,
+                                                        const MgtAssocRequestHeader& frame)
+{
+    Buffer::Iterator i = start;
+    i = m_capability.Deserialize(i);
+    m_listenInterval = frame.m_listenInterval;
+    auto distance = i.GetDistanceFrom(start);
+    NS_ASSERT_MSG(distance <= length,
+                  "Bytes read (" << distance << ") exceed expected number (" << length << ")");
+    return distance + MgtHeaderInPerStaProfile<MgtAssocRequestHeader, AssocRequestElems>::
+                          DeserializeFromPerStaProfileImpl(i, length - distance, frame);
 }
 
 /***********************************************************
@@ -1248,195 +287,6 @@ MgtAssocRequestHeader::Deserialize(Buffer::Iterator start)
  ***********************************************************/
 
 NS_OBJECT_ENSURE_REGISTERED(MgtReassocRequestHeader);
-
-MgtReassocRequestHeader::MgtReassocRequestHeader()
-    : m_currentApAddr(Mac48Address())
-{
-}
-
-MgtReassocRequestHeader::~MgtReassocRequestHeader()
-{
-}
-
-void
-MgtReassocRequestHeader::SetSsid(const Ssid& ssid)
-{
-    m_ssid = ssid;
-}
-
-void
-MgtReassocRequestHeader::SetSsid(Ssid&& ssid)
-{
-    m_ssid = std::move(ssid);
-}
-
-void
-MgtReassocRequestHeader::SetSupportedRates(const SupportedRates& rates)
-{
-    m_rates = rates;
-}
-
-void
-MgtReassocRequestHeader::SetSupportedRates(SupportedRates&& rates)
-{
-    m_rates = std::move(rates);
-}
-
-void
-MgtReassocRequestHeader::SetListenInterval(uint16_t interval)
-{
-    m_listenInterval = interval;
-}
-
-void
-MgtReassocRequestHeader::SetCapabilities(const CapabilityInformation& capabilities)
-{
-    m_capability = capabilities;
-}
-
-void
-MgtReassocRequestHeader::SetCapabilities(CapabilityInformation&& capabilities)
-{
-    m_capability = std::move(capabilities);
-}
-
-const CapabilityInformation&
-MgtReassocRequestHeader::GetCapabilities() const
-{
-    return m_capability;
-}
-
-void
-MgtReassocRequestHeader::SetExtendedCapabilities(const ExtendedCapabilities& extendedCapabilities)
-{
-    m_extendedCapability = extendedCapabilities;
-}
-
-void
-MgtReassocRequestHeader::SetExtendedCapabilities(ExtendedCapabilities&& extendedCapabilities)
-{
-    m_extendedCapability = std::move(extendedCapabilities);
-}
-
-const std::optional<ExtendedCapabilities>&
-MgtReassocRequestHeader::GetExtendedCapabilities() const
-{
-    return m_extendedCapability;
-}
-
-void
-MgtReassocRequestHeader::SetHtCapabilities(const HtCapabilities& htCapabilities)
-{
-    m_htCapability = htCapabilities;
-}
-
-void
-MgtReassocRequestHeader::SetHtCapabilities(HtCapabilities&& htCapabilities)
-{
-    m_htCapability = std::move(htCapabilities);
-}
-
-const std::optional<HtCapabilities>&
-MgtReassocRequestHeader::GetHtCapabilities() const
-{
-    return m_htCapability;
-}
-
-void
-MgtReassocRequestHeader::SetVhtCapabilities(const VhtCapabilities& vhtCapabilities)
-{
-    m_vhtCapability = vhtCapabilities;
-}
-
-void
-MgtReassocRequestHeader::SetVhtCapabilities(VhtCapabilities&& vhtCapabilities)
-{
-    m_vhtCapability = std::move(vhtCapabilities);
-}
-
-const std::optional<VhtCapabilities>&
-MgtReassocRequestHeader::GetVhtCapabilities() const
-{
-    return m_vhtCapability;
-}
-
-void
-MgtReassocRequestHeader::SetHeCapabilities(const HeCapabilities& heCapabilities)
-{
-    m_heCapability = heCapabilities;
-}
-
-void
-MgtReassocRequestHeader::SetHeCapabilities(HeCapabilities&& heCapabilities)
-{
-    m_heCapability = std::move(heCapabilities);
-}
-
-const std::optional<HeCapabilities>&
-MgtReassocRequestHeader::GetHeCapabilities() const
-{
-    return m_heCapability;
-}
-
-void
-MgtReassocRequestHeader::SetEhtCapabilities(const EhtCapabilities& ehtCapabilities)
-{
-    m_ehtCapability = ehtCapabilities;
-}
-
-void
-MgtReassocRequestHeader::SetEhtCapabilities(EhtCapabilities&& ehtCapabilities)
-{
-    m_ehtCapability = std::move(ehtCapabilities);
-}
-
-const std::optional<EhtCapabilities>&
-MgtReassocRequestHeader::GetEhtCapabilities() const
-{
-    return m_ehtCapability;
-}
-
-void
-MgtReassocRequestHeader::SetMultiLinkElement(const MultiLinkElement& multiLinkElement)
-{
-    m_multiLinkElement = multiLinkElement;
-}
-
-void
-MgtReassocRequestHeader::SetMultiLinkElement(MultiLinkElement&& multiLinkElement)
-{
-    m_multiLinkElement = std::move(multiLinkElement);
-}
-
-const std::optional<MultiLinkElement>&
-MgtReassocRequestHeader::GetMultiLinkElement() const
-{
-    return m_multiLinkElement;
-}
-
-const Ssid&
-MgtReassocRequestHeader::GetSsid() const
-{
-    return m_ssid;
-}
-
-const SupportedRates&
-MgtReassocRequestHeader::GetSupportedRates() const
-{
-    return m_rates;
-}
-
-uint16_t
-MgtReassocRequestHeader::GetListenInterval() const
-{
-    return m_listenInterval;
-}
-
-void
-MgtReassocRequestHeader::SetCurrentApAddress(Mac48Address currentApAddr)
-{
-    m_currentApAddr = currentApAddr;
-}
 
 TypeId
 MgtReassocRequestHeader::GetTypeId()
@@ -1454,136 +304,131 @@ MgtReassocRequestHeader::GetInstanceTypeId() const
     return GetTypeId();
 }
 
-uint32_t
-MgtReassocRequestHeader::GetSerializedSize() const
+uint16_t
+MgtReassocRequestHeader::GetListenInterval() const
 {
+    return m_listenInterval;
+}
+
+void
+MgtReassocRequestHeader::SetListenInterval(uint16_t interval)
+{
+    m_listenInterval = interval;
+}
+
+const CapabilityInformation&
+MgtReassocRequestHeader::Capabilities() const
+{
+    return m_capability;
+}
+
+CapabilityInformation&
+MgtReassocRequestHeader::Capabilities()
+{
+    return m_capability;
+}
+
+void
+MgtReassocRequestHeader::SetCurrentApAddress(Mac48Address currentApAddr)
+{
+    m_currentApAddr = currentApAddr;
+}
+
+uint32_t
+MgtReassocRequestHeader::GetSerializedSizeImpl() const
+{
+    SetMleContainingFrame();
+
     uint32_t size = 0;
     size += m_capability.GetSerializedSize();
     size += 2; // listen interval
     size += 6; // current AP address
-    size += m_ssid.GetSerializedSize();
-    size += m_rates.GetSerializedSize();
-    if (m_rates.GetNRates() > 8)
-    {
-        size += m_rates.extended->GetSerializedSize();
-    }
-    if (m_extendedCapability.has_value())
-    {
-        size += m_extendedCapability->GetSerializedSize();
-    }
-    if (m_htCapability.has_value())
-    {
-        size += m_htCapability->GetSerializedSize();
-    }
-    if (m_vhtCapability.has_value())
-    {
-        size += m_vhtCapability->GetSerializedSize();
-    }
-    if (m_heCapability.has_value())
-    {
-        size += m_heCapability->GetSerializedSize();
-    }
-    if (m_multiLinkElement.has_value())
-    {
-        size += m_multiLinkElement->GetSerializedSize();
-    }
-    if (m_ehtCapability.has_value())
-    {
-        size += m_ehtCapability->GetSerializedSize();
-    }
+    size += WifiMgtHeader<MgtReassocRequestHeader, AssocRequestElems>::GetSerializedSizeImpl();
+    return size;
+}
+
+uint32_t
+MgtReassocRequestHeader::GetSerializedSizeInPerStaProfileImpl(
+    const MgtReassocRequestHeader& frame) const
+{
+    uint32_t size = 0;
+    size += m_capability.GetSerializedSize();
+    size +=
+        MgtHeaderInPerStaProfile<MgtReassocRequestHeader,
+                                 AssocRequestElems>::GetSerializedSizeInPerStaProfileImpl(frame);
     return size;
 }
 
 void
-MgtReassocRequestHeader::Print(std::ostream& os) const
+MgtReassocRequestHeader::PrintImpl(std::ostream& os) const
 {
-    os << "current AP address=" << m_currentApAddr << ", "
-       << "ssid=" << m_ssid << ", "
-       << "rates=" << m_rates << ", ";
-    if (m_extendedCapability.has_value())
-    {
-        os << "Extended Capabilities=" << *m_extendedCapability << " , ";
-    }
-    if (m_htCapability.has_value())
-    {
-        os << "HT Capabilities=" << *m_htCapability << " , ";
-    }
-    if (m_vhtCapability.has_value())
-    {
-        os << "VHT Capabilities=" << *m_vhtCapability << " , ";
-    }
-    if (m_heCapability.has_value())
-    {
-        os << "HE Capabilities=" << *m_heCapability << " , ";
-    }
-    if (m_ehtCapability.has_value())
-    {
-        os << "EHT Capabilities=" << *m_ehtCapability;
-    }
+    os << "current AP address=" << m_currentApAddr << ", ";
+    WifiMgtHeader<MgtReassocRequestHeader, AssocRequestElems>::PrintImpl(os);
 }
 
 void
-MgtReassocRequestHeader::Serialize(Buffer::Iterator start) const
+MgtReassocRequestHeader::SerializeImpl(Buffer::Iterator start) const
 {
+    SetMleContainingFrame();
+
     Buffer::Iterator i = start;
     i = m_capability.Serialize(i);
     i.WriteHtolsbU16(m_listenInterval);
     WriteTo(i, m_currentApAddr);
-    i = m_ssid.Serialize(i);
-    i = m_rates.Serialize(i);
-    if (m_rates.GetNRates() > 8)
-    {
-        i = m_rates.extended->Serialize(i);
-    }
-    if (m_extendedCapability.has_value())
-    {
-        i = m_extendedCapability->Serialize(i);
-    }
-    if (m_htCapability.has_value())
-    {
-        i = m_htCapability->Serialize(i);
-    }
-    if (m_vhtCapability.has_value())
-    {
-        i = m_vhtCapability->Serialize(i);
-    }
-    if (m_heCapability.has_value())
-    {
-        i = m_heCapability->Serialize(i);
-    }
-    if (m_multiLinkElement.has_value())
-    {
-        i = m_multiLinkElement->Serialize(i);
-    }
-    if (m_ehtCapability.has_value())
-    {
-        i = m_ehtCapability->Serialize(i);
-    }
+    WifiMgtHeader<MgtReassocRequestHeader, AssocRequestElems>::SerializeImpl(i);
+}
+
+void
+MgtReassocRequestHeader::SerializeInPerStaProfileImpl(Buffer::Iterator start,
+                                                      const MgtReassocRequestHeader& frame) const
+{
+    Buffer::Iterator i = start;
+    i = m_capability.Serialize(i);
+    MgtHeaderInPerStaProfile<MgtReassocRequestHeader,
+                             AssocRequestElems>::SerializeInPerStaProfileImpl(i, frame);
 }
 
 uint32_t
-MgtReassocRequestHeader::Deserialize(Buffer::Iterator start)
+MgtReassocRequestHeader::DeserializeImpl(Buffer::Iterator start)
 {
-    Buffer::Iterator tmp;
     Buffer::Iterator i = start;
     i = m_capability.Deserialize(i);
     m_listenInterval = i.ReadLsbtohU16();
     ReadFrom(i, m_currentApAddr);
-    i = m_ssid.Deserialize(i);
-    i = m_rates.Deserialize(i);
-    i = WifiInformationElement::DeserializeIfPresent(m_rates.extended, i, &m_rates);
-    i = WifiInformationElement::DeserializeIfPresent(m_extendedCapability, i);
-    i = WifiInformationElement::DeserializeIfPresent(m_htCapability, i);
-    i = WifiInformationElement::DeserializeIfPresent(m_vhtCapability, i);
-    i = WifiInformationElement::DeserializeIfPresent(m_heCapability, i);
-    i = WifiInformationElement::DeserializeIfPresent(m_multiLinkElement,
-                                                     i,
-                                                     WIFI_MAC_MGT_REASSOCIATION_REQUEST);
-    const bool is2_4Ghz = m_rates.IsSupportedRate(
-        1000000 /* 1 Mbit/s */); // TODO: use presence of VHT capabilities IE and HE 6 GHz Band
-                                 // Capabilities IE once the later is implemented
-    i = WifiInformationElement::DeserializeIfPresent(m_ehtCapability, i, is2_4Ghz, m_heCapability);
-    return i.GetDistanceFrom(start);
+    auto distance = i.GetDistanceFrom(start) +
+                    WifiMgtHeader<MgtReassocRequestHeader, AssocRequestElems>::DeserializeImpl(i);
+    if (auto& mle = Get<MultiLinkElement>())
+    {
+        for (std::size_t id = 0; id < mle->GetNPerStaProfileSubelements(); id++)
+        {
+            auto& perStaProfile = mle->GetPerStaProfile(id);
+            if (perStaProfile.HasReassocRequest())
+            {
+                auto& frameInPerStaProfile =
+                    std::get<std::reference_wrapper<MgtReassocRequestHeader>>(
+                        perStaProfile.GetAssocRequest())
+                        .get();
+                frameInPerStaProfile.CopyIesFromContainingFrame(*this);
+            }
+        }
+    }
+    return distance;
+}
+
+uint32_t
+MgtReassocRequestHeader::DeserializeFromPerStaProfileImpl(Buffer::Iterator start,
+                                                          uint16_t length,
+                                                          const MgtReassocRequestHeader& frame)
+{
+    Buffer::Iterator i = start;
+    i = m_capability.Deserialize(i);
+    m_listenInterval = frame.m_listenInterval;
+    m_currentApAddr = frame.m_currentApAddr;
+    auto distance = i.GetDistanceFrom(start);
+    NS_ASSERT_MSG(distance <= length,
+                  "Bytes read (" << distance << ") exceed expected number (" << length << ")");
+    return distance + MgtHeaderInPerStaProfile<MgtReassocRequestHeader, AssocRequestElems>::
+                          DeserializeFromPerStaProfileImpl(i, length - distance, frame);
 }
 
 /***********************************************************
@@ -1591,309 +436,6 @@ MgtReassocRequestHeader::Deserialize(Buffer::Iterator start)
  ***********************************************************/
 
 NS_OBJECT_ENSURE_REGISTERED(MgtAssocResponseHeader);
-
-MgtAssocResponseHeader::MgtAssocResponseHeader()
-    : m_aid(0)
-{
-}
-
-MgtAssocResponseHeader::~MgtAssocResponseHeader()
-{
-}
-
-StatusCode
-MgtAssocResponseHeader::GetStatusCode()
-{
-    return m_code;
-}
-
-const SupportedRates&
-MgtAssocResponseHeader::GetSupportedRates() const
-{
-    return m_rates;
-}
-
-void
-MgtAssocResponseHeader::SetStatusCode(StatusCode code)
-{
-    m_code = code;
-}
-
-void
-MgtAssocResponseHeader::SetSupportedRates(const SupportedRates& rates)
-{
-    m_rates = rates;
-}
-
-void
-MgtAssocResponseHeader::SetSupportedRates(SupportedRates&& rates)
-{
-    m_rates = std::move(rates);
-}
-
-void
-MgtAssocResponseHeader::SetCapabilities(const CapabilityInformation& capabilities)
-{
-    m_capability = capabilities;
-}
-
-void
-MgtAssocResponseHeader::SetCapabilities(CapabilityInformation&& capabilities)
-{
-    m_capability = std::move(capabilities);
-}
-
-const CapabilityInformation&
-MgtAssocResponseHeader::GetCapabilities() const
-{
-    return m_capability;
-}
-
-void
-MgtAssocResponseHeader::SetExtendedCapabilities(const ExtendedCapabilities& extendedCapabilities)
-{
-    m_extendedCapability = extendedCapabilities;
-}
-
-void
-MgtAssocResponseHeader::SetExtendedCapabilities(ExtendedCapabilities&& extendedCapabilities)
-{
-    m_extendedCapability = std::move(extendedCapabilities);
-}
-
-const std::optional<ExtendedCapabilities>&
-MgtAssocResponseHeader::GetExtendedCapabilities() const
-{
-    return m_extendedCapability;
-}
-
-void
-MgtAssocResponseHeader::SetHtCapabilities(const HtCapabilities& htCapabilities)
-{
-    m_htCapability = htCapabilities;
-}
-
-void
-MgtAssocResponseHeader::SetHtCapabilities(HtCapabilities&& htCapabilities)
-{
-    m_htCapability = std::move(htCapabilities);
-}
-
-const std::optional<HtCapabilities>&
-MgtAssocResponseHeader::GetHtCapabilities() const
-{
-    return m_htCapability;
-}
-
-void
-MgtAssocResponseHeader::SetHtOperation(const HtOperation& htOperation)
-{
-    m_htOperation = htOperation;
-}
-
-void
-MgtAssocResponseHeader::SetHtOperation(HtOperation&& htOperation)
-{
-    m_htOperation = std::move(htOperation);
-}
-
-const std::optional<HtOperation>&
-MgtAssocResponseHeader::GetHtOperation() const
-{
-    return m_htOperation;
-}
-
-void
-MgtAssocResponseHeader::SetVhtCapabilities(const VhtCapabilities& vhtCapabilities)
-{
-    m_vhtCapability = vhtCapabilities;
-}
-
-void
-MgtAssocResponseHeader::SetVhtCapabilities(VhtCapabilities&& vhtCapabilities)
-{
-    m_vhtCapability = std::move(vhtCapabilities);
-}
-
-const std::optional<VhtCapabilities>&
-MgtAssocResponseHeader::GetVhtCapabilities() const
-{
-    return m_vhtCapability;
-}
-
-void
-MgtAssocResponseHeader::SetVhtOperation(const VhtOperation& vhtOperation)
-{
-    m_vhtOperation = vhtOperation;
-}
-
-void
-MgtAssocResponseHeader::SetVhtOperation(VhtOperation&& vhtOperation)
-{
-    m_vhtOperation = std::move(vhtOperation);
-}
-
-const std::optional<VhtOperation>&
-MgtAssocResponseHeader::GetVhtOperation() const
-{
-    return m_vhtOperation;
-}
-
-void
-MgtAssocResponseHeader::SetHeCapabilities(const HeCapabilities& heCapabilities)
-{
-    m_heCapability = heCapabilities;
-}
-
-void
-MgtAssocResponseHeader::SetHeCapabilities(HeCapabilities&& heCapabilities)
-{
-    m_heCapability = std::move(heCapabilities);
-}
-
-const std::optional<HeCapabilities>&
-MgtAssocResponseHeader::GetHeCapabilities() const
-{
-    return m_heCapability;
-}
-
-void
-MgtAssocResponseHeader::SetHeOperation(const HeOperation& heOperation)
-{
-    m_heOperation = heOperation;
-}
-
-void
-MgtAssocResponseHeader::SetHeOperation(HeOperation&& heOperation)
-{
-    m_heOperation = std::move(heOperation);
-}
-
-const std::optional<HeOperation>&
-MgtAssocResponseHeader::GetHeOperation() const
-{
-    return m_heOperation;
-}
-
-void
-MgtAssocResponseHeader::SetEhtCapabilities(const EhtCapabilities& ehtCapabilities)
-{
-    m_ehtCapability = ehtCapabilities;
-}
-
-void
-MgtAssocResponseHeader::SetEhtCapabilities(EhtCapabilities&& ehtCapabilities)
-{
-    m_ehtCapability = std::move(ehtCapabilities);
-}
-
-const std::optional<EhtCapabilities>&
-MgtAssocResponseHeader::GetEhtCapabilities() const
-{
-    return m_ehtCapability;
-}
-
-void
-MgtAssocResponseHeader::SetEhtOperation(const EhtOperation& ehtOperation)
-{
-    m_ehtOperation = ehtOperation;
-}
-
-void
-MgtAssocResponseHeader::SetEhtOperation(EhtOperation&& ehtOperation)
-{
-    m_ehtOperation = std::move(ehtOperation);
-}
-
-const std::optional<EhtOperation>&
-MgtAssocResponseHeader::GetEhtOperation() const
-{
-    return m_ehtOperation;
-}
-
-void
-MgtAssocResponseHeader::SetMultiLinkElement(const MultiLinkElement& multiLinkElement)
-{
-    m_multiLinkElement = multiLinkElement;
-}
-
-void
-MgtAssocResponseHeader::SetMultiLinkElement(MultiLinkElement&& multiLinkElement)
-{
-    m_multiLinkElement = std::move(multiLinkElement);
-}
-
-const std::optional<MultiLinkElement>&
-MgtAssocResponseHeader::GetMultiLinkElement() const
-{
-    return m_multiLinkElement;
-}
-
-void
-MgtAssocResponseHeader::SetAssociationId(uint16_t aid)
-{
-    m_aid = aid;
-}
-
-uint16_t
-MgtAssocResponseHeader::GetAssociationId() const
-{
-    return m_aid;
-}
-
-void
-MgtAssocResponseHeader::SetErpInformation(const ErpInformation& erpInformation)
-{
-    m_erpInformation = erpInformation;
-}
-
-void
-MgtAssocResponseHeader::SetErpInformation(ErpInformation&& erpInformation)
-{
-    m_erpInformation = std::move(erpInformation);
-}
-
-const std::optional<ErpInformation>&
-MgtAssocResponseHeader::GetErpInformation() const
-{
-    return m_erpInformation;
-}
-
-void
-MgtAssocResponseHeader::SetEdcaParameterSet(const EdcaParameterSet& edcaparameters)
-{
-    m_edcaParameterSet = edcaparameters;
-}
-
-void
-MgtAssocResponseHeader::SetEdcaParameterSet(EdcaParameterSet&& edcaparameters)
-{
-    m_edcaParameterSet = std::move(edcaparameters);
-}
-
-void
-MgtAssocResponseHeader::SetMuEdcaParameterSet(const MuEdcaParameterSet& muEdcaParameters)
-{
-    m_muEdcaParameterSet = muEdcaParameters;
-}
-
-void
-MgtAssocResponseHeader::SetMuEdcaParameterSet(MuEdcaParameterSet&& muEdcaParameters)
-{
-    m_muEdcaParameterSet = std::move(muEdcaParameters);
-}
-
-const std::optional<EdcaParameterSet>&
-MgtAssocResponseHeader::GetEdcaParameterSet() const
-{
-    return m_edcaParameterSet;
-}
-
-const std::optional<MuEdcaParameterSet>&
-MgtAssocResponseHeader::GetMuEdcaParameterSet() const
-{
-    return m_muEdcaParameterSet;
-}
 
 TypeId
 MgtAssocResponseHeader::GetTypeId()
@@ -1911,216 +453,137 @@ MgtAssocResponseHeader::GetInstanceTypeId() const
     return GetTypeId();
 }
 
-uint32_t
-MgtAssocResponseHeader::GetSerializedSize() const
+StatusCode
+MgtAssocResponseHeader::GetStatusCode()
 {
+    return m_code;
+}
+
+void
+MgtAssocResponseHeader::SetStatusCode(StatusCode code)
+{
+    m_code = code;
+}
+
+const CapabilityInformation&
+MgtAssocResponseHeader::Capabilities() const
+{
+    return m_capability;
+}
+
+CapabilityInformation&
+MgtAssocResponseHeader::Capabilities()
+{
+    return m_capability;
+}
+
+void
+MgtAssocResponseHeader::SetAssociationId(uint16_t aid)
+{
+    m_aid = aid;
+}
+
+uint16_t
+MgtAssocResponseHeader::GetAssociationId() const
+{
+    return m_aid;
+}
+
+uint32_t
+MgtAssocResponseHeader::GetSerializedSizeImpl() const
+{
+    SetMleContainingFrame();
+
     uint32_t size = 0;
     size += m_capability.GetSerializedSize();
     size += m_code.GetSerializedSize();
     size += 2; // aid
-    size += m_rates.GetSerializedSize();
-    if (m_erpInformation.has_value())
-    {
-        size += m_erpInformation->GetSerializedSize();
-    }
-    if (m_rates.GetNRates() > 8)
-    {
-        size += m_rates.extended->GetSerializedSize();
-    }
-    if (m_edcaParameterSet.has_value())
-    {
-        size += m_edcaParameterSet->GetSerializedSize();
-    }
-    if (m_extendedCapability.has_value())
-    {
-        size += m_extendedCapability->GetSerializedSize();
-    }
-    if (m_htCapability.has_value())
-    {
-        size += m_htCapability->GetSerializedSize();
-    }
-    if (m_htOperation.has_value())
-    {
-        size += m_htOperation->GetSerializedSize();
-    }
-    if (m_vhtCapability.has_value())
-    {
-        size += m_vhtCapability->GetSerializedSize();
-    }
-    if (m_vhtOperation.has_value())
-    {
-        size += m_vhtOperation->GetSerializedSize();
-    }
-    if (m_heCapability.has_value())
-    {
-        size += m_heCapability->GetSerializedSize();
-    }
-    if (m_heOperation.has_value())
-    {
-        size += m_heOperation->GetSerializedSize();
-    }
-    if (m_muEdcaParameterSet.has_value())
-    {
-        size += m_muEdcaParameterSet->GetSerializedSize();
-    }
-    if (m_multiLinkElement.has_value())
-    {
-        size += m_multiLinkElement->GetSerializedSize();
-    }
-    if (m_ehtCapability.has_value())
-    {
-        size += m_ehtCapability->GetSerializedSize();
-    }
-    if (m_ehtOperation.has_value())
-    {
-        size += m_ehtOperation->GetSerializedSize();
-    }
+    size += WifiMgtHeader<MgtAssocResponseHeader, AssocResponseElems>::GetSerializedSizeImpl();
+    return size;
+}
+
+uint32_t
+MgtAssocResponseHeader::GetSerializedSizeInPerStaProfileImpl(
+    const MgtAssocResponseHeader& frame) const
+{
+    uint32_t size = 0;
+    size += m_capability.GetSerializedSize();
+    size += m_code.GetSerializedSize();
+    size +=
+        MgtHeaderInPerStaProfile<MgtAssocResponseHeader,
+                                 AssocResponseElems>::GetSerializedSizeInPerStaProfileImpl(frame);
     return size;
 }
 
 void
-MgtAssocResponseHeader::Print(std::ostream& os) const
+MgtAssocResponseHeader::PrintImpl(std::ostream& os) const
 {
     os << "status code=" << m_code << ", "
-       << "aid=" << m_aid << ", "
-       << "rates=" << m_rates << ", ";
-    if (m_erpInformation.has_value())
-    {
-        os << "ERP information=" << *m_erpInformation << ", ";
-    }
-    if (m_extendedCapability.has_value())
-    {
-        os << "Extended Capabilities=" << *m_extendedCapability << " , ";
-    }
-    if (m_htCapability.has_value())
-    {
-        os << "HT Capabilities=" << *m_htCapability << " , ";
-    }
-    if (m_htOperation.has_value())
-    {
-        os << "HT Operation=" << *m_htOperation << " , ";
-    }
-    if (m_vhtCapability.has_value())
-    {
-        os << "VHT Capabilities=" << *m_vhtCapability << " , ";
-    }
-    if (m_vhtOperation.has_value())
-    {
-        os << "VHT Operation=" << *m_vhtOperation << " , ";
-    }
-    if (m_heCapability.has_value())
-    {
-        os << "HE Capabilities=" << *m_heCapability << " , ";
-    }
-    if (m_heOperation.has_value())
-    {
-        os << "HE Operation=" << *m_heOperation << " , ";
-    }
-    if (m_ehtCapability.has_value())
-    {
-        os << "EHT Capabilities=" << *m_ehtCapability;
-    }
-    if (m_ehtOperation.has_value())
-    {
-        os << "EHT Operation=" << *m_ehtOperation;
-    }
+       << "aid=" << m_aid << ", ";
+    WifiMgtHeader<MgtAssocResponseHeader, AssocResponseElems>::PrintImpl(os);
 }
 
 void
-MgtAssocResponseHeader::Serialize(Buffer::Iterator start) const
+MgtAssocResponseHeader::SerializeImpl(Buffer::Iterator start) const
 {
+    SetMleContainingFrame();
+
     Buffer::Iterator i = start;
     i = m_capability.Serialize(i);
     i = m_code.Serialize(i);
     i.WriteHtolsbU16(m_aid);
-    i = m_rates.Serialize(i);
-    if (m_erpInformation.has_value())
-    {
-        i = m_erpInformation->Serialize(i);
-    }
-    if (m_rates.GetNRates() > 8)
-    {
-        i = m_rates.extended->Serialize(i);
-    }
-    if (m_edcaParameterSet.has_value())
-    {
-        i = m_edcaParameterSet->Serialize(i);
-    }
-    if (m_extendedCapability.has_value())
-    {
-        i = m_extendedCapability->Serialize(i);
-    }
-    if (m_htCapability.has_value())
-    {
-        i = m_htCapability->Serialize(i);
-    }
-    if (m_htOperation.has_value())
-    {
-        i = m_htOperation->Serialize(i);
-    }
-    if (m_vhtCapability.has_value())
-    {
-        i = m_vhtCapability->Serialize(i);
-    }
-    if (m_vhtOperation.has_value())
-    {
-        i = m_vhtOperation->Serialize(i);
-    }
-    if (m_heCapability.has_value())
-    {
-        i = m_heCapability->Serialize(i);
-    }
-    if (m_heOperation.has_value())
-    {
-        i = m_heOperation->Serialize(i);
-    }
-    if (m_muEdcaParameterSet.has_value())
-    {
-        i = m_muEdcaParameterSet->Serialize(i);
-    }
-    if (m_multiLinkElement.has_value())
-    {
-        i = m_multiLinkElement->Serialize(i);
-    }
-    if (m_ehtCapability.has_value())
-    {
-        i = m_ehtCapability->Serialize(i);
-    }
-    if (m_ehtOperation.has_value())
-    {
-        i = m_ehtOperation->Serialize(i);
-    }
+    WifiMgtHeader<MgtAssocResponseHeader, AssocResponseElems>::SerializeImpl(i);
+}
+
+void
+MgtAssocResponseHeader::SerializeInPerStaProfileImpl(Buffer::Iterator start,
+                                                     const MgtAssocResponseHeader& frame) const
+{
+    Buffer::Iterator i = start;
+    i = m_capability.Serialize(i);
+    i = m_code.Serialize(i);
+    MgtHeaderInPerStaProfile<MgtAssocResponseHeader,
+                             AssocResponseElems>::SerializeInPerStaProfileImpl(i, frame);
 }
 
 uint32_t
-MgtAssocResponseHeader::Deserialize(Buffer::Iterator start)
+MgtAssocResponseHeader::DeserializeImpl(Buffer::Iterator start)
 {
-    Buffer::Iterator tmp;
     Buffer::Iterator i = start;
     i = m_capability.Deserialize(i);
     i = m_code.Deserialize(i);
     m_aid = i.ReadLsbtohU16();
-    i = m_rates.Deserialize(i);
-    i = WifiInformationElement::DeserializeIfPresent(m_erpInformation, i);
-    i = WifiInformationElement::DeserializeIfPresent(m_rates.extended, i, &m_rates);
-    i = WifiInformationElement::DeserializeIfPresent(m_edcaParameterSet, i);
-    i = WifiInformationElement::DeserializeIfPresent(m_extendedCapability, i);
-    i = WifiInformationElement::DeserializeIfPresent(m_htCapability, i);
-    i = WifiInformationElement::DeserializeIfPresent(m_htOperation, i);
-    i = WifiInformationElement::DeserializeIfPresent(m_vhtCapability, i);
-    i = WifiInformationElement::DeserializeIfPresent(m_vhtOperation, i);
-    i = WifiInformationElement::DeserializeIfPresent(m_heCapability, i);
-    i = WifiInformationElement::DeserializeIfPresent(m_heOperation, i);
-    i = WifiInformationElement::DeserializeIfPresent(m_muEdcaParameterSet, i);
-    i = WifiInformationElement::DeserializeIfPresent(m_multiLinkElement,
-                                                     i,
-                                                     WIFI_MAC_MGT_ASSOCIATION_RESPONSE);
-    const bool is2_4Ghz = m_rates.IsSupportedRate(
-        1000000 /* 1 Mbit/s */); // TODO: use presence of VHT capabilities IE and HE 6 GHz Band
-                                 // Capabilities IE once the later is implemented
-    i = WifiInformationElement::DeserializeIfPresent(m_ehtCapability, i, is2_4Ghz, m_heCapability);
-    i = WifiInformationElement::DeserializeIfPresent(m_ehtOperation, i);
-    return i.GetDistanceFrom(start);
+    auto distance = i.GetDistanceFrom(start) +
+                    WifiMgtHeader<MgtAssocResponseHeader, AssocResponseElems>::DeserializeImpl(i);
+    if (auto& mle = Get<MultiLinkElement>())
+    {
+        for (std::size_t id = 0; id < mle->GetNPerStaProfileSubelements(); id++)
+        {
+            auto& perStaProfile = mle->GetPerStaProfile(id);
+            if (perStaProfile.HasAssocResponse())
+            {
+                auto& frameInPerStaProfile = perStaProfile.GetAssocResponse();
+                frameInPerStaProfile.CopyIesFromContainingFrame(*this);
+            }
+        }
+    }
+    return distance;
+}
+
+uint32_t
+MgtAssocResponseHeader::DeserializeFromPerStaProfileImpl(Buffer::Iterator start,
+                                                         uint16_t length,
+                                                         const MgtAssocResponseHeader& frame)
+{
+    Buffer::Iterator i = start;
+    i = m_capability.Deserialize(i);
+    i = m_code.Deserialize(i);
+    m_aid = frame.m_aid;
+    auto distance = i.GetDistanceFrom(start);
+    NS_ASSERT_MSG(distance <= length,
+                  "Bytes read (" << distance << ") exceed expected number (" << length << ")");
+    return distance + MgtHeaderInPerStaProfile<MgtAssocResponseHeader, AssocResponseElems>::
+                          DeserializeFromPerStaProfileImpl(i, length - distance, frame);
 }
 
 /**********************************************************
@@ -2181,6 +644,10 @@ WifiActionHeader::SetAction(WifiActionHeader::CategoryValue type,
         m_actionValue = static_cast<uint8_t>(action.unprotectedDmgAction);
         break;
     }
+    case PROTECTED_EHT: {
+        m_actionValue = static_cast<uint8_t>(action.protectedEhtAction);
+        break;
+    }
     case VENDOR_SPECIFIC_ACTION: {
         break;
     }
@@ -2212,6 +679,8 @@ WifiActionHeader::GetCategory() const
         return FST;
     case UNPROTECTED_DMG:
         return UNPROTECTED_DMG;
+    case PROTECTED_EHT:
+        return PROTECTED_EHT;
     case VENDOR_SPECIFIC_ACTION:
         return VENDOR_SPECIFIC_ACTION;
     default:
@@ -2357,11 +826,11 @@ WifiActionHeader::GetAction() const
         case MDA_SETUP_REPLY:
             retval.meshAction = MDA_SETUP_REPLY;
             break;
-        case MDAOP_ADVERTISMENT_REQUEST:
-            retval.meshAction = MDAOP_ADVERTISMENT_REQUEST;
+        case MDAOP_ADVERTISEMENT_REQUEST:
+            retval.meshAction = MDAOP_ADVERTISEMENT_REQUEST;
             break;
-        case MDAOP_ADVERTISMENTS:
-            retval.meshAction = MDAOP_ADVERTISMENTS;
+        case MDAOP_ADVERTISEMENTS:
+            retval.meshAction = MDAOP_ADVERTISEMENTS;
             break;
         case MDAOP_SET_TEARDOWN:
             retval.meshAction = MDAOP_SET_TEARDOWN;
@@ -2522,6 +991,46 @@ WifiActionHeader::GetAction() const
         }
         break;
 
+    case PROTECTED_EHT:
+        switch (m_actionValue)
+        {
+        case PROTECTED_EHT_TID_TO_LINK_MAPPING_REQUEST:
+            retval.protectedEhtAction = PROTECTED_EHT_TID_TO_LINK_MAPPING_REQUEST;
+            break;
+        case PROTECTED_EHT_TID_TO_LINK_MAPPING_RESPONSE:
+            retval.protectedEhtAction = PROTECTED_EHT_TID_TO_LINK_MAPPING_RESPONSE;
+            break;
+        case PROTECTED_EHT_TID_TO_LINK_MAPPING_TEARDOWN:
+            retval.protectedEhtAction = PROTECTED_EHT_TID_TO_LINK_MAPPING_TEARDOWN;
+            break;
+        case PROTECTED_EHT_EPCS_PRIORITY_ACCESS_ENABLE_REQUEST:
+            retval.protectedEhtAction = PROTECTED_EHT_EPCS_PRIORITY_ACCESS_ENABLE_REQUEST;
+            break;
+        case PROTECTED_EHT_EPCS_PRIORITY_ACCESS_ENABLE_RESPONSE:
+            retval.protectedEhtAction = PROTECTED_EHT_EPCS_PRIORITY_ACCESS_ENABLE_RESPONSE;
+            break;
+        case PROTECTED_EHT_EPCS_PRIORITY_ACCESS_TEARDOWN:
+            retval.protectedEhtAction = PROTECTED_EHT_EPCS_PRIORITY_ACCESS_TEARDOWN;
+            break;
+        case PROTECTED_EHT_EML_OPERATING_MODE_NOTIFICATION:
+            retval.protectedEhtAction = PROTECTED_EHT_EML_OPERATING_MODE_NOTIFICATION;
+            break;
+        case PROTECTED_EHT_LINK_RECOMMENDATION:
+            retval.protectedEhtAction = PROTECTED_EHT_LINK_RECOMMENDATION;
+            break;
+        case PROTECTED_EHT_MULTI_LINK_OPERATION_UPDATE_REQUEST:
+            retval.protectedEhtAction = PROTECTED_EHT_MULTI_LINK_OPERATION_UPDATE_REQUEST;
+            break;
+        case PROTECTED_EHT_MULTI_LINK_OPERATION_UPDATE_RESPONSE:
+            retval.protectedEhtAction = PROTECTED_EHT_MULTI_LINK_OPERATION_UPDATE_RESPONSE;
+            break;
+        default:
+            NS_FATAL_ERROR("Unknown Protected EHT action code");
+            retval.protectedEhtAction =
+                PROTECTED_EHT_TID_TO_LINK_MAPPING_REQUEST; /* quiet compiler */
+        }
+        break;
+
     default:
         NS_FATAL_ERROR("Unsupported action");
         retval.selfProtectedAction = PEER_LINK_OPEN; /* quiet compiler */
@@ -2545,76 +1054,205 @@ WifiActionHeader::GetInstanceTypeId() const
     return GetTypeId();
 }
 
-std::string
-WifiActionHeader::CategoryValueToString(CategoryValue value) const
+std::pair<WifiActionHeader::CategoryValue, WifiActionHeader::ActionValue>
+WifiActionHeader::Peek(Ptr<const Packet> pkt)
 {
-    switch (value)
-    {
-    case QOS:
-        return "QoS";
-    case BLOCK_ACK:
-        return "BlockAck";
-    case PUBLIC:
-        return "Public";
-    case RADIO_MEASUREMENT:
-        return "RadioMeasurement";
-    case MESH:
-        return "Mesh";
-    case MULTIHOP:
-        return "Multihop";
-    case SELF_PROTECTED:
-        return "SelfProtected";
-    case DMG:
-        return "Dmg";
-    case FST:
-        return "Fst";
-    case UNPROTECTED_DMG:
-        return "UnprotectedDmg";
-    case VENDOR_SPECIFIC_ACTION:
-        return "VendorSpecificAction";
-    default:
-        std::ostringstream convert;
-        convert << value;
-        return convert.str();
-    }
+    WifiActionHeader actionHdr;
+    pkt->PeekHeader(actionHdr);
+    return {actionHdr.GetCategory(), actionHdr.GetAction()};
 }
 
-std::string
-WifiActionHeader::SelfProtectedActionValueToString(SelfProtectedActionValue value) const
+std::pair<WifiActionHeader::CategoryValue, WifiActionHeader::ActionValue>
+WifiActionHeader::Remove(Ptr<Packet> pkt)
 {
-    if (value == PEER_LINK_OPEN)
-    {
-        return "PeerLinkOpen";
-    }
-    else if (value == PEER_LINK_CONFIRM)
-    {
-        return "PeerLinkConfirm";
-    }
-    else if (value == PEER_LINK_CLOSE)
-    {
-        return "PeerLinkClose";
-    }
-    else if (value == GROUP_KEY_INFORM)
-    {
-        return "GroupKeyInform";
-    }
-    else if (value == GROUP_KEY_ACK)
-    {
-        return "GroupKeyAck";
-    }
-    else
-    {
-        std::ostringstream convert;
-        convert << value;
-        return convert.str();
-    }
+    WifiActionHeader actionHdr;
+    pkt->RemoveHeader(actionHdr);
+    return {actionHdr.GetCategory(), actionHdr.GetAction()};
 }
 
 void
 WifiActionHeader::Print(std::ostream& os) const
 {
-    os << "category=" << CategoryValueToString((CategoryValue)m_category)
-       << ", value=" << SelfProtectedActionValueToString((SelfProtectedActionValue)m_actionValue);
+#define CASE_ACTION_VALUE(x)                                                                       \
+    case x:                                                                                        \
+        os << #x << "]";                                                                           \
+        break;
+
+    switch (m_category)
+    {
+    case QOS:
+        os << "QOS[";
+        switch (m_actionValue)
+        {
+            CASE_ACTION_VALUE(ADDTS_REQUEST);
+            CASE_ACTION_VALUE(ADDTS_RESPONSE);
+            CASE_ACTION_VALUE(DELTS);
+            CASE_ACTION_VALUE(SCHEDULE);
+            CASE_ACTION_VALUE(QOS_MAP_CONFIGURE);
+        default:
+            NS_FATAL_ERROR("Unknown qos action code");
+        }
+        break;
+    case BLOCK_ACK:
+        os << "BLOCK_ACK[";
+        switch (m_actionValue)
+        {
+            CASE_ACTION_VALUE(BLOCK_ACK_ADDBA_REQUEST);
+            CASE_ACTION_VALUE(BLOCK_ACK_ADDBA_RESPONSE);
+            CASE_ACTION_VALUE(BLOCK_ACK_DELBA);
+        default:
+            NS_FATAL_ERROR("Unknown block ack action code");
+        }
+        break;
+    case PUBLIC:
+        os << "PUBLIC[";
+        switch (m_actionValue)
+        {
+            CASE_ACTION_VALUE(QAB_REQUEST);
+            CASE_ACTION_VALUE(QAB_RESPONSE);
+        default:
+            NS_FATAL_ERROR("Unknown public action code");
+        }
+        break;
+    case RADIO_MEASUREMENT:
+        os << "RADIO_MEASUREMENT[";
+        switch (m_actionValue)
+        {
+            CASE_ACTION_VALUE(RADIO_MEASUREMENT_REQUEST);
+            CASE_ACTION_VALUE(RADIO_MEASUREMENT_REPORT);
+            CASE_ACTION_VALUE(LINK_MEASUREMENT_REQUEST);
+            CASE_ACTION_VALUE(LINK_MEASUREMENT_REPORT);
+            CASE_ACTION_VALUE(NEIGHBOR_REPORT_REQUEST);
+            CASE_ACTION_VALUE(NEIGHBOR_REPORT_RESPONSE);
+        default:
+            NS_FATAL_ERROR("Unknown radio measurement action code");
+        }
+        break;
+    case MESH:
+        os << "MESH[";
+        switch (m_actionValue)
+        {
+            CASE_ACTION_VALUE(LINK_METRIC_REPORT);
+            CASE_ACTION_VALUE(PATH_SELECTION);
+            CASE_ACTION_VALUE(PORTAL_ANNOUNCEMENT);
+            CASE_ACTION_VALUE(CONGESTION_CONTROL_NOTIFICATION);
+            CASE_ACTION_VALUE(MDA_SETUP_REQUEST);
+            CASE_ACTION_VALUE(MDA_SETUP_REPLY);
+            CASE_ACTION_VALUE(MDAOP_ADVERTISEMENT_REQUEST);
+            CASE_ACTION_VALUE(MDAOP_ADVERTISEMENTS);
+            CASE_ACTION_VALUE(MDAOP_SET_TEARDOWN);
+            CASE_ACTION_VALUE(TBTT_ADJUSTMENT_REQUEST);
+            CASE_ACTION_VALUE(TBTT_ADJUSTMENT_RESPONSE);
+        default:
+            NS_FATAL_ERROR("Unknown mesh peering management action code");
+        }
+        break;
+    case MULTIHOP:
+        os << "MULTIHOP[";
+        switch (m_actionValue)
+        {
+            CASE_ACTION_VALUE(PROXY_UPDATE);              // not used so far
+            CASE_ACTION_VALUE(PROXY_UPDATE_CONFIRMATION); // not used so far
+        default:
+            NS_FATAL_ERROR("Unknown mesh peering management action code");
+        }
+        break;
+    case SELF_PROTECTED:
+        os << "SELF_PROTECTED[";
+        switch (m_actionValue)
+        {
+            CASE_ACTION_VALUE(PEER_LINK_OPEN);
+            CASE_ACTION_VALUE(PEER_LINK_CONFIRM);
+            CASE_ACTION_VALUE(PEER_LINK_CLOSE);
+            CASE_ACTION_VALUE(GROUP_KEY_INFORM);
+            CASE_ACTION_VALUE(GROUP_KEY_ACK);
+        default:
+            NS_FATAL_ERROR("Unknown mesh peering management action code");
+        }
+        break;
+    case DMG:
+        os << "DMG[";
+        switch (m_actionValue)
+        {
+            CASE_ACTION_VALUE(DMG_POWER_SAVE_CONFIGURATION_REQUEST);
+            CASE_ACTION_VALUE(DMG_POWER_SAVE_CONFIGURATION_RESPONSE);
+            CASE_ACTION_VALUE(DMG_INFORMATION_REQUEST);
+            CASE_ACTION_VALUE(DMG_INFORMATION_RESPONSE);
+            CASE_ACTION_VALUE(DMG_HANDOVER_REQUEST);
+            CASE_ACTION_VALUE(DMG_HANDOVER_RESPONSE);
+            CASE_ACTION_VALUE(DMG_DTP_REQUEST);
+            CASE_ACTION_VALUE(DMG_DTP_RESPONSE);
+            CASE_ACTION_VALUE(DMG_RELAY_SEARCH_REQUEST);
+            CASE_ACTION_VALUE(DMG_RELAY_SEARCH_RESPONSE);
+            CASE_ACTION_VALUE(DMG_MULTI_RELAY_CHANNEL_MEASUREMENT_REQUEST);
+            CASE_ACTION_VALUE(DMG_MULTI_RELAY_CHANNEL_MEASUREMENT_REPORT);
+            CASE_ACTION_VALUE(DMG_RLS_REQUEST);
+            CASE_ACTION_VALUE(DMG_RLS_RESPONSE);
+            CASE_ACTION_VALUE(DMG_RLS_ANNOUNCEMENT);
+            CASE_ACTION_VALUE(DMG_RLS_TEARDOWN);
+            CASE_ACTION_VALUE(DMG_RELAY_ACK_REQUEST);
+            CASE_ACTION_VALUE(DMG_RELAY_ACK_RESPONSE);
+            CASE_ACTION_VALUE(DMG_TPA_REQUEST);
+            CASE_ACTION_VALUE(DMG_TPA_RESPONSE);
+            CASE_ACTION_VALUE(DMG_ROC_REQUEST);
+            CASE_ACTION_VALUE(DMG_ROC_RESPONSE);
+        default:
+            NS_FATAL_ERROR("Unknown DMG management action code");
+        }
+        break;
+    case FST:
+        os << "FST[";
+        switch (m_actionValue)
+        {
+            CASE_ACTION_VALUE(FST_SETUP_REQUEST);
+            CASE_ACTION_VALUE(FST_SETUP_RESPONSE);
+            CASE_ACTION_VALUE(FST_TEAR_DOWN);
+            CASE_ACTION_VALUE(FST_ACK_REQUEST);
+            CASE_ACTION_VALUE(FST_ACK_RESPONSE);
+            CASE_ACTION_VALUE(ON_CHANNEL_TUNNEL_REQUEST);
+        default:
+            NS_FATAL_ERROR("Unknown FST management action code");
+        }
+        break;
+    case UNPROTECTED_DMG:
+        os << "UNPROTECTED_DMG[";
+        switch (m_actionValue)
+        {
+            CASE_ACTION_VALUE(UNPROTECTED_DMG_ANNOUNCE);
+            CASE_ACTION_VALUE(UNPROTECTED_DMG_BRP);
+            CASE_ACTION_VALUE(UNPROTECTED_MIMO_BF_SETUP);
+            CASE_ACTION_VALUE(UNPROTECTED_MIMO_BF_POLL);
+            CASE_ACTION_VALUE(UNPROTECTED_MIMO_BF_FEEDBACK);
+            CASE_ACTION_VALUE(UNPROTECTED_MIMO_BF_SELECTION);
+        default:
+            NS_FATAL_ERROR("Unknown Unprotected DMG action code");
+        }
+        break;
+    case PROTECTED_EHT:
+        os << "PROTECTED_EHT[";
+        switch (m_actionValue)
+        {
+            CASE_ACTION_VALUE(PROTECTED_EHT_TID_TO_LINK_MAPPING_REQUEST);
+            CASE_ACTION_VALUE(PROTECTED_EHT_TID_TO_LINK_MAPPING_RESPONSE);
+            CASE_ACTION_VALUE(PROTECTED_EHT_TID_TO_LINK_MAPPING_TEARDOWN);
+            CASE_ACTION_VALUE(PROTECTED_EHT_EPCS_PRIORITY_ACCESS_ENABLE_REQUEST);
+            CASE_ACTION_VALUE(PROTECTED_EHT_EPCS_PRIORITY_ACCESS_ENABLE_RESPONSE);
+            CASE_ACTION_VALUE(PROTECTED_EHT_EPCS_PRIORITY_ACCESS_TEARDOWN);
+            CASE_ACTION_VALUE(PROTECTED_EHT_EML_OPERATING_MODE_NOTIFICATION);
+            CASE_ACTION_VALUE(PROTECTED_EHT_LINK_RECOMMENDATION);
+            CASE_ACTION_VALUE(PROTECTED_EHT_MULTI_LINK_OPERATION_UPDATE_REQUEST);
+            CASE_ACTION_VALUE(PROTECTED_EHT_MULTI_LINK_OPERATION_UPDATE_RESPONSE);
+        default:
+            NS_FATAL_ERROR("Unknown Protected EHT action code");
+        }
+        break;
+    case VENDOR_SPECIFIC_ACTION:
+        os << "VENDOR_SPECIFIC_ACTION";
+        break;
+    default:
+        NS_FATAL_ERROR("Unknown action value");
+    }
+#undef CASE_ACTION_VALUE
 }
 
 uint32_t
@@ -3087,6 +1725,164 @@ MgtDelBaHeader::SetParameterSet(uint16_t params)
 {
     m_initiator = (params >> 11) & 0x01;
     m_tid = (params >> 12) & 0x0f;
+}
+
+/***************************************************
+ *     EMLSR Operating Mode Notification
+ ****************************************************/
+
+NS_OBJECT_ENSURE_REGISTERED(MgtEmlOperatingModeNotification);
+
+TypeId
+MgtEmlOperatingModeNotification::GetTypeId()
+{
+    static TypeId tid = TypeId("ns3::MgtEmlOperatingModeNotification")
+                            .SetParent<Header>()
+                            .SetGroupName("Wifi")
+                            .AddConstructor<MgtEmlOperatingModeNotification>();
+    return tid;
+}
+
+TypeId
+MgtEmlOperatingModeNotification::GetInstanceTypeId() const
+{
+    return GetTypeId();
+}
+
+void
+MgtEmlOperatingModeNotification::Print(std::ostream& os) const
+{
+    os << "EMLSR Mode=" << +m_emlControl.emlsrMode << " EMLMR Mode=" << +m_emlControl.emlmrMode
+       << " EMLSR Parameter Update Control=" << +m_emlControl.emlsrParamUpdateCtrl;
+    if (m_emlControl.linkBitmap)
+    {
+        os << " Link bitmap=" << std::hex << *m_emlControl.linkBitmap << std::dec;
+    }
+    if (m_emlsrParamUpdate)
+    {
+        os << " EMLSR Padding Delay="
+           << CommonInfoBasicMle::DecodeEmlsrPaddingDelay(m_emlsrParamUpdate->paddingDelay)
+                  .As(Time::US)
+           << " EMLSR Transition Delay="
+           << CommonInfoBasicMle::DecodeEmlsrTransitionDelay(m_emlsrParamUpdate->transitionDelay)
+                  .As(Time::US);
+    }
+}
+
+uint32_t
+MgtEmlOperatingModeNotification::GetSerializedSize() const
+{
+    uint32_t size = 2; // Dialog Token (1) + first byte of EML Control
+    if (m_emlControl.linkBitmap)
+    {
+        size += 2;
+    }
+    if (m_emlControl.mcsMapCountCtrl)
+    {
+        size += 1;
+    }
+    // TODO add size of EMLMR Supported MCS And NSS Set subfield when implemented
+    if (m_emlsrParamUpdate)
+    {
+        size += 1; // EMLSR Parameter Update field
+    }
+    return size;
+}
+
+void
+MgtEmlOperatingModeNotification::Serialize(Buffer::Iterator start) const
+{
+    start.WriteU8(m_dialogToken);
+
+    NS_ABORT_MSG_IF(m_emlControl.emlsrMode == 1 && m_emlControl.emlmrMode == 1,
+                    "EMLSR Mode and EMLMR Mode cannot be both set to 1");
+    uint8_t val = m_emlControl.emlsrMode | (m_emlControl.emlmrMode << 1) |
+                  (m_emlControl.emlsrParamUpdateCtrl << 2);
+    start.WriteU8(val);
+
+    NS_ABORT_MSG_IF(m_emlControl.linkBitmap.has_value() !=
+                        (m_emlControl.emlsrMode == 1 || m_emlControl.emlmrMode == 1),
+                    "The EMLSR/EMLMR Link Bitmap is present if and only if either of the EMLSR "
+                    "Mode and EMLMR Mode subfields are set to 1");
+    if (m_emlControl.linkBitmap)
+    {
+        start.WriteHtolsbU16(*m_emlControl.linkBitmap);
+    }
+    // TODO serialize MCS Map Count Control and EMLMR Supported MCS And NSS Set subfields
+    // when implemented
+
+    NS_ABORT_MSG_IF(m_emlsrParamUpdate.has_value() != (m_emlControl.emlsrParamUpdateCtrl == 1),
+                    "The EMLSR Parameter Update field is present "
+                        << std::boolalpha << m_emlsrParamUpdate.has_value()
+                        << " if and only if the EMLSR "
+                           "Parameter Update Control subfield is set to 1 "
+                        << +m_emlControl.emlsrParamUpdateCtrl);
+    if (m_emlsrParamUpdate)
+    {
+        val = m_emlsrParamUpdate->paddingDelay | (m_emlsrParamUpdate->transitionDelay << 3);
+        start.WriteU8(val);
+    }
+}
+
+uint32_t
+MgtEmlOperatingModeNotification::Deserialize(Buffer::Iterator start)
+{
+    Buffer::Iterator i = start;
+
+    m_dialogToken = i.ReadU8();
+
+    uint8_t val = i.ReadU8();
+    m_emlControl.emlsrMode = val & 0x01;
+    m_emlControl.emlmrMode = (val >> 1) & 0x01;
+    m_emlControl.emlsrParamUpdateCtrl = (val >> 2) & 0x01;
+
+    NS_ABORT_MSG_IF(m_emlControl.emlsrMode == 1 && m_emlControl.emlmrMode == 1,
+                    "EMLSR Mode and EMLMR Mode cannot be both set to 1");
+
+    if (m_emlControl.emlsrMode == 1 || m_emlControl.emlmrMode == 1)
+    {
+        m_emlControl.linkBitmap = i.ReadLsbtohU16();
+    }
+    // TODO deserialize MCS Map Count Control and EMLMR Supported MCS And NSS Set subfields
+    // when implemented
+
+    if (m_emlControl.emlsrParamUpdateCtrl == 1)
+    {
+        val = i.ReadU8();
+        m_emlsrParamUpdate = EmlsrParamUpdate{};
+        m_emlsrParamUpdate->paddingDelay = val & 0x07;
+        m_emlsrParamUpdate->transitionDelay = (val >> 3) & 0x07;
+    }
+
+    return i.GetDistanceFrom(start);
+}
+
+void
+MgtEmlOperatingModeNotification::SetLinkIdInBitmap(uint8_t linkId)
+{
+    NS_ABORT_MSG_IF(linkId > 15, "Link ID must not exceed 15");
+    if (!m_emlControl.linkBitmap)
+    {
+        m_emlControl.linkBitmap = 0;
+    }
+    m_emlControl.linkBitmap = *m_emlControl.linkBitmap | (1 << linkId);
+}
+
+std::list<uint8_t>
+MgtEmlOperatingModeNotification::GetLinkBitmap() const
+{
+    std::list<uint8_t> list;
+    NS_ASSERT_MSG(m_emlControl.linkBitmap.has_value(), "No link bitmap");
+    uint16_t bitmap = *m_emlControl.linkBitmap;
+    for (uint8_t linkId = 0; linkId < 16; linkId++)
+    {
+        if ((bitmap & 0x0001) == 1)
+        {
+            list.push_back(linkId);
+        }
+        bitmap >>= 1;
+    }
+    return list;
 }
 
 } // namespace ns3

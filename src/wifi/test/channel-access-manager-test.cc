@@ -20,6 +20,8 @@
 #include "ns3/adhoc-wifi-mac.h"
 #include "ns3/channel-access-manager.h"
 #include "ns3/frame-exchange-manager.h"
+#include "ns3/interference-helper.h"
+#include "ns3/multi-model-spectrum-channel.h"
 #include "ns3/qos-txop.h"
 #include "ns3/simulator.h"
 #include "ns3/spectrum-wifi-phy.h"
@@ -84,7 +86,8 @@ class TxopTest : public TxopType
         uint64_t at;     //!< at
         uint32_t nSlots; //!< number of slots
     };
-    typedef std::list<struct ExpectedBackoff> ExpectedBackoffs; //!< expected backoffs typedef
+
+    typedef std::list<ExpectedBackoff> ExpectedBackoffs; //!< expected backoffs typedef
 
     ExpectedBackoffs m_expectedInternalCollision; //!< expected backoff due to an internal collision
     ExpectedBackoffs m_expectedBackoff; //!< expected backoff (not due to an internal collision)
@@ -409,7 +412,7 @@ class ChannelAccessManagerTest : public TestCase
 
     Ptr<FrameExchangeManagerStub<TxopType>> m_feManager;  //!< the Frame Exchange Manager stubbed
     Ptr<ChannelAccessManagerStub> m_ChannelAccessManager; //!< the channel access manager
-    Ptr<WifiPhy> m_phy;                                   //!< the PHY object
+    Ptr<SpectrumWifiPhy> m_phy;                           //!< the PHY object
     TxopTests m_txop;                                     //!< the vector of Txop test instances
     uint32_t m_ackTimeoutValue;                           //!< the Ack timeout value
 };
@@ -620,6 +623,8 @@ ChannelAccessManagerTest<TxopType>::StartTest(uint64_t slotTime,
     // SetupPhyListener(), requires an attached PHY to determine the channel types
     // to initialize
     m_phy = CreateObject<SpectrumWifiPhy>();
+    m_phy->SetInterferenceHelper(CreateObject<InterferenceHelper>());
+    m_phy->AddChannel(CreateObject<MultiModelSpectrumChannel>());
     m_phy->SetOperatingChannel(WifiPhy::ChannelTuple{0, chWidth, WIFI_PHY_BAND_UNSPECIFIED, 0});
     m_phy->ConfigureStandard(WIFI_STANDARD_80211ac); // required to use 160 MHz channels
     m_ChannelAccessManager->SetupPhyListener(m_phy);
@@ -1342,7 +1347,7 @@ class LargestIdlePrimaryChannelTest : public TestCase
     void RunOne(uint16_t chWidth, WifiChannelListType busyChannel);
 
     Ptr<ChannelAccessManager> m_cam; //!< channel access manager
-    Ptr<WifiPhy> m_phy;              //!< PHY object
+    Ptr<SpectrumWifiPhy> m_phy;      //!< PHY object
 };
 
 LargestIdlePrimaryChannelTest::LargestIdlePrimaryChannelTest()
@@ -1436,9 +1441,9 @@ LargestIdlePrimaryChannelTest::RunOne(uint16_t chWidth, WifiChannelListType busy
 
     // At RX end, we check the status of the channel during the interval following
     // the CCA_BUSY period and preceding RX start. The entire operating channel is idle.
-    Time checkTime4 = checkTime3;
+    const Time& checkTime4 = checkTime3;
     Simulator::Schedule(checkTime4 - start, [=]() {
-        Time interval4 = ccaBusyRxInterval;
+        const Time& interval4 = ccaBusyRxInterval;
         Time end4 = checkTime4 - rxDuration;
         NS_TEST_EXPECT_MSG_EQ(m_cam->GetLargestIdlePrimaryChannel(interval4, end4),
                               chWidth,
@@ -1461,7 +1466,7 @@ LargestIdlePrimaryChannelTest::RunOne(uint16_t chWidth, WifiChannelListType busy
     });
 
     // After RX end, no channel is idle if the interval overlaps the RX period
-    Time checkTime6 = checkTime5;
+    const Time& checkTime6 = checkTime5;
     Simulator::Schedule(checkTime6 - start, [=]() {
         Time interval6 = interval5 + rxDuration / 2;
         NS_TEST_EXPECT_MSG_EQ(m_cam->GetLargestIdlePrimaryChannel(interval6, checkTime6),
@@ -1495,6 +1500,8 @@ LargestIdlePrimaryChannelTest::DoRun()
                 }
                 // create a new PHY operating on a channel of the current width
                 m_phy = CreateObject<SpectrumWifiPhy>();
+                m_phy->SetInterferenceHelper(CreateObject<InterferenceHelper>());
+                m_phy->AddChannel(CreateObject<MultiModelSpectrumChannel>());
                 m_phy->SetOperatingChannel(
                     WifiPhy::ChannelTuple{0, chWidth, WIFI_PHY_BAND_5GHZ, 0});
                 m_phy->ConfigureStandard(WIFI_STANDARD_80211ax);

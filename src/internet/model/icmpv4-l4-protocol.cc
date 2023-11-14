@@ -20,13 +20,14 @@
 #include "icmpv4-l4-protocol.h"
 
 #include "ipv4-interface.h"
-#include "ipv4-l3-protocol.h"
 #include "ipv4-raw-socket-factory-impl.h"
+#include "ipv4-route.h"
+#include "ipv4-routing-protocol.h"
+#include "ipv4.h"
+#include "ipv6-interface.h"
 
 #include "ns3/assert.h"
 #include "ns3/boolean.h"
-#include "ns3/ipv4-route.h"
-#include "ns3/ipv6-interface.h"
 #include "ns3/log.h"
 #include "ns3/node.h"
 #include "ns3/packet.h"
@@ -289,7 +290,7 @@ Icmpv4L4Protocol::HandleTimeExceeded(Ptr<Packet> p,
     Forward(source, icmp, 0, ipHeader, payload);
 }
 
-enum IpL4Protocol::RxStatus
+IpL4Protocol::RxStatus
 Icmpv4L4Protocol::Receive(Ptr<Packet> p,
                           const Ipv4Header& header,
                           Ptr<Ipv4Interface> incomingInterface)
@@ -342,7 +343,7 @@ Icmpv4L4Protocol::Receive(Ptr<Packet> p,
     return IpL4Protocol::RX_OK;
 }
 
-enum IpL4Protocol::RxStatus
+IpL4Protocol::RxStatus
 Icmpv4L4Protocol::Receive(Ptr<Packet> p,
                           const Ipv6Header& header,
                           Ptr<Ipv6Interface> incomingInterface)

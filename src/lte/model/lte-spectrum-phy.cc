@@ -22,8 +22,8 @@
 #include "lte-spectrum-phy.h"
 
 #include "lte-chunk-processor.h"
-#include "lte-net-device.h"
-#include "lte-phy-tag.h"
+#include "lte-control-messages.h"
+#include "lte-mi-error-model.h"
 #include "lte-radio-bearer-tag.h"
 #include "lte-spectrum-signal-parameters.h"
 
@@ -32,8 +32,6 @@
 #include <ns3/config.h>
 #include <ns3/double.h>
 #include <ns3/log.h>
-#include <ns3/lte-mi-error-model.h>
-#include <ns3/lte-radio-bearer-tag.h>
 #include <ns3/object-factory.h>
 #include <ns3/simulator.h>
 #include <ns3/trace-source-accessor.h>
@@ -458,12 +456,10 @@ LteSpectrumPhy::StartTxDataFrame(Ptr<PacketBurst> pb,
         m_endTxEvent = Simulator::Schedule(duration, &LteSpectrumPhy::EndTxData, this);
     }
         return false;
-        break;
 
     default:
         NS_FATAL_ERROR("unknown state");
         return true;
-        break;
     }
 }
 
@@ -516,12 +512,10 @@ LteSpectrumPhy::StartTxDlCtrlFrame(std::list<Ptr<LteControlMessage>> ctrlMsgList
         m_endTxEvent = Simulator::Schedule(DL_CTRL_DURATION, &LteSpectrumPhy::EndTxDlCtrl, this);
     }
         return false;
-        break;
 
     default:
         NS_FATAL_ERROR("unknown state");
         return true;
-        break;
     }
 }
 
@@ -572,12 +566,10 @@ LteSpectrumPhy::StartTxUlSrsFrame()
         m_endTxEvent = Simulator::Schedule(UL_SRS_DURATION, &LteSpectrumPhy::EndTxUlSrs, this);
     }
         return false;
-        break;
 
     default:
         NS_FATAL_ERROR("unknown state");
         return true;
-        break;
     }
 }
 
@@ -764,7 +756,7 @@ LteSpectrumPhy::StartRxDlCtrl(Ptr<LteSpectrumSignalParametersDlCtrlFrame> lteDlC
 
         // common code for the two states
         // check presence of PSS for UE measuerements
-        if (lteDlCtrlRxParams->pss == true)
+        if (lteDlCtrlRxParams->pss)
         {
             if (!m_ltePhyRxPssCallback.IsNull())
             {

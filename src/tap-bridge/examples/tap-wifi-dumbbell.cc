@@ -52,7 +52,7 @@
 //
 // 1) Ping one of the simulated nodes on the left side of the topology.
 //
-//    ./ns3 run tap-wifi-dumbbell&
+//    ./ns3 run --enable-sudo tap-wifi-dumbbell&
 //    ping 10.1.1.3
 //
 // 2) Configure a route in the linux host and ping once of the nodes on the
@@ -60,8 +60,8 @@
 //    delays due to CBR background traffic on the point-to-point (see next
 //    item).
 //
-//    ./ns3 run tap-wifi-dumbbell&
-//    sudo route add -net 10.1.3.0 netmask 255.255.255.0 dev thetap gw 10.1.1.2
+//    ./ns3 run --enable-sudo tap-wifi-dumbbell&
+//    sudo ip route add 10.1.3.0/24 dev thetap via 10.1.1.2
 //    ping 10.1.3.4
 //
 //    Take a look at the pcap traces and note that the timing reflects the
@@ -76,22 +76,25 @@
 //    reflected in large delays seen by ping.  You can crank down the CBR
 //    traffic data rate and watch the ping timing change dramatically.
 //
-//    ./ns3 run "tap-wifi-dumbbell --ns3::OnOffApplication::DataRate=100kb/s"&
-//    sudo route add -net 10.1.3.0 netmask 255.255.255.0 dev thetap gw 10.1.1.2
+//    ./ns3 run --enable-sudo "tap-wifi-dumbbell --ns3::OnOffApplication::DataRate=100kb/s"&
+//    sudo ip route add 10.1.3.0/24 dev thetap via 10.1.1.2
 //    ping 10.1.3.4
 //
 // 4) Try to run this in UseBridge mode.  This allows you to bridge an ns-3
 //    simulation to an existing pre-configured bridge.  This uses tap devices
 //    just for illustration, you can create your own bridge if you want.
+//    The "--enable-sudo" option to "./ns3 run" is not needed in this case
+//    because devices are being created outside of ns-3 execution.
 //
-//    sudo tunctl -t mytap1
-//    sudo ifconfig mytap1 0.0.0.0 promisc up
-//    sudo tunctl -t mytap2
-//    sudo ifconfig mytap2 0.0.0.0 promisc up
-//    sudo brctl addbr mybridge
-//    sudo brctl addif mybridge mytap1
-//    sudo brctl addif mybridge mytap2
-//    sudo ifconfig mybridge 10.1.1.5 netmask 255.255.255.0 up
+//    sudo ip tuntap add mode tap mytap1
+//    sudo ip link set mytap1 promisc on up
+//    sudo ip tuntap add mode tap mytap2
+//    sudo ip link set mytap2 promisc on up
+//    sudo ip link add mybridge type bridge
+//    sudo ip link set dev mytap1 master mybridge
+//    sudo ip link set dev mytap2 master mybridge
+//    sudo ip address add 10.1.1.5/24 dev mybridge
+//    sudo ip link set dev mybridge up
 //    ./ns3 run "tap-wifi-dumbbell --mode=UseBridge --tapName=mytap2"&
 //    ping 10.1.1.3
 

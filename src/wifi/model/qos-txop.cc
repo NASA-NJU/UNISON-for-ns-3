@@ -28,7 +28,7 @@
 #include "mgt-headers.h"
 #include "mpdu-aggregator.h"
 #include "msdu-aggregator.h"
-#include "qos-blocked-destinations.h"
+#include "wifi-mac-queue-scheduler.h"
 #include "wifi-mac-queue.h"
 #include "wifi-mac-trailer.h"
 #include "wifi-phy.h"
@@ -108,13 +108,26 @@ QosTxop::QosTxop(AcIndex ac)
       m_ac(ac)
 {
     NS_LOG_FUNCTION(this);
-    m_qosBlockedDestinations = Create<QosBlockedDestinations>();
     m_baManager = CreateObject<BlockAckManager>();
     m_baManager->SetQueue(m_queue);
     m_baManager->SetBlockDestinationCallback(
-        MakeCallback(&QosBlockedDestinations::Block, m_qosBlockedDestinations));
+        Callback<void, Mac48Address, uint8_t>([this](Mac48Address recipient, uint8_t tid) {
+            m_mac->GetMacQueueScheduler()->BlockQueues(WifiQueueBlockedReason::WAITING_ADDBA_RESP,
+                                                       m_ac,
+                                                       {WIFI_QOSDATA_QUEUE},
+                                                       recipient,
+                                                       m_mac->GetLocalAddress(recipient),
+                                                       {tid});
+        }));
     m_baManager->SetUnblockDestinationCallback(
-        MakeCallback(&QosBlockedDestinations::Unblock, m_qosBlockedDestinations));
+        Callback<void, Mac48Address, uint8_t>([this](Mac48Address recipient, uint8_t tid) {
+            m_mac->GetMacQueueScheduler()->UnblockQueues(WifiQueueBlockedReason::WAITING_ADDBA_RESP,
+                                                         m_ac,
+                                                         {WIFI_QOSDATA_QUEUE},
+                                                         recipient,
+                                                         m_mac->GetLocalAddress(recipient),
+                                                         {tid});
+        }));
     m_queue->TraceConnectWithoutContext(
         "Expired",
         MakeCallback(&BlockAckManager::NotifyDiscardedMpdu, m_baManager));
@@ -134,7 +147,6 @@ QosTxop::DoDispose()
         m_baManager->Dispose();
     }
     m_baManager = nullptr;
-    m_qosBlockedDestinations = nullptr;
     Txop::DoDispose();
 }
 
@@ -153,7 +165,7 @@ QosTxop::GetLink(uint8_t linkId) const
 uint8_t
 QosTxop::GetQosQueueSize(uint8_t tid, Mac48Address receiver) const
 {
-    WifiContainerQueueId queueId{WIFI_QOSDATA_UNICAST_QUEUE, receiver, tid};
+    WifiContainerQueueId queueId{WIFI_QOSDATA_QUEUE, WIFI_UNICAST, receiver, tid};
     uint32_t bufferSize = m_queue->GetNBytes(queueId);
     // A queue size value of 254 is used for all sizes greater than 64 768 octets.
     uint8_t queueSize = static_cast<uint8_t>(std::ceil(std::min(bufferSize, 64769U) / 256.0));
@@ -275,7 +287,7 @@ QosTxop::GetBaStartingSequence(Mac48Address address, uint8_t tid) const
     return m_baManager->GetOriginatorStartingSequence(address, tid);
 }
 
-Ptr<WifiMpdu>
+std::pair<CtrlBAckRequestHeader, WifiMacHeader>
 QosTxop::PrepareBlockAckRequest(Mac48Address recipient, uint8_t tid) const
 {
     NS_LOG_FUNCTION(this << recipient << +tid);
@@ -285,8 +297,6 @@ QosTxop::PrepareBlockAckRequest(Mac48Address recipient, uint8_t tid) const
 
     CtrlBAckRequestHeader reqHdr =
         m_baManager->GetBlockAckReqHeader(recipientMld.value_or(recipient), tid);
-    Ptr<Packet> bar = Create<Packet>();
-    bar->AddHeader(reqHdr);
 
     WifiMacHeader hdr;
     hdr.SetType(WIFI_MAC_CTL_BACKREQ);
@@ -297,7 +307,7 @@ QosTxop::PrepareBlockAckRequest(Mac48Address recipient, uint8_t tid) const
     hdr.SetNoRetry();
     hdr.SetNoMoreFragments();
 
-    return Create<WifiMpdu>(bar, hdr);
+    return {reqHdr, hdr};
 }
 
 bool
@@ -311,7 +321,7 @@ QosTxop::HasFramesToTransmit(uint8_t linkId)
 {
     // remove MSDUs with expired lifetime starting from the head of the queue
     m_queue->WipeAllExpiredMpdus();
-    bool queueIsNotEmpty = (bool)(m_queue->PeekFirstAvailable(linkId, m_qosBlockedDestinations));
+    bool queueIsNotEmpty = (bool)(m_queue->PeekFirstAvailable(linkId));
 
     NS_LOG_FUNCTION(this << queueIsNotEmpty);
     return queueIsNotEmpty;
@@ -347,12 +357,8 @@ QosTxop::IsQosOldPacket(Ptr<const WifiMpdu> mpdu)
         return false;
     }
 
-    if (QosUtilsIsOldPacket(GetBaStartingSequence(recipient, tid),
-                            mpdu->GetHeader().GetSequenceNumber()))
-    {
-        return true;
-    }
-    return false;
+    return QosUtilsIsOldPacket(GetBaStartingSequence(recipient, tid),
+                               mpdu->GetHeader().GetSequenceNumber());
 }
 
 Ptr<WifiMpdu>
@@ -364,13 +370,15 @@ QosTxop::PeekNextMpdu(uint8_t linkId, uint8_t tid, Mac48Address recipient, Ptr<c
     auto peek = [this, &linkId, &tid, &recipient, &mpdu]() -> Ptr<WifiMpdu> {
         if (tid == 8 && recipient.IsBroadcast()) // undefined TID and recipient
         {
-            return m_queue->PeekFirstAvailable(linkId, m_qosBlockedDestinations, mpdu);
+            return m_queue->PeekFirstAvailable(linkId, mpdu);
         }
-        if (m_qosBlockedDestinations->IsBlocked(recipient, tid))
+        WifiContainerQueueId queueId(WIFI_QOSDATA_QUEUE, WIFI_UNICAST, recipient, tid);
+        if (auto mask = m_mac->GetMacQueueScheduler()->GetQueueLinkMask(m_ac, queueId, linkId);
+            !mask || mask->none())
         {
-            return nullptr;
+            return m_queue->PeekByQueueId(queueId, mpdu);
         }
-        return m_queue->PeekByTidAndAddress(tid, recipient, mpdu);
+        return nullptr;
     };
 
     auto item = peek();

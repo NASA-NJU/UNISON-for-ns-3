@@ -527,7 +527,7 @@ LteX2HandoverMeasuresTestCase::DoRun()
             Ptr<NetDevice> ueDev = ueDevices.Get(u);
             for (uint32_t b = 0; b < m_nDedicatedBearers; ++b)
             {
-                enum EpsBearer::Qci q = EpsBearer::NGBR_VIDEO_TCP_DEFAULT;
+                EpsBearer::Qci q = EpsBearer::NGBR_VIDEO_TCP_DEFAULT;
                 EpsBearer bearer(q);
                 m_lteHelper->ActivateDataRadioBearer(ueDev, bearer);
             }
@@ -565,13 +565,12 @@ LteX2HandoverMeasuresTestCase::DoRun()
                                 ueDevices.Get(checkPointEventIt->ueDeviceIndex),
                                 enbDevices.Get(checkPointEventIt->enbDeviceIndex));
 
-            Time saveStatsTime = checkPointTime;
-            Simulator::Schedule(saveStatsTime,
+            Simulator::Schedule(checkPointTime,
                                 &LteX2HandoverMeasuresTestCase::SaveStats,
                                 this,
                                 checkPointEventIt->ueDeviceIndex);
 
-            Time checkStats = saveStatsTime + m_statsDuration;
+            Time checkStats = checkPointTime + m_statsDuration;
             Simulator::Schedule(checkStats,
                                 &LteX2HandoverMeasuresTestCase::CheckStats,
                                 this,

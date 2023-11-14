@@ -707,6 +707,18 @@ is spread across the sub-bands roughly according to how power would
 be allocated to sub-carriers. Adjacent channels are models by the use of
 OFDM transmit spectrum masks as defined in the standards.
 
+The class ``WifiBandwidthFilter`` is used to discard signals early in the
+transmission process by ignoring any Wi-Fi PPDU whose TX band (including guard bands)
+does not overlap the current operating channel. Therefore, it bypasses the signal
+propagation/loss calculations reducing the computational load and increasing the
+simulation performance. To enable the ``WifiBandwidthFilter``, the user can use object
+aggregation as follows:
+.. sourcecode:: cpp
+
+  Ptr<WifiBandwidthFilter> wifiFilter = CreateObject<WifiBandwidthFilter> ();
+  Ptr<MultiModelSpectrumChannel> spectrumChannel = CreateObject<MultiModelSpectrumChannel> ();
+  spectrumChannel->AddSpectrumTransmitFilter(wifiFilter);
+
 To support an easier user configuration experience, the existing
 YansWifi helper classes (in ``src/wifi/helper``) were copied and
 adapted to provide equivalent SpectrumWifi helper classes.
@@ -723,6 +735,35 @@ to the InterferenceHelper and can raise CCA_BUSY but are not further processed
 in the reception chain.   After this point, valid Wi-Fi signals cause
 ``WifiPhy::StartReceivePreamble`` to be called, and the processing continues
 as described above.
+
+Furthermore, in order to support more flexible channel switching,
+the ``SpectrumWifiPhy`` can hold multiple instances of ``WifiSpectrumPhyInterface``
+(:ref:`fig-spectrum-wifi-phy-multiple-interfaces`).
+Each of these instances handles a given frequency range of the spectrum, identified by
+a start and a stop frequency expressed in MHz, and there can be no overlap in spectrum between them.
+Only one of these ``WifiSpectrumPhyInterface`` instances corresponds to the active RF interface of the ``SpectrumWifiPhy``,
+the other ones are referred to as inactive RF interfaces and might be disconnected from the spectrum channel.
+
+.. _fig-spectrum-wifi-phy-multiple-interfaces:
+
+.. figure:: figures/spectrum-wifi-phy-multiple-interfaces.*
+   :align: center
+
+   Multiple RF interfaces concept
+
+If the ``SpectrumWifiPhy::TrackSignalsFromInactiveInterfaces`` attribute is set to true,
+inactive RF interfaces are connected to their respective spectrum channels and the ``SpectrumWifiPhy``
+forwards received signals from these inactive RF interfaces to the ``InterferenceHelper`` without processing them.
+The benefit of the latter is that more accurate PHY-CCA.indication can be generated upon channel switching
+if one or more signals started to be transmitted on the new channel before the switch occurs,
+which would be ignored otherwise. This is illustrated in Figure :ref:`fig-cca-channel-switching-multiple-interfaces`, where the parts in red are only generated when ``SpectrumWifiPhy::TrackSignalsFromInactiveInterfaces`` is set to true.
+
+.. _fig-cca-channel-switching-multiple-interfaces:
+
+.. figure:: figures/cca-channel-switching-multiple-interfaces.*
+   :align: center
+
+   Illustration of signals tracking upon channel switching
 
 The MAC model
 =============
@@ -1045,6 +1086,52 @@ allocation as the preceding DL multi-user frame. The transmission of a BSRP Trig
 optionally (depending on the value of the ``EnableBsrp`` attribute) precede the transmission
 of a Basic Trigger Frame in order for the AP to collect information about the buffer status
 of the stations.
+
+Enhanced multi-link single radio operation (EMLSR)
+##################################################
+
+The IEEE 802.11be amendment introduced EMLSR operating mode to allow a non-AP MLD to alternate
+frame exchanges over a subset of setup links identified as EMLSR links. |ns3| supports EMLSR
+operations as described in the following.
+
+Non-AP MLD side
+---------------
+
+A non-AP MLD supports EMLSR operating mode if the ``EmlsrActivated`` attribute of the EHT
+configuration is set to true. In such a case, the WifiMacHelper will install an EMLSR Manager
+by using the type and attribute values configured through the ``SetEmlsrManager`` method. The
+EMLSR Manager is a base class providing the ``EmlsrLinkSet`` attribute, which can be used to
+enable or disable EMLSR mode (after multi-link setup, EMLSR mode is disabled by default). Setting
+the ``EmlsrLinkSet`` attribute triggers the transmission of an EML Operating Mode Notification
+frame to the AP to communicate the new set of EMLSR links, if ML setup has been completed.
+Otherwise, the set of EMLSR links is stored and the EML Operating Mode Notification frame is
+sent as soon as the ML setup is completed. The selection of the link used to transmit
+the EML Operating Mode Notification frame is done by the EMLSR Manager subclass. The default
+EMLSR Manager subclass, ``DefaultEmlsrManager``, selects the link that was used to perform
+ML setup. When the non-AP MLD receives the acknowledgment for the EML Operating Mode Notification
+frame, it starts a timer whose duration is the transition timeout advertised by the AP MLD.
+When the timer expires, or the non-AP MLD receives an EML Operating Mode Notification frame
+from the AP MLD, the EMLSR mode is assumed to be enabled (or disabled).
+
+AP MLD side
+-----------
+An AP MLD supports EMLSR operating mode if the ``EmlsrActivated`` attribute of the EHT
+configuration is set to true. When an AP MLD that supports EMLSR operating mode has to initiate a
+frame exchange with a non-AP MLD that is operating in EMLSR mode, it sends an MU-RTS Trigger Frame
+soliciting a response from the non-AP MLD (and possibly others) as the initial Control frame for
+that exchange. The MU-RTS Trigger Frame includes a Padding field whose transmission duration is the
+maximum among the padding delays advertised by all the EMLSR clients solicited by the MU-RTS
+Trigger Frame. Also, the MU-RTS Trigger Frame is carried in a non-HT (duplicate) PPDU transmitted
+at a rate of 6 Mbps, 12 Mbps or 24 Mbps. When the transmission of an initial Control frame starts,
+the AP MLD blocks transmissions to the solicited EMLSR clients on the EMLSR links other than the
+link used to transmit the initial Control frame, so that the AP MLD does not initiate another
+frame exchange on such links. The frame exchange with an EMLSR client is assumed to terminate
+when the AP MLD does not start a frame transmission a SIFS after the response to the last frame
+transmitted by the AP MLD or the AP MLD transmits a frame that is not addressed to the EMLSR
+client. When a frame exchange with an EMLSR client terminates, the AP MLD blocks transmissions on
+all the EMLSR links and starts a timer whose duration is the transition delay advertised by the
+EMLSR client. When the timer expires, the EMLSR client is assumed to be back to the listening
+operations and transmissions on all the EMLSR links are unblocked.
 
 Ack manager
 ###########

@@ -56,6 +56,7 @@
 #include "ns3/boolean.h"
 #include "ns3/command-line.h"
 #include "ns3/config.h"
+#include "ns3/double.h"
 #include "ns3/gnuplot.h"
 #include "ns3/internet-stack-helper.h"
 #include "ns3/ipv4-address-helper.h"
@@ -65,6 +66,7 @@
 #include "ns3/on-off-helper.h"
 #include "ns3/packet-sink-helper.h"
 #include "ns3/ssid.h"
+#include "ns3/string.h"
 #include "ns3/uinteger.h"
 #include "ns3/yans-wifi-channel.h"
 #include "ns3/yans-wifi-helper.h"
@@ -168,10 +170,16 @@ NodeStatistics::GetDatafile()
     return m_output;
 }
 
+/**
+ * Callback for 'Rate' trace source
+ *
+ * \param oldRate old MCS rate (bits/sec)
+ * \param newRate new MCS rate (bits/sec)
+ */
 void
-RateCallback(std::string path, uint64_t rate, Mac48Address dest)
+RateCallback(uint64_t oldRate, uint64_t newRate)
 {
-    NS_LOG_INFO((Simulator::Now()).GetSeconds() << " " << dest << " Rate " << rate / 1000000.0);
+    NS_LOG_INFO("Rate " << newRate / 1000000.0 << " Mbps");
 }
 
 int
@@ -194,9 +202,9 @@ main(int argc, char* argv[])
     int stepsTime = 1;
 
     CommandLine cmd(__FILE__);
-    cmd.AddValue("staManager", "PRC Manager of the STA", staManager);
-    cmd.AddValue("apManager", "PRC Manager of the AP", apManager);
-    cmd.AddValue("standard", "Wifi Phy Standard", standard);
+    cmd.AddValue("staManager", "Rate adaptation manager of the STA", staManager);
+    cmd.AddValue("apManager", "Rate adaptation manager of the AP", apManager);
+    cmd.AddValue("standard", "Wifi standard (a/b/g/n/ac only)", standard);
     cmd.AddValue("shortGuardInterval",
                  "Enable Short Guard Interval in all stations",
                  shortGuardInterval);
@@ -215,6 +223,12 @@ main(int argc, char* argv[])
 
     int simuTime = steps * stepsTime;
 
+    if (standard != "802.11a" && standard != "802.11b" && standard != "802.11g" &&
+        standard == "802.11n-2.4GHz" && standard != "802.11n-5GHz" && standard != "802.11ac")
+    {
+        NS_FATAL_ERROR("Standard " << standard << " is not supported by this program");
+    }
+
     // Define the APs
     NodeContainer wifiApNodes;
     wifiApNodes.Create(1);
@@ -226,6 +240,30 @@ main(int argc, char* argv[])
     YansWifiPhyHelper wifiPhy;
     YansWifiChannelHelper wifiChannel = YansWifiChannelHelper::Default();
     wifiPhy.SetChannel(wifiChannel.Create());
+    // Channel configuration via ChannelSettings attribute can be performed here
+    std::string frequencyBand;
+    if (standard == "802.11b" || standard == "802.11g" || standard == "802.11n-2.4GHz")
+    {
+        frequencyBand = "BAND_2_4GHZ";
+    }
+    else
+    {
+        frequencyBand = "BAND_5GHZ";
+    }
+    wifiPhy.Set("ChannelSettings",
+                StringValue("{0, " + std::to_string(chWidth) + ", " + frequencyBand + ", 0}"));
+
+    // By default, the CCA sensitivity is -82 dBm, meaning if the RSS is
+    // below this value, the receiver will reject the Wi-Fi frame.
+    // However, we want to allow the rate adaptation to work down to low
+    // SNR values.  To allow this, we need to do three things:  1) disable
+    // the noise figure (set it to 0 dB) so that the noise level in 20 MHz
+    // is around -101 dBm, 2) lower the CCA sensitivity to a value that
+    // disables it (e.g. -110 dBm), and 3) disable the Wi-Fi preamble
+    // detection model.
+    wifiPhy.Set("CcaSensitivity", DoubleValue(-110));
+    wifiPhy.Set("RxNoiseFigure", DoubleValue(0));
+    wifiPhy.DisablePreambleDetectionModel();
 
     NetDeviceContainer wifiApDevices;
     NetDeviceContainer wifiStaDevices;
@@ -296,10 +334,6 @@ main(int argc, char* argv[])
     wifiDevices.Add(wifiStaDevices);
     wifiDevices.Add(wifiApDevices);
 
-    // Set channel width
-    Config::Set("/NodeList/*/DeviceList/*/$ns3::WifiNetDevice/Phy/ChannelWidth",
-                UintegerValue(chWidth));
-
     // Set guard interval
     Config::Set(
         "/NodeList/*/DeviceList/*/$ns3::WifiNetDevice/HtConfiguration/ShortGuardIntervalSupported",
@@ -359,9 +393,9 @@ main(int argc, char* argv[])
                     MakeCallback(&NodeStatistics::RxCallback, &atpCounter));
 
     // Callbacks to print every change of rate
-    Config::ConnectFailSafe("/NodeList/0/DeviceList/*/$ns3::WifiNetDevice/RemoteStationManager/$" +
-                                apManager + "/RateChange",
-                            MakeCallback(RateCallback));
+    Config::ConnectWithoutContextFailSafe(
+        "/NodeList/0/DeviceList/*/$ns3::WifiNetDevice/RemoteStationManager/$" + apManager + "/Rate",
+        MakeCallback(RateCallback));
 
     Simulator::Stop(Seconds(simuTime));
     Simulator::Run();

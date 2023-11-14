@@ -182,6 +182,7 @@ CommandPayloadHeader::GetSerializedSize() const
     case BEACON_REQ:
         break;
     case COOR_REALIGN:
+        size += 8;
         break;
     case GTS_REQ:
         break;
@@ -217,6 +218,11 @@ CommandPayloadHeader::Serialize(Buffer::Iterator start) const
     case BEACON_REQ:
         break;
     case COOR_REALIGN:
+        i.WriteU16(m_panid);
+        WriteTo(i, m_coordShortAddr);
+        i.WriteU8(m_logCh);
+        WriteTo(i, m_shortAddr);
+        i.WriteU8(m_logChPage);
         break;
     case GTS_REQ:
         break;
@@ -251,6 +257,11 @@ CommandPayloadHeader::Deserialize(Buffer::Iterator start)
     case BEACON_REQ:
         break;
     case COOR_REALIGN:
+        m_panid = i.ReadU16();
+        ReadFrom(i, m_coordShortAddr);
+        m_logCh = i.ReadU8();
+        ReadFrom(i, m_shortAddr);
+        m_logChPage = i.ReadU8();
         break;
     case GTS_REQ:
         break;
@@ -264,7 +275,7 @@ CommandPayloadHeader::Deserialize(Buffer::Iterator start)
 void
 CommandPayloadHeader::Print(std::ostream& os) const
 {
-    os << "| MAC Command Frame ID | = " << (uint32_t)m_cmdFrameId;
+    os << "| MAC Command Frame ID | = " << static_cast<uint32_t>(m_cmdFrameId);
     switch (m_cmdFrameId)
     {
     case ASSOCIATION_REQ:
@@ -289,6 +300,11 @@ CommandPayloadHeader::Print(std::ostream& os) const
     case BEACON_REQ:
         break;
     case COOR_REALIGN:
+        os << "| PAN identifier| = " << m_panid
+           << "| PAN Coord Short address| = " << m_coordShortAddr
+           << "| Channel Num.| = " << static_cast<uint32_t>(m_logCh)
+           << "| Short address| = " << m_shortAddr
+           << "| Page Num.| = " << static_cast<uint32_t>(m_logChPage);
         break;
     case GTS_REQ:
         break;
@@ -310,6 +326,34 @@ CommandPayloadHeader::SetCapabilityField(CapabilityField cap)
     m_capabilityInfo = cap;
 }
 
+void
+CommandPayloadHeader::SetCoordShortAddr(Mac16Address addr)
+{
+    NS_ASSERT(m_cmdFrameId == COOR_REALIGN);
+    m_coordShortAddr = addr;
+}
+
+void
+CommandPayloadHeader::SetChannel(uint8_t channel)
+{
+    NS_ASSERT(m_cmdFrameId == COOR_REALIGN);
+    m_logCh = channel;
+}
+
+void
+CommandPayloadHeader::SetPage(uint8_t page)
+{
+    NS_ASSERT(m_cmdFrameId == COOR_REALIGN);
+    m_logChPage = page;
+}
+
+void
+CommandPayloadHeader::SetPanId(uint16_t id)
+{
+    NS_ASSERT(m_cmdFrameId == COOR_REALIGN);
+    m_panid = id;
+}
+
 CommandPayloadHeader::MacCommand
 CommandPayloadHeader::GetCommandFrameType() const
 {
@@ -317,31 +361,22 @@ CommandPayloadHeader::GetCommandFrameType() const
     {
     case 0x01:
         return ASSOCIATION_REQ;
-        break;
     case 0x02:
         return ASSOCIATION_RESP;
-        break;
     case 0x03:
         return DISASSOCIATION_NOTIF;
-        break;
     case 0x04:
         return DATA_REQ;
-        break;
     case 0x05:
         return PANID_CONFLICT;
-        break;
     case 0x06:
         return ORPHAN_NOTIF;
-        break;
     case 0x07:
         return BEACON_REQ;
-        break;
     case 0x08:
         return COOR_REALIGN;
-        break;
     case 0x09:
         return GTS_REQ;
-        break;
     default:
         return CMD_RESERVED;
     }
@@ -350,7 +385,7 @@ CommandPayloadHeader::GetCommandFrameType() const
 void
 CommandPayloadHeader::SetShortAddr(Mac16Address shortAddr)
 {
-    NS_ASSERT(m_cmdFrameId == ASSOCIATION_RESP);
+    NS_ASSERT(m_cmdFrameId == ASSOCIATION_RESP || m_cmdFrameId == COOR_REALIGN);
     m_shortAddr = shortAddr;
 }
 
@@ -364,7 +399,6 @@ CommandPayloadHeader::SetAssociationStatus(AssocStatus status)
 Mac16Address
 CommandPayloadHeader::GetShortAddr() const
 {
-    NS_ASSERT(m_cmdFrameId == ASSOCIATION_RESP);
     return m_shortAddr;
 }
 
@@ -380,6 +414,34 @@ CommandPayloadHeader::GetCapabilityField() const
 {
     NS_ASSERT(m_cmdFrameId == ASSOCIATION_REQ);
     return m_capabilityInfo;
+}
+
+Mac16Address
+CommandPayloadHeader::GetCoordShortAddr() const
+{
+    NS_ASSERT(m_cmdFrameId == COOR_REALIGN);
+    return m_coordShortAddr;
+}
+
+uint8_t
+CommandPayloadHeader::GetChannel() const
+{
+    NS_ASSERT(m_cmdFrameId == COOR_REALIGN);
+    return m_logCh;
+}
+
+uint8_t
+CommandPayloadHeader::GetPage() const
+{
+    NS_ASSERT(m_cmdFrameId == COOR_REALIGN);
+    return m_logChPage;
+}
+
+uint16_t
+CommandPayloadHeader::GetPanId() const
+{
+    NS_ASSERT(m_cmdFrameId == COOR_REALIGN);
+    return m_panid;
 }
 
 } // namespace ns3

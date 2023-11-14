@@ -20,7 +20,8 @@
 #include "ns3/ipv4-routing-protocol.h"
 #include "ns3/test.h"
 
-using namespace ns3;
+namespace ns3
+{
 
 /**
  * \ingroup internet-test
@@ -41,10 +42,10 @@ class Ipv4ARouting : public Ipv4RoutingProtocol
     bool RouteInput(Ptr<const Packet> p,
                     const Ipv4Header& header,
                     Ptr<const NetDevice> idev,
-                    UnicastForwardCallback ucb,
-                    MulticastForwardCallback mcb,
-                    LocalDeliverCallback lcb,
-                    ErrorCallback ecb) override
+                    const UnicastForwardCallback& ucb,
+                    const MulticastForwardCallback& mcb,
+                    const LocalDeliverCallback& lcb,
+                    const ErrorCallback& ecb) override
     {
         return false;
     }
@@ -93,10 +94,10 @@ class Ipv4BRouting : public Ipv4RoutingProtocol
     bool RouteInput(Ptr<const Packet> p,
                     const Ipv4Header& header,
                     Ptr<const NetDevice> idev,
-                    UnicastForwardCallback ucb,
-                    MulticastForwardCallback mcb,
-                    LocalDeliverCallback lcb,
-                    ErrorCallback ecb) override
+                    const UnicastForwardCallback& ucb,
+                    const MulticastForwardCallback& mcb,
+                    const LocalDeliverCallback& lcb,
+                    const ErrorCallback& ecb) override
     {
         return false;
     }
@@ -217,3 +218,5 @@ class Ipv4ListRoutingTestSuite : public TestSuite
 
 static Ipv4ListRoutingTestSuite
     g_ipv4ListRoutingTestSuite; //!< Static variable for test initialization
+
+} // namespace ns3

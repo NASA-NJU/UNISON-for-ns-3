@@ -10,6 +10,7 @@ set(source_files
     model/friis-spectrum-propagation-loss.cc
     model/half-duplex-ideal-phy-signal-parameters.cc
     model/half-duplex-ideal-phy.cc
+    model/ism-spectrum-value-helper.cc
     model/matrix-based-channel-model.cc
     model/microwave-oven-spectrum-value-helper.cc
     model/two-ray-spectrum-propagation-loss-model.cc
@@ -26,6 +27,7 @@ set(source_files
     model/spectrum-model.cc
     model/spectrum-phy.cc
     model/spectrum-propagation-loss-model.cc
+    model/spectrum-transmit-filter.cc
     model/phased-array-spectrum-propagation-loss-model.cc
     model/spectrum-signal-parameters.cc
     model/spectrum-value.cc
@@ -49,6 +51,7 @@ set(header_files
     model/friis-spectrum-propagation-loss.h
     model/half-duplex-ideal-phy-signal-parameters.h
     model/half-duplex-ideal-phy.h
+    model/ism-spectrum-value-helper.h
     model/matrix-based-channel-model.h
     model/microwave-oven-spectrum-value-helper.h
     model/two-ray-spectrum-propagation-loss-model.h
@@ -65,6 +68,7 @@ set(header_files
     model/spectrum-model.h
     model/spectrum-phy.h
     model/spectrum-propagation-loss-model.h
+    model/spectrum-transmit-filter.h
     model/phased-array-spectrum-propagation-loss-model.h
     model/spectrum-signal-parameters.h
     model/spectrum-value.h

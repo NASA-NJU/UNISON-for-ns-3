@@ -317,12 +317,12 @@ MeshWifiInterfaceMac::SendManagementFrame(Ptr<Packet> packet, const WifiMacHeade
     }
 }
 
-SupportedRates
+AllSupportedRates
 MeshWifiInterfaceMac::GetSupportedRates() const
 {
     // set the set of supported rates and make sure that we indicate
     // the Basic Rate set in this set of supported rates.
-    SupportedRates rates;
+    AllSupportedRates rates;
     for (const auto& mode : GetWifiPhy()->GetModeList())
     {
         uint16_t gi = ConvertGuardIntervalToNanoSeconds(mode, GetWifiPhy()->GetDevice());
@@ -339,7 +339,7 @@ MeshWifiInterfaceMac::GetSupportedRates() const
 }
 
 bool
-MeshWifiInterfaceMac::CheckSupportedRates(SupportedRates rates) const
+MeshWifiInterfaceMac::CheckSupportedRates(AllSupportedRates rates) const
 {
     for (uint32_t i = 0; i < GetWifiRemoteStationManager()->GetNBasicModes(); i++)
     {
@@ -459,9 +459,11 @@ MeshWifiInterfaceMac::Receive(Ptr<const WifiMpdu> mpdu, uint8_t linkId)
                                              << " microseconds");
 
         // update supported rates
-        if (beacon_hdr.GetSsid().IsEqual(GetSsid()))
+        if (beacon_hdr.Get<Ssid>()->IsEqual(GetSsid()))
         {
-            SupportedRates rates = beacon_hdr.GetSupportedRates();
+            NS_ASSERT(beacon_hdr.Get<SupportedRates>());
+            auto rates = AllSupportedRates{*beacon_hdr.Get<SupportedRates>(),
+                                           beacon_hdr.Get<ExtendedSupportedRatesIE>()};
 
             for (const auto& mode : GetWifiPhy()->GetModeList())
             {

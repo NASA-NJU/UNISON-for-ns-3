@@ -98,6 +98,17 @@ HtCapabilities::ElementId() const
 }
 
 void
+HtCapabilities::Print(std::ostream& os) const
+{
+    os << "HT Capabilities=" << bool(GetLdpc()) << "|" << bool(GetSupportedChannelWidth()) << "|"
+       << bool(GetShortGuardInterval20()) << "|";
+    for (uint8_t i = 0; i < MAX_SUPPORTED_MCS; i++)
+    {
+        os << IsSupportedMcs(i) << " ";
+    }
+}
+
+void
 HtCapabilities::SetLdpc(uint8_t ldpc)
 {
     m_ldpc = ldpc;
@@ -222,11 +233,7 @@ HtCapabilities::GetMaxAmpduLength() const
 bool
 HtCapabilities::IsSupportedMcs(uint8_t mcs) const
 {
-    if (m_rxMcsBitmask[mcs] == 1)
-    {
-        return true;
-    }
-    return false;
+    return m_rxMcsBitmask[mcs] == 1;
 }
 
 uint8_t
@@ -238,7 +245,7 @@ HtCapabilities::GetRxHighestSupportedAntennas() const
 
         for (uint8_t mcs = (nRx - 1) * 8; mcs <= maxMcs; mcs++)
         {
-            if (IsSupportedMcs(mcs) == false)
+            if (!IsSupportedMcs(mcs))
             {
                 return (nRx - 1);
             }
@@ -504,18 +511,6 @@ HtCapabilities::DeserializeInformationField(Buffer::Iterator start, uint16_t len
     SetTxBfCapabilities(txbfcapabilities);
     SetAntennaSelectionCapabilities(aselcapabilities);
     return length;
-}
-
-std::ostream&
-operator<<(std::ostream& os, const HtCapabilities& htcapabilities)
-{
-    os << bool(htcapabilities.GetLdpc()) << "|" << bool(htcapabilities.GetSupportedChannelWidth())
-       << "|" << bool(htcapabilities.GetShortGuardInterval20()) << "|";
-    for (uint8_t i = 0; i < MAX_SUPPORTED_MCS; i++)
-    {
-        os << htcapabilities.IsSupportedMcs(i) << " ";
-    }
-    return os;
 }
 
 } // namespace ns3

@@ -18,10 +18,18 @@
 # configuration, still in definition. It will be in the documentation.
 
 stages:
+  - pre-build
   - build
   - test
   - code-linting
   - documentation
+
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS
+      when: never
+    - if: $CI_COMMIT_BRANCH
 
 ###################### BUILD STAGE #############################################
 
@@ -30,18 +38,28 @@ stages:
 # the following variables: COMPILER (g++, clang++, ...) and
 # MODE (debug, default, optimized)
 .base-build:
-  stage: build
   script:
     - mkdir -p $CCACHE_BASEDIR_VALUE
     - export CCACHE_BASEDIR=${PWD}
     - export CCACHE_DIR=${PWD}/$CCACHE_BASEDIR_VALUE
     - export MPI_CI=1
     - CXX=$COMPILER ./ns3 configure -d $MODE -GNinja --enable-examples --enable-tests --enable-asserts $ENABLE_MPI
+      $EXTRA_OPTIONS
     - ccache -z
-    - ./ns3 build
-    - if [ "$MODE" != "debug" ] && [ "`./utils/ccache-miss-rate.py`" != "0" ]; then ./test.py -n; fi
+    - if [[ "$CI_JOB_STAGE" == "build" ]];
+      then ./ns3 build;
+      fi
+    - if [[ "$CI_JOB_STAGE" == "build" ]] && [[ "`./utils/ccache-miss-rate.py`" != "0" ]];
+      then `touch build/tests-$CI_COMMIT_REF_SLUG.txt`;
+      fi
+    - if [[ "$CI_JOB_STAGE" == "test" ]] && [[ "$MODE" != "debug" ]] && [[ -f build/tests-$CI_COMMIT_REF_SLUG.txt ]];
+      then ./test.py -n;
+      if [[ $? == 0 ]];
+      then `rm build/tests-$CI_COMMIT_REF_SLUG.txt` || true;
+      fi;
+      fi
     - ccache -s
-    - ./ns3 clean
+    # - ./ns3 clean
   cache:
     # Use separate key for each (debug/default/optimized) jobs because
     # they run in parallel and will otherwise overwrite each other
@@ -57,58 +75,21 @@ stages:
   timeout: 12h
   variables:
     CCACHE_BASEDIR_VALUE: ns-3-ccache-storage
-
-# Defines the per-commit jobs. They are executed for any branch
-.base-per-commit-compile:
-  extends: .base-build
-  except:
-    variables:
-      - $CPPYY == "True"
-      - $RELEASE == "weekly"
-      - $RELEASE == "daily"
-  image: archlinux
-  before_script:
-    - pacman-key --init
-    - pacman -Syu --noconfirm
-      base-devel gcc clang cmake ninja ccache
-      python
-      boost gsl gtk3 openmpi
-      openssh
-  variables:
-    ENABLE_MPI: --enable-mpi
-
-per-commit-clang-debug:
-  extends: .base-per-commit-compile
-  variables:
-    MODE: debug
-    COMPILER: clang++
-
-per-commit-gcc-debug:
-  extends: .base-per-commit-compile
-  variables:
-    MODE: debug
-    COMPILER: g++
-
-per-commit-gcc-default:
-  extends: .base-per-commit-compile
-  variables:
-    MODE: default
-    COMPILER: g++
-
-per-commit-gcc-optimized:
-  extends: .base-per-commit-compile
-  variables:
-    MODE: optimized
-    COMPILER: g++
+  artifacts:
+    expire_in: 2 day
+    paths:
+      - build/
+      - .lock-*
 
 # Weekly jobs for other distribution and compilers
 include:
+  - "utils/tests/gitlab-ci-per-commit.yml"
   - "utils/tests/gitlab-ci-alpine.yml"
   - "utils/tests/gitlab-ci-ubuntu.yml"
   - "utils/tests/gitlab-ci-fedora.yml"
   - "utils/tests/gitlab-ci-gcc.yml"
   - "utils/tests/gitlab-ci-clang.yml"
-  - "utils/tests/gitlab-ci-test.yml"
+  - "utils/tests/gitlab-ci-daily.yml"
   - "utils/tests/gitlab-ci-code-linting.yml"
   - "utils/tests/gitlab-ci-doc.yml"
   - "utils/tests/gitlab-ci-cppyy.yml"

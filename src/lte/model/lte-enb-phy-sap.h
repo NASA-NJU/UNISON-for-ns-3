@@ -20,8 +20,9 @@
 #ifndef LTE_ENB_PHY_SAP_H
 #define LTE_ENB_PHY_SAP_H
 
-#include <ns3/ff-mac-common.h>
-#include <ns3/ff-mac-sched-sap.h>
+#include "ff-mac-common.h"
+#include "ff-mac-sched-sap.h"
+
 #include <ns3/packet.h>
 
 namespace ns3
@@ -109,14 +110,14 @@ class LteEnbPhySapUser
      *
      * \param params
      */
-    virtual void UlInfoListElementHarqFeeback(UlInfoListElement_s params) = 0;
+    virtual void UlInfoListElementHarqFeedback(UlInfoListElement_s params) = 0;
 
     /**
      * Notify the HARQ on the DL transmission status
      *
      * \param params
      */
-    virtual void DlInfoListElementHarqFeeback(DlInfoListElement_s params) = 0;
+    virtual void DlInfoListElementHarqFeedback(DlInfoListElement_s params) = 0;
 };
 
 } // namespace ns3

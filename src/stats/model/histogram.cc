@@ -71,7 +71,7 @@ Histogram::SetDefaultBinWidth(double binWidth)
 }
 
 uint32_t
-Histogram::GetBinCount(uint32_t index)
+Histogram::GetBinCount(uint32_t index) const
 {
     NS_ASSERT(index < m_histogram.size());
     return m_histogram[index];
@@ -90,6 +90,12 @@ Histogram::AddValue(double value)
         m_histogram.resize(index + 1, 0);
     }
     m_histogram[index]++;
+}
+
+void
+Histogram::Clear()
+{
+    m_histogram.clear();
 }
 
 Histogram::Histogram(double binWidth)

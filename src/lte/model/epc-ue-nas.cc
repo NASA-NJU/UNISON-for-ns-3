@@ -20,11 +20,11 @@
 #include "epc-ue-nas.h"
 
 #include "lte-as-sap.h"
-#include "lte-enb-net-device.h"
 
 #include <ns3/epc-helper.h>
 #include <ns3/fatal-error.h>
 #include <ns3/log.h>
+#include <ns3/simulator.h>
 
 namespace ns3
 {
@@ -222,7 +222,6 @@ EpcUeNas::Send(Ptr<Packet> packet, uint16_t protocolNumber)
     default:
         NS_LOG_WARN(this << " NAS OFF, discarding packet");
         return false;
-        break;
     }
 }
 

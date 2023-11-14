@@ -40,6 +40,18 @@ class SupportedRates;
 class CapabilityInformation;
 class RandomVariableStream;
 class WifiAssocManager;
+class EmlsrManager;
+
+/**
+ * \ingroup wifi
+ *
+ * Scan type (active or passive)
+ */
+enum class WifiScanType : uint8_t
+{
+    ACTIVE = 0,
+    PASSIVE
+};
 
 /**
  * \ingroup wifi
@@ -63,17 +75,25 @@ struct WifiScanParams
     /// typedef for a list of channels
     using ChannelList = std::list<Channel>;
 
-    enum : uint8_t
-    {
-        ACTIVE = 0,
-        PASSIVE
-    } type; ///< indicates either active or passive scanning
-
+    WifiScanType type;                    ///< indicates either active or passive scanning
     Ssid ssid;                            ///< desired SSID or wildcard SSID
     std::vector<ChannelList> channelList; ///< list of channels to scan, for each link
     Time probeDelay;                      ///< delay prior to transmitting a Probe Request
     Time minChannelTime;                  ///< minimum time to spend on each channel
     Time maxChannelTime;                  ///< maximum time to spend on each channel
+};
+
+/**
+ * \ingroup wifi
+ *
+ * Enumeration for power management modes
+ */
+enum WifiPowerManagementMode : uint8_t
+{
+    WIFI_PM_ACTIVE = 0,
+    WIFI_PM_SWITCHING_TO_PS,
+    WIFI_PM_POWERSAVE,
+    WIFI_PM_SWITCHING_TO_ACTIVE
 };
 
 /**
@@ -149,7 +169,7 @@ class StaWifiMac : public WifiMac
         WifiScanParams::Channel m_channel; ///< The channel the management frame was received on
         uint8_t m_linkId;                  ///< ID of the link used to communicate with the AP
         /// list of (local link ID, AP link ID) pairs identifying the links to setup between MLDs
-        std::list<std::pair<std::uint8_t, uint8_t>> m_setupLinks;
+        std::list<std::pair<uint8_t, uint8_t>> m_setupLinks;
     };
 
     /**
@@ -185,10 +205,23 @@ class StaWifiMac : public WifiMac
     void SetAssocManager(Ptr<WifiAssocManager> assocManager);
 
     /**
-     * Forward a probe request packet to the DCF. The standard is not clear on the correct
-     * queue for management frames if QoS is supported. We always use the DCF.
+     * Set the EMLSR Manager.
+     *
+     * \param emlsrManager the EMLSR Manager
      */
-    void SendProbeRequest();
+    void SetEmlsrManager(Ptr<EmlsrManager> emlsrManager);
+
+    /**
+     * \return the EMLSR Manager
+     */
+    Ptr<EmlsrManager> GetEmlsrManager() const;
+
+    /**
+     * Enqueue a probe request packet for transmission on the given link.
+     *
+     * \param linkId the ID of the given link
+     */
+    void SendProbeRequest(uint8_t linkId);
 
     /**
      * This method is called after wait beacon timeout or wait probe request timeout has
@@ -214,11 +247,46 @@ class StaWifiMac : public WifiMac
     std::set<uint8_t> GetSetupLinkIds() const;
 
     /**
+     * \param linkId the IO of the given link
+     * \return the ID (as set by the AP) of the given link, if the given link has been setup
+     */
+    std::optional<uint8_t> GetApLinkId(uint8_t linkId) const;
+
+    /**
      * Return the association ID.
      *
      * \return the association ID
      */
     uint16_t GetAssociationId() const;
+
+    /**
+     * Enable or disable Power Save mode on the given link.
+     *
+     * \param enableLinkIdPair a pair indicating whether to enable or not power save mode on
+     *                         the link with the given ID
+     */
+    void SetPowerSaveMode(const std::pair<bool, uint8_t>& enableLinkIdPair);
+
+    /**
+     * \param linkId the ID of the given link
+     * \return the current Power Management mode of the STA operating on the given link
+     */
+    WifiPowerManagementMode GetPmMode(uint8_t linkId) const;
+
+    /**
+     * Set the Power Management mode of the setup links after association.
+     *
+     * \param linkId the ID of the link used to establish association
+     */
+    void SetPmModeAfterAssociation(uint8_t linkId);
+
+    /**
+     * Notify that the MPDU we sent was successfully received by the receiver
+     * (i.e. we received an Ack from the receiver).
+     *
+     * \param mpdu the MPDU that we successfully sent
+     */
+    void TxOk(Ptr<const WifiMpdu> mpdu);
 
     void NotifyChannelSwitching(uint8_t linkId) override;
 
@@ -251,6 +319,9 @@ class StaWifiMac : public WifiMac
         std::optional<Mac48Address> bssid; //!< BSSID of the AP to associate with over this link
         EventId beaconWatchdog;            //!< beacon watchdog
         Time beaconWatchdogEnd{0};         //!< beacon watchdog end
+        WifiPowerManagementMode pmMode{WIFI_PM_ACTIVE}; /**< the current PM mode, if the STA is
+                                                             associated, or the PM mode to switch
+                                                             to upon association, otherwise */
     };
 
     /**
@@ -413,7 +484,7 @@ class StaWifiMac : public WifiMac
      * \param linkId the ID of the link for which the request is made
      * \return SupportedRates all rates that we support
      */
-    SupportedRates GetSupportedRates(uint8_t linkId) const;
+    AllSupportedRates GetSupportedRates(uint8_t linkId) const;
     /**
      * Return the Multi-Link Element to include in the management frames transmitted
      * on the given link
@@ -429,34 +500,47 @@ class StaWifiMac : public WifiMac
      * \param value the new state
      */
     void SetState(MacState value);
+
     /**
-     * Set the EDCA parameters.
-     *
-     * \param ac the access class
-     * \param cwMin the minimum contention window size
-     * \param cwMax the maximum contention window size
-     * \param aifsn the number of slots that make up an AIFS
-     * \param txopLimit the TXOP limit
+     * EDCA Parameters
      */
-    void SetEdcaParameters(AcIndex ac,
-                           uint32_t cwMin,
-                           uint32_t cwMax,
-                           uint8_t aifsn,
-                           Time txopLimit);
+    struct EdcaParams
+    {
+        AcIndex ac;     //!< the access category
+        uint32_t cwMin; //!< the minimum contention window size
+        uint32_t cwMax; //!< the maximum contention window size
+        uint8_t aifsn;  //!< the number of slots that make up an AIFS
+        Time txopLimit; //!< the TXOP limit
+    };
+
     /**
-     * Set the MU EDCA parameters.
+     * Set the EDCA parameters for the given link.
      *
-     * \param ac the Access Category
-     * \param cwMin the minimum contention window size
-     * \param cwMax the maximum contention window size
-     * \param aifsn the number of slots that make up an AIFS
-     * \param muEdcaTimer the MU EDCA timer
+     * \param params the EDCA parameters
+     * \param linkId the ID of the given link
      */
-    void SetMuEdcaParameters(AcIndex ac,
-                             uint16_t cwMin,
-                             uint16_t cwMax,
-                             uint8_t aifsn,
-                             Time muEdcaTimer);
+    void SetEdcaParameters(const EdcaParams& params, uint8_t linkId);
+
+    /**
+     * MU EDCA Parameters
+     */
+    struct MuEdcaParams
+    {
+        AcIndex ac;       //!< the access category
+        uint32_t cwMin;   //!< the minimum contention window size
+        uint32_t cwMax;   //!< the maximum contention window size
+        uint8_t aifsn;    //!< the number of slots that make up an AIFS
+        Time muEdcaTimer; //!< the MU EDCA timer
+    };
+
+    /**
+     * Set the MU EDCA parameters for the given link.
+     *
+     * \param params the MU EDCA parameters
+     * \param linkId the ID of the given link
+     */
+    void SetMuEdcaParameters(const MuEdcaParams& params, uint8_t linkId);
+
     /**
      * Return the Capability information for the given link.
      *
@@ -485,6 +569,7 @@ class StaWifiMac : public WifiMac
     MacState m_state;                       ///< MAC state
     uint16_t m_aid;                         ///< Association AID
     Ptr<WifiAssocManager> m_assocManager;   ///< Association Manager
+    Ptr<EmlsrManager> m_emlsrManager;       ///< EMLSR Manager
     Time m_waitBeaconTimeout;               ///< wait beacon timeout
     Time m_probeRequestTimeout;             ///< probe request timeout
     Time m_assocRequestTimeout;             ///< association request timeout
@@ -493,6 +578,7 @@ class StaWifiMac : public WifiMac
     bool m_activeProbing;                   ///< active probing
     Ptr<RandomVariableStream> m_probeDelay; ///< RandomVariable used to randomize the time
                                             ///< of the first Probe Response on each channel
+    Time m_pmModeSwitchTimeout;             ///< PM mode switch timeout
 
     TracedCallback<Mac48Address> m_assocLogger;             ///< association logger
     TracedCallback<uint8_t, Mac48Address> m_setupCompleted; ///< link setup completed logger

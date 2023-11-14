@@ -21,10 +21,10 @@
 #ifndef LTE_FR_HARD_ALGORITHM_H
 #define LTE_FR_HARD_ALGORITHM_H
 
-#include <ns3/lte-ffr-algorithm.h>
-#include <ns3/lte-ffr-rrc-sap.h>
-#include <ns3/lte-ffr-sap.h>
-#include <ns3/lte-rrc-sap.h>
+#include "lte-ffr-algorithm.h"
+#include "lte-ffr-rrc-sap.h"
+#include "lte-ffr-sap.h"
+#include "lte-rrc-sap.h"
 
 namespace ns3
 {
@@ -73,9 +73,9 @@ class LteFrHardAlgorithm : public LteFfrAlgorithm
     std::vector<bool> DoGetAvailableUlRbg() override;
     bool DoIsUlRbgAvailableForUe(int i, uint16_t rnti) override;
     void DoReportDlCqiInfo(
-        const struct FfMacSchedSapProvider::SchedDlCqiInfoReqParameters& params) override;
+        const FfMacSchedSapProvider::SchedDlCqiInfoReqParameters& params) override;
     void DoReportUlCqiInfo(
-        const struct FfMacSchedSapProvider::SchedUlCqiInfoReqParameters& params) override;
+        const FfMacSchedSapProvider::SchedUlCqiInfoReqParameters& params) override;
     void DoReportUlCqiInfo(std::map<uint16_t, std::vector<double>> ulCqiMap) override;
     uint8_t DoGetTpc(uint16_t rnti) override;
     uint16_t DoGetMinContinuousUlBandwidth() override;

@@ -81,7 +81,7 @@ uint32_t Buffer::g_recommendedStart = 0;
 #define UNINITIALIZED ((Buffer::FreeList*)0)
 uint32_t Buffer::g_maxSize = 0;
 Buffer::FreeList* Buffer::g_freeList = nullptr;
-struct Buffer::LocalStaticDestructor Buffer::g_localStaticDestructor;
+Buffer::LocalStaticDestructor Buffer::g_localStaticDestructor;
 
 Buffer::LocalStaticDestructor::~LocalStaticDestructor()
 {
@@ -98,7 +98,7 @@ Buffer::LocalStaticDestructor::~LocalStaticDestructor()
 }
 
 void
-Buffer::Recycle(struct Buffer::Data* data)
+Buffer::Recycle(Buffer::Data* data)
 {
     NS_LOG_FUNCTION(data);
     NS_ASSERT(data->m_count == 0);
@@ -129,7 +129,7 @@ Buffer::Create(uint32_t dataSize)
     {
         while (!g_freeList->empty())
         {
-            struct Buffer::Data* data = g_freeList->back();
+            Buffer::Data* data = g_freeList->back();
             g_freeList->pop_back();
             if (data->m_size >= dataSize)
             {
@@ -139,13 +139,13 @@ Buffer::Create(uint32_t dataSize)
             Buffer::Deallocate(data);
         }
     }
-    struct Buffer::Data* data = Buffer::Allocate(dataSize);
+    Buffer::Data* data = Buffer::Allocate(dataSize);
     NS_ASSERT(data->m_count == 1);
     return data;
 }
 #else  /* BUFFER_FREE_LIST */
 void
-Buffer::Recycle(struct Buffer::Data* data)
+Buffer::Recycle(Buffer::Data* data)
 {
     NS_LOG_FUNCTION(data);
     NS_ASSERT(data->m_count == 0);
@@ -163,7 +163,9 @@ Buffer::Create(uint32_t size)
 }
 #endif /* BUFFER_FREE_LIST */
 
-struct Buffer::Data*
+constexpr uint32_t ALLOC_OVER_PROVISION = 100; //!< Additional bytes to over-provision.
+
+Buffer::Data*
 Buffer::Allocate(uint32_t reqSize)
 {
     NS_LOG_FUNCTION(reqSize);
@@ -172,16 +174,17 @@ Buffer::Allocate(uint32_t reqSize)
         reqSize = 1;
     }
     NS_ASSERT(reqSize >= 1);
-    uint32_t size = reqSize - 1 + sizeof(struct Buffer::Data);
+    reqSize += ALLOC_OVER_PROVISION;
+    uint32_t size = reqSize - 1 + sizeof(Buffer::Data);
     uint8_t* b = new uint8_t[size];
-    struct Buffer::Data* data = reinterpret_cast<struct Buffer::Data*>(b);
+    Buffer::Data* data = reinterpret_cast<Buffer::Data*>(b);
     data->m_size = reqSize;
     data->m_count = 1;
     return data;
 }
 
 void
-Buffer::Deallocate(struct Buffer::Data* data)
+Buffer::Deallocate(Buffer::Data* data)
 {
     NS_LOG_FUNCTION(data);
     NS_ASSERT(data->m_count == 0);
@@ -204,7 +207,7 @@ Buffer::Buffer(uint32_t dataSize)
 Buffer::Buffer(uint32_t dataSize, bool initialize)
 {
     NS_LOG_FUNCTION(this << dataSize << initialize);
-    if (initialize == true)
+    if (initialize)
     {
         Initialize(dataSize);
     }
@@ -329,7 +332,7 @@ Buffer::AddAtStart(uint32_t start)
     else
     {
         uint32_t newSize = GetInternalSize() + start;
-        struct Buffer::Data* newData = Buffer::Create(newSize);
+        Buffer::Data* newData = Buffer::Create(newSize);
         memcpy(newData->m_data + start, m_data->m_data + m_start, GetInternalSize());
         if (m_data->m_count-- == 1)
         {
@@ -374,7 +377,7 @@ Buffer::AddAtEnd(uint32_t end)
     else
     {
         uint32_t newSize = GetInternalSize() + end;
-        struct Buffer::Data* newData = Buffer::Create(newSize);
+        Buffer::Data* newData = Buffer::Create(newSize);
         memcpy(newData->m_data, m_data->m_data + m_start, GetInternalSize());
         if (m_data->m_count-- == 1)
         {

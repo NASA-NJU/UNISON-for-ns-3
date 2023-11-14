@@ -1,5 +1,4 @@
 #! /usr/bin/env python3
-# -*- Mode: python; py-indent-offset: 4; indent-tabs-mode: nil; coding: utf-8; -*-
 #
 # Copyright (c) 2021 Universidade de Brasília
 #
@@ -970,7 +969,7 @@ class NS3ConfigureTestCase(NS3BaseTestCase):
             self.assertLess(len(get_enabled_modules()), len(self.ns3_modules))
             self.assertIn("ns3-lte", enabled_modules)
             self.assertTrue(get_test_enabled())
-            self.assertGreaterEqual(len(get_programs_list()), len(self.ns3_executables))
+            self.assertLessEqual(len(get_programs_list()), len(self.ns3_executables))
 
             # Replace the ns3rc file with the wifi module, enabling examples and disabling tests
             with open(ns3rc_script, "w") as f:
@@ -1210,7 +1209,8 @@ class NS3ConfigureTestCase(NS3BaseTestCase):
         test_files = ["scratch/main.cc",
                       "scratch/empty.cc",
                       "scratch/subdir1/main.cc",
-                      "scratch/subdir2/main.cc"]
+                      "scratch/subdir2/main.cc",
+                      "scratch/main.test.dots.in.name.cc"]
         backup_files = ["scratch/.main.cc"]  # hidden files should be ignored
 
         # Create test scratch files
@@ -1253,6 +1253,25 @@ class NS3ConfigureTestCase(NS3BaseTestCase):
             else:
                 self.assertEqual(return_code, 1)
 
+        # Now test them in CMake 3.10
+        run_ns3("clean")
+        with DockerContainerManager(self, "ubuntu:18.04") as container:
+            container.execute("apt-get update")
+            container.execute("apt-get install -y python3 cmake g++-8 ninja-build")
+            try:
+                container.execute(
+                    "./ns3 configure --enable-modules=core,network,internet -- -DCMAKE_CXX_COMPILER=/usr/bin/g++-8")
+            except DockerException as e:
+                self.fail()
+            for path in test_files:
+                path = path.replace(".cc", "")
+                try:
+                    container.execute(f"./ns3 run {path}")
+                except DockerException as e:
+                    if "main" in path:
+                        self.fail()
+        run_ns3("clean")
+
         # Delete the test files and reconfigure to clean them up
         for path in test_files + backup_files:
             source_absolute_path = os.path.join(ns3_path, path)
@@ -1267,7 +1286,7 @@ class NS3ConfigureTestCase(NS3BaseTestCase):
                                    )[0]
 
             os.remove(os.path.join(executable_absolute_path, executable_name))
-            if path not in ["scratch/main.cc", "scratch/empty.cc"]:
+            if not os.listdir(os.path.dirname(path)):
                 os.rmdir(os.path.dirname(source_absolute_path))
 
         return_code, stdout, stderr = run_ns3("configure -G \"{generator}\"")
@@ -1368,10 +1387,10 @@ class NS3ConfigureTestCase(NS3BaseTestCase):
                 self.assertIn("Invalid library name: %s" % invalid_or_nonexistent_library, stderr)
             elif invalid_or_nonexistent_library in ["gsd", "libfi", "calibre"]:
                 self.assertEqual(return_code, 2)  # should fail due to missing library
-                # GCC's LD says cannot find
-                # LLVM's LLD says unable to find
                 if "lld" in stdout + stderr:
                     self.assertIn("unable to find library -l%s" % invalid_or_nonexistent_library, stderr)
+                elif "mold" in stdout + stderr:
+                    self.assertIn("library not found: %s" % invalid_or_nonexistent_library, stderr)
                 else:
                     self.assertIn("cannot find -l%s" % invalid_or_nonexistent_library, stderr)
             else:
@@ -1839,6 +1858,21 @@ class NS3ConfigureTestCase(NS3BaseTestCase):
             except DockerException as e:
                 self.assertTrue(False, "Precompiled headers should have been enabled")
 
+    def test_24_CheckTestSettings(self):
+        """!
+        Check for regressions in test object build.
+        @return None
+        """
+        return_code, stdout, stderr = run_ns3('configure')
+        self.assertEqual(return_code, 0)
+
+        test_module_cache = os.path.join(ns3_path, "cmake-cache", "src", "test")
+        self.assertFalse(os.path.exists(test_module_cache))
+
+        return_code, stdout, stderr = run_ns3('configure --enable-tests')
+        self.assertEqual(return_code, 0)
+        self.assertTrue(os.path.exists(test_module_cache))
+
 
 class NS3BuildBaseTestCase(NS3BaseTestCase):
     """!
@@ -2303,7 +2337,7 @@ class NS3BuildBaseTestCase(NS3BaseTestCase):
 
         # First enable examples and static build
         return_code, stdout, stderr = run_ns3(
-            "configure -G \"{generator}\" --enable-python-bindings")
+            "configure -G \"{generator}\" --enable-examples --enable-python-bindings")
 
         # If configuration passes, we are half way done
         self.assertEqual(return_code, 0)
@@ -2319,6 +2353,58 @@ class NS3BuildBaseTestCase(NS3BaseTestCase):
         # Then try to run a specific test with the full relative path
         return_code, stdout, stderr = run_program("test.py", "-p ./examples/wireless/mixed-wired-wireless", python=True)
         self.assertEqual(return_code, 0)
+
+    def test_13_FetchOptionalComponents(self):
+        """!
+        Test if we had regressions with brite, click and openflow modules
+        that depend on homonymous libraries
+        @return None
+        """
+        if shutil.which("git") is None:
+            self.skipTest("Missing git")
+
+        # First enable automatic components fetching
+        return_code, stdout, stderr = run_ns3("configure -- -DNS3_FETCH_OPTIONAL_COMPONENTS=ON")
+        self.assertEqual(return_code, 0)
+
+        # Build the optional components to check if their dependencies were fetched
+        # and there were no build regressions
+        return_code, stdout, stderr = run_ns3("build brite click openflow")
+        self.assertEqual(return_code, 0)
+
+    def test_14_LinkContribModuleToSrcModule(self):
+        """!
+        Test if we can link contrib modules to src modules
+        @return None
+        """
+        if shutil.which("git") is None:
+            self.skipTest("Missing git")
+
+        destination_contrib = os.path.join(ns3_path, "contrib/test-contrib-dependency")
+        destination_src = os.path.join(ns3_path, "src/test-src-dependant-on-contrib")
+        # Remove pre-existing directories
+        if os.path.exists(destination_contrib):
+            shutil.rmtree(destination_contrib)
+        if os.path.exists(destination_src):
+            shutil.rmtree(destination_src)
+
+        # Always use a fresh copy
+        shutil.copytree(os.path.join(ns3_path, "build-support/test-files/test-contrib-dependency"),
+                        destination_contrib)
+        shutil.copytree(os.path.join(ns3_path, "build-support/test-files/test-src-dependant-on-contrib"),
+                        destination_src)
+
+        # Then configure
+        return_code, stdout, stderr = run_ns3("configure --enable-examples")
+        self.assertEqual(return_code, 0)
+
+        # Build the src module that depend on a contrib module
+        return_code, stdout, stderr = run_ns3("run source-example")
+        self.assertEqual(return_code, 0)
+
+        # Remove module copies
+        shutil.rmtree(destination_contrib)
+        shutil.rmtree(destination_src)
 
 
 class NS3ExpectedUseTestCase(NS3BaseTestCase):
@@ -2810,10 +2896,15 @@ class NS3QualityControlTestCase(unittest.TestCase):
                 if "build" in root or "_static" in root or "source-temp" in root or 'html' in root:
                     continue
                 for file in files:
+                    filepath = os.path.join(root, file)
+
+                    # skip everything that isn't a file
+                    if not os.path.isfile(filepath):
+                        continue
+
                     # skip svg files
                     if file.endswith(".svg"):
                         continue
-                    filepath = os.path.join(root, file)
 
                     try:
                         with open(filepath, "r") as f:

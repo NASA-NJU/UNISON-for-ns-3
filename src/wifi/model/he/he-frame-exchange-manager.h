@@ -52,6 +52,13 @@ typedef std::unordered_map<uint16_t /* staId */, Ptr<const WifiPsdu> /* PSDU */>
 bool IsTrigger(const WifiPsduMap& psduMap);
 
 /**
+ * \param psduMap a PSDU map
+ * \return true if the given PSDU map contains a single PSDU including a single MPDU
+ *         that carries a Trigger Frame
+ */
+bool IsTrigger(const WifiConstPsduMap& psduMap);
+
+/**
  * \ingroup wifi
  *
  * HeFrameExchangeManager handles the frame exchange sequences
@@ -156,6 +163,8 @@ class HeFrameExchangeManager : public VhtFrameExchangeManager
     void CtsTimeout(Ptr<WifiMpdu> rts, const WifiTxVector& txVector) override;
     void UpdateNav(Ptr<const WifiPsdu> psdu, const WifiTxVector& txVector) override;
     void NavResetTimeout() override;
+    void StartProtection(const WifiTxParameters& txParams) override;
+    void ProtectionCompleted() override;
 
     /**
      * Clear the TXOP holder if the intra-BSS NAV counted down to zero (includes the case
@@ -184,11 +193,18 @@ class HeFrameExchangeManager : public VhtFrameExchangeManager
                                     Time response) const;
 
     /**
+     * Record the stations being solicited by an MU-RTS TF.
+     *
+     * \param txParams the TX parameters for the data frame protected by the MU-RTS TF.
+     */
+    void RecordSentMuRtsTo(const WifiTxParameters& txParams);
+
+    /**
      * Send an MU-RTS to begin an MU-RTS/CTS frame exchange protecting an MU PPDU.
      *
      * \param txParams the TX parameters for the data frame
      */
-    void SendMuRts(const WifiTxParameters& txParams);
+    virtual void SendMuRts(const WifiTxParameters& txParams);
 
     /**
      * Called when no CTS frame is received after an MU-RTS.
@@ -240,7 +256,7 @@ class HeFrameExchangeManager : public VhtFrameExchangeManager
      * \param psduMap the map of PSDUs to transmit
      * \param txVector the TXVECTOR used to transmit the MU PPDU
      */
-    void ForwardPsduMapDown(WifiConstPsduMap psduMap, WifiTxVector& txVector);
+    virtual void ForwardPsduMapDown(WifiConstPsduMap psduMap, WifiTxVector& txVector);
 
     /**
      * Take the necessary actions after that some BlockAck frames are missing

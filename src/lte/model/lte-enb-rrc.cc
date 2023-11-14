@@ -25,16 +25,18 @@
 
 #include "lte-enb-rrc.h"
 
+#include "component-carrier-enb.h"
+#include "eps-bearer-tag.h"
+#include "lte-pdcp.h"
+#include "lte-radio-bearer-info.h"
+#include "lte-rlc-am.h"
+#include "lte-rlc-tm.h"
+#include "lte-rlc-um.h"
+#include "lte-rlc.h"
+
 #include <ns3/abort.h>
-#include <ns3/eps-bearer-tag.h>
 #include <ns3/fatal-error.h>
 #include <ns3/log.h>
-#include <ns3/lte-pdcp.h>
-#include <ns3/lte-radio-bearer-info.h>
-#include <ns3/lte-rlc-am.h>
-#include <ns3/lte-rlc-tm.h>
-#include <ns3/lte-rlc-um.h>
-#include <ns3/lte-rlc.h>
 #include <ns3/object-factory.h>
 #include <ns3/object-map.h>
 #include <ns3/packet.h>
@@ -204,7 +206,7 @@ UeManager::DoInitialize()
         // Iinterface Specification v1.11, 4.3.4 logicalChannelConfigListElement
         lcinfo.lcGroup = 0;
         lcinfo.qci = 0;
-        lcinfo.isGbr = false;
+        lcinfo.resourceType = 0;
         lcinfo.mbrUl = 0;
         lcinfo.mbrDl = 0;
         lcinfo.gbrUl = 0;
@@ -249,7 +251,7 @@ UeManager::DoInitialize()
         lcinfo.lcGroup = 0; // all SRBs always mapped to LCG 0
         lcinfo.qci =
             EpsBearer::GBR_CONV_VOICE; // not sure why the FF API requires a CQI even for SRBs...
-        lcinfo.isGbr = true;
+        lcinfo.resourceType = 1;       // GBR resource type
         lcinfo.mbrUl = 1e6;
         lcinfo.mbrDl = 1e6;
         lcinfo.gbrUl = 1e4;
@@ -436,6 +438,7 @@ UeManager::SetupDataRadioBearer(EpsBearer bearer,
     Ptr<LteRlc> rlc = rlcObjectFactory.Create()->GetObject<LteRlc>();
     rlc->SetLteMacSapProvider(m_rrc->m_macSapProvider);
     rlc->SetRnti(m_rnti);
+    rlc->SetPacketDelayBudgetMs(bearer.GetPacketDelayBudgetMs());
 
     drbInfo->m_rlc = rlc;
 
@@ -468,7 +471,7 @@ UeManager::SetupDataRadioBearer(EpsBearer bearer,
     // lcinfo.lcId = lcid;
     // lcinfo.lcGroup = m_rrc->GetLogicalChannelGroup (bearer);
     // lcinfo.qci = bearer.qci;
-    // lcinfo.isGbr = bearer.IsGbr ();
+    // lcinfo.resourceType = bearer.GetResourceType();
     // lcinfo.mbrUl = bearer.gbrQosInfo.mbrUl;
     // lcinfo.mbrDl = bearer.gbrQosInfo.mbrDl;
     // lcinfo.gbrUl = bearer.gbrQosInfo.gbrUl;
@@ -503,7 +506,7 @@ UeManager::SetupDataRadioBearer(EpsBearer bearer,
     drbInfo->m_logicalChannelIdentity = lcid;
     drbInfo->m_logicalChannelConfig.priority = m_rrc->GetLogicalChannelPriority(bearer);
     drbInfo->m_logicalChannelConfig.logicalChannelGroup = m_rrc->GetLogicalChannelGroup(bearer);
-    if (bearer.IsGbr())
+    if (bearer.GetResourceType() > 0) // 1, 2 for GBR and DC-GBR
     {
         drbInfo->m_logicalChannelConfig.prioritizedBitRateKbps = bearer.gbrQosInfo.gbrUl;
     }
@@ -679,7 +682,7 @@ UeManager::PrepareHandover(uint16_t cellId)
             uint16_t rnti = m_rrc->AddUe(UeManager::HANDOVER_JOINING, componentCarrierId);
             LteEnbCmacSapProvider::AllocateNcRaPreambleReturnValue anrcrv =
                 m_rrc->m_cmacSapProvider.at(componentCarrierId)->AllocateNcRaPreamble(rnti);
-            if (anrcrv.valid == false)
+            if (!anrcrv.valid)
             {
                 NS_LOG_INFO(this << " failed to allocate a preamble for non-contention based RA => "
                                     "cannot perform HO");
@@ -958,7 +961,6 @@ UeManager::SendData(uint8_t bid, Ptr<Packet> p)
     case CONNECTION_SETUP:
         NS_LOG_WARN("not connected, discarding packet");
         return;
-        break;
 
     case CONNECTED_NORMALLY:
     case CONNECTION_RECONFIGURATION:
@@ -1145,7 +1147,7 @@ UeManager::RecvRrcConnectionRequest(LteRrcSap::RrcConnectionRequest msg)
     case INITIAL_RANDOM_ACCESS: {
         m_connectionRequestTimeout.Cancel();
 
-        if (m_rrc->m_admitRrcConnectionRequest == true)
+        if (m_rrc->m_admitRrcConnectionRequest)
         {
             m_imsi = msg.ueIdentity;
 
@@ -1195,7 +1197,7 @@ UeManager::RecvRrcConnectionSetupCompleted(LteRrcSap::RrcConnectionSetupComplete
     {
     case CONNECTION_SETUP:
         m_connectionSetupTimeout.Cancel();
-        if (m_caSupportConfigured == false && m_rrc->m_numberOfComponentCarriers > 1)
+        if (!m_caSupportConfigured && m_rrc->m_numberOfComponentCarriers > 1)
         {
             m_pendingRrcConnectionReconfiguration = true; // Force Reconfiguration
             m_pendingStartDataRadioBearers = true;
@@ -1610,7 +1612,7 @@ UeManager::BuildRrcConnectionReconfiguration()
     msg.haveMobilityControlInfo = false;
     msg.haveMeasConfig = true;
     msg.measConfig = m_rrc->m_ueMeasConfig;
-    if (m_caSupportConfigured == false && m_rrc->m_numberOfComponentCarriers > 1)
+    if (!m_caSupportConfigured && m_rrc->m_numberOfComponentCarriers > 1)
     {
         m_caSupportConfigured = true;
         NS_LOG_FUNCTION(this << "CA not configured. Configure now!");
@@ -1733,11 +1735,11 @@ UeManager::SwitchToState(State newState)
         break;
 
     case CONNECTED_NORMALLY: {
-        if (m_pendingRrcConnectionReconfiguration == true)
+        if (m_pendingRrcConnectionReconfiguration)
         {
             ScheduleRrcConnectionReconfiguration();
         }
-        if (m_pendingStartDataRadioBearers == true && m_caSupportConfigured == true)
+        if (m_pendingStartDataRadioBearers && m_caSupportConfigured)
         {
             StartDataRadioBearers();
         }
@@ -2867,7 +2869,7 @@ LteEnbRrc::DoRecvHandoverRequest(EpcX2SapUser::HandoverRequestParams req)
     NS_LOG_LOGIC("mmeUeS1apId = " << req.mmeUeS1apId);
 
     // if no SRS index is available, then do not accept the handover
-    if (m_admitHandoverRequest == false || IsMaxSrsReached())
+    if (!m_admitHandoverRequest || IsMaxSrsReached())
     {
         NS_LOG_INFO("rejecting handover request from cellId " << req.sourceCellId);
         EpcX2Sap::HandoverPreparationFailureParams res;
@@ -2887,7 +2889,7 @@ LteEnbRrc::DoRecvHandoverRequest(EpcX2SapUser::HandoverRequestParams req)
     ueManager->SetImsi(req.mmeUeS1apId);
     LteEnbCmacSapProvider::AllocateNcRaPreambleReturnValue anrcrv =
         m_cmacSapProvider.at(componentCarrierId)->AllocateNcRaPreamble(rnti);
-    if (anrcrv.valid == false)
+    if (!anrcrv.valid)
     {
         NS_LOG_INFO(
             this
@@ -3121,6 +3123,7 @@ LteEnbRrc::DoAllocateTemporaryCellRnti(uint8_t componentCarrierId)
     // if no SRS index is available, then do not create a new UE context.
     if (IsMaxSrsReached())
     {
+        NS_LOG_WARN("Not enough SRS configuration indices, UE context not created");
         return 0; // return 0 since new RNTI was not assigned for the received preamble
     }
     return AddUe(UeManager::INITIAL_RANDOM_ACCESS, componentCarrierId);
@@ -3310,15 +3313,12 @@ LteEnbRrc::GetRlcType(EpsBearer bearer)
     {
     case RLC_SM_ALWAYS:
         return LteRlcSm::GetTypeId();
-        break;
 
     case RLC_UM_ALWAYS:
         return LteRlcUm::GetTypeId();
-        break;
 
     case RLC_AM_ALWAYS:
         return LteRlcAm::GetTypeId();
-        break;
 
     case PER_BASED:
         if (bearer.GetPacketErrorLossRate() > 1.0e-5)
@@ -3329,11 +3329,9 @@ LteEnbRrc::GetRlcType(EpsBearer bearer)
         {
             return LteRlcAm::GetTypeId();
         }
-        break;
 
     default:
         return LteRlcSm::GetTypeId();
-        break;
     }
 }
 
@@ -3487,20 +3485,13 @@ LteEnbRrc::IsMaxSrsReached()
     NS_ASSERT(m_srsCurrentPeriodicityId < SRS_ENTRIES);
     NS_LOG_DEBUG(this << " SRS p " << g_srsPeriodicity[m_srsCurrentPeriodicityId] << " set "
                       << m_ueSrsConfigurationIndexSet.size());
-    if (m_ueSrsConfigurationIndexSet.size() >= g_srsPeriodicity[m_srsCurrentPeriodicityId])
-    {
-        return true;
-    }
-    else
-    {
-        return false;
-    }
+    return m_ueSrsConfigurationIndexSet.size() >= g_srsPeriodicity[m_srsCurrentPeriodicityId];
 }
 
 uint8_t
 LteEnbRrc::GetLogicalChannelGroup(EpsBearer bearer)
 {
-    if (bearer.IsGbr())
+    if (bearer.GetResourceType() > 0) // 1, 2 for GBR and DC-GBR
     {
         return 1;
     }
@@ -3561,10 +3552,8 @@ LteEnbRrc::IsRandomAccessCompleted(uint16_t rnti)
     case UeManager::CONNECTED_NORMALLY:
     case UeManager::CONNECTION_RECONFIGURATION:
         return true;
-        break;
     default:
         return false;
-        break;
     }
 }
 

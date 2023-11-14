@@ -26,14 +26,13 @@
 #include "candidate-queue.h"
 #include "global-router-interface.h"
 #include "ipv4-global-routing.h"
+#include "ipv4.h"
 
 #include "ns3/assert.h"
 #include "ns3/fatal-error.h"
-#include "ns3/ipv4-list-routing.h"
-#include "ns3/ipv4-routing-protocol.h"
-#include "ns3/ipv4.h"
 #include "ns3/log.h"
 #include "ns3/node-list.h"
+#include "ns3/simulator.h"
 
 #include <algorithm>
 #include <iostream>
@@ -1218,7 +1217,7 @@ GlobalRouteManagerImpl::SPFGetNextLink(SPFVertex* v,
             // skipped a previous link and moved forward to the next (which is then the
             // one we want).
             //
-            if (skip == false)
+            if (!skip)
             {
                 NS_LOG_LOGIC("Returning the found link");
                 return l;

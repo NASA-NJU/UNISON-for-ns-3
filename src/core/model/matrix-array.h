@@ -92,7 +92,7 @@ class MatrixArray : public ValArray<T>
      * \param numCols the number of columns
      * \param numPages the number of pages
      */
-    MatrixArray<T>(uint16_t numRows, uint16_t numCols = 1, uint16_t numPages = 1);
+    MatrixArray<T>(size_t numRows, size_t numCols = 1, size_t numPages = 1);
     /**
      * \brief Constructor creates a single array of values.size () elements and 1 column,
      * and uses std::valarray<T> values to initialize the elements.
@@ -118,7 +118,7 @@ class MatrixArray : public ValArray<T>
      * \param numCols the number of columns
      * \param values std::valarray<T> that will be used to initialize elements of 3D array
      */
-    MatrixArray<T>(uint16_t numRows, uint16_t numCols, const std::valarray<T>& values);
+    MatrixArray<T>(size_t numRows, size_t numCols, const std::valarray<T>& values);
     /**
      * \brief Constructor creates a single matrix of numRows and numCols, and moves
      * std::valarray<T> values to initialize the elements.
@@ -126,7 +126,7 @@ class MatrixArray : public ValArray<T>
      * \param numCols the number of columns
      * \param values std::valarray<T> that will be moved to initialize elements of 3D array
      */
-    MatrixArray<T>(uint16_t numRows, uint16_t numCols, std::valarray<T>&& values);
+    MatrixArray<T>(size_t numRows, size_t numCols, std::valarray<T>&& values);
     /**
      * \brief Constructor creates the array of numPages matrices of numRows x numCols dimensions,
      * and uses std::valarray<T> values to initialize all the elements.
@@ -135,10 +135,7 @@ class MatrixArray : public ValArray<T>
      * \param numPages the number of pages
      * \param values std::valarray<T> that will be used to initialize elements of 3D array
      */
-    MatrixArray<T>(uint16_t numRows,
-                   uint16_t numCols,
-                   uint16_t numPages,
-                   const std::valarray<T>& values);
+    MatrixArray<T>(size_t numRows, size_t numCols, size_t numPages, const std::valarray<T>& values);
     /**
      * \brief Constructor creates the array of numPages matrices of numRows x numCols dimensions,
      * and moves std::valarray<T> values to initialize all the elements.
@@ -147,10 +144,7 @@ class MatrixArray : public ValArray<T>
      * \param numPages the number of pages
      * \param values std::valarray<T> that will be used to initialize elements of 3D array
      */
-    MatrixArray<T>(uint16_t numRows,
-                   uint16_t numCols,
-                   uint16_t numPages,
-                   std::valarray<T>&& values);
+    MatrixArray<T>(size_t numRows, size_t numCols, size_t numPages, std::valarray<T>&& values);
     /** instruct the compiler to generate the implicitly declared destructor*/
     ~MatrixArray<T>() override = default;
     /** instruct the compiler to generate the implicitly declared copy constructor*/
@@ -179,13 +173,13 @@ class MatrixArray : public ValArray<T>
     /**
      * \brief operator+ definition for MatrixArray<T>.
      * \param rhs The rhs MatrixArray object
-     * \returns The result of operator+ of this MatrixArray and rhs MatrixAray
+     * \returns The result of operator+ of this MatrixArray and rhs MatrixArray
      */
     MatrixArray<T> operator+(const MatrixArray<T>& rhs) const;
     /**
      * \brief binary operator- definition for MatrixArray<T>.
      * \param rhs The rhs MatrixArray object
-     * \returns The result of operator- of this MatrixArray and rhs MatrixAray
+     * \returns The result of operator- of this MatrixArray and rhs MatrixArray
      */
     MatrixArray<T> operator-(const MatrixArray<T>& rhs) const;
     /**
@@ -253,7 +247,7 @@ class MatrixArray : public ValArray<T>
                                                   EnableBool)>::type>
     MatrixArray<T> HermitianTranspose() const;
 
-  private:
+  protected:
     // To simplify functions in MatrixArray that are using members from the template base class
     using ValArray<T>::m_numRows;
     using ValArray<T>::m_numCols;

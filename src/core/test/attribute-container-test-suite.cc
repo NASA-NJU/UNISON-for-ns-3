@@ -32,7 +32,6 @@
 #include <iterator>
 #include <list>
 #include <map>
-#include <sstream>
 #include <utility>
 #include <vector>
 
@@ -59,13 +58,26 @@ class AttributeContainerObject : public Object
     /**
      * Reverses the list of doubles.
      */
-    void ReverseList();
+    void ReverseDoubleList();
 
     /**
      * \brief Get the type ID.
      * \return The object TypeId.
      */
     static TypeId GetTypeId();
+
+    /**
+     * Set the list of doubles to the given list
+     *
+     * \param doubleList the given list
+     */
+    void SetDoubleList(const std::list<double>& doubleList);
+    /**
+     * Get the list of doubles
+     *
+     * \return the list of doubles
+     */
+    std::list<double> GetDoubleList() const;
 
     /**
      * Set the vector of ints to the given vector
@@ -80,20 +92,12 @@ class AttributeContainerObject : public Object
      */
     std::vector<int> GetIntVec() const;
 
-    /**
-     * \brief Stream insertion operator.
-     *
-     * \param [in] os The reference to the output stream.
-     * \param [in] obj The AttributeContainer object.
-     * \returns The reference to the output stream.
-     */
-    friend std::ostream& operator<<(std::ostream& os, const AttributeContainerObject& obj);
-
   private:
     std::list<double> m_doublelist; //!< List of doubles.
     std::vector<int> m_intvec;      //!< Vector of ints.
     // TODO(jared): need PairValue attributevalue to handle std::pair elements
-    std::map<std::string, int> m_map; //!< Map of <std::string, int>.
+    std::map<std::string, int> m_map;                         //!< Map of <std::string, int>.
+    std::map<int64_t, std::list<int64_t>> m_intVecIntMapping; //!< Mapping integers to vectors
 };
 
 AttributeContainerObject::AttributeContainerObject()
@@ -107,6 +111,8 @@ AttributeContainerObject::~AttributeContainerObject()
 TypeId
 AttributeContainerObject::GetTypeId()
 {
+    using IntVecMapValue = PairValue<IntegerValue, AttributeContainerValue<IntegerValue>>;
+
     static TypeId tid =
         TypeId("ns3::AttributeContainerObject")
             .SetParent<Object>()
@@ -118,15 +124,16 @@ AttributeContainerObject::GetTypeId()
                           MakeAttributeContainerAccessor<DoubleValue>(
                               &AttributeContainerObject::m_doublelist),
                           MakeAttributeContainerChecker<DoubleValue>(MakeDoubleChecker<double>()))
-            .AddAttribute("IntegerVector",
-                          "Vector of integers",
-                          // the container value container differs from the underlying object
-                          AttributeContainerValue<IntegerValue>(),
-                          // the type of the underlying container cannot be deduced
-                          MakeAttributeContainerAccessor<IntegerValue, std::list>(
-                              &AttributeContainerObject::SetIntVec,
-                              &AttributeContainerObject::GetIntVec),
-                          MakeAttributeContainerChecker<IntegerValue>(MakeIntegerChecker<int>()))
+            .AddAttribute(
+                "IntegerVector",
+                "Vector of integers",
+                // the container value container differs from the underlying object
+                AttributeContainerValue<IntegerValue>(),
+                // the type of the underlying container cannot be deduced
+                MakeAttributeContainerAccessor<IntegerValue, ';', std::list>(
+                    &AttributeContainerObject::SetIntVec,
+                    &AttributeContainerObject::GetIntVec),
+                MakeAttributeContainerChecker<IntegerValue, ';'>(MakeIntegerChecker<int>()))
             .AddAttribute(
                 "MapStringInt",
                 "Map of strings to ints",
@@ -136,17 +143,42 @@ AttributeContainerObject::GetTypeId()
                     &AttributeContainerObject::m_map),
                 MakeAttributeContainerChecker<PairValue<StringValue, IntegerValue>>(
                     MakePairChecker<StringValue, IntegerValue>(MakeStringChecker(),
-                                                               MakeIntegerChecker<int>())));
+                                                               MakeIntegerChecker<int>())))
+            .AddAttribute(
+                "IntVecPairVec",
+                "An example of complex attribute that is defined by a vector of pairs consisting "
+                "of an integer value and a vector of integers. In case a string is used to set "
+                "this attribute, the string shall contain the pairs separated by a semicolon (;); "
+                "in every pair, the integer value and the vector of integers are separated by a "
+                "blank space, and the elements of the vectors are separated by a comma (,) "
+                "without spaces. E.g. \"0 1,2,3; 1 0; 2 0,1\" consists of three pairs containing "
+                "vectors of 3, 1 and 2 elements, respectively.",
+                StringValue(""),
+                MakeAttributeContainerAccessor<IntVecMapValue, ';'>(
+                    &AttributeContainerObject::m_intVecIntMapping),
+                MakeAttributeContainerChecker<IntVecMapValue, ';'>(
+                    MakePairChecker<IntegerValue, AttributeContainerValue<IntegerValue>>(
+                        MakeIntegerChecker<int>(),
+                        MakeAttributeContainerChecker<IntegerValue>(MakeIntegerChecker<int>()))));
     return tid;
 }
 
 void
-AttributeContainerObject::ReverseList()
+AttributeContainerObject::ReverseDoubleList()
 {
     m_doublelist.reverse();
-    std::vector<int> tmp;
-    std::copy_backward(m_intvec.begin(), m_intvec.end(), tmp.begin());
-    m_intvec = tmp;
+}
+
+void
+AttributeContainerObject::SetDoubleList(const std::list<double>& doubleList)
+{
+    m_doublelist = doubleList;
+}
+
+std::list<double>
+AttributeContainerObject::GetDoubleList() const
+{
+    return m_doublelist;
 }
 
 void
@@ -159,23 +191,6 @@ std::vector<int>
 AttributeContainerObject::GetIntVec() const
 {
     return m_intvec;
-}
-
-std::ostream&
-operator<<(std::ostream& os, const AttributeContainerObject& obj)
-{
-    os << "AttributeContainerObject: ";
-    bool first = true;
-    for (auto d : obj.m_doublelist)
-    {
-        if (!first)
-        {
-            os << ", ";
-        }
-        os << d;
-        first = false;
-    }
-    return os;
 }
 
 /**
@@ -256,7 +271,7 @@ AttributeContainerTestCase::DoRun()
         auto ref = {"one", "two", "three"};
         AttributeContainerValue<StringValue> ac(ref.begin(), ref.end());
 
-        NS_TEST_ASSERT_MSG_EQ(3, ac.GetN(), "Container size mismatch");
+        NS_TEST_ASSERT_MSG_EQ(ref.size(), ac.GetN(), "Container size mismatch");
         auto aciter = ac.Begin();
         for (auto v : ref)
         {
@@ -269,9 +284,9 @@ AttributeContainerTestCase::DoRun()
 
     {
         auto ref = {"one", "two", "three"};
-        AttributeContainerValue<StringValue, std::vector> ac(ref);
+        AttributeContainerValue<StringValue, ',', std::vector> ac(ref);
 
-        NS_TEST_ASSERT_MSG_EQ(3, ac.GetN(), "Container size mismatch");
+        NS_TEST_ASSERT_MSG_EQ(ref.size(), ac.GetN(), "Container size mismatch");
         auto aciter = ac.Begin();
         for (auto v : ref)
         {
@@ -287,7 +302,7 @@ AttributeContainerTestCase::DoRun()
         std::map<std::string, int64_t> ref = {{"one", 1}, {"two", 2}, {"three", 3}};
         AttributeContainerValue<PairValue<StringValue, IntegerValue>> ac(ref);
 
-        NS_TEST_ASSERT_MSG_EQ(3, ac.GetN(), "Container size mismatch");
+        NS_TEST_ASSERT_MSG_EQ(ref.size(), ac.GetN(), "Container size mismatch");
         auto aciter = ac.Begin();
         for (const auto& v : ref)
         {
@@ -366,7 +381,7 @@ AttributeContainerSerializationTestCase::DoRun()
     {
         std::string strings = "this is a sentence with words";
 
-        AttributeContainerValue<StringValue> attr(' ');
+        AttributeContainerValue<StringValue, ' '> attr;
         auto checker = MakeAttributeContainerChecker(attr);
         auto acchecker = DynamicCast<AttributeContainerChecker>(checker);
         acchecker->SetItemChecker(MakeStringChecker());
@@ -376,8 +391,7 @@ AttributeContainerSerializationTestCase::DoRun()
         NS_TEST_ASSERT_MSG_EQ(attr.GetN(), 6, "Incorrect container size");
 
         std::string reserialized = attr.SerializeToString(checker);
-        std::string canonical = strings;
-        NS_TEST_ASSERT_MSG_EQ(reserialized, canonical, "Reserialization failed");
+        NS_TEST_ASSERT_MSG_EQ(reserialized, strings, "Reserialization failed");
     }
 
     {
@@ -394,8 +408,7 @@ AttributeContainerSerializationTestCase::DoRun()
         NS_TEST_ASSERT_MSG_EQ(attr.GetN(), 3, "Incorrect container size");
 
         std::string reserialized = attr.SerializeToString(checker);
-        std::string canonical = pairs;
-        NS_TEST_ASSERT_MSG_EQ(reserialized, canonical, "Reserealization failed");
+        NS_TEST_ASSERT_MSG_EQ(reserialized, pairs, "Reserealization failed");
     }
 }
 
@@ -427,29 +440,24 @@ AttributeContainerSetGetTestCase::DoRun()
 {
     Ptr<AttributeContainerObject> obj = CreateObject<AttributeContainerObject>();
     {
-        std::ostringstream oss;
-        oss << *obj;
-        NS_TEST_ASSERT_MSG_EQ(oss.str(),
-                              "AttributeContainerObject: ",
-                              "DoubleList initialized incorrectly");
+        auto doubleList = obj->GetDoubleList();
+        NS_TEST_ASSERT_MSG_EQ(doubleList.empty(), true, "DoubleList initialized incorrectly");
     }
 
-    std::list<double> doubles = {1.1, 2.22, 3.333};
+    const std::list<double> doubles = {1.1, 2.22, 3.333};
     obj->SetAttribute("DoubleList", AttributeContainerValue<DoubleValue>(doubles));
     {
-        std::ostringstream oss;
-        oss << *obj;
-        NS_TEST_ASSERT_MSG_EQ(oss.str(),
-                              "AttributeContainerObject: 1.1, 2.22, 3.333",
+        auto doubleList = obj->GetDoubleList();
+        NS_TEST_ASSERT_MSG_EQ(std::equal(doubles.begin(), doubles.end(), doubleList.begin()),
+                              true,
                               "DoubleList incorrectly set");
     }
 
-    obj->ReverseList();
+    obj->ReverseDoubleList();
     {
-        std::ostringstream oss;
-        oss << *obj;
-        NS_TEST_ASSERT_MSG_EQ(oss.str(),
-                              "AttributeContainerObject: 3.333, 2.22, 1.1",
+        auto doubleList = obj->GetDoubleList();
+        NS_TEST_ASSERT_MSG_EQ(std::equal(doubles.rbegin(), doubles.rend(), doubleList.begin()),
+                              true,
                               "DoubleList incorrectly reversed");
 
         // NOTE: changing the return container here too!
@@ -459,32 +467,58 @@ AttributeContainerSetGetTestCase::DoRun()
 
         AttributeContainerValue<DoubleValue>::result_type doublevec = value.Get();
         NS_TEST_ASSERT_MSG_EQ(doubles.size(), doublevec.size(), "DoublesVec wrong size");
-        auto iter = doubles.rbegin();
-        for (auto d : doublevec)
-        {
-            NS_TEST_ASSERT_MSG_EQ(d, *iter, "Incorrect value in doublesvec");
-            ++iter;
-        }
+        NS_TEST_ASSERT_MSG_EQ(std::equal(doubles.rbegin(), doubles.rend(), doublevec.begin()),
+                              true,
+                              "Incorrect value in doublesvec");
     }
 
-    std::vector<int> ints = {-1, 0, 1, 2, 3};
+    const std::vector<int> ints = {-1, 0, 1, 2, 3};
     // NOTE: here the underlying attribute container type differs from the actual container
-    obj->SetAttribute("IntegerVector", AttributeContainerValue<IntegerValue>(ints));
+    obj->SetAttribute("IntegerVector", AttributeContainerValue<IntegerValue, ';'>(ints));
 
     {
         // NOTE: changing the container here too!
-        AttributeContainerValue<IntegerValue> value;
+        AttributeContainerValue<IntegerValue, ';'> value;
         obj->GetAttribute("IntegerVector", value);
         NS_TEST_ASSERT_MSG_EQ(ints.size(), value.GetN(), "AttributeContainerValue wrong size");
 
         AttributeContainerValue<IntegerValue>::result_type intlist = value.Get();
         NS_TEST_ASSERT_MSG_EQ(ints.size(), intlist.size(), "Intvec wrong size");
-        auto iter = ints.begin();
-        for (auto d : intlist)
-        {
-            NS_TEST_ASSERT_MSG_EQ(d, *iter, "Incorrect value in intvec");
-            ++iter;
-        }
+
+        NS_TEST_ASSERT_MSG_EQ(std::equal(ints.begin(), ints.end(), intlist.begin()),
+                              true,
+                              "Incorrect value in intvec");
+    }
+
+    std::string intVecPairString("0 1,2,3; 1 0; 2 0,1");
+    // NOTE: here the underlying attribute container type differs from the actual container
+    obj->SetAttribute("IntVecPairVec", StringValue(intVecPairString));
+
+    {
+        using IntVecMapValue = PairValue<IntegerValue, AttributeContainerValue<IntegerValue>>;
+
+        // NOTE: changing the container here too!
+        AttributeContainerValue<IntVecMapValue, ';'> value;
+        obj->GetAttribute("IntVecPairVec", value);
+        NS_TEST_ASSERT_MSG_EQ(3, value.GetN(), "AttributeContainerValue wrong size"); // 3 pairs
+
+        AttributeContainerValue<IntVecMapValue>::result_type reslist = value.Get();
+        NS_TEST_ASSERT_MSG_EQ(3, reslist.size(), "IntVecMapValue wrong size");
+        auto reslistIt = reslist.begin();
+        NS_TEST_ASSERT_MSG_EQ(reslistIt->first, 0, "Incorrect integer value in first pair");
+        NS_TEST_ASSERT_MSG_EQ(reslistIt->second.size(),
+                              3,
+                              "Incorrect number of integer values in first pair");
+        ++reslistIt;
+        NS_TEST_ASSERT_MSG_EQ(reslistIt->first, 1, "Incorrect integer value in second pair");
+        NS_TEST_ASSERT_MSG_EQ(reslistIt->second.size(),
+                              1,
+                              "Incorrect number of integer values in second pair");
+        ++reslistIt;
+        NS_TEST_ASSERT_MSG_EQ(reslistIt->first, 2, "Incorrect integer value in third pair");
+        NS_TEST_ASSERT_MSG_EQ(reslistIt->second.size(),
+                              2,
+                              "Incorrect number of integer values in third pair");
     }
 
     std::map<std::string, int> map = {{"one", 1}, {"two", 2}, {"three", 3}};

@@ -132,15 +132,11 @@ FcfsWifiQueueScheduler::DoNotifyEnqueue(AcIndex ac, Ptr<WifiMpdu> mpdu)
 
     const auto queueId = WifiMacQueueContainer::GetQueueId(mpdu);
 
-    if (GetWifiMacQueue(ac)->GetNPackets(queueId) > 1)
-    {
-        // Enqueue takes place at the tail, while the priority is determined by the
-        // head of the queue. Therefore, if the queue was not empty before inserting
-        // this MPDU, priority does not change
-        return;
-    }
+    // priority is determined by the head of the queue
+    auto item = GetWifiMacQueue(ac)->PeekByQueueId(queueId);
+    NS_ASSERT(item);
 
-    SetPriority(ac, queueId, {mpdu->GetExpiryTime(), std::get<WifiContainerQueueType>(queueId)});
+    SetPriority(ac, queueId, {item->GetTimestamp(), std::get<WifiContainerQueueType>(queueId)});
 }
 
 void
@@ -161,7 +157,7 @@ FcfsWifiQueueScheduler::DoNotifyDequeue(AcIndex ac, const std::list<Ptr<WifiMpdu
         {
             SetPriority(ac,
                         queueId,
-                        {item->GetExpiryTime(), std::get<WifiContainerQueueType>(queueId)});
+                        {item->GetTimestamp(), std::get<WifiContainerQueueType>(queueId)});
         }
     }
 }
@@ -184,7 +180,7 @@ FcfsWifiQueueScheduler::DoNotifyRemove(AcIndex ac, const std::list<Ptr<WifiMpdu>
         {
             SetPriority(ac,
                         queueId,
-                        {item->GetExpiryTime(), std::get<WifiContainerQueueType>(queueId)});
+                        {item->GetTimestamp(), std::get<WifiContainerQueueType>(queueId)});
         }
     }
 }

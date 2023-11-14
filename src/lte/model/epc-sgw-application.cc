@@ -17,10 +17,13 @@
  * Author: Manuel Requena <manuel.requena@cttc.es>
  */
 
-#include "ns3/epc-sgw-application.h"
+#include "epc-sgw-application.h"
 
-#include "ns3/epc-gtpu-header.h"
+#include "epc-gtpu-header.h"
+
 #include "ns3/log.h"
+
+#include <map>
 
 namespace ns3
 {

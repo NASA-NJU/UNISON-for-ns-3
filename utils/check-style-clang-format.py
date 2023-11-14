@@ -44,8 +44,8 @@ import os
 import shutil
 import subprocess
 import sys
-from typing import List, Tuple
 
+from typing import Dict, List, Tuple
 
 ###########################################################
 # PARAMETERS
@@ -302,6 +302,7 @@ def check_style(path: str,
                 enable_check_whitespace: bool,
                 enable_check_tabs: bool,
                 fix: bool,
+                verbose: bool,
                 n_jobs: int = 1,
                 ) -> None:
     """
@@ -314,6 +315,7 @@ def check_style(path: str,
     @param enable_check_formatting Whether to enable code formatting checking.
     @param enable_check_whitespace Whether to enable trailing whitespace checking.
     @param enable_check_tabs Whether to enable tabs checking.
+    @param verbose Show the lines that are not well-formatted.
     @param n_jobs Number of parallel jobs.
     """
 
@@ -327,23 +329,37 @@ def check_style(path: str,
 
     if enable_check_formatting:
         check_formatting_successful = check_formatting(
-            files_to_check_formatting, fix, n_jobs)
+            files_to_check_formatting,
+            fix,
+            verbose,
+            n_jobs,
+        )
 
         print('')
 
     if enable_check_whitespace:
         check_whitespace_successful = check_trailing_whitespace(
-            files_to_check_whitespace, fix, n_jobs)
+            files_to_check_whitespace,
+            fix,
+            verbose,
+            n_jobs,
+        )
 
         print('')
 
     if enable_check_tabs:
         check_tabs_successful = check_tabs(
-            files_to_check_tabs, fix, n_jobs)
+            files_to_check_tabs,
+            fix,
+            verbose,
+            n_jobs,
+        )
 
-    if check_formatting_successful and \
-       check_whitespace_successful and \
-       check_tabs_successful:
+    if all([
+        check_formatting_successful,
+        check_whitespace_successful,
+        check_tabs_successful,
+    ]):
         sys.exit(0)
     else:
         sys.exit(1)
@@ -352,13 +368,18 @@ def check_style(path: str,
 ###########################################################
 # CHECK FORMATTING
 ###########################################################
-def check_formatting(filenames: List[str], fix: bool, n_jobs: int) -> bool:
+def check_formatting(filenames: List[str],
+                     fix: bool,
+                     verbose: bool,
+                     n_jobs: int,
+                     ) -> bool:
     """
     Check / fix the coding style of a list of files with clang-format.
 
     @param filenames List of filenames to be checked.
     @param fix Whether to fix the formatting of the file (True) or
                just check if the file is well-formatted (False).
+    @param verbose Show the lines that are not well-formatted.
     @param n_jobs Number of parallel jobs.
     @return True if all files are well formatted after the check process.
             False if there are non-formatted files after the check process.
@@ -367,6 +388,7 @@ def check_formatting(filenames: List[str], fix: bool, n_jobs: int) -> bool:
     # Check files
     clang_format_path = find_clang_format_path()
     files_not_formatted: List[str] = []
+    files_verbose_infos: Dict[str, List[str]] = {}
 
     with concurrent.futures.ProcessPoolExecutor(n_jobs) as executor:
         files_not_formatted_results = executor.map(
@@ -374,29 +396,34 @@ def check_formatting(filenames: List[str], fix: bool, n_jobs: int) -> bool:
             filenames,
             itertools.repeat(clang_format_path),
             itertools.repeat(fix),
+            itertools.repeat(verbose),
         )
 
-        for (filename, formatted) in files_not_formatted_results:
+        for (filename, formatted, verbose_infos) in files_not_formatted_results:
             if not formatted:
                 files_not_formatted.append(filename)
 
-    files_not_formatted.sort()
+            if verbose:
+                files_verbose_infos[filename] = verbose_infos
 
     # Output results
     if not files_not_formatted:
-        print('All files are well formatted')
+        print('- All files are well formatted')
         return True
 
     else:
         n_non_formatted_files = len(files_not_formatted)
 
         if fix:
-            print(f'Fixed formatting of the files ({n_non_formatted_files}):')
+            print(f'- Fixed formatting of the files ({n_non_formatted_files}):')
         else:
-            print(f'Detected bad formatting in the files ({n_non_formatted_files}):')
+            print(f'- Detected bad formatting in the files ({n_non_formatted_files}):')
 
         for f in files_not_formatted:
-            print(f'- {f}')
+            if verbose:
+                print(*[f'    {l}' for l in files_verbose_infos[f]], sep='\n')
+            else:
+                print(f'    - {f}')
 
         # Return True if all files were fixed
         return fix
@@ -405,7 +432,8 @@ def check_formatting(filenames: List[str], fix: bool, n_jobs: int) -> bool:
 def check_formatting_file(filename: str,
                           clang_format_path: str,
                           fix: bool,
-                          ) -> Tuple[str, bool]:
+                          verbose: bool,
+                          ) -> Tuple[str, bool, List[str]]:
     """
     Check / fix the coding style of a file with clang-format.
 
@@ -413,8 +441,11 @@ def check_formatting_file(filename: str,
     @param clang_format_path Path to clang-format.
     @param fix Whether to fix the style of the file (True) or
                just check if the file is well-formatted (False).
-    @return Tuple [Filename, Whether the file is well-formatted].
+    @param verbose Show the lines that are not well-formatted.
+    @return Tuple [Filename, Whether the file is well-formatted, Verbose information].
     """
+
+    verbose_infos: List[str] = []
 
     # Check if the file is well formatted
     process = subprocess.run(
@@ -424,15 +455,18 @@ def check_formatting_file(filename: str,
             '-style=file',
             '--dry-run',
             '--Werror',
-            # Optimization: Only 1 error is needed to check that the file is not formatted
-            '--ferror-limit=1',
+            # Optimization: In non-verbose mode, only 1 error is needed to check that the file is not formatted
+            f'--ferror-limit={0 if verbose else 1}',
         ],
         check=False,
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
+        capture_output=True,
+        text=True,
     )
 
     file_formatted = (process.returncode == 0)
+
+    if verbose:
+        verbose_infos = process.stderr.splitlines()
 
     # Fix file
     if fix and not file_formatted:
@@ -448,19 +482,24 @@ def check_formatting_file(filename: str,
             stderr=subprocess.DEVNULL,
         )
 
-    return (filename, file_formatted)
+    return (filename, file_formatted, verbose_infos)
 
 
 ###########################################################
 # CHECK TRAILING WHITESPACE
 ###########################################################
-def check_trailing_whitespace(filenames: List[str], fix: bool, n_jobs: int) -> bool:
+def check_trailing_whitespace(filenames: List[str],
+                              fix: bool,
+                              verbose: bool,
+                              n_jobs: int,
+                              ) -> bool:
     """
     Check / fix trailing whitespace in a list of files.
 
     @param filename Name of the file to be checked.
     @param fix Whether to fix the file (True) or
                just check if it has trailing whitespace (False).
+    @param verbose Show the lines that are not well-formatted.
     @param n_jobs Number of parallel jobs.
     @return True if no files have trailing whitespace after the check process.
             False if there are trailing whitespace after the check process.
@@ -468,23 +507,26 @@ def check_trailing_whitespace(filenames: List[str], fix: bool, n_jobs: int) -> b
 
     # Check files
     files_with_whitespace: List[str] = []
+    files_verbose_infos: Dict[str, List[str]] = {}
 
     with concurrent.futures.ProcessPoolExecutor(n_jobs) as executor:
         files_with_whitespace_results = executor.map(
             check_trailing_whitespace_file,
             filenames,
             itertools.repeat(fix),
+            itertools.repeat(verbose),
         )
 
-        for (filename, has_whitespace) in files_with_whitespace_results:
+        for (filename, has_whitespace, verbose_infos) in files_with_whitespace_results:
             if has_whitespace:
                 files_with_whitespace.append(filename)
 
-    files_with_whitespace.sort()
+            if verbose:
+                files_verbose_infos[filename] = verbose_infos
 
     # Output results
     if not files_with_whitespace:
-        print('No files detected with trailing whitespace')
+        print('- No files detected with trailing whitespace')
         return True
 
     else:
@@ -492,29 +534,37 @@ def check_trailing_whitespace(filenames: List[str], fix: bool, n_jobs: int) -> b
 
         if fix:
             print(
-                f'Fixed trailing whitespace in the files ({n_files_with_whitespace}):')
+                f'- Fixed trailing whitespace in the files ({n_files_with_whitespace}):')
         else:
             print(
-                f'Detected trailing whitespace in the files ({n_files_with_whitespace}):')
+                f'- Detected trailing whitespace in the files ({n_files_with_whitespace}):')
 
         for f in files_with_whitespace:
-            print(f'- {f}')
+            if verbose:
+                print(*[f'    {l}' for l in files_verbose_infos[f]], sep='\n')
+            else:
+                print(f'    - {f}')
 
         # If all files were fixed, there are no more trailing whitespace
         return fix
 
 
-def check_trailing_whitespace_file(filename: str, fix: bool) -> Tuple[str, bool]:
+def check_trailing_whitespace_file(filename: str,
+                                   fix: bool,
+                                   verbose: bool,
+                                   ) -> Tuple[str, bool, List[str]]:
     """
     Check / fix trailing whitespace in a file.
 
     @param filename Name of the file to be checked.
     @param fix Whether to fix the file (True) or
                just check if it has trailing whitespace (False).
-    @return Tuple [Filename, Whether the file has trailing whitespace].
+    @param verbose Show the lines that are not well-formatted.
+    @return Tuple [Filename, Whether the file has trailing whitespace, Verbose information].
     """
 
     has_trailing_whitespace = False
+    verbose_infos: List[str] = []
 
     with open(filename, 'r', encoding='utf-8') as f:
         file_lines = f.readlines()
@@ -525,30 +575,41 @@ def check_trailing_whitespace_file(filename: str, fix: bool) -> Tuple[str, bool]
 
         if line_fixed != line:
             has_trailing_whitespace = True
-
-            # Optimization: if only checking, skip the rest of the file
-            if not fix:
-                break
-
             file_lines[i] = line_fixed
+
+            if verbose:
+                verbose_infos.extend([
+                    f'{filename}:{i + 1}: error: Trailing whitespace detected',
+                    f'    {line_fixed.rstrip()}',
+                    f'    {"":{len(line_fixed) - 1}}^',
+                ])
+
+            # Optimization: If running in non-verbose check mode, only one error is needed to check that the file is not formatted
+            if not fix and not verbose:
+                break
 
     # Update file with the fixed lines
     if fix and has_trailing_whitespace:
         with open(filename, 'w', encoding='utf-8') as f:
             f.writelines(file_lines)
 
-    return (filename, has_trailing_whitespace)
+    return (filename, has_trailing_whitespace, verbose_infos)
 
 
 ###########################################################
 # CHECK TABS
 ###########################################################
-def check_tabs(filenames: List[str], fix: bool, n_jobs: int) -> bool:
+def check_tabs(filenames: List[str],
+               fix: bool,
+               verbose: bool,
+               n_jobs: int,
+               ) -> bool:
     """
     Check / fix tabs in a list of files.
 
     @param filename Name of the file to be checked.
     @param fix Whether to fix the file (True) or just check if it has tabs (False).
+    @param verbose Show the lines that are not well-formatted.
     @param n_jobs Number of parallel jobs.
     @return True if no files have tabs after the check process.
             False if there are tabs after the check process.
@@ -556,23 +617,26 @@ def check_tabs(filenames: List[str], fix: bool, n_jobs: int) -> bool:
 
     # Check files
     files_with_tabs: List[str] = []
+    files_verbose_infos: Dict[str, List[str]] = {}
 
     with concurrent.futures.ProcessPoolExecutor(n_jobs) as executor:
         files_with_tabs_results = executor.map(
             check_tabs_file,
             filenames,
             itertools.repeat(fix),
+            itertools.repeat(verbose),
         )
 
-        for (filename, has_tabs) in files_with_tabs_results:
+        for (filename, has_tabs, verbose_infos) in files_with_tabs_results:
             if has_tabs:
                 files_with_tabs.append(filename)
 
-    files_with_tabs.sort()
+            if verbose:
+                files_verbose_infos[filename] = verbose_infos
 
     # Output results
     if not files_with_tabs:
-        print('No files detected with tabs')
+        print('- No files detected with tabs')
         return True
 
     else:
@@ -580,29 +644,38 @@ def check_tabs(filenames: List[str], fix: bool, n_jobs: int) -> bool:
 
         if fix:
             print(
-                f'Fixed tabs in the files ({n_files_with_tabs}):')
+                f'- Fixed tabs in the files ({n_files_with_tabs}):')
         else:
             print(
-                f'Detected tabs in the files ({n_files_with_tabs}):')
+                f'- Detected tabs in the files ({n_files_with_tabs}):')
 
         for f in files_with_tabs:
-            print(f'- {f}')
+            if verbose:
+                print(*[f'    {l}' for l in files_verbose_infos[f]], sep='\n')
+            else:
+                print(f'    - {f}')
 
         # If all files were fixed, there are no more trailing whitespace
         return fix
 
 
-def check_tabs_file(filename: str, fix: bool) -> Tuple[str, bool]:
+def check_tabs_file(filename: str,
+                    fix: bool,
+                    verbose: bool,
+                    ) -> Tuple[str, bool, List[str]]:
     """
     Check / fix tabs in a file.
 
     @param filename Name of the file to be checked.
     @param fix Whether to fix the file (True) or just check if it has tabs (False).
-    @return Tuple [Filename, Whether the file has tabs].
+    @param verbose Show the lines that are not well-formatted.
+    @return Tuple [Filename, Whether the file has tabs, Verbose information].
     """
 
     has_tabs = False
     clang_format_enabled = True
+
+    verbose_infos: List[str] = []
 
     with open(filename, 'r', encoding='utf-8') as f:
         file_lines = f.readlines()
@@ -622,21 +695,29 @@ def check_tabs_file(filename: str, fix: bool) -> Tuple[str, bool]:
             continue
 
         # Check if there are tabs and fix them
-        if line.find('\t') != -1:
+        tab_index = line.find('\t')
+
+        if tab_index != -1:
             has_tabs = True
-
-            # Optimization: if only checking, skip the rest of the file
-            if not fix:
-                break
-
             file_lines[i] = line.expandtabs(TAB_SIZE)
+
+            if verbose:
+                verbose_infos.extend([
+                    f'{filename}:{i + 1}:{tab_index + 1}: error: Tab detected',
+                    f'    {line.rstrip()}',
+                    f'    {"":{tab_index}}^',
+                ])
+
+            # Optimization: If running in non-verbose check mode, only one error is needed to check that the file is not formatted
+            if not fix and not verbose:
+                break
 
     # Update file with the fixed lines
     if fix and has_tabs:
         with open(filename, 'w', encoding='utf-8') as f:
             f.writelines(file_lines)
 
-    return (filename, has_tabs)
+    return (filename, has_tabs, verbose_infos)
 
 
 ###########################################################
@@ -669,6 +750,9 @@ if __name__ == '__main__':
     parser.add_argument('--fix', action='store_true',
                         help='Fix coding style issues detected in the files')
 
+    parser.add_argument('-v', '--verbose', action='store_true',
+                        help='Show the lines that are not well-formatted')
+
     parser.add_argument('-j', '--jobs', type=int, default=max(1, os.cpu_count() - 1),
                         help='Number of parallel jobs')
 
@@ -681,6 +765,7 @@ if __name__ == '__main__':
             enable_check_whitespace=(not args.no_whitespace),
             enable_check_tabs=(not args.no_tabs),
             fix=args.fix,
+            verbose=args.verbose,
             n_jobs=args.jobs,
         )
 

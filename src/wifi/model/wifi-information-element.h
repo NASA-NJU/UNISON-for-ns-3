@@ -199,7 +199,7 @@ typedef uint8_t WifiInformationElementId;
 #define IE_CLUSTER_REPORT ((WifiInformationElementId)166)
 #define IE_RELAY_CAPABILITIES ((WifiInformationElementId)167)
 #define IE_RELAY_TRANSFER_PARAMETER_SET ((WifiInformationElementId)168)
-#define IE_BEAMLINK_MAINENANCE ((WifiInformationElementId)169)
+#define IE_BEAMLINK_MAINTENANCE ((WifiInformationElementId)169)
 // 170 to 171 are reserved
 #define IE_DMG_LINK_ADAPTATION_ACKNOWLEDGMENT ((WifiInformationElementId)172)
 // 173 is reserved
@@ -232,6 +232,8 @@ typedef uint8_t WifiInformationElementId;
 #define IE_EXT_HE_OPERATION ((WifiInformationElementId)36)
 #define IE_EXT_UORA_PARAMETER_SET ((WifiInformationElementId)37)
 #define IE_EXT_MU_EDCA_PARAMETER_SET ((WifiInformationElementId)38)
+
+#define IE_EXT_NON_INHERITANCE ((WifiInformationElementId)56)
 
 #define IE_EXT_EHT_OPERATION ((WifiInformationElementId)106)
 #define IE_EXT_MULTI_LINK_ELEMENT ((WifiInformationElementId)107)
@@ -306,25 +308,17 @@ class WifiInformationElement : public SimpleRefCount<WifiInformationElement>
      */
     Buffer::Iterator Deserialize(Buffer::Iterator i);
     /**
-     * Deserialize an entire IE (which may possibly be fragmented into multiple
-     * elements) that is optionally present. The iterator passed in
+     * Deserialize entire IE (which may possibly be fragmented into multiple
+     * elements) if it is present. The iterator passed in
      * must be pointing at the Element ID of an information element. If
-     * the Element ID is not the requested one, the same iterator will
-     * be returned. Otherwise, an iterator pointing to the octet after
-     * the end of the information element is returned.
+     * the Element ID is not the one that the given class is interested
+     * in then it will return the same iterator.
      *
-     * \tparam IE \deduced Information Element type
-     * \tparam Args \deduced type of the arguments to forward to the constructor of the IE
-     * \param[out] optElem an object that contains the information element, if present
-     * \param i an iterator which points to where the IE should be read
-     * \param args arguments to forward to the constructor of the IE.
-     * \return the input iterator, if the requested IE is not present, or an iterator
-     *         pointing to the octet after the end of the information element, otherwise
+     * \param i an iterator which points to where the IE should be read.
+     *
+     * \return an iterator
      */
-    template <typename IE, typename... Args>
-    static Buffer::Iterator DeserializeIfPresent(std::optional<IE>& optElem,
-                                                 Buffer::Iterator i,
-                                                 Args&&... args);
+    Buffer::Iterator DeserializeIfPresent(Buffer::Iterator i);
     /**
      * Get the size of the serialized IE including Element ID and
      * length fields (for every element this IE is possibly fragmented into).
@@ -365,18 +359,6 @@ class WifiInformationElement : public SimpleRefCount<WifiInformationElement>
     virtual bool operator==(const WifiInformationElement& a) const;
 
   private:
-    /**
-     * Deserialize entire IE (which may possibly be fragmented into multiple
-     * elements) if it is present. The iterator passed in
-     * must be pointing at the Element ID of an information element. If
-     * the Element ID is not the one that the given class is interested
-     * in then it will return the same iterator.
-     *
-     * \param i an iterator which points to where the IE should be read.
-     *
-     * \return an iterator
-     */
-    Buffer::Iterator DeserializeIfPresent(Buffer::Iterator i);
     /**
      * Serialize an IE that needs to be fragmented.
      *
@@ -423,35 +405,14 @@ class WifiInformationElement : public SimpleRefCount<WifiInformationElement>
     virtual uint16_t DeserializeInformationField(Buffer::Iterator start, uint16_t length) = 0;
 };
 
-} // namespace ns3
-
-/***************************************************************
- *  Implementation of the templates declared above.
- ***************************************************************/
-
-namespace ns3
-{
-
-template <typename IE, typename... Args>
-Buffer::Iterator
-WifiInformationElement::DeserializeIfPresent(std::optional<IE>& optElem,
-                                             Buffer::Iterator i,
-                                             Args&&... args)
-{
-    optElem = std::nullopt;
-    IE elem(std::forward<Args>(args)...);
-
-    Buffer::Iterator start = i;
-    i = elem.DeserializeIfPresent(i);
-
-    if (i.GetDistanceFrom(start) != 0)
-    {
-        // the element is present and has been deserialized
-        optElem = elem;
-    }
-
-    return i;
-}
+/**
+ * \brief Stream insertion operator.
+ *
+ * \param os the output stream
+ * \param element the Information Element
+ * \returns a reference to the stream
+ */
+std::ostream& operator<<(std::ostream& os, const WifiInformationElement& element);
 
 } // namespace ns3
 

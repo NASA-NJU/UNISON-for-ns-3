@@ -22,20 +22,19 @@
 #include "icmpv6-l4-protocol.h"
 #include "ipv6-autoconfigured-prefix.h"
 #include "ipv6-extension-demux.h"
-#include "ipv6-extension-header.h"
 #include "ipv6-extension.h"
 #include "ipv6-interface.h"
 #include "ipv6-option-demux.h"
 #include "ipv6-option.h"
 #include "ipv6-raw-socket-factory-impl.h"
 #include "ipv6-raw-socket-impl.h"
+#include "ipv6-route.h"
+#include "ipv6-routing-protocol.h"
 #include "loopback-net-device.h"
 #include "ndisc-cache.h"
 
 #include "ns3/boolean.h"
 #include "ns3/callback.h"
-#include "ns3/ipv6-route.h"
-#include "ns3/ipv6-routing-protocol.h"
 #include "ns3/log.h"
 #include "ns3/mac16-address.h"
 #include "ns3/mac64-address.h"
@@ -91,7 +90,7 @@ Ipv6L3Protocol::GetTypeId()
                           MakeBooleanChecker())
             .AddAttribute("StrongEndSystemModel",
                           "Reject packets for an address not configured on the interface they're "
-                          "coming from (RFC1222).",
+                          "coming from (RFC1122, section 3.3.4.2).",
                           BooleanValue(true),
                           MakeBooleanAccessor(&Ipv6L3Protocol::m_strongEndSystemModel),
                           MakeBooleanChecker())
@@ -134,6 +133,10 @@ Ipv6L3Protocol::Ipv6L3Protocol()
 
     Ptr<Ipv6RawSocketFactoryImpl> rawFactoryImpl = CreateObject<Ipv6RawSocketFactoryImpl>();
     AggregateObject(rawFactoryImpl);
+    m_ucb = MakeCallback(&Ipv6L3Protocol::IpForward, this);
+    m_mcb = MakeCallback(&Ipv6L3Protocol::IpMulticastForward, this);
+    m_lcb = MakeCallback(&Ipv6L3Protocol::LocalDeliver, this);
+    m_ecb = MakeCallback(&Ipv6L3Protocol::RouteInputError, this);
 }
 
 Ipv6L3Protocol::~Ipv6L3Protocol()
@@ -1160,39 +1163,41 @@ Ipv6L3Protocol::Receive(Ptr<NetDevice> device,
 
     for (uint32_t j = 0; j < GetNInterfaces(); j++)
     {
-        if (j == interface || !m_strongEndSystemModel)
+        for (uint32_t i = 0; i < GetNAddresses(j); i++)
         {
-            for (uint32_t i = 0; i < GetNAddresses(j); i++)
+            Ipv6InterfaceAddress iaddr = GetAddress(j, i);
+            Ipv6Address addr = iaddr.GetAddress();
+            if (addr == hdr.GetDestination())
             {
-                Ipv6InterfaceAddress iaddr = GetAddress(j, i);
-                Ipv6Address addr = iaddr.GetAddress();
-                if (addr == hdr.GetDestination())
+                if (j == interface)
                 {
-                    if (j == interface)
-                    {
-                        NS_LOG_LOGIC("For me (destination " << addr << " match)");
-                    }
-                    else
-                    {
-                        NS_LOG_LOGIC("For me (destination " << addr
-                                                            << " match) on another interface "
-                                                            << hdr.GetDestination());
-                    }
+                    NS_LOG_LOGIC("For me (destination " << addr << " match)");
                     LocalDeliver(packet, hdr, interface);
                     return;
                 }
-                NS_LOG_LOGIC("Address " << addr << " not a match");
+                else if (!m_strongEndSystemModel)
+                {
+                    NS_LOG_LOGIC("For me (destination "
+                                 << addr << " match) on another interface with Weak ES Model"
+                                 << hdr.GetDestination());
+                    LocalDeliver(packet, hdr, interface);
+                    return;
+                }
+                else
+                {
+                    NS_LOG_LOGIC("For me (destination "
+                                 << addr
+                                 << " match) on another interface with Strong ES Model - discarding"
+                                 << hdr.GetDestination());
+                    m_dropTrace(hdr, packet, DROP_NO_ROUTE, this, interface);
+                    return;
+                }
             }
+            NS_LOG_LOGIC("Address " << addr << " not a match");
         }
     }
 
-    if (!m_routingProtocol->RouteInput(packet,
-                                       hdr,
-                                       device,
-                                       MakeCallback(&Ipv6L3Protocol::IpForward, this),
-                                       MakeCallback(&Ipv6L3Protocol::IpMulticastForward, this),
-                                       MakeCallback(&Ipv6L3Protocol::LocalDeliver, this),
-                                       MakeCallback(&Ipv6L3Protocol::RouteInputError, this)))
+    if (!m_routingProtocol->RouteInput(packet, hdr, device, m_ucb, m_mcb, m_lcb, m_ecb))
     {
         NS_LOG_WARN("No route found for forwarding packet.  Drop.");
         // Drop trace and ICMPs are courtesy of RouteInputError
@@ -1383,7 +1388,7 @@ Ipv6L3Protocol::IpForward(Ptr<const NetDevice> idev,
         NS_LOG_WARN("TTL exceeded.  Drop.");
         m_dropTrace(ipHeader, packet, DROP_TTL_EXPIRED, this, 0);
         // Do not reply to multicast IPv6 address
-        if (ipHeader.GetDestination().IsMulticast() == false)
+        if (!ipHeader.GetDestination().IsMulticast())
         {
             packet->AddHeader(ipHeader);
             GetIcmpv6()->SendErrorTimeExceeded(packet,
@@ -1579,7 +1584,7 @@ Ipv6L3Protocol::LocalDeliver(Ptr<const Packet> packet, const Ipv6Header& ip, uin
 
                 m_localDeliverTrace(ip, p, iif);
 
-                enum IpL4Protocol::RxStatus status = protocol->Receive(p, ip, GetInterface(iif));
+                IpL4Protocol::RxStatus status = protocol->Receive(p, ip, GetInterface(iif));
 
                 switch (status)
                 {
@@ -1652,6 +1657,10 @@ Ipv6L3Protocol::BuildHeader(Ipv6Address src,
 void
 Ipv6L3Protocol::RegisterExtensions()
 {
+    if (m_node->GetObject<Ipv6ExtensionDemux>())
+    {
+        return;
+    }
     Ptr<Ipv6ExtensionDemux> ipv6ExtensionDemux = CreateObject<Ipv6ExtensionDemux>();
     ipv6ExtensionDemux->SetNode(m_node);
 
@@ -1688,6 +1697,10 @@ Ipv6L3Protocol::RegisterExtensions()
 void
 Ipv6L3Protocol::RegisterOptions()
 {
+    if (m_node->GetObject<Ipv6OptionDemux>())
+    {
+        return;
+    }
     Ptr<Ipv6OptionDemux> ipv6OptionDemux = CreateObject<Ipv6OptionDemux>();
     ipv6OptionDemux->SetNode(m_node);
 
@@ -1777,11 +1790,7 @@ Ipv6L3Protocol::IsRegisteredMulticastAddress(Ipv6Address address, uint32_t inter
     Ipv6RegisteredMulticastAddressKey_t key = std::make_pair(address, interface);
     Ipv6RegisteredMulticastAddressCIter_t iter = m_multicastAddresses.find(key);
 
-    if (iter == m_multicastAddresses.end())
-    {
-        return false;
-    }
-    return true;
+    return iter != m_multicastAddresses.end();
 }
 
 bool
@@ -1792,11 +1801,7 @@ Ipv6L3Protocol::IsRegisteredMulticastAddress(Ipv6Address address) const
     Ipv6RegisteredMulticastAddressNoInterfaceCIter_t iter =
         m_multicastAddressesNoInterface.find(address);
 
-    if (iter == m_multicastAddressesNoInterface.end())
-    {
-        return false;
-    }
-    return true;
+    return iter != m_multicastAddressesNoInterface.end();
 }
 
 bool

@@ -27,13 +27,17 @@
 #include "qos-txop.h"
 #include "snr-tag.h"
 #include "wifi-assoc-manager.h"
+#include "wifi-mac-queue.h"
 #include "wifi-net-device.h"
 #include "wifi-phy.h"
 
+#include "ns3/eht-configuration.h"
+#include "ns3/emlsr-manager.h"
 #include "ns3/he-configuration.h"
 #include "ns3/ht-configuration.h"
 #include "ns3/log.h"
 #include "ns3/packet.h"
+#include "ns3/pair.h"
 #include "ns3/pointer.h"
 #include "ns3/random-variable-stream.h"
 #include "ns3/simulator.h"
@@ -94,6 +98,23 @@ StaWifiMac::GetTypeId()
                           StringValue("ns3::UniformRandomVariable[Min=50.0|Max=250.0]"),
                           MakePointerAccessor(&StaWifiMac::m_probeDelay),
                           MakePointerChecker<RandomVariableStream>())
+            .AddAttribute(
+                "PowerSaveMode",
+                "Enable/disable power save mode on the given link. The power management mode is "
+                "actually changed when the AP acknowledges a frame sent with the Power Management "
+                "field set to the value corresponding to the requested mode",
+                TypeId::ATTR_GET | TypeId::ATTR_SET, // do not set at construction time
+                PairValue<BooleanValue, UintegerValue>(),
+                MakePairAccessor<BooleanValue, UintegerValue>(&StaWifiMac::SetPowerSaveMode),
+                MakePairChecker<BooleanValue, UintegerValue>(MakeBooleanChecker(),
+                                                             MakeUintegerChecker<uint8_t>()))
+            .AddAttribute("PmModeSwitchTimeout",
+                          "If switching to a new Power Management mode is not completed within "
+                          "this amount of time, make another attempt at switching Power "
+                          "Management mode.",
+                          TimeValue(Seconds(0.1)),
+                          MakeTimeAccessor(&StaWifiMac::m_pmModeSwitchTimeout),
+                          MakeTimeChecker())
             .AddTraceSource("Assoc",
                             "Associated with an access point. If this is an MLD that associated "
                             "with an AP MLD, the AP MLD address is provided.",
@@ -142,6 +163,8 @@ StaWifiMac::DoInitialize()
 {
     NS_LOG_FUNCTION(this);
     StartScanning();
+    NS_ABORT_IF(!TraceConnectWithoutContext("AckedMpdu", MakeCallback(&StaWifiMac::TxOk, this)));
+    WifiMac::DoInitialize();
 }
 
 void
@@ -153,6 +176,11 @@ StaWifiMac::DoDispose()
         m_assocManager->Dispose();
     }
     m_assocManager = nullptr;
+    if (m_emlsrManager)
+    {
+        m_emlsrManager->Dispose();
+    }
+    m_emlsrManager = nullptr;
     WifiMac::DoDispose();
 }
 
@@ -192,6 +220,20 @@ StaWifiMac::SetAssocManager(Ptr<WifiAssocManager> assocManager)
     NS_LOG_FUNCTION(this << assocManager);
     m_assocManager = assocManager;
     m_assocManager->SetStaWifiMac(this);
+}
+
+void
+StaWifiMac::SetEmlsrManager(Ptr<EmlsrManager> emlsrManager)
+{
+    NS_LOG_FUNCTION(this << emlsrManager);
+    m_emlsrManager = emlsrManager;
+    m_emlsrManager->SetWifiMac(this);
+}
+
+Ptr<EmlsrManager>
+StaWifiMac::GetEmlsrManager() const
+{
+    return m_emlsrManager;
 }
 
 uint16_t
@@ -241,36 +283,38 @@ StaWifiMac::GetCurrentChannel(uint8_t linkId) const
 }
 
 void
-StaWifiMac::SendProbeRequest()
+StaWifiMac::SendProbeRequest(uint8_t linkId)
 {
-    NS_LOG_FUNCTION(this);
+    NS_LOG_FUNCTION(this << linkId);
     WifiMacHeader hdr;
     hdr.SetType(WIFI_MAC_MGT_PROBE_REQUEST);
     hdr.SetAddr1(Mac48Address::GetBroadcast());
-    hdr.SetAddr2(GetAddress());
+    hdr.SetAddr2(GetFrameExchangeManager(linkId)->GetAddress());
     hdr.SetAddr3(Mac48Address::GetBroadcast());
     hdr.SetDsNotFrom();
     hdr.SetDsNotTo();
     Ptr<Packet> packet = Create<Packet>();
     MgtProbeRequestHeader probe;
-    probe.SetSsid(GetSsid());
-    probe.SetSupportedRates(GetSupportedRates(SINGLE_LINK_OP_ID));
+    probe.Get<Ssid>() = GetSsid();
+    auto supportedRates = GetSupportedRates(linkId);
+    probe.Get<SupportedRates>() = supportedRates.rates;
+    probe.Get<ExtendedSupportedRatesIE>() = supportedRates.extendedRates;
     if (GetHtSupported())
     {
-        probe.SetExtendedCapabilities(GetExtendedCapabilities());
-        probe.SetHtCapabilities(GetHtCapabilities(SINGLE_LINK_OP_ID));
+        probe.Get<ExtendedCapabilities>() = GetExtendedCapabilities();
+        probe.Get<HtCapabilities>() = GetHtCapabilities(linkId);
     }
-    if (GetVhtSupported(SINGLE_LINK_OP_ID))
+    if (GetVhtSupported(linkId))
     {
-        probe.SetVhtCapabilities(GetVhtCapabilities(SINGLE_LINK_OP_ID));
+        probe.Get<VhtCapabilities>() = GetVhtCapabilities(linkId);
     }
     if (GetHeSupported())
     {
-        probe.SetHeCapabilities(GetHeCapabilities(SINGLE_LINK_OP_ID));
+        probe.Get<HeCapabilities>() = GetHeCapabilities(linkId);
     }
     if (GetEhtSupported())
     {
-        probe.SetEhtCapabilities(GetEhtCapabilities(SINGLE_LINK_OP_ID));
+        probe.Get<EhtCapabilities>() = GetEhtCapabilities(linkId);
     }
     packet->AddHeader(probe);
 
@@ -311,26 +355,28 @@ StaWifiMac::GetAssociationRequest(bool isReassoc, uint8_t linkId) const
 
     // lambda to set the fields of the (Re)Association Request
     auto fill = [&](auto&& frame) {
-        frame.SetSsid(GetSsid());
-        frame.SetSupportedRates(GetSupportedRates(linkId));
-        frame.SetCapabilities(GetCapabilities(linkId));
+        frame.template Get<Ssid>() = GetSsid();
+        auto supportedRates = GetSupportedRates(linkId);
+        frame.template Get<SupportedRates>() = supportedRates.rates;
+        frame.template Get<ExtendedSupportedRatesIE>() = supportedRates.extendedRates;
+        frame.Capabilities() = GetCapabilities(linkId);
         frame.SetListenInterval(0);
         if (GetHtSupported())
         {
-            frame.SetExtendedCapabilities(GetExtendedCapabilities());
-            frame.SetHtCapabilities(GetHtCapabilities(linkId));
+            frame.template Get<ExtendedCapabilities>() = GetExtendedCapabilities();
+            frame.template Get<HtCapabilities>() = GetHtCapabilities(linkId);
         }
         if (GetVhtSupported(linkId))
         {
-            frame.SetVhtCapabilities(GetVhtCapabilities(linkId));
+            frame.template Get<VhtCapabilities>() = GetVhtCapabilities(linkId);
         }
         if (GetHeSupported())
         {
-            frame.SetHeCapabilities(GetHeCapabilities(linkId));
+            frame.template Get<HeCapabilities>() = GetHeCapabilities(linkId);
         }
         if (GetEhtSupported())
         {
-            frame.SetEhtCapabilities(GetEhtCapabilities(linkId));
+            frame.template Get<EhtCapabilities>() = GetEhtCapabilities(linkId);
         }
     };
 
@@ -343,16 +389,28 @@ StaWifiMac::GetMultiLinkElement(bool isReassoc, uint8_t linkId) const
 {
     NS_LOG_FUNCTION(this << isReassoc << +linkId);
 
-    MultiLinkElement multiLinkElement(MultiLinkElement::BASIC_VARIANT,
-                                      isReassoc ? WIFI_MAC_MGT_REASSOCIATION_REQUEST
-                                                : WIFI_MAC_MGT_ASSOCIATION_REQUEST);
+    MultiLinkElement multiLinkElement(MultiLinkElement::BASIC_VARIANT);
     // The Common info field of the Basic Multi-Link element carried in the (Re)Association
     // Request frame shall include the MLD MAC address, the MLD Capabilities and Operations,
     // and the EML Capabilities subfields, and shall not include the Link ID Info, the BSS
     // Parameters Change Count, and the Medium Synchronization Delay Information subfields
     // (Sec. 35.3.5.4 of 802.11be D2.0)
-    // TODO Add the MLD Capabilities and Operations and the EML Capabilities subfields
+    // TODO Add the MLD Capabilities and Operations subfield
     multiLinkElement.SetMldMacAddress(GetAddress());
+
+    if (m_emlsrManager) // EMLSR Manager is only installed if EMLSR is activated
+    {
+        multiLinkElement.SetEmlsrSupported(true);
+        TimeValue time;
+        m_emlsrManager->GetAttribute("EmlsrPaddingDelay", time);
+        multiLinkElement.SetEmlsrPaddingDelay(time.Get());
+        m_emlsrManager->GetAttribute("EmlsrTransitionDelay", time);
+        multiLinkElement.SetEmlsrTransitionDelay(time.Get());
+        // When the Transition Timeout subfield is included in a frame sent by a non-AP STA
+        // affiliated with a non-AP MLD, the Transition Timeout subfield is reserved
+        // (Section 9.4.2.312.2.3 of 802.11be D2.3)
+    }
+
     // For each requested link in addition to the link on which the (Re)Association Request
     // frame is transmitted, the Link Info field of the Basic Multi-Link element carried
     // in the (Re)Association Request frame shall contain the corresponding Per-STA Profile
@@ -421,7 +479,7 @@ StaWifiMac::SendAssociationRequest(bool isReassoc)
         GetWifiRemoteStationManager(linkId)->GetMldAddress(*link.bssid).has_value())
     {
         auto addMle = [&](auto&& frame) {
-            frame.SetMultiLinkElement(GetMultiLinkElement(isReassoc, linkId));
+            frame.template Get<MultiLinkElement>() = GetMultiLinkElement(isReassoc, linkId);
         };
         std::visit(addMle, frame);
     }
@@ -471,7 +529,6 @@ StaWifiMac::TryToEnsureAssociated()
     {
     case ASSOCIATED:
         return;
-        break;
     case SCANNING:
         /* we have initiated active or passive scanning, continue to wait
            and gather beacons or probe responses until the scanning timeout
@@ -521,13 +578,13 @@ StaWifiMac::StartScanning()
     }
     if (m_activeProbing)
     {
-        scanParams.type = WifiScanParams::ACTIVE;
+        scanParams.type = WifiScanType::ACTIVE;
         scanParams.probeDelay = MicroSeconds(m_probeDelay->GetValue());
         scanParams.minChannelTime = scanParams.maxChannelTime = m_probeRequestTimeout;
     }
     else
     {
-        scanParams.type = WifiScanParams::PASSIVE;
+        scanParams.type = WifiScanType::PASSIVE;
         scanParams.maxChannelTime = m_waitBeaconTimeout;
     }
 
@@ -670,6 +727,8 @@ StaWifiMac::Disassociated(uint8_t linkId)
 
     NS_LOG_DEBUG("Set state to UNASSOCIATED and start scanning");
     SetState(UNASSOCIATED);
+    // cancel the association request timer (see issue #862)
+    m_assocRequestEvent.Cancel();
     auto mldAddress = GetWifiRemoteStationManager(linkId)->GetMldAddress(GetBssid(linkId));
     if (GetNLinks() > 1 && mldAddress.has_value())
     {
@@ -731,6 +790,12 @@ StaWifiMac::GetSetupLinkIds() const
         }
     }
     return linkIds;
+}
+
+std::optional<uint8_t>
+StaWifiMac::GetApLinkId(uint8_t linkId) const
+{
+    return GetLink(linkId).apLinkId;
 }
 
 Mac48Address
@@ -879,6 +944,12 @@ StaWifiMac::Receive(Ptr<const WifiMpdu> mpdu, uint8_t linkId)
             NotifyRxDrop(packet);
             return;
         }
+        if (!hdr->HasData())
+        {
+            NS_LOG_LOGIC("Received (QoS) Null Data frame: ignore");
+            NotifyRxDrop(packet);
+            return;
+        }
         if (hdr->IsQosData())
         {
             if (hdr->IsQosAmsdu())
@@ -892,7 +963,7 @@ StaWifiMac::Receive(Ptr<const WifiMpdu> mpdu, uint8_t linkId)
                 ForwardUp(packet, hdr->GetAddr3(), hdr->GetAddr1());
             }
         }
-        else if (hdr->HasData())
+        else
         {
             ForwardUp(packet, hdr->GetAddr3(), hdr->GetAddr1());
         }
@@ -921,11 +992,26 @@ StaWifiMac::Receive(Ptr<const WifiMpdu> mpdu, uint8_t linkId)
         ReceiveAssocResp(mpdu, linkId);
         break;
 
+    case WIFI_MAC_MGT_ACTION:
+        if (auto [category, action] = WifiActionHeader::Peek(packet);
+            category == WifiActionHeader::PROTECTED_EHT &&
+            action.protectedEhtAction ==
+                WifiActionHeader::PROTECTED_EHT_EML_OPERATING_MODE_NOTIFICATION)
+        {
+            // this is handled by the EMLSR Manager
+            break;
+        }
+
     default:
         // Invoke the receive handler of our parent class to deal with any
         // other frames. Specifically, this will handle Block Ack-related
         // Management Action frames.
         WifiMac::Receive(mpdu, linkId);
+    }
+
+    if (m_emlsrManager)
+    {
+        m_emlsrManager->NotifyMgtFrameReceived(mpdu, linkId);
     }
 }
 
@@ -939,7 +1025,7 @@ StaWifiMac::ReceiveBeacon(Ptr<const WifiMpdu> mpdu, uint8_t linkId)
     NS_LOG_DEBUG("Beacon received");
     MgtBeaconHeader beacon;
     mpdu->GetPacket()->PeekHeader(beacon);
-    const CapabilityInformation& capabilities = beacon.GetCapabilities();
+    const auto& capabilities = beacon.Capabilities();
     NS_ASSERT(capabilities.IsEss());
     bool goodBeacon;
     if (IsWaitAssocResp() || IsAssociated())
@@ -1028,6 +1114,7 @@ StaWifiMac::ReceiveAssocResp(Ptr<const WifiMpdu> mpdu, uint8_t linkId)
         return;
     }
 
+    std::optional<Mac48Address> apMldAddress;
     MgtAssocResponseHeader assocResp;
     mpdu->GetPacket()->PeekHeader(assocResp);
     if (m_assocRequestEvent.IsRunning())
@@ -1041,11 +1128,11 @@ StaWifiMac::ReceiveAssocResp(Ptr<const WifiMpdu> mpdu, uint8_t linkId)
         UpdateApInfo(assocResp, hdr.GetAddr2(), hdr.GetAddr3(), linkId);
         NS_ASSERT(GetLink(linkId).bssid.has_value() && *GetLink(linkId).bssid == hdr.GetAddr3());
         SetBssid(hdr.GetAddr3(), linkId);
-        if ((GetNLinks() > 1) && assocResp.GetMultiLinkElement().has_value())
+        if ((GetNLinks() > 1) && assocResp.Get<MultiLinkElement>().has_value())
         {
-            // this is an ML setup, trace the MLD address (only once)
-            m_assocLogger(*GetWifiRemoteStationManager(linkId)->GetMldAddress(hdr.GetAddr3()));
+            // this is an ML setup, trace the setup link
             m_setupCompleted(linkId, hdr.GetAddr3());
+            apMldAddress = GetWifiRemoteStationManager(linkId)->GetMldAddress(hdr.GetAddr3());
         }
         else
         {
@@ -1072,7 +1159,7 @@ StaWifiMac::ReceiveAssocResp(Ptr<const WifiMpdu> mpdu, uint8_t linkId)
         }
 
         // if a Multi-Link Element is present, check its content
-        if (const auto& mle = assocResp.GetMultiLinkElement(); mle.has_value())
+        if (const auto& mle = assocResp.Get<MultiLinkElement>())
         {
             NS_ABORT_MSG_IF(!GetLink(linkId).apLinkId.has_value(),
                             "The link on which the Association Response was received "
@@ -1122,13 +1209,9 @@ StaWifiMac::ReceiveAssocResp(Ptr<const WifiMpdu> mpdu, uint8_t linkId)
                     NS_LOG_DEBUG("Setup on link " << staLinkid << " completed");
                     UpdateApInfo(assoc, *bssid, *bssid, staLinkid);
                     SetBssid(*bssid, staLinkid);
-                    if (m_state != ASSOCIATED)
-                    {
-                        m_assocLogger(
-                            *GetWifiRemoteStationManager(staLinkid)->GetMldAddress(*bssid));
-                    }
                     m_setupCompleted(staLinkid, *bssid);
                     SetState(ASSOCIATED);
+                    apMldAddress = GetWifiRemoteStationManager(staLinkid)->GetMldAddress(*bssid);
                     if (!m_linkUp.IsNull())
                     {
                         m_linkUp();
@@ -1149,6 +1232,11 @@ StaWifiMac::ReceiveAssocResp(Ptr<const WifiMpdu> mpdu, uint8_t linkId)
                 GetLink(id).phy->SetOffMode();
             }
         }
+        if (apMldAddress)
+        {
+            // this is an ML setup, trace the MLD address of the AP (only once)
+            m_assocLogger(*apMldAddress);
+        }
     }
 
     if (m_state == WAIT_ASSOC_RESP)
@@ -1157,7 +1245,90 @@ StaWifiMac::ReceiveAssocResp(Ptr<const WifiMpdu> mpdu, uint8_t linkId)
         NS_LOG_DEBUG("association refused");
         SetState(REFUSED);
         StartScanning();
+        return;
     }
+
+    SetPmModeAfterAssociation(linkId);
+}
+
+void
+StaWifiMac::SetPmModeAfterAssociation(uint8_t linkId)
+{
+    NS_LOG_FUNCTION(this << linkId);
+
+    // STAs operating on setup links may need to transition to a new PM mode after the
+    // acknowledgement of the Association Response. For this purpose, we connect a callback to
+    // the PHY TX begin trace to catch the Ack transmitted after the Association Response.
+    CallbackBase cb = Callback<void, WifiConstPsduMap, WifiTxVector, double>(
+        [=](WifiConstPsduMap psduMap, WifiTxVector txVector, double /* txPowerW */) {
+            NS_ASSERT_MSG(psduMap.size() == 1 && psduMap.begin()->second->GetNMpdus() == 1 &&
+                              psduMap.begin()->second->GetHeader(0).IsAck(),
+                          "Expected a Normal Ack after Association Response frame");
+
+            auto ackDuration =
+                WifiPhy::CalculateTxDuration(psduMap, txVector, GetLink(linkId).phy->GetPhyBand());
+
+            for (uint8_t id = 0; id < GetNLinks(); id++)
+            {
+                auto& link = GetLink(id);
+
+                if (!link.bssid)
+                {
+                    // link has not been setup
+                    continue;
+                }
+
+                if (id == linkId)
+                {
+                    /**
+                     * When a link becomes enabled for a non-AP STA that is affiliated with a
+                     * non-AP MLD after successful association with an AP MLD with (Re)Association
+                     * Request/Response  frames transmitted on that link [..], the power management
+                     * mode of the non-AP STA, immediately after the acknowledgement of the
+                     * (Re)Association Response frame [..], is active mode.
+                     * (Sec. 35.3.7.1.4 of 802.11be D3.0)
+                     */
+                    // if the user requested this link to be in powersave mode, we have to
+                    // switch PM mode
+                    if (link.pmMode == WIFI_PM_POWERSAVE)
+                    {
+                        Simulator::Schedule(ackDuration,
+                                            &StaWifiMac::SetPowerSaveMode,
+                                            this,
+                                            std::pair<bool, uint8_t>{true, id});
+                    }
+                    link.pmMode = WIFI_PM_ACTIVE;
+                }
+                else
+                {
+                    /**
+                     * When a link becomes enabled for a non-AP STA that is affiliated with a
+                     * non-AP MLD after successful association with an AP MLD with (Re)Association
+                     * Request/Response frames transmitted on another link [..], the power
+                     * management mode of the non-AP STA, immediately after the acknowledgement of
+                     * the (Re)Association Response frame [..], is power save mode, and its power
+                     * state is doze. (Sec. 35.3.7.1.4 of 802.11be D3.0)
+                     */
+                    // if the user requested this link to be in active mode, we have to
+                    // switch PM mode
+                    if (link.pmMode == WIFI_PM_ACTIVE)
+                    {
+                        Simulator::Schedule(ackDuration,
+                                            &StaWifiMac::SetPowerSaveMode,
+                                            this,
+                                            std::pair<bool, uint8_t>{false, id});
+                    }
+                    link.pmMode = WIFI_PM_POWERSAVE;
+                }
+            }
+        });
+
+    // connect the callback to the PHY TX begin trace to catch the Ack and disconnect
+    // after its transmission begins
+    auto phy = GetLink(linkId).phy;
+    phy->TraceConnectWithoutContext("PhyTxPsduBegin", cb);
+    Simulator::Schedule(phy->GetSifs() + NanoSeconds(1),
+                        [=]() { phy->TraceDisconnectWithoutContext("PhyTxPsduBegin", cb); });
 }
 
 bool
@@ -1169,7 +1340,9 @@ StaWifiMac::CheckSupportedRates(std::variant<MgtBeaconHeader, MgtProbeResponseHe
     // lambda to invoke on the current frame variant
     auto check = [&](auto&& mgtFrame) -> bool {
         // check supported rates
-        const SupportedRates& rates = mgtFrame.GetSupportedRates();
+        NS_ASSERT(mgtFrame.template Get<SupportedRates>());
+        const auto rates = AllSupportedRates{*mgtFrame.template Get<SupportedRates>(),
+                                             mgtFrame.template Get<ExtendedSupportedRatesIE>()};
         for (const auto& selector : GetWifiPhy(linkId)->GetBssMembershipSelectorList())
         {
             if (!rates.IsBssMembershipSelectorRate(selector))
@@ -1193,10 +1366,24 @@ StaWifiMac::UpdateApInfo(const MgtFrameType& frame,
 {
     NS_LOG_FUNCTION(this << frame.index() << apAddr << bssid << +linkId);
 
+    // ERP Information is not present in Association Response frames
+    const std::optional<ErpInformation>* erpInformation = nullptr;
+
+    if (const auto* beacon = std::get_if<MgtBeaconHeader>(&frame))
+    {
+        erpInformation = &beacon->Get<ErpInformation>();
+    }
+    else if (const auto* probe = std::get_if<MgtProbeResponseHeader>(&frame))
+    {
+        erpInformation = &probe->Get<ErpInformation>();
+    }
+
     // lambda processing Information Elements included in all frame types
     auto commonOps = [&](auto&& frame) {
-        const CapabilityInformation& capabilities = frame.GetCapabilities();
-        const SupportedRates& rates = frame.GetSupportedRates();
+        const auto& capabilities = frame.Capabilities();
+        NS_ASSERT(frame.template Get<SupportedRates>());
+        const auto rates = AllSupportedRates{*frame.template Get<SupportedRates>(),
+                                             frame.template Get<ExtendedSupportedRatesIE>()};
         for (const auto& mode : GetWifiPhy(linkId)->GetModeList())
         {
             if (rates.IsSupportedRate(mode.GetDataRate(GetWifiPhy(linkId)->GetChannelWidth())))
@@ -1210,11 +1397,10 @@ StaWifiMac::UpdateApInfo(const MgtFrameType& frame,
         }
 
         bool isShortPreambleEnabled = capabilities.IsShortPreamble();
-        if (const auto& erpInformation = frame.GetErpInformation();
-            erpInformation.has_value() && GetErpSupported(linkId))
+        if (erpInformation && erpInformation->has_value() && GetErpSupported(linkId))
         {
-            isShortPreambleEnabled &= !erpInformation->GetBarkerPreambleMode();
-            if (erpInformation->GetUseProtection() != 0)
+            isShortPreambleEnabled &= !(*erpInformation)->GetBarkerPreambleMode();
+            if ((*erpInformation)->GetUseProtection() != 0)
             {
                 GetWifiRemoteStationManager(linkId)->SetUseNonErpProtection(true);
             }
@@ -1243,32 +1429,36 @@ StaWifiMac::UpdateApInfo(const MgtFrameType& frame,
         }
         /* QoS station */
         bool qosSupported = false;
-        const auto& edcaParameters = frame.GetEdcaParameterSet();
+        const auto& edcaParameters = frame.template Get<EdcaParameterSet>();
         if (edcaParameters.has_value())
         {
             qosSupported = true;
             // The value of the TXOP Limit field is specified as an unsigned integer, with the least
             // significant octet transmitted first, in units of 32 μs.
-            SetEdcaParameters(AC_BE,
-                              edcaParameters->GetBeCWmin(),
-                              edcaParameters->GetBeCWmax(),
-                              edcaParameters->GetBeAifsn(),
-                              32 * MicroSeconds(edcaParameters->GetBeTxopLimit()));
-            SetEdcaParameters(AC_BK,
-                              edcaParameters->GetBkCWmin(),
-                              edcaParameters->GetBkCWmax(),
-                              edcaParameters->GetBkAifsn(),
-                              32 * MicroSeconds(edcaParameters->GetBkTxopLimit()));
-            SetEdcaParameters(AC_VI,
-                              edcaParameters->GetViCWmin(),
-                              edcaParameters->GetViCWmax(),
-                              edcaParameters->GetViAifsn(),
-                              32 * MicroSeconds(edcaParameters->GetViTxopLimit()));
-            SetEdcaParameters(AC_VO,
-                              edcaParameters->GetVoCWmin(),
-                              edcaParameters->GetVoCWmax(),
-                              edcaParameters->GetVoAifsn(),
-                              32 * MicroSeconds(edcaParameters->GetVoTxopLimit()));
+            SetEdcaParameters({AC_BE,
+                               edcaParameters->GetBeCWmin(),
+                               edcaParameters->GetBeCWmax(),
+                               edcaParameters->GetBeAifsn(),
+                               32 * MicroSeconds(edcaParameters->GetBeTxopLimit())},
+                              linkId);
+            SetEdcaParameters({AC_BK,
+                               edcaParameters->GetBkCWmin(),
+                               edcaParameters->GetBkCWmax(),
+                               edcaParameters->GetBkAifsn(),
+                               32 * MicroSeconds(edcaParameters->GetBkTxopLimit())},
+                              linkId);
+            SetEdcaParameters({AC_VI,
+                               edcaParameters->GetViCWmin(),
+                               edcaParameters->GetViCWmax(),
+                               edcaParameters->GetViAifsn(),
+                               32 * MicroSeconds(edcaParameters->GetViTxopLimit())},
+                              linkId);
+            SetEdcaParameters({AC_VO,
+                               edcaParameters->GetVoCWmin(),
+                               edcaParameters->GetVoCWmax(),
+                               edcaParameters->GetVoAifsn(),
+                               32 * MicroSeconds(edcaParameters->GetVoTxopLimit())},
+                              linkId);
         }
         GetWifiRemoteStationManager(linkId)->SetQosSupport(apAddr, qosSupported);
 
@@ -1277,7 +1467,8 @@ StaWifiMac::UpdateApInfo(const MgtFrameType& frame,
             return;
         }
         /* HT station */
-        if (const auto& htCapabilities = frame.GetHtCapabilities(); htCapabilities.has_value())
+        if (const auto& htCapabilities = frame.template Get<HtCapabilities>();
+            htCapabilities.has_value())
         {
             if (!htCapabilities->IsSupportedMcs(0))
             {
@@ -1296,7 +1487,7 @@ StaWifiMac::UpdateApInfo(const MgtFrameType& frame,
         // the 2.4 GHz band do not support VHT
         if (GetVhtSupported(linkId))
         {
-            const auto& vhtCapabilities = frame.GetVhtCapabilities();
+            const auto& vhtCapabilities = frame.template Get<VhtCapabilities>();
             // we will always fill in RxHighestSupportedLgiDataRate field at TX, so this can be used
             // to check whether it supports VHT
             if (vhtCapabilities.has_value() &&
@@ -1320,7 +1511,7 @@ StaWifiMac::UpdateApInfo(const MgtFrameType& frame,
             return;
         }
         /* HE station */
-        const auto& heCapabilities = frame.GetHeCapabilities();
+        const auto& heCapabilities = frame.template Get<HeCapabilities>();
         if (heCapabilities.has_value() && heCapabilities->GetSupportedMcsAndNss() != 0)
         {
             GetWifiRemoteStationManager(linkId)->AddStationHeCapabilities(apAddr, *heCapabilities);
@@ -1331,36 +1522,41 @@ StaWifiMac::UpdateApInfo(const MgtFrameType& frame,
                     GetWifiRemoteStationManager(linkId)->AddSupportedMcs(apAddr, mcs);
                 }
             }
-            if (const auto& heOperation = frame.GetHeOperation(); heOperation.has_value())
+            if (const auto& heOperation = frame.template Get<HeOperation>();
+                heOperation.has_value())
             {
                 GetHeConfiguration()->SetAttribute("BssColor",
                                                    UintegerValue(heOperation->GetBssColor()));
             }
         }
 
-        const auto& muEdcaParameters = frame.GetMuEdcaParameterSet();
+        const auto& muEdcaParameters = frame.template Get<MuEdcaParameterSet>();
         if (muEdcaParameters.has_value())
         {
-            SetMuEdcaParameters(AC_BE,
-                                muEdcaParameters->GetMuCwMin(AC_BE),
-                                muEdcaParameters->GetMuCwMax(AC_BE),
-                                muEdcaParameters->GetMuAifsn(AC_BE),
-                                muEdcaParameters->GetMuEdcaTimer(AC_BE));
-            SetMuEdcaParameters(AC_BK,
-                                muEdcaParameters->GetMuCwMin(AC_BK),
-                                muEdcaParameters->GetMuCwMax(AC_BK),
-                                muEdcaParameters->GetMuAifsn(AC_BK),
-                                muEdcaParameters->GetMuEdcaTimer(AC_BK));
-            SetMuEdcaParameters(AC_VI,
-                                muEdcaParameters->GetMuCwMin(AC_VI),
-                                muEdcaParameters->GetMuCwMax(AC_VI),
-                                muEdcaParameters->GetMuAifsn(AC_VI),
-                                muEdcaParameters->GetMuEdcaTimer(AC_VI));
-            SetMuEdcaParameters(AC_VO,
-                                muEdcaParameters->GetMuCwMin(AC_VO),
-                                muEdcaParameters->GetMuCwMax(AC_VO),
-                                muEdcaParameters->GetMuAifsn(AC_VO),
-                                muEdcaParameters->GetMuEdcaTimer(AC_VO));
+            SetMuEdcaParameters({AC_BE,
+                                 muEdcaParameters->GetMuCwMin(AC_BE),
+                                 muEdcaParameters->GetMuCwMax(AC_BE),
+                                 muEdcaParameters->GetMuAifsn(AC_BE),
+                                 muEdcaParameters->GetMuEdcaTimer(AC_BE)},
+                                linkId);
+            SetMuEdcaParameters({AC_BK,
+                                 muEdcaParameters->GetMuCwMin(AC_BK),
+                                 muEdcaParameters->GetMuCwMax(AC_BK),
+                                 muEdcaParameters->GetMuAifsn(AC_BK),
+                                 muEdcaParameters->GetMuEdcaTimer(AC_BK)},
+                                linkId);
+            SetMuEdcaParameters({AC_VI,
+                                 muEdcaParameters->GetMuCwMin(AC_VI),
+                                 muEdcaParameters->GetMuCwMax(AC_VI),
+                                 muEdcaParameters->GetMuAifsn(AC_VI),
+                                 muEdcaParameters->GetMuEdcaTimer(AC_VI)},
+                                linkId);
+            SetMuEdcaParameters({AC_VO,
+                                 muEdcaParameters->GetMuCwMin(AC_VO),
+                                 muEdcaParameters->GetMuCwMax(AC_VO),
+                                 muEdcaParameters->GetMuAifsn(AC_VO),
+                                 muEdcaParameters->GetMuEdcaTimer(AC_VO)},
+                                linkId);
         }
 
         if (!GetEhtSupported())
@@ -1368,20 +1564,131 @@ StaWifiMac::UpdateApInfo(const MgtFrameType& frame,
             return;
         }
         /* EHT station */
-        const auto& ehtCapabilities = frame.GetEhtCapabilities();
+        const auto& ehtCapabilities = frame.template Get<EhtCapabilities>();
         // TODO: once we support non constant rate managers, we should add checks here whether EHT
         // is supported by the peer
         GetWifiRemoteStationManager(linkId)->AddStationEhtCapabilities(apAddr, *ehtCapabilities);
+
+        if (const auto& mle = frame.template Get<MultiLinkElement>();
+            mle && mle->HasEmlCapabilities() && m_emlsrManager)
+        {
+            m_emlsrManager->SetTransitionTimeout(mle->GetTransitionTimeout());
+        }
     };
 
     // process Information Elements included in the current frame variant
     std::visit(commonOps, frame);
 }
 
-SupportedRates
+void
+StaWifiMac::SetPowerSaveMode(const std::pair<bool, uint8_t>& enableLinkIdPair)
+{
+    const auto [enable, linkId] = enableLinkIdPair;
+    NS_LOG_FUNCTION(this << enable << linkId);
+
+    auto& link = GetLink(linkId);
+
+    if (!IsAssociated())
+    {
+        NS_LOG_DEBUG("Not associated yet, record the PM mode to switch to upon association");
+        link.pmMode = enable ? WIFI_PM_POWERSAVE : WIFI_PM_ACTIVE;
+        return;
+    }
+
+    if (!link.bssid)
+    {
+        NS_LOG_DEBUG("Link " << +linkId << " has not been setup, ignore request");
+        return;
+    }
+
+    if ((enable && link.pmMode == WIFI_PM_POWERSAVE) || (!enable && link.pmMode == WIFI_PM_ACTIVE))
+    {
+        NS_LOG_DEBUG("No PM mode change needed");
+        return;
+    }
+
+    link.pmMode = enable ? WIFI_PM_SWITCHING_TO_PS : WIFI_PM_SWITCHING_TO_ACTIVE;
+
+    // reschedule a call to this function to make sure that the PM mode switch
+    // is eventually completed
+    Simulator::Schedule(m_pmModeSwitchTimeout,
+                        &StaWifiMac::SetPowerSaveMode,
+                        this,
+                        enableLinkIdPair);
+
+    if (HasFramesToTransmit(linkId))
+    {
+        NS_LOG_DEBUG("Next transmitted frame will be sent with PM=" << enable);
+        return;
+    }
+
+    // No queued frames. Enqueue a Data Null frame to inform the AP of the PM mode change
+    WifiMacHeader hdr(WIFI_MAC_DATA_NULL);
+
+    hdr.SetAddr1(GetBssid(linkId));
+    hdr.SetAddr2(GetFrameExchangeManager(linkId)->GetAddress());
+    hdr.SetAddr3(GetBssid(linkId));
+    hdr.SetDsNotFrom();
+    hdr.SetDsTo();
+    enable ? hdr.SetPowerManagement() : hdr.SetNoPowerManagement();
+    if (GetQosSupported())
+    {
+        GetQosTxop(AC_BE)->Queue(Create<WifiMpdu>(Create<Packet>(), hdr));
+    }
+    else
+    {
+        m_txop->Queue(Create<WifiMpdu>(Create<Packet>(), hdr));
+    }
+}
+
+WifiPowerManagementMode
+StaWifiMac::GetPmMode(uint8_t linkId) const
+{
+    return GetLink(linkId).pmMode;
+}
+
+void
+StaWifiMac::TxOk(Ptr<const WifiMpdu> mpdu)
+{
+    NS_LOG_FUNCTION(this << *mpdu);
+
+    auto linkId = GetLinkIdByAddress(mpdu->GetHeader().GetAddr2());
+
+    if (!linkId)
+    {
+        // the given MPDU may be the original copy containing MLD addresses and not carrying
+        // a valid PM bit (which is set on the aliases).
+        auto linkIds = mpdu->GetInFlightLinkIds();
+        NS_ASSERT_MSG(!linkIds.empty(),
+                      "The TA of the acked MPDU (" << *mpdu
+                                                   << ") is not a link "
+                                                      "address and the MPDU is not inflight");
+        // in case the ack'ed MPDU is inflight on multiple links, we cannot really know if
+        // it was received by the AP on all links or only on some links. Hence, we only
+        // consider the first link ID in the set, given that in the most common case of MPDUs
+        // that cannot be sent concurrently on multiple links, there will be only one link ID
+        linkId = *linkIds.begin();
+        mpdu = GetTxopQueue(mpdu->GetQueueAc())->GetAlias(mpdu, *linkId);
+    }
+
+    auto& link = GetLink(*linkId);
+    const WifiMacHeader& hdr = mpdu->GetHeader();
+
+    // we received an acknowledgment while switching PM mode; the PM mode change is effective now
+    if (hdr.IsPowerManagement() && link.pmMode == WIFI_PM_SWITCHING_TO_PS)
+    {
+        link.pmMode = WIFI_PM_POWERSAVE;
+    }
+    else if (!hdr.IsPowerManagement() && link.pmMode == WIFI_PM_SWITCHING_TO_ACTIVE)
+    {
+        link.pmMode = WIFI_PM_ACTIVE;
+    }
+}
+
+AllSupportedRates
 StaWifiMac::GetSupportedRates(uint8_t linkId) const
 {
-    SupportedRates rates;
+    AllSupportedRates rates;
     for (const auto& mode : GetWifiPhy(linkId)->GetModeList())
     {
         uint64_t modeDataRate = mode.GetDataRate(GetWifiPhy(linkId)->GetChannelWidth());
@@ -1415,31 +1722,23 @@ StaWifiMac::SetState(MacState value)
 }
 
 void
-StaWifiMac::SetEdcaParameters(AcIndex ac,
-                              uint32_t cwMin,
-                              uint32_t cwMax,
-                              uint8_t aifsn,
-                              Time txopLimit)
+StaWifiMac::SetEdcaParameters(const EdcaParams& params, uint8_t linkId)
 {
-    Ptr<QosTxop> edca = GetQosTxop(ac);
-    edca->SetMinCw(cwMin, SINGLE_LINK_OP_ID);
-    edca->SetMaxCw(cwMax, SINGLE_LINK_OP_ID);
-    edca->SetAifsn(aifsn, SINGLE_LINK_OP_ID);
-    edca->SetTxopLimit(txopLimit, SINGLE_LINK_OP_ID);
+    Ptr<QosTxop> edca = GetQosTxop(params.ac);
+    edca->SetMinCw(params.cwMin, linkId);
+    edca->SetMaxCw(params.cwMax, linkId);
+    edca->SetAifsn(params.aifsn, linkId);
+    edca->SetTxopLimit(params.txopLimit, linkId);
 }
 
 void
-StaWifiMac::SetMuEdcaParameters(AcIndex ac,
-                                uint16_t cwMin,
-                                uint16_t cwMax,
-                                uint8_t aifsn,
-                                Time muEdcaTimer)
+StaWifiMac::SetMuEdcaParameters(const MuEdcaParams& params, uint8_t linkId)
 {
-    Ptr<QosTxop> edca = GetQosTxop(ac);
-    edca->SetMuCwMin(cwMin, SINGLE_LINK_OP_ID);
-    edca->SetMuCwMax(cwMax, SINGLE_LINK_OP_ID);
-    edca->SetMuAifsn(aifsn, SINGLE_LINK_OP_ID);
-    edca->SetMuEdcaTimer(muEdcaTimer, SINGLE_LINK_OP_ID);
+    Ptr<QosTxop> edca = GetQosTxop(params.ac);
+    edca->SetMuCwMin(params.cwMin, linkId);
+    edca->SetMuCwMax(params.cwMax, linkId);
+    edca->SetMuAifsn(params.aifsn, linkId);
+    edca->SetMuEdcaTimer(params.muEdcaTimer, linkId);
 }
 
 void

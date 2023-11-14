@@ -108,7 +108,7 @@ class InterferenceExperiment
      * Run function
      * \param input the interference experiment data
      */
-    void Run(struct InterferenceExperiment::Input input);
+    void Run(InterferenceExperiment::Input input);
 
   private:
     /**
@@ -213,12 +213,12 @@ InterferenceExperiment::Input::Input()
 }
 
 void
-InterferenceExperiment::Run(struct InterferenceExperiment::Input input)
+InterferenceExperiment::Run(InterferenceExperiment::Input input)
 {
     m_input = input;
 
-    double range = std::max(std::abs(input.xA), input.xB);
-    Config::SetDefault("ns3::RangePropagationLossModel::MaxRange", DoubleValue(range));
+    double maxRange = std::max(std::abs(input.xA), input.xB);
+    Config::SetDefault("ns3::RangePropagationLossModel::MaxRange", DoubleValue(maxRange));
 
     Ptr<SingleModelSpectrumChannel> channel = CreateObject<SingleModelSpectrumChannel>();
     channel->SetPropagationDelayModel(CreateObject<ConstantSpeedPropagationDelayModel>());
@@ -235,7 +235,6 @@ InterferenceExperiment::Run(struct InterferenceExperiment::Input input)
     Ptr<Node> nodeA = CreateObject<Node>();
     Ptr<WifiNetDevice> devA = CreateObject<WifiNetDevice>();
     m_txA = CreateObject<SpectrumWifiPhy>();
-    m_txA->CreateWifiSpectrumPhyInterface(devA);
     m_txA->SetDevice(devA);
     m_txA->SetTxPowerStart(input.txPowerLevelA);
     m_txA->SetTxPowerEnd(input.txPowerLevelA);
@@ -243,7 +242,6 @@ InterferenceExperiment::Run(struct InterferenceExperiment::Input input)
     Ptr<Node> nodeB = CreateObject<Node>();
     Ptr<WifiNetDevice> devB = CreateObject<WifiNetDevice>();
     m_txB = CreateObject<SpectrumWifiPhy>();
-    m_txB->CreateWifiSpectrumPhyInterface(devB);
     m_txB->SetDevice(devB);
     m_txB->SetTxPowerStart(input.txPowerLevelB);
     m_txB->SetTxPowerEnd(input.txPowerLevelB);
@@ -251,7 +249,6 @@ InterferenceExperiment::Run(struct InterferenceExperiment::Input input)
     Ptr<Node> nodeRx = CreateObject<Node>();
     Ptr<WifiNetDevice> devRx = CreateObject<WifiNetDevice>();
     Ptr<SpectrumWifiPhy> rx = CreateObject<SpectrumWifiPhy>();
-    rx->CreateWifiSpectrumPhyInterface(devRx);
     rx->SetDevice(devRx);
 
     Ptr<InterferenceHelper> interferenceTxA = CreateObject<InterferenceHelper>();
@@ -266,9 +263,9 @@ InterferenceExperiment::Run(struct InterferenceExperiment::Input input)
     rx->SetInterferenceHelper(interferenceRx);
     Ptr<ErrorRateModel> errorRx = CreateObject<NistErrorRateModel>();
     rx->SetErrorRateModel(errorRx);
-    m_txA->SetChannel(channel);
-    m_txB->SetChannel(channel);
-    rx->SetChannel(channel);
+    m_txA->AddChannel(channel);
+    m_txB->AddChannel(channel);
+    rx->AddChannel(channel);
     m_txA->SetMobility(posTxA);
     m_txB->SetMobility(posTxB);
     rx->SetMobility(posRx);

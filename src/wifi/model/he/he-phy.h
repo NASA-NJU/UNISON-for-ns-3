@@ -172,7 +172,7 @@ class HePhy : public VhtPhy
      *
      * \return the RU band in the TX spectrum
      */
-    WifiSpectrumBand GetRuBandForTx(const WifiTxVector& txVector, uint16_t staId) const;
+    WifiSpectrumBandInfo GetRuBandForTx(const WifiTxVector& txVector, uint16_t staId) const;
     /**
      * Get the band in the RX spectrum associated with the RU used by the PSDU
      * transmitted to/by a given STA in a DL MU PPDU/HE TB PPDU
@@ -182,7 +182,7 @@ class HePhy : public VhtPhy
      *
      * \return the RU band in the RX spectrum
      */
-    WifiSpectrumBand GetRuBandForRx(const WifiTxVector& txVector, uint16_t staId) const;
+    WifiSpectrumBandInfo GetRuBandForRx(const WifiTxVector& txVector, uint16_t staId) const;
     /**
      * Get the band used to transmit the non-OFDMA part of an HE TB PPDU.
      *
@@ -191,7 +191,7 @@ class HePhy : public VhtPhy
      *
      * \return the spectrum band used to transmit the non-OFDMA part of an HE TB PPDU
      */
-    WifiSpectrumBand GetNonOfdmaBand(const WifiTxVector& txVector, uint16_t staId) const;
+    WifiSpectrumBandInfo GetNonOfdmaBand(const WifiTxVector& txVector, uint16_t staId) const;
     /**
      * Get the width in MHz of the non-OFDMA portion of an HE TB PPDU
      *
@@ -424,11 +424,47 @@ class HePhy : public VhtPhy
     static bool IsAllowed(const WifiTxVector& txVector);
 
     /**
-     * Get variable length HE SIG-B field size based on TX Vector
-     * \param txVector WiFi TX Vector
-     * \return field size in bytes
+     * Create and return the HE MCS corresponding to
+     * the provided index.
+     * This method binds all the callbacks used by WifiMode.
+     *
+     * \param index the index of the MCS
+     * \return an HE MCS
      */
-    static uint32_t GetSigBFieldSize(const WifiTxVector& txVector);
+    static WifiMode CreateHeMcs(uint8_t index);
+
+    /**
+     * \param bandWidth the width (MHz) of the band used for the OFDMA transmission. Must be
+     *                  a multiple of 20 MHz
+     * \param guardBandwidth width of the guard band (MHz)
+     * \param subcarrierSpacing the subcarrier spacing (MHz)
+     * \param subcarrierRange the subcarrier range of the HE RU
+     * \param bandIndex the index (starting at 0) of the band within the operating channel
+     * \return the converted subcarriers
+     *
+     * This is a helper function to convert HE RU subcarriers, which are relative to the center
+     * frequency subcarrier, to the indexes used by the Spectrum model.
+     */
+    static WifiSpectrumBandIndices ConvertHeRuSubcarriers(uint16_t bandWidth,
+                                                          uint16_t guardBandwidth,
+                                                          uint32_t subcarrierSpacing,
+                                                          HeRu::SubcarrierRange subcarrierRange,
+                                                          uint8_t bandIndex = 0);
+
+    /// Map a spectrum band associated with an RU to the RU specification
+    using RuBands = std::map<WifiSpectrumBandInfo, HeRu::RuSpec>;
+
+    /**
+     * Static function to compute the RU bands that belong to a given channel width.
+     *
+     * \param phy the PHY that issued the function call
+     * \param channelWidth the channelWidth the channel width in MHz
+     * \param guardBandwidth width of the guard band in MHz
+     * \returns the computed RU bands that belong to the channel width
+     */
+    static RuBands GetRuBands(Ptr<const WifiPhy> phy,
+                              uint16_t channelWidth,
+                              uint16_t guardBandwidth);
 
   protected:
     PhyFieldRxStatus ProcessSig(Ptr<Event> event,
@@ -437,8 +473,8 @@ class HePhy : public VhtPhy
     Ptr<Event> DoGetEvent(Ptr<const WifiPpdu> ppdu, RxPowerWattPerChannelBand& rxPowersW) override;
     bool IsConfigSupported(Ptr<const WifiPpdu> ppdu) const override;
     Time DoStartReceivePayload(Ptr<Event> event) override;
-    std::pair<uint16_t, WifiSpectrumBand> GetChannelWidthAndBand(const WifiTxVector& txVector,
-                                                                 uint16_t staId) const override;
+    std::pair<uint16_t, WifiSpectrumBandInfo> GetChannelWidthAndBand(const WifiTxVector& txVector,
+                                                                     uint16_t staId) const override;
     void RxPayloadSucceeded(Ptr<const WifiPsdu> psdu,
                             RxSignalInfo rxSignalInfo,
                             const WifiTxVector& txVector,
@@ -451,6 +487,7 @@ class HePhy : public VhtPhy
     void DoResetReceive(Ptr<Event> event) override;
     void DoAbortCurrentReception(WifiPhyRxfailureReason reason) override;
     uint64_t ObtainNextUid(const WifiTxVector& txVector) override;
+    Time GetMaxDelayPpduSameUid(const WifiTxVector& txVector) override;
     Ptr<SpectrumValue> GetTxPowerSpectralDensity(double txPowerW,
                                                  Ptr<const WifiPpdu> ppdu) const override;
     uint32_t GetMaxPsduSize() const override;
@@ -478,6 +515,12 @@ class HePhy : public VhtPhy
      * \return the updated status of the reception of the SIG-B
      */
     virtual PhyFieldRxStatus ProcessSigB(Ptr<Event> event, PhyFieldRxStatus status);
+
+    /**
+     * \param txVector the transmission parameters
+     * \return the number of bits of the HE-SIG-B
+     */
+    virtual uint32_t GetSigBSize(const WifiTxVector& txVector) const;
 
     /**
      * Start receiving the PSDU (i.e. the first symbol of the PSDU has arrived) of an OFDMA
@@ -581,16 +624,6 @@ class HePhy : public VhtPhy
      * \return the per-20 MHz CCA durations vector
      */
     std::vector<Time> GetPer20MHzDurations(const Ptr<const WifiPpdu> ppdu);
-
-    /**
-     * Create and return the HE MCS corresponding to
-     * the provided index.
-     * This method binds all the callbacks used by WifiMode.
-     *
-     * \param index the index of the MCS
-     * \return an HE MCS
-     */
-    static WifiMode CreateHeMcs(uint8_t index);
 
     /**
      * Given a PPDU duration value, the TXVECTOR used to transmit the PPDU and

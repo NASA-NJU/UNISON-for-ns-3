@@ -38,7 +38,7 @@ NS_LOG_COMPONENT_DEFINE("MatrixArrayTest");
 
 /**
  * \ingroup matrixArray-tests
- *  MatrixArray test for testing constructors
+ *  MatrixArray test case for testing constructors, operators and other functions
  */
 template <class T>
 class MatrixArrayTestCase : public TestCase
@@ -50,7 +50,7 @@ class MatrixArrayTestCase : public TestCase
      *
      * \param [in] name reference name
      */
-    MatrixArrayTestCase<T>(const std::string name);
+    MatrixArrayTestCase<T>(const std::string& name);
 
     /** Destructor. */
     ~MatrixArrayTestCase<T>() override;
@@ -83,7 +83,7 @@ class MatrixArrayTestCase : public TestCase
 };
 
 template <class T>
-MatrixArrayTestCase<T>::MatrixArrayTestCase(const std::string name)
+MatrixArrayTestCase<T>::MatrixArrayTestCase(const std::string& name)
     : TestCase(name)
 {
 }
@@ -100,9 +100,9 @@ MatrixArrayTestCase<T>::DoRun()
     // test multiplication of matrices (MatrixArray containing only 1 matrix)
     MatrixArray<T> m1 = MatrixArray<T>(2, 3);
     MatrixArray<T> m2 = MatrixArray<T>(m1.GetNumCols(), m1.GetNumRows());
-    for (auto i = 0; i < m1.GetNumRows(); ++i)
+    for (size_t i = 0; i < m1.GetNumRows(); ++i)
     {
-        for (auto j = 0; j < m1.GetNumCols(); ++j)
+        for (size_t j = 0; j < m1.GetNumCols(); ++j)
         {
             m1(i, j) = 1;
             m2(j, i) = 1;
@@ -121,9 +121,9 @@ MatrixArrayTestCase<T>::DoRun()
     NS_TEST_ASSERT_MSG_EQ(m3.GetNumRows(),
                           m3.GetNumCols(),
                           "The number of rows and cols should be equal");
-    for (auto i = 0; i < m3.GetNumCols(); ++i)
+    for (size_t i = 0; i < m3.GetNumCols(); ++i)
     {
-        for (auto j = 0; j < m3.GetNumRows(); ++j)
+        for (size_t j = 0; j < m3.GetNumRows(); ++j)
         {
             NS_TEST_ASSERT_MSG_EQ(std::real(m3(i, j)),
                                   m1.GetNumCols(),
@@ -133,9 +133,9 @@ MatrixArrayTestCase<T>::DoRun()
 
     // multiplication with a scalar value
     MatrixArray<T> m4 = m3 * (static_cast<T>(5.0));
-    for (auto i = 0; i < m4.GetNumCols(); ++i)
+    for (size_t i = 0; i < m4.GetNumCols(); ++i)
     {
-        for (auto j = 0; j < m4.GetNumRows(); ++j)
+        for (size_t j = 0; j < m4.GetNumRows(); ++j)
         {
             NS_TEST_ASSERT_MSG_EQ(m3(i, j) * (static_cast<T>(5.0)),
                                   m4(i, j),
@@ -147,11 +147,11 @@ MatrixArrayTestCase<T>::DoRun()
     // test multiplication of arrays of matrices
     MatrixArray<T> m5 = MatrixArray<T>(2, 3, 2);
     MatrixArray<T> m6 = MatrixArray<T>(m5.GetNumCols(), m5.GetNumRows(), m5.GetNumPages());
-    for (auto p = 0; p < m5.GetNumPages(); ++p)
+    for (size_t p = 0; p < m5.GetNumPages(); ++p)
     {
-        for (auto i = 0; i < m5.GetNumRows(); ++i)
+        for (size_t i = 0; i < m5.GetNumRows(); ++i)
         {
-            for (auto j = 0; j < m5.GetNumCols(); ++j)
+            for (size_t j = 0; j < m5.GetNumCols(); ++j)
             {
                 m5(i, j, p) = 1;
                 m6(j, i, p) = 1;
@@ -169,11 +169,11 @@ MatrixArrayTestCase<T>::DoRun()
                           m7.GetNumCols(),
                           "The number of rows and cols should be equal");
 
-    for (auto p = 0; p < m7.GetNumPages(); ++p)
+    for (size_t p = 0; p < m7.GetNumPages(); ++p)
     {
-        for (auto i = 0; i < m7.GetNumCols(); ++i)
+        for (size_t i = 0; i < m7.GetNumCols(); ++i)
         {
-            for (auto j = 0; j < m7.GetNumRows(); ++j)
+            for (size_t j = 0; j < m7.GetNumRows(); ++j)
             {
                 NS_TEST_ASSERT_MSG_EQ(std::real(m7(i, j, p)),
                                       m5.GetNumCols(),
@@ -190,6 +190,27 @@ MatrixArrayTestCase<T>::DoRun()
     MatrixArray<T> m8 = m5.Transpose();
     NS_TEST_ASSERT_MSG_EQ(m6, m8, "These two matrices should be equal");
     NS_LOG_INFO("m8 = m5.Transpose ()" << m8);
+
+    // test transpose using initialization arrays
+    std::valarray<int> a{0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4};
+    std::valarray<int> b{0, 1, 2, 3, 4, 0, 1, 2, 3, 4, 0, 1, 2, 3, 4};
+    std::valarray<T> aCasted(a.size());
+    std::valarray<T> bCasted(b.size());
+    for (size_t i = 0; i < a.size(); ++i)
+    {
+        aCasted[i] = static_cast<T>(a[i]);
+    }
+    for (size_t i = 0; i < b.size(); ++i)
+    {
+        bCasted[i] = static_cast<T>(b[i]);
+    }
+    m5 = MatrixArray<T>(3, 5, 1, aCasted);
+    m6 = MatrixArray<T>(5, 3, 1, bCasted);
+    m8 = m5.Transpose();
+    NS_TEST_ASSERT_MSG_EQ(m6, m8, "These two matrices should be equal");
+    NS_LOG_INFO("m5 (3, 5, 1):" << m5);
+    NS_LOG_INFO("m6 (5, 3, 1):" << m6);
+    NS_LOG_INFO("m8 (5, 3, 1) = m5.Transpose ()" << m8);
 
     // test 1D array creation, i.e. vector and transposing it
     MatrixArray<T> m9 = MatrixArray<T>(std::vector<T>({0, 1, 2, 3, 4, 5, 6, 7}));
@@ -217,12 +238,14 @@ MatrixArrayTestCase<T>::DoRun()
     NS_TEST_ASSERT_MSG_EQ(m10, m9, "m10 and m9 should be equal");
 
     // test multiplication by using an initialization matrixArray
-    std::valarray<int> a{0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5};
-    std::valarray<int> b{0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1};
+    // matrix dimensions in each page are 2x3, 3x2, and the resulting matrix per page is a square
+    // matrix 2x2
+    a = {0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5};
+    b = {0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1};
     std::valarray<int> c{2, 3, 4, 6, 2, 3, 4, 6};
-    std::valarray<T> aCasted(a.size());
-    std::valarray<T> bCasted(b.size());
-    std::valarray<T> cCasted(c.size());
+    aCasted = std::valarray<T>(a.size());
+    bCasted = std::valarray<T>(b.size());
+    std::valarray<T> cCasted = std::valarray<T>(c.size());
 
     for (size_t i = 0; i < a.size(); ++i)
     {
@@ -247,9 +270,88 @@ MatrixArrayTestCase<T>::DoRun()
                           m14.GetNumRows(),
                           "The number of rows is not as expected.");
     NS_TEST_ASSERT_MSG_EQ(m13, m14, "The values are not equal.");
-    NS_LOG_INFO("m11:" << m11);
-    NS_LOG_INFO("m12:" << m12);
-    NS_LOG_INFO("m13 = matrixArrayA * matrixArrayB:" << m13);
+    NS_LOG_INFO("m11 (2,3,2):" << m11);
+    NS_LOG_INFO("m12 (3,2,2):" << m12);
+    NS_LOG_INFO("m13 = m11 * m12:" << m13);
+
+    // test multiplication by using an initialization matrixArray
+    // matrices have different number of elements per page
+    // matrix dimensions in each page are 4x3, 3x2, and the resulting matrix
+    // dimensions are 4x2
+    a = std::valarray<int>(
+        {0, 1, 0, 1, 2, 3, 2, 3, 4, 5, 4, 5, 0, 1, 0, 1, 2, 3, 2, 3, 4, 5, 4, 5});
+    b = std::valarray<int>({0, 1, 0, 1, 0, 1, 0, 10, 0, 10, 0, 10});
+    c = std::valarray<int>({2, 3, 2, 3, 4, 6, 4, 6, 20, 30, 20, 30, 40, 60, 40, 60});
+    aCasted = std::valarray<T>(a.size());
+    bCasted = std::valarray<T>(b.size());
+    cCasted = std::valarray<T>(c.size());
+
+    for (size_t i = 0; i < a.size(); ++i)
+    {
+        aCasted[i] = static_cast<T>(a[i]);
+    }
+    for (size_t i = 0; i < b.size(); ++i)
+    {
+        bCasted[i] = static_cast<T>(b[i]);
+    }
+    for (size_t i = 0; i < c.size(); ++i)
+    {
+        cCasted[i] = static_cast<T>(c[i]);
+    }
+
+    m11 = MatrixArray<T>(4, 3, 2, aCasted);
+    m12 = MatrixArray<T>(3, 2, 2, bCasted);
+    m13 = m11 * m12;
+    m14 = MatrixArray<T>(4, 2, 2, cCasted);
+    NS_TEST_ASSERT_MSG_EQ(m13.GetNumCols(),
+                          m14.GetNumCols(),
+                          "The number of columns is not as expected.");
+    NS_TEST_ASSERT_MSG_EQ(m13.GetNumRows(),
+                          m14.GetNumRows(),
+                          "The number of rows is not as expected.");
+    NS_TEST_ASSERT_MSG_EQ(m13, m14, "The values are not equal.");
+    NS_LOG_INFO("m11 (4,3,2):" << m11);
+    NS_LOG_INFO("m12 (3,2,2):" << m12);
+    NS_LOG_INFO("m13 = m11 * m12:" << m13);
+
+    // test multiplication by using an initialization matrixArray
+    // matrices have different number of elements per page
+    // matrix dimensions in each page are 1x3, 3x2, and the resulting matrix has
+    // dimensions 1x2
+    a = std::valarray<int>({5, 4, 5, 5, 4, 5});
+    b = std::valarray<int>({0, 1, 0, 1, 0, 1, 1, 2, 3, 10, 100, 1000});
+    c = std::valarray<int>({4, 10, 28, 5450});
+    aCasted = std::valarray<T>(a.size());
+    bCasted = std::valarray<T>(b.size());
+    cCasted = std::valarray<T>(c.size());
+
+    for (size_t i = 0; i < a.size(); ++i)
+    {
+        aCasted[i] = static_cast<T>(a[i]);
+    }
+    for (size_t i = 0; i < b.size(); ++i)
+    {
+        bCasted[i] = static_cast<T>(b[i]);
+    }
+    for (size_t i = 0; i < c.size(); ++i)
+    {
+        cCasted[i] = static_cast<T>(c[i]);
+    }
+
+    m11 = MatrixArray<T>(1, 3, 2, aCasted);
+    m12 = MatrixArray<T>(3, 2, 2, bCasted);
+    m13 = m11 * m12;
+    m14 = MatrixArray<T>(1, 2, 2, cCasted);
+    NS_TEST_ASSERT_MSG_EQ(m13.GetNumCols(),
+                          m14.GetNumCols(),
+                          "The number of columns is not as expected.");
+    NS_TEST_ASSERT_MSG_EQ(m13.GetNumRows(),
+                          m14.GetNumRows(),
+                          "The number of rows is not as expected.");
+    NS_TEST_ASSERT_MSG_EQ(m13, m14, "The values are not equal.");
+    NS_LOG_INFO("m11 (1,3,2):" << m11);
+    NS_LOG_INFO("m12 (3,2,2):" << m12);
+    NS_LOG_INFO("m13 = m11 * m12:" << m13);
 
     // test MultiplyByLeftAndRightMatrix
     std::valarray<int> d{1, 1, 1};
@@ -320,23 +422,100 @@ MatrixArrayTestCase<T>::DoRun()
     NS_LOG_INFO("m24 = m20 * m22 * m21" << m24);
 
     // test initialization with moving
+    size_t lCastedSize = lCasted.size();
     NS_LOG_INFO("size() of lCasted before move: " << lCasted.size());
     MatrixArray<T> m25 = MatrixArray<T>(2, 2, 2, std::move(lCasted));
-    NS_LOG_INFO("size() of lCasted after move: " << lCasted.size());
     NS_LOG_INFO("m25.GetSize ()" << m25.GetSize());
-    NS_TEST_ASSERT_MSG_EQ(lCasted.size(), 0, "The size of lCasted should be 0.");
+    NS_TEST_ASSERT_MSG_EQ(lCastedSize, m25.GetSize(), "The number of elements are not equal.");
 
+    size_t hCastedSize = hCasted.size();
     NS_LOG_INFO("size() of hCasted before move: " << hCasted.size());
     MatrixArray<T> m26 = MatrixArray<T>(2, 3, std::move(hCasted));
-    NS_LOG_INFO("size() of hCasted after move: " << hCasted.size());
     NS_LOG_INFO("m26.GetSize ()" << m26.GetSize());
-    NS_TEST_ASSERT_MSG_EQ(hCasted.size(), 0, "The size of hCasted should be 0.");
+    NS_TEST_ASSERT_MSG_EQ(hCastedSize, m26.GetSize(), "The number of elements are not equal.");
 
+    size_t jCastedSize = jCasted.size();
     NS_LOG_INFO("size() of jCasted before move: " << jCasted.size());
     MatrixArray<T> m27 = MatrixArray<T>(std::move(jCasted));
-    NS_LOG_INFO("size() of jCasted after move: " << jCasted.size());
     NS_LOG_INFO("m27.GetSize ()" << m27.GetSize());
-    NS_TEST_ASSERT_MSG_EQ(hCasted.size(), 0, "The size of jCasted should be 0.");
+    NS_TEST_ASSERT_MSG_EQ(jCastedSize, m27.GetSize(), "The number of elements are not equal.");
+}
+
+/**
+ * \ingroup matrixArray-tests
+ *  Test for testing functions that apply to MatrixArrays that use complex numbers,
+ *  such as HermitianTranspose that is only defined for complex type
+ */
+class ComplexMatrixArrayTestCase : public TestCase
+{
+  public:
+    /** Constructor*/
+    ComplexMatrixArrayTestCase();
+    /**
+     * Constructor
+     *
+     * \param [in] name reference name
+     */
+    ComplexMatrixArrayTestCase(const std::string& name);
+    /** Destructor*/
+    ~ComplexMatrixArrayTestCase() override;
+
+  private:
+    void DoRun() override;
+};
+
+ComplexMatrixArrayTestCase::ComplexMatrixArrayTestCase()
+    : TestCase("ComplexMatrixArrayTestCase")
+{
+}
+
+ComplexMatrixArrayTestCase::ComplexMatrixArrayTestCase(const std::string& name)
+    : TestCase(name)
+{
+}
+
+ComplexMatrixArrayTestCase::~ComplexMatrixArrayTestCase()
+{
+}
+
+void
+ComplexMatrixArrayTestCase::DoRun()
+{
+    std::valarray<std::complex<double>> complexValarray1 = {
+        {1, 1},
+        {2, 2},
+        {3, 3},
+        {4, 4},
+        {5, 5},
+        {6, 6},
+        {-1, 1},
+        {-2, 2},
+        {-3, 3},
+        {-4, 4},
+        {-5, 5},
+        {-6, 6},
+    };
+    std::valarray<std::complex<double>> complexValarray2 = {
+        {1, -1},
+        {4, -4},
+        {2, -2},
+        {5, -5},
+        {3, -3},
+        {6, -6},
+        {-1, -1},
+        {-4, -4},
+        {-2, -2},
+        {-5, -5},
+        {-3, -3},
+        {-6, -6},
+    };
+    ComplexMatrixArray m1 = ComplexMatrixArray(3, 2, 2, complexValarray1);
+    ComplexMatrixArray m2 = ComplexMatrixArray(2, 3, 2, complexValarray2);
+    ComplexMatrixArray m3 = m1.HermitianTranspose();
+    NS_LOG_INFO("m1 (3, 2, 2):" << m1);
+    NS_LOG_INFO("m2 (2, 3, 2):" << m2);
+    NS_LOG_INFO("m3 (2, 3, 2):" << m3);
+    NS_TEST_ASSERT_MSG_EQ(m2, m3, "m2 and m3 matrices should be equal");
 }
 
 /**
@@ -357,6 +536,7 @@ MatrixArrayTestSuite::MatrixArrayTestSuite()
     AddTestCase(
         new MatrixArrayTestCase<std::complex<double>>("Test MatrixArray<std::complex<double>>"));
     AddTestCase(new MatrixArrayTestCase<int>("Test MatrixArray<int>"));
+    AddTestCase(new ComplexMatrixArrayTestCase("Test ComplexMatrixArray"));
 }
 
 /**

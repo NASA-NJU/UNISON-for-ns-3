@@ -26,7 +26,6 @@
 #include "mgt-headers.h"
 #include "qos-txop.h"
 #include "ssid.h"
-#include "wifi-mac-queue-scheduler.h"
 #include "wifi-mac-queue.h"
 #include "wifi-net-device.h"
 
@@ -363,6 +362,14 @@ WifiMac::DoInitialize()
     {
         it->second->Initialize();
     }
+
+    for (auto& link : m_links)
+    {
+        if (auto cam = link->channelAccessManager)
+        {
+            cam->Initialize();
+        }
+    }
 }
 
 void
@@ -537,6 +544,23 @@ WifiMac::GetTxopQueue(AcIndex ac) const
 {
     Ptr<Txop> txop = (ac == AC_BE_NQOS ? m_txop : StaticCast<Txop>(GetQosTxop(ac)));
     return (txop ? txop->GetWifiMacQueue() : nullptr);
+}
+
+bool
+WifiMac::HasFramesToTransmit(uint8_t linkId)
+{
+    if (m_txop && m_txop->HasFramesToTransmit(linkId))
+    {
+        return true;
+    }
+    for (const auto& [aci, qosTxop] : m_edca)
+    {
+        if (qosTxop->HasFramesToTransmit(linkId))
+        {
+            return true;
+        }
+    }
+    return false;
 }
 
 void
@@ -1086,6 +1110,98 @@ WifiMac::SetLinkDownCallback(Callback<void> linkDown)
 }
 
 void
+WifiMac::BlockUnicastTxOnLinks(WifiQueueBlockedReason reason,
+                               const Mac48Address& address,
+                               const std::set<uint8_t>& linkIds)
+{
+    NS_LOG_FUNCTION(this << reason << address);
+    NS_ASSERT(m_scheduler);
+
+    for (const auto linkId : linkIds)
+    {
+        auto& link = GetLink(linkId);
+        auto linkAddr = link.stationManager->GetAffiliatedStaAddress(address).value_or(address);
+
+        if (link.stationManager->GetMldAddress(address) == address && linkAddr == address)
+        {
+            NS_LOG_DEBUG("Link " << +linkId << " has not been setup with the MLD, skip");
+            continue;
+        }
+
+        for (const auto [acIndex, ac] : wifiAcList)
+        {
+            // block queues storing QoS data frames and control frames that use MLD addresses
+            m_scheduler->BlockQueues(reason,
+                                     acIndex,
+                                     {WIFI_QOSDATA_QUEUE, WIFI_CTL_QUEUE},
+                                     address,
+                                     GetAddress(),
+                                     {ac.GetLowTid(), ac.GetHighTid()},
+                                     {linkId});
+            // block queues storing management and control frames that use link addresses
+            m_scheduler->BlockQueues(reason,
+                                     acIndex,
+                                     {WIFI_MGT_QUEUE, WIFI_CTL_QUEUE},
+                                     linkAddr,
+                                     link.feManager->GetAddress(),
+                                     {},
+                                     {linkId});
+        }
+    }
+}
+
+void
+WifiMac::UnblockUnicastTxOnLinks(WifiQueueBlockedReason reason,
+                                 const Mac48Address& address,
+                                 const std::set<uint8_t>& linkIds)
+{
+    NS_LOG_FUNCTION(this << reason << address);
+    NS_ASSERT(m_scheduler);
+
+    for (const auto linkId : linkIds)
+    {
+        auto& link = GetLink(linkId);
+        auto linkAddr = link.stationManager->GetAffiliatedStaAddress(address).value_or(address);
+
+        if (link.stationManager->GetMldAddress(address) == address && linkAddr == address)
+        {
+            NS_LOG_DEBUG("Link " << +linkId << " has not been setup with the MLD, skip");
+            continue;
+        }
+
+        for (const auto [acIndex, ac] : wifiAcList)
+        {
+            // unblock queues storing QoS data frames and control frames that use MLD addresses
+            m_scheduler->UnblockQueues(reason,
+                                       acIndex,
+                                       {WIFI_QOSDATA_QUEUE, WIFI_CTL_QUEUE},
+                                       address,
+                                       GetAddress(),
+                                       {ac.GetLowTid(), ac.GetHighTid()},
+                                       {linkId});
+            // unblock queues storing management and control frames that use link addresses
+            m_scheduler->UnblockQueues(reason,
+                                       acIndex,
+                                       {WIFI_MGT_QUEUE, WIFI_CTL_QUEUE},
+                                       linkAddr,
+                                       link.feManager->GetAddress(),
+                                       {},
+                                       {linkId});
+            // request channel access if needed (schedule now because multiple invocations
+            // of this method may be done in a loop at the caller)
+            auto qosTxop = GetQosTxop(acIndex);
+            Simulator::ScheduleNow([=]() {
+                if (qosTxop->GetAccessStatus(linkId) == Txop::NOT_REQUESTED &&
+                    qosTxop->HasFramesToTransmit(linkId))
+                {
+                    GetLink(linkId).channelAccessManager->RequestAccess(qosTxop);
+                }
+            });
+        }
+    }
+}
+
+void
 WifiMac::Enqueue(Ptr<Packet> packet, Mac48Address to, Mac48Address from)
 {
     // We expect WifiMac subclasses which do support forwarding (e.g.,
@@ -1121,6 +1237,12 @@ WifiMac::Receive(Ptr<const WifiMpdu> mpdu, uint8_t linkId)
     // The derived class may also do some such filtering, but it doesn't
     // hurt to have it here too as a backstop.
     if (to != myAddr)
+    {
+        return;
+    }
+
+    // Nothing to do with (QoS) Null Data frames
+    if (hdr->IsData() && !hdr->HasData())
     {
         return;
     }

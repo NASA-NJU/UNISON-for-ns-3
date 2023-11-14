@@ -63,11 +63,7 @@ TestDoubleIsEqual(const double x1, const double x2, const double epsilon)
     delta = std::ldexp(epsilon, exponent);
     difference = x1 - x2;
 
-    if (difference > delta || difference < -delta)
-    {
-        return false;
-    }
-    return true;
+    return difference <= delta && difference >= -delta;
 }
 
 /**
@@ -241,8 +237,8 @@ class TestRunnerImpl : public Singleton<TestRunnerImpl>
      * \returns The list of tests matching the filter constraints.
      */
     std::list<TestCase*> FilterTests(std::string testName,
-                                     enum TestSuite::Type testType,
-                                     enum TestCase::TestDuration maximumTestDuration);
+                                     TestSuite::Type testType,
+                                     TestCase::TestDuration maximumTestDuration);
 
     /** Container type for the test. */
     typedef std::vector<TestSuite*> TestSuiteVector;
@@ -302,7 +298,7 @@ TestCase::~TestCase()
 }
 
 void
-TestCase::AddTestCase(TestCase* testCase, enum TestCase::TestDuration duration)
+TestCase::AddTestCase(TestCase* testCase, TestCase::TestDuration duration)
 {
     NS_LOG_FUNCTION(&testCase << duration);
 
@@ -836,8 +832,8 @@ TestRunnerImpl::PrintTestTypeList() const
 
 std::list<TestCase*>
 TestRunnerImpl::FilterTests(std::string testName,
-                            enum TestSuite::Type testType,
-                            enum TestCase::TestDuration maximumTestDuration)
+                            TestSuite::Type testType,
+                            TestCase::TestDuration maximumTestDuration)
 {
     NS_LOG_FUNCTION(this << testName << testType);
     std::list<TestCase*> tests;
@@ -899,7 +895,7 @@ TestRunnerImpl::Run(int argc, char* argv[])
     bool printTestTypeList = false;
     bool printTestNameList = false;
     bool printTestTypeAndName = false;
-    enum TestCase::TestDuration maximumTestDuration = TestCase::QUICK;
+    TestCase::TestDuration maximumTestDuration = TestCase::QUICK;
     char* progname = argv[0];
 
     char** argi = argv;
@@ -1006,7 +1002,7 @@ TestRunnerImpl::Run(int argc, char* argv[])
         }
         argi++;
     }
-    enum TestSuite::Type testType;
+    TestSuite::Type testType;
     if (testTypeString.empty())
     {
         testType = TestSuite::ALL;

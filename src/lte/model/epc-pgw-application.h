@@ -21,9 +21,10 @@
 #ifndef EPC_PGW_APPLICATION_H
 #define EPC_PGW_APPLICATION_H
 
+#include "epc-gtpc-header.h"
+#include "epc-tft-classifier.h"
+
 #include "ns3/application.h"
-#include "ns3/epc-gtpc-header.h"
-#include "ns3/epc-tft-classifier.h"
 #include "ns3/socket.h"
 #include "ns3/virtual-net-device.h"
 
@@ -123,7 +124,7 @@ class EpcPgwApplication : public Application
      *
      * \param packet packet to be sent
      * \param sgwS5uAddress the address of the SGW
-     * \param teid the Tunnel Endpoint IDentifier
+     * \param teid the Tunnel Endpoint Identifier
      */
     void SendToS5uSocket(Ptr<Packet> packet, Ipv4Address sgwS5uAddress, uint32_t teid);
 

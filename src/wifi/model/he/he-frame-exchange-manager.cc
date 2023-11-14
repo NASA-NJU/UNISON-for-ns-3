@@ -54,6 +54,14 @@ IsTrigger(const WifiPsduMap& psduMap)
            psduMap.cbegin()->second->GetHeader(0).IsTrigger();
 }
 
+bool
+IsTrigger(const WifiConstPsduMap& psduMap)
+{
+    return psduMap.size() == 1 && psduMap.cbegin()->first == SU_STA_ID &&
+           psduMap.cbegin()->second->GetNMpdus() == 1 &&
+           psduMap.cbegin()->second->GetHeader(0).IsTrigger();
+}
+
 TypeId
 HeFrameExchangeManager::GetTypeId()
 {
@@ -282,23 +290,62 @@ HeFrameExchangeManager::SendPsduMapWithProtection(WifiPsduMap psduMap, WifiTxPar
         }
     }
 
-    if (m_txParams.m_protection->method == WifiProtection::RTS_CTS)
+    StartProtection(m_txParams);
+}
+
+void
+HeFrameExchangeManager::StartProtection(const WifiTxParameters& txParams)
+{
+    NS_LOG_FUNCTION(this << &txParams);
+
+    NS_ABORT_MSG_IF(m_psduMap.size() > 1 &&
+                        txParams.m_protection->method == WifiProtection::RTS_CTS,
+                    "Cannot use RTS/CTS with MU PPDUs");
+    if (txParams.m_protection->method == WifiProtection::MU_RTS_CTS)
     {
-        NS_ABORT_MSG_IF(m_psduMap.size() > 1, "Cannot use RTS/CTS with MU PPDUs");
-        SendRts(m_txParams);
-    }
-    else if (m_txParams.m_protection->method == WifiProtection::MU_RTS_CTS)
-    {
-        SendMuRts(m_txParams);
-    }
-    else if (m_txParams.m_protection->method == WifiProtection::NONE)
-    {
-        SendPsduMap();
+        RecordSentMuRtsTo(txParams);
+        SendMuRts(txParams);
     }
     else
     {
-        NS_ABORT_MSG("Unknown or prohibited protection type: " << m_txParams.m_protection.get());
+        VhtFrameExchangeManager::StartProtection(txParams);
     }
+}
+
+void
+HeFrameExchangeManager::RecordSentMuRtsTo(const WifiTxParameters& txParams)
+{
+    NS_LOG_FUNCTION(this << &txParams);
+
+    NS_ASSERT(txParams.m_protection && txParams.m_protection->method == WifiProtection::MU_RTS_CTS);
+    WifiMuRtsCtsProtection* protection =
+        static_cast<WifiMuRtsCtsProtection*>(txParams.m_protection.get());
+
+    NS_ASSERT(protection->muRts.IsMuRts());
+    NS_ASSERT_MSG(m_apMac, "APs only can send MU-RTS TF");
+    const auto& aidAddrMap = m_apMac->GetStaList(m_linkId);
+    NS_ASSERT(m_sentRtsTo.empty());
+
+    for (const auto& userInfo : protection->muRts)
+    {
+        const auto addressIt = aidAddrMap.find(userInfo.GetAid12());
+        NS_ASSERT_MSG(addressIt != aidAddrMap.end(), "AID not found");
+        m_sentRtsTo.insert(addressIt->second);
+    }
+}
+
+void
+HeFrameExchangeManager::ProtectionCompleted()
+{
+    NS_LOG_FUNCTION(this);
+    if (!m_psduMap.empty())
+    {
+        m_protectedStas.merge(m_sentRtsTo);
+        m_sentRtsTo.clear();
+        SendPsduMap();
+        return;
+    }
+    VhtFrameExchangeManager::ProtectionCompleted();
 }
 
 Time
@@ -387,8 +434,15 @@ HeFrameExchangeManager::CtsAfterMuRtsTimeout(Ptr<WifiMpdu> muRts, const WifiTxVe
 {
     NS_LOG_FUNCTION(this << *muRts << txVector);
 
-    NS_ASSERT(!m_psduMap.empty());
+    if (m_psduMap.empty())
+    {
+        // A CTS Timeout occurred when protecting a single PSDU that is not included
+        // in a DL MU PPDU is handled by the parent classes
+        VhtFrameExchangeManager::CtsTimeout(muRts, txVector);
+        return;
+    }
 
+    m_sentRtsTo.clear();
     for (const auto& psdu : m_psduMap)
     {
         for (const auto& mpdu : *PeekPointer(psdu.second))
@@ -509,8 +563,9 @@ HeFrameExchangeManager::SendPsduMap()
                 uint8_t tid = *tids.begin();
 
                 NS_ASSERT(m_edca);
-                m_edca->GetBaManager()->ScheduleBar(
-                    m_mac->GetQosTxop(tid)->PrepareBlockAckRequest(psdu.second->GetAddr1(), tid));
+                auto [reqHdr, hdr] =
+                    m_mac->GetQosTxop(tid)->PrepareBlockAckRequest(psdu.second->GetAddr1(), tid);
+                m_edca->GetBaManager()->ScheduleBar(reqHdr, hdr);
             }
         }
 
@@ -872,9 +927,10 @@ HeFrameExchangeManager::ForwardPsduMapDown(WifiConstPsduMap psduMap, WifiTxVecto
         NS_LOG_DEBUG("Transmitting: [STAID=" << psdu.first << ", " << *psdu.second << "]");
     }
     NS_LOG_DEBUG("TXVECTOR: " << txVector);
-    for (const auto& psdu : psduMap)
+    for (const auto& [staId, psdu] : psduMap)
     {
-        NotifyTxToEdca(psdu.second);
+        FinalizeMacHeader(psdu);
+        NotifyTxToEdca(psdu);
     }
     if (psduMap.size() > 1 || psduMap.begin()->second->IsAggregate() ||
         psduMap.begin()->second->IsSingle())
@@ -1565,6 +1621,12 @@ HeFrameExchangeManager::SendCtsAfterMuRts(const WifiMacHeader& muRtsHdr,
 {
     NS_LOG_FUNCTION(this << muRtsHdr << trigger << muRtsSnr);
 
+    if (!UlMuCsMediumIdle(trigger))
+    {
+        NS_LOG_DEBUG("UL MU CS indicated medium busy, cannot send CTS");
+        return;
+    }
+
     NS_ASSERT(m_staMac != nullptr && m_staMac->IsAssociated());
     WifiTxVector ctsTxVector = GetCtsTxVectorAfterMuRts(trigger, m_staMac->GetAssociationId());
     ctsTxVector.SetTriggerResponding(true);
@@ -1942,13 +2004,9 @@ HeFrameExchangeManager::IsIntraBssPpdu(Ptr<const WifiPsdu> psdu, const WifiTxVec
     // is disabled (see 26.17.3.3), then the RXVECTOR parameter BSS_COLOR of a PPDU shall not be
     // used to classify the PPDU")
     const auto bssColor = m_mac->GetHeConfiguration()->GetBssColor();
-    if (bssColor != 0 && bssColor == txVector.GetBssColor())
-    {
-        return true;
-    }
 
     // the other two conditions using the RXVECTOR parameter PARTIAL_AID are not implemented
-    return false;
+    return bssColor != 0 && bssColor == txVector.GetBssColor();
 }
 
 void
@@ -1981,6 +2039,17 @@ HeFrameExchangeManager::UpdateNav(Ptr<const WifiPsdu> psdu, const WifiTxVector& 
     NS_LOG_DEBUG("PPDU classified as intra-BSS, update the intra-BSS NAV");
     Time duration = psdu->GetDuration();
     NS_LOG_DEBUG("Duration/ID=" << duration);
+
+    if (psdu->GetHeader(0).IsCfEnd())
+    {
+        // An HE STA that maintains two NAVs (see 26.2.4) and receives a CF-End frame should reset
+        // the basic NAV if the received CF-End frame is carried in an inter-BSS PPDU and reset the
+        // intra-BSS NAV if the received CF-End frame is carried in an intra-BSS PPDU. (Sec. 26.2.5
+        // of 802.11ax-2021)
+        NS_LOG_DEBUG("Received CF-End, resetting the intra-BSS NAV");
+        IntraBssNavResetTimeout();
+        return;
+    }
 
     // For all other received frames the STA shall update its NAV when the received
     // Duration is greater than the STA’s current NAV value (IEEE 802.11-2020 sec. 10.3.2.4)
@@ -2280,9 +2349,11 @@ HeFrameExchangeManager::ReceiveMpdu(Ptr<const WifiMpdu> mpdu,
 
             m_txTimer.Cancel();
             m_channelAccessManager->NotifyCtsTimeoutResetNow();
-            Simulator::Schedule(m_phy->GetSifs(), &HeFrameExchangeManager::SendPsduMap, this);
+            Simulator::Schedule(m_phy->GetSifs(),
+                                &HeFrameExchangeManager::ProtectionCompleted,
+                                this);
         }
-        else if (hdr.IsCts() && !m_psduMap.empty() && m_txTimer.IsRunning() &&
+        else if (hdr.IsCts() && m_txTimer.IsRunning() &&
                  m_txTimer.GetReason() == WifiTxTimer::WAIT_CTS_AFTER_MU_RTS)
         {
             NS_ABORT_MSG_IF(inAmpdu, "Received CTS as part of an A-MPDU");
@@ -2292,7 +2363,9 @@ HeFrameExchangeManager::ReceiveMpdu(Ptr<const WifiMpdu> mpdu,
 
             m_txTimer.Cancel();
             m_channelAccessManager->NotifyCtsTimeoutResetNow();
-            Simulator::Schedule(m_phy->GetSifs(), &HeFrameExchangeManager::SendPsduMap, this);
+            Simulator::Schedule(m_phy->GetSifs(),
+                                &HeFrameExchangeManager::ProtectionCompleted,
+                                this);
         }
         else if (hdr.IsAck() && m_txTimer.IsRunning() &&
                  m_txTimer.GetReason() == WifiTxTimer::WAIT_NORMAL_ACK_AFTER_DL_MU_PPDU)
@@ -2524,20 +2597,13 @@ HeFrameExchangeManager::ReceiveMpdu(Ptr<const WifiMpdu> mpdu,
                 //   the non-AP STA (this is guaranteed if we get here)
                 // - The UL MU CS condition indicates that the medium is idle
                 // (Sec. 26.2.6.3 of 802.11ax-2021)
-                if (UlMuCsMediumIdle(trigger))
-                {
-                    NS_LOG_DEBUG("Schedule CTS");
-                    Simulator::Schedule(m_phy->GetSifs(),
-                                        &HeFrameExchangeManager::SendCtsAfterMuRts,
-                                        this,
-                                        hdr,
-                                        trigger,
-                                        rxSignalInfo.snr);
-                }
-                else
-                {
-                    NS_LOG_DEBUG("Cannot schedule CTS");
-                }
+                NS_LOG_DEBUG("Schedule CTS");
+                Simulator::Schedule(m_phy->GetSifs(),
+                                    &HeFrameExchangeManager::SendCtsAfterMuRts,
+                                    this,
+                                    hdr,
+                                    trigger,
+                                    rxSignalInfo.snr);
             }
             else if (trigger.IsMuBar())
             {

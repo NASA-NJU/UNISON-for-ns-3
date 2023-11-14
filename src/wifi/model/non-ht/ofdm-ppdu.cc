@@ -24,6 +24,7 @@
 #include "ofdm-phy.h"
 
 #include "ns3/log.h"
+#include "ns3/wifi-phy-operating-channel.h"
 #include "ns3/wifi-phy.h"
 #include "ns3/wifi-psdu.h"
 
@@ -34,15 +35,13 @@ NS_LOG_COMPONENT_DEFINE("OfdmPpdu");
 
 OfdmPpdu::OfdmPpdu(Ptr<const WifiPsdu> psdu,
                    const WifiTxVector& txVector,
-                   uint16_t txCenterFreq,
-                   WifiPhyBand band,
+                   const WifiPhyOperatingChannel& channel,
                    uint64_t uid,
                    bool instantiateLSig /* = true */)
-    : WifiPpdu(psdu, txVector, txCenterFreq, uid),
-      m_band(band),
+    : WifiPpdu(psdu, txVector, channel, uid),
       m_channelWidth(txVector.IsNonHtDuplicate() ? 20 : txVector.GetChannelWidth())
 {
-    NS_LOG_FUNCTION(this << psdu << txVector << txCenterFreq << band << uid);
+    NS_LOG_FUNCTION(this << psdu << txVector << channel << uid);
     if (instantiateLSig)
     {
         SetPhyHeaders(txVector, psdu->GetSize());
@@ -53,14 +52,7 @@ void
 OfdmPpdu::SetPhyHeaders(const WifiTxVector& txVector, std::size_t psduSize)
 {
     NS_LOG_FUNCTION(this << txVector << psduSize);
-
-#ifdef NS3_BUILD_PROFILE_DEBUG
-    LSigHeader lSig;
-    SetLSigHeader(lSig, txVector, psduSize);
-    m_phyHeaders->AddHeader(lSig);
-#else
     SetLSigHeader(m_lSig, txVector, psduSize);
-#endif
 }
 
 void
@@ -75,19 +67,7 @@ OfdmPpdu::DoGetTxVector() const
 {
     WifiTxVector txVector;
     txVector.SetPreambleType(m_preamble);
-
-#ifdef NS3_BUILD_PROFILE_DEBUG
-    LSigHeader lSig;
-    if (m_phyHeaders->PeekHeader(lSig) == 0)
-    {
-        NS_FATAL_ERROR("Missing L-SIG in PPDU");
-    }
-
-    SetTxVectorFromLSigHeader(txVector, lSig);
-#else
     SetTxVectorFromLSigHeader(txVector, m_lSig);
-#endif
-
     return txVector;
 }
 
@@ -104,15 +84,9 @@ Time
 OfdmPpdu::GetTxDuration() const
 {
     const WifiTxVector& txVector = GetTxVector();
-    uint16_t length = 0;
-#ifdef NS3_BUILD_PROFILE_DEBUG
-    LSigHeader lSig;
-    m_phyHeaders->PeekHeader(lSig);
-    length = lSig.GetLength();
-#else
-    length = m_lSig.GetLength();
-#endif
-    return WifiPhy::CalculateTxDuration(length, txVector, m_band);
+    const auto length = m_lSig.GetLength();
+    NS_ASSERT(m_operatingChannel.IsSet());
+    return WifiPhy::CalculateTxDuration(length, txVector, m_operatingChannel.GetPhyBand());
 }
 
 Ptr<WifiPpdu>
@@ -125,34 +99,6 @@ OfdmPpdu::LSigHeader::LSigHeader()
     : m_rate(0b1101),
       m_length(0)
 {
-}
-
-TypeId
-OfdmPpdu::LSigHeader::GetTypeId()
-{
-    static TypeId tid = TypeId("ns3::LSigHeader")
-                            .SetParent<Header>()
-                            .SetGroupName("Wifi")
-                            .AddConstructor<LSigHeader>();
-    return tid;
-}
-
-TypeId
-OfdmPpdu::LSigHeader::GetInstanceTypeId() const
-{
-    return GetTypeId();
-}
-
-void
-OfdmPpdu::LSigHeader::Print(std::ostream& os) const
-{
-    os << "SIGNAL=" << GetRate() << " LENGTH=" << m_length;
-}
-
-uint32_t
-OfdmPpdu::LSigHeader::GetSerializedSize() const
-{
-    return 3;
 }
 
 void
@@ -264,35 +210,6 @@ uint16_t
 OfdmPpdu::LSigHeader::GetLength() const
 {
     return m_length;
-}
-
-void
-OfdmPpdu::LSigHeader::Serialize(Buffer::Iterator start) const
-{
-    uint8_t byte = 0;
-    uint16_t bytes = 0;
-
-    byte |= m_rate;
-    byte |= (m_length & 0x07) << 5;
-    start.WriteU8(byte);
-
-    bytes |= (m_length & 0x0ff8) >> 3;
-    start.WriteU16(bytes);
-}
-
-uint32_t
-OfdmPpdu::LSigHeader::Deserialize(Buffer::Iterator start)
-{
-    Buffer::Iterator i = start;
-
-    uint8_t byte = i.ReadU8();
-    m_rate = byte & 0x0f;
-    m_length = (byte >> 5) & 0x07;
-
-    uint16_t bytes = i.ReadU16();
-    m_length |= (bytes << 3) & 0x0ff8;
-
-    return i.GetDistanceFrom(start);
 }
 
 } // namespace ns3

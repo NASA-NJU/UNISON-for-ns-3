@@ -20,8 +20,9 @@
 #ifndef LTE_RLC_AM_HEADER_H
 #define LTE_RLC_AM_HEADER_H
 
+#include "lte-rlc-sequence-number.h"
+
 #include "ns3/header.h"
-#include "ns3/lte-rlc-sequence-number.h"
 
 #include <list>
 
@@ -73,11 +74,8 @@ class LteRlcAmHeader : public Header
         DATA_PDU = 1
     };
 
-    /// ControlPduType_t enumeration
-    enum ControPduType_t
-    {
-        STATUS_PDU = 000,
-    };
+    /// Control PDU type status
+    static constexpr uint8_t STATUS_PDU{0};
 
     //
     // DATA PDU
