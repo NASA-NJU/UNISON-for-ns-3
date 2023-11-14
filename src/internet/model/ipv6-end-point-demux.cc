@@ -29,8 +29,8 @@ namespace ns3
 NS_LOG_COMPONENT_DEFINE("Ipv6EndPointDemux");
 
 Ipv6EndPointDemux::Ipv6EndPointDemux()
-    : m_ephemeral(1024),
-      m_portFirst(1024),
+    : m_ephemeral(49152),
+      m_portFirst(49152),
       m_portLast(65535)
 {
     NS_LOG_FUNCTION(this);
