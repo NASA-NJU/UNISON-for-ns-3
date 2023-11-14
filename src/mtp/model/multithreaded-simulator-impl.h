@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 #ifndef MULTITHREADED_SIMULATOR_IMPL_H
 #define MULTITHREADED_SIMULATOR_IMPL_H
 

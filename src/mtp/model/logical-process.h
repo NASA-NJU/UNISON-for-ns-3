@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 #ifndef LOGICAL_PROCESS_H
 #define LOGICAL_PROCESS_H
 

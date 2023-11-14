@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 #ifndef MTP_INTERFACE_H
 #define MTP_INTERFACE_H
 
