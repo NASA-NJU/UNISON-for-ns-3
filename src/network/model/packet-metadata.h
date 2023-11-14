@@ -675,6 +675,9 @@ class PacketMetadata
      */
     static void Deallocate(struct PacketMetadata::Data* data);
 
+#ifdef NS3_MTP
+    static std::atomic<bool> m_freeListUsing;
+#endif
     static DataFreeList m_freeList; //!< the metadata data storage
     static bool m_enable;           //!< Enable the packet metadata
     static bool m_enableChecking;   //!< Enable the packet metadata checking

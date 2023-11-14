@@ -40,6 +40,9 @@ bool PacketMetadata::m_metadataSkipped = false;
 uint32_t PacketMetadata::m_maxSize = 0;
 uint16_t PacketMetadata::m_chunkUid = 0;
 PacketMetadata::DataFreeList PacketMetadata::m_freeList;
+#ifdef NS3_MTP
+std::atomic<bool> PacketMetadata::m_freeListUsing(false);
+#endif
 
 PacketMetadata::DataFreeList::~DataFreeList()
 {
@@ -62,9 +65,7 @@ PacketMetadata::Enable()
                   "after sending any packets.  One way to fix this problem is "
                   "to call ns3::PacketMetadata::Enable () near the beginning of"
                   " the program, before any packets are sent.");
-#ifndef NS3_MTP
     m_enable = true;
-#endif
 }
 
 void
@@ -72,9 +73,7 @@ PacketMetadata::EnableChecking()
 {
     NS_LOG_FUNCTION_NOARGS();
     Enable();
-#ifndef NS3_MTP
     m_enableChecking = true;
-#endif
 }
 
 void
@@ -575,6 +574,10 @@ PacketMetadata::Create(uint32_t size)
     {
         m_maxSize = size;
     }
+#ifdef NS3_MTP
+    while (m_freeListUsing.exchange(true, std::memory_order_acquire))
+        ;
+#endif
     while (!m_freeList.empty())
     {
         struct PacketMetadata::Data* data = m_freeList.back();
@@ -583,11 +586,17 @@ PacketMetadata::Create(uint32_t size)
         {
             NS_LOG_LOGIC("create found size=" << data->m_size);
             data->m_count = 1;
+#ifdef NS3_MTP
+            m_freeListUsing.store(false, std::memory_order_release);
+#endif
             return data;
         }
         NS_LOG_LOGIC("create dealloc size=" << data->m_size);
         PacketMetadata::Deallocate(data);
     }
+#ifdef NS3_MTP
+    m_freeListUsing.store(false, std::memory_order_release);
+#endif
     NS_LOG_LOGIC("create alloc size=" << m_maxSize);
     return PacketMetadata::Allocate(m_maxSize);
 }
@@ -596,14 +605,18 @@ void
 PacketMetadata::Recycle(struct PacketMetadata::Data* data)
 {
     NS_LOG_FUNCTION(data);
-#ifdef NS3_MTP
-    std::atomic_thread_fence(std::memory_order_acquire);
-#endif
     if (!m_enable)
     {
+#ifdef NS3_MTP
+        std::atomic_thread_fence(std::memory_order_acquire);
+#endif
         PacketMetadata::Deallocate(data);
         return;
     }
+#ifdef NS3_MTP
+    while (m_freeListUsing.exchange(true, std::memory_order_acquire))
+        ;
+#endif
     NS_LOG_LOGIC("recycle size=" << data->m_size << ", list=" << m_freeList.size());
     NS_ASSERT(data->m_count == 0);
     if (m_freeList.size() > 1000 || data->m_size < m_maxSize)
@@ -614,6 +627,9 @@ PacketMetadata::Recycle(struct PacketMetadata::Data* data)
     {
         m_freeList.push_back(data);
     }
+#ifdef NS3_MTP
+    m_freeListUsing.store(false, std::memory_order_release);
+#endif
 }
 
 struct PacketMetadata::Data*
