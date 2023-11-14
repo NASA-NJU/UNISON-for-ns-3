@@ -7,6 +7,7 @@ A fast and user-transparent parallel simulator implementation for ns-3.
 More information about UNISON can be found in our EuroSys '24 paper (coming soon).
 
 Supported ns-3 version: [3.36.1](tree/unison-3.36.1), [3.37](tree/unison-3.37), [3.38](tree/unison-3.38), [3.39](tree/unison-3.36.1).
+We are trying to keep UNISON updated with the latest version of ns-3.
 You can find each unison-enabled ns-3 version via `unison-*` tags.
 
 ## Getting Started
@@ -65,14 +66,18 @@ MtpInterface::CriticalSection cs;
 
 at the beginning of your methods.
 
+In addition to the DCTCP example above, you can find other adapted examples in `examples/mtp`.
+
 ## Running Evaluations
 
-To evaluate UNISON, please checkout to [unison-evaluations](https://github.com/NASA-NJU/UNISON-for-ns-3/tree/unison-evaluations) branch.
+To evaluate UNISON, please switch to [unison-evaluations](https://github.com/NASA-NJU/UNISON-for-ns-3/tree/unison-evaluations) branch, which is based on ns-3.36.1.
 In this branch, you can find various topology models in the `scratch` folder.
 There are a lot of parameters you can set for each topology.
 We provided a utility script `exp.py` to compare these simulators and parameters.
-We also provided `process.py` to convert these raw experiment data to CSV files suitable for ploting.
+We also provided `process.py` to convert these raw experiment data to CSV files suitable for plotting.
 Please see the [README in that branch](https://github.com/NASA-NJU/UNISON-for-ns-3/tree/unison-evaluations) for more details.
+
+The evaluated artifact (based on ns-3.36.1) is persistently indexed by DOI [10.5281/zenodo.10077300](https://doi.org/10.5281/zenodo.10077300).
 
 ## Module Documentation
 
@@ -164,6 +169,14 @@ src/nix-vector-routing/model/nix-vector-routing.cc |   92 ++
 src/nix-vector-routing/model/nix-vector-routing.h  |    8 +
 ```
 
+Modifications to the `mpi` module to make it thread-safe with the hybrid simulator:
+
+```
+src/mpi/model/granted-time-window-mpi-interface.cc |   25 +
+src/mpi/model/granted-time-window-mpi-interface.h  |    7 +
+src/mpi/model/mpi-interface.cc                     |    3 +-
+```
+
 ### 3. Logging
 
 The reason behind UNISON's fast speed is that it divides the network into multiple logical processes (LPs) with fine granularity and schedules them dynamically.
@@ -197,7 +210,7 @@ Config::SetDefault("ns3::HybridSimulatorImpl::MinLookahead", TimeValue(NanoSecon
 The scheduling method determines the priority (estimated completion time of the next round) of each logical process.
 There are five available options:
 
-- `ByExecutionTime`: LPs with higher execution time of the last round will have higher priority.
+- `ByExecutionTime`: LPs with a higher execution time of the last round will have higher priority.
 - `ByPendingEventCount`: LPs with more pending events of this round will have higher priority.
 - `ByEventCount`: LPs with more pending events of this round will have higher priority.
 - `BySimulationTime`: LPs with larger current clock time will have higher priority.
