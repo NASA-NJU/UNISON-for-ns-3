@@ -6,6 +6,9 @@
 A fast and user-transparent parallel simulator implementation for ns-3.
 More information about UNISON can be found in our EuroSys '24 paper (coming soon).
 
+Supported ns-3 version: [3.36.1](tree/unison-3.36.1), [3.37](tree/unison-3.37), [3.38](tree/unison-3.38), [3.39](tree/unison-3.36.1).
+You can find each unison-enabled ns-3 version via `unison-*` tags.
+
 ## Getting Started
 
 The quickest way to get started is to type the command
@@ -45,7 +48,7 @@ diff examples/tcp/dctcp-example.cc examples/mtp/dctcp-example-mtp.cc
 It turns out that to bring UNISON to existing model code, all you need to do is to include the `ns3/mtp-interface.h` header file and add the following line at the beginning of the `main` function:
 
 ```c++
-MtpInterface::Enable (numberOfThreads);
+MtpInterface::Enable(numberOfThreads);
 ```
 
 The parameter `numberOfThreads` is optional.
@@ -95,72 +98,70 @@ We also modified the module to make it locally thread-safe.
 ### 2. Modifications to ns-3 Architecture
 
 In addition to the `mtp` and `mpi` modules, we also modified the following part of the ns-3 architecture to make it thread-safe, also with some bug fixing for ns-3.
+You can find the modifications to each unison-enabled ns-3 version via `git diff unison-* ns-*`.
 
 Modifications to the build system to provide `--enable-mtp` option to enable/disable UNISON:
 
 ```
-ns3                                                |   2 +
-CMakeLists.txt                                     |   1 +
-build-support/custom-modules/ns3-configtable.cmake |   3 +
-build-support/macros-and-definitions.cmake         |  10 +
+ns3                                                |    2 +
+CMakeLists.txt                                     |    1 +
+build-support/custom-modules/ns3-configtable.cmake |    3 +
+build-support/macros-and-definitions.cmake         |   10 +
 ```
 
 Modifications to the `core` module to make reference counting thread-safe:
 
 ```
-src/core/CMakeLists.txt                            |   1 +
-src/core/model/atomic-counter.h                    |  49 ++
-src/core/model/hash.h                              |  16 +
-src/core/model/object.cc                           |   2 +
-src/core/model/simple-ref-count.h                  |  11 +-
+src/core/CMakeLists.txt                            |    1 +
+src/core/model/atomic-counter.h                    |   50 +
+src/core/model/hash.h                              |   16 +
+src/core/model/object.cc                           |    2 +
+src/core/model/simple-ref-count.h                  |   11 +-
 ```
 
 Modifications to the `network` module to make packets thread-safe:
 
 ```
-src/network/model/buffer.cc                        |  15 +-
-src/network/model/buffer.h                         |   7 +
-src/network/model/byte-tag-list.cc                 |  14 +-
-src/network/model/node.cc                          |   7 +
-src/network/model/node.h                           |   7 +
-src/network/model/packet-metadata.cc               |  10 +-
-src/network/model/packet-metadata.h                |  11 +-
-src/network/model/packet-tag-list.h                |  11 +-
-src/network/model/socket.cc                        |   6 +
-src/network/utils/simple-net-device.cc             |   4 +
+src/network/model/buffer.cc                        |   15 +-
+src/network/model/buffer.h                         |    7 +
+src/network/model/byte-tag-list.cc                 |   14 +-
+src/network/model/node.cc                          |    7 +
+src/network/model/node.h                           |    7 +
+src/network/model/packet-metadata.cc               |   26 +-
+src/network/model/packet-metadata.h                |   14 +-
+src/network/model/packet-tag-list.h                |   11 +-
+src/network/model/socket.cc                        |    6 +
 ```
 
-Modifications to the `internet` module to make it thread-safe, plus adding per-flow ECMP routing and increasing # of available ports to support a large number of flows:
+Modifications to the `internet` module to make it thread-safe and add per-flow ECMP routing:
 
 ```
-src/internet/model/global-route-manager-impl.cc    |   2 +
-src/internet/model/ipv4-end-point-demux.cc         |   2 +-
-src/internet/model/ipv4-global-routing.cc          |  31 +-
-src/internet/model/ipv4-global-routing.h           |   5 +-
-src/internet/model/ipv4-packet-info-tag.cc         |   2 +
-src/internet/model/ipv6-end-point-demux.cc         |   4 +-
-src/internet/model/ipv6-packet-info-tag.cc         |   2 +
-src/internet/model/tcp-option.cc                   |   2 +-
+src/internet/model/global-route-manager-impl.cc    |    2 +
+src/internet/model/ipv4-global-routing.cc          |   32 +-
+src/internet/model/ipv4-global-routing.h           |    8 +-
+src/internet/model/ipv4-packet-info-tag.cc         |    2 +
+src/internet/model/ipv6-packet-info-tag.cc         |    2 +
+src/internet/model/tcp-option.cc                   |    2 +-
 ```
 
 Modifications to the `flow-monitor` module to make it thread-safe:
 
 ```
-src/flow-monitor/model/flow-monitor.cc             |  42 +
-src/flow-monitor/model/flow-monitor.h              |   4 +
-src/flow-monitor/model/ipv4-flow-classifier.cc     |  12 +
-src/flow-monitor/model/ipv4-flow-classifier.h      |   4 +
-src/flow-monitor/model/ipv4-flow-probe.cc          |   2 +
-src/flow-monitor/model/ipv6-flow-classifier.cc     |  12 +
-src/flow-monitor/model/ipv6-flow-classifier.h      |   4 +
-src/flow-monitor/model/ipv6-flow-probe.cc          |   2 +
+src/flow-monitor/model/flow-monitor.cc             |   48 +
+src/flow-monitor/model/flow-monitor.h              |    4 +
+src/flow-monitor/model/ipv4-flow-classifier.cc     |   12 +
+src/flow-monitor/model/ipv4-flow-classifier.h      |    5 +
+src/flow-monitor/model/ipv4-flow-probe.cc          |    2 +
+src/flow-monitor/model/ipv6-flow-classifier.cc     |   12 +
+src/flow-monitor/model/ipv6-flow-classifier.h      |    5 +
+src/flow-monitor/model/ipv6-flow-probe.cc          |    2 +
 ```
 
 Modifications to the `nix-vector-routing` module to make it thread-safe:
 
 ```
-src/nix-vector-routing/model/nix-vector-routing.cc |  92 ++
-src/nix-vector-routing/model/nix-vector-routing.h  |   8 +
+src/nix-vector-routing/model/nix-vector-routing.cc |   92 ++
+src/nix-vector-routing/model/nix-vector-routing.h  |    8 +
 ```
 
 ### 3. Logging
@@ -169,8 +170,8 @@ The reason behind UNISON's fast speed is that it divides the network into multip
 To get to know more details of such workflow, you can enable the following log component:
 
 ```c++
-LogComponentEnable ("LogicalProcess", LOG_LEVEL_INFO);
-LogComponentEnable ("MultithreadedSimulatorImpl", LOG_LEVEL_INFO);
+LogComponentEnable("LogicalProcess", LOG_LEVEL_INFO);
+LogComponentEnable("MultithreadedSimulatorImpl", LOG_LEVEL_INFO);
 ```
 
 ### 4. Advanced Options
@@ -180,8 +181,8 @@ These options can be modified at the beginning of the `main` function using the 
 You can also change the default maximum number of threads by setting
 
 ```c++
-Config::SetDefault ("ns3::MultithreadedSimulatorImpl::MaxThreads", UintegerValue (8));
-Config::SetDefault ("ns3::HybridSimulatorImpl::MaxThreads", UintegerValue (8));
+Config::SetDefault("ns3::MultithreadedSimulatorImpl::MaxThreads", UintegerValue(8));
+Config::SetDefault("ns3::HybridSimulatorImpl::MaxThreads", UintegerValue(8));
 ```
 
 The automatic partition will cut off stateless links whose delay is above the threshold.
@@ -189,8 +190,8 @@ The threshold is automatically calculated based on the delay of every link.
 If you are not satisfied with the partition results, you can set a custom threshold by setting
 
 ```c++
-Config::SetDefault ("ns3::MultithreadedSimulatorImpl::MinLookahead", TimeValue (NanoSeconds (500));
-Config::SetDefault ("ns3::HybridSimulatorImpl::MinLookahead", TimeValue (NanoSeconds (500));
+Config::SetDefault("ns3::MultithreadedSimulatorImpl::MinLookahead", TimeValue(NanoSeconds(500));
+Config::SetDefault("ns3::HybridSimulatorImpl::MinLookahead", TimeValue(NanoSeconds(500));
 ```
 
 The scheduling method determines the priority (estimated completion time of the next round) of each logical process.
@@ -206,7 +207,7 @@ Many experiments show that the first one usually leads to better performance.
 However, you can still choose one according to your taste by setting
 
 ```c++
-GlobalValue::Bind ("PartitionSchedulingMethod", StringValue ("ByExecutionTime"));
+GlobalValue::Bind("PartitionSchedulingMethod", StringValue("ByExecutionTime"));
 ```
 
 By default, the scheduling period is 2 when the number of partitions is less than 16, 3 when it is less than 256, 4 when it is less than 4096, etc.
@@ -214,7 +215,7 @@ Since more partitions lead to more scheduling costs.
 You can also set how frequently scheduling occurs by setting
 
 ```c++
-GlobalValue::Bind ("PartitionSchedulingPeriod", UintegerValue (4));
+GlobalValue::Bind("PartitionSchedulingPeriod", UintegerValue(4));
 ```
 
 ## Links
