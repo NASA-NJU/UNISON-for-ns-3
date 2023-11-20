@@ -353,6 +353,49 @@ HybridSimulatorImpl::Partition()
     bool* visited = new bool[nodes.GetN()]{false};
     std::queue<Ptr<Node>> q;
 
+    // if m_minLookahead is not set, calculate the median of delay for every link
+    if (m_minLookahead == TimeStep(0))
+    {
+        std::vector<Time> delays;
+        for (NodeContainer::Iterator it = nodes.Begin(); it != nodes.End(); it++)
+        {
+            Ptr<Node> node = *it;
+            if (node->GetSystemId() == m_myId)
+            {
+                for (uint32_t i = 0; i < node->GetNDevices(); i++)
+                {
+                    Ptr<NetDevice> localNetDevice = node->GetDevice(i);
+                    Ptr<Channel> channel = localNetDevice->GetChannel();
+                    if (!channel)
+                    {
+                        continue;
+                    }
+                    // cut-off p2p links for partition
+                    if (localNetDevice->IsPointToPoint())
+                    {
+                        TimeValue delay;
+                        channel->GetAttribute("Delay", delay);
+                        delays.push_back(delay.Get());
+                    }
+                }
+            }
+        }
+        std::sort(delays.begin(), delays.end());
+        if (delays.size() == 0)
+        {
+            m_minLookahead = TimeStep(0);
+        }
+        else if (delays.size() % 2 == 1)
+        {
+            m_minLookahead = delays[delays.size() / 2];
+        }
+        else
+        {
+            m_minLookahead = (delays[delays.size() / 2 - 1] + delays[delays.size() / 2]) / 2;
+        }
+        NS_LOG_INFO("Min lookahead is set to " << m_minLookahead);
+    }
+
     // perform a BFS on the whole network topo to assign each node a localSystemId
     for (NodeContainer::Iterator it = nodes.Begin(); it != nodes.End(); it++)
     {
@@ -376,7 +419,7 @@ HybridSimulatorImpl::Partition()
                 {
                     Ptr<NetDevice> localNetDevice = node->GetDevice(i);
                     Ptr<Channel> channel = localNetDevice->GetChannel();
-                    if (channel == 0)
+                    if (!channel)
                     {
                         continue;
                     }
@@ -407,14 +450,14 @@ HybridSimulatorImpl::Partition()
     }
     delete[] visited;
 
-    // after the partition, we finally know the system count
-    uint32_t systemCount = localSystemId;
-    uint32_t threadCount = std::min(m_maxThreads, systemCount);
+    // after the partition, we finally know the system count (# of LPs)
+    const uint32_t systemCount = localSystemId;
+    const uint32_t threadCount = std::min(m_maxThreads, systemCount);
     NS_LOG_INFO("Partition done! " << systemCount << " systems share " << threadCount
                                    << " threads");
 
-    // create new systems
-    Ptr<Scheduler> events = MtpInterface::GetSystem()->GetPendingEvents();
+    // create new LPs
+    const Ptr<Scheduler> events = MtpInterface::GetSystem()->GetPendingEvents();
     MtpInterface::Disable();
     MtpInterface::Enable(threadCount, systemCount);
 
@@ -426,12 +469,13 @@ HybridSimulatorImpl::Partition()
         MtpInterface::GetSystem(i)->SetScheduler(schedulerFactory);
     }
 
-    // transfer events to new system
+    // transfer events to new LPs
     while (!events->IsEmpty())
     {
         Scheduler::Event ev = events->RemoveNext();
         // invoke initialization events (at time 0) by their insertion order
-        // since they may not be in the same system, causing error
+        // since changing the execution order of these events may cause error,
+        // they have to be invoked now rather than parallelly executed
         if (ev.key.m_ts == 0)
         {
             MtpInterface::GetSystem(ev.key.m_context == Simulator::NO_CONTEXT
