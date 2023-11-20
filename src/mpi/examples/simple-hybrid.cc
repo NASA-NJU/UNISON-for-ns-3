@@ -1,4 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
@@ -64,7 +63,7 @@
 
 using namespace ns3;
 
-NS_LOG_COMPONENT_DEFINE("SimpleDistributed");
+NS_LOG_COMPONENT_DEFINE("SimpleHybrid");
 
 int
 main(int argc, char* argv[])
@@ -72,7 +71,6 @@ main(int argc, char* argv[])
     LogComponentEnable("LogicalProcess", LOG_LEVEL_INFO);
 
     bool nix = true;
-    bool nullmsg = false;
     bool tracing = false;
     bool testing = false;
     bool verbose = false;
@@ -80,23 +78,10 @@ main(int argc, char* argv[])
     // Parse command line
     CommandLine cmd(__FILE__);
     cmd.AddValue("nix", "Enable the use of nix-vector or global routing", nix);
-    cmd.AddValue("nullmsg", "Enable the use of null-message synchronization", nullmsg);
     cmd.AddValue("tracing", "Enable pcap tracing", tracing);
     cmd.AddValue("verbose", "verbose output", verbose);
     cmd.AddValue("test", "Enable regression test output", testing);
     cmd.Parse(argc, argv);
-
-    // Distributed simulation setup; by default use granted time window algorithm.
-    if (nullmsg)
-    {
-        GlobalValue::Bind("SimulatorImplementationType",
-                          StringValue("ns3::NullMessageSimulatorImpl"));
-    }
-    else
-    {
-        GlobalValue::Bind("SimulatorImplementationType",
-                          StringValue("ns3::DistributedSimulatorImpl"));
-    }
 
     // Enable parallel simulator with the command line arguments
     MtpInterface::Enable();

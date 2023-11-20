@@ -196,7 +196,7 @@ main(int argc, char* argv[])
         Ipv4GlobalRoutingHelper::PopulateRoutingTables();
     }
 
-    if (tracing == true)
+    if (tracing)
     {
         routerLink.EnablePcap("router-left", routerDevices, true);
         leafLink.EnablePcap("leaf-left", leftLeafDevices, true);
@@ -207,7 +207,6 @@ main(int argc, char* argv[])
     // Create a packet sink on the right leafs to receive packets from left leafs
 
     uint16_t port = 50000;
-
     Address sinkLocalAddress(InetSocketAddress(Ipv4Address::GetAny(), port));
     PacketSinkHelper sinkHelper("ns3::UdpSocketFactory", sinkLocalAddress);
     ApplicationContainer sinkApp;
@@ -219,7 +218,6 @@ main(int argc, char* argv[])
     sinkApp.Stop(Seconds(5));
 
     // Create the OnOff applications to send
-
     OnOffHelper clientHelper("ns3::UdpSocketFactory", Address());
     clientHelper.SetAttribute("OnTime", StringValue("ns3::ConstantRandomVariable[Constant=1]"));
     clientHelper.SetAttribute("OffTime", StringValue("ns3::ConstantRandomVariable[Constant=0]"));
@@ -238,6 +236,6 @@ main(int argc, char* argv[])
     Simulator::Run();
     Simulator::Destroy();
 
-    // Exit the MPI execution environment
+    // Exit the MTP execution environment
     return 0;
 }
