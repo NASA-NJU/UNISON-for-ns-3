@@ -191,9 +191,29 @@ function(build_lib)
     # include directories, allowing consumers of this module to include and link
     # the 3rd-party code with no additional setup
     get_target_includes(${lib${BLIB_LIBNAME}} exported_include_directories)
+
     string(REPLACE "-I" "" exported_include_directories
                    "${exported_include_directories}"
     )
+
+    # include directories prefixed in the source or binary directory need to be
+    # treated differently
+    set(new_exported_include_directories)
+    foreach(directory ${exported_include_directories})
+      string(FIND "${directory}" "${PROJECT_SOURCE_DIR}" is_prefixed_in_subdir)
+      if(${is_prefixed_in_subdir} GREATER_EQUAL 0)
+        string(SUBSTRING "${directory}" ${is_prefixed_in_subdir} -1
+                         directory_path
+        )
+        list(APPEND new_exported_include_directories
+             $<BUILD_INTERFACE:${directory_path}>
+        )
+      else()
+        list(APPEND new_exported_include_directories ${directory})
+      endif()
+    endforeach()
+    set(exported_include_directories ${new_exported_include_directories})
+
     string(REPLACE "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/include" ""
                    exported_include_directories
                    "${exported_include_directories}"
@@ -233,6 +253,23 @@ function(build_lib)
     PUBLIC $<BUILD_INTERFACE:${CMAKE_OUTPUT_DIRECTORY}/include>
            $<INSTALL_INTERFACE:include>
     INTERFACE ${exported_include_directories}
+  )
+
+  # Export definitions as interface definitions, propagating local definitions
+  # to other modules and scratches
+  get_target_property(
+    target_definitions ${lib${BLIB_LIBNAME}} COMPILE_DEFINITIONS
+  )
+  if(${target_definitions} STREQUAL "target_definitions-NOTFOUND")
+    set(target_definitions)
+  endif()
+  get_directory_property(dir_definitions COMPILE_DEFINITIONS)
+  set(exported_definitions "${target_definitions};${dir_definitions}")
+  list(REMOVE_DUPLICATES exported_definitions)
+  list(REMOVE_ITEM exported_definitions "")
+  set_target_properties(
+    ${lib${BLIB_LIBNAME}} PROPERTIES INTERFACE_COMPILE_DEFINITIONS
+                                     "${exported_definitions}"
   )
 
   set(ns3-external-libs "${non_ns_libraries_to_link};${ns3-external-libs}"

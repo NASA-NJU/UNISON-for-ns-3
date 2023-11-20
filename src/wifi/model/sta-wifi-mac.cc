@@ -31,6 +31,7 @@
 #include "wifi-net-device.h"
 #include "wifi-phy.h"
 
+#include "ns3/attribute-container.h"
 #include "ns3/eht-configuration.h"
 #include "ns3/emlsr-manager.h"
 #include "ns3/he-configuration.h"
@@ -162,6 +163,20 @@ void
 StaWifiMac::DoInitialize()
 {
     NS_LOG_FUNCTION(this);
+    // an EMLSR client must perform ML setup by using its main PHY
+    if (m_assocManager && m_emlsrManager)
+    {
+        auto mainPhyId = m_emlsrManager->GetMainPhyId();
+        auto linkId = GetLinkForPhy(mainPhyId);
+        NS_ASSERT(linkId);
+        m_assocManager->SetAttribute(
+            "AllowedLinks",
+            AttributeContainerValue<UintegerValue>(std::list<uint8_t>{*linkId}));
+    }
+    if (m_emlsrManager)
+    {
+        m_emlsrManager->Initialize();
+    }
     StartScanning();
     NS_ABORT_IF(!TraceConnectWithoutContext("AckedMpdu", MakeCallback(&StaWifiMac::TxOk, this)));
     WifiMac::DoInitialize();
@@ -204,6 +219,12 @@ StaWifiMac::StaLinkEntity&
 StaWifiMac::GetLink(uint8_t linkId) const
 {
     return static_cast<StaLinkEntity&>(WifiMac::GetLink(linkId));
+}
+
+StaWifiMac::StaLinkEntity&
+StaWifiMac::GetStaLink(const std::unique_ptr<WifiMac::LinkEntity>& link) const
+{
+    return static_cast<StaLinkEntity&>(*link);
 }
 
 int64_t
@@ -280,6 +301,39 @@ StaWifiMac::GetCurrentChannel(uint8_t linkId) const
     uint16_t width = phy->GetOperatingChannel().IsOfdm() ? 20 : phy->GetChannelWidth();
     uint8_t ch = phy->GetOperatingChannel().GetPrimaryChannelNumber(width, phy->GetStandard());
     return {ch, phy->GetPhyBand()};
+}
+
+void
+StaWifiMac::NotifyEmlsrModeChanged(const std::set<uint8_t>& linkIds)
+{
+    NS_LOG_FUNCTION(this << linkIds.size());
+
+    for (const auto& [linkId, lnk] : GetLinks())
+    {
+        auto& link = GetStaLink(lnk);
+
+        if (linkIds.count(linkId) > 0)
+        {
+            // EMLSR mode enabled
+            link.emlsrEnabled = true;
+            link.pmMode = WIFI_PM_ACTIVE;
+        }
+        else
+        {
+            // EMLSR mode disabled
+            if (link.emlsrEnabled)
+            {
+                link.pmMode = WIFI_PM_POWERSAVE;
+            }
+            link.emlsrEnabled = false;
+        }
+    }
+}
+
+bool
+StaWifiMac::IsEmlsrLink(uint8_t linkId) const
+{
+    return GetLink(linkId).emlsrEnabled;
 }
 
 void
@@ -411,14 +465,32 @@ StaWifiMac::GetMultiLinkElement(bool isReassoc, uint8_t linkId) const
         // (Section 9.4.2.312.2.3 of 802.11be D2.3)
     }
 
+    // The MLD Capabilities And Operations subfield is present in the Common Info field of the
+    // Basic Multi-Link element carried in Beacon, Probe Response, (Re)Association Request, and
+    // (Re)Association Response frames. (Sec. 9.4.2.312.2.3 of 802.11be D3.1)
+    auto& mldCapabilities = multiLinkElement.GetCommonInfoBasic().m_mldCapabilities;
+    mldCapabilities.emplace();
+    mldCapabilities->maxNSimultaneousLinks = GetNLinks() - 1; // assuming STR for now
+    mldCapabilities->srsSupport = 0;
+
+    auto ehtConfiguration = GetEhtConfiguration();
+    NS_ASSERT(ehtConfiguration);
+    EnumValue negSupport;
+    ehtConfiguration->GetAttributeFailSafe("TidToLinkMappingNegSupport", negSupport);
+
+    mldCapabilities->tidToLinkMappingSupport = negSupport.Get();
+    mldCapabilities->freqSepForStrApMld = 0; // not supported yet
+    mldCapabilities->aarSupport = 0;         // not supported yet
+
     // For each requested link in addition to the link on which the (Re)Association Request
     // frame is transmitted, the Link Info field of the Basic Multi-Link element carried
     // in the (Re)Association Request frame shall contain the corresponding Per-STA Profile
     // subelement(s).
-    for (uint8_t index = 0; index < GetNLinks(); index++)
+    for (const auto& [index, link] : GetLinks())
     {
-        auto& link = GetLink(index);
-        if (index != linkId && link.apLinkId.has_value())
+        const auto& staLink = GetStaLink(link);
+
+        if (index != linkId && staLink.bssid.has_value())
         {
             multiLinkElement.AddPerStaProfileSubelement();
             auto& perStaProfile = multiLinkElement.GetPerStaProfile(
@@ -427,7 +499,7 @@ StaWifiMac::GetMultiLinkElement(bool isReassoc, uint8_t linkId) const
             // for the corresponding non-AP STA that requests a link for multi-link (re)setup
             // with the AP MLD is set to the link ID of the AP affiliated with the AP MLD that
             // is operating on that link. The link ID is obtained during multi-link discovery
-            perStaProfile.SetLinkId(link.apLinkId.value());
+            perStaProfile.SetLinkId(index);
             // For each Per-STA Profile subelement included in the Link Info field, the
             // Complete Profile subfield of the STA Control field shall be set to 1
             perStaProfile.SetCompleteProfile();
@@ -435,7 +507,7 @@ StaWifiMac::GetMultiLinkElement(bool isReassoc, uint8_t linkId) const
             // subfield in the STA Info field and is set to 1 if the STA MAC Address subfield
             // is present in the STA Info field; otherwise set to 0. An STA sets this subfield
             // to 1 when the element carries complete profile.
-            perStaProfile.SetStaMacAddress(link.feManager->GetAddress());
+            perStaProfile.SetStaMacAddress(staLink.feManager->GetAddress());
             perStaProfile.SetAssocRequest(GetAssociationRequest(isReassoc, index));
         }
     }
@@ -443,20 +515,92 @@ StaWifiMac::GetMultiLinkElement(bool isReassoc, uint8_t linkId) const
     return multiLinkElement;
 }
 
+std::vector<TidToLinkMapping>
+StaWifiMac::GetTidToLinkMappingElements(uint8_t apNegSupport)
+{
+    NS_LOG_FUNCTION(this << apNegSupport);
+
+    auto ehtConfig = GetEhtConfiguration();
+    NS_ASSERT(ehtConfig);
+
+    EnumValue negSupport;
+    ehtConfig->GetAttributeFailSafe("TidToLinkMappingNegSupport", negSupport);
+
+    NS_ABORT_MSG_IF(negSupport.Get() == 0,
+                    "Cannot request TID-to-Link Mapping if negotiation is not supported");
+
+    // store the mappings, so that we can enforce them when the AP MLD accepts them
+    m_dlTidLinkMappingInAssocReq = ehtConfig->GetTidLinkMapping(WifiDirection::DOWNLINK);
+    m_ulTidLinkMappingInAssocReq = ehtConfig->GetTidLinkMapping(WifiDirection::UPLINK);
+
+    bool mappingValidForNegType1 = TidToLinkMappingValidForNegType1(m_dlTidLinkMappingInAssocReq,
+                                                                    m_ulTidLinkMappingInAssocReq);
+    NS_ABORT_MSG_IF(
+        negSupport.Get() == 1 && !mappingValidForNegType1,
+        "Mapping TIDs to distinct link sets is incompatible with negotiation support of 1");
+
+    if (apNegSupport == 1 && !mappingValidForNegType1)
+    {
+        // If the TID-to-link Mapping Negotiation Support subfield value received from a peer
+        // MLD is equal to 1, the MLD that initiates a TID-to-link mapping negotiation with the
+        // peer MLD shall send only the TID-to-link Mapping element where all TIDs are mapped to
+        // the same link set (Sec. 35.3.7.1.3 of 802.11be D3.1). We use default mapping to meet
+        // this requirement.
+        NS_LOG_DEBUG("Using default mapping because AP MLD advertised negotiation support of 1");
+        m_dlTidLinkMappingInAssocReq.clear();
+        m_ulTidLinkMappingInAssocReq.clear();
+    }
+
+    std::vector<TidToLinkMapping> ret(1);
+
+    ret.back().m_control.direction = WifiDirection::DOWNLINK;
+
+    // lambda to fill the last TID-to-Link Mapping IE in the vector to return
+    auto fillIe = [&ret](const auto& mapping) {
+        ret.back().m_control.defaultMapping = mapping.empty();
+
+        for (const auto& [tid, linkSet] : mapping)
+        {
+            // At any point in time, a TID shall always be mapped to at least one setup link both
+            // in DL and UL, which means that a TID-to-link mapping change is only valid and
+            // successful if it will not result in having any TID for which the link set for DL
+            // or UL is made of zero setup links (Sec. 35.3.7.1.1 of 802.11be D3.1)
+            NS_ABORT_MSG_IF(linkSet.empty(), "Cannot map a TID to an empty link set");
+            ret.back().SetLinkMappingOfTid(tid, linkSet);
+        }
+    };
+
+    fillIe(m_dlTidLinkMappingInAssocReq);
+
+    if (m_ulTidLinkMappingInAssocReq == m_dlTidLinkMappingInAssocReq)
+    {
+        ret.back().m_control.direction = WifiDirection::BOTH_DIRECTIONS;
+        return ret;
+    }
+
+    ret.emplace_back();
+    ret.back().m_control.direction = WifiDirection::UPLINK;
+    fillIe(m_ulTidLinkMappingInAssocReq);
+
+    return ret;
+}
+
 void
 StaWifiMac::SendAssociationRequest(bool isReassoc)
 {
     // find the link where the (Re)Association Request has to be sent
-    uint8_t linkId = 0;
-    while (linkId < GetNLinks())
+    auto it = GetLinks().cbegin();
+    while (it != GetLinks().cend())
     {
-        if (GetLink(linkId).sendAssocReq)
+        if (GetStaLink(it->second).sendAssocReq)
         {
             break;
         }
-        linkId++;
+        it++;
     }
-    NS_ABORT_MSG_IF(linkId == GetNLinks(), "No link selected to send the (Re)Association Request");
+    NS_ABORT_MSG_IF(it == GetLinks().cend(),
+                    "No link selected to send the (Re)Association Request");
+    uint8_t linkId = it->first;
     auto& link = GetLink(linkId);
     NS_ABORT_MSG_IF(!link.bssid.has_value(),
                     "No BSSID set for the link on which the (Re)Association Request is to be sent");
@@ -474,7 +618,9 @@ StaWifiMac::SendAssociationRequest(bool isReassoc)
     auto frame = GetAssociationRequest(isReassoc, linkId);
 
     // include a Multi-Link Element if this device has multiple links (independently
-    // of how many links will be setup) and the AP is a multi-link device
+    // of how many links will be setup) and the AP is a multi-link device;
+    // if the AP MLD  has indicated a support of TID-to-link mapping negotiation, also
+    // include the TID-to-link Mapping element(s)
     if (GetNLinks() > 1 &&
         GetWifiRemoteStationManager(linkId)->GetMldAddress(*link.bssid).has_value())
     {
@@ -482,6 +628,17 @@ StaWifiMac::SendAssociationRequest(bool isReassoc)
             frame.template Get<MultiLinkElement>() = GetMultiLinkElement(isReassoc, linkId);
         };
         std::visit(addMle, frame);
+
+        uint8_t negSupport;
+        if (const auto& mldCapabilities =
+                GetWifiRemoteStationManager(linkId)->GetStationMldCapabilities(*link.bssid);
+            mldCapabilities && (negSupport = mldCapabilities->get().tidToLinkMappingSupport) > 0)
+        {
+            auto addTlm = [&](auto&& frame) {
+                frame.template Get<TidToLinkMapping>() = GetTidToLinkMappingElements(negSupport);
+            };
+            std::visit(addTlm, frame);
+        }
     }
 
     if (!isReassoc)
@@ -567,12 +724,11 @@ StaWifiMac::StartScanning()
 
     WifiScanParams scanParams;
     scanParams.ssid = GetSsid();
-    for (uint8_t linkId = 0; linkId < GetNLinks(); linkId++)
+    for (const auto& [id, link] : GetLinks())
     {
         WifiScanParams::ChannelList channel{
-            (GetWifiPhy(linkId)->HasFixedPhyBand())
-                ? WifiScanParams::Channel{0, GetWifiPhy(linkId)->GetPhyBand()}
-                : WifiScanParams::Channel{0, WIFI_PHY_BAND_UNSPECIFIED}};
+            (link->phy->HasFixedPhyBand()) ? WifiScanParams::Channel{0, link->phy->GetPhyBand()}
+                                           : WifiScanParams::Channel{0, WIFI_PHY_BAND_UNSPECIFIED}};
 
         scanParams.channelList.push_back(channel);
     }
@@ -606,34 +762,37 @@ StaWifiMac::ScanningTimeout(const std::optional<ApInfo>& bestAp)
     NS_LOG_DEBUG("Attempting to associate with AP: " << *bestAp);
     UpdateApInfo(bestAp->m_frame, bestAp->m_apAddr, bestAp->m_bssid, bestAp->m_linkId);
     // reset info on links to setup
-    for (uint8_t linkId = 0; linkId < GetNLinks(); linkId++)
+    for (auto& [id, link] : GetLinks())
     {
-        auto& link = GetLink(linkId);
-        link.sendAssocReq = false;
-        link.apLinkId = std::nullopt;
-        link.bssid = std::nullopt;
+        auto& staLink = GetStaLink(link);
+        staLink.sendAssocReq = false;
+        staLink.bssid = std::nullopt;
     }
     // send Association Request on the link where the Beacon/Probe Response was received
     GetLink(bestAp->m_linkId).sendAssocReq = true;
     GetLink(bestAp->m_linkId).bssid = bestAp->m_bssid;
+    std::shared_ptr<CommonInfoBasicMle> mleCommonInfo;
     // update info on links to setup (11be MLDs only)
-    for (const auto& [localLinkId, apLinkId] : bestAp->m_setupLinks)
+    const auto& mle =
+        std::visit([](auto&& frame) { return frame.template Get<MultiLinkElement>(); },
+                   bestAp->m_frame);
+    std::map<uint8_t, uint8_t> swapInfo;
+    for (const auto& [localLinkId, apLinkId, bssid] : bestAp->m_setupLinks)
     {
+        NS_ASSERT_MSG(mle, "We get here only for ML setup");
         NS_LOG_DEBUG("Setting up link (local ID=" << +localLinkId << ", AP ID=" << +apLinkId
                                                   << ")");
-        GetLink(localLinkId).apLinkId = apLinkId;
-        if (localLinkId == bestAp->m_linkId)
+        GetLink(localLinkId).bssid = bssid;
+        if (!mleCommonInfo)
         {
-            continue;
+            mleCommonInfo = std::make_shared<CommonInfoBasicMle>(mle->GetCommonInfoBasic());
         }
-        auto mldAddress =
-            GetWifiRemoteStationManager(bestAp->m_linkId)->GetMldAddress(bestAp->m_bssid);
-        NS_ABORT_MSG_IF(!mldAddress.has_value(), "AP MLD address not set");
-        auto bssid = GetWifiRemoteStationManager(localLinkId)->GetAffiliatedStaAddress(*mldAddress);
-        NS_ABORT_MSG_IF(!mldAddress.has_value(),
-                        "AP link address not set for local link " << +localLinkId);
-        GetLink(localLinkId).bssid = *bssid;
+        GetWifiRemoteStationManager(localLinkId)->AddStationMleCommonInfo(bssid, mleCommonInfo);
+        swapInfo.emplace(localLinkId, apLinkId);
     }
+
+    SwapLinks(swapInfo);
+
     // lambda to get beacon interval from Beacon or Probe Response
     auto getBeaconInterval = [](auto&& frame) {
         using T = std::decay_t<decltype(frame)>;
@@ -651,11 +810,11 @@ StaWifiMac::ScanningTimeout(const std::optional<ApInfo>& bestAp)
     Time beaconInterval = std::visit(getBeaconInterval, bestAp->m_frame);
     Time delay = beaconInterval * m_maxMissedBeacons;
     // restart beacon watchdog for all links to setup
-    for (uint8_t linkId = 0; linkId < GetNLinks(); linkId++)
+    for (const auto& [id, link] : GetLinks())
     {
-        if (GetLink(linkId).apLinkId.has_value() || GetNLinks() == 1)
+        if (GetStaLink(link).bssid.has_value() || GetNLinks() == 1)
         {
-            RestartBeaconWatchdog(delay, linkId);
+            RestartBeaconWatchdog(delay, id);
         }
     }
     SetState(WAIT_ASSOC_RESP);
@@ -705,20 +864,19 @@ StaWifiMac::Disassociated(uint8_t linkId)
     NS_LOG_FUNCTION(this << +linkId);
 
     auto& link = GetLink(linkId);
-    if (link.apLinkId.has_value())
+    if (link.bssid.has_value())
     {
         // this is a link setup in an ML setup
         m_setupCanceled(linkId, GetBssid(linkId));
     }
 
     // disable the given link
-    link.apLinkId = std::nullopt;
     link.bssid = std::nullopt;
     link.phy->SetOffMode();
 
-    for (uint8_t id = 0; id < GetNLinks(); id++)
+    for (const auto& [id, lnk] : GetLinks())
     {
-        if (GetLink(id).apLinkId.has_value())
+        if (GetStaLink(lnk).bssid.has_value())
         {
             // found an enabled link
             return;
@@ -741,9 +899,9 @@ StaWifiMac::Disassociated(uint8_t linkId)
     }
     m_aid = 0; // reset AID
     // ensure all links are on
-    for (uint8_t id = 0; id < GetNLinks(); id++)
+    for (const auto& [id, lnk] : GetLinks())
     {
-        GetLink(id).phy->ResumeFromOff();
+        lnk->phy->ResumeFromOff();
     }
     TryToEnsureAssociated();
 }
@@ -782,20 +940,14 @@ StaWifiMac::GetSetupLinkIds() const
     }
 
     std::set<uint8_t> linkIds;
-    for (uint8_t linkId = 0; linkId < GetNLinks(); linkId++)
+    for (const auto& [id, link] : GetLinks())
     {
-        if (GetLink(linkId).bssid)
+        if (GetStaLink(link).bssid)
         {
-            linkIds.insert(linkId);
+            linkIds.insert(id);
         }
     }
     return linkIds;
-}
-
-std::optional<uint8_t>
-StaWifiMac::GetApLinkId(uint8_t linkId) const
-{
-    return GetLink(linkId).apLinkId;
 }
 
 Mac48Address
@@ -895,6 +1047,50 @@ StaWifiMac::Enqueue(Ptr<Packet> packet, Mac48Address to)
     else
     {
         GetTxop()->Queue(packet, hdr);
+    }
+}
+
+void
+StaWifiMac::BlockTxOnLink(uint8_t linkId, WifiQueueBlockedReason reason)
+{
+    NS_LOG_FUNCTION(this << linkId << reason);
+
+    auto bssid = GetBssid(linkId);
+    auto apAddress = GetWifiRemoteStationManager(linkId)->GetMldAddress(bssid).value_or(bssid);
+
+    BlockUnicastTxOnLinks(reason, apAddress, {linkId});
+    // the only type of broadcast frames that a non-AP STA can send are management frames
+    for (const auto [acIndex, ac] : wifiAcList)
+    {
+        GetMacQueueScheduler()->BlockQueues(reason,
+                                            acIndex,
+                                            {WIFI_MGT_QUEUE},
+                                            Mac48Address::GetBroadcast(),
+                                            GetFrameExchangeManager(linkId)->GetAddress(),
+                                            {},
+                                            {linkId});
+    }
+}
+
+void
+StaWifiMac::UnblockTxOnLink(uint8_t linkId, WifiQueueBlockedReason reason)
+{
+    NS_LOG_FUNCTION(this << linkId << reason);
+
+    auto bssid = GetBssid(linkId);
+    auto apAddress = GetWifiRemoteStationManager(linkId)->GetMldAddress(bssid).value_or(bssid);
+
+    UnblockUnicastTxOnLinks(reason, apAddress, {linkId});
+    // the only type of broadcast frames that a non-AP STA can send are management frames
+    for (const auto [acIndex, ac] : wifiAcList)
+    {
+        GetMacQueueScheduler()->UnblockQueues(reason,
+                                              acIndex,
+                                              {WIFI_MGT_QUEUE},
+                                              Mac48Address::GetBroadcast(),
+                                              GetFrameExchangeManager(linkId)->GetAddress(),
+                                              {},
+                                              {linkId});
     }
 }
 
@@ -1128,21 +1324,56 @@ StaWifiMac::ReceiveAssocResp(Ptr<const WifiMpdu> mpdu, uint8_t linkId)
         UpdateApInfo(assocResp, hdr.GetAddr2(), hdr.GetAddr3(), linkId);
         NS_ASSERT(GetLink(linkId).bssid.has_value() && *GetLink(linkId).bssid == hdr.GetAddr3());
         SetBssid(hdr.GetAddr3(), linkId);
+        SetState(ASSOCIATED);
         if ((GetNLinks() > 1) && assocResp.Get<MultiLinkElement>().has_value())
         {
             // this is an ML setup, trace the setup link
             m_setupCompleted(linkId, hdr.GetAddr3());
             apMldAddress = GetWifiRemoteStationManager(linkId)->GetMldAddress(hdr.GetAddr3());
+            NS_ASSERT(apMldAddress);
+
+            if (const auto& mldCapabilities =
+                    GetWifiRemoteStationManager(linkId)->GetStationMldCapabilities(hdr.GetAddr3());
+                mldCapabilities && mldCapabilities->get().tidToLinkMappingSupport > 0)
+            {
+                // the AP MLD supports TID-to-Link Mapping negotiation, hence we included
+                // TID-to-Link Mapping element(s) in the Association Request.
+                if (assocResp.Get<TidToLinkMapping>().empty())
+                {
+                    // The AP MLD did not include a TID-to-Link Mapping element in the Association
+                    // Response, hence it accepted the mapping, which we can now store.
+                    UpdateTidToLinkMapping(*apMldAddress,
+                                           WifiDirection::DOWNLINK,
+                                           m_dlTidLinkMappingInAssocReq);
+                    UpdateTidToLinkMapping(*apMldAddress,
+                                           WifiDirection::UPLINK,
+                                           m_ulTidLinkMappingInAssocReq);
+
+                    // Apply the negotiated TID-to-Link Mapping (if any) for UL direction
+                    ApplyTidLinkMapping(*apMldAddress, WifiDirection::UPLINK);
+                }
+            }
         }
         else
         {
             m_assocLogger(hdr.GetAddr3());
         }
-        SetState(ASSOCIATED);
         if (!m_linkUp.IsNull())
         {
             m_linkUp();
         }
+    }
+    else
+    {
+        // If the link on which the (Re)Association Request frame was received cannot be
+        // accepted by the AP MLD, the AP MLD shall treat the multi-link (re)setup as a
+        // failure and shall not accept any requested links. If the link on which the
+        // (Re)Association Request frame was received is accepted by the AP MLD, the
+        // multi-link (re)setup is successful. (Sec. 35.3.5.1 of 802.11be D3.1)
+        NS_LOG_DEBUG("association refused");
+        SetState(REFUSED);
+        StartScanning();
+        return;
     }
 
     // if this is an MLD, check if we can setup (other) links
@@ -1151,8 +1382,11 @@ StaWifiMac::ReceiveAssocResp(Ptr<const WifiMpdu> mpdu, uint8_t linkId)
         // create a list of all local Link IDs. IDs are removed as we find a corresponding
         // Per-STA Profile Subelements indicating successful association. Links with
         // remaining IDs are not setup
-        std::list<uint8_t> setupLinks(GetNLinks());
-        std::iota(setupLinks.begin(), setupLinks.end(), 0);
+        std::list<uint8_t> setupLinks;
+        for (const auto& [id, link] : GetLinks())
+        {
+            setupLinks.push_back(id);
+        }
         if (assocResp.GetStatusCode().IsSuccess())
         {
             setupLinks.remove(linkId);
@@ -1161,10 +1395,10 @@ StaWifiMac::ReceiveAssocResp(Ptr<const WifiMpdu> mpdu, uint8_t linkId)
         // if a Multi-Link Element is present, check its content
         if (const auto& mle = assocResp.Get<MultiLinkElement>())
         {
-            NS_ABORT_MSG_IF(!GetLink(linkId).apLinkId.has_value(),
+            NS_ABORT_MSG_IF(!GetLink(linkId).bssid.has_value(),
                             "The link on which the Association Response was received "
                             "is not a link we requested to setup");
-            NS_ABORT_MSG_IF(*GetLink(linkId).apLinkId != mle->GetLinkIdInfo(),
+            NS_ABORT_MSG_IF(linkId != mle->GetLinkIdInfo(),
                             "The link ID of the AP that transmitted the Association "
                             "Response does not match the stored link ID");
             NS_ABORT_MSG_IF(GetWifiRemoteStationManager(linkId)->GetMldAddress(hdr.GetAddr2()) !=
@@ -1177,18 +1411,11 @@ StaWifiMac::ReceiveAssocResp(Ptr<const WifiMpdu> mpdu, uint8_t linkId)
             {
                 auto& perStaProfile = mle->GetPerStaProfile(elem);
                 uint8_t apLinkId = perStaProfile.GetLinkId();
+                auto it = GetLinks().find(apLinkId);
                 uint8_t staLinkid = 0;
-                while (staLinkid < GetNLinks())
-                {
-                    if (GetLink(staLinkid).apLinkId == apLinkId)
-                    {
-                        break;
-                    }
-                    staLinkid++;
-                }
                 std::optional<Mac48Address> bssid;
-                NS_ABORT_MSG_IF(staLinkid == GetNLinks() ||
-                                    !(bssid = GetLink(staLinkid).bssid).has_value(),
+                NS_ABORT_MSG_IF(it == GetLinks().cend() ||
+                                    !(bssid = GetLink((staLinkid = it->first)).bssid).has_value(),
                                 "Setup for AP link ID " << apLinkId << " was not requested");
                 NS_ABORT_MSG_IF(*bssid != perStaProfile.GetStaMacAddress(),
                                 "The BSSID in the Per-STA Profile for link ID "
@@ -1224,28 +1451,14 @@ StaWifiMac::ReceiveAssocResp(Ptr<const WifiMpdu> mpdu, uint8_t linkId)
         // remaining links in setupLinks are not setup and hence must be disabled
         for (const auto& id : setupLinks)
         {
-            GetLink(id).apLinkId = std::nullopt;
             GetLink(id).bssid = std::nullopt;
-            // if at least one link was setup, disable the links that were not setup (if any)
-            if (m_state == ASSOCIATED)
-            {
-                GetLink(id).phy->SetOffMode();
-            }
+            GetLink(id).phy->SetOffMode();
         }
         if (apMldAddress)
         {
             // this is an ML setup, trace the MLD address of the AP (only once)
             m_assocLogger(*apMldAddress);
         }
-    }
-
-    if (m_state == WAIT_ASSOC_RESP)
-    {
-        // if we didn't transition to ASSOCIATED, the request was refused
-        NS_LOG_DEBUG("association refused");
-        SetState(REFUSED);
-        StartScanning();
-        return;
     }
 
     SetPmModeAfterAssociation(linkId);
@@ -1268,9 +1481,9 @@ StaWifiMac::SetPmModeAfterAssociation(uint8_t linkId)
             auto ackDuration =
                 WifiPhy::CalculateTxDuration(psduMap, txVector, GetLink(linkId).phy->GetPhyBand());
 
-            for (uint8_t id = 0; id < GetNLinks(); id++)
+            for (const auto& [id, lnk] : GetLinks())
             {
-                auto& link = GetLink(id);
+                auto& link = GetStaLink(lnk);
 
                 if (!link.bssid)
                 {
@@ -1751,6 +1964,83 @@ StaWifiMac::PhyCapabilitiesChanged()
         SetState(WAIT_ASSOC_RESP);
         SendAssociationRequest(true);
     }
+}
+
+/**
+ * Initial configuration:
+ *
+ *        ┌───┬───┬───┐        ┌────┐       ┌───────┐
+ * Link A │FEM│RSM│CAM│◄──────►│Main├──────►│Channel│
+ *        │   │   │   │        │PHY │       │   A   │
+ *        └───┴───┴───┘        └────┘       └───────┘
+ *
+ *        ┌───┬───┬───┐        ┌────┐       ┌───────┐
+ * Link B │FEM│RSM│CAM│        │Aux │       │Channel│
+ *        │   │   │   │◄──────►│PHY ├──────►│   B   │
+ *        └───┴───┴───┘        └────┘       └───────┘
+ *
+ * A link switching/swapping is notified by the EMLSR Manager and the Channel Access Manager
+ * (CAM) notifies us that a first PHY (i.e., the Main PHY) switches to Channel B. We connect
+ * the Main PHY to the MAC stack B:
+ *
+ *
+ *        ┌───┬───┬───┐        ┌────┐       ┌───────┐
+ * Link A │FEM│RSM│CAM│   ┌───►│Main├───┐   │Channel│
+ *        │   │   │   │   │    │PHY │   │   │   A   │
+ *        └───┴───┴───┘   │    └────┘   │   └───────┘
+ *                        │             │
+ *        ┌───┬───┬───┐   │    ┌────┐   │   ┌───────┐
+ * Link B │FEM│RSM│CAM│◄──┘    │Aux │   └──►│Channel│
+ *        │   │   │   │◄─ ─ ─ ─│PHY ├──────►│   B   │
+ *        └───┴───┴───┘INACTIVE└────┘       └───────┘
+ *
+ * MAC stack B keeps a PHY listener associated with the Aux PHY, even though it is inactive,
+ * meaning that the PHY listener will only notify channel switches (no CCA, no RX).
+ * If the EMLSR Manager requested a link switching, this configuration will be kept until
+ * further requests. If the EMLSR Manager requested a link swapping, link B's CAM will be
+ * notified by its (inactive) PHY listener upon the channel switch performed by the Aux PHY.
+ * In this case, we remove the inactive PHY listener and connect the Aux PHY to MAC stack A:
+ *
+ *        ┌───┬───┬───┐        ┌────┐       ┌───────┐
+ * Link A │FEM│RSM│CAM│◄─┐ ┌──►│Main├───┐   │Channel│
+ *        │   │   │   │  │ │   │PHY │ ┌─┼──►│   A   │
+ *        └───┴───┴───┘  │ │   └────┘ │ │   └───────┘
+ *                       │ │          │ │
+ *        ┌───┬───┬───┐  │ │   ┌────┐ │ │   ┌───────┐
+ * Link B │FEM│RSM│CAM│◄─┼─┘   │Aux │ │ └──►│Channel│
+ *        │   │   │   │  └────►│PHY ├─┘     │   B   │
+ *        └───┴───┴───┘        └────┘       └───────┘
+ */
+
+void
+StaWifiMac::NotifySwitchingEmlsrLink(Ptr<WifiPhy> phy, uint8_t linkId)
+{
+    NS_LOG_FUNCTION(this << phy << linkId);
+
+    // if any link points to the PHY that switched channel, reset the phy pointer
+    for (auto& [id, link] : GetLinks())
+    {
+        // auto& link = GetStaLink(lnk);
+        if (link->phy == phy)
+        {
+            link->phy = nullptr;
+        }
+    }
+
+    auto& newLink = GetLink(linkId);
+    // The MAC stack associated with the new link uses the given PHY
+    newLink.phy = phy;
+    // Setup a PHY listener for the given PHY on the CAM associated with the new link
+    newLink.channelAccessManager->SetupPhyListener(phy);
+    NS_ASSERT(m_emlsrManager);
+    if (m_emlsrManager->GetCamStateReset())
+    {
+        newLink.channelAccessManager->ResetState();
+    }
+    // Disconnect the FEM on the new link from the current PHY
+    newLink.feManager->ResetPhy();
+    // Connect the FEM on the new link to the given PHY
+    newLink.feManager->SetWifiPhy(phy);
 }
 
 void

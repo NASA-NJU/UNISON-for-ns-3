@@ -30,7 +30,8 @@
 
 #include "dsr-main-helper.h"
 
-#include "ns3/dsr-helper.h"
+#include "dsr-helper.h"
+
 #include "ns3/dsr-rcache.h"
 #include "ns3/dsr-routing.h"
 #include "ns3/dsr-rreq-table.h"
@@ -80,7 +81,7 @@ DsrMainHelper::Install(DsrHelper& dsrHelper, NodeContainer nodes)
     NS_LOG_DEBUG("Passed node container");
     delete m_dsrHelper;
     m_dsrHelper = dsrHelper.Copy();
-    for (NodeContainer::Iterator i = nodes.Begin(); i != nodes.End(); ++i)
+    for (auto i = nodes.Begin(); i != nodes.End(); ++i)
     {
         Install(*i);
     }

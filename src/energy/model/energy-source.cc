@@ -22,7 +22,8 @@
  * Modifications made by: Cristiano Tapparello <cristiano.tapparello@rochester.edu>
  */
 
-#include <ns3/energy-source.h>
+#include "energy-source.h"
+
 #include <ns3/log.h>
 
 namespace ns3
@@ -171,8 +172,7 @@ EnergySource::CalculateTotalCurrent()
     {
         double totalHarvestedPower = 0.0;
 
-        std::vector<Ptr<EnergyHarvester>>::const_iterator harvester;
-        for (harvester = m_harvesters.begin(); harvester != m_harvesters.end(); harvester++)
+        for (auto harvester = m_harvesters.begin(); harvester != m_harvesters.end(); harvester++)
         {
             totalHarvestedPower += (*harvester)->GetPower();
         }

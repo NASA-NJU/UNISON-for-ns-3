@@ -1851,7 +1851,7 @@ TcpSocketBase::ReceivedAck(Ptr<Packet> packet, const TcpHeader& tcpHeader)
 
     m_txBuffer->DiscardUpTo(ackNumber, MakeCallback(&TcpRateOps::SkbDelivered, m_rateOps));
 
-    uint32_t currentDelivered =
+    auto currentDelivered =
         static_cast<uint32_t>(m_rateOps->GetConnectionRate().m_delivered - previousDelivered);
     m_tcb->m_lastAckedSackedBytes = currentDelivered;
 
@@ -3272,7 +3272,7 @@ TcpSocketBase::UpdateRttHistory(const SequenceNumber32& seq, uint32_t sz, bool i
     }
     else
     { // This is a retransmit, find in list and mark as re-tx
-        for (std::deque<RttHistory>::iterator i = m_history.begin(); i != m_history.end(); ++i)
+        for (auto i = m_history.begin(); i != m_history.end(); ++i)
         {
             if ((seq >= i->seq) && (seq < (i->seq + SequenceNumber32(i->count))))
             { // Found it
@@ -3291,13 +3291,13 @@ TcpSocketBase::SendPendingData(bool withAck)
     NS_LOG_FUNCTION(this << withAck);
     if (m_txBuffer->Size() == 0)
     {
-        return false; // Nothing to send
+        return 0; // Nothing to send
     }
     if (m_endPoint == nullptr && m_endPoint6 == nullptr)
     {
         NS_LOG_INFO(
             "TcpSocketBase::SendPendingData: No endpoint; m_shutdownSend=" << m_shutdownSend);
-        return false; // Is this the right way to handle this condition?
+        return 0; // Is this the right way to handle this condition?
     }
 
     uint32_t nPacketsSent = 0;
@@ -3370,7 +3370,7 @@ TcpSocketBase::SendPendingData(bool withAck)
 
             uint32_t s = std::min(availableWindow, m_tcb->m_segmentSize);
             // NextSeg () may have further constrained the segment size
-            uint32_t maxSizeToSend = static_cast<uint32_t>(nextHigh - next);
+            auto maxSizeToSend = static_cast<uint32_t>(nextHigh - next);
             s = std::min(s, maxSizeToSend);
 
             // (C.2) If any of the data octets sent in (C.1) are below HighData,
@@ -4317,8 +4317,8 @@ TcpSocketBase::AddOptionSack(TcpHeader& header)
 
     // Append the allowed number of SACK blocks
     Ptr<TcpOptionSack> option = CreateObject<TcpOptionSack>();
-    TcpOptionSack::SackList::iterator i;
-    for (i = sackList.begin(); allowedSackBlocks > 0 && i != sackList.end(); ++i)
+
+    for (auto i = sackList.begin(); allowedSackBlocks > 0 && i != sackList.end(); ++i)
     {
         option->AddSackBlock(*i);
         allowedSackBlocks--;

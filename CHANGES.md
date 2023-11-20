@@ -13,6 +13,36 @@ Note that users who upgrade the simulator across versions, or who work directly 
 
 This file is a best-effort approach to solving this issue; we will do our best but can guarantee that there will be things that fall through the cracks, unfortunately. If you, as a user, can suggest improvements to this file based on your experience, please contribute a patch or drop us a note on ns-developers mailing list.
 
+Changes from ns-3.39 to ns-3.40
+-------------------------------
+
+### New API
+
+* (energy) Added `GenericBatteryModel` to the energy module with working examples, and support for battery presets and cell packs.
+* (lr-wpan) Added the functions to set or get the capability field via bitmap (a 8 bit int).
+* (lr-wpan) Added the possibility to obtain the LQI from a received `MlmeAssociateIndicationParams`.
+* (wifi) Added new helper methods to SpectrumWifiPhyHelper to allow flexible configuration for the mapping between spectrum PHY interfaces and PHY instances.
+* (wifi) Added new trace sources to `WifiPhy`: **OperatingChannelChange**, which is fired when the operating channel of a PHY is changed.
+* (wifi) The attribute `WifiPhy::Antennas` is extended to support up to 8 antennas.
+
+### Changes to existing API
+
+* (core) Removed private class `EmpiricalRandomVariable::ValueCDF` in favor of `std::map`.
+* (lr-wpan) Removed unnecessary bcst filter from `LrWpanMac::PdDataIndication` which also blocked the correct reception of beacon request commands.
+* (wifi) The attribute `WifiPhy::Antennas` is extended to support up to 8 antennas.
+* (wifi) `StaWifiMac::MacState` enum is now public, and `WifiMacHeader` can be subclassed
+
+### Changes to build system
+
+* Added support for Vcpkg and CPM package managers
+
+### Changed behavior
+
+* (core) `EmpiricalRandomVariable` CDF pairs can now be added in any order.
+* (core) `EmpiricalRandomVariable` no longer requires that a CDF pair with a range value exactly equal to 1.0 be added (see issue #922).
+* (wifi) Upon ML setup, a non-AP MLD updates the IDs of the setup links to match the IDs used by the AP MLD.
+* (wifi) Attribute **TrackSignalsFromInactiveInterfaces** in SpectrumWifiPhy has been defaulted to be enabled.
+
 Changes from ns-3.38 to ns-3.39
 -------------------------------
 

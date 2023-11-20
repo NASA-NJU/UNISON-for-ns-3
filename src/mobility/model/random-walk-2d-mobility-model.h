@@ -21,12 +21,12 @@
 
 #include "constant-velocity-helper.h"
 #include "mobility-model.h"
+#include "rectangle.h"
 
 #include "ns3/event-id.h"
 #include "ns3/nstime.h"
 #include "ns3/object.h"
 #include "ns3/random-variable-stream.h"
-#include "ns3/rectangle.h"
 
 namespace ns3
 {
@@ -42,6 +42,11 @@ namespace ns3
  * of the model, we rebound on the boundary with a reflexive angle
  * and speed. This model is often identified as a brownian motion
  * model.
+ *
+ * The Direction random variable is used for any point strictly
+ * inside the boundaries. The points on the boundary have their
+ * direction chosen randomly, without considering the Direction
+ * Attribute.
  */
 class RandomWalk2dMobilityModel : public MobilityModel
 {

@@ -38,9 +38,9 @@ previous versions.
 The following list contains the set of clang-format versions that are verified
 to produce consistent output among themselves.
 
-* clang-format-14
-* clang-format-15
 * clang-format-16
+* clang-format-15
+* clang-format-14
 
 Integration with IDEs
 =====================
@@ -121,13 +121,14 @@ We recommend running this script over your newly introduced C++ files prior to s
 as a Merge Request.
 
 The script has multiple modes of operation. By default, the script checks if
-source code files are well formatted and text files do not have trailing whitespace
+source code files are well formatted, if there are no #include headers from the same
+module with the "ns3/" prefix, and text files do not have trailing whitespace
 nor tabs. The process returns a zero exit code if all files adhere to these rules.
 If there are files that do not comply with the rules, the process returns a non-zero
 exit code and lists the respective files. This mode is useful for developers editing
 their code and for the GitLab CI/CD pipeline to check if the codebase is well formatted.
 All checks are enabled by default. Users can disable specific checks using the corresponding
-flags: ``--no-formatting``, ``--no-whitespace`` and ``--no-tabs``.
+flags: ``--no-include-prefixes``, ``--no-formatting``, ``--no-whitespace`` and ``--no-tabs``.
 
 Additional information about the formatting issues detected by the script can be enabled
 by adding the ``-v, --verbose`` flag.
@@ -151,17 +152,13 @@ For quick-reference, the most used commands are listed below:
 .. sourcecode:: console
 
   # Entire codebase (using paths relative to the ns-3 main directory)
-  ./utils/check-style-clang-format.py [--fix] [--verbose] [--no-formatting] [--no-whitespace] [--no-tabs] .
+  ./utils/check-style-clang-format.py --fix .
 
   # Entire codebase (using absolute paths)
-  /path/to/utils/check-style-clang-format.py [--fix] [--verbose] [--no-formatting] [--no-whitespace] [--no-tabs] /path/to/ns3
+  /path/to/utils/check-style-clang-format.py --fix /path/to/ns3
 
-  # Specific directory
-  /path/to/utils/check-style-clang-format.py [--fix] [--verbose] [--no-formatting] [--no-whitespace] [--no-tabs] absolute_or_relative/path/to/directory
-
-  # Individual file
-  /path/to/utils/check-style-clang-format.py [--fix] [--verbose] [--no-formatting] [--no-whitespace] [--no-tabs] absolute_or_relative/path/to/file
-
+  # Specific directory or file
+  /path/to/utils/check-style-clang-format.py --fix absolute_or_relative/path/to/directory_or_file
 
 Clang-tidy
 **********
@@ -799,6 +796,29 @@ file (``*.cc``).
   // Or as constexpr (in implementation files)
   constexpr uint8_t STATUS_PDU{0};
 
+When declaring variables that are easily deducible from context, prefer to declare them
+with ``auto`` instead of repeating the type name. Not only does this improve code readability,
+by making lines shorter, but it also facilitates future code refactoring.
+When declaring variables, prefer to use direct-initialization, to avoid repeating the type name.
+
+.. sourcecode:: cpp
+
+  // Avoid repeating the type name when declaring iterators or pointers, and casting variables
+  std::map<uint32_t, std::string>::const_iterator it = myMap.find(key);
+  int* ptr = new int[10];
+  uint8_t m = static_cast<uint8_t>(97 + (i % 26));
+
+  // Prefer to declare them with auto
+  auto it = myMap.find(key);
+  auto* ptr = new int[10];
+  auto m = static_cast<uint8_t>(97 + (i % 26));
+
+  // Avoid splitting the declaration and initialization of variables
+  Ipv4Address ipv4Address = Ipv4Address("192.168.0.1")
+
+  // Prefer to use direct-initialization
+  Ipv4Address ipv4Address("192.168.0.1")
+
 Comments
 ========
 
@@ -1200,6 +1220,125 @@ the |ns3| smart pointer class ``Ptr`` should be used in boolean comparisons as f
 
   NS_TEST...  (p, nullptr, ...)      NS_TEST...  (p, nullptr, ...)
 
+Code performance tips
+=====================
+
+While developing code, consider the following tips to improve the code's performance.
+Some tips are general recommendations, but are not strictly enforced.
+Other tips are enforced by clang-tidy. Please refer to the clang-tidy section below
+for more details.
+
+- Prefer to use ``.emplace_back()`` over ``.push_back()`` to optimize performance.
+
+- When initializing STL containers (e.g., ``std::vector``) with known size,
+  reserve memory to store all items, before pushing them in a loop.
+
+  .. sourcecode:: cpp
+
+    constexpr int N_ITEMS = 5;
+
+    std::vector<int> myVector;
+    myVector.reserve(N_ITEMS); // Reserve memory to store all items
+
+    for (int i = 0; i < N_ITEMS; i++)
+    {
+        myVector.emplace_back(i);
+    }
+
+- Prefer to initialize STL containers (e.g., ``std::vector``, ``std::map``, etc.)
+  directly through the constructor or with a braced-init-list, instead of pushing
+  elements one-by-one.
+
+  .. sourcecode:: cpp
+
+    // Prefer to initialize containers directly
+    std::vector<int> myVector1{1, 2, 3};
+    std::vector<int> myVector2(myVector1.begin(), myVector1.end());
+    std::vector<bool> myVector3(myVector2.size(), true);
+
+    // Avoid pushing elements one-by-one
+    std::vector<int> myVector1;
+    myVector1.reserve(3);
+    myVector1.emplace_back(1);
+    myVector1.emplace_back(2);
+    myVector1.emplace_back(3);
+
+    std::vector<int> myVector2;
+    myVector2.reserve(myVector1.size());
+    for (const auto& v : myVector1)
+    {
+        myVector2.emplace_back(v);
+    }
+
+    std::vector<bool> myVector3;
+    myVector3.reserve(myVector1.size());
+    for (std::size_t i = 0; i < myVector1.size(); i++)
+    {
+        myVector3.emplace_back(true);
+    }
+
+- When looping through containers, prefer to use const-ref syntax over copying
+  elements.
+
+  .. sourcecode:: cpp
+
+    std::vector<int> myVector{1, 2, 3};
+
+    for (const auto& v : myVector) { ... }  // OK
+    for (auto v : myVector) { ... }         // Avoid
+
+- Prefer to use the ``empty()`` function of STL containers (e.g., ``std::vector``),
+  instead of the condition ``size() > 0``, to avoid unnecessarily calculating the
+  size of the container.
+
+- Avoid unnecessary calls to the functions ``.c_str()`` and ``.data()`` of
+  ``std::string``.
+
+- Avoid unnecessarily dereferencing std smart pointers (``std::shared_ptr``,
+  ``std::unique_ptr``) with calls to their member function ``.get()``.
+  Prefer to use the std smart pointer directly where needed.
+
+  .. sourcecode:: cpp
+
+    auto ptr = std::make_shared<Node>();
+
+    // OK
+    if (ptr) { ... }
+
+    // Avoid
+    if (ptr.get()) { ... }
+
+- Consider caching frequently-used results (especially expensive calculations,
+  such as mathematical functions) in a temporary variable, instead of calculating
+  them in every loop.
+
+  .. sourcecode:: cpp
+
+    // Prefer to cache intermediate results
+    const double sinTheta = std::sin(theta);
+    const double cosTheta = std::cos(theta);
+
+    for (uint8_t i = 0; i < NUM_VALUES; i++)
+    {
+        double power = std::pow(2, i);
+
+        array1[i] = (power * sinTheta) + cosTheta;
+        array2[i] = (power * cosTheta) + sinTheta;
+    }
+
+    // Avoid repeating calculations
+    for (uint8_t i = 0; i < NUM_VALUES; i++)
+    {
+        array1[i] = (std::pow(2, i) * std::sin(theta)) + std::cos(theta);
+        array2[i] = (std::pow(2, i) * std::cos(theta)) + std::sin(theta);
+    }
+
+- Do not include inline implementations in header files; put all
+  implementation in a ``.cc`` file (unless implementation in the header file
+  brings demonstrable and significant performance improvement).
+
+- Avoid declaring trivial destructors, to optimize performance.
+
 C++ standard
 ============
 
@@ -1249,10 +1388,6 @@ Miscellaneous items
 
     void MySub(const T& t);  // OK
     void MySub(T const& t);  // Not OK
-
-- Do not include inline implementations in header files; put all
-  implementation in a ``.cc`` file (unless implementation in the header file
-  brings demonstrable and significant performance improvement).
 
 - Do not use ``NULL``, ``nil`` or ``0`` constants; use ``nullptr`` (improves portability)
 
@@ -1315,12 +1450,13 @@ Miscellaneous items
 Clang-tidy rules
 ================
 
-Please refer to the ``.clang-tidy`` file in the |ns3| root directory for the full list
+Please refer to the ``.clang-tidy`` file in the |ns3| main directory for the full list
 of rules that should be observed while developing code.
 
-- Explicitly mark inherited functions with the ``override`` specifier.
+Some rules are explained in the corresponding sections above. The remaining rules are
+explained here.
 
-- Prefer to use ``.emplace_back()`` over ``.push_back()`` to optimize performance.
+- Explicitly mark inherited functions with the ``override`` specifier.
 
 - When creating STL smart pointers, prefer to use ``std::make_shared`` or
   ``std::make_unique``, instead of creating the smart pointer with ``new``.
@@ -1340,69 +1476,6 @@ of rules that should be observed while developing code.
     for (const auto& v : myVector) { ... }             // Prefer
     for (int i = 0; i < myVector.size(); i++) { ... }  // Avoid
 
-- When looping through containers, prefer to use const-ref syntax over copying
-  elements.
-
-  .. sourcecode:: cpp
-
-    std::vector<int> myVector{1, 2, 3};
-
-    for (const auto& v : myVector) { ... }  // OK
-    for (auto v : myVector) { ... }         // Avoid
-
-- When initializing ``std::vector`` containers with known size, reserve memory to
-  store all items, before pushing them in a loop.
-
-  .. sourcecode:: cpp
-
-    constexpr int N_ITEMS = 5;
-
-    std::vector<int> myVector;
-    myVector.reserve(N_ITEMS); // Reserve memory to store all items
-
-    for (int i = 0; i < N_ITEMS; i++)
-    {
-        myVector.emplace_back(i);
-    }
-
-- Prefer to initialize STL containers (e.g., ``std::vector``, ``std::map``, etc.)
-  directly with a braced-init-list, instead of pushing elements one-by-one.
-
-  .. sourcecode:: cpp
-
-    // OK
-    std::vector<int> myVector{1, 2, 3};
-
-    // Avoid
-    std::vector<int> myVector;
-    myVector.reserve(3);
-    myVector.emplace_back(1);
-    myVector.emplace_back(2);
-    myVector.emplace_back(3);
-
-- Prefer to use the ``empty()`` function of STL containers (e.g., ``std::vector``),
-  instead of the condition ``size() > 0``, to avoid unnecessarily calculating the
-  size of the container.
-
-- Avoid unnecessary calls to the functions ``.c_str()`` and ``.data()`` of
-  ``std::string``.
-
-- Avoid unnecessarily dereferencing std smart pointers (``std::shared_ptr``,
-  ``std::unique_ptr``) with calls to their member function ``.get()``.
-  Prefer to use the std smart pointer directly where needed.
-
-  .. sourcecode:: cpp
-
-    auto ptr = std::make_shared<Node>();
-
-    // OK
-    if (ptr) { ... }
-
-    // Avoid
-    if (ptr.get()) { ... }
-
-- Avoid declaring trivial destructors, to optimize performance.
-
 - Avoid accessing class static functions and members through objects.
   Instead, prefer to access them through the class.
 
@@ -1415,5 +1488,34 @@ of rules that should be observed while developing code.
     MyClass myClass;
     MyClass.StaticFunction();
 
+- Prefer using type traits in short form ``traits_t<...>`` and ``traits_v<...>``,
+  instead of the long form ``traits<...>::type`` and ``traits<...>::value``, respectively.
+
+  .. sourcecode:: cpp
+
+    // Prefer using the shorter version of type traits
+    std::is_same_v<int, float>
+    std::is_integral_v<T>
+    std::enable_if_t<std::is_integral_v<T>, Time>
+
+    // Avoid the longer form of type traits
+    std::is_same<int, float>::value
+    std::is_integral<T>::value
+    std::enable_if<std::is_integral<T>::value, Time>::type
+
+- Avoid using integer values (``1`` or ``0``) to represent boolean variables
+  (``true`` or ``false``), to improve code readability and avoid implicit conversions.
+
 - Prefer to use ``static_assert()`` over ``NS_ASSERT()`` when conditions can be
   evaluated at compile-time.
+
+- Prefer using transparent functors to non-transparent ones, to avoid repeating
+  the type name. This improves readability and avoids errors when refactoring code.
+
+  .. sourcecode:: cpp
+
+    // Prefer using transparent functors
+    std::map<MyClass, int, std::less<>> myMap;
+
+    // Avoid repeating the type name "MyClass" in std::less<>
+    std::map<MyClass, int, std::less<MyClass>> myMap;

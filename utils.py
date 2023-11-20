@@ -5,7 +5,7 @@
 # should be enabled
 
 import os
-import sys
+
 
 def get_list_from_file(file_path, list_name):
     '''Looks for a Python list called list_name in the file specified
@@ -20,7 +20,7 @@ def get_list_from_file(file_path, list_name):
 
     # Read in the file if it exists.
     if os.path.exists(file_path):
-        with open(file_path, "r") as file_in:
+        with open(file_path, "r", encoding="utf-8") as file_in:
 
             # Look for the list.
             list_string = ""
@@ -58,7 +58,7 @@ def get_bool_from_file(file_path, bool_name, value_if_missing):
 
     # Read in the file if it exists.
     if os.path.exists(file_path):
-        with open(file_path, "r") as file_in:
+        with open(file_path, "r", encoding="utf-8") as file_in:
 
             # Look for the boolean variable.
             bool_found = False
@@ -121,4 +121,3 @@ def read_config_file():
     tests_enabled = get_bool_from_file(dot_ns3rc_path, 'tests_enabled', value_if_missing)
 
     return (config_file_exists, modules_enabled, examples_enabled, tests_enabled)
-

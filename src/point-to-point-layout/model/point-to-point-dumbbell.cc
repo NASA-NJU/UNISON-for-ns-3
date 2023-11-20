@@ -17,18 +17,18 @@
 
 // Implement an object to create a dumbbell topology.
 
-#include <cmath>
-#include <iostream>
-#include <sstream>
+#include "point-to-point-dumbbell.h"
 
-// ns3 includes
 #include "ns3/constant-position-mobility-model.h"
 #include "ns3/ipv6-address-generator.h"
 #include "ns3/log.h"
 #include "ns3/node-list.h"
-#include "ns3/point-to-point-dumbbell.h"
 #include "ns3/point-to-point-net-device.h"
 #include "ns3/vector.h"
+
+#include <cmath>
+#include <iostream>
+#include <sstream>
 
 namespace ns3
 {
@@ -191,7 +191,7 @@ PointToPointDumbbellHelper::AssignIpv6Addresses(Ipv6Address addrBase, Ipv6Prefix
         ndc.Add(m_leftLeafDevices.Get(i));
         ndc.Add(m_leftRouterDevices.Get(i));
         Ipv6InterfaceContainer ifc = addressHelper.Assign(ndc);
-        Ipv6InterfaceContainer::Iterator it = ifc.Begin();
+        auto it = ifc.Begin();
         m_leftLeafInterfaces6.Add((*it).first, (*it).second);
         it++;
         m_leftRouterInterfaces6.Add((*it).first, (*it).second);
@@ -207,7 +207,7 @@ PointToPointDumbbellHelper::AssignIpv6Addresses(Ipv6Address addrBase, Ipv6Prefix
         ndc.Add(m_rightLeafDevices.Get(i));
         ndc.Add(m_rightRouterDevices.Get(i));
         Ipv6InterfaceContainer ifc = addressHelper.Assign(ndc);
-        Ipv6InterfaceContainer::Iterator it = ifc.Begin();
+        auto it = ifc.Begin();
         m_rightLeafInterfaces6.Add((*it).first, (*it).second);
         it++;
         m_rightRouterInterfaces6.Add((*it).first, (*it).second);

@@ -75,9 +75,9 @@ static uint32_t g_maxSize = 0; //!< maximum data size (used for allocation)
 ByteTagListDataFreeList::~ByteTagListDataFreeList()
 {
     NS_LOG_FUNCTION(this);
-    for (ByteTagListDataFreeList::iterator i = begin(); i != end(); i++)
+    for (auto i = begin(); i != end(); i++)
     {
-        uint8_t* buffer = (uint8_t*)(*i);
+        auto buffer = (uint8_t*)(*i);
         delete[] buffer;
     }
 }
@@ -374,11 +374,11 @@ ByteTagList::Allocate(uint32_t size)
             data->dirty = 0;
             return data;
         }
-        uint8_t* buffer = (uint8_t*)data;
+        auto buffer = (uint8_t*)data;
         delete[] buffer;
     }
-    uint8_t* buffer = new uint8_t[std::max(size, g_maxSize) + sizeof(ByteTagListData) - 4];
-    ByteTagListData* data = (ByteTagListData*)buffer;
+    auto buffer = new uint8_t[std::max(size, g_maxSize) + sizeof(ByteTagListData) - 4];
+    auto data = (ByteTagListData*)buffer;
     data->count = 1;
     data->size = size;
     data->dirty = 0;
@@ -399,7 +399,7 @@ ByteTagList::Deallocate(ByteTagListData* data)
     {
         if (g_freeList.size() > FREE_LIST_SIZE || data->size < g_maxSize)
         {
-            uint8_t* buffer = (uint8_t*)data;
+            auto buffer = (uint8_t*)data;
             delete[] buffer;
         }
         else

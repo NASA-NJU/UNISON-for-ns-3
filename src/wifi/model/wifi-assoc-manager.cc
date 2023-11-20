@@ -22,6 +22,9 @@
 
 #include "sta-wifi-mac.h"
 
+#include "ns3/attribute-container.h"
+#include "ns3/eht-configuration.h"
+#include "ns3/enum.h"
 #include "ns3/log.h"
 
 #include <algorithm>
@@ -65,7 +68,17 @@ WifiAssocManager::ApInfoCompare::operator()(const StaWifiMac::ApInfo& lhs,
 TypeId
 WifiAssocManager::GetTypeId()
 {
-    static TypeId tid = TypeId("ns3::WifiAssocManager").SetParent<Object>().SetGroupName("Wifi");
+    static TypeId tid =
+        TypeId("ns3::WifiAssocManager")
+            .SetParent<Object>()
+            .SetGroupName("Wifi")
+            .AddAttribute(
+                "AllowedLinks",
+                "Only Beacon and Probe Response frames received on a link belonging to the given "
+                "set are processed. An empty set is equivalent to the set of all links.",
+                AttributeContainerValue<UintegerValue>(),
+                MakeAttributeContainerAccessor<UintegerValue>(&WifiAssocManager::m_allowedLinks),
+                MakeAttributeContainerChecker<UintegerValue>(MakeUintegerChecker<uint8_t>()));
     return tid;
 }
 
@@ -164,10 +177,12 @@ WifiAssocManager::StartScanning(WifiScanParams&& scanParams)
     NS_LOG_FUNCTION(this);
     m_scanParams = std::move(scanParams);
 
-    // remove stored AP information not matching the scanning parameters
+    // remove stored AP information not matching the scanning parameters or related to APs
+    // that are not reachable on an allowed link
     for (auto ap = m_apList.begin(); ap != m_apList.end();)
     {
-        if (!MatchScanParams(*ap))
+        if (!MatchScanParams(*ap) ||
+            (!m_allowedLinks.empty() && m_allowedLinks.count(ap->m_linkId) == 0))
         {
             // remove AP info from list
             m_apListIt.erase(ap->m_bssid);
@@ -187,7 +202,8 @@ WifiAssocManager::NotifyApInfo(const StaWifiMac::ApInfo&& apInfo)
 {
     NS_LOG_FUNCTION(this << apInfo);
 
-    if (!CanBeInserted(apInfo) || !MatchScanParams(apInfo))
+    if (!CanBeInserted(apInfo) || !MatchScanParams(apInfo) ||
+        (!m_allowedLinks.empty() && m_allowedLinks.count(apInfo.m_linkId) == 0))
     {
         return;
     }
@@ -234,10 +250,10 @@ WifiAssocManager::ScanningTimeout()
     m_mac->ScanningTimeout(std::move(bestAp));
 }
 
-std::list<std::pair<uint8_t, uint8_t>>&
+std::list<StaWifiMac::ApInfo::SetupLinksInfo>&
 WifiAssocManager::GetSetupLinks(const StaWifiMac::ApInfo& apInfo)
 {
-    return const_cast<std::list<std::pair<uint8_t, uint8_t>>&>(apInfo.m_setupLinks);
+    return const_cast<std::list<StaWifiMac::ApInfo::SetupLinksInfo>&>(apInfo.m_setupLinks);
 }
 
 bool
@@ -283,6 +299,26 @@ WifiAssocManager::CanSetupMultiLink(OptMleConstRef& mle, OptRnrConstRef& rnr)
     {
         NS_LOG_DEBUG("No Link ID Info subfield in the Multi-Link Element");
         return false;
+    }
+
+    if (const auto& mldCapabilities = mle->get().GetCommonInfoBasic().m_mldCapabilities)
+    {
+        auto ehtConfig = m_mac->GetEhtConfiguration();
+        NS_ASSERT(ehtConfig);
+        EnumValue negSupport;
+        ehtConfig->GetAttributeFailSafe("TidToLinkMappingNegSupport", negSupport);
+
+        // A non-AP MLD that performs multi-link (re)setup on at least two links with an AP MLD
+        // that sets the TID-To-Link Mapping Negotiation Support subfield of the MLD Capabilities
+        // field of the Basic Multi-Link element to a nonzero value shall support TID-to-link
+        // mapping negotiation with the TID-To-Link Mapping Negotiation Support subfield of the
+        // MLD Capabilities field of the Basic Multi-Link element it transmits to at least 1.
+        // (Sec. 35.3.7.1.1 of 802.11be D3.1)
+        if (mldCapabilities->tidToLinkMappingSupport > 0 && negSupport.Get() == 0)
+        {
+            NS_LOG_DEBUG("AP MLD supports TID-to-Link Mapping negotiation, while we don't");
+            return false;
+        }
     }
 
     return true;

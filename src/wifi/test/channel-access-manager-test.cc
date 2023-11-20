@@ -650,7 +650,7 @@ ChannelAccessManagerTest<TxopType>::EndTest()
 {
     Simulator::Run();
 
-    for (typename TxopTests::const_iterator i = m_txop.begin(); i != m_txop.end(); i++)
+    for (auto i = m_txop.begin(); i != m_txop.end(); i++)
     {
         Ptr<TxopTest<TxopType>> state = *i;
         NS_TEST_EXPECT_MSG_EQ(state->m_expectedGrants.empty(), true, "Have no expected grants");
@@ -836,6 +836,7 @@ ChannelAccessManagerTest<TxopType>::AddSwitchingEvt(uint64_t at, uint64_t durati
     Simulator::Schedule(MicroSeconds(at) - Now(),
                         &ChannelAccessManager::NotifySwitchingStartNow,
                         m_ChannelAccessManager,
+                        nullptr,
                         MicroSeconds(duration));
 }
 

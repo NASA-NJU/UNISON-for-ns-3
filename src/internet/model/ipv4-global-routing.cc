@@ -87,7 +87,7 @@ void
 Ipv4GlobalRouting::AddHostRouteTo(Ipv4Address dest, Ipv4Address nextHop, uint32_t interface)
 {
     NS_LOG_FUNCTION(this << dest << nextHop << interface);
-    Ipv4RoutingTableEntry* route = new Ipv4RoutingTableEntry();
+    auto route = new Ipv4RoutingTableEntry();
     *route = Ipv4RoutingTableEntry::CreateHostRouteTo(dest, nextHop, interface);
     m_hostRoutes.push_back(route);
 }
@@ -96,7 +96,7 @@ void
 Ipv4GlobalRouting::AddHostRouteTo(Ipv4Address dest, uint32_t interface)
 {
     NS_LOG_FUNCTION(this << dest << interface);
-    Ipv4RoutingTableEntry* route = new Ipv4RoutingTableEntry();
+    auto route = new Ipv4RoutingTableEntry();
     *route = Ipv4RoutingTableEntry::CreateHostRouteTo(dest, interface);
     m_hostRoutes.push_back(route);
 }
@@ -108,7 +108,7 @@ Ipv4GlobalRouting::AddNetworkRouteTo(Ipv4Address network,
                                      uint32_t interface)
 {
     NS_LOG_FUNCTION(this << network << networkMask << nextHop << interface);
-    Ipv4RoutingTableEntry* route = new Ipv4RoutingTableEntry();
+    auto route = new Ipv4RoutingTableEntry();
     *route = Ipv4RoutingTableEntry::CreateNetworkRouteTo(network, networkMask, nextHop, interface);
     m_networkRoutes.push_back(route);
 }
@@ -117,7 +117,7 @@ void
 Ipv4GlobalRouting::AddNetworkRouteTo(Ipv4Address network, Ipv4Mask networkMask, uint32_t interface)
 {
     NS_LOG_FUNCTION(this << network << networkMask << interface);
-    Ipv4RoutingTableEntry* route = new Ipv4RoutingTableEntry();
+    auto route = new Ipv4RoutingTableEntry();
     *route = Ipv4RoutingTableEntry::CreateNetworkRouteTo(network, networkMask, interface);
     m_networkRoutes.push_back(route);
 }
@@ -129,7 +129,7 @@ Ipv4GlobalRouting::AddASExternalRouteTo(Ipv4Address network,
                                         uint32_t interface)
 {
     NS_LOG_FUNCTION(this << network << networkMask << nextHop << interface);
-    Ipv4RoutingTableEntry* route = new Ipv4RoutingTableEntry();
+    auto route = new Ipv4RoutingTableEntry();
     *route = Ipv4RoutingTableEntry::CreateNetworkRouteTo(network, networkMask, nextHop, interface);
     m_ASexternalRoutes.push_back(route);
 }
@@ -145,7 +145,7 @@ Ipv4GlobalRouting::LookupGlobal(Ipv4Address dest, uint32_t flowHash, Ptr<NetDevi
     RouteVec_t allRoutes;
 
     NS_LOG_LOGIC("Number of m_hostRoutes = " << m_hostRoutes.size());
-    for (HostRoutesCI i = m_hostRoutes.begin(); i != m_hostRoutes.end(); i++)
+    for (auto i = m_hostRoutes.begin(); i != m_hostRoutes.end(); i++)
     {
         NS_ASSERT((*i)->IsHost());
         if ((*i)->GetDest() == dest)
@@ -165,7 +165,7 @@ Ipv4GlobalRouting::LookupGlobal(Ipv4Address dest, uint32_t flowHash, Ptr<NetDevi
     if (allRoutes.empty()) // if no host route is found
     {
         NS_LOG_LOGIC("Number of m_networkRoutes" << m_networkRoutes.size());
-        for (NetworkRoutesI j = m_networkRoutes.begin(); j != m_networkRoutes.end(); j++)
+        for (auto j = m_networkRoutes.begin(); j != m_networkRoutes.end(); j++)
         {
             Ipv4Mask mask = (*j)->GetDestNetworkMask();
             Ipv4Address entry = (*j)->GetDestNetwork();
@@ -186,7 +186,7 @@ Ipv4GlobalRouting::LookupGlobal(Ipv4Address dest, uint32_t flowHash, Ptr<NetDevi
     }
     if (allRoutes.empty()) // consider external if no host/network found
     {
-        for (ASExternalRoutesI k = m_ASexternalRoutes.begin(); k != m_ASexternalRoutes.end(); k++)
+        for (auto k = m_ASexternalRoutes.begin(); k != m_ASexternalRoutes.end(); k++)
         {
             Ipv4Mask mask = (*k)->GetDestNetworkMask();
             Ipv4Address entry = (*k)->GetDestNetwork();
@@ -259,7 +259,7 @@ Ipv4GlobalRouting::GetRoute(uint32_t index) const
     if (index < m_hostRoutes.size())
     {
         uint32_t tmp = 0;
-        for (HostRoutesCI i = m_hostRoutes.begin(); i != m_hostRoutes.end(); i++)
+        for (auto i = m_hostRoutes.begin(); i != m_hostRoutes.end(); i++)
         {
             if (tmp == index)
             {
@@ -272,7 +272,7 @@ Ipv4GlobalRouting::GetRoute(uint32_t index) const
     uint32_t tmp = 0;
     if (index < m_networkRoutes.size())
     {
-        for (NetworkRoutesCI j = m_networkRoutes.begin(); j != m_networkRoutes.end(); j++)
+        for (auto j = m_networkRoutes.begin(); j != m_networkRoutes.end(); j++)
         {
             if (tmp == index)
             {
@@ -283,7 +283,7 @@ Ipv4GlobalRouting::GetRoute(uint32_t index) const
     }
     index -= m_networkRoutes.size();
     tmp = 0;
-    for (ASExternalRoutesCI k = m_ASexternalRoutes.begin(); k != m_ASexternalRoutes.end(); k++)
+    for (auto k = m_ASexternalRoutes.begin(); k != m_ASexternalRoutes.end(); k++)
     {
         if (tmp == index)
         {
@@ -303,7 +303,7 @@ Ipv4GlobalRouting::RemoveRoute(uint32_t index)
     if (index < m_hostRoutes.size())
     {
         uint32_t tmp = 0;
-        for (HostRoutesI i = m_hostRoutes.begin(); i != m_hostRoutes.end(); i++)
+        for (auto i = m_hostRoutes.begin(); i != m_hostRoutes.end(); i++)
         {
             if (tmp == index)
             {
@@ -319,7 +319,7 @@ Ipv4GlobalRouting::RemoveRoute(uint32_t index)
     }
     index -= m_hostRoutes.size();
     uint32_t tmp = 0;
-    for (NetworkRoutesI j = m_networkRoutes.begin(); j != m_networkRoutes.end(); j++)
+    for (auto j = m_networkRoutes.begin(); j != m_networkRoutes.end(); j++)
     {
         if (tmp == index)
         {
@@ -334,7 +334,7 @@ Ipv4GlobalRouting::RemoveRoute(uint32_t index)
     }
     index -= m_networkRoutes.size();
     tmp = 0;
-    for (ASExternalRoutesI k = m_ASexternalRoutes.begin(); k != m_ASexternalRoutes.end(); k++)
+    for (auto k = m_ASexternalRoutes.begin(); k != m_ASexternalRoutes.end(); k++)
     {
         if (tmp == index)
         {
@@ -362,16 +362,15 @@ void
 Ipv4GlobalRouting::DoDispose()
 {
     NS_LOG_FUNCTION(this);
-    for (HostRoutesI i = m_hostRoutes.begin(); i != m_hostRoutes.end(); i = m_hostRoutes.erase(i))
+    for (auto i = m_hostRoutes.begin(); i != m_hostRoutes.end(); i = m_hostRoutes.erase(i))
     {
         delete (*i);
     }
-    for (NetworkRoutesI j = m_networkRoutes.begin(); j != m_networkRoutes.end();
-         j = m_networkRoutes.erase(j))
+    for (auto j = m_networkRoutes.begin(); j != m_networkRoutes.end(); j = m_networkRoutes.erase(j))
     {
         delete (*j);
     }
-    for (ASExternalRoutesI l = m_ASexternalRoutes.begin(); l != m_ASexternalRoutes.end();
+    for (auto l = m_ASexternalRoutes.begin(); l != m_ASexternalRoutes.end();
          l = m_ASexternalRoutes.erase(l))
     {
         delete (*l);

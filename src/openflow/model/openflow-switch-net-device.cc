@@ -14,7 +14,6 @@
  *
  * Author: Blake Hurd  <naimorai@gmail.com>
  */
-#ifdef NS3_OPENFLOW
 
 #include "openflow-switch-net-device.h"
 
@@ -27,6 +26,19 @@ namespace ns3
 NS_LOG_COMPONENT_DEFINE("OpenFlowSwitchNetDevice");
 
 NS_OBJECT_ENSURE_REGISTERED(OpenFlowSwitchNetDevice);
+
+/**
+ * Generate an ID.
+ *
+ * \return Generated ID.
+ */
+static uint64_t
+GenerateId()
+{
+    uint8_t ea[ETH_ADDR_LEN];
+    eth_addr_random(ea);
+    return eth_addr_to_uint64(ea);
+}
 
 const char*
 OpenFlowSwitchNetDevice::GetManufacturerDescription()
@@ -50,14 +62,6 @@ const char*
 OpenFlowSwitchNetDevice::GetSerialNumber()
 {
     return "N/A";
-}
-
-static uint64_t
-GenerateId()
-{
-    uint8_t ea[ETH_ADDR_LEN];
-    eth_addr_random(ea);
-    return eth_addr_to_uint64(ea);
 }
 
 TypeId
@@ -133,7 +137,7 @@ OpenFlowSwitchNetDevice::DoDispose()
 {
     NS_LOG_FUNCTION_NOARGS();
 
-    for (Ports_t::iterator b = m_ports.begin(), e = m_ports.end(); b != e; b++)
+    for (auto b = m_ports.begin(), e = m_ports.end(); b != e; b++)
     {
         SendPortStatus(*b, OFPPR_DELETE);
         b->netdev = nullptr;
@@ -1162,6 +1166,49 @@ OpenFlowSwitchNetDevice::RunThroughVPortTable(uint32_t packet_uid, int port, uin
 }
 
 int
+OpenFlowSwitchNetDevice::ReceivePortMod(const void* msg)
+{
+    ofp_port_mod* opm = (ofp_port_mod*)msg;
+
+    int port = opm->port_no; // ntohs(opm->port_no);
+    if (port < DP_MAX_PORTS)
+    {
+        ofi::Port& p = m_ports[port];
+
+        // Make sure the port id hasn't changed since this was sent
+        Mac48Address hw_addr = Mac48Address();
+        hw_addr.CopyFrom(opm->hw_addr);
+        if (p.netdev->GetAddress() != hw_addr)
+        {
+            return 0;
+        }
+
+        if (opm->mask)
+        {
+            uint32_t config_mask = ntohl(opm->mask);
+            p.config &= ~config_mask;
+            p.config |= ntohl(opm->config) & config_mask;
+        }
+
+        if (opm->mask & htonl(OFPPC_PORT_DOWN))
+        {
+            if ((opm->config & htonl(OFPPC_PORT_DOWN)) && (p.config & OFPPC_PORT_DOWN) == 0)
+            {
+                p.config |= OFPPC_PORT_DOWN;
+                /// \todo Possibly disable the Port's Net Device via the appropriate interface.
+            }
+            else if ((opm->config & htonl(OFPPC_PORT_DOWN)) == 0 && (p.config & OFPPC_PORT_DOWN))
+            {
+                p.config &= ~OFPPC_PORT_DOWN;
+                /// \todo Possibly enable the Port's Net Device via the appropriate interface.
+            }
+        }
+    }
+
+    return 0;
+}
+
+int
 OpenFlowSwitchNetDevice::ReceiveFeaturesRequest(const void* msg)
 {
     SendFeaturesReply();
@@ -1245,49 +1292,6 @@ OpenFlowSwitchNetDevice::ReceivePacketOut(const void* msg)
     }
 
     ofi::ExecuteActions(this, opo->buffer_id, buffer, &key, opo->actions, actions_len, true);
-    return 0;
-}
-
-int
-OpenFlowSwitchNetDevice::ReceivePortMod(const void* msg)
-{
-    ofp_port_mod* opm = (ofp_port_mod*)msg;
-
-    int port = opm->port_no; // ntohs(opm->port_no);
-    if (port < DP_MAX_PORTS)
-    {
-        ofi::Port& p = m_ports[port];
-
-        // Make sure the port id hasn't changed since this was sent
-        Mac48Address hw_addr = Mac48Address();
-        hw_addr.CopyFrom(opm->hw_addr);
-        if (p.netdev->GetAddress() != hw_addr)
-        {
-            return 0;
-        }
-
-        if (opm->mask)
-        {
-            uint32_t config_mask = ntohl(opm->mask);
-            p.config &= ~config_mask;
-            p.config |= ntohl(opm->config) & config_mask;
-        }
-
-        if (opm->mask & htonl(OFPPC_PORT_DOWN))
-        {
-            if ((opm->config & htonl(OFPPC_PORT_DOWN)) && (p.config & OFPPC_PORT_DOWN) == 0)
-            {
-                p.config |= OFPPC_PORT_DOWN;
-                /// \todo Possibly disable the Port's Net Device via the appropriate interface.
-            }
-            else if ((opm->config & htonl(OFPPC_PORT_DOWN)) == 0 && (p.config & OFPPC_PORT_DOWN))
-            {
-                p.config &= ~OFPPC_PORT_DOWN;
-                /// \todo Possibly enable the Port's Net Device via the appropriate interface.
-            }
-        }
-    }
-
     return 0;
 }
 
@@ -1700,5 +1704,3 @@ OpenFlowSwitchNetDevice::GetVPortTable()
 }
 
 } // namespace ns3
-
-#endif // NS3_OPENFLOW

@@ -42,8 +42,8 @@ NS_LOG_COMPONENT_DEFINE("SpectrumWifiHelper");
 SpectrumWifiPhyHelper::SpectrumWifiPhyHelper(uint8_t nLinks)
     : WifiPhyHelper(nLinks)
 {
-    NS_ABORT_IF(m_phy.size() != nLinks);
-    for (auto& phy : m_phy)
+    NS_ABORT_IF(m_phys.size() != nLinks);
+    for (auto& phy : m_phys)
     {
         phy.SetTypeId("ns3::SpectrumWifiPhy");
     }
@@ -54,16 +54,13 @@ SpectrumWifiPhyHelper::SpectrumWifiPhyHelper(uint8_t nLinks)
 void
 SpectrumWifiPhyHelper::SetChannel(const Ptr<SpectrumChannel> channel)
 {
-    m_channels[WHOLE_WIFI_SPECTRUM] = channel;
-    AddWifiBandwidthFilter(channel);
+    AddChannel(channel);
 }
 
 void
 SpectrumWifiPhyHelper::SetChannel(const std::string& channelName)
 {
-    Ptr<SpectrumChannel> channel = Names::Find<SpectrumChannel>(channelName);
-    m_channels[WHOLE_WIFI_SPECTRUM] = channel;
-    AddWifiBandwidthFilter(channel);
+    AddChannel(channelName);
 }
 
 void
@@ -79,7 +76,6 @@ SpectrumWifiPhyHelper::AddChannel(const std::string& channelName, const Frequenc
 {
     Ptr<SpectrumChannel> channel = Names::Find<SpectrumChannel>(channelName);
     AddChannel(channel, freqRange);
-    AddWifiBandwidthFilter(channel);
 }
 
 void
@@ -108,17 +104,36 @@ SpectrumWifiPhyHelper::AddWifiBandwidthFilter(Ptr<SpectrumChannel> channel)
     }
 }
 
+void
+SpectrumWifiPhyHelper::AddPhyToFreqRangeMapping(uint8_t linkId, const FrequencyRange& freqRange)
+{
+    if (auto it = m_interfacesMap.find(linkId); it == m_interfacesMap.end())
+    {
+        m_interfacesMap.insert({linkId, {freqRange}});
+    }
+    else
+    {
+        it->second.emplace(freqRange);
+    }
+}
+
+void
+SpectrumWifiPhyHelper::ResetPhyToFreqRangeMapping()
+{
+    m_interfacesMap.clear();
+}
+
 std::vector<Ptr<WifiPhy>>
 SpectrumWifiPhyHelper::Create(Ptr<Node> node, Ptr<WifiNetDevice> device) const
 {
     std::vector<Ptr<WifiPhy>> ret;
 
-    for (std::size_t i = 0; i < m_phy.size(); i++)
+    for (std::size_t i = 0; i < m_phys.size(); i++)
     {
-        Ptr<SpectrumWifiPhy> phy = m_phy.at(i).Create<SpectrumWifiPhy>();
+        auto phy = m_phys.at(i).Create<SpectrumWifiPhy>();
         auto interference = m_interferenceHelper.Create<InterferenceHelper>();
         phy->SetInterferenceHelper(interference);
-        Ptr<ErrorRateModel> error = m_errorRateModel.at(i).Create<ErrorRateModel>();
+        auto error = m_errorRateModel.at(i).Create<ErrorRateModel>();
         phy->SetErrorRateModel(error);
         if (m_frameCaptureModel.at(i).IsTypeIdSet())
         {
@@ -131,16 +146,63 @@ SpectrumWifiPhyHelper::Create(Ptr<Node> node, Ptr<WifiNetDevice> device) const
                 m_preambleDetectionModel.at(i).Create<PreambleDetectionModel>();
             phy->SetPreambleDetectionModel(preambleDetection);
         }
-        for (const auto& [freqRange, channel] : m_channels)
-        {
-            phy->AddChannel(channel, freqRange);
-        }
+        InstallPhyInterfaces(i, phy);
+        phy->SetChannelSwitchedCallback(
+            MakeCallback(&SpectrumWifiPhyHelper::SpectrumChannelSwitched, this).Bind(phy));
         phy->SetDevice(device);
         phy->SetMobility(node->GetObject<MobilityModel>());
         ret.emplace_back(phy);
     }
 
     return ret;
+}
+
+void
+SpectrumWifiPhyHelper::InstallPhyInterfaces(uint8_t linkId, Ptr<SpectrumWifiPhy> phy) const
+{
+    if (m_interfacesMap.count(linkId) == 0)
+    {
+        // default setup: set all interfaces to this link
+        for (const auto& [freqRange, channel] : m_channels)
+        {
+            phy->AddChannel(channel, freqRange);
+        }
+    }
+    else
+    {
+        for (const auto& freqRange : m_interfacesMap.at(linkId))
+        {
+            phy->AddChannel(m_channels.at(freqRange), freqRange);
+        }
+    }
+}
+
+void
+SpectrumWifiPhyHelper::SpectrumChannelSwitched(Ptr<SpectrumWifiPhy> phy) const
+{
+    NS_LOG_FUNCTION(this << phy);
+    for (const auto& otherPhy : phy->GetDevice()->GetPhys())
+    {
+        auto spectrumPhy = DynamicCast<SpectrumWifiPhy>(otherPhy);
+        NS_ASSERT(spectrumPhy);
+        if (spectrumPhy == phy)
+        {
+            // this is the PHY that has switched
+            continue;
+        }
+        if (spectrumPhy->GetCurrentFrequencyRange() == phy->GetCurrentFrequencyRange())
+        {
+            // this is the active interface
+            continue;
+        }
+        if (const auto& interfaces = spectrumPhy->GetSpectrumPhyInterfaces();
+            interfaces.count(phy->GetCurrentFrequencyRange()) == 0)
+        {
+            // no interface attached to that channel
+            continue;
+        }
+        spectrumPhy->ConfigureInterface(phy->GetFrequency(), phy->GetChannelWidth());
+    }
 }
 
 } // namespace ns3

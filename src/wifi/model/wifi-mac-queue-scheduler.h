@@ -45,6 +45,7 @@ enum class WifiQueueBlockedReason : uint8_t
     POWER_SAVE_MODE,
     USING_OTHER_EMLSR_LINK,
     WAITING_EMLSR_TRANSITION_DELAY,
+    TID_NOT_MAPPED,
     REASONS_COUNT
 };
 
@@ -68,6 +69,8 @@ operator<<(std::ostream& os, WifiQueueBlockedReason reason)
         return (os << "USING_OTHER_EMLSR_LINK");
     case WifiQueueBlockedReason::WAITING_EMLSR_TRANSITION_DELAY:
         return (os << "WAITING_EMLSR_TRANSITION_DELAY");
+    case WifiQueueBlockedReason::TID_NOT_MAPPED:
+        return (os << "TID_NOT_MAPPED");
     case WifiQueueBlockedReason::REASONS_COUNT:
         return (os << "REASONS_COUNT");
     default:
@@ -101,26 +104,29 @@ class WifiMacQueueScheduler : public Object
     /**
      * Get the next queue to serve, which is guaranteed to contain at least an MPDU
      * whose lifetime has not expired. Queues containing MPDUs that cannot be sent
-     * over the given link are ignored.
+     * over the given link (if any) are ignored.
      *
      * \param ac the Access Category that we want to serve
-     * \param linkId the ID of the link on which we got channel access
+     * \param linkId the ID of the link on which MPDUs contained in the returned queue must be
+     *               allowed to be sent
      * \return the ID of the selected container queue (if any)
      */
-    virtual std::optional<WifiContainerQueueId> GetNext(AcIndex ac, uint8_t linkId) = 0;
+    virtual std::optional<WifiContainerQueueId> GetNext(AcIndex ac,
+                                                        std::optional<uint8_t> linkId) = 0;
     /**
      * Get the next queue to serve after the given one. The returned queue is
      * guaranteed to contain at least an MPDU whose lifetime has not expired.
-     * Queues containing MPDUs that cannot be sent over the given link are ignored.
+     * Queues containing MPDUs that cannot be sent over the given link (if any) are ignored.
      *
      * \param ac the Access Category that we want to serve
-     * \param linkId the ID of the link on which we got channel access
+     * \param linkId the ID of the link on which MPDUs contained in the returned queue must be
+     *               allowed to be sent
      * \param prevQueueId the ID of the container queue served previously
      * \return the ID of the selected container queue (if any)
      */
     virtual std::optional<WifiContainerQueueId> GetNext(
         AcIndex ac,
-        uint8_t linkId,
+        std::optional<uint8_t> linkId,
         const WifiContainerQueueId& prevQueueId) = 0;
 
     /**

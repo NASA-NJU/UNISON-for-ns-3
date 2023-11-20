@@ -168,13 +168,14 @@ def parse_args(argv):
         parser_configure = on_off_argument(parser_configure, *on_off_option)
 
     parser_configure.add_argument('--enable-modules',
-                                  help='List of modules to build (e.g. core;network;internet)',
+                                  help='List of modules to build (e.g. \"core;network;internet\")',
                                   action="store", type=str, default=None)
     parser_configure.add_argument('--disable-modules',
-                                  help='List of modules not to build (e.g. lte;wimax)',
+                                  help='List of modules not to build (e.g. \"lte;wimax\")',
                                   action="store", type=str, default=None)
     parser_configure.add_argument('--filter-module-examples-and-tests',
-                                  help='List of modules that should have their examples and tests built (e.g. lte;wifi)',
+                                  help=('List of modules that should have their examples '
+                                        'and tests built (e.g. \"lte;wifi\")'),
                                   action="store", type=str, default=None)
     parser_configure.add_argument('--lcov-report',
                                   help=('Generate a code coverage report '
@@ -430,7 +431,8 @@ def print_and_buffer(message):
 def remove_dir(dir_to_remove, dry_run, directory_qualifier=""):
     dir_to_remove = os.path.abspath(dir_to_remove)
     if os.path.exists(dir_to_remove):
-        if ".." in os.path.relpath(dir_to_remove, ns3_path):
+        if (".." in os.path.relpath(dir_to_remove, ns3_path)
+            or os.path.abspath(dir_to_remove) == os.path.abspath(ns3_path)):
             # In case the directory to remove isn't within
             # the current ns-3 directory, print an error
             # message for the dry-run case
@@ -504,6 +506,10 @@ def clean_pip_packaging_artifacts(dry_run=False):
                 ]
     for directory in pip_dirs:
         remove_dir(directory, dry_run)
+
+
+def clean_vcpkg_artifacts(dry_run=False):
+    remove_dir(os.path.join(ns3_path, "vcpkg"), dry_run)
 
 
 def search_cmake_cache(build_profile):
@@ -1447,6 +1453,7 @@ def main():
         clean_cmake_artifacts(dry_run=args.dry_run)
         clean_docs_and_tests_artifacts(dry_run=args.dry_run)
         clean_pip_packaging_artifacts(dry_run=args.dry_run)
+        clean_vcpkg_artifacts(dry_run=args.dry_run)
         # We end things earlier when cleaning
         return
 

@@ -224,7 +224,7 @@ WimaxHelper::Install(NodeContainer c,
                      double frameDuration)
 {
     NetDeviceContainer devices;
-    for (NodeContainer::Iterator i = c.Begin(); i != c.End(); i++)
+    for (auto i = c.Begin(); i != c.End(); i++)
     {
         Ptr<Node> node = *i;
         Ptr<WimaxPhy> phy = CreatePhy(phyType);
@@ -268,7 +268,7 @@ WimaxHelper::Install(NodeContainer c,
                      SchedulerType schedulerType)
 {
     NetDeviceContainer devices;
-    for (NodeContainer::Iterator i = c.Begin(); i != c.End(); i++)
+    for (auto i = c.Begin(); i != c.End(); i++)
     {
         Ptr<Node> node = *i;
         Ptr<WimaxPhy> phy = CreatePhy(phyType);
@@ -309,11 +309,11 @@ WimaxHelper::Install(NodeContainer c,
                      SchedulerType schedulerType)
 {
     NetDeviceContainer devices;
-    for (NodeContainer::Iterator i = c.Begin(); i != c.End(); i++)
+    for (auto i = c.Begin(); i != c.End(); i++)
     {
         Ptr<Node> node = *i;
 
-        Ptr<WimaxPhy> phy = CreatePhyWithoutChannel(phyType, (char*)"dummy", 0);
+        Ptr<WimaxPhy> phy = CreatePhyWithoutChannel(phyType, (char*)"dummy", false);
         Ptr<WimaxNetDevice> device;
         Ptr<UplinkScheduler> uplinkScheduler = CreateUplinkScheduler(schedulerType);
         Ptr<BSScheduler> bsScheduler = CreateBSScheduler(schedulerType);
@@ -349,7 +349,7 @@ WimaxHelper::Install(Ptr<Node> node,
                      SchedulerType schedulerType)
 {
     // Ptr<WimaxPhy> phy = CreatePhyWithoutChannel (phyType);
-    Ptr<WimaxPhy> phy = CreatePhyWithoutChannel(phyType, (char*)"dummy", 0);
+    Ptr<WimaxPhy> phy = CreatePhyWithoutChannel(phyType, (char*)"dummy", false);
     Ptr<WimaxNetDevice> device;
     Ptr<UplinkScheduler> uplinkScheduler = CreateUplinkScheduler(schedulerType);
     Ptr<BSScheduler> bsScheduler = CreateBSScheduler(schedulerType);
@@ -637,7 +637,7 @@ static void
 PcapSniffTxRxEvent(Ptr<PcapFileWrapper> file, Ptr<const PacketBurst> burst)
 {
     std::list<Ptr<Packet>> packets = burst->GetPackets();
-    for (std::list<Ptr<Packet>>::iterator iter = packets.begin(); iter != packets.end(); ++iter)
+    for (auto iter = packets.begin(); iter != packets.end(); ++iter)
     {
         Ptr<Packet> p = (*iter)->Copy();
         WimaxMacToMacHeader m2m(p->GetSize());
@@ -696,7 +696,7 @@ WimaxHelper::AssignStreams(NetDeviceContainer c, int64_t stream)
 {
     int64_t currentStream = stream;
     Ptr<NetDevice> netDevice;
-    for (NetDeviceContainer::Iterator i = c.Begin(); i != c.End(); ++i)
+    for (auto i = c.Begin(); i != c.End(); ++i)
     {
         netDevice = (*i);
         Ptr<WimaxNetDevice> wimax = DynamicCast<WimaxNetDevice>(netDevice);

@@ -26,27 +26,6 @@ namespace ns3
 
 NS_OBJECT_ENSURE_REGISTERED(UdpHeader);
 
-/* The magic values below are used only for debugging.
- * They can be used to easily detect memory corruption
- * problems so you can see the patterns in memory.
- */
-UdpHeader::UdpHeader()
-    : m_sourcePort(0xfffd),
-      m_destinationPort(0xfffd),
-      m_payloadSize(0),
-      m_checksum(0),
-      m_calcChecksum(false),
-      m_goodChecksum(true)
-{
-}
-
-UdpHeader::~UdpHeader()
-{
-    m_sourcePort = 0xfffe;
-    m_destinationPort = 0xfffe;
-    m_payloadSize = 0xfffe;
-}
-
 void
 UdpHeader::EnableChecksums()
 {
@@ -150,7 +129,7 @@ UdpHeader::ForceChecksum(uint16_t checksum)
 void
 UdpHeader::ForcePayloadSize(uint16_t payloadSize)
 {
-    m_payloadSize = payloadSize;
+    m_forcedPayloadSize = payloadSize;
 }
 
 TypeId
@@ -189,13 +168,13 @@ UdpHeader::Serialize(Buffer::Iterator start) const
 
     i.WriteHtonU16(m_sourcePort);
     i.WriteHtonU16(m_destinationPort);
-    if (m_payloadSize == 0)
+    if (m_forcedPayloadSize == 0)
     {
         i.WriteHtonU16(start.GetSize());
     }
     else
     {
-        i.WriteHtonU16(m_payloadSize);
+        i.WriteHtonU16(m_forcedPayloadSize);
     }
 
     if (m_checksum == 0)

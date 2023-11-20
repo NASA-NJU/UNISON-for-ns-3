@@ -20,8 +20,8 @@
 #ifndef TUPLE_H
 #define TUPLE_H
 
-#include <ns3/attribute-helper.h>
-#include <ns3/string.h>
+#include "attribute-helper.h"
+#include "string.h"
 
 #include <algorithm>
 #include <sstream>
@@ -368,7 +368,7 @@ class TupleChecker : public ns3::TupleChecker
 
     bool Check(const AttributeValue& value) const override
     {
-        const TupleValue<Args...>* v = dynamic_cast<const TupleValue<Args...>*>(&value);
+        const auto v = dynamic_cast<const TupleValue<Args...>*>(&value);
         if (v == nullptr)
         {
             return false;
@@ -403,8 +403,8 @@ class TupleChecker : public ns3::TupleChecker
 
     bool Copy(const AttributeValue& source, AttributeValue& destination) const override
     {
-        const TupleValue<Args...>* src = dynamic_cast<const TupleValue<Args...>*>(&source);
-        TupleValue<Args...>* dst = dynamic_cast<TupleValue<Args...>*>(&destination);
+        const auto src = dynamic_cast<const TupleValue<Args...>*>(&source);
+        auto dst = dynamic_cast<TupleValue<Args...>*>(&destination);
         if (src == nullptr || dst == nullptr)
         {
             return false;

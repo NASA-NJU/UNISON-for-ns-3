@@ -103,7 +103,7 @@ GlobalValue::GetValue(AttributeValue& value) const
     {
         return;
     }
-    StringValue* str = dynamic_cast<StringValue*>(&value);
+    auto str = dynamic_cast<StringValue*>(&value);
     if (str == nullptr)
     {
         NS_FATAL_ERROR("GlobalValue name=" << m_name << ": input value is not a string");
@@ -127,7 +127,7 @@ GlobalValue::SetValue(const AttributeValue& value)
     Ptr<AttributeValue> v = m_checker->CreateValidValue(value);
     if (!v)
     {
-        return 0;
+        return false;
     }
     m_currentValue = v;
     return true;
@@ -138,7 +138,7 @@ GlobalValue::Bind(std::string name, const AttributeValue& value)
 {
     NS_LOG_FUNCTION(name << &value);
 
-    for (Iterator i = Begin(); i != End(); i++)
+    for (auto i = Begin(); i != End(); i++)
     {
         if ((*i)->GetName() == name)
         {
@@ -157,7 +157,7 @@ GlobalValue::BindFailSafe(std::string name, const AttributeValue& value)
 {
     NS_LOG_FUNCTION(name << &value);
 
-    for (Iterator i = Begin(); i != End(); i++)
+    for (auto i = Begin(); i != End(); i++)
     {
         if ((*i)->GetName() == name)
         {
@@ -193,7 +193,7 @@ bool
 GlobalValue::GetValueByNameFailSafe(std::string name, AttributeValue& value)
 {
     NS_LOG_FUNCTION(name << &value);
-    for (GlobalValue::Iterator gvit = GlobalValue::Begin(); gvit != GlobalValue::End(); ++gvit)
+    for (auto gvit = GlobalValue::Begin(); gvit != GlobalValue::End(); ++gvit)
     {
         if ((*gvit)->GetName() == name)
         {

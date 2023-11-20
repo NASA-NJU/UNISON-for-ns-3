@@ -45,6 +45,7 @@ class EhtFrameExchangeManager : public HeFrameExchangeManager
 
     void SetLinkId(uint8_t linkId) override;
     Ptr<WifiMpdu> CreateAliasIfNeeded(Ptr<WifiMpdu> mpdu) const override;
+    bool StartTransmission(Ptr<Txop> edca, uint16_t allowedWidth) override;
 
     /**
      * Send an EML Operating Mode Notification frame to the given station.
@@ -52,8 +53,7 @@ class EhtFrameExchangeManager : public HeFrameExchangeManager
      * \param dest the MAC address of the receiver
      * \param frame the EML Operating Mode Notification frame to send
      */
-    void SendEmlOperatingModeNotification(const Mac48Address& dest,
-                                          const MgtEmlOperatingModeNotification& frame);
+    void SendEmlOmn(const Mac48Address& dest, const MgtEmlOmn& frame);
 
     /**
      * Get the RSSI (in dBm) of the most recent packet received from the station having
@@ -77,11 +77,29 @@ class EhtFrameExchangeManager : public HeFrameExchangeManager
                                    uint16_t aid,
                                    const Mac48Address& address) const;
 
+    /**
+     * Notify that the given PHY will switch channel to operate on another EMLSR link
+     * after the given delay.
+     *
+     * \param phy the given PHY
+     * \param linkId the ID of the EMLSR link on which the given PHY is operating
+     * \param delay the delay after which the channel switch will be completed
+     */
+    void NotifySwitchingEmlsrLink(Ptr<WifiPhy> phy, uint8_t linkId, Time delay);
+
   protected:
+    void DoDispose() override;
+    void RxStartIndication(WifiTxVector txVector, Time psduDuration) override;
     void ForwardPsduDown(Ptr<const WifiPsdu> psdu, WifiTxVector& txVector) override;
     void ForwardPsduMapDown(WifiConstPsduMap psduMap, WifiTxVector& txVector) override;
     void SendMuRts(const WifiTxParameters& txParams) override;
+    void TransmissionFailed() override;
     void NotifyChannelReleased(Ptr<Txop> txop) override;
+    void PostProcessFrame(Ptr<const WifiPsdu> psdu, const WifiTxVector& txVector) override;
+    void ReceiveMpdu(Ptr<const WifiMpdu> mpdu,
+                     RxSignalInfo rxSignalInfo,
+                     const WifiTxVector& txVector,
+                     bool inAmpdu) override;
 
     /**
      * This method is intended to be called when an AP MLD detects that an EMLSR client previously
@@ -94,6 +112,34 @@ class EhtFrameExchangeManager : public HeFrameExchangeManager
      * \param delay the given delay
      */
     void EmlsrSwitchToListening(const Mac48Address& address, const Time& delay);
+
+  private:
+    /**
+     * Update the TXOP end timer when starting a frame transmission.
+     *
+     * \param txDuration the TX duration of the frame being transmitted
+     */
+    void UpdateTxopEndOnTxStart(Time txDuration);
+
+    /**
+     * Update the TXOP end timer when receiving a PHY-RXSTART.indication.
+     *
+     * \param psduDuration the TX duration of the PSDU being received
+     */
+    void UpdateTxopEndOnRxStartIndication(Time psduDuration);
+
+    /**
+     * Update the TXOP end timer when a frame reception ends.
+     */
+    void UpdateTxopEndOnRxEnd();
+
+    /**
+     * Take actions when a TXOP (of which we are not the holder) ends.
+     */
+    void TxopEnd();
+
+    EventId m_ongoingTxopEnd; //!< event indicating the possible end of the current TXOP (of which
+                              //!< we are not the holder)
 };
 
 } // namespace ns3

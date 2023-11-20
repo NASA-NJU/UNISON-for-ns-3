@@ -162,14 +162,24 @@ class StaWifiMac : public WifiMac
      */
     struct ApInfo
     {
+        /**
+         * Information about links to setup
+         */
+        struct SetupLinksInfo
+        {
+            uint8_t localLinkId; ///< local link ID
+            uint8_t apLinkId;    ///< AP link ID
+            Mac48Address bssid;  ///< BSSID
+        };
+
         Mac48Address m_bssid;  ///< BSSID
         Mac48Address m_apAddr; ///< AP MAC address
         double m_snr;          ///< SNR in linear scale
         MgtFrameType m_frame;  ///< The body of the management frame used to update AP info
         WifiScanParams::Channel m_channel; ///< The channel the management frame was received on
         uint8_t m_linkId;                  ///< ID of the link used to communicate with the AP
-        /// list of (local link ID, AP link ID) pairs identifying the links to setup between MLDs
-        std::list<std::pair<uint8_t, uint8_t>> m_setupLinks;
+        std::list<SetupLinksInfo>
+            m_setupLinks; ///< information about the links to setup between MLDs
     };
 
     /**
@@ -247,12 +257,6 @@ class StaWifiMac : public WifiMac
     std::set<uint8_t> GetSetupLinkIds() const;
 
     /**
-     * \param linkId the IO of the given link
-     * \return the ID (as set by the AP) of the given link, if the given link has been setup
-     */
-    std::optional<uint8_t> GetApLinkId(uint8_t linkId) const;
-
-    /**
      * Return the association ID.
      *
      * \return the association ID
@@ -291,6 +295,44 @@ class StaWifiMac : public WifiMac
     void NotifyChannelSwitching(uint8_t linkId) override;
 
     /**
+     * Notify the MAC that EMLSR mode has changed on the given set of links.
+     *
+     * \param linkIds the IDs of the links that are now EMLSR links (EMLSR mode is disabled
+     *                on other links)
+     */
+    void NotifyEmlsrModeChanged(const std::set<uint8_t>& linkIds);
+
+    /**
+     * \param linkId the ID of the given link
+     * \return whether the EMLSR mode is enabled on the given link
+     */
+    bool IsEmlsrLink(uint8_t linkId) const;
+
+    /**
+     * Notify that the given PHY switched channel to operate on another EMLSR link.
+     *
+     * \param phy the given PHY
+     * \param linkId the ID of the EMLSR link on which the given PHY is operating
+     */
+    void NotifySwitchingEmlsrLink(Ptr<WifiPhy> phy, uint8_t linkId);
+
+    /**
+     * Block transmissions on the given link for the given reason.
+     *
+     * \param linkId the ID of the given link
+     * \param reason the reason for blocking transmissions on the given link
+     */
+    void BlockTxOnLink(uint8_t linkId, WifiQueueBlockedReason reason);
+
+    /**
+     * Unblock transmissions on the given link for the given reason.
+     *
+     * \param linkId the ID of the given link
+     * \param reason the reason for unblocking transmissions on the given link
+     */
+    void UnblockTxOnLink(uint8_t linkId, WifiQueueBlockedReason reason);
+
+    /**
      * Assign a fixed random variable stream number to the random variables
      * used by this model.  Return the number of streams (possibly zero) that
      * have been assigned.
@@ -314,14 +356,13 @@ class StaWifiMac : public WifiMac
 
         bool sendAssocReq;                 //!< whether this link is used to send the
                                            //!< Association Request frame
-        std::optional<uint8_t> apLinkId;   //!< ID (as set by the AP) of the link we have
-                                           //!< setup or are setting up
         std::optional<Mac48Address> bssid; //!< BSSID of the AP to associate with over this link
         EventId beaconWatchdog;            //!< beacon watchdog
         Time beaconWatchdogEnd{0};         //!< beacon watchdog end
         WifiPowerManagementMode pmMode{WIFI_PM_ACTIVE}; /**< the current PM mode, if the STA is
                                                              associated, or the PM mode to switch
                                                              to upon association, otherwise */
+        bool emlsrEnabled{false}; //!< whether EMLSR mode is enabled on this link
     };
 
     /**
@@ -332,7 +373,15 @@ class StaWifiMac : public WifiMac
      */
     StaLinkEntity& GetLink(uint8_t linkId) const;
 
-  private:
+    /**
+     * Cast the given LinkEntity object to StaLinkEntity.
+     *
+     * \param link the given LinkEntity object
+     * \return a reference to the object casted to StaLinkEntity
+     */
+    StaLinkEntity& GetStaLink(const std::unique_ptr<WifiMac::LinkEntity>& link) const;
+
+  public:
     /**
      * The current MAC state of the STA.
      */
@@ -345,6 +394,7 @@ class StaWifiMac : public WifiMac
         REFUSED
     };
 
+  private:
     /**
      * Enable or disable active probing.
      *
@@ -494,6 +544,13 @@ class StaWifiMac : public WifiMac
      * \return the Multi-Link Element
      */
     MultiLinkElement GetMultiLinkElement(bool isReassoc, uint8_t linkId) const;
+
+    /**
+     * \param apNegSupport the negotiation type supported by the AP MLD
+     * \return the TID-to-Link Mapping element(s) to include in Association Request frame.
+     */
+    std::vector<TidToLinkMapping> GetTidToLinkMappingElements(uint8_t apNegSupport);
+
     /**
      * Set the current MAC state.
      *
@@ -579,6 +636,11 @@ class StaWifiMac : public WifiMac
     Ptr<RandomVariableStream> m_probeDelay; ///< RandomVariable used to randomize the time
                                             ///< of the first Probe Response on each channel
     Time m_pmModeSwitchTimeout;             ///< PM mode switch timeout
+
+    /// store the DL TID-to-Link Mapping included in the Association Request frame
+    WifiTidLinkMapping m_dlTidLinkMappingInAssocReq;
+    /// store the UL TID-to-Link Mapping included in the Association Request frame
+    WifiTidLinkMapping m_ulTidLinkMappingInAssocReq;
 
     TracedCallback<Mac48Address> m_assocLogger;             ///< association logger
     TracedCallback<uint8_t, Mac48Address> m_setupCompleted; ///< link setup completed logger

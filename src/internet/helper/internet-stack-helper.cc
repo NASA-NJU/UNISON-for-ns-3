@@ -223,7 +223,7 @@ int64_t
 InternetStackHelper::AssignStreams(NodeContainer c, int64_t stream)
 {
     int64_t currentStream = stream;
-    for (NodeContainer::Iterator i = c.Begin(); i != c.End(); ++i)
+    for (auto i = c.Begin(); i != c.End(); ++i)
     {
         Ptr<Node> node = *i;
         Ptr<GlobalRouter> router = node->GetObject<GlobalRouter>();
@@ -267,7 +267,7 @@ InternetStackHelper::AssignStreams(NodeContainer c, int64_t stream)
 void
 InternetStackHelper::Install(NodeContainer c) const
 {
-    for (NodeContainer::Iterator i = c.Begin(); i != c.End(); ++i)
+    for (auto i = c.Begin(); i != c.End(); ++i)
     {
         Install(*i);
     }
@@ -404,11 +404,11 @@ Ipv4L3ProtocolRxTxSink(Ptr<const Packet> p, Ptr<Ipv4> ipv4, uint32_t interface)
 bool
 InternetStackHelper::PcapHooked(Ptr<Ipv4> ipv4)
 {
-    for (InterfaceFileMapIpv4::const_iterator i = g_interfaceFileMapIpv4.begin();
-         i != g_interfaceFileMapIpv4.end();
-         ++i)
+    auto id = ipv4->GetObject<Node>()->GetId();
+
+    for (auto i = g_interfaceFileMapIpv4.begin(); i != g_interfaceFileMapIpv4.end(); ++i)
     {
-        if ((*i).first.first == ipv4->GetObject<Node>()->GetId())
+        if ((*i).first.first == id)
         {
             return true;
         }
@@ -510,11 +510,11 @@ Ipv6L3ProtocolRxTxSink(Ptr<const Packet> p, Ptr<Ipv6> ipv6, uint32_t interface)
 bool
 InternetStackHelper::PcapHooked(Ptr<Ipv6> ipv6)
 {
-    for (InterfaceFileMapIpv6::const_iterator i = g_interfaceFileMapIpv6.begin();
-         i != g_interfaceFileMapIpv6.end();
-         ++i)
+    auto id = ipv6->GetObject<Node>()->GetId();
+
+    for (auto i = g_interfaceFileMapIpv6.begin(); i != g_interfaceFileMapIpv6.end(); ++i)
     {
-        if ((*i).first.first == ipv6->GetObject<Node>()->GetId())
+        if ((*i).first.first == id)
         {
             return true;
         }
@@ -774,11 +774,11 @@ Ipv4L3ProtocolRxSinkWithContext(Ptr<OutputStreamWrapper> stream,
 bool
 InternetStackHelper::AsciiHooked(Ptr<Ipv4> ipv4)
 {
-    for (InterfaceStreamMapIpv4::const_iterator i = g_interfaceStreamMapIpv4.begin();
-         i != g_interfaceStreamMapIpv4.end();
-         ++i)
+    auto id = ipv4->GetObject<Node>()->GetId();
+
+    for (auto i = g_interfaceStreamMapIpv4.begin(); i != g_interfaceStreamMapIpv4.end(); ++i)
     {
-        if ((*i).first.first == ipv4->GetObject<Node>()->GetId())
+        if ((*i).first.first == id)
         {
             return true;
         }
@@ -1118,11 +1118,11 @@ Ipv6L3ProtocolRxSinkWithContext(Ptr<OutputStreamWrapper> stream,
 bool
 InternetStackHelper::AsciiHooked(Ptr<Ipv6> ipv6)
 {
-    for (InterfaceStreamMapIpv6::const_iterator i = g_interfaceStreamMapIpv6.begin();
-         i != g_interfaceStreamMapIpv6.end();
-         ++i)
+    auto id = ipv6->GetObject<Node>()->GetId();
+
+    for (auto i = g_interfaceStreamMapIpv6.begin(); i != g_interfaceStreamMapIpv6.end(); ++i)
     {
-        if ((*i).first.first == ipv6->GetObject<Node>()->GetId())
+        if ((*i).first.first == id)
         {
             return true;
         }

@@ -211,7 +211,7 @@ main(int argc, char* argv[])
     double stepSize = 1;        // dBm
     double stepTime = 1;        // seconds
     uint32_t packetSize = 1024; // bytes
-    bool broadcast = 0;
+    bool broadcast = false;
     int ap1_x = 0;
     int ap1_y = 0;
     int sta1_x = 5;
@@ -714,8 +714,8 @@ main(int argc, char* argv[])
     Ptr<WifiNetDevice> wndServer = ndServer->GetObject<WifiNetDevice>();
     Ptr<WifiPhy> wifiPhyPtrClient = wndClient->GetPhy();
     Ptr<WifiPhy> wifiPhyPtrServer = wndServer->GetPhy();
-    uint8_t t_clientNss = static_cast<uint8_t>(clientNss);
-    uint8_t t_serverNss = static_cast<uint8_t>(serverNss);
+    auto t_clientNss = static_cast<uint8_t>(clientNss);
+    auto t_serverNss = static_cast<uint8_t>(serverNss);
     wifiPhyPtrClient->SetNumberOfAntennas(t_clientNss);
     wifiPhyPtrClient->SetMaxSupportedTxSpatialStreams(t_clientNss);
     wifiPhyPtrClient->SetMaxSupportedRxSpatialStreams(t_clientNss);

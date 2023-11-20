@@ -26,7 +26,9 @@
 #include "wifi-remote-station-manager.h"
 #include "wifi-standards.h"
 
+#include <functional>
 #include <list>
+#include <map>
 #include <memory>
 #include <optional>
 #include <set>
@@ -141,6 +143,12 @@ class WifiMac : public Object
      * \return the number of links used by this MAC
      */
     uint8_t GetNLinks() const;
+
+    /**
+     * \return the set of link IDs in use by this device
+     */
+    const std::set<uint8_t>& GetLinkIds() const;
+
     /**
      * Get the ID of the link having the given MAC address, if any.
      *
@@ -148,6 +156,22 @@ class WifiMac : public Object
      * \return the ID of the link having the given MAC address, if any
      */
     virtual std::optional<uint8_t> GetLinkIdByAddress(const Mac48Address& address) const;
+
+    /**
+     * Get the ID of the link (if any) on which the given PHY is operating.
+     *
+     * \param phy the given PHY
+     * \return the ID of the link (if any) on which the given PHY is operating
+     */
+    std::optional<uint8_t> GetLinkForPhy(Ptr<const WifiPhy> phy) const;
+
+    /**
+     * Get the ID of the link (if any) on which the given PHY is operating.
+     *
+     * \param phyId the index of the given PHY in the vector of PHYs held by WifiNetDevice
+     * \return the ID of the link (if any) on which the given PHY is operating
+     */
+    std::optional<uint8_t> GetLinkForPhy(std::size_t phyId) const;
 
     /**
      * \param remoteAddr the (MLD or link) address of a remote device
@@ -654,6 +678,34 @@ class WifiMac : public Object
      */
     BlockAckReqType GetBarTypeAsRecipient(Mac48Address originator, uint8_t tid) const;
 
+    /**
+     * Get the TID-to-Link Mapping negotiated with the given MLD (if any) for the given direction.
+     * An empty mapping indicates the default mapping.
+     *
+     * \param mldAddr the MLD address of the given MLD
+     * \param dir the given direction (DL or UL)
+     * \return the negotiated TID-to-Link Mapping
+     */
+    std::optional<std::reference_wrapper<const WifiTidLinkMapping>> GetTidToLinkMapping(
+        Mac48Address mldAddr,
+        WifiDirection dir) const;
+
+    /**
+     * Check whether the given TID is mapped on the given link in the given direction for the
+     * given MLD.
+     *
+     * \param mldAddr the MLD address of the given MLD
+     * \param dir the given direction (DL or UL)
+     * \param tid the given TID
+     * \param linkId the ID of the given link
+     * \return whether the given TID is mapped on the given link in the given direction for the
+     *         given MLD
+     */
+    bool TidMappedOnLink(Mac48Address mldAddr,
+                         WifiDirection dir,
+                         uint8_t tid,
+                         uint8_t linkId) const;
+
   protected:
     void DoInitialize() override;
     void DoDispose() override;
@@ -752,6 +804,25 @@ class WifiMac : public Object
     virtual void DeaggregateAmsduAndForward(Ptr<const WifiMpdu> mpdu);
 
     /**
+     * Apply the TID-to-Link Mapping negotiated with the given MLD for the given direction
+     * by properly configuring the queue scheduler.
+     *
+     * \param mldAddr the MLD MAC address of the given MLD
+     * \param dir the given direction (DL or UL)
+     */
+    void ApplyTidLinkMapping(const Mac48Address& mldAddr, WifiDirection dir);
+
+    /**
+     * Swap the links based on the information included in the given map. This method
+     * is normally called by a non-AP MLD upon completing ML setup to have its link IDs
+     * match AP MLD's link IDs.
+     *
+     * \param links a set of pairs (from, to) each mapping a current link ID to the
+     *              link ID it has to become (i.e., link 'from' becomes link 'to')
+     */
+    void SwapLinks(std::map<uint8_t, uint8_t> links);
+
+    /**
      * Structure holding information specific to a single link. Here, the meaning of
      * "link" is that of the 11be amendment which introduced multi-link devices. For
      * previous amendments, only one link can be created. Therefore, "link" has not
@@ -763,7 +834,6 @@ class WifiMac : public Object
         /// Destructor (a virtual method is needed to make this struct polymorphic)
         virtual ~LinkEntity();
 
-        uint8_t id;                                     //!< Link ID (starting at 0)
         Ptr<WifiPhy> phy;                               //!< Wifi PHY object
         Ptr<ChannelAccessManager> channelAccessManager; //!< channel access manager object
         Ptr<FrameExchangeManager> feManager;            //!< Frame Exchange Manager object
@@ -774,12 +844,29 @@ class WifiMac : public Object
     };
 
     /**
+     * \return a const reference to the map of link entities
+     */
+    const std::map<uint8_t, std::unique_ptr<LinkEntity>>& GetLinks() const;
+
+    /**
      * Get a reference to the link associated with the given ID.
      *
      * \param linkId the given link ID
      * \return a reference to the link associated with the given ID
      */
     LinkEntity& GetLink(uint8_t linkId) const;
+
+    /**
+     * Update the TID-to-Link Mappings for the given MLD in the given direction based on the
+     * given negotiated mappings. An empty mapping indicates the default mapping.
+     *
+     * \param mldAddr the MLD address of the given MLD
+     * \param dir the given direction (DL or UL)
+     * \param mapping the negotiated TID-to-Link Mapping
+     */
+    void UpdateTidToLinkMapping(const Mac48Address& mldAddr,
+                                WifiDirection dir,
+                                const WifiTidLinkMapping& mapping);
 
     Ptr<MacRxMiddle> m_rxMiddle; //!< RX middle (defragmentation etc.)
     Ptr<MacTxMiddle> m_txMiddle; //!< TX middle (aggregation etc.)
@@ -835,6 +922,15 @@ class WifiMac : public Object
      * \return a unique pointer to the created LinkEntity object
      */
     virtual std::unique_ptr<LinkEntity> CreateLinkEntity() const;
+
+    /**
+     * This method is intended to be called when a link changes ID in order to update the
+     * link ID stored by the Frame Exchange Manager and the Channel Access Manager operating
+     * on that link.
+     *
+     * \param id the (new) ID of the link that has changed ID
+     */
+    void UpdateLinkId(uint8_t id);
 
     /**
      * This method is called if this device is an MLD to determine the MAC address of
@@ -932,8 +1028,9 @@ class WifiMac : public Object
 
     TypeOfStation m_typeOfStation; //!< the type of station
 
-    Ptr<WifiNetDevice> m_device;                      //!< Pointer to the device
-    std::vector<std::unique_ptr<LinkEntity>> m_links; //!< vector of Link objects
+    Ptr<WifiNetDevice> m_device;                            //!< Pointer to the device
+    std::map<uint8_t, std::unique_ptr<LinkEntity>> m_links; //!< ID-indexed map of Link objects
+    std::set<uint8_t> m_linkIds;                            //!< IDs of the links in use
 
     Mac48Address m_address; //!< MAC address of this station
     Ssid m_ssid;            //!< Service Set ID (SSID)
@@ -941,7 +1038,7 @@ class WifiMac : public Object
     /** This type defines a mapping between an Access Category index,
     and a pointer to the corresponding channel access function.
     Access Categories are sorted in decreasing order of priority. */
-    typedef std::map<AcIndex, Ptr<QosTxop>, std::greater<AcIndex>> EdcaQueues;
+    typedef std::map<AcIndex, Ptr<QosTxop>, std::greater<>> EdcaQueues;
 
     /** This is a map from Access Category index to the corresponding
     channel access function */
@@ -956,6 +1053,11 @@ class WifiMac : public Object
     uint32_t m_viMaxAmpduSize; ///< maximum A-MPDU size for AC_VI (in bytes)
     uint32_t m_beMaxAmpduSize; ///< maximum A-MPDU size for AC_BE (in bytes)
     uint32_t m_bkMaxAmpduSize; ///< maximum A-MPDU size for AC_BK (in bytes)
+
+    /// @brief DL TID-to-Link Mapping negotiated with an MLD (identified by its MLD address)
+    std::unordered_map<Mac48Address, WifiTidLinkMapping, WifiAddressHash> m_dlTidLinkMappings;
+    /// @brief UL TID-to-Link Mapping negotiated with an MLD (identified by its MLD address)
+    std::unordered_map<Mac48Address, WifiTidLinkMapping, WifiAddressHash> m_ulTidLinkMappings;
 
     ForwardUpCallback m_forwardUp; //!< Callback to forward packet up the stack
 

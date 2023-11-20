@@ -167,8 +167,6 @@ packets.  Interference from other wireless technologies is only modeled
 when the SpectrumWifiPhy is used.
 The following details pertain to the physical layer and channel models:
 
-* 802.11ax/be MU-RTS/CTS is not yet supported
-* 802.11ac/ax/be MU-MIMO is not supported, and no more than 4 antennas can be configured
 * 802.11n/ac/ax/be beamforming is not supported
 * 802.11n RIFS is not supported
 * 802.11 PCF/HCF/HCCA are not implemented
@@ -178,11 +176,11 @@ The following details pertain to the physical layer and channel models:
 * Cases where RTS/CTS and ACK are transmitted using HT/VHT/HE/EHT formats are not supported
 * Energy consumption model does not consider MIMO
 * 802.11ax preamble puncturing is supported by the PHY but is currently not exploited by the MAC
-* Only minimal 802.11be PHY is supported (no MAC layer yet)
+* Only minimal MU-MIMO is supported (ideal PHY assumed, no MAC layer yet)
 
 At the MAC layer, most of the main functions found in deployed Wi-Fi
-equipment for 802.11a/b/e/g/n/ac/ax are implemented, but there are scattered instances
-where some limitations in the models exist. Support for 802.11n, ac and ax is evolving.
+equipment for 802.11a/b/e/g/n/ac/ax/be are implemented, but there are scattered instances
+where some limitations in the models exist. Support for 802.11n, ac, ax and be is evolving.
 
 Some implementation choices that are not imposed by the standard are listed below:
 
@@ -751,9 +749,14 @@ the other ones are referred to as inactive RF interfaces and might be disconnect
 
    Multiple RF interfaces concept
 
-If the ``SpectrumWifiPhy::TrackSignalsFromInactiveInterfaces`` attribute is set to true,
+If the ``SpectrumWifiPhy::TrackSignalsFromInactiveInterfaces`` attribute is set to true (default),
 inactive RF interfaces are connected to their respective spectrum channels and the ``SpectrumWifiPhy``
-forwards received signals from these inactive RF interfaces to the ``InterferenceHelper`` without processing them.
+also receive signals from these inactive RF interfaces when they belong to a configured portion
+of the frequency range covered by the interface.
+The portion of the spectrum being monitored by an inactive interface is specified by a center frequency
+and a channel width, and is seamlessly set to equivalent of the operating channel of the spectrum PHY
+that is actively using that frequency range. The ``SpectrumWifiPhy``forwards these received signals
+from inactive interfaces to the ``InterferenceHelper`` without further processing them.
 The benefit of the latter is that more accurate PHY-CCA.indication can be generated upon channel switching
 if one or more signals started to be transmitted on the new channel before the switch occurs,
 which would be ignored otherwise. This is illustrated in Figure :ref:`fig-cca-channel-switching-multiple-interfaces`, where the parts in red are only generated when ``SpectrumWifiPhy::TrackSignalsFromInactiveInterfaces`` is set to true.
@@ -965,6 +968,16 @@ assigned a User Priority based on the socket priority (see, e.g., the wifi-multi
 the wifi-mac-ofdma examples), which determines the Access Category that handles the
 packet. By default, wifi MAC queues support flow control, hence upper layers do not
 forward a packet down if there is no room for it in the corresponding MAC queue.
+Wifi MAC queues do not support dynamic queue limits (byte queue limits); therefore,
+there is no backpressure into the traffic control layer until the WifiMacQueue for
+an access category is completely full (i.e., when the queue depth reaches the value
+of the MaxSize attribute, which defaults to 500 packets).
+TCP small queues (TSQ) [corbet2012]_ is a Linux feature that provides feedback from the
+Wi-Fi device to the socket layer, to control how much data is queued at the Wi-Fi
+level.  |ns3| TCP does not implement TSQ, nor does the WifiNetDevice provide that
+specific feedback (although some use of the existing trace sources may be enough to
+support it).  Regardless, experimental tests have demonstrated that TSQ interferes with
+Wi-Fi aggregation on uplink transfers [grazia2022]_.
 Packets stay in the wifi MAC queue until they are acknowledged or discarded. A packet
 may be discarded because, e.g., its lifetime expired (i.e., it stayed in the queue for too
 long) or the maximum number of retries was reached. The maximum lifetime for a packet can

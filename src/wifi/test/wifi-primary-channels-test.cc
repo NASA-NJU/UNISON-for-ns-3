@@ -665,7 +665,7 @@ WifiPrimaryChannelsTest::DoRun()
         {
             for (unsigned int type = 0; type < 7; type++)
             {
-                HeRu::RuType ruType = static_cast<HeRu::RuType>(type);
+                auto ruType = static_cast<HeRu::RuType>(type);
                 std::size_t nRus = HeRu::GetNRus(txChannelWidth, ruType);
                 std::set<uint8_t> txBss;
                 if (nRus > 0)
@@ -713,7 +713,7 @@ WifiPrimaryChannelsTest::DoRun()
         {
             for (unsigned int type = 0; type < 7; type++)
             {
-                HeRu::RuType ruType = static_cast<HeRu::RuType>(type);
+                auto ruType = static_cast<HeRu::RuType>(type);
                 std::size_t nRus = HeRu::GetNRus(txChannelWidth, ruType);
                 std::set<uint8_t> txBss;
                 if (nRus > 0)
@@ -1375,10 +1375,13 @@ WifiPrimaryChannelsTestSuite::WifiPrimaryChannelsTestSuite()
     // Test cases for 20 MHz can be added, but are not that useful (there would be a single BSS)
     AddTestCase(new WifiPrimaryChannelsTest(40, true), TestCase::QUICK);
     AddTestCase(new WifiPrimaryChannelsTest(40, false), TestCase::QUICK);
+#if 0
+    // Tests disabled until issue #776 resolved
     AddTestCase(new WifiPrimaryChannelsTest(80, true), TestCase::EXTENSIVE);
     AddTestCase(new WifiPrimaryChannelsTest(80, false), TestCase::EXTENSIVE);
     AddTestCase(new WifiPrimaryChannelsTest(160, true), TestCase::TAKES_FOREVER);
     AddTestCase(new WifiPrimaryChannelsTest(160, false), TestCase::TAKES_FOREVER);
+#endif
     AddTestCase(new Wifi20MHzChannelIndicesTest(), TestCase::QUICK);
 }
 

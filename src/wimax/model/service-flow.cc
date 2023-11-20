@@ -73,7 +73,7 @@ ServiceFlow::ServiceFlow(Tlv tlv)
 {
     InitValues();
     m_connection = nullptr;
-    m_isEnabled = 0;
+    m_isEnabled = false;
     m_record = new ServiceFlowRecord();
     NS_ASSERT_MSG(tlv.GetType() == Tlv::UPLINK_SERVICE_FLOW ||
                       tlv.GetType() == Tlv::DOWNLINK_SERVICE_FLOW,
@@ -91,7 +91,7 @@ ServiceFlow::ServiceFlow(Tlv tlv)
         m_direction = SF_DIRECTION_DOWN;
     }
 
-    for (std::vector<Tlv*>::const_iterator iter = param->Begin(); iter != param->End(); ++iter)
+    for (auto iter = param->Begin(); iter != param->End(); ++iter)
     {
         switch ((*iter)->GetType())
         {

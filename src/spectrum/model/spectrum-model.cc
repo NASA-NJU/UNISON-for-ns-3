@@ -18,9 +18,10 @@
  * Author: Nicola Baldo <nbaldo@cttc.es>
  */
 
+#include "spectrum-model.h"
+
 #include <ns3/assert.h>
 #include <ns3/log.h>
-#include <ns3/spectrum-model.h>
 
 #include <cmath>
 #include <cstddef>
@@ -43,8 +44,7 @@ SpectrumModel::SpectrumModel(const std::vector<double>& centerFreqs)
     NS_ASSERT(centerFreqs.size() > 1);
     m_uid = ++m_uidCount;
 
-    for (std::vector<double>::const_iterator it = centerFreqs.begin(); it != centerFreqs.end();
-         ++it)
+    for (auto it = centerFreqs.begin(); it != centerFreqs.end(); ++it)
     {
         BandInfo e;
         e.fc = *it;
@@ -110,9 +110,9 @@ SpectrumModel::GetUid() const
 bool
 SpectrumModel::IsOrthogonal(const SpectrumModel& other) const
 {
-    for (Bands::const_iterator myIt = Begin(); myIt != End(); ++myIt)
+    for (auto myIt = Begin(); myIt != End(); ++myIt)
     {
-        for (Bands::const_iterator otherIt = other.Begin(); otherIt != other.End(); ++otherIt)
+        for (auto otherIt = other.Begin(); otherIt != other.End(); ++otherIt)
         {
             if (std::max(myIt->fl, otherIt->fl) < std::min(myIt->fh, otherIt->fh))
             {

@@ -25,9 +25,10 @@
 #ifndef LR_WPAN_MAC_H
 #define LR_WPAN_MAC_H
 
+#include "lr-wpan-fields.h"
+#include "lr-wpan-phy.h"
+
 #include <ns3/event-id.h>
-#include <ns3/lr-wpan-fields.h>
-#include <ns3/lr-wpan-phy.h>
 #include <ns3/mac16-address.h>
 #include <ns3/mac64-address.h>
 #include <ns3/object.h>
@@ -447,9 +448,11 @@ struct McpsDataIndicationParams
  */
 struct MlmeAssociateIndicationParams
 {
-    Mac64Address m_extDevAddr; //!< The extended address of the device requesting association
-    CapabilityField
-        capabilityInfo; //!< The operational capabilities of the device requesting association.
+    Mac64Address m_extDevAddr;      //!< The extended address of the device requesting association
+    CapabilityField capabilityInfo; //!< The operational capabilities of
+                                    //!< the device requesting association.
+    uint8_t lqi{0}; //!< The link quality indicator of the received associate request command
+                    //!< (Not officially supported in the standard but found in implementations)
 };
 
 /**
@@ -1584,7 +1587,7 @@ class LrWpanMac : public Object
      * Print the Pending transaction list.
      * \param os The reference to the output stream used by this print function.
      */
-    void PrintPendTxQ(std::ostream& os) const;
+    void PrintPendingTxQueue(std::ostream& os) const;
 
     /**
      * Print the Transmit Queue.
@@ -2217,6 +2220,11 @@ class LrWpanMac : public Object
      * The number of CSMA/CA retries used for sending the current packet.
      */
     uint8_t m_numCsmacaRetry;
+
+    /**
+     * Keep track of the last received frame Link Quality Indicator
+     */
+    uint8_t m_lastRxFrameLqi;
 
     /**
      * Scheduler event for the ACK timeout of the currently transmitted data

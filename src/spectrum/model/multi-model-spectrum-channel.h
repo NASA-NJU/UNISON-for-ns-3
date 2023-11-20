@@ -20,11 +20,12 @@
 #ifndef MULTI_MODEL_SPECTRUM_CHANNEL_H
 #define MULTI_MODEL_SPECTRUM_CHANNEL_H
 
+#include "spectrum-channel.h"
+#include "spectrum-converter.h"
+#include "spectrum-propagation-loss-model.h"
+#include "spectrum-value.h"
+
 #include <ns3/propagation-delay-model.h>
-#include <ns3/spectrum-channel.h>
-#include <ns3/spectrum-converter.h>
-#include <ns3/spectrum-propagation-loss-model.h>
-#include <ns3/spectrum-value.h>
 
 #include <map>
 #include <set>
@@ -127,7 +128,7 @@ class MultiModelSpectrumChannel : public SpectrumChannel
      * This method checks if m_rxSpectrumModelInfoMap contains an entry
      * for the given TX SpectrumModel. If such entry exists, it returns
      * an iterator pointing to it. If not, it creates a new entry in
-     * m_txSpectrumMpodelInfoMap, and returns an iterator to it.
+     * m_txSpectrumModelInfoMap, and returns an iterator to it.
      *
      * \param txSpectrumModel The TX SpectrumModel  being considered
      *

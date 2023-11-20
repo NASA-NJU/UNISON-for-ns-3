@@ -39,10 +39,14 @@ class Rectangle
      */
     enum Side
     {
-        RIGHT,
-        LEFT,
-        TOP,
-        BOTTOM
+        RIGHTSIDE = 0,
+        LEFTSIDE,
+        TOPSIDE,
+        BOTTOMSIDE,
+        TOPRIGHTCORNER,
+        TOPLEFTCORNER,
+        BOTTOMRIGHTCORNER,
+        BOTTOMLEFTCORNER
     };
 
     /**
@@ -68,12 +72,34 @@ class Rectangle
     bool IsInside(const Vector& position) const;
     /**
      * \param position the position to test.
-     * \return the side of the rectangle the input position is closest to.
+     * \return true if the input position is located on the rectable border, false otherwise.
      *
      * This method compares only the x and y coordinates of the input position.
      * It ignores the z coordinate.
      */
-    Side GetClosestSide(const Vector& position) const;
+    bool IsOnTheBorder(const Vector& position) const;
+    /**
+     * \param position the position to test.
+     * \return the side of the rectangle the input position is closest to.
+     *
+     * This method compares only the x and y coordinates of the input position.
+     * It ignores the z coordinate.
+     *
+     * This method assumes assumes a right-handed Cartesian orientation, so that
+     * (xMin, yMin) is the BOTTOMLEFTCORNER,  the TOP and BOTTOM sides are parallel to
+     * the x-axis, the LEFT and RIGHT sides are parallel to the y-axis, and the
+     * (xMax, yMax) point is the TOPRIGHTCORNER.
+     *
+     * Beware: the method has an ambiguity in the "center" of the rectangle. Assume
+     * a rectangle between the points (0, 0) and (4, 2), i.e., wider than taller.
+     * All the points on the line between (1, 1) and (3, 1) are equally closer to the
+     * TOP and BOTTOM than to the other sides of the Rectangle.
+     * These points are classified as TOPSIDE by convention.
+     *
+     * Similarly, for a Rectangle taller than wider, the "center" points will be
+     * classified as RIGHTSIDE, and for a square box, the center will return RIGHTSIDE.
+     */
+    Side GetClosestSideOrCorner(const Vector& position) const;
     /**
      * \param current the current position
      * \param speed the current speed
@@ -94,6 +120,7 @@ class Rectangle
 
 std::ostream& operator<<(std::ostream& os, const Rectangle& rectangle);
 std::istream& operator>>(std::istream& is, Rectangle& rectangle);
+std::ostream& operator<<(std::ostream& os, const Rectangle::Side& side);
 
 ATTRIBUTE_HELPER_HEADER(Rectangle);
 

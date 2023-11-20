@@ -503,12 +503,12 @@ class OpenFlowSwitchNetDevice : public NetDevice
      * \param msg The OpenFlow message received.
      * \return 0 if everything's ok, otherwise an error number.
      */
+    int ReceivePortMod(const void* msg);
     int ReceiveFeaturesRequest(const void* msg);
     int ReceiveGetConfigRequest(const void* msg);
     int ReceiveSetConfig(const void* msg);
     int ReceivePacketOut(const void* msg);
     int ReceiveFlow(const void* msg);
-    int ReceivePortMod(const void* msg);
     int ReceiveStatsRequest(const void* msg);
     int ReceiveEchoRequest(const void* msg);
     int ReceiveEchoReply(const void* msg);
@@ -518,7 +518,7 @@ class OpenFlowSwitchNetDevice : public NetDevice
 
     /// Rx Callback
     NetDevice::ReceiveCallback m_rxCallback;
-    /// Promiscuopus Rx Callback
+    /// Promiscuous Rx Callback
     NetDevice::PromiscReceiveCallback m_promiscRxCallback;
 
     Mac48Address m_address;       ///< Address of this device.

@@ -147,7 +147,7 @@ WifiPhyHelper::WifiPhyHelper(uint8_t nLinks)
     : m_pcapDlt(PcapHelper::DLT_IEEE802_11)
 {
     NS_ABORT_IF(nLinks == 0);
-    m_phy.resize(nLinks);
+    m_phys.resize(nLinks);
     m_errorRateModel.resize(nLinks);
     m_frameCaptureModel.resize(nLinks);
     m_preambleDetectionModel.resize(nLinks);
@@ -162,7 +162,7 @@ WifiPhyHelper::~WifiPhyHelper()
 void
 WifiPhyHelper::Set(std::string name, const AttributeValue& v)
 {
-    for (auto& phy : m_phy)
+    for (auto& phy : m_phys)
     {
         phy.Set(name, v);
     }
@@ -171,7 +171,7 @@ WifiPhyHelper::Set(std::string name, const AttributeValue& v)
 void
 WifiPhyHelper::Set(uint8_t linkId, std::string name, const AttributeValue& v)
 {
-    m_phy.at(linkId).Set(name, v);
+    m_phys.at(linkId).Set(name, v);
 }
 
 void
@@ -759,7 +759,7 @@ WifiHelper::Install(const WifiPhyHelper& phyHelper,
                     NodeContainer::Iterator last) const
 {
     NetDeviceContainer devices;
-    for (NodeContainer::Iterator i = first; i != last; ++i)
+    for (auto i = first; i != last; ++i)
     {
         Ptr<Node> node = *i;
         Ptr<WifiNetDevice> device = CreateObject<WifiNetDevice>();
@@ -975,6 +975,11 @@ WifiHelper::EnableLogComponents()
     LogComponentEnable("YansWifiChannel", LOG_LEVEL_ALL);
     LogComponentEnable("YansWifiPhy", LOG_LEVEL_ALL);
 
+    LogComponentEnable("Athstats", LOG_LEVEL_ALL);
+    LogComponentEnable("WifiHelper", LOG_LEVEL_ALL);
+    LogComponentEnable("SpectrumWifiHelper", LOG_LEVEL_ALL);
+    LogComponentEnable("YansWifiHelper", LOG_LEVEL_ALL);
+
     // From Spectrum
     LogComponentEnable("WifiSpectrumValueHelper", LOG_LEVEL_ALL);
 }
@@ -984,7 +989,7 @@ WifiHelper::AssignStreams(NetDeviceContainer c, int64_t stream)
 {
     int64_t currentStream = stream;
     Ptr<NetDevice> netDevice;
-    for (NetDeviceContainer::Iterator i = c.Begin(); i != c.End(); ++i)
+    for (auto i = c.Begin(); i != c.End(); ++i)
     {
         netDevice = (*i);
         Ptr<WifiNetDevice> wifi = DynamicCast<WifiNetDevice>(netDevice);

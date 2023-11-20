@@ -35,25 +35,6 @@ NS_LOG_COMPONENT_DEFINE("TcpHeader");
 
 NS_OBJECT_ENSURE_REGISTERED(TcpHeader);
 
-TcpHeader::TcpHeader()
-    : m_sourcePort(0),
-      m_destinationPort(0),
-      m_sequenceNumber(0),
-      m_ackNumber(0),
-      m_length(5),
-      m_flags(0),
-      m_windowSize(0xffff),
-      m_urgentPointer(0),
-      m_calcChecksum(false),
-      m_goodChecksum(true),
-      m_optionsLen(0)
-{
-}
-
-TcpHeader::~TcpHeader()
-{
-}
-
 std::string
 TcpHeader::FlagsToString(uint8_t flags, const std::string& delimiter)
 {
@@ -63,7 +44,7 @@ TcpHeader::FlagsToString(uint8_t flags, const std::string& delimiter)
     {
         if (flags & (1 << i))
         {
-            if (flagsDescription.length() > 0)
+            if (!flagsDescription.empty())
             {
                 flagsDescription += delimiter;
             }
@@ -286,9 +267,7 @@ TcpHeader::Print(std::ostream& os) const
 
     os << " Seq=" << m_sequenceNumber << " Ack=" << m_ackNumber << " Win=" << m_windowSize;
 
-    TcpOptionList::const_iterator op;
-
-    for (op = m_options.begin(); op != m_options.end(); ++op)
+    for (auto op = m_options.begin(); op != m_options.end(); ++op)
     {
         os << " " << (*op)->GetInstanceTypeId().GetName() << "(";
         (*op)->Print(os);
@@ -319,8 +298,8 @@ TcpHeader::Serialize(Buffer::Iterator start) const
     // This implementation does not presently try to align options on word
     // boundaries using NOP options
     uint32_t optionLen = 0;
-    TcpOptionList::const_iterator op;
-    for (op = m_options.begin(); op != m_options.end(); ++op)
+
+    for (auto op = m_options.begin(); op != m_options.end(); ++op)
     {
         optionLen += (*op)->GetSerializedSize();
         (*op)->Serialize(i);
@@ -436,9 +415,8 @@ uint8_t
 TcpHeader::CalculateHeaderLength() const
 {
     uint32_t len = 20;
-    TcpOptionList::const_iterator i;
 
-    for (i = m_options.begin(); i != m_options.end(); ++i)
+    for (auto i = m_options.begin(); i != m_options.end(); ++i)
     {
         len += (*i)->GetSerializedSize();
     }
@@ -485,9 +463,7 @@ TcpHeader::GetOptionList() const
 Ptr<const TcpOption>
 TcpHeader::GetOption(uint8_t kind) const
 {
-    TcpOptionList::const_iterator i;
-
-    for (i = m_options.begin(); i != m_options.end(); ++i)
+    for (auto i = m_options.begin(); i != m_options.end(); ++i)
     {
         if ((*i)->GetKind() == kind)
         {
@@ -501,9 +477,7 @@ TcpHeader::GetOption(uint8_t kind) const
 bool
 TcpHeader::HasOption(uint8_t kind) const
 {
-    TcpOptionList::const_iterator i;
-
-    for (i = m_options.begin(); i != m_options.end(); ++i)
+    for (auto i = m_options.begin(); i != m_options.end(); ++i)
     {
         if ((*i)->GetKind() == kind)
         {

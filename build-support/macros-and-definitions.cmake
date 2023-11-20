@@ -150,6 +150,7 @@ set(CMAKE_HEADER_OUTPUT_DIRECTORY ${CMAKE_OUTPUT_DIRECTORY}/include/ns3)
 set(THIRD_PARTY_DIRECTORY ${PROJECT_SOURCE_DIR}/3rd-party)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 link_directories(${CMAKE_OUTPUT_DIRECTORY}/lib)
+file(MAKE_DIRECTORY ${CMAKE_OUTPUT_DIRECTORY})
 
 # Get installation folder default values for each platform and include package
 # configuration macro
@@ -664,23 +665,6 @@ macro(process_options)
     endif()
   endif()
 
-  set(ENABLE_SQLITE False)
-  if(${NS3_SQLITE})
-    # find_package(SQLite3 QUIET) # unsupported in CMake 3.10 We emulate the
-    # behavior of find_package below
-    find_external_library(
-      DEPENDENCY_NAME SQLite3 HEADER_NAME sqlite3.h LIBRARY_NAME sqlite3
-    )
-
-    if(${SQLite3_FOUND})
-      set(ENABLE_SQLITE True)
-      add_definitions(-DHAVE_SQLITE3)
-      include_directories(${SQLite3_INCLUDE_DIRS})
-    else()
-      message(${HIGHLIGHTED_STATUS} "SQLite was not found")
-    endif()
-  endif()
-
   if(${NS3_NATIVE_OPTIMIZATIONS} AND ${GCC})
     add_compile_options(-march=native -mtune=native)
   endif()
@@ -750,6 +734,68 @@ macro(process_options)
        "${PROJECT_SOURCE_DIR}/build-support/custom-modules"
   )
   list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/build-support/3rd-party")
+
+  # Include our package managers
+  # cmake-format: off
+  # Starting with a custom cmake file that provides a Hunter-like interface to vcpkg
+  # Use add_package(package) to install a package
+  # Then find_package(package) to use it
+  # cmake-format: on
+  include(ns3-vcpkg-hunter)
+
+  # Then the beautiful CPM manager (too bad it doesn't work with everything)
+  # https://github.com/cpm-cmake/CPM.cmake
+  if(${NS3_CPM})
+    set(CPM_DOWNLOAD_VERSION 0.38.2)
+    set(CPM_DOWNLOAD_LOCATION
+        "${CMAKE_BINARY_DIR}/cmake/CPM_${CPM_DOWNLOAD_VERSION}.cmake"
+    )
+    if(NOT (EXISTS ${CPM_DOWNLOAD_LOCATION}))
+      message(STATUS "Downloading CPM.cmake to ${CPM_DOWNLOAD_LOCATION}")
+      file(
+        DOWNLOAD
+        https://github.com/cpm-cmake/CPM.cmake/releases/download/v${CPM_DOWNLOAD_VERSION}/CPM.cmake
+        ${CPM_DOWNLOAD_LOCATION}
+      )
+    endif()
+    include(${CPM_DOWNLOAD_LOCATION})
+    set(CPM_USE_LOCAL_PACKAGES ON)
+  endif()
+  # Package manager test block
+  if(TEST_PACKAGE_MANAGER)
+    if(${TEST_PACKAGE_MANAGER} STREQUAL "CPM")
+      cpmaddpackage(
+        NAME ARMADILLO GIT_TAG 6cada351248c9a967b137b9fcb3d160dad7c709b
+        GIT_REPOSITORY https://gitlab.com/conradsnicta/armadillo-code.git
+      )
+      find_package(ARMADILLO REQUIRED)
+      message(STATUS "Armadillo was found? ${ARMADILLO_FOUND}")
+    elseif(${TEST_PACKAGE_MANAGER} STREQUAL "VCPKG")
+      add_package(Armadillo)
+      find_package(Armadillo REQUIRED)
+      message(STATUS "Armadillo was found? ${ARMADILLO_FOUND}")
+    else()
+      find_package(Armadillo REQUIRED)
+    endif()
+  endif()
+  # End of package managers
+
+  set(ENABLE_SQLITE False)
+  if(${NS3_SQLITE})
+    # find_package(SQLite3 QUIET) # unsupported in CMake 3.10 We emulate the
+    # behavior of find_package below
+    find_external_library(
+      DEPENDENCY_NAME SQLite3 HEADER_NAME sqlite3.h LIBRARY_NAME sqlite3
+    )
+
+    if(${SQLite3_FOUND})
+      set(ENABLE_SQLITE True)
+      add_definitions(-DHAVE_SQLITE3)
+      include_directories(${SQLite3_INCLUDE_DIRS})
+    else()
+      message(${HIGHLIGHTED_STATUS} "SQLite was not found")
+    endif()
+  endif()
 
   set(ENABLE_EIGEN False)
   if(${NS3_EIGEN})
@@ -889,6 +935,7 @@ macro(process_options)
       message(${HIGHLIGHTED_STATUS}
               "Python: development libraries were not found"
       )
+      set(ENABLE_PYTHON_BINDINGS_REASON "missing Python development libraries")
     endif()
   else()
     if(${NS3_PYTHON_BINDINGS})
@@ -896,6 +943,7 @@ macro(process_options)
         ${HIGHLIGHTED_STATUS}
         "Python: an incompatible version of Python was found, python bindings will be disabled"
       )
+      set(ENABLE_PYTHON_BINDINGS_REASON "incompatible Python version")
     endif()
   endif()
 
@@ -906,12 +954,24 @@ macro(process_options)
         ${HIGHLIGHTED_STATUS}
         "Bindings: python bindings require Python, but it could not be found"
       )
+      set(ENABLE_PYTHON_BINDINGS_REASON "missing dependency: python")
+    elseif(APPLE AND "${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "arm64")
+      # Warn users that Cppyy on ARM Macs isn't supported yet
+      message(${HIGHLIGHTED_STATUS}
+              "Bindings: macOS silicon detected -- see issue 930"
+      )
+      set(ENABLE_PYTHON_BINDINGS_REASON
+          "macOS silicon detected -- see issue 930"
+      )
     else()
       check_python_packages("cppyy" missing_packages)
       if(missing_packages)
         message(
           ${HIGHLIGHTED_STATUS}
           "Bindings: python bindings disabled due to the following missing dependencies: ${missing_packages}"
+        )
+        set(ENABLE_PYTHON_BINDINGS_REASON
+            "missing dependency: ${missing_packages}"
         )
       else()
         set(ENABLE_PYTHON_BINDINGS ON)
@@ -999,10 +1059,21 @@ macro(process_options)
 
   set(ENABLE_VISUALIZER FALSE)
   if(${NS3_VISUALIZER})
-    if((NOT ${ENABLE_PYTHON_BINDINGS}) OR (NOT ${Python3_FOUND}))
-      message(${HIGHLIGHTED_STATUS} "Visualizer requires Python bindings")
+    # If bindings are enabled, check if visualizer dependencies are met
+    if(${NS3_PYTHON_BINDINGS})
+      if(NOT ${Python3_FOUND})
+        set(ENABLE_VISUALIZER_REASON "missing Python")
+      elseif(NOT ${ENABLE_PYTHON_BINDINGS})
+        set(ENABLE_VISUALIZER_REASON "missing Python Bindings")
+      else()
+        set(ENABLE_VISUALIZER TRUE)
+      endif()
+      # If bindings are disabled, just say python bindings are disabled
     else()
-      set(ENABLE_VISUALIZER TRUE)
+      set(ENABLE_VISUALIZER_REASON "Python Bindings are disabled")
+    endif()
+    if(ENABLE_VISUALIZER_REASON)
+      message(${HIGHLIGHTED_STATUS} "Visualizer: ${ENABLE_VISUALIZER_REASON}")
     endif()
   endif()
 

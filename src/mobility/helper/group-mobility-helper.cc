@@ -19,7 +19,7 @@
  * Adapted from 'mobility-helper.cc' for group mobility by Tom Henderson
  */
 
-#include "ns3/group-mobility-helper.h"
+#include "group-mobility-helper.h"
 
 #include "ns3/config.h"
 #include "ns3/hierarchical-mobility-model.h"
@@ -101,7 +101,7 @@ GroupMobilityHelper::Install(std::string nodeName)
 void
 GroupMobilityHelper::Install(NodeContainer c)
 {
-    for (NodeContainer::Iterator i = c.Begin(); i != c.End(); ++i)
+    for (auto i = c.Begin(); i != c.End(); ++i)
     {
         Install(*i);
     }
@@ -114,7 +114,7 @@ GroupMobilityHelper::AssignStreams(NodeContainer c, int64_t stream)
     Ptr<Node> node;
     bool firstNode = true;
     Ptr<HierarchicalMobilityModel> mobility;
-    for (NodeContainer::Iterator i = c.Begin(); i != c.End(); ++i)
+    for (auto i = c.Begin(); i != c.End(); ++i)
     {
         node = (*i);
         mobility = node->GetObject<HierarchicalMobilityModel>();

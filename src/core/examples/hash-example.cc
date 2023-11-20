@@ -296,10 +296,10 @@ class Dictionary
             return;
         }
 
-        int newPhrases = 0;
+        bool newPhrases = false;
         for (auto& collider : m_hashes)
         {
-            newPhrases += collider.Add(phrase);
+            newPhrases |= collider.Add(phrase);
         }
 
         if (newPhrases)
@@ -352,7 +352,7 @@ class Dictionary
         //
         // Number of buckets = k = 2^bits
         long double k32 = 0xFFFFFFFF;
-        long double k64 = static_cast<long double>(0xFFFFFFFFFFFFFFFFULL);
+        auto k64 = static_cast<long double>(0xFFFFFFFFFFFFFFFFULL);
 
         long double n = m_nphrases;
         long double Ec32 = n * (n - 1) / (2 * k32) * (1 - (n - 2) / (3 * k32));

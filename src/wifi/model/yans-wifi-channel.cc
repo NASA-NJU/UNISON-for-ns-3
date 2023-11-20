@@ -19,6 +19,7 @@
 
 #include "yans-wifi-channel.h"
 
+#include "wifi-net-device.h"
 #include "wifi-ppdu.h"
 #include "wifi-psdu.h"
 #include "wifi-utils.h"
@@ -31,7 +32,6 @@
 #include "ns3/propagation-delay-model.h"
 #include "ns3/propagation-loss-model.h"
 #include "ns3/simulator.h"
-#include "ns3/wifi-net-device.h"
 
 namespace ns3
 {
@@ -92,7 +92,7 @@ YansWifiChannel::Send(Ptr<YansWifiPhy> sender, Ptr<const WifiPpdu> ppdu, double 
     NS_LOG_FUNCTION(this << sender << ppdu << txPowerDbm);
     Ptr<MobilityModel> senderMobility = sender->GetMobility();
     NS_ASSERT(senderMobility);
-    for (PhyList::const_iterator i = m_phyList.begin(); i != m_phyList.end(); i++)
+    for (auto i = m_phyList.begin(); i != m_phyList.end(); i++)
     {
         if (sender != (*i))
         {
@@ -137,7 +137,7 @@ YansWifiChannel::Receive(Ptr<YansWifiPhy> phy, Ptr<const WifiPpdu> ppdu, double 
     // Do no further processing if signal is too weak
     // Current implementation assumes constant RX power over the PPDU duration
     // Compare received TX power per MHz to normalized RX sensitivity
-    uint16_t txWidth = ppdu->GetTransmissionChannelWidth();
+    uint16_t txWidth = ppdu->GetTxChannelWidth();
     if ((rxPowerDbm + phy->GetRxGain()) < phy->GetRxSensitivity() + RatioToDb(txWidth / 20.0))
     {
         NS_LOG_INFO("Received signal too weak to process: " << rxPowerDbm << " dBm");

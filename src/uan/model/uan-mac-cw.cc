@@ -19,12 +19,13 @@
 
 #include "uan-mac-cw.h"
 
+#include "uan-header-common.h"
+
 #include "ns3/attribute.h"
 #include "ns3/double.h"
 #include "ns3/log.h"
 #include "ns3/nstime.h"
 #include "ns3/trace-source-accessor.h"
-#include "ns3/uan-header-common.h"
 #include "ns3/uinteger.h"
 
 namespace ns3
@@ -150,7 +151,7 @@ UanMacCw::Enqueue(Ptr<Packet> packet, uint16_t protocolNumber, const Address& de
             m_pktTx = packet;
             m_pktTxProt = GetTxModeIndex();
             m_state = CCABUSY;
-            uint32_t cw = (uint32_t)m_rv->GetValue(0, m_cw);
+            auto cw = (uint32_t)m_rv->GetValue(0, m_cw);
             m_savedDelayS = cw * m_slotTime;
             m_sendTime = Simulator::Now() + m_savedDelayS;
             NS_LOG_DEBUG("Time " << Now().As(Time::S) << ": Addr " << GetAddress()

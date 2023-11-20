@@ -1249,7 +1249,7 @@ void
 WifiPhy::SetNumberOfAntennas(uint8_t antennas)
 {
     NS_LOG_FUNCTION(this << +antennas);
-    NS_ASSERT_MSG(antennas > 0 && antennas <= 4, "unsupported number of antennas");
+    NS_ASSERT_MSG(antennas > 0 && antennas <= 8, "unsupported number of antennas");
     m_numberOfAntennas = antennas;
     if (m_interference)
     {
@@ -1725,7 +1725,30 @@ WifiPhy::Send(WifiConstPsduMap psdus, const WifiTxVector& txVector)
     NS_ASSERT(!m_state->IsStateTx() && !m_state->IsStateSwitching());
     NS_ASSERT(m_endTxEvent.IsExpired());
 
-    if (txVector.GetNssMax() > GetMaxSupportedTxSpatialStreams())
+    if (!txVector.IsValid())
+    {
+        NS_FATAL_ERROR("TX-VECTOR is invalid!");
+    }
+
+    uint8_t nss = 0;
+    if (txVector.IsMu())
+    {
+        // We do not support mixed OFDMA and MU-MIMO
+        if (txVector.IsDlMuMimo())
+        {
+            nss = txVector.GetNssTotal();
+        }
+        else
+        {
+            nss = txVector.GetNssMax();
+        }
+    }
+    else
+    {
+        nss = txVector.GetNss();
+    }
+
+    if (nss > GetMaxSupportedTxSpatialStreams())
     {
         NS_FATAL_ERROR("Unsupported number of spatial streams!");
     }
@@ -1747,9 +1770,7 @@ WifiPhy::Send(WifiConstPsduMap psdus, const WifiTxVector& txVector)
     {
         noEndPreambleDetectionEvent &= it.second->NoEndPreambleDetectionEvents();
     }
-    if (!noEndPreambleDetectionEvent ||
-        (m_currentEvent &&
-         (m_currentEvent->GetEndTime() > (Simulator::Now() + m_state->GetDelayUntilIdle()))))
+    if (!noEndPreambleDetectionEvent || m_currentEvent)
     {
         AbortCurrentReception(RECEPTION_ABORTED_BY_TX);
     }
@@ -1817,6 +1838,13 @@ WifiPhy::GetPreviouslyRxPpduUid() const
 }
 
 void
+WifiPhy::SetPreviouslyRxPpduUid(uint64_t uid)
+{
+    NS_ASSERT(m_standard >= WIFI_STANDARD_80211be);
+    m_previouslyRxPpduUid = uid;
+}
+
+void
 WifiPhy::Reset()
 {
     NS_LOG_FUNCTION(this);
@@ -1846,7 +1874,7 @@ WifiPhy::StartReceivePreamble(Ptr<const WifiPpdu> ppdu,
         // TODO find a fallback PHY for receiving the PPDU (e.g. 11a for 11ax due to preamble
         // structure)
         NS_LOG_DEBUG("Unsupported modulation received (" << modulation << "), consider as noise");
-        m_interference->Add(ppdu, ppdu->GetTxVector(), rxDuration, rxPowersW);
+        m_interference->Add(ppdu, rxDuration, rxPowersW);
         SwitchMaybeToCcaBusy(nullptr);
     }
 }
@@ -2146,7 +2174,7 @@ WifiPhy::GetTxPowerForTransmission(Ptr<const WifiPpdu> ppdu) const
     }
     else
     {
-        if (txVector.GetNssMax() > 1)
+        if (txVector.GetNssMax() > 1 || txVector.GetNssTotal() > 1)
         {
             txPowerDbm = std::min(m_txPowerMaxMimo, GetPowerDbm(txVector.GetTxPowerLevel()));
         }
@@ -2157,7 +2185,7 @@ WifiPhy::GetTxPowerForTransmission(Ptr<const WifiPpdu> ppdu) const
     }
 
     // Apply power density constraint on EIRP
-    uint16_t channelWidth = ppdu->GetTransmissionChannelWidth();
+    uint16_t channelWidth = ppdu->GetTxChannelWidth();
     double txPowerDbmPerMhz =
         (txPowerDbm + GetTxGain()) - RatioToDb(channelWidth); // account for antenna gain since EIRP
     NS_LOG_INFO("txPowerDbm=" << txPowerDbm << " with txPowerDbmPerMhz=" << txPowerDbmPerMhz

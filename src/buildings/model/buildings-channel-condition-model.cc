@@ -18,11 +18,12 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include "ns3/buildings-channel-condition-model.h"
+#include "buildings-channel-condition-model.h"
 
-#include "ns3/building-list.h"
+#include "building-list.h"
+#include "mobility-building-info.h"
+
 #include "ns3/log.h"
-#include "ns3/mobility-building-info.h"
 #include "ns3/mobility-model.h"
 
 namespace ns3
@@ -170,7 +171,7 @@ bool
 BuildingsChannelConditionModel::IsLineOfSightBlocked(const ns3::Vector& l1,
                                                      const ns3::Vector& l2) const
 {
-    for (BuildingList::Iterator bit = BuildingList::Begin(); bit != BuildingList::End(); ++bit)
+    for (auto bit = BuildingList::Begin(); bit != BuildingList::End(); ++bit)
     {
         if ((*bit)->IsIntersect(l1, l2))
         {

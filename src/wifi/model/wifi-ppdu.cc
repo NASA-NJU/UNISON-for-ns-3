@@ -19,10 +19,10 @@
 
 #include "wifi-ppdu.h"
 
+#include "wifi-phy-operating-channel.h"
 #include "wifi-psdu.h"
 
 #include "ns3/log.h"
-#include "ns3/wifi-phy-operating-channel.h"
 
 namespace ns3
 {
@@ -42,7 +42,9 @@ WifiPpdu::WifiPpdu(Ptr<const WifiPsdu> psdu,
       m_txVector(txVector),
       m_operatingChannel(channel),
       m_truncatedTx(false),
-      m_txPowerLevel(txVector.GetTxPowerLevel())
+      m_txPowerLevel(txVector.GetTxPowerLevel()),
+      m_txAntennas(txVector.GetNTx()),
+      m_txChannelWidth(txVector.GetChannelWidth())
 {
     NS_LOG_FUNCTION(this << *psdu << txVector << channel << uid);
     m_psdus.insert(std::make_pair(SU_STA_ID, psdu));
@@ -63,7 +65,8 @@ WifiPpdu::WifiPpdu(const WifiConstPsduMap& psdus,
       m_operatingChannel(channel),
       m_truncatedTx(false),
       m_txPowerLevel(txVector.GetTxPowerLevel()),
-      m_txAntennas(txVector.GetNTx())
+      m_txAntennas(txVector.GetNTx()),
+      m_txChannelWidth(txVector.GetChannelWidth())
 {
     NS_LOG_FUNCTION(this << psdus << txVector << channel << uid);
     m_psdus = psdus;
@@ -86,6 +89,7 @@ WifiPpdu::GetTxVector() const
         m_txVector = DoGetTxVector();
         m_txVector->SetTxPowerLevel(m_txPowerLevel);
         m_txVector->SetNTx(m_txAntennas);
+        m_txVector->SetChannelWidth(m_txChannelWidth);
     }
     return m_txVector.value();
 }
@@ -139,9 +143,9 @@ WifiPpdu::GetModulation() const
 }
 
 uint16_t
-WifiPpdu::GetTransmissionChannelWidth() const
+WifiPpdu::GetTxChannelWidth() const
 {
-    return GetTxVector().GetChannelWidth();
+    return m_txChannelWidth;
 }
 
 uint16_t
@@ -154,9 +158,8 @@ bool
 WifiPpdu::DoesOverlapChannel(uint16_t minFreq, uint16_t maxFreq) const
 {
     NS_LOG_FUNCTION(this << m_txCenterFreq << minFreq << maxFreq);
-    uint16_t txChannelWidth = GetTxVector().GetChannelWidth();
-    uint16_t minTxFreq = m_txCenterFreq - txChannelWidth / 2;
-    uint16_t maxTxFreq = m_txCenterFreq + txChannelWidth / 2;
+    uint16_t minTxFreq = m_txCenterFreq - m_txChannelWidth / 2;
+    uint16_t maxTxFreq = m_txCenterFreq + m_txChannelWidth / 2;
     /**
      * The PPDU does not overlap the channel in two cases.
      *

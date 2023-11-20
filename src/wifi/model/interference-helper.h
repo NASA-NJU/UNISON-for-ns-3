@@ -44,14 +44,10 @@ class Event : public SimpleRefCount<Event>
      * be moved into this object.
      *
      * \param ppdu the PPDU
-     * \param txVector the TXVECTOR
      * \param duration duration of the PPDU
      * \param rxPower the received power per band (W)
      */
-    Event(Ptr<const WifiPpdu> ppdu,
-          const WifiTxVector& txVector,
-          Time duration,
-          RxPowerWattPerChannelBand&& rxPower);
+    Event(Ptr<const WifiPpdu> ppdu, Time duration, RxPowerWattPerChannelBand&& rxPower);
     ~Event();
 
     /**
@@ -98,22 +94,24 @@ class Event : public SimpleRefCount<Event>
      */
     const RxPowerWattPerChannelBand& GetRxPowerWPerBand() const;
     /**
-     * Return the TXVECTOR of the PPDU.
-     *
-     * \return the TXVECTOR of the PPDU
-     */
-    const WifiTxVector& GetTxVector() const;
-    /**
      * Update the received power (W) for all bands, i.e. add up the received power
      * to the current received power, for each band.
      *
      * \param rxPower the received power (W) for all bands.
      */
     void UpdateRxPowerW(const RxPowerWattPerChannelBand& rxPower);
+    /**
+     * Update the PPDU that initially generated the event.
+     * This is needed to have the PPDU holding the correct TXVECTOR
+     * upon reception of multiple signals carring the same content
+     * but over different channel width (typically non-HT duplicates).
+     *
+     * \param ppdu the new PPDU to use for this event.
+     */
+    void UpdatePpdu(Ptr<const WifiPpdu> ppdu);
 
   private:
     Ptr<const WifiPpdu> m_ppdu;           //!< PPDU
-    WifiTxVector m_txVector;              //!< TXVECTOR
     Time m_startTime;                     //!< start time
     Time m_endTime;                       //!< end time
     RxPowerWattPerChannelBand m_rxPowerW; //!< received power in watts per band
@@ -209,20 +207,17 @@ class InterferenceHelper : public Object
      * Add the PPDU-related signal to interference helper.
      *
      * \param ppdu the PPDU
-     * \param txVector the TXVECTOR
      * \param duration the PPDU duration
      * \param rxPower received power per band (W)
-     * \param isStartOfdmaRxing flag whether the event corresponds to the start of the OFDMA payload
-     * reception (only used for UL-OFDMA) //TODO simplify this once WifiPpdu is subclassed by adding
-     * an attribute
+     * \param isStartHePortionRxing flag whether the event corresponds to the start of the HE
+     * portion reception (only used for MU)
      *
      * \return Event
      */
     Ptr<Event> Add(Ptr<const WifiPpdu> ppdu,
-                   const WifiTxVector& txVector,
                    Time duration,
                    RxPowerWattPerChannelBand& rxPower,
-                   bool isStartOfdmaRxing = false);
+                   bool isStartHePortionRxing = false);
 
     /**
      * Add a non-Wifi signal to interference helper.
@@ -428,10 +423,10 @@ class InterferenceHelper : public Object
      * Append the given Event.
      *
      * \param event the event to be appended
-     * \param isStartOfdmaRxing flag whether event corresponds to the start of the OFDMA payload
-     * reception (only used for UL-OFDMA)
+     * \param isStartHePortionRxing flag whether event corresponds to the start of the HE portion
+     * reception (only used for MU)
      */
-    void AppendEvent(Ptr<Event> event, bool isStartOfdmaRxing);
+    void AppendEvent(Ptr<Event> event, bool isStartHePortionRxing);
 
     /**
      * Calculate noise and interference power in W.
@@ -443,8 +438,21 @@ class InterferenceHelper : public Object
      * \return noise and interference power
      */
     double CalculateNoiseInterferenceW(Ptr<Event> event,
-                                       NiChangesPerBand* nis,
+                                       NiChangesPerBand& nis,
                                        const WifiSpectrumBandInfo& band) const;
+
+    /**
+     * Calculate power of all other events preceding a given event that belong to the same MU-MIMO
+     * transmission.
+     *
+     * \param event the event
+     * \param band the band
+     *
+     * \return the power of all other events preceding the event that belong to the same MU-MIMO
+     * transmission
+     */
+    double CalculateMuMimoPowerW(Ptr<const Event> event, const WifiSpectrumBandInfo& band) const;
+
     /**
      * Calculate the error rate of the given PHY payload only in the provided time
      * window (thus enabling per MPDU PER information). The PHY payload can be divided into
@@ -535,6 +543,17 @@ class InterferenceHelper : public Object
     NiChanges::iterator AddNiChangeEvent(Time moment,
                                          NiChange change,
                                          NiChangesPerBand::iterator niIt);
+
+    /**
+     * Return whether another event is a MU-MIMO event that belongs to the same transmission and to
+     * the same RU.
+     *
+     * \param currentEvent the current event that is being inspected
+     * \param otherEvent the other event to compare against
+     *
+     * \return whether both events belong to the same transmission and to the same RU
+     */
+    bool IsSameMuMimoTransmission(Ptr<const Event> currentEvent, Ptr<const Event> otherEvent) const;
 };
 
 } // namespace ns3

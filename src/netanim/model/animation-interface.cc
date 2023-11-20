@@ -38,7 +38,6 @@
 #endif
 #include "animation-interface.h"
 
-#include "ns3/animation-interface.h"
 #include "ns3/channel.h"
 #include "ns3/config.h"
 #include "ns3/constant-position-mobility-model.h"
@@ -136,7 +135,7 @@ AnimationInterface::EnableWifiPhyCounters(Time startTime, Time stopTime, Time po
     m_wifiPhyCountersPollInterval = pollInterval;
     m_wifiPhyTxDropCounterId = AddNodeCounter("WifiPhy TxDrop", AnimationInterface::DOUBLE_COUNTER);
     m_wifiPhyRxDropCounterId = AddNodeCounter("WifiPhy RxDrop", AnimationInterface::DOUBLE_COUNTER);
-    for (NodeList::Iterator i = NodeList::Begin(); i != NodeList::End(); ++i)
+    for (auto i = NodeList::Begin(); i != NodeList::End(); ++i)
     {
         Ptr<Node> n = *i;
         m_nodeWifiPhyTxDrop[n->GetId()] = 0;
@@ -156,7 +155,7 @@ AnimationInterface::EnableWifiMacCounters(Time startTime, Time stopTime, Time po
     m_wifiMacTxDropCounterId = AddNodeCounter("WifiMac TxDrop", AnimationInterface::DOUBLE_COUNTER);
     m_wifiMacRxCounterId = AddNodeCounter("WifiMac Rx", AnimationInterface::DOUBLE_COUNTER);
     m_wifiMacRxDropCounterId = AddNodeCounter("WifiMac RxDrop", AnimationInterface::DOUBLE_COUNTER);
-    for (NodeList::Iterator i = NodeList::Begin(); i != NodeList::End(); ++i)
+    for (auto i = NodeList::Begin(); i != NodeList::End(); ++i)
     {
         Ptr<Node> n = *i;
         m_nodeWifiMacTx[n->GetId()] = 0;
@@ -179,7 +178,7 @@ AnimationInterface::EnableQueueCounters(Time startTime, Time stopTime, Time poll
     m_queueEnqueueCounterId = AddNodeCounter("Enqueue", AnimationInterface::DOUBLE_COUNTER);
     m_queueDequeueCounterId = AddNodeCounter("Dequeue", AnimationInterface::DOUBLE_COUNTER);
     m_queueDropCounterId = AddNodeCounter("Queue Drop", AnimationInterface::DOUBLE_COUNTER);
-    for (NodeList::Iterator i = NodeList::Begin(); i != NodeList::End(); ++i)
+    for (auto i = NodeList::Begin(); i != NodeList::End(); ++i)
     {
         Ptr<Node> n = *i;
         m_nodeQueueEnqueue[n->GetId()] = 0;
@@ -200,7 +199,7 @@ AnimationInterface::EnableIpv4L3ProtocolCounters(Time startTime, Time stopTime, 
     m_ipv4L3ProtocolTxCounterId = AddNodeCounter("Ipv4 Tx", AnimationInterface::DOUBLE_COUNTER);
     m_ipv4L3ProtocolRxCounterId = AddNodeCounter("Ipv4 Rx", AnimationInterface::DOUBLE_COUNTER);
     m_ipv4L3ProtocolDropCounterId = AddNodeCounter("Ipv4 Drop", AnimationInterface::DOUBLE_COUNTER);
-    for (NodeList::Iterator i = NodeList::Begin(); i != NodeList::End(); ++i)
+    for (auto i = NodeList::Begin(); i != NodeList::End(); ++i)
     {
         Ptr<Node> n = *i;
         m_nodeIpv4Tx[n->GetId()] = 0;
@@ -441,7 +440,7 @@ AnimationInterface::UpdateNodeDescription(uint32_t nodeId, std::string descr)
 double
 AnimationInterface::GetNodeEnergyFraction(Ptr<const Node> node) const
 {
-    const EnergyFractionMap::const_iterator fractionIter = m_nodeEnergyFraction.find(node->GetId());
+    const auto fractionIter = m_nodeEnergyFraction.find(node->GetId());
     NS_ASSERT(fractionIter != m_nodeEnergyFraction.end());
     return fractionIter->second;
 }
@@ -501,7 +500,7 @@ std::vector<Ptr<Node>>
 AnimationInterface::GetMovedNodes()
 {
     std::vector<Ptr<Node>> movedNodes;
-    for (NodeList::Iterator i = NodeList::Begin(); i != NodeList::End(); ++i)
+    for (auto i = NodeList::Begin(); i != NodeList::End(); ++i)
     {
         Ptr<Node> n = *i;
         NS_ASSERT(n);
@@ -574,9 +573,8 @@ AnimationInterface::WriteRoutePath(uint32_t nodeId,
 {
     NS_LOG_INFO("Writing Route Path From :" << nodeId << " To: " << destination);
     WriteXmlRp(nodeId, destination, rpElements);
-    /*for (Ipv4RoutePathElements::const_iterator i = rpElements.begin ();
-         i != rpElements.end ();
-         ++i)
+    /*
+    for (auto i = rpElements.begin (); i != rpElements.end (); ++i)
       {
         Ipv4RoutePathElement rpElement = *i;
         NS_LOG_INFO ("Node:" << rpElement.nodeId << "-->" << rpElement.nextHop.c_str ());
@@ -1125,7 +1123,7 @@ AnimationInterface::LteSpectrumPhyTxStart(std::string context, Ptr<const PacketB
     UpdatePosition(ndev);
 
     std::list<Ptr<Packet>> pbList = pb->GetPackets();
-    for (std::list<Ptr<Packet>>::iterator i = pbList.begin(); i != pbList.end(); ++i)
+    for (auto i = pbList.begin(); i != pbList.end(); ++i)
     {
         Ptr<Packet> p = *i;
         ++gAnimUid;
@@ -1153,7 +1151,7 @@ AnimationInterface::LteSpectrumPhyRxStart(std::string context, Ptr<const PacketB
     UpdatePosition(ndev);
 
     std::list<Ptr<Packet>> pbList = pb->GetPackets();
-    for (std::list<Ptr<Packet>>::iterator i = pbList.begin(); i != pbList.end(); ++i)
+    for (auto i = pbList.begin(); i != pbList.end(); ++i)
     {
         Ptr<Packet> p = *i;
         uint64_t animUid = GetAnimUidFromPacket(p);
@@ -1326,8 +1324,7 @@ AnimationInterface::PurgePendingPackets(AnimationInterface::ProtocolType protoco
         return;
     }
     std::vector<uint64_t> purgeList;
-    for (AnimUidPacketInfoMap::iterator i = pendingPackets->begin(); i != pendingPackets->end();
-         ++i)
+    for (auto i = pendingPackets->begin(); i != pendingPackets->end(); ++i)
     {
         AnimPacketInfo pktInfo = i->second;
         double delta = (Simulator::Now().GetSeconds() - pktInfo.m_fbTx);
@@ -1336,7 +1333,7 @@ AnimationInterface::PurgePendingPackets(AnimationInterface::ProtocolType protoco
             purgeList.push_back(i->first);
         }
     }
-    for (std::vector<uint64_t>::iterator i = purgeList.begin(); i != purgeList.end(); ++i)
+    for (auto i = purgeList.begin(); i != purgeList.end(); ++i)
     {
         pendingPackets->erase(*i);
     }
@@ -1503,9 +1500,7 @@ void
 AnimationInterface::AddToIpv4AddressNodeIdTable(std::vector<std::string> ipv4Addresses,
                                                 uint32_t nodeId)
 {
-    for (std::vector<std::string>::const_iterator i = ipv4Addresses.begin();
-         i != ipv4Addresses.end();
-         ++i)
+    for (auto i = ipv4Addresses.begin(); i != ipv4Addresses.end(); ++i)
     {
         AddToIpv4AddressNodeIdTable(*i, nodeId);
     }
@@ -1522,9 +1517,7 @@ void
 AnimationInterface::AddToIpv6AddressNodeIdTable(std::vector<std::string> ipv6Addresses,
                                                 uint32_t nodeId)
 {
-    for (std::vector<std::string>::const_iterator i = ipv6Addresses.begin();
-         i != ipv6Addresses.end();
-         ++i)
+    for (auto i = ipv6Addresses.begin(); i != ipv6Addresses.end(); ++i)
     {
         AddToIpv6AddressNodeIdTable(*i, nodeId);
     }
@@ -1592,7 +1585,7 @@ AnimationInterface::ConnectLteUe(Ptr<Node> n, Ptr<LteUeNetDevice> nd, uint32_t d
 void
 AnimationInterface::ConnectLte()
 {
-    for (NodeList::Iterator i = NodeList::Begin(); i != NodeList::End(); ++i)
+    for (auto i = NodeList::Begin(); i != NodeList::End(); ++i)
     {
         Ptr<Node> n = *i;
         NS_ASSERT(n);
@@ -1893,12 +1886,11 @@ AnimationInterface::GetIpv6Addresses(Ptr<NetDevice> nd)
 void
 AnimationInterface::WriteIpv4Addresses()
 {
-    for (NodeIdIpv4Map::const_iterator i = m_nodeIdIpv4Map.begin(); i != m_nodeIdIpv4Map.end(); ++i)
+    for (auto i = m_nodeIdIpv4Map.begin(); i != m_nodeIdIpv4Map.end(); ++i)
     {
         std::vector<std::string> ipv4Addresses;
-        std::pair<NodeIdIpv4Map::const_iterator, NodeIdIpv4Map::const_iterator> iterPair =
-            m_nodeIdIpv4Map.equal_range(i->first);
-        for (NodeIdIpv4Map::const_iterator it = iterPair.first; it != iterPair.second; ++it)
+        auto iterPair = m_nodeIdIpv4Map.equal_range(i->first);
+        for (auto it = iterPair.first; it != iterPair.second; ++it)
         {
             ipv4Addresses.push_back(it->second);
         }
@@ -1909,13 +1901,12 @@ AnimationInterface::WriteIpv4Addresses()
 void
 AnimationInterface::WriteIpv6Addresses()
 {
-    for (NodeIdIpv6Map::const_iterator i = m_nodeIdIpv6Map.begin(); i != m_nodeIdIpv6Map.end();
+    for (auto i = m_nodeIdIpv6Map.begin(); i != m_nodeIdIpv6Map.end();
          i = m_nodeIdIpv6Map.upper_bound(i->first))
     {
         std::vector<std::string> ipv6Addresses;
-        std::pair<NodeIdIpv6Map::const_iterator, NodeIdIpv6Map::const_iterator> iterPair =
-            m_nodeIdIpv6Map.equal_range(i->first);
-        for (NodeIdIpv6Map::const_iterator it = iterPair.first; it != iterPair.second; ++it)
+        auto iterPair = m_nodeIdIpv6Map.equal_range(i->first);
+        for (auto it = iterPair.first; it != iterPair.second; ++it)
         {
             ipv6Addresses.push_back(it->second);
         }
@@ -1926,7 +1917,7 @@ AnimationInterface::WriteIpv6Addresses()
 void
 AnimationInterface::WriteLinkProperties()
 {
-    for (NodeList::Iterator i = NodeList::Begin(); i != NodeList::End(); ++i)
+    for (auto i = NodeList::Begin(); i != NodeList::End(); ++i)
     {
         Ptr<Node> n = *i;
         UpdatePosition(n);
@@ -2027,7 +2018,7 @@ AnimationInterface::WriteLinkProperties()
 void
 AnimationInterface::WriteNodes()
 {
-    for (NodeList::Iterator i = NodeList::Begin(); i != NodeList::End(); ++i)
+    for (auto i = NodeList::Begin(); i != NodeList::End(); ++i)
     {
         Ptr<Node> n = *i;
         NS_LOG_INFO("Update Position for Node: " << n->GetId());
@@ -2039,7 +2030,7 @@ AnimationInterface::WriteNodes()
 void
 AnimationInterface::WriteNodeColors()
 {
-    for (NodeList::Iterator i = NodeList::Begin(); i != NodeList::End(); ++i)
+    for (auto i = NodeList::Begin(); i != NodeList::End(); ++i)
     {
         Ptr<Node> n = *i;
         Rgb rgb = {255, 0, 0};
@@ -2054,7 +2045,7 @@ AnimationInterface::WriteNodeColors()
 void
 AnimationInterface::WriteNodeSizes()
 {
-    for (NodeList::Iterator i = NodeList::Begin(); i != NodeList::End(); ++i)
+    for (auto i = NodeList::Begin(); i != NodeList::End(); ++i)
     {
         Ptr<Node> n = *i;
         NS_LOG_INFO("Update Size for Node: " << n->GetId());
@@ -2069,7 +2060,7 @@ AnimationInterface::WriteNodeEnergies()
 {
     m_remainingEnergyCounterId =
         AddNodeCounter("RemainingEnergy", AnimationInterface::DOUBLE_COUNTER);
-    for (NodeList::Iterator i = NodeList::Begin(); i != NodeList::End(); ++i)
+    for (auto i = NodeList::Begin(); i != NodeList::End(); ++i)
     {
         Ptr<Node> n = *i;
         if (NodeList::GetNode(n->GetId())->GetObject<EnergySource>())
@@ -2145,7 +2136,7 @@ AnimationInterface::TrackQueueCounters()
         NS_LOG_INFO("TrackQueueCounters Completed");
         return;
     }
-    for (NodeList::Iterator i = NodeList::Begin(); i != NodeList::End(); ++i)
+    for (auto i = NodeList::Begin(); i != NodeList::End(); ++i)
     {
         uint32_t nodeId = Ptr<Node>(*i)->GetId();
         UpdateNodeCounter(m_queueEnqueueCounterId, nodeId, m_nodeQueueEnqueue[nodeId]);
@@ -2163,7 +2154,7 @@ AnimationInterface::TrackWifiMacCounters()
         NS_LOG_INFO("TrackWifiMacCounters Completed");
         return;
     }
-    for (NodeList::Iterator i = NodeList::Begin(); i != NodeList::End(); ++i)
+    for (auto i = NodeList::Begin(); i != NodeList::End(); ++i)
     {
         uint32_t nodeId = Ptr<Node>(*i)->GetId();
         UpdateNodeCounter(m_wifiMacTxCounterId, nodeId, m_nodeWifiMacTx[nodeId]);
@@ -2184,7 +2175,7 @@ AnimationInterface::TrackWifiPhyCounters()
         NS_LOG_INFO("TrackWifiPhyCounters Completed");
         return;
     }
-    for (NodeList::Iterator i = NodeList::Begin(); i != NodeList::End(); ++i)
+    for (auto i = NodeList::Begin(); i != NodeList::End(); ++i)
     {
         uint32_t nodeId = Ptr<Node>(*i)->GetId();
         UpdateNodeCounter(m_wifiPhyTxDropCounterId, nodeId, m_nodeWifiPhyTxDrop[nodeId]);
@@ -2203,7 +2194,7 @@ AnimationInterface::TrackIpv4L3ProtocolCounters()
         NS_LOG_INFO("TrackIpv4L3ProtocolCounters Completed");
         return;
     }
-    for (NodeList::Iterator i = NodeList::Begin(); i != NodeList::End(); ++i)
+    for (auto i = NodeList::Begin(); i != NodeList::End(); ++i)
     {
         uint32_t nodeId = Ptr<Node>(*i)->GetId();
         UpdateNodeCounter(m_ipv4L3ProtocolTxCounterId, nodeId, m_nodeIpv4Tx[nodeId]);
@@ -2224,9 +2215,7 @@ AnimationInterface::TrackIpv4RoutePaths()
     {
         return;
     }
-    for (std::vector<Ipv4RouteTrackElement>::const_iterator i = m_ipv4RouteTrackElements.begin();
-         i != m_ipv4RouteTrackElements.end();
-         ++i)
+    for (auto i = m_ipv4RouteTrackElements.begin(); i != m_ipv4RouteTrackElements.end(); ++i)
     {
         Ipv4RouteTrackElement trackElement = *i;
         Ptr<Node> fromNode = NodeList::GetNode(trackElement.fromNodeId);
@@ -2301,7 +2290,7 @@ AnimationInterface::TrackIpv4Route()
     }
     if (m_routingNc.GetN())
     {
-        for (NodeContainer::Iterator i = m_routingNc.Begin(); i != m_routingNc.End(); ++i)
+        for (auto i = m_routingNc.Begin(); i != m_routingNc.End(); ++i)
         {
             Ptr<Node> n = *i;
             WriteXmlRouting(n->GetId(), GetIpv4RoutingTable(n));
@@ -2309,7 +2298,7 @@ AnimationInterface::TrackIpv4Route()
     }
     else
     {
-        for (NodeList::Iterator i = NodeList::Begin(); i != NodeList::End(); ++i)
+        for (auto i = NodeList::Begin(); i != NodeList::End(); ++i)
         {
             Ptr<Node> n = *i;
             WriteXmlRouting(n->GetId(), GetIpv4RoutingTable(n));
@@ -2496,9 +2485,7 @@ AnimationInterface::WriteXmlIpv4Addresses(uint32_t nodeId, std::vector<std::stri
 {
     AnimXmlElement element("ip");
     element.AddAttribute("n", nodeId);
-    for (std::vector<std::string>::const_iterator i = ipv4Addresses.begin();
-         i != ipv4Addresses.end();
-         ++i)
+    for (auto i = ipv4Addresses.begin(); i != ipv4Addresses.end(); ++i)
     {
         AnimXmlElement valueElement("address");
         valueElement.SetText(*i);
@@ -2512,9 +2499,7 @@ AnimationInterface::WriteXmlIpv6Addresses(uint32_t nodeId, std::vector<std::stri
 {
     AnimXmlElement element("ipv6");
     element.AddAttribute("n", nodeId);
-    for (std::vector<std::string>::const_iterator i = ipv6Addresses.begin();
-         i != ipv6Addresses.end();
-         ++i)
+    for (auto i = ipv6Addresses.begin(); i != ipv6Addresses.end(); ++i)
     {
         AnimXmlElement valueElement("address");
         valueElement.SetText(*i);
@@ -2544,7 +2529,7 @@ AnimationInterface::WriteXmlRp(uint32_t nodeId,
     element.AddAttribute("id", nodeId);
     element.AddAttribute("d", destination.c_str());
     element.AddAttribute("c", rpElements.size());
-    for (Ipv4RoutePathElements::const_iterator i = rpElements.begin(); i != rpElements.end(); ++i)
+    for (auto i = rpElements.begin(); i != rpElements.end(); ++i)
     {
         Ipv4RoutePathElement rpElement = *i;
         AnimXmlElement rpeElement("rpe");
@@ -2754,7 +2739,7 @@ AnimationInterface::AnimXmlElement::AddAttribute(std::string attribute, T value,
     {
         attributeString += "=\"";
         std::string valueStr = oss.str();
-        for (std::string::iterator it = valueStr.begin(); it != valueStr.end(); ++it)
+        for (auto it = valueStr.begin(); it != valueStr.end(); ++it)
         {
             switch (*it)
             {
@@ -2804,8 +2789,7 @@ AnimationInterface::AnimXmlElement::ToString(bool autoClose)
 {
     std::string elementString = "<" + m_tagName + " ";
 
-    for (std::vector<std::string>::const_iterator i = m_attributes.begin(); i != m_attributes.end();
-         ++i)
+    for (auto i = m_attributes.begin(); i != m_attributes.end(); ++i)
     {
         elementString += *i;
     }
@@ -2826,9 +2810,7 @@ AnimationInterface::AnimXmlElement::ToString(bool autoClose)
         if (!m_children.empty())
         {
             elementString += "\n";
-            for (std::vector<std::string>::const_iterator i = m_children.begin();
-                 i != m_children.end();
-                 ++i)
+            for (auto i = m_children.begin(); i != m_children.end(); ++i)
             {
                 elementString += *i + "\n";
             }

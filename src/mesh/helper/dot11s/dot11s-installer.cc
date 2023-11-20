@@ -16,7 +16,7 @@
  *
  * Authors: Kirill Andreev <andreev@iitp.ru>
  */
-#include "ns3/dot11s-installer.h"
+#include "dot11s-installer.h"
 
 #include "ns3/hwmp-protocol.h"
 #include "ns3/mesh-wifi-interface-mac.h"
@@ -92,7 +92,7 @@ Dot11sStack::Report(const Ptr<MeshPointDevice> mp, std::ostream& os)
     mp->Report(os);
 
     std::vector<Ptr<NetDevice>> ifaces = mp->GetInterfaces();
-    for (std::vector<Ptr<NetDevice>>::const_iterator i = ifaces.begin(); i != ifaces.end(); ++i)
+    for (auto i = ifaces.begin(); i != ifaces.end(); ++i)
     {
         Ptr<WifiNetDevice> device = (*i)->GetObject<WifiNetDevice>();
         NS_ASSERT(device);
@@ -115,7 +115,7 @@ Dot11sStack::ResetStats(const Ptr<MeshPointDevice> mp)
     mp->ResetStats();
 
     std::vector<Ptr<NetDevice>> ifaces = mp->GetInterfaces();
-    for (std::vector<Ptr<NetDevice>>::const_iterator i = ifaces.begin(); i != ifaces.end(); ++i)
+    for (auto i = ifaces.begin(); i != ifaces.end(); ++i)
     {
         Ptr<WifiNetDevice> device = (*i)->GetObject<WifiNetDevice>();
         NS_ASSERT(device);

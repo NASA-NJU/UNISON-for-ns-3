@@ -30,6 +30,7 @@
 #include "ns3/log.h"
 #include "ns3/simulator.h"
 
+#include <algorithm>
 #include <optional>
 
 namespace ns3
@@ -687,21 +688,6 @@ BlockAckManager::ScheduleBar(const CtrlBAckRequestHeader& reqHdr, const WifiMacH
     }
 
     m_queue->Enqueue(Create<WifiMpdu>(pkt, hdr));
-}
-
-void
-BlockAckManager::ScheduleMuBar(Ptr<WifiMpdu> muBar)
-{
-    NS_LOG_FUNCTION(this << *muBar);
-    NS_ASSERT(muBar->GetHeader().IsTrigger());
-
-#ifdef NS3_BUILD_PROFILE_DEBUG
-    CtrlTriggerHeader triggerHdr;
-    muBar->GetPacket()->PeekHeader(triggerHdr);
-    NS_ASSERT(triggerHdr.IsMuBar());
-#endif
-
-    m_queue->Enqueue(muBar);
 }
 
 const std::list<BlockAckManager::AgreementKey>&

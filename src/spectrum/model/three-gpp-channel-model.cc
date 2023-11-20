@@ -2197,12 +2197,11 @@ ThreeGppChannelModel::CalcAttenuationOfBlockage(
 {
     NS_LOG_FUNCTION(this);
 
-    DoubleVector powerAttenuation;
-    uint8_t clusterNum = clusterAOA.size();
-    for (uint8_t cInd = 0; cInd < clusterNum; cInd++)
-    {
-        powerAttenuation.push_back(0); // Initial power attenuation for all clusters to be 0 dB;
-    }
+    auto clusterNum = clusterAOA.size();
+
+    // Initial power attenuation for all clusters to be 0 dB
+    DoubleVector powerAttenuation(clusterNum, 0);
+
     // step a: the number of non-self blocking blockers is stored in m_numNonSelfBlocking.
 
     // step b:Generate the size and location of each blocker
@@ -2315,7 +2314,7 @@ ThreeGppChannelModel::CalcAttenuationOfBlockage(
     }
 
     // step c: Determine the attenuation of each blocker due to blockers
-    for (uint8_t cInd = 0; cInd < clusterNum; cInd++)
+    for (std::size_t cInd = 0; cInd < clusterNum; cInd++)
     {
         NS_ASSERT_MSG(clusterAOA[cInd] >= 0 && clusterAOA[cInd] <= 360,
                       "the AOA should be the range of [0,360]");

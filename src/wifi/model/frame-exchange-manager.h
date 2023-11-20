@@ -30,12 +30,12 @@
 #include "wifi-tx-timer.h"
 #include "wifi-tx-vector.h"
 
-#include "ns3/object.h"
 // Needed to compile wave bindings
 #include "channel-access-manager.h"
+#include "wifi-ack-manager.h"
+#include "wifi-protection-manager.h"
 
-#include "ns3/wifi-ack-manager.h"
-#include "ns3/wifi-protection-manager.h"
+#include "ns3/object.h"
 
 namespace ns3
 {
@@ -635,7 +635,6 @@ class FrameExchangeManager : public Object
      */
     virtual void Reset();
 
-  private:
     /**
      * \param txVector the TXVECTOR decoded from PHY header.
      * \param psduDuration the duration of the PSDU that is about to be received.
@@ -646,8 +645,9 @@ class FrameExchangeManager : public Object
      * If the reception is correct for at least one MPDU of the PSDU
      * the Receive method will be called after \p psduDuration.
      */
-    void RxStartIndication(WifiTxVector txVector, Time psduDuration);
+    virtual void RxStartIndication(WifiTxVector txVector, Time psduDuration);
 
+  private:
     /**
      * Send the current MPDU, which can be acknowledged by a Normal Ack.
      */

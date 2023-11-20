@@ -17,12 +17,11 @@
  * Authors: Lalith Suresh <suresh.lalith@gmail.com>
  */
 
-#ifdef NS3_CLICK
-
 #include "ipv4-click-routing.h"
 
+#include "ipv4-l3-click-protocol.h"
+
 #include "ns3/ipv4-interface.h"
-#include "ns3/ipv4-l3-click-protocol.h"
 #include "ns3/log.h"
 #include "ns3/mac48-address.h"
 #include "ns3/node.h"
@@ -87,7 +86,7 @@ Ipv4ClickRouting::DoInitialize()
         m_nodeName = name.str();
     }
 
-    NS_ASSERT(m_clickFile.length() > 0);
+    NS_ASSERT(!m_clickFile.empty());
 
     // Even though simclick_click_create() will halt programme execution
     // if it is unable to initialise a Click router, we play safe
@@ -397,7 +396,7 @@ Ipv4ClickRouting::Send(Ptr<Packet> p, Ipv4Address src, Ipv4Address dst)
     }
 
     int len = p->GetSize();
-    uint8_t* buf = new uint8_t[len];
+    auto buf = new uint8_t[len];
     p->CopyData(buf, len);
 
     // ... and send the packet on the corresponding Click interface.
@@ -425,7 +424,7 @@ Ipv4ClickRouting::Receive(Ptr<Packet> p, Mac48Address receiverAddr, Mac48Address
     }
 
     int len = p->GetSize();
-    uint8_t* buf = new uint8_t[len];
+    auto buf = new uint8_t[len];
     p->CopyData(buf, len);
 
     // ... and send the packet to the corresponding Click interface
@@ -817,8 +816,8 @@ simclick_sim_command(simclick_node_t* simnode, int cmd, ...)
 
         // Append key/value pair, separated by \0.
         std::map<std::string, std::string> defines = clickInstance->GetDefines();
-        std::map<std::string, std::string>::const_iterator it = defines.begin();
-        while (it != defines.end())
+
+        for (auto it = defines.begin(); it != defines.end(); it++)
         {
             size_t available = *size - required;
             if (it->first.length() + it->second.length() + 2 <= available)
@@ -833,7 +832,6 @@ simclick_sim_command(simclick_node_t* simnode, int cmd, ...)
             {
                 required += it->first.length() + it->second.length() + 2;
             }
-            it++;
         }
         if (required > *size)
         {
@@ -850,5 +848,3 @@ simclick_sim_command(simclick_node_t* simnode, int cmd, ...)
     va_end(val);
     return retval;
 }
-
-#endif // NS3_CLICK

@@ -183,6 +183,7 @@ LrWpanMac::LrWpanMac()
     m_numCsmacaRetry = 0;
     m_txPkt = nullptr;
     m_rxPkt = nullptr;
+    m_lastRxFrameLqi = 0;
     m_ifs = 0;
 
     m_macLIFSPeriod = 40;
@@ -847,7 +848,7 @@ LrWpanMac::MlmeSyncRequest(MlmeSyncRequestParams params)
     NS_LOG_FUNCTION(this);
     NS_ASSERT(params.m_logCh <= 26 && m_macPanId != 0xffff);
 
-    uint64_t symbolRate = (uint64_t)m_phy->GetDataOrSymbolRate(false); // symbols per second
+    auto symbolRate = (uint64_t)m_phy->GetDataOrSymbolRate(false); // symbols per second
     // change phy current logical channel
     Ptr<LrWpanPhyPibAttributes> pibAttr = Create<LrWpanPhyPibAttributes>();
     pibAttr->phyCurrentChannel = params.m_logCh;
@@ -1659,7 +1660,7 @@ LrWpanMac::AwaitBeacon()
 void
 LrWpanMac::BeaconSearchTimeout()
 {
-    uint64_t symbolRate = (uint64_t)m_phy->GetDataOrSymbolRate(false); // symbols per second
+    auto symbolRate = (uint64_t)m_phy->GetDataOrSymbolRate(false); // symbols per second
 
     if (m_numLostBeacons > lrwpan::aMaxLostBeacons)
     {
@@ -1871,8 +1872,8 @@ LrWpanMac::PdDataIndication(uint32_t psduLength, Ptr<Packet> p, uint8_t lqi)
     // srcPanId = m_macPanId if only srcAddr field in Data or Command frame,accept frame if
     // srcPanId=m_macPanId
 
-    Ptr<Packet> originalPkt = p->Copy(); // because we will strip headers
-    uint64_t symbolRate = (uint64_t)m_phy->GetDataOrSymbolRate(false); // symbols per second
+    Ptr<Packet> originalPkt = p->Copy();                           // because we will strip headers
+    auto symbolRate = (uint64_t)m_phy->GetDataOrSymbolRate(false); // symbols per second
     m_promiscSnifferTrace(originalPkt);
 
     m_macPromiscRxTrace(originalPkt);
@@ -1972,21 +1973,6 @@ LrWpanMac::PdDataIndication(uint32_t psduLength, Ptr<Packet> p, uint8_t lqi)
                                 receivedMacHdr.GetDstPanId() == 0xffff) ||
                                (m_macPanId == 0xffff && receivedMacHdr.IsBeacon())) ||
                               (m_macPanId == 0xffff && receivedMacHdr.IsCommand());
-            }
-
-            if (acceptFrame && (receivedMacHdr.GetShortDstAddr() == Mac16Address("FF:FF")))
-            {
-                // TODO: shouldn't this be filtered by the PHY?
-                // A broadcast message (e.g. beacons, orphan notifications) should not be received
-                // by the device who issues it.
-                if (receivedMacHdr.GetSrcAddrMode() == EXT_ADDR)
-                {
-                    acceptFrame = (receivedMacHdr.GetExtSrcAddr() != GetExtendedAddress());
-                }
-                else
-                {
-                    acceptFrame = (receivedMacHdr.GetShortSrcAddr() != GetShortAddress());
-                }
             }
 
             if (acceptFrame && (receivedMacHdr.GetDstAddrMode() == SHORT_ADDR))
@@ -2108,9 +2094,10 @@ LrWpanMac::PdDataIndication(uint32_t psduLength, Ptr<Packet> p, uint8_t lqi)
                     m_setMacState.Cancel();
                     ChangeMacState(MAC_IDLE);
 
-                    // save received packet to process the appropriate indication/response after
-                    // sending ACK (PD-DATA.confirm)
+                    // save received packet and LQI to process the appropriate indication/response
+                    // after sending ACK (PD-DATA.confirm)
                     m_rxPkt = originalPkt->Copy();
+                    m_lastRxFrameLqi = lqi;
 
                     // LOG Commands with ACK required.
                     CommandPayloadHeader receivedMacPayload;
@@ -2680,7 +2667,7 @@ LrWpanMac::AckWaitTimeout()
 void
 LrWpanMac::IfsWaitTimeout(Time ifsTime)
 {
-    uint64_t symbolRate = (uint64_t)m_phy->GetDataOrSymbolRate(false);
+    auto symbolRate = (uint64_t)m_phy->GetDataOrSymbolRate(false);
     Time lifsTime = Seconds((double)m_macLIFSPeriod / symbolRate);
     Time sifsTime = Seconds((double)m_macSIFSPeriod / symbolRate);
 
@@ -2947,34 +2934,37 @@ LrWpanMac::PurgeInd()
 }
 
 void
-LrWpanMac::PrintPendTxQ(std::ostream& os) const
+LrWpanMac::PrintPendingTxQueue(std::ostream& os) const
 {
     LrWpanMacHeader peekedMacHdr;
 
     os << "Pending Transaction List [" << GetShortAddress() << " | " << GetExtendedAddress()
        << "] | CurrentTime: " << Simulator::Now().As(Time::S) << "\n"
-       << "       Destination        | Sequence Number |   Frame type    | Expire time\n";
+       << "    Destination    |"
+       << "    Sequence Number |"
+       << "    Frame type    |"
+       << "    Expire time\n";
 
-    for (uint32_t i = 0; i < m_indTxQueue.size(); i++)
+    for (auto transaction : m_indTxQueue)
     {
-        m_indTxQueue[i]->txQPkt->PeekHeader(peekedMacHdr);
-        os << m_indTxQueue[i]->dstExtAddress << "           "
-           << static_cast<uint32_t>(m_indTxQueue[i]->seqNum) << "          ";
+        transaction->txQPkt->PeekHeader(peekedMacHdr);
+        os << transaction->dstExtAddress << "           "
+           << static_cast<uint32_t>(transaction->seqNum) << "          ";
 
         if (peekedMacHdr.IsCommand())
         {
-            os << "Cmd Frame    ";
+            os << " Command Frame   ";
         }
         else if (peekedMacHdr.IsData())
         {
-            os << "Data Frame   ";
+            os << " Data Frame      ";
         }
         else
         {
-            os << "Unk Frame    ";
+            os << " Unknown Frame   ";
         }
 
-        os << m_indTxQueue[i]->expireTime.As(Time::S) << "\n";
+        os << transaction->expireTime.As(Time::S) << "\n";
     }
 }
 
@@ -2985,11 +2975,14 @@ LrWpanMac::PrintTxQueue(std::ostream& os) const
 
     os << "\nTx Queue [" << GetShortAddress() << " | " << GetExtendedAddress()
        << "] | CurrentTime: " << Simulator::Now().As(Time::S) << "\n"
-       << "       Destination                 | Sequence Number |  Dst PAN id | Frame type    |\n";
+       << "    Destination    |"
+       << "    Sequence Number    |"
+       << "    Dst PAN id    |"
+       << "    Frame type    |\n";
 
-    for (uint32_t i = 0; i < m_indTxQueue.size(); i++)
+    for (auto transaction : m_txQueue)
     {
-        m_txQueue[i]->txQPkt->PeekHeader(peekedMacHdr);
+        transaction->txQPkt->PeekHeader(peekedMacHdr);
 
         os << "[" << peekedMacHdr.GetShortDstAddr() << "]"
            << ", [" << peekedMacHdr.GetExtDstAddr() << "]        "
@@ -2998,15 +2991,15 @@ LrWpanMac::PrintTxQueue(std::ostream& os) const
 
         if (peekedMacHdr.IsCommand())
         {
-            os << "Cmd Frame    ";
+            os << " Command Frame   ";
         }
         else if (peekedMacHdr.IsData())
         {
-            os << "Data Frame   ";
+            os << " Data Frame      ";
         }
         else
         {
-            os << "Unk Frame    ";
+            os << " Unknown Frame   ";
         }
 
         os << "\n";
@@ -3185,9 +3178,13 @@ LrWpanMac::PdDataConfirm(LrWpanPhyEnumeration status)
                 {
                     if (!m_mlmeAssociateIndicationCallback.IsNull())
                     {
+                        // NOTE: The LQI parameter is not part of the standard but found
+                        // in some implementations as is required for higher layers (See Zboss
+                        // implementation).
                         MlmeAssociateIndicationParams associateParams;
                         associateParams.capabilityInfo = receivedMacPayload.GetCapabilityField();
                         associateParams.m_extDevAddr = receivedMacHdr.GetExtSrcAddr();
+                        associateParams.lqi = m_lastRxFrameLqi;
                         m_mlmeAssociateIndicationCallback(associateParams);
                     }
 
@@ -3202,15 +3199,13 @@ LrWpanMac::PdDataConfirm(LrWpanPhyEnumeration status)
                     switch (receivedMacPayload.GetAssociationStatus())
                     {
                     case CommandPayloadHeader::SUCCESSFUL:
-                        confirmParams.m_status =
-                            LrWpanMlmeAssociateConfirmStatus::MLMEASSOC_SUCCESS;
-                        // The original short address used in the association
-                        // used in the association request
-                        confirmParams.m_assocShortAddr = GetShortAddress();
-
                         // The assigned short address by the coordinator
                         SetShortAddress(receivedMacPayload.GetShortAddr());
                         m_macPanId = receivedMacHdr.GetSrcPanId();
+
+                        confirmParams.m_status =
+                            LrWpanMlmeAssociateConfirmStatus::MLMEASSOC_SUCCESS;
+                        confirmParams.m_assocShortAddr = GetShortAddress();
                         break;
                     case CommandPayloadHeader::FULL_CAPACITY:
                         confirmParams.m_status =
@@ -3424,7 +3419,7 @@ LrWpanMac::PlmeSetAttributeConfirm(LrWpanPhyEnumeration status, LrWpanPibAttribu
     {
         if (status == LrWpanPhyEnumeration::IEEE_802_15_4_PHY_SUCCESS)
         {
-            uint64_t symbolRate = static_cast<uint64_t>(m_phy->GetDataOrSymbolRate(false));
+            auto symbolRate = static_cast<uint64_t>(m_phy->GetDataOrSymbolRate(false));
             Time nextScanTime;
 
             if (m_scanParams.m_scanType == MLMESCAN_ORPHAN)

@@ -38,6 +38,8 @@
 #include "ns3/pointer.h"
 #include "ns3/vht-configuration.h"
 
+#include <algorithm>
+
 namespace ns3
 {
 
@@ -363,7 +365,7 @@ WifiMac::DoInitialize()
         it->second->Initialize();
     }
 
-    for (auto& link : m_links)
+    for (const auto& [id, link] : m_links)
     {
         if (auto cam = link->channelAccessManager)
         {
@@ -481,7 +483,7 @@ WifiMac::GetBssid(uint8_t linkId) const
 void
 WifiMac::SetPromisc()
 {
-    for (auto& link : m_links)
+    for (auto& [id, link] : m_links)
     {
         link->feManager->SetPromisc();
     }
@@ -646,7 +648,7 @@ void
 WifiMac::ConfigureContentionWindow(uint32_t cwMin, uint32_t cwMax)
 {
     std::list<bool> isDsssOnly;
-    for (const auto& link : m_links)
+    for (const auto& [id, link] : m_links)
     {
         isDsssOnly.push_back(link->dsssSupported && !link->erpSupported);
     }
@@ -751,11 +753,11 @@ WifiMac::ConfigureStandard(WifiStandard standard)
     NS_ABORT_IF(standard >= WIFI_STANDARD_80211n && !m_qosSupported);
     NS_ABORT_MSG_IF(m_links.empty(), "No PHY configured yet");
 
-    for (auto& link : m_links)
+    for (auto& [id, link] : m_links)
     {
         NS_ABORT_MSG_IF(
             !link->phy || !link->phy->GetOperatingChannel().IsSet(),
-            "[LinkID " << link->id
+            "[LinkID " << +id
                        << "] PHY must have been set and an operating channel must have been set");
 
         // do not create a ChannelAccessManager and a FrameExchangeManager if they
@@ -772,8 +774,8 @@ WifiMac::ConfigureStandard(WifiStandard standard)
         }
         link->feManager->SetWifiPhy(link->phy);
         link->feManager->SetWifiMac(this);
-        link->feManager->SetLinkId(link->id);
-        link->channelAccessManager->SetLinkId(link->id);
+        link->feManager->SetLinkId(id);
+        link->channelAccessManager->SetLinkId(id);
         link->channelAccessManager->SetupFrameExchangeManager(link->feManager);
 
         if (m_txop)
@@ -787,7 +789,7 @@ WifiMac::ConfigureStandard(WifiStandard standard)
             link->channelAccessManager->Add(it->second);
         }
 
-        ConfigurePhyDependentParameters(link->id);
+        ConfigurePhyDependentParameters(id);
     }
 }
 
@@ -896,13 +898,9 @@ WifiMac::SetWifiRemoteStationManagers(
     for (std::size_t i = 0; i < stationManagers.size(); i++)
     {
         // the link may already exist in case PHY objects were configured first
-        if (i == m_links.size())
-        {
-            m_links.push_back(CreateLinkEntity());
-            m_links.back()->id = i;
-        }
-        NS_ABORT_IF(i != m_links[i]->id);
-        m_links[i]->stationManager = stationManagers[i];
+        auto [it, inserted] = m_links.emplace(i, CreateLinkEntity());
+        m_linkIds.insert(i);
+        it->second->stationManager = stationManagers[i];
     }
 }
 
@@ -918,12 +916,19 @@ WifiMac::CreateLinkEntity() const
     return std::make_unique<LinkEntity>();
 }
 
+const std::map<uint8_t, std::unique_ptr<WifiMac::LinkEntity>>&
+WifiMac::GetLinks() const
+{
+    return m_links;
+}
+
 WifiMac::LinkEntity&
 WifiMac::GetLink(uint8_t linkId) const
 {
-    NS_ASSERT(linkId < m_links.size());
-    NS_ASSERT(m_links.at(linkId)); // check that the pointer owns an object
-    return *m_links.at(linkId);
+    auto it = m_links.find(linkId);
+    NS_ASSERT(it != m_links.cend());
+    NS_ASSERT(it->second); // check that the pointer owns an object
+    return *it->second;
 }
 
 uint8_t
@@ -932,17 +937,211 @@ WifiMac::GetNLinks() const
     return m_links.size();
 }
 
+const std::set<uint8_t>&
+WifiMac::GetLinkIds() const
+{
+    return m_linkIds;
+}
+
+void
+WifiMac::UpdateLinkId(uint8_t id)
+{
+    NS_LOG_FUNCTION(this << id);
+
+    auto& link = GetLink(id);
+    if (link.feManager)
+    {
+        link.feManager->SetLinkId(id);
+    }
+    if (link.channelAccessManager)
+    {
+        link.channelAccessManager->SetLinkId(id);
+    }
+}
+
 std::optional<uint8_t>
 WifiMac::GetLinkIdByAddress(const Mac48Address& address) const
 {
-    for (std::size_t ret = 0; ret < m_links.size(); ++ret)
+    for (const auto& [id, link] : m_links)
     {
-        if (m_links[ret]->feManager->GetAddress() == address)
+        if (link->feManager->GetAddress() == address)
         {
-            return ret;
+            return id;
         }
     }
     return std::nullopt;
+}
+
+std::optional<uint8_t>
+WifiMac::GetLinkForPhy(Ptr<const WifiPhy> phy) const
+{
+    for (const auto& [id, link] : m_links)
+    {
+        if (link->phy == phy)
+        {
+            return id;
+        }
+    }
+    return std::nullopt;
+}
+
+std::optional<uint8_t>
+WifiMac::GetLinkForPhy(std::size_t phyId) const
+{
+    NS_ABORT_UNLESS(phyId < m_device->GetNPhys());
+    auto phy = m_device->GetPhy(phyId);
+    return GetLinkForPhy(phy);
+}
+
+void
+WifiMac::SwapLinks(std::map<uint8_t, uint8_t> links)
+{
+    NS_LOG_FUNCTION(this);
+
+    std::map<uint8_t, uint8_t> actualPairs;
+
+    while (!links.empty())
+    {
+        auto from = links.cbegin()->first;
+        auto to = links.cbegin()->second;
+
+        if (from == to)
+        {
+            // nothing to do
+            links.erase(links.cbegin());
+            continue;
+        }
+
+        std::unique_ptr<LinkEntity> linkToMove;
+        NS_ASSERT(m_links.find(from) != m_links.cend());
+        linkToMove.swap(m_links.at(from)); // from is now out of m_links
+        auto empty = from;                 // track empty cell in m_links
+
+        do
+        {
+            auto [it, inserted] =
+                m_links.emplace(to, nullptr); // insert an element with key to if not present
+            m_links[to].swap(linkToMove);     // to is the link to move now
+            actualPairs.emplace(from, to);
+            UpdateLinkId(to);
+            links.erase(from);
+            if (!linkToMove)
+            {
+                if (inserted)
+                {
+                    m_links.erase(empty);
+                }
+                break;
+            }
+
+            auto nextTo = links.find(to);
+            if (nextTo == links.cend())
+            {
+                // no new position specified for 'to', use the current empty cell
+                m_links[empty].swap(linkToMove);
+                actualPairs.emplace(to, empty);
+                break;
+            }
+
+            from = to;
+            to = nextTo->second;
+        } while (true);
+    }
+
+    m_linkIds.clear();
+    for (const auto& [id, link] : m_links)
+    {
+        m_linkIds.insert(id);
+    }
+
+    if (m_txop)
+    {
+        m_txop->SwapLinks(actualPairs);
+    }
+    for (auto& [ac, edca] : m_edca)
+    {
+        edca->SwapLinks(actualPairs);
+    }
+}
+
+void
+WifiMac::UpdateTidToLinkMapping(const Mac48Address& mldAddr,
+                                WifiDirection dir,
+                                const WifiTidLinkMapping& mapping)
+{
+    NS_LOG_FUNCTION(this << mldAddr);
+
+    NS_ABORT_MSG_IF(dir == WifiDirection::BOTH_DIRECTIONS,
+                    "DL and UL directions for TID-to-Link mapping must be set separately");
+
+    auto& mappings = (dir == WifiDirection::DOWNLINK ? m_dlTidLinkMappings : m_ulTidLinkMappings);
+
+    auto [it, inserted] = mappings.emplace(mldAddr, mapping);
+
+    if (inserted)
+    {
+        // we are done
+        return;
+    }
+
+    // a previous mapping is stored for this MLD
+    if (mapping.empty())
+    {
+        // the default mapping has been now negotiated
+        it->second.clear();
+        return;
+    }
+
+    for (const auto& [tid, linkSet] : mapping)
+    {
+        it->second[tid] = linkSet;
+    }
+}
+
+std::optional<std::reference_wrapper<const WifiTidLinkMapping>>
+WifiMac::GetTidToLinkMapping(Mac48Address mldAddr, WifiDirection dir) const
+{
+    NS_ABORT_MSG_IF(dir == WifiDirection::BOTH_DIRECTIONS,
+                    "Cannot request TID-to-Link mapping for both directions");
+
+    const auto& mappings =
+        (dir == WifiDirection::DOWNLINK ? m_dlTidLinkMappings : m_ulTidLinkMappings);
+
+    if (const auto it = mappings.find(mldAddr); it != mappings.cend())
+    {
+        return it->second;
+    }
+    return std::nullopt;
+}
+
+bool
+WifiMac::TidMappedOnLink(Mac48Address mldAddr, WifiDirection dir, uint8_t tid, uint8_t linkId) const
+{
+    NS_ABORT_MSG_IF(dir == WifiDirection::BOTH_DIRECTIONS,
+                    "Cannot request TID-to-Link mapping for both directions");
+
+    const auto& mappings =
+        (dir == WifiDirection::DOWNLINK ? m_dlTidLinkMappings : m_ulTidLinkMappings);
+
+    const auto it = mappings.find(mldAddr);
+
+    if (it == mappings.cend())
+    {
+        // TID-to-link mapping was not negotiated, TIDs are mapped to all setup links
+        return GetWifiRemoteStationManager(linkId)->GetMldAddress(mldAddr).has_value();
+    }
+
+    auto linkSetIt = it->second.find(tid);
+
+    if (linkSetIt == it->second.cend())
+    {
+        // If there is no successfully negotiated TID-to-link mapping for a TID, then the TID
+        // is mapped to all setup links for DL and UL (Sec. 35.3.7.1.3 of 802.11be D3.1)
+        return GetWifiRemoteStationManager(linkId)->GetMldAddress(mldAddr).has_value();
+    }
+
+    return std::find(linkSetIt->second.cbegin(), linkSetIt->second.cend(), linkId) !=
+           linkSetIt->second.cend();
 }
 
 void
@@ -964,20 +1163,15 @@ WifiMac::SetWifiPhys(const std::vector<Ptr<WifiPhy>>& phys)
         // the link may already exist in case we are setting new PHY objects
         // (ResetWifiPhys just nullified the PHY(s) but left the links)
         // or the remote station managers were configured first
-        if (i == m_links.size())
-        {
-            m_links.push_back(CreateLinkEntity());
-            m_links.back()->id = i;
-        }
-        NS_ABORT_IF(i != m_links[i]->id);
-        m_links[i]->phy = phys[i];
+        auto [it, inserted] = m_links.emplace(i, CreateLinkEntity());
+        m_linkIds.insert(i);
+        it->second->phy = phys[i];
     }
 }
 
 Ptr<WifiPhy>
 WifiMac::GetWifiPhy(uint8_t linkId) const
 {
-    NS_LOG_FUNCTION(this << +linkId);
     return GetLink(linkId).phy;
 }
 
@@ -985,7 +1179,7 @@ void
 WifiMac::ResetWifiPhys()
 {
     NS_LOG_FUNCTION(this);
-    for (auto& link : m_links)
+    for (auto& [id, link] : m_links)
     {
         if (link->feManager)
         {
@@ -1107,6 +1301,88 @@ WifiMac::SetLinkDownCallback(Callback<void> linkDown)
 {
     NS_LOG_FUNCTION(this);
     m_linkDown = linkDown;
+}
+
+void
+WifiMac::ApplyTidLinkMapping(const Mac48Address& mldAddr, WifiDirection dir)
+{
+    NS_LOG_FUNCTION(this << mldAddr);
+
+    NS_ABORT_MSG_IF(
+        dir == WifiDirection::BOTH_DIRECTIONS,
+        "This method can be used to enforce TID-to-Link mapping for one direction at a time");
+
+    const auto& mappings =
+        (dir == WifiDirection::DOWNLINK ? m_dlTidLinkMappings : m_ulTidLinkMappings);
+
+    auto it = mappings.find(mldAddr);
+
+    if (it == mappings.cend())
+    {
+        // no mapping has been ever negotiated with the given MLD, the default mapping is used
+        return;
+    }
+
+    std::set<uint8_t> setupLinks;
+
+    // find the IDs of the links setup with the given MLD
+    for (const auto& [id, link] : m_links)
+    {
+        if (link->stationManager->GetMldAddress(mldAddr))
+        {
+            setupLinks.insert(id);
+        }
+    }
+
+    auto linkMapping = it->second;
+
+    if (linkMapping.empty())
+    {
+        // default link mapping, each TID mapped on all setup links
+        for (uint8_t tid = 0; tid < 8; tid++)
+        {
+            linkMapping.emplace(tid, setupLinks);
+        }
+    }
+
+    for (const auto& [tid, linkSet] : linkMapping)
+    {
+        decltype(setupLinks) mappedLinks; // empty
+        auto notMappedLinks = setupLinks; // all setup links
+
+        for (const auto id : linkSet)
+        {
+            if (setupLinks.find(id) != setupLinks.cend())
+            {
+                // link is mapped
+                mappedLinks.insert(id);
+                notMappedLinks.erase(id);
+            }
+        }
+
+        // unblock mapped links
+        NS_ABORT_MSG_IF(mappedLinks.empty(), "Every TID must be mapped to at least a link");
+
+        m_scheduler->UnblockQueues(WifiQueueBlockedReason::TID_NOT_MAPPED,
+                                   QosUtilsMapTidToAc(tid),
+                                   {WIFI_QOSDATA_QUEUE},
+                                   mldAddr,
+                                   GetAddress(),
+                                   {tid},
+                                   mappedLinks);
+
+        // block unmapped links
+        if (!notMappedLinks.empty())
+        {
+            m_scheduler->BlockQueues(WifiQueueBlockedReason::TID_NOT_MAPPED,
+                                     QosUtilsMapTidToAc(tid),
+                                     {WIFI_QOSDATA_QUEUE},
+                                     mldAddr,
+                                     GetAddress(),
+                                     {tid},
+                                     notMappedLinks);
+        }
+    }
 }
 
 void
@@ -1357,9 +1633,9 @@ WifiMac::DeaggregateAmsduAndForward(Ptr<const WifiMpdu> mpdu)
 std::optional<Mac48Address>
 WifiMac::GetMldAddress(const Mac48Address& remoteAddr) const
 {
-    for (std::size_t linkId = 0; linkId < m_links.size(); linkId++)
+    for (const auto& [id, link] : m_links)
     {
-        if (auto mldAddress = m_links[linkId]->stationManager->GetMldAddress(remoteAddr))
+        if (auto mldAddress = link->stationManager->GetMldAddress(remoteAddr))
         {
             return *mldAddress;
         }
@@ -1370,7 +1646,7 @@ WifiMac::GetMldAddress(const Mac48Address& remoteAddr) const
 Mac48Address
 WifiMac::GetLocalAddress(const Mac48Address& remoteAddr) const
 {
-    for (const auto& link : m_links)
+    for (const auto& [id, link] : m_links)
     {
         if (auto mldAddress = link->stationManager->GetMldAddress(remoteAddr))
         {
@@ -1511,7 +1787,7 @@ WifiMac::GetEhtSupported() const
 bool
 WifiMac::GetHtSupported(const Mac48Address& address) const
 {
-    for (const auto& link : m_links)
+    for (const auto& [id, link] : m_links)
     {
         if (link->stationManager->GetHtSupported(address))
         {
@@ -1524,7 +1800,7 @@ WifiMac::GetHtSupported(const Mac48Address& address) const
 bool
 WifiMac::GetVhtSupported(const Mac48Address& address) const
 {
-    for (const auto& link : m_links)
+    for (const auto& [id, link] : m_links)
     {
         if (link->stationManager->GetVhtSupported(address))
         {
@@ -1537,7 +1813,7 @@ WifiMac::GetVhtSupported(const Mac48Address& address) const
 bool
 WifiMac::GetHeSupported(const Mac48Address& address) const
 {
-    for (const auto& link : m_links)
+    for (const auto& [id, link] : m_links)
     {
         if (link->stationManager->GetHeSupported(address))
         {
@@ -1550,7 +1826,7 @@ WifiMac::GetHeSupported(const Mac48Address& address) const
 bool
 WifiMac::GetEhtSupported(const Mac48Address& address) const
 {
-    for (const auto& link : m_links)
+    for (const auto& [id, link] : m_links)
     {
         if (link->stationManager->GetEhtSupported(address))
         {

@@ -19,15 +19,16 @@
 
 #include "lte-test-deactivate-bearer.h"
 
-#include "ns3/applications-module.h"
 #include "ns3/double.h"
 #include "ns3/internet-module.h"
 #include "ns3/ipv4-global-routing-helper.h"
 #include "ns3/network-module.h"
+#include "ns3/packet-sink-helper.h"
 #include "ns3/point-to-point-epc-helper.h"
 #include "ns3/point-to-point-helper.h"
 #include "ns3/radio-bearer-stats-calculator.h"
 #include "ns3/string.h"
+#include "ns3/udp-client-server-helper.h"
 #include <ns3/boolean.h>
 #include <ns3/constant-position-mobility-model.h>
 #include <ns3/enum.h>
@@ -108,7 +109,7 @@ LenaDeactivateBearerTestCase::BuildNameString(uint16_t nUser, std::vector<uint16
 {
     std::ostringstream oss;
     oss << "distances (m) = [ ";
-    for (std::vector<uint16_t>::iterator it = dist.begin(); it != dist.end(); ++it)
+    for (auto it = dist.begin(); it != dist.end(); ++it)
     {
         oss << *it << " ";
     }

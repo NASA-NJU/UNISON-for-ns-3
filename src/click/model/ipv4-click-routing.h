@@ -54,21 +54,30 @@ class UniformRandomVariable;
  * \ingroup click
  * \brief Class to allow a node to use Click for external routing
  */
-
 class Ipv4ClickRouting : public Ipv4RoutingProtocol
 {
-#ifdef NS3_CLICK
   public:
     // Allow test cases to access private members
     friend class ::ClickTrivialTest;
     friend class ::ClickIfidFromNameTest;
     friend class ::ClickIpMacAddressFromNameTest;
 
+    /**
+     * Get type ID.
+     *
+     * \return TypeId.
+     */
     static TypeId GetTypeId();
 
+    /** Constructor. */
     Ipv4ClickRouting();
     ~Ipv4ClickRouting() override;
 
+    /**
+     * Get the uniform random variable.
+     *
+     * \return Uniform random variable.
+     */
     Ptr<UniformRandomVariable> GetRandomVariable();
 
   protected:
@@ -104,27 +113,30 @@ class Ipv4ClickRouting : public Ipv4RoutingProtocol
     /**
      * \brief Read Handler interface for a node's Click Elements.
      *        Allows a user to read state information of a Click element.
-     * \param elementName name of the Click element
-     * \param handlerName name of the handler to be read
+     * \param elementName name of the Click element.
+     * \param handlerName name of the handler to be read.
+     * \return String read.
      */
     std::string ReadHandler(std::string elementName, std::string handlerName);
 
     /**
-     * \brief Write Handler interface for a node's Click Elements
+     * \brief Write Handler interface for a node's Click Elements.
      *        Allows a user to modify state information of a Click element.
-     * \param elementName name of the Click element
-     * \param handlerName name of the handler to be read
-     * \param writeString string to be written using the write handler
+     * \param elementName name of the Click element.
+     * \param handlerName name of the handler to be read.
+     * \param writeString string to be written using the write handler.
+     * \return Write operation status.
      */
     int WriteHandler(std::string elementName, std::string handlerName, std::string writeString);
 
     /**
-     *
      * \brief Sets an interface to run on promiscuous mode.
+     * \param ifid Interface ID.
      */
     void SetPromisc(int ifid);
 
   private:
+    /// Pointer to the simclick node
     simclick_node_t* m_simNode;
 
     /**
@@ -186,6 +198,7 @@ class Ipv4ClickRouting : public Ipv4RoutingProtocol
 
     /**
      * \brief Provides for SIMCLICK_IF_READY
+     * \param ifid Interface ID
      * \return Returns 1, if the interface is ready, -1 if ifid is invalid
      */
     bool IsInterfaceReady(int ifid);
@@ -204,7 +217,8 @@ class Ipv4ClickRouting : public Ipv4RoutingProtocol
     void AddSimNodeToClickMapping();
 
     /**
-     * \brief Get current simulation time as a timeval
+     * \brief Get current simulation time as a timeval.
+     * \return Current simulation time as a timeval.
      */
     struct timeval GetTimevalFromNow() const;
 
@@ -274,20 +288,16 @@ class Ipv4ClickRouting : public Ipv4RoutingProtocol
     void NotifyRemoveAddress(uint32_t interface, Ipv4InterfaceAddress address) override;
 
   private:
-    std::string m_clickFile;
-    std::map<std::string, std::string> m_defines;
-    std::string m_nodeName;
-    std::string m_clickRoutingTableElement;
+    std::string m_clickFile;                      //!< Name of .click configuration file
+    std::map<std::string, std::string> m_defines; //!< Defines for .click configuration file parsing
+    std::string m_nodeName;                       //!< Name of the node
+    std::string m_clickRoutingTableElement;       //!< Name of the routing table element
 
-    std::map<std::string, uint32_t> m_ifaceIdFromName;
-    std::map<std::string, Address> m_ifaceMacFromName;
-    std::map<std::string, Ipv4Address> m_ifaceAddrFromName;
-    bool m_clickInitialised;
-    bool m_nonDefaultName;
+    bool m_clickInitialised; //!< Whether click has been initialized
+    bool m_nonDefaultName;   //!< Whether a non-default name has been set
 
-    Ptr<Ipv4> m_ipv4;
-    Ptr<UniformRandomVariable> m_random;
-#endif /* NS3_CLICK */
+    Ptr<Ipv4> m_ipv4;                    //!< Pointer to the IPv4 object
+    Ptr<UniformRandomVariable> m_random; //!< Uniform random variable
 };
 
 } // namespace ns3

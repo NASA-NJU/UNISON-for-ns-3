@@ -3,12 +3,10 @@ cppyy-22.04:
   image: ubuntu:22.04 # python 3.10
   rules:
     - if: $RELEASE == "weekly"
+    - if: $RELEASE == "daily"
+    - if: $RELEASE == "manual"
     - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
-  needs: ["weekly-slow-jobs"]
   dependencies: []
-  tags:
-    - nsnam
-    - linux
   before_script:
     - apt update
     - DEBIAN_FRONTEND=noninteractive apt install -y
@@ -40,9 +38,6 @@ cppyy-20.04:
   image: ubuntu:20.04 # python 3.8
   rules:
     - if: $RELEASE == "manual"
-  tags:
-    - nsnam
-    - linux
   before_script:
     - apt update
     - DEBIAN_FRONTEND=noninteractive apt install -y
@@ -53,35 +48,6 @@ cppyy-20.04:
     - pip install cppyy==2.4.2
   script:
     - ./ns3 configure -G Ninja --enable-python-bindings
-    - ./ns3 build
-    - ./ns3 run first.py
-    - ./ns3 run second.py
-    - ./ns3 run third.py
-    - ./ns3 run ./utils/python-unit-tests.py
-  timeout: 9h
-
-cppyy-18.04:
-  stage: test
-  image: ubuntu:18.04 # python 3.6
-  rules:
-    - if: $RELEASE == "manual"
-  tags:
-    - nsnam
-    - linux
-  before_script:
-    - apt update
-    - apt install -y software-properties-common
-    - add-apt-repository ppa:ubuntu-toolchain-r/test -y
-    - apt update
-    - DEBIAN_FRONTEND=noninteractive apt install -y
-      g++-9 gcc-9 cmake ninja-build ccache libclang-dev llvm-dev
-      python3 python3-pip
-      libboost-dev libgsl-dev libgtk-3-dev
-      git wget
-    - update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 800 --slave /usr/bin/g++ g++ /usr/bin/g++-9
-    - pip3 install cppyy-cling cppyy-backend CPyCppyy cppyy # older python version may install dependencies in the wrong order
-  script:
-    - CXX=g++-9 ./ns3 configure -G Ninja --enable-python-bindings
     - ./ns3 build
     - ./ns3 run first.py
     - ./ns3 run second.py
@@ -104,16 +70,16 @@ cppyy-18.04:
     - $PYTHON -m venv ./venv
     - . ./venv/bin/activate
     # Upgrade the pip version to reuse the pre-build cppyy
-    - $PYTHON -m pip install pip --upgrade
-    - $PYTHON -m pip install setuptools setuptools_scm wheel --upgrade
-    - $PYTHON -m pip install wheel auditwheel cmake-build-extension cppyy==2.4.2
+    - python -m pip install pip --upgrade
+    - python -m pip install setuptools setuptools_scm wheel --upgrade
+    - python -m pip install auditwheel cmake-build-extension cppyy==2.4.2
     # Configure and build wheel
-    - $PYTHON setup.py bdist_wheel build_ext
-    - export EXCLUDE_INTERNAL_LIBRARIES=`$PYTHON ./build-support/pip-wheel/auditwheel-exclude-list.py`
+    - python setup.py bdist_wheel build_ext
+    - export EXCLUDE_INTERNAL_LIBRARIES=`python ./build-support/pip-wheel/auditwheel-exclude-list.py`
     # Bundle in shared libraries that were not explicitly packaged or depended upon
-    - $PYTHON -m auditwheel repair ./dist/*whl -L /lib64 $EXCLUDE_INTERNAL_LIBRARIES
+    - python -m auditwheel repair ./dist/*whl -L /lib64 $EXCLUDE_INTERNAL_LIBRARIES
     # Clean the build directory
-    - $PYTHON ./ns3 clean
+    - python ./ns3 clean
     # Clean up the environment
     - deactivate
     - rm -R ./venv

@@ -35,6 +35,10 @@
 
 namespace ns3
 {
+// Explicit instantiation declaration
+template Callback<ObjectBase*> MakeCallback<ObjectBase*>(ObjectBase* (*)());
+template Callback<ObjectBase*>::Callback();
+template class CallbackImpl<ObjectBase*>;
 
 NS_LOG_COMPONENT_DEFINE("ObjectBase");
 
@@ -257,7 +261,7 @@ ObjectBase::GetAttribute(std::string name, AttributeValue& value) const
     {
         return;
     }
-    StringValue* str = dynamic_cast<StringValue*>(&value);
+    auto str = dynamic_cast<StringValue*>(&value);
     if (str == nullptr)
     {
         NS_FATAL_ERROR("Attribute name=" << name << " tid=" << tid.GetName()
@@ -292,7 +296,7 @@ ObjectBase::GetAttributeFailSafe(std::string name, AttributeValue& value) const
     {
         return true;
     }
-    StringValue* str = dynamic_cast<StringValue*>(&value);
+    auto str = dynamic_cast<StringValue*>(&value);
     if (str == nullptr)
     {
         return false;

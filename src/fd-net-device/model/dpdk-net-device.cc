@@ -144,14 +144,11 @@ DpdkNetDevice::CheckAllPortsLinkStatus()
         /* print link status if flag set */
         if (printFlag == 1)
         {
-            if (link.link_status)
+            if (!link.link_status)
             {
-                continue;
+                NS_LOG_INFO("Port " << +m_portId << " Link Down");
             }
-            else
-            {
-                printf("Port %d Link Down\n", m_portId);
-            }
+
             continue;
         }
         /* clear allPortsUp flag if any link down */
@@ -186,7 +183,7 @@ DpdkNetDevice::SignalHandler(int signum)
 {
     if (signum == SIGINT || signum == SIGTERM)
     {
-        printf("\n\nSignal %d received, preparing to exit...\n", signum);
+        NS_LOG_INFO("Signal " << signum << " received, preparing to exit...");
         m_forceQuit = true;
     }
 }
@@ -260,7 +257,7 @@ DpdkNetDevice::InitDpdk(int argc, char** argv, std::string dpdkDriver)
     command.append(dpdkDriver);
     command.append(" ");
     command.append(m_deviceName);
-    printf("Executing: %s\n", command.c_str());
+    NS_LOG_INFO("Executing: " << command);
     if (system(command.c_str()))
     {
         rte_exit(EXIT_FAILURE, "Execution failed - bye\n");

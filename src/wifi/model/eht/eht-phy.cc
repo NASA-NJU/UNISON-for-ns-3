@@ -138,13 +138,15 @@ EhtPhy::GetSigBSize(const WifiTxVector& txVector) const
             txVector.GetChannelWidth(),
             txVector.GetRuAllocation(
                 m_wifiPhy ? m_wifiPhy->GetOperatingChannel().GetPrimaryChannelIndex(20) : 0),
-            txVector.GetEhtPpduType());
+            txVector.GetEhtPpduType(),
+            txVector.IsSigBCompression(),
+            txVector.IsSigBCompression() ? txVector.GetHeMuUserInfoMap().size() : 0);
     }
     return HePhy::GetSigBSize(txVector);
 }
 
 Time
-EhtPhy::CalculateNonOfdmaDurationForHeTb(const WifiTxVector& txVector) const
+EhtPhy::CalculateNonHeDurationForHeTb(const WifiTxVector& txVector) const
 {
     Time duration = GetDuration(WIFI_PPDU_FIELD_PREAMBLE, txVector) +
                     GetDuration(WIFI_PPDU_FIELD_NON_HT_HEADER, txVector) +
@@ -153,7 +155,7 @@ EhtPhy::CalculateNonOfdmaDurationForHeTb(const WifiTxVector& txVector) const
 }
 
 Time
-EhtPhy::CalculateNonOfdmaDurationForHeMu(const WifiTxVector& txVector) const
+EhtPhy::CalculateNonHeDurationForHeMu(const WifiTxVector& txVector) const
 {
     Time duration = GetDuration(WIFI_PPDU_FIELD_PREAMBLE, txVector) +
                     GetDuration(WIFI_PPDU_FIELD_NON_HT_HEADER, txVector) +

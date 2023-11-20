@@ -25,6 +25,8 @@
 #include "ns3/wifi-phy-operating-channel.h"
 #include "ns3/wifi-psdu.h"
 
+#include <numeric>
+
 namespace ns3
 {
 
@@ -135,7 +137,19 @@ EhtPpdu::SetTxVectorFromPhyHeaders(WifiTxVector& txVector) const
             ruAllocation.has_value())
         {
             txVector.SetRuAllocation(ruAllocation.value(), p20Index);
-            SetHeMuUserInfos(txVector, ruAllocation.value(), ehtPhyHeader->m_contentChannels);
+            const auto isMuMimo = (ehtPhyHeader->m_ppduType == 2);
+            const auto muMimoUsers =
+                isMuMimo
+                    ? std::accumulate(ehtPhyHeader->m_contentChannels.cbegin(),
+                                      ehtPhyHeader->m_contentChannels.cend(),
+                                      0,
+                                      [](uint8_t prev, const auto& cc) { return prev + cc.size(); })
+                    : 0;
+            SetHeMuUserInfos(txVector,
+                             ruAllocation.value(),
+                             ehtPhyHeader->m_contentChannels,
+                             ehtPhyHeader->m_ppduType == 2,
+                             muMimoUsers);
         }
         if (ehtPhyHeader->m_ppduType == 1) // EHT SU
         {
@@ -159,13 +173,18 @@ EhtPpdu::SetTxVectorFromPhyHeaders(WifiTxVector& txVector) const
 std::pair<std::size_t, std::size_t>
 EhtPpdu::GetNumRusPerEhtSigBContentChannel(uint16_t channelWidth,
                                            uint8_t ehtPpduType,
-                                           const RuAllocation& ruAllocation)
+                                           const RuAllocation& ruAllocation,
+                                           bool compression,
+                                           std::size_t numMuMimoUsers)
 {
     if (ehtPpduType == 1)
     {
         return {1, 0};
     }
-    return HePpdu::GetNumRusPerHeSigBContentChannel(channelWidth, ruAllocation);
+    return HePpdu::GetNumRusPerHeSigBContentChannel(channelWidth,
+                                                    ruAllocation,
+                                                    compression,
+                                                    numMuMimoUsers);
 }
 
 HePpdu::HeSigBContentChannels
@@ -183,22 +202,31 @@ EhtPpdu::GetEhtSigContentChannels(const WifiTxVector& txVector, uint8_t p20Index
 uint32_t
 EhtPpdu::GetEhtSigFieldSize(uint16_t channelWidth,
                             const RuAllocation& ruAllocation,
-                            uint8_t ehtPpduType)
+                            uint8_t ehtPpduType,
+                            bool compression,
+                            std::size_t numMuMimoUsers)
 {
     // FIXME: EHT-SIG is not implemented yet, hence this is a copy of HE-SIG-B
-    auto commonFieldSize = 4 /* CRC */ + 6 /* tail */;
-    if (channelWidth <= 40)
+    uint32_t commonFieldSize = 0;
+    if (!compression)
     {
-        commonFieldSize += 8; // only one allocation subfield
-    }
-    else
-    {
-        commonFieldSize +=
-            8 * (channelWidth / 40) /* one allocation field per 40 MHz */ + 1 /* center RU */;
+        commonFieldSize = 4 /* CRC */ + 6 /* tail */;
+        if (channelWidth <= 40)
+        {
+            commonFieldSize += 8; // only one allocation subfield
+        }
+        else
+        {
+            commonFieldSize +=
+                8 * (channelWidth / 40) /* one allocation field per 40 MHz */ + 1 /* center RU */;
+        }
     }
 
-    auto numRusPerContentChannel =
-        GetNumRusPerEhtSigBContentChannel(channelWidth, ehtPpduType, ruAllocation);
+    auto numRusPerContentChannel = GetNumRusPerEhtSigBContentChannel(channelWidth,
+                                                                     ehtPpduType,
+                                                                     ruAllocation,
+                                                                     compression,
+                                                                     numMuMimoUsers);
     auto maxNumRusPerContentChannel =
         std::max(numRusPerContentChannel.first, numRusPerContentChannel.second);
     auto maxNumUserBlockFields = maxNumRusPerContentChannel /

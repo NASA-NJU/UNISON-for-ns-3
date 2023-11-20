@@ -493,8 +493,7 @@ FrameExchangeManager::SendMpdu()
         // the timeout duration is "aSIFSTime + aSlotTime + aRxPHYStartDelay, starting
         // at the PHY-TXEND.confirm primitive" (section 10.3.2.9 or 10.22.2.2 of 802.11-2016).
         // aRxPHYStartDelay equals the time to transmit the PHY header.
-        WifiNormalAck* normalAcknowledgment =
-            static_cast<WifiNormalAck*>(m_txParams.m_acknowledgment.get());
+        auto normalAcknowledgment = static_cast<WifiNormalAck*>(m_txParams.m_acknowledgment.get());
 
         Time timeout =
             txDuration + m_phy->GetSifs() + m_phy->GetSlot() +
@@ -502,6 +501,7 @@ FrameExchangeManager::SendMpdu()
         NS_ASSERT(!m_txTimer.IsRunning());
         m_txTimer.Set(WifiTxTimer::WAIT_NORMAL_ACK,
                       timeout,
+                      {m_mpdu->GetHeader().GetAddr1()},
                       &FrameExchangeManager::NormalAckTimeout,
                       this,
                       m_mpdu,
@@ -525,6 +525,7 @@ FrameExchangeManager::ForwardMpduDown(Ptr<WifiMpdu> mpdu, WifiTxVector& txVector
 
     auto psdu = Create<WifiPsdu>(mpdu, false);
     FinalizeMacHeader(psdu);
+    m_allowedWidth = std::min(m_allowedWidth, txVector.GetChannelWidth());
     m_phy->Send(psdu, txVector);
 }
 
@@ -587,7 +588,7 @@ FrameExchangeManager::CalculateProtectionTime(WifiProtection* protection) const
     }
     else if (protection->method == WifiProtection::RTS_CTS)
     {
-        WifiRtsCtsProtection* rtsCtsProtection = static_cast<WifiRtsCtsProtection*>(protection);
+        auto rtsCtsProtection = static_cast<WifiRtsCtsProtection*>(protection);
         rtsCtsProtection->protectionTime = m_phy->CalculateTxDuration(GetRtsSize(),
                                                                       rtsCtsProtection->rtsTxVector,
                                                                       m_phy->GetPhyBand()) +
@@ -598,8 +599,7 @@ FrameExchangeManager::CalculateProtectionTime(WifiProtection* protection) const
     }
     else if (protection->method == WifiProtection::CTS_TO_SELF)
     {
-        WifiCtsToSelfProtection* ctsToSelfProtection =
-            static_cast<WifiCtsToSelfProtection*>(protection);
+        auto ctsToSelfProtection = static_cast<WifiCtsToSelfProtection*>(protection);
         ctsToSelfProtection->protectionTime =
             m_phy->CalculateTxDuration(GetCtsSize(),
                                        ctsToSelfProtection->ctsTxVector,
@@ -620,7 +620,7 @@ FrameExchangeManager::CalculateAcknowledgmentTime(WifiAcknowledgment* acknowledg
     }
     else if (acknowledgment->method == WifiAcknowledgment::NORMAL_ACK)
     {
-        WifiNormalAck* normalAcknowledgment = static_cast<WifiNormalAck*>(acknowledgment);
+        auto normalAcknowledgment = static_cast<WifiNormalAck*>(acknowledgment);
         normalAcknowledgment->acknowledgmentTime =
             m_phy->GetSifs() + m_phy->CalculateTxDuration(GetAckSize(),
                                                           normalAcknowledgment->ackTxVector,
@@ -706,8 +706,7 @@ FrameExchangeManager::SendRts(const WifiTxParameters& txParams)
     rts.SetAddr2(m_self);
 
     NS_ASSERT(txParams.m_protection && txParams.m_protection->method == WifiProtection::RTS_CTS);
-    WifiRtsCtsProtection* rtsCtsProtection =
-        static_cast<WifiRtsCtsProtection*>(txParams.m_protection.get());
+    auto rtsCtsProtection = static_cast<WifiRtsCtsProtection*>(txParams.m_protection.get());
 
     NS_ASSERT(txParams.m_txDuration != Time::Min());
     rts.SetDuration(GetRtsDurationId(rtsCtsProtection->rtsTxVector,
@@ -726,6 +725,7 @@ FrameExchangeManager::SendRts(const WifiTxParameters& txParams)
     NS_ASSERT(!m_txTimer.IsRunning());
     m_txTimer.Set(WifiTxTimer::WAIT_CTS,
                   timeout,
+                  {receiver},
                   &FrameExchangeManager::CtsTimeout,
                   this,
                   mpdu,
@@ -807,8 +807,7 @@ FrameExchangeManager::SendCtsToSelf(const WifiTxParameters& txParams)
 
     NS_ASSERT(txParams.m_protection &&
               txParams.m_protection->method == WifiProtection::CTS_TO_SELF);
-    WifiCtsToSelfProtection* ctsToSelfProtection =
-        static_cast<WifiCtsToSelfProtection*>(txParams.m_protection.get());
+    auto ctsToSelfProtection = static_cast<WifiCtsToSelfProtection*>(txParams.m_protection.get());
 
     NS_ASSERT(txParams.m_txDuration != Time::Min());
     cts.SetDuration(GetCtsToSelfDurationId(ctsToSelfProtection->ctsTxVector,

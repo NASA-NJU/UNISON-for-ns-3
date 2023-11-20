@@ -293,7 +293,7 @@ Ipv6RawSocketImpl::SendTo(Ptr<Packet> p, uint32_t flags, const Address& toAddres
                 p->CopyData(&type, sizeof(type));
                 if (type == Icmpv6Header::ICMPV6_ECHO_REQUEST)
                 {
-                    Icmpv6Echo hdr(1);
+                    Icmpv6Echo hdr(true);
                     p->RemoveHeader(hdr);
                     hdr.CalculatePseudoHeaderChecksum(route->GetSource(),
                                                       dst,
@@ -421,7 +421,7 @@ Ipv6RawSocketImpl::GetRxAvailable() const
     NS_LOG_FUNCTION(this);
     uint32_t rx = 0;
 
-    for (std::list<Data>::const_iterator it = m_data.begin(); it != m_data.end(); ++it)
+    for (auto it = m_data.begin(); it != m_data.end(); ++it)
     {
         rx += (it->packet)->GetSize();
     }

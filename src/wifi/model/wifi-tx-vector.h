@@ -28,6 +28,7 @@
 
 #include <list>
 #include <optional>
+#include <set>
 #include <vector>
 
 namespace ns3
@@ -248,9 +249,13 @@ class WifiTxVector
      */
     uint8_t GetNss(uint16_t staId = SU_STA_ID) const;
     /**
-     * \returns the maximum number of Nss (namely if MU)
+     * \returns the maximum number of Nss over all RUs of an HE MU (used for OFDMA)
      */
     uint8_t GetNssMax() const;
+    /**
+     * \returns the total number of Nss for a given RU of an HE MU (used for full bandwidth MU-MIMO)
+     */
+    uint8_t GetNssTotal() const;
     /**
      * Sets the number of Nss
      *
@@ -371,6 +376,18 @@ class WifiTxVector
      */
     bool IsUlMu() const;
     /**
+     * Return true if this TX vector is used for a downlink multi-user transmission using OFDMA.
+     *
+     * \return true if this TX vector is used for a downlink multi-user transmission using OFDMA
+     */
+    bool IsDlOfdma() const;
+    /**
+     * Return true if this TX vector is used for a downlink multi-user transmission using MU-MIMO.
+     *
+     * \return true if this TX vector is used for a downlink multi-user transmission using MU-MIMO
+     */
+    bool IsDlMuMimo() const;
+    /**
      * Check if STA ID is allocated
      * \param staId STA ID
      * \return true if allocated, false otherwise
@@ -424,7 +441,7 @@ class WifiTxVector
     HeMuUserInfoMap& GetHeMuUserInfoMap();
 
     /// map of specific user info parameters ordered per increasing frequency RUs
-    using UserInfoMapOrderedByRus = std::map<HeRu::RuSpec, uint16_t, HeRu::RuSpecCompare>;
+    using UserInfoMapOrderedByRus = std::map<HeRu::RuSpec, std::set<uint16_t>, HeRu::RuSpecCompare>;
 
     /**
      * Get the map of specific user info parameters ordered per increasing frequency RUs.
@@ -433,6 +450,13 @@ class WifiTxVector
      * \return the map of specific user info parameters ordered per increasing frequency RUs
      */
     UserInfoMapOrderedByRus GetUserInfoMapOrderedByRus(uint8_t p20Index) const;
+
+    /**
+     * Indicate whether the Common field is present in the HE-SIG-B field.
+     *
+     * \return true if the Common field is present in the HE-SIG-B, false otherwise
+     */
+    bool IsSigBCompression() const;
 
     /**
      * Set the 20 MHz subchannels that are punctured.
@@ -522,6 +546,14 @@ class WifiTxVector
      * \return the CENTER_26_TONE_RU field
      */
     Center26ToneRuIndication DeriveCenter26ToneRuIndication() const;
+
+    /**
+     * Get the number of STAs in a given RU.
+     *
+     * \param ru the RU specification
+     * \return the number of STAs in the RU
+     */
+    uint8_t GetNumStasInRu(const HeRu::RuSpec& ru) const;
 
     WifiMode m_mode;          /**< The DATARATE parameter in Table 15-4.
                               It is the value that will be passed

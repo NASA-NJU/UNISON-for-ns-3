@@ -18,9 +18,10 @@
  * Author: Nicola Baldo <nbaldo@cttc.es>
  */
 
+#include "spectrum-value.h"
+
 #include <ns3/log.h>
 #include <ns3/math.h>
-#include <ns3/spectrum-value.h>
 
 namespace ns3
 {
@@ -100,8 +101,8 @@ SpectrumValue::ConstBandsEnd() const
 void
 SpectrumValue::Add(const SpectrumValue& x)
 {
-    Values::iterator it1 = m_values.begin();
-    Values::const_iterator it2 = x.m_values.begin();
+    auto it1 = m_values.begin();
+    auto it2 = x.m_values.begin();
 
     NS_ASSERT(m_spectrumModel == x.m_spectrumModel);
     NS_ASSERT(m_values.size() == x.m_values.size());
@@ -117,7 +118,7 @@ SpectrumValue::Add(const SpectrumValue& x)
 void
 SpectrumValue::Add(double s)
 {
-    Values::iterator it1 = m_values.begin();
+    auto it1 = m_values.begin();
 
     while (it1 != m_values.end())
     {
@@ -129,8 +130,8 @@ SpectrumValue::Add(double s)
 void
 SpectrumValue::Subtract(const SpectrumValue& x)
 {
-    Values::iterator it1 = m_values.begin();
-    Values::const_iterator it2 = x.m_values.begin();
+    auto it1 = m_values.begin();
+    auto it2 = x.m_values.begin();
 
     NS_ASSERT(m_spectrumModel == x.m_spectrumModel);
     NS_ASSERT(m_values.size() == x.m_values.size());
@@ -152,8 +153,8 @@ SpectrumValue::Subtract(double s)
 void
 SpectrumValue::Multiply(const SpectrumValue& x)
 {
-    Values::iterator it1 = m_values.begin();
-    Values::const_iterator it2 = x.m_values.begin();
+    auto it1 = m_values.begin();
+    auto it2 = x.m_values.begin();
 
     NS_ASSERT(m_spectrumModel == x.m_spectrumModel);
     NS_ASSERT(m_values.size() == x.m_values.size());
@@ -169,7 +170,7 @@ SpectrumValue::Multiply(const SpectrumValue& x)
 void
 SpectrumValue::Multiply(double s)
 {
-    Values::iterator it1 = m_values.begin();
+    auto it1 = m_values.begin();
 
     while (it1 != m_values.end())
     {
@@ -181,8 +182,8 @@ SpectrumValue::Multiply(double s)
 void
 SpectrumValue::Divide(const SpectrumValue& x)
 {
-    Values::iterator it1 = m_values.begin();
-    Values::const_iterator it2 = x.m_values.begin();
+    auto it1 = m_values.begin();
+    auto it2 = x.m_values.begin();
 
     NS_ASSERT(m_spectrumModel == x.m_spectrumModel);
     NS_ASSERT(m_values.size() == x.m_values.size());
@@ -199,7 +200,7 @@ void
 SpectrumValue::Divide(double s)
 {
     NS_LOG_FUNCTION(this << s);
-    Values::iterator it1 = m_values.begin();
+    auto it1 = m_values.begin();
 
     while (it1 != m_values.end())
     {
@@ -211,7 +212,7 @@ SpectrumValue::Divide(double s)
 void
 SpectrumValue::ChangeSign()
 {
-    Values::iterator it1 = m_values.begin();
+    auto it1 = m_values.begin();
 
     while (it1 != m_values.end())
     {
@@ -256,7 +257,7 @@ void
 SpectrumValue::Pow(double exp)
 {
     NS_LOG_FUNCTION(this << exp);
-    Values::iterator it1 = m_values.begin();
+    auto it1 = m_values.begin();
 
     while (it1 != m_values.end())
     {
@@ -269,7 +270,7 @@ void
 SpectrumValue::Exp(double base)
 {
     NS_LOG_FUNCTION(this << base);
-    Values::iterator it1 = m_values.begin();
+    auto it1 = m_values.begin();
 
     while (it1 != m_values.end())
     {
@@ -282,7 +283,7 @@ void
 SpectrumValue::Log10()
 {
     NS_LOG_FUNCTION(this);
-    Values::iterator it1 = m_values.begin();
+    auto it1 = m_values.begin();
 
     while (it1 != m_values.end())
     {
@@ -295,7 +296,7 @@ void
 SpectrumValue::Log2()
 {
     NS_LOG_FUNCTION(this);
-    Values::iterator it1 = m_values.begin();
+    auto it1 = m_values.begin();
 
     while (it1 != m_values.end())
     {
@@ -308,7 +309,7 @@ void
 SpectrumValue::Log()
 {
     NS_LOG_FUNCTION(this);
-    Values::iterator it1 = m_values.begin();
+    auto it1 = m_values.begin();
 
     while (it1 != m_values.end())
     {
@@ -321,7 +322,7 @@ double
 Norm(const SpectrumValue& x)
 {
     double s = 0;
-    Values::const_iterator it1 = x.ConstValuesBegin();
+    auto it1 = x.ConstValuesBegin();
     while (it1 != x.ConstValuesEnd())
     {
         s += (*it1) * (*it1);
@@ -334,7 +335,7 @@ double
 Sum(const SpectrumValue& x)
 {
     double s = 0;
-    Values::const_iterator it1 = x.ConstValuesBegin();
+    auto it1 = x.ConstValuesBegin();
     while (it1 != x.ConstValuesEnd())
     {
         s += (*it1);
@@ -347,7 +348,7 @@ double
 Prod(const SpectrumValue& x)
 {
     double s = 0;
-    Values::const_iterator it1 = x.ConstValuesBegin();
+    auto it1 = x.ConstValuesBegin();
     while (it1 != x.ConstValuesEnd())
     {
         s *= (*it1);
@@ -360,8 +361,8 @@ double
 Integral(const SpectrumValue& arg)
 {
     double i = 0;
-    Values::const_iterator vit = arg.ConstValuesBegin();
-    Bands::const_iterator bit = arg.ConstBandsBegin();
+    auto vit = arg.ConstValuesBegin();
+    auto bit = arg.ConstBandsBegin();
     while (vit != arg.ConstValuesEnd())
     {
         NS_ASSERT(bit != arg.ConstBandsEnd());
@@ -392,7 +393,7 @@ SpectrumValue::Copy() const
 std::ostream&
 operator<<(std::ostream& os, const SpectrumValue& pvf)
 {
-    Values::const_iterator it1 = pvf.ConstValuesBegin();
+    auto it1 = pvf.ConstValuesBegin();
     while (it1 != pvf.ConstValuesEnd())
     {
         os << *it1 << " ";
@@ -612,7 +613,7 @@ SpectrumValue::operator/=(double rhs)
 SpectrumValue&
 SpectrumValue::operator=(double rhs)
 {
-    Values::iterator it1 = m_values.begin();
+    auto it1 = m_values.begin();
 
     while (it1 != m_values.end())
     {

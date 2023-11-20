@@ -404,7 +404,7 @@ PcapFile::Init(uint32_t dataLinkType,
     //
     // And set swap mode if requested or we are on a big-endian system.
     //
-    m_swapMode = swapMode | bigEndian;
+    m_swapMode = swapMode || bigEndian;
 
     WriteFileHeader();
 }
@@ -552,8 +552,8 @@ PcapFile::Diff(const std::string& f1,
         return true;
     }
 
-    uint8_t* data1 = new uint8_t[snapLen]();
-    uint8_t* data2 = new uint8_t[snapLen]();
+    auto data1 = new uint8_t[snapLen]();
+    auto data2 = new uint8_t[snapLen]();
     uint32_t tsSec1 = 0;
     uint32_t tsSec2 = 0;
     uint32_t tsUsec1 = 0;

@@ -17,9 +17,10 @@
  * Author: Nicola Baldo <nbaldo@cttc.es>
  */
 
+#include "friis-spectrum-propagation-loss.h"
+
 #include "spectrum-signal-parameters.h"
 
-#include <ns3/friis-spectrum-propagation-loss.h>
 #include <ns3/mobility-model.h>
 
 #include <cmath> // for M_PI
@@ -54,8 +55,8 @@ FriisSpectrumPropagationLossModel::DoCalcRxPowerSpectralDensity(
     Ptr<const MobilityModel> b) const
 {
     Ptr<SpectrumValue> rxPsd = Copy<SpectrumValue>(params->psd);
-    Values::iterator vit = rxPsd->ValuesBegin();
-    Bands::const_iterator fit = rxPsd->ConstBandsBegin();
+    auto vit = rxPsd->ValuesBegin();
+    auto fit = rxPsd->ConstBandsBegin();
 
     NS_ASSERT(a);
     NS_ASSERT(b);

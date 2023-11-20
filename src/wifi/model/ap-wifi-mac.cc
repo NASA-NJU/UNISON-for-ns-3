@@ -686,6 +686,25 @@ ApWifiMac::GetMultiLinkElement(uint8_t linkId, WifiMacType frameType, const Mac4
         mle.SetTransitionTimeout(time.Get());
     }
 
+    // The MLD Capabilities And Operations subfield is present in the Common Info field of the
+    // Basic Multi-Link element carried in Beacon, Probe Response, (Re)Association Request, and
+    // (Re)Association Response frames. (Sec. 9.4.2.312.2.3 of 802.11be D3.1)
+    if (frameType == WIFI_MAC_MGT_BEACON || frameType == WIFI_MAC_MGT_PROBE_RESPONSE ||
+        frameType == WIFI_MAC_MGT_ASSOCIATION_REQUEST ||
+        frameType == WIFI_MAC_MGT_REASSOCIATION_REQUEST ||
+        frameType == WIFI_MAC_MGT_ASSOCIATION_RESPONSE)
+    {
+        auto& mldCapabilities = mle.GetCommonInfoBasic().m_mldCapabilities;
+        mldCapabilities.emplace();
+        mldCapabilities->maxNSimultaneousLinks = GetNLinks() - 1; // assuming STR for now
+        mldCapabilities->srsSupport = 0;
+        EnumValue negSupport;
+        ehtConfiguration->GetAttributeFailSafe("TidToLinkMappingNegSupport", negSupport);
+        mldCapabilities->tidToLinkMappingSupport = negSupport.Get();
+        mldCapabilities->freqSepForStrApMld = 0; // not supported yet
+        mldCapabilities->aarSupport = 0;         // not supported yet
+    }
+
     // if the Multi-Link Element is being inserted in a (Re)Association Response frame
     // and the remote station is affiliated with an MLD, try multi-link setup
     if (auto staMldAddress = GetWifiRemoteStationManager(linkId)->GetMldAddress(to);
@@ -1083,6 +1102,10 @@ ApWifiMac::GetAssocResp(Mac48Address to, uint8_t linkId)
     {
         assoc.Get<EhtCapabilities>() = GetEhtCapabilities(linkId);
         assoc.Get<EhtOperation>() = GetEhtOperation(linkId);
+        // The AP MLD that accepts the requested TID-to-link mapping shall not include in the
+        // (Re)Association Response frame the TID-to-link Mapping element.
+        // (Sec. 35.3.7.1.8 of 802.11be D3.1).
+        // For now, we assume that AP MLDs always accept requested TID-to-link mappings.
     }
     return assoc;
 }
@@ -1466,6 +1489,9 @@ ApWifiMac::TxOk(Ptr<const WifiMpdu> mpdu)
                     StaSwitchingToPsMode(*staAddress, i);
                 }
             }
+
+            // Apply the negotiated TID-to-Link Mapping (if any) for DL direction
+            ApplyTidLinkMapping(*staMldAddress, WifiDirection::DOWNLINK);
         }
     }
     else if (hdr.IsAction())
@@ -1747,8 +1773,7 @@ ApWifiMac::Receive(Ptr<const WifiMpdu> mpdu, uint8_t linkId)
                     packet->PeekHeader(reassocReq);
                     frame = reassocReq;
                 }
-                ReceiveAssocRequest(frame, from, linkId);
-                if (GetNLinks() > 1)
+                if (ReceiveAssocRequest(frame, from, linkId) && GetNLinks() > 1)
                 {
                     ParseReportedStaInfo(frame, from, linkId);
                 }
@@ -1791,9 +1816,9 @@ ApWifiMac::Receive(Ptr<const WifiMpdu> mpdu, uint8_t linkId)
                     IsAssociated(hdr->GetAddr2()))
                 {
                     // received an EML Operating Mode Notification frame from an associated station
-                    MgtEmlOperatingModeNotification frame;
+                    MgtEmlOmn frame;
                     pkt->RemoveHeader(frame);
-                    ReceiveEmlNotification(frame, hdr->GetAddr2(), linkId);
+                    ReceiveEmlOmn(frame, hdr->GetAddr2(), linkId);
                     return;
                 }
                 break;
@@ -1892,9 +1917,105 @@ ApWifiMac::ReceiveAssocRequest(const AssocReqRefVariant& assoc,
         }
         if (GetEhtSupported())
         {
-            // check whether the EHT STA supports all MCSs in Basic MCS Set
-            //  const auto& ehtCapabilities = frame.GetEhtCapabilities ();
-            // TODO: to be completed
+            // TODO check whether the EHT STA supports all MCSs in Basic MCS Set
+            auto ehtConfig = GetEhtConfiguration();
+            NS_ASSERT(ehtConfig);
+
+            if (const auto& tidLinkMapping = frame.template Get<TidToLinkMapping>();
+                !tidLinkMapping.empty())
+            {
+                // non-AP MLD included TID-to-Link Mapping IE(s) in the Association Request.
+                // We refuse association if we do not support TID-to-Link mapping negotiation
+                // or the non-AP MLD included more than two TID-to-Link Mapping IEs
+                // or we support negotiation type 1 but TIDs are mapped onto distinct link sets
+                // or there is some TID that is not mapped to any link
+                // or the direction(s) is/are not set properly
+                if (tidLinkMapping.size() > 2)
+                {
+                    return failure("More than two TID-to-Link Mapping IEs");
+                }
+
+                // if only one Tid-to-Link Mapping element is present, it must be valid for
+                // both directions
+                bool bothDirIfOneTlm =
+                    tidLinkMapping.size() != 1 ||
+                    tidLinkMapping[0].m_control.direction == WifiDirection::BOTH_DIRECTIONS;
+                // An MLD that includes two TID-To-Link Mapping elements in a (Re)Association
+                // Request frame or a (Re)Association Response frame shall set the Direction
+                // subfield in one of the TID-To-Link Mapping elements to 0 and the Direction
+                // subfield in the other TID-To- Link Mapping element to 1.
+                // (Sec. 35.3.7.1.8 of 802.11be D3.1)
+                bool distinctDirsIfTwoTlms =
+                    tidLinkMapping.size() != 2 ||
+                    (tidLinkMapping[0].m_control.direction != WifiDirection::BOTH_DIRECTIONS &&
+                     tidLinkMapping[1].m_control.direction != WifiDirection::BOTH_DIRECTIONS &&
+                     tidLinkMapping[0].m_control.direction !=
+                         tidLinkMapping[1].m_control.direction);
+
+                if (!bothDirIfOneTlm || !distinctDirsIfTwoTlms)
+                {
+                    return failure("Incorrect directions in TID-to-Link Mapping IEs");
+                }
+
+                EnumValue negSupport;
+                ehtConfig->GetAttributeFailSafe("TidToLinkMappingNegSupport", negSupport);
+
+                if (negSupport.Get() == 0)
+                {
+                    return failure("TID-to-Link Mapping negotiation not supported");
+                }
+
+                auto getMapping = [](const TidToLinkMapping& tlmIe, WifiTidLinkMapping& mapping) {
+                    if (tlmIe.m_control.defaultMapping)
+                    {
+                        return;
+                    }
+                    for (uint8_t tid = 0; tid < 8; tid++)
+                    {
+                        if (auto linkSet = tlmIe.GetLinkMappingOfTid(tid); !linkSet.empty())
+                        {
+                            mapping.emplace(tid, std::move(linkSet));
+                        }
+                    }
+                };
+
+                WifiTidLinkMapping dlMapping;
+                WifiTidLinkMapping ulMapping;
+
+                switch (tidLinkMapping[0].m_control.direction)
+                {
+                case WifiDirection::BOTH_DIRECTIONS:
+                    getMapping(tidLinkMapping.at(0), dlMapping);
+                    ulMapping = dlMapping;
+                    break;
+                case WifiDirection::DOWNLINK:
+                    getMapping(tidLinkMapping.at(0), dlMapping);
+                    getMapping(tidLinkMapping.at(1), ulMapping);
+                    break;
+                case WifiDirection::UPLINK:
+                    getMapping(tidLinkMapping.at(0), ulMapping);
+                    getMapping(tidLinkMapping.at(1), dlMapping);
+                    break;
+                }
+
+                if (negSupport.Get() == 1 &&
+                    !TidToLinkMappingValidForNegType1(dlMapping, ulMapping))
+                {
+                    return failure("Mapping TIDs to distinct link sets is incompatible with "
+                                   "negotiation support of 1");
+                }
+
+                // otherwise, we accept the TID-to-link Mapping and store it
+                const auto& mle = frame.template Get<MultiLinkElement>();
+                NS_ASSERT_MSG(mle,
+                              "Multi-Link Element not present in an Association Request including "
+                              "TID-to-Link Mapping element(s)");
+                auto mldAddr = mle->GetMldMacAddress();
+
+                // The requested link mappings are valid and can be accepted; store them.
+                UpdateTidToLinkMapping(mldAddr, WifiDirection::DOWNLINK, dlMapping);
+                UpdateTidToLinkMapping(mldAddr, WifiDirection::UPLINK, ulMapping);
+            }
         }
 
         // The association request from the station can be accepted.
@@ -1975,7 +2096,6 @@ ApWifiMac::ReceiveAssocRequest(const AssocReqRefVariant& assoc,
         NS_LOG_DEBUG("Association Request from " << from << " accepted");
         remoteStationManager->RecordWaitAssocTxOk(from);
         return true;
-        ;
     };
 
     return std::visit(recvAssocRequest, assoc);
@@ -1995,18 +2115,8 @@ ApWifiMac::ParseReportedStaInfo(const AssocReqRefVariant& assoc, Mac48Address fr
             return;
         }
 
-        auto emlCapabilities = std::make_shared<CommonInfoBasicMle::EmlCapabilities>();
-        if (mle->HasEmlCapabilities())
-        {
-            emlCapabilities->emlsrSupport = mle->IsEmlsrSupported() ? 1 : 0;
-            emlCapabilities->emlsrPaddingDelay =
-                CommonInfoBasicMle::EncodeEmlsrPaddingDelay(mle->GetEmlsrPaddingDelay());
-            emlCapabilities->emlsrTransitionDelay =
-                CommonInfoBasicMle::EncodeEmlsrTransitionDelay(mle->GetEmlsrTransitionDelay());
-        }
-
-        GetWifiRemoteStationManager(linkId)->SetMldAddress(from, mle->GetMldMacAddress());
-        GetWifiRemoteStationManager(linkId)->AddStationEmlCapabilities(from, emlCapabilities);
+        auto mleCommonInfo = std::make_shared<CommonInfoBasicMle>(mle->GetCommonInfoBasic());
+        GetWifiRemoteStationManager(linkId)->AddStationMleCommonInfo(from, mleCommonInfo);
 
         for (std::size_t i = 0; i < mle->GetNPerStaProfileSubelements(); i++)
         {
@@ -2032,11 +2142,9 @@ ApWifiMac::ParseReportedStaInfo(const AssocReqRefVariant& assoc, Mac48Address fr
             ReceiveAssocRequest(perStaProfile.GetAssocRequest(),
                                 perStaProfile.GetStaMacAddress(),
                                 newLinkId);
-            GetWifiRemoteStationManager(newLinkId)->SetMldAddress(perStaProfile.GetStaMacAddress(),
-                                                                  mle->GetMldMacAddress());
-            GetWifiRemoteStationManager(newLinkId)->AddStationEmlCapabilities(
+            GetWifiRemoteStationManager(newLinkId)->AddStationMleCommonInfo(
                 perStaProfile.GetStaMacAddress(),
-                emlCapabilities);
+                mleCommonInfo);
         }
     };
 
@@ -2044,9 +2152,7 @@ ApWifiMac::ParseReportedStaInfo(const AssocReqRefVariant& assoc, Mac48Address fr
 }
 
 void
-ApWifiMac::ReceiveEmlNotification(MgtEmlOperatingModeNotification& frame,
-                                  const Mac48Address& sender,
-                                  uint8_t linkId)
+ApWifiMac::ReceiveEmlOmn(MgtEmlOmn& frame, const Mac48Address& sender, uint8_t linkId)
 {
     NS_LOG_FUNCTION(this << frame << sender << linkId);
 
@@ -2070,8 +2176,8 @@ ApWifiMac::ReceiveEmlNotification(MgtEmlOperatingModeNotification& frame,
         NS_ASSERT_MSG(emlCapabilities, "EML Capabilities not stored for STA " << sender);
 
         // update values stored in remote station manager
-        emlCapabilities->emlsrPaddingDelay = frame.m_emlsrParamUpdate->paddingDelay;
-        emlCapabilities->emlsrTransitionDelay = frame.m_emlsrParamUpdate->transitionDelay;
+        emlCapabilities->get().emlsrPaddingDelay = frame.m_emlsrParamUpdate->paddingDelay;
+        emlCapabilities->get().emlsrTransitionDelay = frame.m_emlsrParamUpdate->transitionDelay;
     }
 
     auto mldAddress = GetWifiRemoteStationManager(linkId)->GetMldAddress(sender);
@@ -2180,7 +2286,7 @@ ApWifiMac::ReceiveEmlNotification(MgtEmlOperatingModeNotification& frame,
     frame.m_emlsrParamUpdate.reset();
 
     auto ehtFem = StaticCast<EhtFrameExchangeManager>(GetFrameExchangeManager(linkId));
-    ehtFem->SendEmlOperatingModeNotification(sender, frame);
+    ehtFem->SendEmlOmn(sender, frame);
 }
 
 void

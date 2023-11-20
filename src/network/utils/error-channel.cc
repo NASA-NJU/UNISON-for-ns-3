@@ -19,10 +19,11 @@
 
 #include "error-channel.h"
 
+#include "simple-net-device.h"
+
 #include "ns3/log.h"
 #include "ns3/node.h"
 #include "ns3/packet.h"
-#include "ns3/simple-net-device.h"
 #include "ns3/simulator.h"
 
 namespace ns3
@@ -86,9 +87,7 @@ ErrorChannel::Send(Ptr<Packet> p,
                    Ptr<SimpleNetDevice> sender)
 {
     NS_LOG_FUNCTION(p << protocol << to << from << sender);
-    for (std::vector<Ptr<SimpleNetDevice>>::const_iterator i = m_devices.begin();
-         i != m_devices.end();
-         ++i)
+    for (auto i = m_devices.begin(); i != m_devices.end(); ++i)
     {
         Ptr<SimpleNetDevice> tmp = *i;
         if (tmp == sender)

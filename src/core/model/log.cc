@@ -247,7 +247,7 @@ bool
 LogComponent::IsEnabled(const LogLevel level) const
 {
     //  LogComponentEnableEnvVar ();
-    return (level & m_levels) ? 1 : 0;
+    return level & m_levels;
 }
 
 bool
@@ -320,9 +320,7 @@ void
 LogComponentEnableAll(LogLevel level)
 {
     LogComponent::ComponentList* components = LogComponent::GetComponentList();
-    for (LogComponent::ComponentList::const_iterator i = components->begin();
-         i != components->end();
-         i++)
+    for (auto i = components->begin(); i != components->end(); i++)
     {
         i->second->Enable(level);
     }
@@ -344,9 +342,7 @@ void
 LogComponentDisableAll(LogLevel level)
 {
     LogComponent::ComponentList* components = LogComponent::GetComponentList();
-    for (LogComponent::ComponentList::const_iterator i = components->begin();
-         i != components->end();
-         i++)
+    for (auto i = components->begin(); i != components->end(); i++)
     {
         i->second->Disable(level);
     }

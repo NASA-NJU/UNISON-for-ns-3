@@ -23,10 +23,13 @@
 #include "ns3/mgt-headers.h"
 #include "ns3/multi-link-element.h"
 #include "ns3/reduced-neighbor-report.h"
+#include "ns3/simulator.h"
 #include "ns3/tid-to-link-mapping-element.h"
 #include "ns3/wifi-phy-operating-channel.h"
+#include "ns3/wifi-utils.h"
 
 #include <optional>
+#include <set>
 #include <sstream>
 #include <vector>
 
@@ -216,7 +219,7 @@ BasicMultiLinkElementTest::DoRun()
     assoc.Get<Ssid>() = Ssid("OtherSsid");
     // another "mistake" of the same type, except that a TID-To-Link Mapping element
     // is not included in the containing frame
-    assoc.Get<TidToLinkMapping>().emplace();
+    assoc.Get<TidToLinkMapping>().emplace_back();
     // the SupportedRates IE is the same (hence not serialized) as in the containing frame,
     // while the ExtendedSupportedRatesIE is different (hence serialized)
     rates.AddSupportedRate(5.5e6);
@@ -404,8 +407,8 @@ BasicMultiLinkElementTest::DoRun()
     NS_TEST_EXPECT_MSG_EQ(frame.Get<EhtCapabilities>().has_value(),
                           true,
                           "Containing frame should have EHT Capabilities IE");
-    NS_TEST_EXPECT_MSG_EQ(frame.Get<TidToLinkMapping>().has_value(),
-                          false,
+    NS_TEST_EXPECT_MSG_EQ(frame.Get<TidToLinkMapping>().empty(),
+                          true,
                           "Containing frame should not have TID-to-Link Mapping IE");
 
     auto& mle = frame.Get<MultiLinkElement>().value();
@@ -467,8 +470,8 @@ BasicMultiLinkElementTest::DoRun()
         (perSta1Frame.Get<EhtCapabilities>() == frame.Get<EhtCapabilities>()),
         true,
         "EHT Capabilities IE not correctly inherited by frame in first Per-STA Profile");
-    NS_TEST_EXPECT_MSG_EQ(perSta1Frame.Get<TidToLinkMapping>().has_value(),
-                          false,
+    NS_TEST_EXPECT_MSG_EQ(perSta1Frame.Get<TidToLinkMapping>().empty(),
+                          true,
                           "Frame in first Per-STA Profile should not have TID-to-Link Mapping IE");
 
     // frame in second Per-STA Profile subelement includes VHT Capabilities IE and has inherited
@@ -524,8 +527,8 @@ BasicMultiLinkElementTest::DoRun()
         perSta2Frame.Get<EhtCapabilities>().has_value(),
         false,
         "Frame in second Per-STA Profile should have not inherited EHT Capabilities IE");
-    NS_TEST_EXPECT_MSG_EQ(perSta2Frame.Get<TidToLinkMapping>().has_value(),
-                          false,
+    NS_TEST_EXPECT_MSG_EQ(perSta2Frame.Get<TidToLinkMapping>().empty(),
+                          true,
                           "Frame in second Per-STA Profile should not have TID-to-Link Mapping IE");
 
     // frame in third Per-STA Profile subelement includes VHT Capabilities IE and has inherited
@@ -584,8 +587,8 @@ BasicMultiLinkElementTest::DoRun()
         (perSta3Frame.Get<EhtCapabilities>() == frame.Get<EhtCapabilities>()),
         true,
         "EHT Capabilities IE not correctly inherited by frame in third Per-STA Profile");
-    NS_TEST_EXPECT_MSG_EQ(perSta3Frame.Get<TidToLinkMapping>().has_value(),
-                          false,
+    NS_TEST_EXPECT_MSG_EQ(perSta3Frame.Get<TidToLinkMapping>().empty(),
+                          true,
                           "Frame in third Per-STA Profile should not have TID-to-Link Mapping IE");
 }
 
@@ -1205,64 +1208,81 @@ class TidToLinkMappingElementTest : public HeaderSerializationTestCase
     /**
      * Constructor
      *
-     * \tparam Args \deduced Template type parameter pack for the sequence of TID-Link mapping pairs
      * \param direction The direction for the TID-to-link mapping
-     * \param args A sequence of TID-Link mapping pairs
+     * \param mappingSwitchTime the Mapping Switching Time
+     * \param expectedDuration the Expected Duration
+     * \param mappings A TID-indexed map of the link sets the TIDs are mapped to
      */
-    template <typename... Args>
-    TidToLinkMappingElementTest(TidLinkMapDir direction, Args&&... args);
+    TidToLinkMappingElementTest(WifiDirection direction,
+                                std::optional<Time> mappingSwitchTime,
+                                std::optional<Time> expectedDuration,
+                                const WifiTidLinkMapping& mappings);
 
     ~TidToLinkMappingElementTest() override = default;
 
   private:
-    /**
-     * Set the given TID-Link mapping and recursively call itself to set the remaining pairs.
-     *
-     * \tparam Args \deduced Template type parameter pack for the sequence of TID-Link mapping pairs
-     * \param tid the TID
-     * \param linkIds the IDs of the links on which the given TID is mapped
-     * \param args A sequence of TID-Link mapping pairs
-     */
-    template <typename... Args>
-    void SetLinkMapping(uint8_t tid, const std::list<uint8_t>& linkIds, Args&&... args);
-
-    /**
-     * Base case to stop the recursion performed by the templated version of this method.
-     */
-    void SetLinkMapping()
-    {
-    }
-
+    void DoSetup() override;
     void DoRun() override;
 
-    TidToLinkMapping m_tidToLinkMapping; ///< TID-To-Link Mapping element
+    WifiDirection m_direction;               ///< the direction for the TID-to-link mapping
+    std::optional<Time> m_mappingSwitchTime; ///< the Mapping Switching Time
+    std::optional<Time> m_expectedDuration;  ///< the Expected Duration
+    WifiTidLinkMapping m_mappings;           ///< maps TIDs to link sets
+    TidToLinkMapping m_tidToLinkMapping;     ///< TID-To-Link Mapping element
 };
 
-template <typename... Args>
-TidToLinkMappingElementTest::TidToLinkMappingElementTest(TidLinkMapDir direction, Args&&... args)
+TidToLinkMappingElementTest::TidToLinkMappingElementTest(WifiDirection direction,
+                                                         std::optional<Time> mappingSwitchTime,
+                                                         std::optional<Time> expectedDuration,
+                                                         const WifiTidLinkMapping& mappings)
     : HeaderSerializationTestCase(
-          "Check serialization and deserialization of TID-To-Link Mapping elements")
+          "Check serialization and deserialization of TID-To-Link Mapping elements"),
+      m_direction(direction),
+      m_mappingSwitchTime(mappingSwitchTime),
+      m_expectedDuration(expectedDuration),
+      m_mappings(mappings)
 {
-    m_tidToLinkMapping.m_control.direction = direction;
-    m_tidToLinkMapping.m_control.defaultMapping = true;
-    SetLinkMapping(args...);
 }
 
-template <typename... Args>
 void
-TidToLinkMappingElementTest::SetLinkMapping(uint8_t tid,
-                                            const std::list<uint8_t>& linkIds,
-                                            Args&&... args)
+TidToLinkMappingElementTest::DoSetup()
 {
-    m_tidToLinkMapping.m_control.defaultMapping = false;
-    m_tidToLinkMapping.SetLinkMappingOfTid(tid, linkIds);
-    SetLinkMapping(args...);
+    m_tidToLinkMapping.m_control.direction = m_direction;
+    m_tidToLinkMapping.m_control.defaultMapping = true;
+
+    if (m_mappingSwitchTime)
+    {
+        m_tidToLinkMapping.SetMappingSwitchTime(*m_mappingSwitchTime);
+        std::optional<Time> encoded = m_tidToLinkMapping.GetMappingSwitchTime();
+        NS_TEST_ASSERT_MSG_EQ(encoded.has_value(), true, "Mapping Switch Time should be present");
+        NS_TEST_EXPECT_MSG_EQ(*m_mappingSwitchTime,
+                              *encoded,
+                              "Incorrect Mapping Switch Time value");
+    }
+    if (m_expectedDuration)
+    {
+        m_tidToLinkMapping.SetExpectedDuration(*m_expectedDuration);
+        std::optional<Time> encoded = m_tidToLinkMapping.GetExpectedDuration();
+        NS_TEST_ASSERT_MSG_EQ(encoded.has_value(), true, "Expected Duration should be present");
+        NS_TEST_EXPECT_MSG_EQ(*m_expectedDuration, *encoded, "Incorrect Expected Duration value");
+    }
+
+    for (const auto& [tid, linkSet] : m_mappings)
+    {
+        m_tidToLinkMapping.m_control.defaultMapping = false;
+        m_tidToLinkMapping.SetLinkMappingOfTid(tid, linkSet);
+        NS_TEST_EXPECT_MSG_EQ((m_tidToLinkMapping.GetLinkMappingOfTid(tid) == linkSet),
+                              true,
+                              "Incorrect link set for TID " << +tid);
+    }
 }
 
 void
 TidToLinkMappingElementTest::DoRun()
 {
     TestHeaderSerialization(m_tidToLinkMapping);
+
+    Simulator::Destroy();
 }
 
 /**
@@ -1362,33 +1382,31 @@ WifiEhtInfoElemsTestSuite::WifiEhtInfoElemsTestSuite()
     AddTestCase(new WifiEhtCapabilitiesIeTest(true, 80), TestCase::QUICK);
     AddTestCase(new WifiEhtCapabilitiesIeTest(false, 160), TestCase::QUICK);
     AddTestCase(new WifiEhtCapabilitiesIeTest(false, 320), TestCase::QUICK);
-    AddTestCase(new TidToLinkMappingElementTest(TidLinkMapDir::DOWNLINK), TestCase::QUICK);
     AddTestCase(
-        new TidToLinkMappingElementTest(TidLinkMapDir::UPLINK, 3, std::list<uint8_t>{0, 4, 6}),
+        new TidToLinkMappingElementTest(WifiDirection::DOWNLINK, std::nullopt, std::nullopt, {}),
         TestCase::QUICK);
-    AddTestCase(new TidToLinkMappingElementTest(TidLinkMapDir::BOTH_DIRECTIONS,
-                                                3,
-                                                std::list<uint8_t>{0, 4, 6},
-                                                6,
-                                                std::list<uint8_t>{3, 7, 11, 14}),
+    AddTestCase(new TidToLinkMappingElementTest(WifiDirection::UPLINK,
+                                                MicroSeconds(500 * 1024),
+                                                MicroSeconds(300 * 1024),
+                                                {{3, std::set<uint8_t>{0, 4, 6}}}),
                 TestCase::QUICK);
-    AddTestCase(new TidToLinkMappingElementTest(TidLinkMapDir::DOWNLINK,
-                                                0,
-                                                std::list<uint8_t>{0, 1, 2},
-                                                1,
-                                                std::list<uint8_t>{3, 4, 5},
-                                                2,
-                                                std::list<uint8_t>{6, 7},
-                                                3,
-                                                std::list<uint8_t>{8, 9, 10},
-                                                4,
-                                                std::list<uint8_t>{11, 12, 13},
-                                                5,
-                                                std::list<uint8_t>{14},
-                                                6,
-                                                std::list<uint8_t>{1, 3, 6},
-                                                7,
-                                                std::list<uint8_t>{11, 14}),
+    AddTestCase(new TidToLinkMappingElementTest(
+                    WifiDirection::BOTH_DIRECTIONS,
+                    std::nullopt,
+                    MicroSeconds(100 * 1024),
+                    {{3, std::set<uint8_t>{0, 4, 6}}, {6, std::set<uint8_t>{3, 7, 11, 14}}}),
+                TestCase::QUICK);
+    AddTestCase(new TidToLinkMappingElementTest(WifiDirection::DOWNLINK,
+                                                MicroSeconds(100 * 1024),
+                                                std::nullopt,
+                                                {{0, std::set<uint8_t>{0, 1, 2}},
+                                                 {1, std::set<uint8_t>{3, 4, 5}},
+                                                 {2, std::set<uint8_t>{6, 7}},
+                                                 {3, std::set<uint8_t>{8, 9, 10}},
+                                                 {4, std::set<uint8_t>{11, 12, 13}},
+                                                 {5, std::set<uint8_t>{14}},
+                                                 {6, std::set<uint8_t>{1, 3, 6}},
+                                                 {7, std::set<uint8_t>{11, 14}}}),
                 TestCase::QUICK);
     AddTestCase(new EhtOperationElementTest({0, 0, 0, 0, 0}, 1, 2, 3, 4, 5, 6, 7, 8, std::nullopt),
                 TestCase::QUICK);
