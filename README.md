@@ -1,13 +1,13 @@
-# UNISON for ns-3
+# Unison for ns-3
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.10077300.svg)](https://doi.org/10.5281/zenodo.10077300)
 [![CI](https://github.com/NASA-NJU/UNISON-for-ns-3/actions/workflows/per_commit.yml/badge.svg)](https://github.com/NASA-NJU/UNISON-for-ns-3/actions/workflows/per_commit.yml)
 
 A fast and user-transparent parallel simulator implementation for ns-3.
-More information about UNISON can be found in our EuroSys '24 paper (coming soon).
+More information about Unison can be found in our EuroSys '24 paper (coming soon).
 
-Supported ns-3 version: [3.36.1](tree/unison-3.36.1), [3.37](tree/unison-3.37), [3.38](tree/unison-3.38), [3.39](tree/unison-3.36.1).
-We are trying to keep UNISON updated with the latest version of ns-3.
+Supported ns-3 version: [3.36.1](https://github.com/NASA-NJU/UNISON-for-ns-3/tree/unison-3.36.1), [3.37](https://github.com/NASA-NJU/UNISON-for-ns-3/tree/unison-3.37), [3.38](https://github.com/NASA-NJU/UNISON-for-ns-3/tree/unison-3.38), [3.39](https://github.com/NASA-NJU/UNISON-for-ns-3/tree/unison-3.39) and [3.40](github.com/NASA-NJU/UNISON-for-ns-3/tree/unison-3.40).
+We are trying to keep Unison updated with the latest version of ns-3.
 You can find each unison-enabled ns-3 version via `unison-*` tags.
 
 ## Getting Started
@@ -22,7 +22,7 @@ The quickest way to get started is to type the command
 > If you want to get `-O3` optimized build and discard all log outputs, please add `-d optimized` arguments.
 
 The `--enable-mtp` option will enable multi-threaded parallelization.
-You can verify UNISON is enabled by checking whether `Multithreaded Simulation : ON` appears in the optional feature list.
+You can verify Unison is enabled by checking whether `Multithreaded Simulation : ON` appears in the optional feature list.
 
 Now, let's build and run a DCTCP example with default sequential simulation and parallel simulation (using 4 threads) respectively:
 
@@ -35,29 +35,32 @@ time ./ns3 run dctcp-example-mtp
 The simulation should finish in 4-5 minutes for `dctcp-example` and 1-2 minutes for `dctcp-example-mtp`, depending on your hardware and your build profile.
 The output in `*.dat` should be in accordance with the comments in the source file.
 
-The speedup of UNISON is more significant for larger topologies and traffic volumes.
+The speedup of Unison is more significant for larger topologies and traffic volumes.
 If you are interested in using it to simulate topologies like fat-tree, BCube and 2D-torus, please refer to [Running Evaluations](#running-evaluations).
 
 ## Speedup Your Existing Code
 
-To understand how UNISON affects your model code, let's find the differences between two versions of the source files of the above example:
+To understand how Unison affects your model code, let's find the differences between two versions of the source files of the above example:
 
 ```shell
 diff examples/tcp/dctcp-example.cc examples/mtp/dctcp-example-mtp.cc
 ```
 
-It turns out that to bring UNISON to existing model code, all you need to do is to include the `ns3/mtp-interface.h` header file and add the following line at the beginning of the `main` function:
+It turns out that to bring Unison to the existing model code, all you need to do is to include the `ns3/mtp-interface.h` header file and add the following line at the beginning of the `main` function:
 
 ```c++
 MtpInterface::Enable(numberOfThreads);
 ```
 
 The parameter `numberOfThreads` is optional.
-If it is omitted, the number of threads is automatically chosen and will not exceed the maximum number of available hardware threads on your system. If you want to enable UNISON for distributed simulation on existing MPI programs for further speedup, place the above line before MPI initialization.
+If it is omitted, the number of threads is automatically chosen and will not exceed the maximum number of available hardware threads on your system.
+If you want to enable Unison for distributed simulation on existing MPI programs for further speedup, place the above line before MPI initialization and do not explicitly specify the simulator implementation in your code.
+For such hybrid simulation with MPI, the `--enable-mpi` option is also required when configuring ns-3.
 
-UNISON resolved a lot of thread-safety issues with ns-3's architecture.
+Unison resolved a lot of thread-safety issues with ns-3's architecture.
 You don't need to consider these issues on your own for most of the time, except if you have custom global statistics other than the built-in flow-monitor.
 In the latter case, if multiple nodes can access your global statistics, you can replace them with atomic variables via `std::atomic<>`.
+When collecting tracing data such as Pcap, it is strongly recommended to create separate output files for each node instead of a single trace file.
 For complex custom data structures, you can create critical sections by adding
 
 ```c++
@@ -66,16 +69,30 @@ MtpInterface::CriticalSection cs;
 
 at the beginning of your methods.
 
-In addition to the DCTCP example above, you can find other adapted examples in `examples/mtp`.
+## Examples
+
+In addition to the DCTCP example, you can find other adapted examples in `examples/mtp`.
+Meanwhile, Unison also supports manual partition, and you can find a minimal example in `src/mtp/examples/simple-mtp.cc`
+For hybrid simulation with MPI, you can find a minimal example in `src/mpi/examples/simple-hybrid.cc`.
+
+We also provide three detailed fat-tree examples for Unison, traditional MPI parallel simulation and hybrid simulation:
+
+| Name | Location | Required configuration flags | Running commands |
+| - | - | - | - |
+| fat-tree-mtp | src/mtp/examples/fat-tree-mtp.cc | `--enable-mtp --enable-exaples` without `--enable-mpi` | `./ns3 run "fat-tree-mtp --thread=4"` |
+| fat-tree-mpi | src/mpi/examples/fat-tree-mpi.cc | `--enable-mpi --enable-exaples` without `--enable-mtp` | `./ns3 run fat-tree-mpi --command-template "mpirun -np 4 %s"` |
+| fat-tree-hybrid | src/mpi/examples/fat-tree-hybrid.cc | `--enable-mtp --enable-mpi --enable-exaples` | `./ns3 run fat-tree-mpi --command-template "mpirun -np 2 %s --thread=2"` |
+
+Feel free to explore these examples, compare code changes and adjust the `-np` and `--thread` arguments.
 
 ## Running Evaluations
 
-To evaluate UNISON, please switch to [unison-evaluations](https://github.com/NASA-NJU/UNISON-for-ns-3/tree/unison-evaluations) branch, which is based on ns-3.36.1.
+To evaluate Unison, please switch to [unison-evaluations](https://github.com/NASA-NJU/Unison-for-ns-3/tree/unison-evaluations) branch, which is based on ns-3.36.1.
 In this branch, you can find various topology models in the `scratch` folder.
 There are a lot of parameters you can set for each topology.
 We provided a utility script `exp.py` to compare these simulators and parameters.
 We also provided `process.py` to convert these raw experiment data to CSV files suitable for plotting.
-Please see the [README in that branch](https://github.com/NASA-NJU/UNISON-for-ns-3/tree/unison-evaluations) for more details.
+Please see the [README in that branch](https://github.com/NASA-NJU/Unison-for-ns-3/tree/unison-evaluations) for more details.
 
 The evaluated artifact (based on ns-3.36.1) is persistently indexed by DOI [10.5281/zenodo.10077300](https://doi.org/10.5281/zenodo.10077300).
 
@@ -83,7 +100,7 @@ The evaluated artifact (based on ns-3.36.1) is persistently indexed by DOI [10.5
 
 ### 1. Overview
 
-UNISON for ns-3 is mainly implemented in the `mtp` module (located at `src/mtp/*`), which stands for multi-threaded parallelization.
+Unison for ns-3 is mainly implemented in the `mtp` module (located at `src/mtp/*`), which stands for multi-threaded parallelization.
 This module contains three parts: A parallel simulator implementation `multithreaded-simulator-impl`, an interface to users `mtp-interface`, and `logical-process` to represent LPs in terms of parallel simulation.
 
 All LPs and threads are stored in the `mtp-interface`.
@@ -105,7 +122,7 @@ We also modified the module to make it locally thread-safe.
 In addition to the `mtp` and `mpi` modules, we also modified the following part of the ns-3 architecture to make it thread-safe, also with some bug fixing for ns-3.
 You can find the modifications to each unison-enabled ns-3 version via `git diff unison-* ns-*`.
 
-Modifications to the build system to provide `--enable-mtp` option to enable/disable UNISON:
+Modifications to the build system to provide `--enable-mtp` option to enable/disable Unison:
 
 ```
 ns3                                                |    2 +
@@ -179,7 +196,7 @@ src/mpi/model/mpi-interface.cc                     |    3 +-
 
 ### 3. Logging
 
-The reason behind UNISON's fast speed is that it divides the network into multiple logical processes (LPs) with fine granularity and schedules them dynamically.
+The reason behind Unison's fast speed is that it divides the network into multiple logical processes (LPs) with fine granularity and schedules them dynamically.
 To get to know more details of such workflow, you can enable the following log component:
 
 ```c++
