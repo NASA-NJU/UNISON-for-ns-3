@@ -1,3 +1,10 @@
+set(example_as_test_suite)
+if(${ENABLE_EXAMPLES})
+  set(example_as_test_suite
+      test/mtp-test-suite.cc
+  )
+endif()
+
 build_lib(
   LIBNAME mtp
   SOURCE_FILES
@@ -10,6 +17,5 @@ build_lib(
     model/multithreaded-simulator-impl.h
   LIBRARIES_TO_LINK ${libcore}
                     ${libnetwork}
-  TEST_SOURCES
-    test/mtp-test-suite.cc
+  TEST_SOURCES ${example_as_test_suite}
 )

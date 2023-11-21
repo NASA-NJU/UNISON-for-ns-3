@@ -1,68 +1,142 @@
-// TODO: Add multithreaded tests
-
-// Include a header file from your module to test.
+#include "ns3/example-as-test.h"
 #include "ns3/mtp-module.h"
-
-// An essential include is test.h
 #include "ns3/test.h"
 
-// Do not put your test classes in namespace ns3.  You may find it useful
-// to use the using directive to access the ns3 namespace directly
+#include <sstream>
+
 using namespace ns3;
 
-// This is an example TestCase.
-class MtpTestCase1 : public TestCase
+class MtpTestCase : public ExampleAsTestCase
 {
-public:
-  MtpTestCase1 ();
-  virtual ~MtpTestCase1 ();
+  public:
+    /**
+     * \copydoc ns3::ExampleAsTestCase::ExampleAsTestCase
+     *
+     * \param [in] postCmd The post processing command
+     */
+    MtpTestCase(const std::string name,
+                const std::string program,
+                const std::string dataDir,
+                const std::string args = "",
+                const std::string postCmd = "",
+                const bool shouldNotErr = true);
 
-private:
-  virtual void DoRun (void);
+    /** Destructor */
+    ~MtpTestCase() override
+    {
+    }
+
+    /**
+     * Produce the `--command-template` argument
+     *
+     * \returns The `--command-template` string.
+     */
+    std::string GetCommandTemplate() const override;
+
+    /**
+     * Remove time statistics
+     *
+     * \returns The post processing command
+     */
+    std::string GetPostProcessingCommand() const override;
+
+  private:
+    /** The post processing command. */
+    std::string m_postCmd;
 };
 
-// Add some help text to this case to describe what it is intended to test
-MtpTestCase1::MtpTestCase1 ()
-  : TestCase ("Mtp test case (does nothing)")
+MtpTestCase::MtpTestCase(const std::string name,
+                         const std::string program,
+                         const std::string dataDir,
+                         const std::string args /* = "" */,
+                         const std::string postCmd /* = "" */,
+                         const bool shouldNotErr /* = true */)
+    : ExampleAsTestCase(name, program, dataDir, args, shouldNotErr),
+      m_postCmd(postCmd)
 {
 }
 
-// This destructor does nothing but we include it as a reminder that
-// the test case should clean up after itself
-MtpTestCase1::~MtpTestCase1 ()
+std::string
+MtpTestCase::GetCommandTemplate() const
 {
+    std::stringstream ss;
+    ss << "%s " << m_args;
+    return ss.str();
 }
 
-//
-// This method is the pure virtual method from class TestCase that every
-// TestCase must implement
-//
-void
-MtpTestCase1::DoRun (void)
+std::string
+MtpTestCase::GetPostProcessingCommand() const
 {
-  // A wide variety of test macros are available in src/core/test.h
-  NS_TEST_ASSERT_MSG_EQ (true, true, "true doesn't equal true for some reason");
-  // Use this one for floating point comparisons
-  NS_TEST_ASSERT_MSG_EQ_TOL (0.01, 0.01, 0.001, "Numbers are not equal within tolerance");
+    std::string command(m_postCmd);
+    return command;
 }
 
-// The TestSuite class names the TestSuite, identifies what type of TestSuite,
-// and enables the TestCases to be run.  Typically, only the constructor for
-// this class must be defined
-//
 class MtpTestSuite : public TestSuite
 {
-public:
-  MtpTestSuite ();
-};
+  public:
+    /**
+     * \copydoc MpiTestCase::MpiTestCase
+     *
+     * \param [in] duration Amount of time this test takes to execute
+     *             (defaults to QUICK).
+     */
+    MtpTestSuite(const std::string name,
+                 const std::string program,
+                 const std::string dataDir,
+                 const std::string args = "",
+                 const std::string postCmd = "",
+                 const TestDuration duration = QUICK,
+                 const bool shouldNotErr = true)
+        : TestSuite(name, EXAMPLE)
+    {
+        AddTestCase(new MtpTestCase(name, program, dataDir, args, postCmd, shouldNotErr), duration);
+    }
 
-MtpTestSuite::MtpTestSuite ()
-  : TestSuite ("mtp", UNIT)
-{
-  // TestDuration for TestCase can be QUICK, EXTENSIVE or TAKES_FOREVER
-  AddTestCase (new MtpTestCase1, TestCase::QUICK);
-}
+}; // class MtpTestSuite
 
-// Do not forget to allocate an instance of this TestSuite
-static MtpTestSuite smtpTestSuite;
+static MtpTestSuite g_mtpFatTree1("mtp-fat-tree",
+                                  "fat-tree-mtp",
+                                  NS_TEST_SOURCEDIR,
+                                  "--bandwidth=100Mbps --thread=4 --flowmon=true",
+                                  "| grep -v 'Simulation time'",
+                                  TestCase::TestDuration::QUICK);
 
+static MtpTestSuite g_mtpFatTree2("mtp-fat-tree-incast",
+                                  "fat-tree-mtp",
+                                  NS_TEST_SOURCEDIR,
+                                  "--bandwidth=100Mbps --incast=1 --thread=4 --flowmon=true",
+                                  "| grep -v 'Simulation time'",
+                                  TestCase::TestDuration::QUICK);
+
+static MtpTestSuite g_mtpTcpValidation1("mtp-tcp-validation-dctcp-10ms",
+                                        "tcp-validation-mtp",
+                                        NS_TEST_SOURCEDIR,
+                                        "--firstTcpType=dctcp --linkRate=50Mbps --baseRtt=10ms "
+                                        "--queueUseEcn=1 --stopTime=15s --validate=dctcp-10ms",
+                                        "",
+                                        TestCase::TestDuration::QUICK);
+
+static MtpTestSuite g_mtpTcpValidation2("mtp-tcp-validation-dctcp-80ms",
+                                        "tcp-validation-mtp",
+                                        NS_TEST_SOURCEDIR,
+                                        "--firstTcpType=dctcp --linkRate=50Mbps --baseRtt=80ms "
+                                        "--queueUseEcn=1 --stopTime=40s --validate=dctcp-80ms",
+                                        "",
+                                        TestCase::TestDuration::QUICK);
+
+static MtpTestSuite g_mtpTcpValidation3(
+    "mtp-tcp-validation-cubic-50ms-no-ecn",
+    "tcp-validation-mtp",
+    NS_TEST_SOURCEDIR,
+    "--firstTcpType=cubic --linkRate=50Mbps --baseRtt=50ms --queueUseEcn=0 --stopTime=20s "
+    "--validate=cubic-50ms-no-ecn",
+    "",
+    TestCase::TestDuration::QUICK);
+
+static MtpTestSuite g_mtpTcpValidation4("mtp-tcp-validation-cubic-50ms-ecn",
+                                        "tcp-validation-mtp",
+                                        NS_TEST_SOURCEDIR,
+                                        "--firstTcpType=cubic --linkRate=50Mbps --baseRtt=50ms "
+                                        "--queueUseEcn=1 --stopTime=20s --validate=cubic-50ms-ecn",
+                                        "",
+                                        TestCase::TestDuration::QUICK);
