@@ -162,7 +162,8 @@ FlowMonitor::ReportFirstTx(Ptr<FlowProbe> probe,
 
 #ifdef NS3_MTP
     while (m_lock.exchange(true, std::memory_order_acquire))
-        ;
+    {
+    };
 #endif
 
     TrackedPacket& tracked = m_trackedPackets[std::make_pair(flowId, packetId)];
@@ -203,7 +204,8 @@ FlowMonitor::ReportForwarding(Ptr<FlowProbe> probe,
 
 #ifdef NS3_MTP
     while (m_lock.exchange(true, std::memory_order_acquire))
-        ;
+    {
+    };
 #endif
 
     std::pair<FlowId, FlowPacketId> key(flowId, packetId);
@@ -244,7 +246,8 @@ FlowMonitor::ReportLastRx(Ptr<FlowProbe> probe,
 
 #ifdef NS3_MTP
     while (m_lock.exchange(true, std::memory_order_acquire))
-        ;
+    {
+    };
 #endif
 
     auto tracked = m_trackedPackets.find(std::make_pair(flowId, packetId));
@@ -326,7 +329,8 @@ FlowMonitor::ReportDrop(Ptr<FlowProbe> probe,
 
 #ifdef NS3_MTP
     while (m_lock.exchange(true, std::memory_order_acquire))
-        ;
+    {
+    };
 #endif
 
     probe->AddPacketDropStats(flowId, packetSize, reasonCode);

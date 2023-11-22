@@ -150,7 +150,8 @@ Ipv6FlowClassifier::Classify(const Ipv6Header& ipHeader,
 
 #ifdef NS3_MTP
     while (m_lock.exchange(true, std::memory_order_acquire))
-        ;
+    {
+    };
 #endif
 
     // try to insert the tuple, but check if it already exists
