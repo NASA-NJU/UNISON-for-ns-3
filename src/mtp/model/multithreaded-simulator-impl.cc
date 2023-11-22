@@ -17,6 +17,12 @@
  * Author: Songyuan Bai <i@f5soft.site>
  */
 
+/**
+ * \file
+ * \ingroup mtp
+ *  Implementation of classes ns3::MultithreadedSimulatorImpl
+ */
+
 #include "multithreaded-simulator-impl.h"
 
 #include "mtp-interface.h"

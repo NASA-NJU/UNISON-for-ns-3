@@ -17,6 +17,13 @@
  * Author: Songyuan Bai <i@f5soft.site>
  */
 
+/**
+ * \file
+ * \ingroup mtp
+ * \ingroup mpi
+ *  Implementation of classes ns3::HybridSimulatorImpl
+ */
+
 #include "hybrid-simulator-impl.h"
 
 #include "granted-time-window-mpi-interface.h"

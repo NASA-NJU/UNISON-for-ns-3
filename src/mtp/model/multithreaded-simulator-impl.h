@@ -17,6 +17,12 @@
  * Author: Songyuan Bai <i@f5soft.site>
  */
 
+/**
+ * \file
+ * \ingroup mtp
+ *  Declaration of classes ns3::MultithreadedSimulatorImpl
+ */
+
 #ifndef MULTITHREADED_SIMULATOR_IMPL_H
 #define MULTITHREADED_SIMULATOR_IMPL_H
 
@@ -31,6 +37,10 @@
 namespace ns3
 {
 
+/**
+ * @brief
+ * Implementation of the multithreaded simulator
+ */
 class MultithreadedSimulatorImpl : public SimulatorImpl
 {
   public:
@@ -66,6 +76,17 @@ class MultithreadedSimulatorImpl : public SimulatorImpl
     // Inherited from Object
     virtual void DoDispose();
 
+    /**
+     * @brief Automatically divides the to-be-simulated topology
+     *
+     * This method is called at the beginning of MultithreadedSimulatorImpl::Run.
+     * It will set each node a systemId. Then it creates logical processes according
+     * to the number of partitions, and transfer old events to newly created logical
+     * processes.
+     *
+     * If manual partition is enabled by calling MtpInterface::Enable with two parameters,
+     * this method will not be called.
+     */
     void Partition();
 
     bool m_partition;

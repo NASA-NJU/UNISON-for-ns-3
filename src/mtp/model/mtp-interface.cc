@@ -17,6 +17,12 @@
  * Author: Songyuan Bai <i@f5soft.site>
  */
 
+/**
+ * \file
+ * \ingroup mtp
+ *  Implementation of classes ns3::MtpInterface
+ */
+
 #include "mtp-interface.h"
 
 #include "ns3/assert.h"

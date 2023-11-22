@@ -17,6 +17,13 @@
  * Author: Songyuan Bai <i@f5soft.site>
  */
 
+/**
+ * \file
+ * \ingroup mtp
+ * \ingroup mpi
+ *  Declaration of classes ns3::HybridSimulatorImpl
+ */
+
 #ifndef NS3_HYBRID_SIMULATOR_IMPL_H
 #define NS3_HYBRID_SIMULATOR_IMPL_H
 
@@ -33,6 +40,10 @@
 namespace ns3
 {
 
+/**
+ * @brief
+ * Implementation of the hybrid simulator
+ */
 class HybridSimulatorImpl : public SimulatorImpl
 {
   public:
@@ -68,6 +79,12 @@ class HybridSimulatorImpl : public SimulatorImpl
     // Inherited from Object
     virtual void DoDispose();
 
+    /**
+     * @brief Whether LPs on the current local process is finished.
+     *
+     * @return true if all finished
+     * @return false if not all finished
+     */
     bool IsLocalFinished() const;
 
     /** Are all parallel instances completed. */
@@ -78,6 +95,17 @@ class HybridSimulatorImpl : public SimulatorImpl
     uint32_t m_systemCount; /**< MPI communicator size. */
     Time m_smallestTime;    /**< End of current window. */
 
+    /**
+     * @brief Automatically divides the to-be-simulated topology
+     *
+     * This method is called at the beginning of MultithreadedSimulatorImpl::Run.
+     * It will set each node a systemId. Then it creates logical processes according
+     * to the number of partitions, and transfer old events to newly created logical
+     * processes.
+     *
+     * If manual partition is enabled by calling MtpInterface::Enable with two parameters,
+     * this method will not be called.
+     */
     void Partition();
 
     uint32_t m_maxThreads;

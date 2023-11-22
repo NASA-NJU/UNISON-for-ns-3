@@ -17,6 +17,12 @@
  * Author: Songyuan Bai <i@f5soft.site>
  */
 
+/**
+ * \file
+ * \ingroup mtp
+ *  Implementation of classes ns3::LogicalProcess
+ */
+
 #include "logical-process.h"
 
 #include "mtp-interface.h"
@@ -76,7 +82,7 @@ LogicalProcess::CalculateLookAhead()
 
     if (m_systemId == 0)
     {
-        m_lookAhead = TimeStep(0); // No lookahead for public LP
+        m_lookAhead = TimeStep(0); // No lookahead for the public LP
     }
     else
     {
@@ -85,6 +91,8 @@ LogicalProcess::CalculateLookAhead()
         for (auto iter = c.Begin(); iter != c.End(); ++iter)
         {
 #ifdef NS3_MPI
+            // for hybrid simulation, the left 16-bit indicates local system ID,
+            // and the right 16-bit indicates global system ID (MPI rank)
             if (((*iter)->GetSystemId() >> 16) != m_systemId)
             {
                 continue;
