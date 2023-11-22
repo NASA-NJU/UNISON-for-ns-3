@@ -35,6 +35,7 @@ class MtpInterface
     static void Enable(const uint32_t threadCount); // auto partition, specify thread count
     static void Enable(const uint32_t threadCount, const uint32_t systemCount); // manual partition
     static void EnableNew(const uint32_t newSystemCount); // add LPs for dynamic added node
+    static void EnableNew(const uint32_t threadCount, const uint32_t newSystemCount);
     static void Disable();
     static void Run();
     static void RunBefore();
