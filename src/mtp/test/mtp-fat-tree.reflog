@@ -22,10 +22,10 @@
 
 - Generating traffic...
   Expected data rate = 0.48Gbps
-  Generated data rate = 0.433455Gbps
+  Generated data rate = 0.322004Gbps
   Expected avg flow size = 1.71125MB
-  Generated avg flow size = 1.56604MB
-  Total flow count = 36
+  Generated avg flow size = 1.19742MB
+  Total flow count = 34
 
 - Start simulation...
   Progressed to 0.1s
@@ -37,17 +37,17 @@
   Progressed to 0.7s
   Progressed to 0.8s
   Progressed to 0.9s
-  Detected #flow = 70
-  Finished #flow = 65
-  Average FCT (all) = 92536.3us
-  Average FCT (finished) = 77992.9us
-  Average end to end delay = 66398.2us
-  Average flow throughput = 0.0312583Gbps
-  Network throughput = 0.246348Gbps
-  Total Tx packets = 29014
-  Total Rx packets = 25782
+  Detected #flow = 66
+  Finished #flow = 64
+  Average FCT (all) = 104715us
+  Average FCT (finished) = 98911.9us
+  Average end to end delay = 20943us
+  Average flow throughput = 0.0285373Gbps
+  Network throughput = 0.218251Gbps
+  Total Tx packets = 26704
+  Total Rx packets = 25885
   Dropped packets = 0
 
 - Done!
-  Event count = 355408
+  Event count = 461850
 
