@@ -52,15 +52,16 @@ class Distribution
 {
   public:
     // load a distribution from a CDF file
-    Distribution(string filename = "src/mtp/examples/web-search.txt")
+    Distribution(const string filename)
     {
         ifstream fin;
         fin.open(filename);
         while (!fin.eof())
         {
-            double x, cdf;
+            double x;
+            double cdf;
             fin >> x >> cdf;
-            m_cdf.push_back(std::make_pair(x, cdf));
+            m_cdf.emplace_back(x, cdf);
         }
         fin.close();
 
@@ -68,7 +69,7 @@ class Distribution
     }
 
     // expectation value of the distribution
-    double Expectation()
+    double Expectation() const
     {
         double ex = 0;
         for (uint32_t i = 1; i < m_cdf.size(); i++)
@@ -106,22 +107,20 @@ class Distribution
 class TrafficGenerator
 {
   public:
-    TrafficGenerator(string cdfFile,
-                     uint32_t hostTotal,
-                     double dataRate,
-                     double incastRatio,
-                     vector<uint32_t> victims)
+    TrafficGenerator(const string cdfFile,
+                     const uint32_t hostTotal,
+                     const double dataRate,
+                     const double incastRatio,
+                     const vector<uint32_t> victims)
+        : m_currentTime(0),
+          m_incastRatio(incastRatio),
+          m_hostTotal(hostTotal),
+          m_victims(victims),
+          m_flowCount(0),
+          m_flowSizeTotal(0),
+          m_distribution(cdfFile)
     {
-        m_distribution = Distribution(cdfFile);
-
-        m_currentTime = 0;
         m_averageInterval = m_distribution.Expectation() * 8 / dataRate;
-        m_incastRatio = incastRatio;
-        m_hostTotal = hostTotal;
-        m_victims = victims;
-
-        m_flowCount = 0;
-        m_flowSizeTotal = 0;
         m_uniformRand = CreateObject<UniformRandomVariable>();
         m_expRand = CreateObject<ExponentialRandomVariable>();
     }
@@ -129,7 +128,8 @@ class TrafficGenerator
     // get one flow with incremental time and random src, dst and size
     tuple<double, uint32_t, uint32_t, uint32_t> GetFlow()
     {
-        uint32_t src, dst;
+        uint32_t src;
+        uint32_t dst;
         if (m_uniformRand->GetValue(0, 1) < m_incastRatio)
         {
             dst = m_victims[m_uniformRand->GetInteger(0, m_victims.size() - 1)];
@@ -151,22 +151,22 @@ class TrafficGenerator
         return make_tuple(m_currentTime, src, dst, flowSize);
     }
 
-    double GetActualDataRate()
+    double GetActualDataRate() const
     {
         return m_flowSizeTotal / m_currentTime * 8;
     }
 
-    double GetAvgFlowSize()
+    double GetAvgFlowSize() const
     {
         return m_distribution.Expectation();
     }
 
-    double GetActualAvgFlowSize()
+    double GetActualAvgFlowSize() const
     {
         return m_flowSizeTotal / (double)m_flowCount;
     }
 
-    uint32_t GetFlowCount()
+    uint32_t GetFlowCount() const
     {
         return m_flowCount;
     }
@@ -463,10 +463,17 @@ StartSimulation()
     uint64_t eventCount = Simulator::GetEventCount();
     if (conf::flowmon)
     {
-        uint64_t dropped = 0, totalTx = 0, totalRx = 0, totalTxBytes = 0, flowCount = 0,
-                 finishedFlowCount = 0;
+        uint64_t dropped = 0;
+        uint64_t totalTx = 0;
+        uint64_t totalRx = 0;
+        uint64_t totalTxBytes = 0;
+        uint64_t flowCount = 0;
+        uint64_t finishedFlowCount = 0;
         double totalThroughput = 0;
-        Time totalFct(0), totalFinishedFct(0), totalDelay(0);
+        Time totalFct(0);
+        Time totalFinishedFct(0);
+        Time totalDelay(0);
+
         flowMonitor->CheckForLostPackets();
         for (auto& p : flowMonitor->GetFlowStats())
         {
@@ -490,6 +497,7 @@ StartSimulation()
                 flowCount++;
             }
         }
+
         double avgFct = (double)totalFct.GetMicroSeconds() / flowCount;
         double avgFinishedFct = (double)totalFinishedFct.GetMicroSeconds() / finishedFlowCount;
         double avgDelay = (double)totalDelay.GetMicroSeconds() / totalRx;
@@ -542,7 +550,10 @@ main(int argc, char* argv[])
     uint32_t nAgg = conf::k / 2;  // number of aggregation switch in a pod
     uint32_t nEdge = conf::k / 2; // number of edge switch in a pod
     uint32_t nHost = conf::k / 2; // number of hosts under a switch
-    NodeContainer core[nGroup], agg[nPod], edge[nPod], host[nPod][nEdge];
+    NodeContainer core[nGroup];
+    NodeContainer agg[nPod];
+    NodeContainer edge[nPod];
+    NodeContainer host[nPod][nEdge];
 
     // create nodes
     for (uint32_t i = 0; i < nGroup; i++)

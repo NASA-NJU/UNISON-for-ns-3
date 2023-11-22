@@ -225,7 +225,8 @@ GrantedTimeWindowMpiInterface::SendPacket(Ptr<Packet> p,
 
 #ifdef NS3_MTP
     while (g_sending.exchange(true, std::memory_order_acquire))
-        ;
+    {
+    };
 #endif
 
     SentBuffer sendBuf;

@@ -178,8 +178,7 @@ HybridSimulatorImpl::Remove(const EventId& id)
     if (id.GetUid() == EventId::DESTROY)
     {
         // destroy events.
-        for (std::list<EventId>::iterator i = m_destroyEvents.begin(); i != m_destroyEvents.end();
-             i++)
+        for (auto i = m_destroyEvents.begin(); i != m_destroyEvents.end(); i++)
         {
             if (*i == id)
             {
@@ -209,13 +208,11 @@ HybridSimulatorImpl::IsExpired(const EventId& id) const
     if (id.GetUid() == EventId::DESTROY)
     {
         // destroy events.
-        if (id.PeekEventImpl() == 0 || id.PeekEventImpl()->IsCancelled())
+        if (id.PeekEventImpl() == nullptr || id.PeekEventImpl()->IsCancelled())
         {
             return true;
         }
-        for (std::list<EventId>::const_iterator i = m_destroyEvents.begin();
-             i != m_destroyEvents.end();
-             i++)
+        for (auto i = m_destroyEvents.begin(); i != m_destroyEvents.end(); i++)
         {
             if (*i == id)
             {
@@ -374,7 +371,7 @@ HybridSimulatorImpl::Partition()
     if (m_minLookahead == TimeStep(0))
     {
         std::vector<Time> delays;
-        for (NodeContainer::Iterator it = nodes.Begin(); it != nodes.End(); it++)
+        for (auto it = nodes.Begin(); it != nodes.End(); it++)
         {
             Ptr<Node> node = *it;
             if (node->GetSystemId() == m_myId)
@@ -398,7 +395,7 @@ HybridSimulatorImpl::Partition()
             }
         }
         std::sort(delays.begin(), delays.end());
-        if (delays.size() == 0)
+        if (delays.empty())
         {
             m_minLookahead = TimeStep(0);
         }
@@ -414,7 +411,7 @@ HybridSimulatorImpl::Partition()
     }
 
     // perform a BFS on the whole network topo to assign each node a localSystemId
-    for (NodeContainer::Iterator it = nodes.Begin(); it != nodes.End(); it++)
+    for (auto it = nodes.Begin(); it != nodes.End(); it++)
     {
         Ptr<Node> node = *it;
         if (!visited[node->GetId()] && node->GetSystemId() == m_myId)

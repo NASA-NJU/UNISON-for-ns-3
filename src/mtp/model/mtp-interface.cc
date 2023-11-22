@@ -233,7 +233,8 @@ MtpInterface::ProcessOneRound()
 
     // logical process barriar synchronization
     while (g_finishedSystemCount.load(std::memory_order_acquire) != g_systemCount)
-        ;
+    {
+    };
 
     // stage 2: process the public LP
     g_systems[0].ProcessOneRound();
@@ -256,7 +257,8 @@ MtpInterface::ProcessOneRound()
 
     // logical process barriar synchronization
     while (g_finishedSystemCount.load(std::memory_order_acquire) != g_systemCount)
-        ;
+    {
+    };
 }
 
 void
@@ -324,7 +326,8 @@ MtpInterface::ThreadFunc(void* arg)
         if (index >= g_systemCount)
         {
             while (g_systemIndex.load(std::memory_order_acquire) >= g_systemCount)
-                ;
+            {
+            };
             continue;
         }
         LogicalProcess* system = &g_systems[g_sortedSystemIndices[index]];

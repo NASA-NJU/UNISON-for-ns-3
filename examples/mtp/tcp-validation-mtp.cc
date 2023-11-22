@@ -163,12 +163,12 @@ NS_LOG_COMPONENT_DEFINE("TcpValidation");
 
 // These variables are declared outside of main() so that they can
 // be used in trace sinks.
-std::atomic<uint32_t> g_firstBytesReceived (0);  //!< First received packet size.
-std::atomic<uint32_t> g_secondBytesReceived (0); //!< Second received packet size.
-std::atomic<uint32_t> g_marksObserved (0);       //!< Number of marked packets observed.
-std::atomic<uint32_t> g_dropsObserved (0);       //!< Number of dropped packets observed.
-std::string g_validate = "";        //!< Empty string disables validation.
-bool g_validationFailed = false;    //!< True if validation failed.
+std::atomic<uint32_t> g_firstBytesReceived(0);  //!< First received packet size.
+std::atomic<uint32_t> g_secondBytesReceived(0); //!< Second received packet size.
+std::atomic<uint32_t> g_marksObserved(0);       //!< Number of marked packets observed.
+std::atomic<uint32_t> g_dropsObserved(0);       //!< Number of dropped packets observed.
+std::string g_validate = "";                    //!< Empty string disables validation.
+bool g_validationFailed = false;                //!< True if validation failed.
 
 /**
  * Trace first congestion window.
@@ -748,7 +748,7 @@ main(int argc, char* argv[])
         firstTcpTypeId = TcpDctcp::GetTypeId();
         Config::SetDefault("ns3::CoDelQueueDisc::CeThreshold", TimeValue(ceThreshold));
         Config::SetDefault("ns3::FqCoDelQueueDisc::CeThreshold", TimeValue(ceThreshold));
-        if (queueUseEcn == false)
+        if (!queueUseEcn)
         {
             std::cout << "Warning: using DCTCP with queue ECN disabled" << std::endl;
         }
@@ -935,7 +935,7 @@ main(int argc, char* argv[])
         proto->SetAttribute("SocketType", TypeIdValue(secondTcpTypeId));
     }
 
-    // InternetStackHelper will install a base TrafficControLayer on the node,
+    // InternetStackHelper will install a base TrafficControlLayer on the node,
     // but the Ipv4AddressHelper below will install the default FqCoDelQueueDisc
     // on all single device nodes.  The below code overrides the configuration
     // that is normally done by the Ipv4AddressHelper::Install() method by

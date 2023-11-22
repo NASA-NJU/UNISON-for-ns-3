@@ -33,18 +33,18 @@ namespace ns3
 NS_LOG_COMPONENT_DEFINE("LogicalProcess");
 
 LogicalProcess::LogicalProcess()
+    : m_systemId(0),
+      m_systemCount(0),
+      m_stop(false),
+      m_uid(EventId::UID::VALID),
+      m_currentContext(Simulator::NO_CONTEXT),
+      m_currentUid(0),
+      m_currentTs(0),
+      m_eventCount(0),
+      m_pendingEventCount(0),
+      m_events(nullptr),
+      m_lookAhead(TimeStep(0))
 {
-    m_systemId = 0;
-    m_systemCount = 0;
-    m_uid = EventId::UID::VALID;
-    m_stop = false;
-    m_currentContext = Simulator::NO_CONTEXT;
-    m_currentUid = 0;
-    m_currentTs = 0;
-    m_eventCount = 0;
-    m_pendingEventCount = 0;
-    m_events = 0;
-    m_lookAhead = TimeStep(0);
 }
 
 LogicalProcess::~LogicalProcess()
@@ -82,7 +82,7 @@ LogicalProcess::CalculateLookAhead()
     {
         m_lookAhead = Time::Max() / 2 - TimeStep(1);
         NodeContainer c = NodeContainer::GetGlobal();
-        for (NodeContainer::Iterator iter = c.Begin(); iter != c.End(); ++iter)
+        for (auto iter = c.Begin(); iter != c.End(); ++iter)
         {
 #ifdef NS3_MPI
             if (((*iter)->GetSystemId() >> 16) != m_systemId)
@@ -241,8 +241,7 @@ LogicalProcess::ScheduleWithContext(LogicalProcess* remote,
     else
     {
         ev.key.m_uid = EventId::UID::INVALID;
-        remote->m_mailbox[m_systemId].push_back(
-            std::make_tuple(m_currentTs, m_systemId, m_uid, ev));
+        remote->m_mailbox[m_systemId].emplace_back(m_currentTs, m_systemId, m_uid, ev);
     }
 }
 
@@ -288,16 +287,9 @@ LogicalProcess::Remove(const EventId& id)
 bool
 LogicalProcess::IsExpired(const EventId& id) const
 {
-    if (id.PeekEventImpl() == 0 || id.GetTs() < m_currentTs ||
-        (id.GetTs() == m_currentTs && id.GetUid() <= m_currentUid) ||
-        id.PeekEventImpl()->IsCancelled())
-    {
-        return true;
-    }
-    else
-    {
-        return false;
-    }
+    return id.PeekEventImpl() == nullptr || id.GetTs() < m_currentTs ||
+           (id.GetTs() == m_currentTs && id.GetUid() <= m_currentUid) ||
+           id.PeekEventImpl()->IsCancelled();
 }
 
 void
