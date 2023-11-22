@@ -576,7 +576,8 @@ PacketMetadata::Create(uint32_t size)
     }
 #ifdef NS3_MTP
     while (m_freeListUsing.exchange(true, std::memory_order_acquire))
-        ;
+    {
+    };
 #endif
     while (!m_freeList.empty())
     {
@@ -615,7 +616,8 @@ PacketMetadata::Recycle(PacketMetadata::Data* data)
     }
 #ifdef NS3_MTP
     while (m_freeListUsing.exchange(true, std::memory_order_acquire))
-        ;
+    {
+    };
 #endif
     NS_LOG_LOGIC("recycle size=" << data->m_size << ", list=" << m_freeList.size());
     NS_ASSERT(data->m_count == 0);

@@ -415,8 +415,8 @@ ByteTagListData*
 ByteTagList::Allocate(uint32_t size)
 {
     NS_LOG_FUNCTION(this << size);
-    uint8_t* buffer = new uint8_t[size + sizeof(ByteTagListData) - 4];
-    ByteTagListData* data = (ByteTagListData*)buffer;
+    auto* buffer = new uint8_t[size + sizeof(ByteTagListData) - 4];
+    auto* data = (ByteTagListData*)buffer;
     data->count = 1;
     data->size = size;
     data->dirty = 0;
@@ -427,7 +427,7 @@ void
 ByteTagList::Deallocate(ByteTagListData* data)
 {
     NS_LOG_FUNCTION(this << data);
-    if (data == 0)
+    if (data == nullptr)
     {
         return;
     }
@@ -436,7 +436,7 @@ ByteTagList::Deallocate(ByteTagListData* data)
 #ifdef NS3_MTP
         std::atomic_thread_fence(std::memory_order_acquire);
 #endif
-        uint8_t* buffer = (uint8_t*)data;
+        auto* buffer = (uint8_t*)data;
         delete[] buffer;
     }
 }
