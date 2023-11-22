@@ -68,8 +68,6 @@ NS_LOG_COMPONENT_DEFINE("SimpleHybrid");
 int
 main(int argc, char* argv[])
 {
-    LogComponentEnable("LogicalProcess", LOG_LEVEL_INFO);
-
     bool nix = true;
     bool tracing = false;
     bool testing = false;
@@ -216,7 +214,7 @@ main(int argc, char* argv[])
         Ipv4GlobalRoutingHelper::PopulateRoutingTables();
     }
 
-    if (tracing == true)
+    if (tracing)
     {
         if (systemId == 0)
         {

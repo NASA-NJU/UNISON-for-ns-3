@@ -1,8 +1,14 @@
 set(example_as_test_suite)
 if(${ENABLE_EXAMPLES})
-  set(example_as_test_suite
-      test/mtp-test-suite.cc
-  )
+  if(${ENABLE_MPI})
+    set(example_as_test_suite
+        test/hybrid-test-suite.cc
+    )
+  else()
+    set(example_as_test_suite
+        test/mtp-test-suite.cc
+    )
+  endif()
 endif()
 
 build_lib(
