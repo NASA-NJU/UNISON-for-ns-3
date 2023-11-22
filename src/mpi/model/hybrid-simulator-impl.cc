@@ -471,22 +471,29 @@ HybridSimulatorImpl::Partition()
                                    << " threads");
 
     // create new LPs
-    const Ptr<Scheduler> events = MtpInterface::GetSystem()->GetPendingEvents();
-    MtpInterface::Disable();
-    MtpInterface::Enable(threadCount, systemCount);
+    MtpInterface::EnableNew(threadCount, systemCount);
 
     // set scheduler
     ObjectFactory schedulerFactory;
     schedulerFactory.SetTypeId(m_schedulerTypeId);
-    for (uint32_t i = 0; i <= systemCount; i++)
+    for (uint32_t i = 1; i <= systemCount; i++)
     {
         MtpInterface::GetSystem(i)->SetScheduler(schedulerFactory);
     }
 
-    // transfer events to new LPs
-    while (!events->IsEmpty())
+    // remove old events in public LP
+    const Ptr<Scheduler> oldEvents = MtpInterface::GetSystem()->GetPendingEvents();
+    const Ptr<Scheduler> eventsToBeTransferred = schedulerFactory.Create<Scheduler>();
+    while (!oldEvents->IsEmpty())
     {
-        Scheduler::Event ev = events->RemoveNext();
+        Scheduler::Event next = oldEvents->RemoveNext();
+        eventsToBeTransferred->Insert(next);
+    }
+
+    // transfer events to new LPs
+    while (!eventsToBeTransferred->IsEmpty())
+    {
+        Scheduler::Event ev = eventsToBeTransferred->RemoveNext();
         // invoke initialization events (at time 0) by their insertion order
         // since changing the execution order of these events may cause error,
         // they have to be invoked now rather than parallelly executed
