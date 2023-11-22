@@ -541,7 +541,8 @@ NixVectorRouting<T>::GetNodeByIp(IpAddress dest) const
         if (g_mapBuilding.exchange(true, std::memory_order_relaxed))
         {
             while (!g_isMapBuilt.load(std::memory_order_acquire))
-                ;
+            {
+            };
         }
         else
         {
@@ -585,7 +586,8 @@ NixVectorRouting<T>::GetInterfaceByNetDevice(Ptr<NetDevice> netDevice) const
         if (g_mapBuilding.exchange(true, std::memory_order_relaxed))
         {
             while (!g_isMapBuilt.load(std::memory_order_acquire))
-                ;
+            {
+            };
         }
         else
         {
@@ -1502,7 +1504,8 @@ NixVectorRouting<T>::CheckCacheStateAndFlush() const
         if (g_cacheFlushing.exchange(true, std::memory_order_relaxed))
         {
             while (g_isCacheDirty.load(std::memory_order_acquire))
-                ;
+            {
+            };
         }
         else
         {
