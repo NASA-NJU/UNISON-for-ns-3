@@ -4,9 +4,12 @@
 [![CI](https://github.com/NASA-NJU/UNISON-for-ns-3/actions/workflows/per_commit.yml/badge.svg)](https://github.com/NASA-NJU/UNISON-for-ns-3/actions/workflows/per_commit.yml)
 
 A fast and user-transparent parallel simulator implementation for ns-3.
+
+With fine-grained partition and load-adaptive scheduling, Unison allows users to easily simulate models with multithreaded parallelization without further configurations.
+Meanwhile, cache misses are reduced by fine-grained partition, and the mutual waiting time among threads is minimized by load-adaptive scheduling, resulting in efficient parallelization.
 More information about Unison can be found in our EuroSys '24 paper (coming soon).
 
-Supported ns-3 version: [3.36.1](https://github.com/NASA-NJU/UNISON-for-ns-3/tree/unison-3.36.1), [3.37](https://github.com/NASA-NJU/UNISON-for-ns-3/tree/unison-3.37), [3.38](https://github.com/NASA-NJU/UNISON-for-ns-3/tree/unison-3.38), [3.39](https://github.com/NASA-NJU/UNISON-for-ns-3/tree/unison-3.39) and [3.40](github.com/NASA-NJU/UNISON-for-ns-3/tree/unison-3.40).
+Supported ns-3 version: [3.36.1](https://github.com/NASA-NJU/UNISON-for-ns-3/tree/unison-3.36.1), [3.37](https://github.com/NASA-NJU/UNISON-for-ns-3/tree/unison-3.37), [3.38](https://github.com/NASA-NJU/UNISON-for-ns-3/tree/unison-3.38), [3.39](https://github.com/NASA-NJU/UNISON-for-ns-3/tree/unison-3.39) and [3.40](https://github.com/NASA-NJU/UNISON-for-ns-3/tree/unison-3.40).
 We are trying to keep Unison updated with the latest version of ns-3.
 You can find each unison-enabled ns-3 version via `unison-*` tags.
 
@@ -81,7 +84,7 @@ We also provide three detailed fat-tree examples for Unison, traditional MPI par
 | - | - | - | - |
 | fat-tree-mtp | src/mtp/examples/fat-tree-mtp.cc | `--enable-mtp --enable-exaples` without `--enable-mpi` | `./ns3 run "fat-tree-mtp --thread=4"` |
 | fat-tree-mpi | src/mpi/examples/fat-tree-mpi.cc | `--enable-mpi --enable-exaples` without `--enable-mtp` | `./ns3 run fat-tree-mpi --command-template "mpirun -np 4 %s"` |
-| fat-tree-hybrid | src/mpi/examples/fat-tree-hybrid.cc | `--enable-mtp --enable-mpi --enable-exaples` | `./ns3 run fat-tree-mpi --command-template "mpirun -np 2 %s --thread=2"` |
+| fat-tree-hybrid | src/mpi/examples/fat-tree-hybrid.cc | `--enable-mtp --enable-mpi --enable-exaples` | `./ns3 run fat-tree-hybrid --command-template "mpirun -np 2 %s --thread=2"` |
 
 Feel free to explore these examples, compare code changes and adjust the `-np` and `--thread` arguments.
 

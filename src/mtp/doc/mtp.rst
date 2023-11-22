@@ -1,98 +1,145 @@
-Example Module Documentation
+.. include:: replace.txt
+
+Multi-threaded Parallel Simulation (MTP)
 ----------------------------
 
-.. include:: replace.txt
+This module provides a fast and user-transparent parallel simulator
+implementation for ns-3. By splitting up the to-be-simulated topology
+into multiple logical processes, LPs, with fine granularity, each LP
+can be dynamically scheduled and processed by a thread for load balancing,
+while reducing cache misses. With this approach, siginficant speedup
+can be acheived for large topologies with heavy traffic.
+
+.. _current-implementation-details:
+
+Current Implementation Details
+******************************
+
+This module contains three parts: A parallel simulator implementation
+``MultithreadedSimulatorImpl``, an interface to users ``MtpInterface``,
+and ``LogicalProcess`` to represent LPs in terms of parallel simulation.
+
+All LPs and threads are stored in the ``MtpInterface``. It controls the
+simulation progress, schedules LPs to threads and manages the lifecycles
+of LPs and threads. The interface also provides some methods and options
+for users to tweak the simulation.
+
+Each LP's logic is implemented in ``LogicalProcess``. It contains most of
+the methods of the default sequential simulator plus some auxiliary methods
+for parallel simulation.
+
+The simulator implementation ``MultithreadedSimulatorImpl`` is a derived
+class from the base simulator. It converts calls to the base simulator into
+calls to logical processes based on the context of the current thread.
+It also provides a partition method for automatic fine-grained topology partition.
+
+For distributed simulation with MPI, we added ``HybridSimulatorImpl`` in the
+``mpi`` module. This simulator uses both ``MtpInterface`` and ``MpiInterface``
+to coordinate local LPs and global MPI communications. We also modified the
+module to make it locally thread-safe.
+
+Running Multithreaded Simulations
+*********************************
+
+Prerequisites
++++++++++++++
+.. highlight:: bash
+
+For multithreaded simulation on a single machine with many cores, ensure
+that your system supports pthread library. For hybrid distributed simulation,
+ensure that MPI is installed, as well as mpic++. In Ubuntu repositories,
+these are openmpi-bin, openmpi-common, openmpi-doc, libopenmpi-dev. In
+Fedora, these are openmpi and openmpi-devel.
+
+Building and running examples
++++++++++++++++++++++++++++++
+
+If you already built |ns3| without MTP enabled, you must re-build::
+
+    $ ./ns3 distclean
+
+Configure |ns3| with the --enable-mtp option::
+
+    $ ./ns3 configure --enable-examples --enable-tests --enable-mtp
+
+Ensure that MTP is enabled by checking the optional features shown from the
+output of configure. If you want to use the hybrid simulator, you also have
+to pass the --enable-mpi option.
+
+Next, build |ns3|::
+
+    $ ./ns3
+
+After building |ns3| with MTP enabled, the example programs are now
+ready to run. Here are a few adapted examples (you can run these original
+examples by omiting the ``-mtp`` in the program name)::
+
+    $ ./ns3 run dctcp-example-mtp
+    $ ./ns3 run rping-simple-network-mtp
+    $ ./ns3 run simple-multicast-flooding-mtp
+
+An example simulating the fat-tree topology with the multithreaded simulator
+and the hybrid simulator::
+
+    $ ./ns3 run "fat-tree-mtp --thread=4"
+    $ ./ns3 run "fat-tree-mtp --command-template "mpirun -np 2 %s --thread=2"
+
+The thread parameter is the number of threads to use (for each process in the
+hybrid case).
+
+Advanced Options
+++++++++++++++++
 .. highlight:: cpp
 
-.. heading hierarchy:
-   ------------- Chapter
-   ************* Section (#.#)
-   ============= Subsection (#.#.#)
-   ############# Paragraph (no number)
+These options can be modified at the beginning of the ``main`` function using
+the native config syntax of ns-3.
 
-This is a suggested outline for adding new module documentation to |ns3|.
-See ``src/click/doc/click.rst`` for an example.
+You can also change the default maximum number of threads by setting
 
-The introductory paragraph is for describing what this code is trying to
-model.
+    Config::SetDefault("ns3::MultithreadedSimulatorImpl::MaxThreads", UintegerValue(8));
+    Config::SetDefault("ns3::HybridSimulatorImpl::MaxThreads", UintegerValue(8));
 
-For consistency (italicized formatting), please use |ns3| to refer to
-ns-3 in the documentation (and likewise, |ns2| for ns-2).  These macros
-are defined in the file ``replace.txt``.
+The automatic partition will cut off stateless links whose delay is above the
+threshold. The threshold is automatically calculated based on the delay of every
+link. If you are not satisfied with the partition results, you can set a custom
+threshold by setting
 
-Model Description
-*****************
+    Config::SetDefault("ns3::MultithreadedSimulatorImpl::MinLookahead", TimeValue(NanoSeconds(500));
+    Config::SetDefault("ns3::HybridSimulatorImpl::MinLookahead", TimeValue(NanoSeconds(500));
 
-The source code for the new module lives in the directory ``contrib/mtp``.
+The scheduling method determines the priority (estimated completion time of the
+next round) of each logical process. There are five available options:
 
-Add here a basic description of what is being modeled.
+- ``ByExecutionTime``: LPs with a higher execution time of the last round will have higher priority.
+- ``ByPendingEventCount``: LPs with more pending events of this round will have higher priority.
+- ``ByEventCount``: LPs with more pending events of this round will have higher priority.
+- ``BySimulationTime``: LPs with larger current clock time will have higher priority.
+- ``None``: Do not schedule. The partition's priority is based on their ID.
 
-Design
-======
+Many experiments show that the first one usually leads to better performance.
+However, you can still choose one according to your taste by setting
 
-Briefly describe the software design of the model and how it fits into 
-the existing ns-3 architecture. 
+    GlobalValue::Bind("PartitionSchedulingMethod", StringValue("ByExecutionTime"));
 
-Scope and Limitations
-=====================
+By default, the scheduling period is 2 when the number of partitions is less than
+16, 3 when it is less than 256, 4 when it is less than 4096, etc. Since more
+partitions lead to more scheduling costs. You can also set how frequently scheduling
+occurs by setting
 
-What can the model do?  What can it not do?  Please use this section to
-describe the scope and limitations of the model.
+    GlobalValue::Bind("PartitionSchedulingPeriod", UintegerValue(4));
 
-References
-==========
+Tracing During Multithreaded Simulations
+****************************************
 
-Add academic citations here, such as if you published a paper on this
-model, or if readers should read a particular specification or other work.
+Unison resolved a lot of thread-safety issues with ns-3's architecture. You don't
+need to consider these issues on your own for most of the time, except if you have
+custom global statistics other than the built-in flow-monitor. In the latter case,
+if multiple nodes can access your global statistics, you can replace them with
+atomic variables via ``std::atomic<>``. When collecting tracing data such as Pcap,
+it is strongly recommended to create separate output files for each node instead
+of a single trace file. For complex custom data structures, you can create critical
+sections by adding
 
-Usage
-*****
+    MtpInterface::CriticalSection cs;
 
-This section is principally concerned with the usage of your model, using
-the public API.  Focus first on most common usage patterns, then go
-into more advanced topics.
-
-Building New Module
-===================
-
-Include this subsection only if there are special build instructions or
-platform limitations.
-
-Helpers
-=======
-
-What helper API will users typically use?  Describe it here.
-
-Attributes
-==========
-
-What classes hold attributes, and what are the key ones worth mentioning?
-
-Output
-======
-
-What kind of data does the model generate?  What are the key trace
-sources?   What kind of logging output can be enabled?
-
-Advanced Usage
-==============
-
-Go into further details (such as using the API outside of the helpers)
-in additional sections, as needed.
-
-Examples
-========
-
-What examples using this new code are available?  Describe them here.
-
-Troubleshooting
-===============
-
-Add any tips for avoiding pitfalls, etc.
-
-Validation
-**********
-
-Describe how the model has been tested/validated.  What tests run in the
-test suite?  How much API and code is covered by the tests?  Again, 
-references to outside published work may help here.
+at the beginning of your methods.
