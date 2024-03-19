@@ -422,7 +422,8 @@ ByteTagList::Deallocate (struct ByteTagListData *data)
     {
       return;
     }
-  if (data->count-- == 0)
+  // if (data->count-- == 0)
+  if (data->count-- == 1) //network: Fix a memory leak issue in byte-tag-list
     {
 #ifdef NS3_MTP
       std::atomic_thread_fence (std::memory_order_acquire);
