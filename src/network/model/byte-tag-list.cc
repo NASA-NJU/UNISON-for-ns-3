@@ -431,7 +431,7 @@ ByteTagList::Deallocate(ByteTagListData* data)
     {
         return;
     }
-    if (data->count-- == 0)
+    if (data->count-- == 1)
     {
 #ifdef NS3_MTP
         std::atomic_thread_fence(std::memory_order_acquire);
