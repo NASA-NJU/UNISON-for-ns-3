@@ -23,6 +23,7 @@
 #include "ns3/channel-access-manager.h"
 #include "ns3/log.h"
 #include "ns3/wifi-mpdu.h"
+#include "ns3/wifi-net-device.h"
 #include "ns3/wifi-phy.h"
 
 namespace ns3
@@ -42,7 +43,10 @@ DefaultEmlsrManager::GetTypeId()
             .AddConstructor<DefaultEmlsrManager>()
             .AddAttribute("SwitchAuxPhy",
                           "Whether Aux PHY should switch channel to operate on the link on which "
-                          "the Main PHY was operating before moving to the link of the Aux PHY.",
+                          "the Main PHY was operating before moving to the link of the Aux PHY. "
+                          "Note that, if the Aux PHY does not switch channel, the main PHY will "
+                          "switch back to its previous link once the TXOP terminates (otherwise, "
+                          "no PHY will be listening on that EMLSR link).",
                           BooleanValue(true),
                           MakeBooleanAccessor(&DefaultEmlsrManager::m_switchAuxPhy),
                           MakeBooleanChecker());
@@ -94,25 +98,79 @@ DefaultEmlsrManager::NotifyMainPhySwitch(uint8_t currLinkId, uint8_t nextLinkId)
 {
     NS_LOG_FUNCTION(this << currLinkId << nextLinkId);
 
-    if (!m_switchAuxPhy)
+    if (m_switchAuxPhy)
     {
-        return; // nothing to do
+        // switch channel on Aux PHY so that it operates on the link on which the main PHY was
+        // operating
+        SwitchAuxPhy(nextLinkId, currLinkId);
+        return;
     }
 
-    // switch channel on Aux PHY so that it operates on the link on which the main PHY was operating
-    auto auxPhy = GetStaMac()->GetWifiPhy(nextLinkId);
+    if (currLinkId != GetMainPhyId())
+    {
+        // the main PHY is leaving a non-primary link, hence an aux PHY needs to be reconnected
+        NS_ASSERT_MSG(
+            m_auxPhyToReconnect,
+            "There should be an aux PHY to reconnect when the main PHY leaves a non-primary link");
 
-    auto newAuxPhyChannel = GetChannelForAuxPhy(currLinkId);
+        // the Aux PHY is not actually switching (hence no switching delay)
+        GetStaMac()->NotifySwitchingEmlsrLink(m_auxPhyToReconnect, currLinkId, Seconds(0));
+        SetCcaEdThresholdOnLinkSwitch(m_auxPhyToReconnect, currLinkId);
+        m_auxPhyToReconnect = nullptr;
+    }
 
-    NS_LOG_DEBUG("Aux PHY (" << auxPhy << ") is about to switch to " << newAuxPhyChannel
-                             << " to operate on link " << +currLinkId);
+    if (nextLinkId != GetMainPhyId())
+    {
+        // the main PHY is moving to a non-primary link and the aux PHY does not switch link
+        m_auxPhyToReconnect = GetStaMac()->GetWifiPhy(nextLinkId);
+    }
+}
 
-    GetStaMac()
-        ->GetChannelAccessManager(nextLinkId)
-        ->NotifySwitchingEmlsrLink(auxPhy, newAuxPhyChannel, currLinkId);
+void
+DefaultEmlsrManager::DoNotifyIcfReceived(uint8_t linkId)
+{
+    NS_LOG_FUNCTION(this << linkId);
+}
 
-    void (WifiPhy::*fp)(const WifiPhyOperatingChannel&) = &WifiPhy::SetOperatingChannel;
-    Simulator::ScheduleNow(fp, auxPhy, newAuxPhyChannel);
+void
+DefaultEmlsrManager::DoNotifyUlTxopStart(uint8_t linkId)
+{
+    NS_LOG_FUNCTION(this << linkId);
+}
+
+void
+DefaultEmlsrManager::DoNotifyTxopEnd(uint8_t linkId)
+{
+    NS_LOG_FUNCTION(this << linkId);
+
+    // switch main PHY to the previous link, if needed
+    if (!m_switchAuxPhy && m_auxPhyToReconnect)
+    {
+        auto mainPhy = GetStaMac()->GetDevice()->GetPhy(m_mainPhyId);
+
+        // the main PHY may be switching at the end of a TXOP when, e.g., the main PHY starts
+        // switching to a link on which an aux PHY gained a TXOP and sent an RTS, but the CTS
+        // is not received and the UL TXOP ends before the main PHY channel switch is completed.
+        // In such cases, wait until the main PHY channel switch is completed before requesting
+        // a new channel switch.
+        // Backoff shall not be reset on the link left by the main PHY because a TXOP ended and
+        // a new backoff value must be generated.
+        if (!mainPhy->IsStateSwitching())
+        {
+            SwitchMainPhy(GetMainPhyId(), false, DONT_RESET_BACKOFF, REQUEST_ACCESS);
+        }
+        else
+        {
+            Simulator::Schedule(mainPhy->GetDelayUntilIdle(),
+                                &DefaultEmlsrManager::SwitchMainPhy,
+                                this,
+                                GetMainPhyId(),
+                                false,
+                                DONT_RESET_BACKOFF,
+                                REQUEST_ACCESS);
+        }
+        return;
+    }
 }
 
 } // namespace ns3

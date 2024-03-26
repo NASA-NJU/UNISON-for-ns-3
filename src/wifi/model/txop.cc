@@ -230,7 +230,6 @@ Txop::SetDroppedMpduCallback(DroppedMpdu callback)
 Ptr<WifiMacQueue>
 Txop::GetWifiMacQueue() const
 {
-    NS_LOG_FUNCTION(this);
     return m_queue;
 }
 
@@ -535,17 +534,29 @@ Txop::Queue(Ptr<WifiMpdu> mpdu)
 {
     NS_LOG_FUNCTION(this << *mpdu);
     const auto linkIds = m_mac->GetMacQueueScheduler()->GetLinkIds(m_queue->GetAc(), mpdu);
+    std::map<uint8_t, bool> hasFramesToTransmit;
+
+    // save the status of the AC queues before enqueuing the MPDU (required to determine if
+    // backoff is needed)
     for (const auto linkId : linkIds)
     {
-        if (m_mac->GetChannelAccessManager(linkId)->NeedBackoffUponAccess(this))
-        {
-            GenerateBackoff(linkId);
-        }
+        hasFramesToTransmit[linkId] = HasFramesToTransmit(linkId);
     }
     m_queue->Enqueue(mpdu);
     for (const auto linkId : linkIds)
     {
-        StartAccessIfNeeded(linkId);
+        // schedule a call to StartAccessIfNeeded() to request channel access after that all the
+        // packets of a burst have been enqueued, instead of requesting channel access right after
+        // the first packet. The call to StartAccessIfNeeded() is scheduled only after the first
+        // packet
+        if (auto& event = GetLink(linkId).accessRequest.event; !event.IsRunning())
+        {
+            event = Simulator::ScheduleNow(&Txop::StartAccessAfterEvent,
+                                           this,
+                                           linkId,
+                                           hasFramesToTransmit.at(linkId),
+                                           CHECK_MEDIUM_BUSY);
+        }
     }
 }
 
@@ -558,13 +569,24 @@ Txop::AssignStreams(int64_t stream)
 }
 
 void
-Txop::StartAccessIfNeeded(uint8_t linkId)
+Txop::StartAccessAfterEvent(uint8_t linkId, bool hadFramesToTransmit, bool checkMediumBusy)
 {
-    NS_LOG_FUNCTION(this << +linkId);
-    if (HasFramesToTransmit(linkId) && GetLink(linkId).access == NOT_REQUESTED)
+    NS_LOG_FUNCTION(this << +linkId << hadFramesToTransmit << checkMediumBusy);
+
+    if (GetLink(linkId).access != NOT_REQUESTED || !HasFramesToTransmit(linkId))
     {
-        m_mac->GetChannelAccessManager(linkId)->RequestAccess(this);
+        NS_LOG_DEBUG("No need to request channel access on link " << +linkId);
+        return;
     }
+
+    if (m_mac->GetChannelAccessManager(linkId)->NeedBackoffUponAccess(this,
+                                                                      hadFramesToTransmit,
+                                                                      checkMediumBusy))
+    {
+        GenerateBackoff(linkId);
+    }
+
+    m_mac->GetChannelAccessManager(linkId)->RequestAccess(this);
 }
 
 void
@@ -646,7 +668,8 @@ void
 Txop::NotifyWakeUp(uint8_t linkId)
 {
     NS_LOG_FUNCTION(this << +linkId);
-    StartAccessIfNeeded(linkId);
+    // before wake up, no packet can be transmitted
+    StartAccessAfterEvent(linkId, DIDNT_HAVE_FRAMES_TO_TRANSMIT, DONT_CHECK_MEDIUM_BUSY);
 }
 
 void
@@ -655,7 +678,8 @@ Txop::NotifyOn()
     NS_LOG_FUNCTION(this);
     for (const auto& [id, link] : m_links)
     {
-        StartAccessIfNeeded(id);
+        // before being turned on, no packet can be transmitted
+        StartAccessAfterEvent(id, DIDNT_HAVE_FRAMES_TO_TRANSMIT, DONT_CHECK_MEDIUM_BUSY);
     }
 }
 

@@ -19,6 +19,7 @@
 
 #include "spectrum-channel.h"
 
+#include <ns3/abort.h>
 #include <ns3/double.h>
 #include <ns3/log.h>
 #include <ns3/pointer.h>
@@ -158,7 +159,7 @@ SpectrumChannel::AddSpectrumTransmitFilter(Ptr<SpectrumTransmitFilter> filter)
     m_filter = filter;
 }
 
-Ptr<const SpectrumTransmitFilter>
+Ptr<SpectrumTransmitFilter>
 SpectrumChannel::GetSpectrumTransmitFilter() const
 {
     return m_filter;
@@ -167,28 +168,100 @@ SpectrumChannel::GetSpectrumTransmitFilter() const
 void
 SpectrumChannel::SetPropagationDelayModel(Ptr<PropagationDelayModel> delay)
 {
-    NS_ASSERT(!m_propagationDelay);
+    NS_ABORT_MSG_IF(m_propagationDelay, "Error, called SetPropagationDelayModel() twice");
     m_propagationDelay = delay;
 }
 
 Ptr<SpectrumPropagationLossModel>
-SpectrumChannel::GetSpectrumPropagationLossModel()
+SpectrumChannel::GetSpectrumPropagationLossModel() const
 {
-    NS_LOG_FUNCTION(this);
     return m_spectrumPropagationLoss;
 }
 
 Ptr<PhasedArraySpectrumPropagationLossModel>
-SpectrumChannel::GetPhasedArraySpectrumPropagationLossModel()
+SpectrumChannel::GetPhasedArraySpectrumPropagationLossModel() const
 {
-    NS_LOG_FUNCTION(this);
     return m_phasedArraySpectrumPropagationLoss;
 }
 
 Ptr<PropagationLossModel>
-SpectrumChannel::GetPropagationLossModel()
+SpectrumChannel::GetPropagationLossModel() const
 {
     return m_propagationLoss;
+}
+
+Ptr<PropagationDelayModel>
+SpectrumChannel::GetPropagationDelayModel() const
+{
+    return m_propagationDelay;
+}
+
+int64_t
+SpectrumChannel::AssignStreams(int64_t stream)
+{
+    NS_LOG_FUNCTION(this << stream);
+    auto currentStream = stream;
+    auto lastCurrentStream = stream;
+    if (m_propagationLoss)
+    {
+        currentStream += m_propagationLoss->AssignStreams(currentStream);
+    }
+    if (currentStream - lastCurrentStream)
+    {
+        NS_LOG_DEBUG("PropagationLossModel objects used " << currentStream - lastCurrentStream
+                                                          << " streams");
+    }
+    lastCurrentStream = currentStream;
+    if (m_propagationDelay)
+    {
+        m_propagationDelay->AssignStreams(currentStream);
+        currentStream += 1;
+    }
+    if (currentStream - lastCurrentStream)
+    {
+        NS_LOG_DEBUG("PropagationDelayModel object used " << currentStream - lastCurrentStream
+                                                          << " streams");
+    }
+    lastCurrentStream = currentStream;
+    if (m_spectrumPropagationLoss)
+    {
+        currentStream += m_spectrumPropagationLoss->AssignStreams(currentStream);
+    }
+    if (currentStream - lastCurrentStream)
+    {
+        NS_LOG_DEBUG("SpectrumPropagationLossModel objects used "
+                     << currentStream - lastCurrentStream << " streams");
+    }
+    lastCurrentStream = currentStream;
+    if (m_phasedArraySpectrumPropagationLoss)
+    {
+        currentStream += m_phasedArraySpectrumPropagationLoss->AssignStreams(currentStream);
+    }
+    if (currentStream - lastCurrentStream)
+    {
+        NS_LOG_DEBUG("PhasedArraySpectrumPropagationLossModel objects used "
+                     << currentStream - lastCurrentStream << " streams");
+    }
+    lastCurrentStream = currentStream;
+    if (m_filter)
+    {
+        currentStream += m_filter->AssignStreams(currentStream);
+    }
+    if (currentStream - lastCurrentStream)
+    {
+        NS_LOG_DEBUG("SpectrumTransmitFilter objects used " << currentStream - lastCurrentStream
+                                                            << " streams");
+    }
+    currentStream += DoAssignStreams(currentStream);
+    NS_LOG_DEBUG("Assigned a total of " << currentStream - stream << " streams");
+    return (currentStream - stream);
+}
+
+int64_t
+SpectrumChannel::DoAssignStreams(int64_t stream)
+{
+    NS_LOG_FUNCTION(this << stream);
+    return 0;
 }
 
 } // namespace ns3

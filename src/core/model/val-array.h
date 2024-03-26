@@ -80,7 +80,7 @@ class ValArray : public SimpleRefCount<ValArray<T>>
 {
   public:
     // instruct the compiler to generate the default constructor
-    ValArray<T>() = default;
+    ValArray() = default;
     /**
      * \brief Constructor that creates "numPages" number of 2D arrays that are of
      * dimensions "numRows"x"numCols", and are initialized with all-zero elements.
@@ -89,25 +89,25 @@ class ValArray : public SimpleRefCount<ValArray<T>>
      * \param numCols the number of columns
      * \param numPages the number of pages
      */
-    ValArray<T>(size_t numRows, size_t numCols = 1, size_t numPages = 1);
+    ValArray(size_t numRows, size_t numCols = 1, size_t numPages = 1);
     /**
      * \brief Constructor creates a single 1D array of values.size () elements and 1 column,
      * and uses std::valarray<T> values to initialize the elements.
      * \param values std::valarray<T> that will be used to initialize elements of 1D array
      */
-    explicit ValArray<T>(const std::valarray<T>& values);
+    explicit ValArray(const std::valarray<T>& values);
     /**
      * \brief Constructor creates a single 1D array of values.size () elements and 1 column,
      * and moves std::valarray<T> values to initialize the elements.
      * \param values std::valarray<T> that will be moved to initialize elements of 1D array
      */
-    ValArray<T>(std::valarray<T>&& values);
+    ValArray(std::valarray<T>&& values);
     /**
      * \brief Constructor creates a single 1D array of values.size () elements and 1 column,
      * and uses values std::vector<T> to initialize the elements.
      * \param values std::vector<T> that will be used to initialize elements of 1D array
      */
-    explicit ValArray<T>(const std::vector<T>& values);
+    explicit ValArray(const std::vector<T>& values);
     /**
      * \brief Constructor creates a single 2D array of numRows and numCols, and uses
      * std::valarray<T> values to initialize the elements.
@@ -115,7 +115,7 @@ class ValArray : public SimpleRefCount<ValArray<T>>
      * \param numCols the number of columns
      * \param values valarray<T> that will be used to initialize elements of 3D array
      */
-    ValArray<T>(size_t numRows, size_t numCols, const std::valarray<T>& values);
+    ValArray(size_t numRows, size_t numCols, const std::valarray<T>& values);
     /**
      * \brief Constructor creates a single 2D array of numRows and numCols, and moves
      * std::valarray<T> values to initialize the elements.
@@ -123,7 +123,7 @@ class ValArray : public SimpleRefCount<ValArray<T>>
      * \param numCols the number of columns
      * \param values valarray<T> that will be used to initialize elements of 3D array
      */
-    ValArray<T>(size_t numRows, size_t numCols, std::valarray<T>&& values);
+    ValArray(size_t numRows, size_t numCols, std::valarray<T>&& values);
     /**
      * \brief Constructor creates the 3D array of numRows x numCols x numPages dimensions,
      * and uses std::valarray<T> values to initialize all the 2D arrays, where first
@@ -133,7 +133,7 @@ class ValArray : public SimpleRefCount<ValArray<T>>
      * \param numPages the number of pages
      * \param values valarray<T> that will be used to initialize elements of 3D array
      */
-    ValArray<T>(size_t numRows, size_t numCols, size_t numPages, const std::valarray<T>& values);
+    ValArray(size_t numRows, size_t numCols, size_t numPages, const std::valarray<T>& values);
     /**
      * \brief Constructor creates the 3D array of numRows x numCols x numPages dimensions,
      * and moves std::valarray<T> values to initialize all the 2D arrays, where first
@@ -143,19 +143,19 @@ class ValArray : public SimpleRefCount<ValArray<T>>
      * \param numPages the number of pages
      * \param values valarray<T> that will be used to initialize elements of 3D array
      */
-    ValArray<T>(size_t numRows, size_t numCols, size_t numPages, std::valarray<T>&& values);
+    ValArray(size_t numRows, size_t numCols, size_t numPages, std::valarray<T>&& values);
     /** instruct the compiler to generate the implicitly declared destructor*/
-    virtual ~ValArray<T>() = default;
+    virtual ~ValArray() = default;
     /** instruct the compiler to generate the implicitly declared copy constructor*/
-    ValArray<T>(const ValArray<T>&) = default;
+    ValArray(const ValArray<T>&) = default;
     /**
      * \brief Copy assignment operator.
      * Instruct the compiler to generate the implicitly declared copy assignment operator.
      * \return a reference to the assigned object
      */
-    ValArray<T>& operator=(const ValArray<T>&) = default;
+    ValArray& operator=(const ValArray<T>&) = default;
     /** instruct the compiler to generate the implicitly declared move constructor*/
-    ValArray<T>(ValArray<T>&&) = default;
+    ValArray(ValArray<T>&&) = default;
     /**
      * \brief Move assignment operator.
      * Instruct the compiler to generate the implicitly declared move assignment operator.
@@ -240,24 +240,24 @@ class ValArray : public SimpleRefCount<ValArray<T>>
      * \returns ValArray in which each element has been multiplied by the given
      * scalar value.
      */
-    ValArray<T> operator*(const T& rhs) const;
+    ValArray operator*(const T& rhs) const;
     /**
      * \brief operator+ definition for ValArray<T>.
      * \param rhs The rhs ValArray to be added to this ValArray.
      * \return the ValArray instance that holds the results of the operator+
      */
-    ValArray<T> operator+(const ValArray<T>& rhs) const;
+    ValArray operator+(const ValArray<T>& rhs) const;
     /**
      * \brief binary operator- definition for ValArray<T>.
      * \param rhs The rhs ValArray to be subtracted from this ValArray.
      * \return the ValArray instance that holds the results of the operator-
      */
-    ValArray<T> operator-(const ValArray<T>& rhs) const;
+    ValArray operator-(const ValArray<T>& rhs) const;
     /**
      * \brief unary operator- definition for ValArray<T>.
      * \return the ValArray instance that holds the results of the operator-
      */
-    ValArray<T> operator-() const;
+    ValArray operator-() const;
     /**
      * \brief operator+= definition for ValArray<T>.
      * \param rhs The rhs ValArray to be added to this ValArray.
@@ -379,21 +379,21 @@ inline size_t
 ValArray<T>::GetNumRows() const
 {
     return m_numRows;
-};
+}
 
 template <class T>
 inline size_t
 ValArray<T>::GetNumCols() const
 {
     return m_numCols;
-};
+}
 
 template <class T>
 inline size_t
 ValArray<T>::GetNumPages() const
 {
     return m_numPages;
-};
+}
 
 template <class T>
 inline size_t
@@ -411,7 +411,7 @@ ValArray<T>::operator()(size_t rowIndex, size_t colIndex, size_t pageIndex)
     NS_ASSERT_MSG(pageIndex < m_numPages, "Pages index out of bounds");
     size_t index = (rowIndex + m_numRows * (colIndex + m_numCols * pageIndex));
     return m_values[index];
-};
+}
 
 template <class T>
 inline const T&
@@ -422,7 +422,7 @@ ValArray<T>::operator()(size_t rowIndex, size_t colIndex, size_t pageIndex) cons
     NS_ASSERT_MSG(pageIndex < m_numPages, "Pages index out of bounds");
     size_t index = (rowIndex + m_numRows * (colIndex + m_numCols * pageIndex));
     return m_values[index];
-};
+}
 
 template <class T>
 inline T&
@@ -430,7 +430,7 @@ ValArray<T>::operator()(size_t rowIndex, size_t colIndex)
 {
     NS_ASSERT_MSG(m_numPages == 1, "Cannot use 2D access operator for 3D ValArray.");
     return (*this)(rowIndex, colIndex, 0);
-};
+}
 
 template <class T>
 inline const T&
@@ -438,7 +438,7 @@ ValArray<T>::operator()(size_t rowIndex, size_t colIndex) const
 {
     NS_ASSERT_MSG(m_numPages == 1, "Cannot use 2D access operator for 3D ValArray.");
     return (*this)(rowIndex, colIndex, 0);
-};
+}
 
 template <class T>
 inline T&
@@ -451,7 +451,7 @@ ValArray<T>::operator()(size_t index)
                       (m_numRows == 1 && m_numCols == 1),
                   "Access operator allowed only for 1D ValArray.");
     return m_values[index];
-};
+}
 
 template <class T>
 inline const T&
@@ -464,7 +464,7 @@ ValArray<T>::operator()(size_t index) const
                       (m_numRows == 1 && m_numCols == 1),
                   "Access operator allowed only for 1D ValArray.");
     return m_values[index];
-};
+}
 
 template <class T>
 inline ValArray<T>
@@ -523,7 +523,7 @@ ValArray<T>::GetPagePtr(size_t pageIndex)
 {
     NS_ASSERT_MSG(pageIndex < m_numPages, "Invalid page index.");
     return &(m_values[m_numRows * m_numCols * pageIndex]);
-};
+}
 
 template <class T>
 inline const T*
@@ -531,7 +531,7 @@ ValArray<T>::GetPagePtr(size_t pageIndex) const
 {
     NS_ASSERT_MSG(pageIndex < m_numPages, "Invalid page index.");
     return &(m_values[m_numRows * m_numCols * pageIndex]);
-};
+}
 
 template <class T>
 inline bool
@@ -567,14 +567,14 @@ inline T&
 ValArray<T>::Elem(size_t row, size_t col, size_t page)
 {
     return (*this)(row, col, page);
-};
+}
 
 template <class T>
 inline const T&
 ValArray<T>::Elem(size_t row, size_t col, size_t page) const
 {
     return (*this)(row, col, page);
-};
+}
 
 /*************************************************
  **  Class ValArray non-inline implementations
@@ -587,7 +587,7 @@ ValArray<T>::ValArray(size_t numRows, size_t numCols, size_t numPages)
       m_numPages{numPages}
 {
     m_values.resize(m_numRows * m_numCols * m_numPages);
-};
+}
 
 template <class T>
 ValArray<T>::ValArray(const std::valarray<T>& values)
@@ -626,7 +626,7 @@ ValArray<T>::ValArray(size_t numRows, size_t numCols, const std::valarray<T>& va
 {
     NS_ASSERT_MSG(m_numRows * m_numCols == values.size(),
                   "Dimensions and the initialization array size do not match.");
-};
+}
 
 template <class T>
 ValArray<T>::ValArray(size_t numRows, size_t numCols, std::valarray<T>&& values)
@@ -637,7 +637,7 @@ ValArray<T>::ValArray(size_t numRows, size_t numCols, std::valarray<T>&& values)
     NS_ASSERT_MSG(m_numRows * m_numCols == values.size(),
                   "Dimensions and the initialization array size do not match.");
     m_values = std::move(values);
-};
+}
 
 template <class T>
 ValArray<T>::ValArray(size_t numRows,
@@ -651,7 +651,7 @@ ValArray<T>::ValArray(size_t numRows,
 {
     NS_ASSERT_MSG(m_numRows * m_numCols * m_numPages == values.size(),
                   "Dimensions and the initialization array size do not match.");
-};
+}
 
 template <class T>
 ValArray<T>::ValArray(size_t numRows, size_t numCols, size_t numPages, std::valarray<T>&& values)
@@ -662,7 +662,7 @@ ValArray<T>::ValArray(size_t numRows, size_t numCols, size_t numPages, std::vala
     NS_ASSERT_MSG(m_numRows * m_numCols * m_numPages == values.size(),
                   "Dimensions and the initialization array size do not match.");
     m_values = std::move(values);
-};
+}
 
 template <class T>
 bool

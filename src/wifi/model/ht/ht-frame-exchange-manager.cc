@@ -23,10 +23,11 @@
 #include "ns3/assert.h"
 #include "ns3/ctrl-headers.h"
 #include "ns3/log.h"
-#include "ns3/mgt-headers.h"
+#include "ns3/mgt-action-headers.h"
 #include "ns3/recipient-block-ack-agreement.h"
 #include "ns3/snr-tag.h"
 #include "ns3/sta-wifi-mac.h"
+#include "ns3/vht-configuration.h"
 #include "ns3/wifi-mac-queue.h"
 #include "ns3/wifi-utils.h"
 
@@ -109,7 +110,7 @@ HtFrameExchangeManager::NeedSetupBlockAck(Mac48Address recipient, uint8_t tid)
     Ptr<QosTxop> qosTxop = m_mac->GetQosTxop(tid);
     bool establish;
 
-    if (!GetWifiRemoteStationManager()->GetHtSupported(recipient))
+    if (!m_mac->GetHtSupported(recipient))
     {
         establish = false;
     }
@@ -126,7 +127,7 @@ HtFrameExchangeManager::NeedSetupBlockAck(Mac48Address recipient, uint8_t tid)
             ((qosTxop->GetBlockAckThreshold() > 0 && packets >= qosTxop->GetBlockAckThreshold()) ||
              (m_mpduAggregator->GetMaxAmpduSize(recipient, tid, WIFI_MOD_CLASS_HT) > 0 &&
               packets > 1) ||
-             GetWifiRemoteStationManager()->GetVhtSupported());
+             m_mac->GetVhtConfiguration());
     }
 
     NS_LOG_FUNCTION(this << recipient << +tid << establish);
@@ -238,7 +239,8 @@ HtFrameExchangeManager::SendAddBaResponse(const MgtAddBaRequestHeader* reqHdr,
     auto tid = reqHdr->GetTid();
     respHdr.SetTid(tid);
 
-    respHdr.SetBufferSize(GetSupportedBaBufferSize());
+    auto bufferSize = std::min(m_mac->GetMpduBufferSize(), m_mac->GetMaxBaBufferSize(originator));
+    respHdr.SetBufferSize(bufferSize);
     respHdr.SetTimeout(reqHdr->GetTimeout());
 
     WifiActionHeader actionHdr;
@@ -308,12 +310,6 @@ HtFrameExchangeManager::SendAddBaResponse(const MgtAddBaRequestHeader* reqHdr,
     m_mac->GetQosTxop(tid)->Queue(mpdu);
 }
 
-uint16_t
-HtFrameExchangeManager::GetSupportedBaBufferSize() const
-{
-    return 64;
-}
-
 void
 HtFrameExchangeManager::SendDelbaFrame(Mac48Address addr, uint8_t tid, bool byOriginator)
 {
@@ -329,16 +325,7 @@ HtFrameExchangeManager::SendDelbaFrame(Mac48Address addr, uint8_t tid, bool byOr
 
     MgtDelBaHeader delbaHdr;
     delbaHdr.SetTid(tid);
-    if (byOriginator)
-    {
-        delbaHdr.SetByOriginator();
-        GetBaManager(tid)->DestroyOriginatorAgreement(addr, tid);
-    }
-    else
-    {
-        delbaHdr.SetByRecipient();
-        GetBaManager(tid)->DestroyRecipientAgreement(addr, tid);
-    }
+    byOriginator ? delbaHdr.SetByOriginator() : delbaHdr.SetByRecipient();
 
     WifiActionHeader actionHdr;
     WifiActionHeader::ActionValue action;
@@ -349,7 +336,7 @@ HtFrameExchangeManager::SendDelbaFrame(Mac48Address addr, uint8_t tid, bool byOr
     packet->AddHeader(delbaHdr);
     packet->AddHeader(actionHdr);
 
-    m_mac->GetQosTxop(tid)->GetWifiMacQueue()->Enqueue(Create<WifiMpdu>(packet, hdr));
+    m_mac->GetQosTxop(tid)->Queue(Create<WifiMpdu>(packet, hdr));
 }
 
 bool
@@ -582,6 +569,12 @@ HtFrameExchangeManager::SendMpduFromBaManager(Ptr<WifiMpdu> mpdu,
         NS_LOG_DEBUG("Not enough time to send the BAR frame returned by the Block Ack Manager");
         return false;
     }
+
+    NS_ABORT_IF(txParams.m_acknowledgment->method != WifiAcknowledgment::BLOCK_ACK);
+
+    // the BlockAckReq frame is sent using the same TXVECTOR as the BlockAck frame
+    auto blockAcknowledgment = static_cast<WifiBlockAck*>(txParams.m_acknowledgment.get());
+    txParams.m_txVector = blockAcknowledgment->blockAckTxVector;
 
     // we can transmit the BlockAckReq frame
     SendPsduWithProtection(GetWifiPsdu(mpdu, txParams.m_txVector), txParams);
@@ -1377,8 +1370,6 @@ HtFrameExchangeManager::MissedBlockAck(Ptr<WifiPsdu> psdu,
     else
     {
         isBar = false;
-        GetWifiRemoteStationManager()
-            ->ReportAmpduTxStatus(recipient, 0, psdu->GetNMpdus(), 0, 0, txVector);
         std::set<uint8_t> tids = psdu->GetTids();
         NS_ABORT_MSG_IF(tids.size() > 1, "Multi-TID A-MPDUs not handled here");
         NS_ASSERT(!tids.empty());
@@ -1437,6 +1428,8 @@ HtFrameExchangeManager::MissedBlockAck(Ptr<WifiPsdu> psdu,
     else
     {
         // we have to retransmit the data frames, if needed
+        GetWifiRemoteStationManager()
+            ->ReportAmpduTxStatus(recipient, 0, psdu->GetNMpdus(), 0, 0, txVector);
         if (!GetWifiRemoteStationManager()->NeedRetransmission(*psdu->begin()))
         {
             NS_LOG_DEBUG("Missed Block Ack, do not retransmit the data frames");

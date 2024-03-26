@@ -44,10 +44,18 @@ additional_commands:
             DEPENDENCY_NAME : '1'
             HEADER_NAME : '1'
             LIBRARY_NAME : '1'
+            OUTPUT_VARIABLE : '1'
             HEADER_NAMES : '*'
             LIBRARY_NAMES : '*'
             PATH_SUFFIXES : '*'
             SEARCH_PATHS : '*'
+    check_deps:
+        pargs:
+            nargs: 1
+        kwargs:
+            CMAKE_PACKAGES : '*'
+            EXECUTABLES : '*'
+            PYTHON_PACKAGES : '*'
 
 format:
   tab_size: 2

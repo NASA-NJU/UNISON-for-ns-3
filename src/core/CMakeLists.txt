@@ -14,38 +14,12 @@ if(${GSL_FOUND})
 endif()
 
 # Check for dependencies and add sources accordingly
-if(${CMAKE_VERSION}
-   VERSION_LESS
-   "3.11.0"
+check_include_files(
+  "boost/units/quantity.hpp;boost/units/systems/si.hpp"
+  HAVE_BOOST_UNITS
+  LANGUAGE
+  CXX
 )
-  check_include_file_cxx(
-    boost/units/quantity.hpp
-    HAVE_BOOST_UNITS_QUANTITY
-  )
-  check_include_file_cxx(
-    boost/units/systems/si.hpp
-    HAVE_BOOST_UNITS_SI
-  )
-  if(${HAVE_BOOST_UNITS_QUANTITY}
-     AND ${HAVE_BOOST_UNITS_SI}
-  )
-    set(HAVE_BOOST_UNITS
-        TRUE
-    )
-  else()
-    set(HAVE_BOOST_UNITS
-        FALSE
-    )
-  endif()
-else()
-  # Fast path for CMake >= 3.11
-  check_include_files(
-    "boost/units/quantity.hpp;boost/units/systems/si.hpp"
-    HAVE_BOOST_UNITS
-    LANGUAGE
-    CXX
-  )
-endif()
 
 if(${HAVE_BOOST_UNITS})
   add_definitions(
@@ -97,6 +71,9 @@ elseif(
   )
 endif()
 
+set(example_as_test_sources)
+set(example_as_test_headers)
+set(example_as_test_suite)
 if(${ENABLE_EXAMPLES})
   set(example_as_test_sources
       model/example-as-test.cc
@@ -177,7 +154,6 @@ set(source_files
     model/boolean.cc
     model/integer.cc
     model/uinteger.cc
-    model/enum.cc
     model/double.cc
     model/int64x64.cc
     model/string.cc
@@ -306,7 +282,7 @@ set(header_files
     model/type-name.h
     model/type-traits.h
     model/uinteger.h
-    model/unused.h
+    model/uniform-random-bit-generator.h
     model/valgrind.h
     model/vector.h
     model/warnings.h

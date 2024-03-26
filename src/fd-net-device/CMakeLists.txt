@@ -26,6 +26,9 @@ check_include_file(
 )
 
 include(FindPkgConfig)
+set(DPDK_INCLUDE_DIRS
+    ""
+)
 if(PKG_CONFIG_FOUND)
   pkg_check_modules(
     DPDK
@@ -137,6 +140,8 @@ if(${ENABLE_FDNETDEV})
     FdNetDevice
   )
 
+  set(emu_sources)
+  set(emu_headers)
   if(${ENABLE_EMUNETDEV})
     set(emu_sources
         helper/emu-fd-net-device-helper.cc
@@ -172,6 +177,8 @@ if(${ENABLE_FDNETDEV})
     )
   endif()
 
+  set(tap_sources)
+  set(tap_headers)
   if(${ENABLE_TAPNETDEV})
     set(tap_sources
         helper/tap-fd-net-device-helper.cc
@@ -190,6 +197,7 @@ if(${ENABLE_FDNETDEV})
         helper/creator-utils.cc
         helper/encode-decode.cc
         helper/tap-device-creator.cc
+      LIBRARIES_TO_LINK ${libnetwork}
       EXECUTABLE_DIRECTORY_PATH
         ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/src/fd-net-device/
       INSTALL_DIRECTORY_PATH ${CMAKE_INSTALL_LIBEXECDIR}/ns3
@@ -208,6 +216,8 @@ if(${ENABLE_FDNETDEV})
     )
   endif()
 
+  set(netmap_sources)
+  set(netmap_headers)
   if(${ENABLE_NETMAP_EMU})
     set(netmap_sources
         helper/netmap-net-device-helper.cc
@@ -241,6 +251,9 @@ if(${ENABLE_FDNETDEV})
     )
   endif()
 
+  set(dpdk_sources)
+  set(dpdk_headers)
+  set(dpdk_libraries)
   if(${ENABLE_DPDKDEVNET})
     set(dpdk_sources
         model/dpdk-net-device.cc

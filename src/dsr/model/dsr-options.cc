@@ -755,7 +755,7 @@ DsrOptionRreq::Process(Ptr<Packet> packet,
                     //   {
                     //     dsr->UseExtends (m_finalRoute);
                     //   }
-                    sourceRoute.SetSegmentsLeft((m_finalRoute.size() - 2));
+                    sourceRoute.SetSegmentsLeft(m_finalRoute.size() - 2);
                     // The salvage value here is 0
                     sourceRoute.SetSalvage(0);
                     Ipv4Address nextHop =
@@ -860,7 +860,7 @@ DsrOptionRreq::Process(Ptr<Packet> packet,
                     //   {
                     //     dsr->UseExtends (saveRoute);
                     //   }
-                    sourceRoute.SetSegmentsLeft((saveRoute.size() - 2));
+                    sourceRoute.SetSegmentsLeft(saveRoute.size() - 2);
                     uint8_t salvage = 0;
                     sourceRoute.SetSalvage(salvage);
                     Ipv4Address nextHop =
@@ -1123,7 +1123,7 @@ DsrOptionRrep::Process(Ptr<Packet> packet,
             DsrOptionSRHeader sourceRoute;
             NS_LOG_DEBUG("The route length " << nodeList.size());
             sourceRoute.SetNodesAddress(nodeList);
-            sourceRoute.SetSegmentsLeft((nodeList.size() - 2));
+            sourceRoute.SetSegmentsLeft(nodeList.size() - 2);
             sourceRoute.SetSalvage(0);
             Ipv4Address nextHop = SearchNextHop(ipv4Address, nodeList); // Get the next hop address
             NS_LOG_DEBUG("The nextHop address " << nextHop);
@@ -1759,7 +1759,7 @@ DsrOptionAckReq::Process(Ptr<Packet> packet,
     DsrOptionAckReqHeader ackReq;
     p->RemoveHeader(ackReq);
     /*
-     * Get the node with ip address and get the dsr extension and reoute cache objects
+     * Get the node with ip address and get the dsr extension and route cache objects
      */
     Ptr<Node> node = GetNodeWithAddress(ipv4Address);
     Ptr<dsr::DsrRouting> dsr = node->GetObject<dsr::DsrRouting>();

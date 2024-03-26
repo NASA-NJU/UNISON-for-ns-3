@@ -48,33 +48,38 @@ Homebrew and MacPorts, but macOS will not provide it due to licensing issues.  |
 works on recent versions of both ``clang++`` and ``g++``, so for macOS, there is no need
 to install ``g++``.
 
-  +--------------------+---------------------------------------------------------------------+
+  +--------------------+-------------------------------+-------------------------------------+
   | **ns-3 Version**   | **Homebrew packages**         | **MacPorts packages**               |
-  +====================+==================+==================================================+
+  +====================+===============================+=====================================+
   | 3.36 and later     | ``cmake ninja``               | ``cmake ninja``                     |
-  +--------------------+---------------------------------------------------------------------+
+  +--------------------+-------------------------------+-------------------------------------+
   | 3.35 and earlier   | None                          | None                                |
-  +--------------------+---------------------------------------------------------------------+
+  +--------------------+-------------------------------+-------------------------------------+
 
 Recommended
 ***********
 
-  +-----------------------------+------------------------------------------------------------+
+  +-----------------------------+------------------------+-----------------------------------+
   | **Feature**                 | **Homebrew packages**  | **MacPorts packages**             |
-  +=============================+============================================================+
+  +=============================+========================+===================================+
   | Compiler cache optimization | ``ccache``             | ``ccache``                        |
-  +-----------------------------+------------------------------------------------------------+
+  +-----------------------------+------------------------+-----------------------------------+
   | Code linting                | ``clang-format llvm``  |  clang-format included with       |
   |                             |                        | ``clang``, need to select         |
   |                             |                        | ``clang-XX llvm-XX`` versions     |
-  +-----------------------------+------------------------------------------------------------+
+  +-----------------------------+------------------------+-----------------------------------+
   | Debugging                   | None                   | ``gdb ddd`` (ddd requires gdb)    |
-  +-----------------------------+------------------------------------------------------------+
+  +-----------------------------+------------------------+-----------------------------------+
 
 .. note::
   The ``llvm`` Homebrew package provides ``clang-tidy``, but please note that the binary is
   placed at ``/opt/homebrew/opt/llvm/bin/clang-tidy`` so you may need to add this path to your
   ``$PATH`` variable.
+
+.. note::
+  Likewise, when using MacPorts, the ``clang-tidy`` and ``clang-format`` binaries will be
+  placed in ``/opt/local/libexec/llvm-XX/bin`` (where ``XX` is the installed version number
+  such as ``16``), so you will need to add this to your ``$PATH`` variable.
 
 .. note::
   For debugging, ``lldb`` is the default debugger for llvm.  Memory checkers such as

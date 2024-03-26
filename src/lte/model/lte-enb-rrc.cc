@@ -15,12 +15,14 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * Authors: Nicola Baldo <nbaldo@cttc.es>
- *          Marco Miozzo <mmiozzo@cttc.es>
- *          Manuel Requena <manuel.requena@cttc.es>
- * Modified by:  Danilo Abrignani <danilo.abrignani@unibo.it> (Carrier Aggregation - GSoC 2015),
- *               Biljana Bojovic <biljana.bojovic@cttc.es> (Carrier Aggregation)
- *               Vignesh Babu <ns3-dev@esk.fraunhofer.de> (RLF extensions)
+ * Authors:
+ *   Nicola Baldo <nbaldo@cttc.es>
+ *   Marco Miozzo <mmiozzo@cttc.es>
+ *   Manuel Requena <manuel.requena@cttc.es>
+ * Modified by:
+ *   Danilo Abrignani <danilo.abrignani@unibo.it> (Carrier Aggregation - GSoC 2015),
+ *   Biljana Bojovic <biljana.bojovic@cttc.es> (Carrier Aggregation)
+ *   Vignesh Babu <ns3-dev@esk.fraunhofer.de> (RLF extensions)
  */
 
 #include "lte-enb-rrc.h"
@@ -140,7 +142,7 @@ NS_OBJECT_ENSURE_REGISTERED(UeManager);
 
 UeManager::UeManager()
 {
-    NS_FATAL_ERROR("this constructor is not espected to be used");
+    NS_FATAL_ERROR("this constructor is not expected to be used");
 }
 
 UeManager::UeManager(Ptr<LteEnbRrc> rrc, uint16_t rnti, State s, uint8_t componentCarrierId)
@@ -1938,18 +1940,19 @@ LteEnbRrc::GetTypeId()
                           UintegerValue(0), // default tx-mode
                           MakeUintegerAccessor(&LteEnbRrc::m_defaultTransmissionMode),
                           MakeUintegerChecker<uint8_t>())
-            .AddAttribute("EpsBearerToRlcMapping",
-                          "Specify which type of RLC will be used for each type of EPS bearer.",
-                          EnumValue(RLC_SM_ALWAYS),
-                          MakeEnumAccessor(&LteEnbRrc::m_epsBearerToRlcMapping),
-                          MakeEnumChecker(RLC_SM_ALWAYS,
-                                          "RlcSmAlways",
-                                          RLC_UM_ALWAYS,
-                                          "RlcUmAlways",
-                                          RLC_AM_ALWAYS,
-                                          "RlcAmAlways",
-                                          PER_BASED,
-                                          "PacketErrorRateBased"))
+            .AddAttribute(
+                "EpsBearerToRlcMapping",
+                "Specify which type of RLC will be used for each type of EPS bearer.",
+                EnumValue(RLC_SM_ALWAYS),
+                MakeEnumAccessor<LteEpsBearerToRlcMapping_t>(&LteEnbRrc::m_epsBearerToRlcMapping),
+                MakeEnumChecker(RLC_SM_ALWAYS,
+                                "RlcSmAlways",
+                                RLC_UM_ALWAYS,
+                                "RlcUmAlways",
+                                RLC_AM_ALWAYS,
+                                "RlcAmAlways",
+                                PER_BASED,
+                                "PacketErrorRateBased"))
             .AddAttribute("SystemInformationPeriodicity",
                           "The interval for sending system information (Time value)",
                           TimeValue(MilliSeconds(80)),

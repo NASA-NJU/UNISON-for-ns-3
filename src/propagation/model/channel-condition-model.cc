@@ -102,43 +102,43 @@ ChannelCondition::SetO2iLowHighCondition(O2iLowHighConditionValue o2iLowHighCond
 bool
 ChannelCondition::IsLos() const
 {
-    return (m_losCondition == ChannelCondition::LOS);
+    return m_losCondition == ChannelCondition::LOS;
 }
 
 bool
 ChannelCondition::IsNlos() const
 {
-    return (m_losCondition == ChannelCondition::NLOS);
+    return m_losCondition == ChannelCondition::NLOS;
 }
 
 bool
 ChannelCondition::IsNlosv() const
 {
-    return (m_losCondition == ChannelCondition::NLOSv);
+    return m_losCondition == ChannelCondition::NLOSv;
 }
 
 bool
 ChannelCondition::IsO2i() const
 {
-    return (m_o2iCondition == ChannelCondition::O2I);
+    return m_o2iCondition == ChannelCondition::O2I;
 }
 
 bool
 ChannelCondition::IsO2o() const
 {
-    return (m_o2iCondition == ChannelCondition::O2O);
+    return m_o2iCondition == ChannelCondition::O2O;
 }
 
 bool
 ChannelCondition::IsI2i() const
 {
-    return (m_o2iCondition == ChannelCondition::I2I);
+    return m_o2iCondition == ChannelCondition::I2I;
 }
 
 bool
 ChannelCondition::IsEqual(LosConditionValue losCondition, O2iConditionValue o2iCondition) const
 {
-    return (m_losCondition == losCondition && m_o2iCondition == o2iCondition);
+    return m_losCondition == losCondition && m_o2iCondition == o2iCondition;
 }
 
 std::ostream&
@@ -686,7 +686,7 @@ ThreeGppUmiStreetCanyonChannelConditionModel::ComputePlos(Ptr<const MobilityMode
     // compute the 2D distance between a and b
     double distance2D = Calculate2dDistance(a->GetPosition(), b->GetPosition());
 
-    // NOTE: no idication is given about the UT height used to derive the
+    // NOTE: no indication is given about the UT height used to derive the
     // LOS probability
 
     // h_BS should be equal to 10 m. We check if at least one of the two
@@ -741,7 +741,7 @@ ThreeGppIndoorMixedOfficeChannelConditionModel::ComputePlos(Ptr<const MobilityMo
     // compute the 2D distance between a and b
     double distance2D = Calculate2dDistance(a->GetPosition(), b->GetPosition());
 
-    // NOTE: no idication is given about the UT height used to derive the
+    // NOTE: no indication is given about the UT height used to derive the
     // LOS probability
 
     // retrieve h_BS, it should be equal to 3 m
@@ -800,7 +800,7 @@ ThreeGppIndoorOpenOfficeChannelConditionModel::ComputePlos(Ptr<const MobilityMod
     // compute the 2D distance between a and b
     double distance2D = Calculate2dDistance(a->GetPosition(), b->GetPosition());
 
-    // NOTE: no idication is given about the UT height used to derive the
+    // NOTE: no indication is given about the UT height used to derive the
     // LOS probability
 
     // retrieve h_BS, it should be equal to 3 m

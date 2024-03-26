@@ -15,6 +15,19 @@
 #
 # Author: Gabriel Ferreira <gabrielcarvfer@gmail.com>
 
+# Set RPATH not too need LD_LIBRARY_PATH after installing. Add the lib64 variant
+# to support all platforms, such as alma linux, used to build the manylinux pip
+# wheel.
+set(CMAKE_INSTALL_RPATH
+    "${CMAKE_INSTALL_PREFIX}/lib:$ORIGIN/:$ORIGIN/../lib:${CMAKE_INSTALL_PREFIX}/lib64:$ORIGIN/:$ORIGIN/../lib64"
+)
+
+# cmake-format: off
+# You are a wizard, Harry!
+# source: https://gitlab.kitware.com/cmake/community/-/wikis/doc/cmake/RPATH-handling
+# cmake-format: on
+set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+
 function(build_required_and_libs_lists module_name visibility libraries
          all_ns3_libraries
 )

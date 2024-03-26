@@ -56,7 +56,7 @@ class VisualSimulatorImpl : public SimulatorImpl
     void Destroy() override;
     bool IsFinished() const override;
     void Stop() override;
-    void Stop(const Time& delay) override;
+    EventId Stop(const Time& delay) override;
     EventId Schedule(const Time& delay, EventImpl* event) override;
     void ScheduleWithContext(uint32_t context, const Time& delay, EventImpl* event) override;
     EventId ScheduleNow(EventImpl* event) override;
@@ -81,11 +81,6 @@ class VisualSimulatorImpl : public SimulatorImpl
     void NotifyConstructionCompleted() override;
 
   private:
-    /**
-     * Get the simulator implementation
-     * \return a pointer to the simulator implementation
-     */
-    Ptr<SimulatorImpl> GetSim();
     Ptr<SimulatorImpl> m_simulator;       ///< the simulator implementation
     ObjectFactory m_simulatorImplFactory; ///< simulator implementation factory
 };

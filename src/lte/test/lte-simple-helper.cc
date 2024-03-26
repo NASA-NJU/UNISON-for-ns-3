@@ -14,7 +14,8 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * Author: Manuel Requena <manuel.requena@cttc.es> (Based on lte-helper.cc)
+ * Author: Manuel Requena <manuel.requena@cttc.es>
+ * (Based on lte-helper.cc)
  */
 
 #include "lte-simple-helper.h"
@@ -66,7 +67,8 @@ LteSimpleHelper::GetTypeId()
                             .AddAttribute("RlcEntity",
                                           "Specify which type of RLC will be used. ",
                                           EnumValue(RLC_UM),
-                                          MakeEnumAccessor(&LteSimpleHelper::m_lteRlcEntityType),
+                                          MakeEnumAccessor<LteRlcEntityType_t>(
+                                              &LteSimpleHelper::m_lteRlcEntityType),
                                           MakeEnumChecker(RLC_UM, "RlcUm", RLC_AM, "RlcAm"));
     return tid;
 }

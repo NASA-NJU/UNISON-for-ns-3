@@ -83,7 +83,8 @@ HybridBuildingsPropagationLossModel::GetTypeId()
             .AddAttribute("Environment",
                           "Environment Scenario",
                           EnumValue(UrbanEnvironment),
-                          MakeEnumAccessor(&HybridBuildingsPropagationLossModel::SetEnvironment),
+                          MakeEnumAccessor<EnvironmentType>(
+                              &HybridBuildingsPropagationLossModel::SetEnvironment),
                           MakeEnumChecker(UrbanEnvironment,
                                           "Urban",
                                           SubUrbanEnvironment,
@@ -95,7 +96,7 @@ HybridBuildingsPropagationLossModel::GetTypeId()
                 "CitySize",
                 "Dimension of the city",
                 EnumValue(LargeCity),
-                MakeEnumAccessor(&HybridBuildingsPropagationLossModel::SetCitySize),
+                MakeEnumAccessor<CitySize>(&HybridBuildingsPropagationLossModel::SetCitySize),
                 MakeEnumChecker(SmallCity, "Small", MediumCity, "Medium", LargeCity, "Large"))
 
             .AddAttribute(
@@ -278,11 +279,11 @@ HybridBuildingsPropagationLossModel::ItuR1411(Ptr<MobilityModel> a, Ptr<Mobility
 {
     if (a->GetDistanceFrom(b) < m_itu1411NlosThreshold)
     {
-        return (m_ituR1411Los->GetLoss(a, b));
+        return m_ituR1411Los->GetLoss(a, b);
     }
     else
     {
-        return (m_ituR1411NlosOverRooftop->GetLoss(a, b));
+        return m_ituR1411NlosOverRooftop->GetLoss(a, b);
     }
 }
 

@@ -481,7 +481,7 @@ LteAmc::GetTypeId()
                 "AmcModel",
                 "AMC model used to assign CQI",
                 EnumValue(LteAmc::MiErrorModel),
-                MakeEnumAccessor(&LteAmc::m_amcModel),
+                MakeEnumAccessor<AmcModel>(&LteAmc::m_amcModel),
                 MakeEnumChecker(LteAmc::MiErrorModel, "Vienna", LteAmc::PiroEW2010, "PiroEW2010"));
     return tid;
 }
@@ -524,7 +524,7 @@ LteAmc::GetDlTbSizeFromMcs(int mcs, int nprb)
     NS_ASSERT_MSG(nprb > 0 && nprb < 111, "NPRB=" << nprb);
 
     int itbs = McsToItbsDl[mcs];
-    return (TransportBlockSizeTable[nprb - 1][itbs]);
+    return TransportBlockSizeTable[nprb - 1][itbs];
 }
 
 int
@@ -536,7 +536,7 @@ LteAmc::GetUlTbSizeFromMcs(int mcs, int nprb)
     NS_ASSERT_MSG(nprb > 0 && nprb < 111, "NPRB=" << nprb);
 
     int itbs = McsToItbsUl[mcs];
-    return (TransportBlockSizeTable[nprb - 1][itbs]);
+    return TransportBlockSizeTable[nprb - 1][itbs];
 }
 
 double

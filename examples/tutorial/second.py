@@ -1,23 +1,30 @@
-# -*-  Mode: Python; -*-
-# /*
-#  * This program is free software; you can redistribute it and/or modify
-#  * it under the terms of the GNU General Public License version 2 as
-#  * published by the Free Software Foundation;
-#  *
-#  * This program is distributed in the hope that it will be useful,
-#  * but WITHOUT ANY WARRANTY; without even the implied warranty of
-#  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#  * GNU General Public License for more details.
-#  *
-#  * You should have received a copy of the GNU General Public License
-#  * along with this program; if not, write to the Free Software
-#  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-#  *
-#  * Ported to Python by Mohit P. Tahiliani
-#  */
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License version 2 as
+# published by the Free Software Foundation;
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+# Ported to Python by Mohit P. Tahiliani
+#
 
-from ns import ns
+try:
+    from ns import ns
+except ModuleNotFoundError:
+    raise SystemExit(
+        "Error: ns3 Python module not found;"
+        " Python bindings may not be enabled"
+        " or your PYTHONPATH might not be properly configured"
+    )
 import sys
+from ctypes import c_bool, c_int
 
 # // Default Network Topology
 # //
@@ -27,7 +34,7 @@ import sys
 # //                    ================
 # //                      LAN 10.1.2.0
 
-from ctypes import c_int, c_bool
+
 nCsma = c_int(3)
 verbose = c_bool(True)
 cmd = ns.CommandLine(__file__)
@@ -76,9 +83,11 @@ serverApps = echoServer.Install(csmaNodes.Get(nCsma.value))
 serverApps.Start(ns.core.Seconds(1.0))
 serverApps.Stop(ns.core.Seconds(10.0))
 
-echoClient = ns.applications.UdpEchoClientHelper(csmaInterfaces.GetAddress(nCsma.value).ConvertTo(), 9)
+echoClient = ns.applications.UdpEchoClientHelper(
+    csmaInterfaces.GetAddress(nCsma.value).ConvertTo(), 9
+)
 echoClient.SetAttribute("MaxPackets", ns.core.UintegerValue(1))
-echoClient.SetAttribute("Interval", ns.core.TimeValue(ns.core.Seconds (1.0)))
+echoClient.SetAttribute("Interval", ns.core.TimeValue(ns.core.Seconds(1.0)))
 echoClient.SetAttribute("PacketSize", ns.core.UintegerValue(1024))
 
 clientApps = echoClient.Install(p2pNodes.Get(0))
@@ -88,8 +97,7 @@ clientApps.Stop(ns.core.Seconds(10.0))
 ns.internet.Ipv4GlobalRoutingHelper.PopulateRoutingTables()
 
 pointToPoint.EnablePcapAll("second")
-csma.EnablePcap ("second", csmaDevices.Get (1), True)
+csma.EnablePcap("second", csmaDevices.Get(1), True)
 
 ns.core.Simulator.Run()
 ns.core.Simulator.Destroy()
-

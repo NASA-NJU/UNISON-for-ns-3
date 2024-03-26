@@ -28,9 +28,7 @@
 #include <set>
 #include <variant>
 
-class TwoLevelAggregationTest;
 class AmpduAggregationTest;
-class HeAggregationTest;
 class MultiLinkOperationsTestBase;
 
 namespace ns3
@@ -144,11 +142,7 @@ class StaWifiMac : public WifiMac
 {
   public:
     /// Allow test cases to access private members
-    friend class ::TwoLevelAggregationTest;
-    /// Allow test cases to access private members
     friend class ::AmpduAggregationTest;
-    /// Allow test cases to access private members
-    friend class ::HeAggregationTest;
     /// Allow test cases to access private members
     friend class ::MultiLinkOperationsTestBase;
 
@@ -313,8 +307,9 @@ class StaWifiMac : public WifiMac
      *
      * \param phy the given PHY
      * \param linkId the ID of the EMLSR link on which the given PHY is operating
+     * \param delay the delay after which the channel switch will be completed
      */
-    void NotifySwitchingEmlsrLink(Ptr<WifiPhy> phy, uint8_t linkId);
+    void NotifySwitchingEmlsrLink(Ptr<WifiPhy> phy, uint8_t linkId, Time delay);
 
     /**
      * Block transmissions on the given link for the given reason.
@@ -357,8 +352,6 @@ class StaWifiMac : public WifiMac
         bool sendAssocReq;                 //!< whether this link is used to send the
                                            //!< Association Request frame
         std::optional<Mac48Address> bssid; //!< BSSID of the AP to associate with over this link
-        EventId beaconWatchdog;            //!< beacon watchdog
-        Time beaconWatchdogEnd{0};         //!< beacon watchdog end
         WifiPowerManagementMode pmMode{WIFI_PM_ACTIVE}; /**< the current PM mode, if the STA is
                                                              associated, or the PM mode to switch
                                                              to upon association, otherwise */
@@ -506,27 +499,19 @@ class StaWifiMac : public WifiMac
      */
     bool IsWaitAssocResp() const;
     /**
-     * This method is called after we have not received a beacon from the AP
-     * on the given link.
-     *
-     * \param linkId the ID of the given link
+     * This method is called after we have not received a beacon from the AP on any link.
      */
-    void MissedBeacons(uint8_t linkId);
+    void MissedBeacons();
     /**
-     * Restarts the beacon timer for the given link.
+     * Restarts the beacon timer.
      *
      * \param delay the delay before the watchdog fires
-     * \param linkId the ID of the given link
      */
-    void RestartBeaconWatchdog(Time delay, uint8_t linkId);
+    void RestartBeaconWatchdog(Time delay);
     /**
-     * Check if any enabled link remains after the given link is disabled (because,
-     * e.g., the maximum number of beacons is missed or the channel is switched).
-     * If no enabled link remains, proceed with disassociation.
-     *
-     * \param linkId the ID of the given link
+     * Set the state to unassociated and try to associate again.
      */
-    void Disassociated(uint8_t linkId);
+    void Disassociated();
     /**
      * Return an instance of SupportedRates that contains all rates that we support
      * including HT rates.
@@ -632,6 +617,8 @@ class StaWifiMac : public WifiMac
     Time m_assocRequestTimeout;             ///< association request timeout
     EventId m_assocRequestEvent;            ///< association request event
     uint32_t m_maxMissedBeacons;            ///< maximum missed beacons
+    EventId m_beaconWatchdog;               //!< beacon watchdog
+    Time m_beaconWatchdogEnd{0};            //!< beacon watchdog end
     bool m_activeProbing;                   ///< active probing
     Ptr<RandomVariableStream> m_probeDelay; ///< RandomVariable used to randomize the time
                                             ///< of the first Probe Response on each channel

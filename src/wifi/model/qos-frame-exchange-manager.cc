@@ -97,7 +97,8 @@ QosFrameExchangeManager::SendCfEndIfNeeded()
     cfEnd.SetAddr1(Mac48Address::GetBroadcast());
     cfEnd.SetAddr2(m_self);
 
-    WifiTxVector cfEndTxVector = GetWifiRemoteStationManager()->GetRtsTxVector(cfEnd.GetAddr1());
+    WifiTxVector cfEndTxVector =
+        GetWifiRemoteStationManager()->GetRtsTxVector(cfEnd.GetAddr1(), m_allowedWidth);
 
     auto mpdu = Create<WifiMpdu>(Create<Packet>(), cfEnd);
     auto txDuration =
@@ -125,11 +126,14 @@ QosFrameExchangeManager::PifsRecovery()
 {
     NS_LOG_FUNCTION(this);
     NS_ASSERT(m_edca);
-    NS_ASSERT(m_edca->IsTxopStarted(m_linkId));
+    NS_ASSERT(m_edca->GetTxopStartTime(m_linkId).has_value());
 
     // Release the channel if it has not been idle for the last PIFS interval
-    if (m_channelAccessManager->GetAccessGrantStart() - m_phy->GetSifs() >
-        Simulator::Now() - m_phy->GetPifs())
+    m_allowedWidth = std::min(
+        m_allowedWidth,
+        m_channelAccessManager->GetLargestIdlePrimaryChannel(m_phy->GetPifs(), Simulator::Now()));
+
+    if (m_allowedWidth == 0)
     {
         NotifyChannelReleased(m_edca);
         m_edca = nullptr;
@@ -203,7 +207,7 @@ QosFrameExchangeManager::StartTransmission(Ptr<QosTxop> edca, Time txopDuration)
     if (backingOff)
     {
         NS_ASSERT(m_edca->GetTxopLimit(m_linkId).IsStrictlyPositive());
-        NS_ASSERT(m_edca->IsTxopStarted(m_linkId));
+        NS_ASSERT(m_edca->GetTxopStartTime(m_linkId));
         NS_ASSERT(!m_pifsRecovery);
         NS_ASSERT(!m_initialFrame);
 
@@ -219,7 +223,7 @@ QosFrameExchangeManager::StartTransmission(Ptr<QosTxop> edca, Time txopDuration)
         // TXOP. In such a case, we assume that a new TXOP is being started if it
         // elapsed more than TXOPlimit since the start of the paused TXOP. Note
         // that GetRemainingTxop returns 0 iff Now - TXOPstart >= TXOPlimit
-        if (!m_edca->IsTxopStarted(m_linkId) ||
+        if (!m_edca->GetTxopStartTime(m_linkId) ||
             (backingOff && m_edca->GetRemainingTxop(m_linkId).IsZero()))
         {
             // starting a new TXOP
@@ -613,6 +617,13 @@ QosFrameExchangeManager::TransmissionFailed()
     }
     else
     {
+        // some STA(s) did not respond, they are no longer protected
+        for (const auto& address : m_txTimer.GetStasExpectedToRespond())
+        {
+            NS_LOG_DEBUG(address << " did not respond, hence it is no longer protected");
+            m_protectedStas.erase(address);
+        }
+
         NS_ASSERT_MSG(m_edca->GetTxopLimit(m_linkId).IsStrictlyPositive(),
                       "Cannot transmit more than one frame if TXOP Limit is zero");
 

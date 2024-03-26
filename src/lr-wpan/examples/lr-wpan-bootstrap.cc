@@ -88,7 +88,7 @@ ScanConfirm(Ptr<LrWpanNetDevice> device, MlmeScanConfirmParams params)
     // with the highest LQI value obtained from a passive scan and make
     // sure this coordinator allows association.
 
-    if (params.m_status == MLMESCAN_SUCCESS)
+    if (params.m_status == LrWpanMacStatus::SUCCESS)
     {
         // Select the coordinator with the highest LQI from the PAN Descriptor List
         int maxLqi = 0;
@@ -105,7 +105,8 @@ ScanConfirm(Ptr<LrWpanNetDevice> device, MlmeScanConfirmParams params)
             }
 
             // Only request association if the coordinator is permitting association at this moment.
-            if (params.m_panDescList[panDescIndex].m_superframeSpec.IsAssocPermit())
+            SuperframeField superframe(params.m_panDescList[panDescIndex].m_superframeSpec);
+            if (superframe.IsAssocPermit())
             {
                 std::string addressing;
                 if (params.m_panDescList[panDescIndex].m_coorAddrMode == SHORT_ADDR)
@@ -133,6 +134,7 @@ ScanConfirm(Ptr<LrWpanNetDevice> device, MlmeScanConfirmParams params)
                     assocParams.m_chPage = params.m_panDescList[panDescIndex].m_logChPage;
                     assocParams.m_coordPanId = params.m_panDescList[panDescIndex].m_coorPanId;
                     assocParams.m_coordAddrMode = params.m_panDescList[panDescIndex].m_coorAddrMode;
+                    CapabilityField capability;
 
                     if (params.m_panDescList[panDescIndex].m_coorAddrMode ==
                         LrWpanAddressMode::SHORT_ADDR)
@@ -140,7 +142,7 @@ ScanConfirm(Ptr<LrWpanNetDevice> device, MlmeScanConfirmParams params)
                         assocParams.m_coordAddrMode = LrWpanAddressMode::SHORT_ADDR;
                         assocParams.m_coordShortAddr =
                             params.m_panDescList[panDescIndex].m_coorShortAddr;
-                        assocParams.m_capabilityInfo.SetShortAddrAllocOn(true);
+                        capability.SetShortAddrAllocOn(true);
                     }
                     else if (assocParams.m_coordAddrMode == LrWpanAddressMode::EXT_ADDR)
                     {
@@ -148,8 +150,9 @@ ScanConfirm(Ptr<LrWpanNetDevice> device, MlmeScanConfirmParams params)
                         assocParams.m_coordExtAddr =
                             params.m_panDescList[panDescIndex].m_coorExtAddr;
                         assocParams.m_coordShortAddr = Mac16Address("ff:fe");
-                        assocParams.m_capabilityInfo.SetShortAddrAllocOn(false);
+                        capability.SetShortAddrAllocOn(false);
                     }
+                    assocParams.m_capabilityInfo = capability.GetCapability();
 
                     Simulator::ScheduleNow(&LrWpanMac::MlmeAssociateRequest,
                                            device->GetMac(),
@@ -206,8 +209,11 @@ AssociateIndication(Ptr<LrWpanNetDevice> device, MlmeAssociateIndicationParams p
     MlmeAssociateResponseParams assocRespParams;
 
     assocRespParams.m_extDevAddr = params.m_extDevAddr;
-    assocRespParams.m_status = LrWpanAssociationStatus::ASSOCIATED;
-    if (params.capabilityInfo.IsShortAddrAllocOn())
+    assocRespParams.m_status = LrWpanMacStatus::SUCCESS;
+    CapabilityField capability;
+    capability.SetCapability(params.capabilityInfo);
+
+    if (capability.IsShortAddrAllocOn())
     {
         // Truncate the extended address and make an assigned
         // short address based on this. This mechanism is not described by the standard.
@@ -242,14 +248,14 @@ CommStatusIndication(Ptr<LrWpanNetDevice> device, MlmeCommStatusIndicationParams
     // and is only here for demonstration purposes.
     switch (params.m_status)
     {
-    case LrWpanMlmeCommStatus::MLMECOMMSTATUS_TRANSACTION_EXPIRED:
+    case LrWpanMacStatus::TRANSACTION_EXPIRED:
         std::cout << Simulator::Now().As(Time::S) << " Coordinator " << device->GetNode()->GetId()
                   << " [" << device->GetMac()->GetShortAddress() << " | "
                   << device->GetMac()->GetExtendedAddress() << "]"
                   << " MLME-comm-status.indication: Transaction for device " << params.m_dstExtAddr
                   << " EXPIRED in pending transaction list\n";
         break;
-    case LrWpanMlmeCommStatus::MLMECOMMSTATUS_NO_ACK:
+    case LrWpanMacStatus::NO_ACK:
         std::cout << Simulator::Now().As(Time::S) << " Coordinator " << device->GetNode()->GetId()
                   << " [" << device->GetMac()->GetShortAddress() << " | "
                   << device->GetMac()->GetExtendedAddress() << "]"
@@ -257,7 +263,7 @@ CommStatusIndication(Ptr<LrWpanNetDevice> device, MlmeCommStatusIndicationParams
                   << " device registered in the pending transaction list\n";
         break;
 
-    case LrWpanMlmeCommStatus::MLMECOMMSTATUS_CHANNEL_ACCESS_FAILURE:
+    case LrWpanMacStatus::CHANNEL_ACCESS_FAILURE:
         std::cout << Simulator::Now().As(Time::S) << " Coordinator " << device->GetNode()->GetId()
                   << " [" << device->GetMac()->GetShortAddress() << " | "
                   << device->GetMac()->GetExtendedAddress() << "]"
@@ -276,7 +282,7 @@ AssociateConfirm(Ptr<LrWpanNetDevice> device, MlmeAssociateConfirmParams params)
     // Used by device higher layer to inform the results of a
     // association procedure from its mac layer.This is implemented by other protocol stacks
     // and is only here for demonstration purposes.
-    if (params.m_status == LrWpanMlmeAssociateConfirmStatus::MLMEASSOC_SUCCESS)
+    if (params.m_status == LrWpanMacStatus::SUCCESS)
     {
         std::cout << Simulator::Now().As(Time::S) << " Node " << device->GetNode()->GetId() << " ["
                   << device->GetMac()->GetShortAddress() << " | "
@@ -286,7 +292,7 @@ AssociateConfirm(Ptr<LrWpanNetDevice> device, MlmeAssociateConfirmParams params)
                   << " | CoordShort: " << device->GetMac()->GetCoordShortAddress()
                   << " | CoordExt: " << device->GetMac()->GetCoordExtAddress() << ")\n";
     }
-    else if (params.m_status == LrWpanMlmeAssociateConfirmStatus::MLMEASSOC_NO_ACK)
+    else if (params.m_status == LrWpanMacStatus::NO_ACK)
     {
         std::cout << Simulator::Now().As(Time::S) << " Node " << device->GetNode()->GetId() << " ["
                   << device->GetMac()->GetShortAddress() << " | "
@@ -305,7 +311,7 @@ AssociateConfirm(Ptr<LrWpanNetDevice> device, MlmeAssociateConfirmParams params)
 static void
 PollConfirm(Ptr<LrWpanNetDevice> device, MlmePollConfirmParams params)
 {
-    if (params.m_status == LrWpanMlmePollConfirmStatus::MLMEPOLL_CHANNEL_ACCESS_FAILURE)
+    if (params.m_status == LrWpanMacStatus::CHANNEL_ACCESS_FAILURE)
     {
         std::cout
             << Simulator::Now().As(Time::S) << " Node " << device->GetNode()->GetId() << " ["
@@ -313,14 +319,14 @@ PollConfirm(Ptr<LrWpanNetDevice> device, MlmePollConfirmParams params)
             << device->GetMac()->GetExtendedAddress() << "]"
             << " MLME-poll.confirm:  CHANNEL ACCESS problem when sending a data request command.\n";
     }
-    else if (params.m_status == LrWpanMlmePollConfirmStatus::MLMEPOLL_NO_ACK)
+    else if (params.m_status == LrWpanMacStatus::NO_ACK)
     {
         std::cout << Simulator::Now().As(Time::S) << " Node " << device->GetNode()->GetId() << " ["
                   << device->GetMac()->GetShortAddress() << " | "
                   << device->GetMac()->GetExtendedAddress() << "]"
                   << " MLME-poll.confirm: Data Request Command FAILED (NO ACK).\n";
     }
-    else if (params.m_status != LrWpanMlmePollConfirmStatus::MLMEPOLL_SUCCESS)
+    else if (params.m_status != LrWpanMacStatus::SUCCESS)
     {
         std::cout << Simulator::Now().As(Time::S) << " Node " << device->GetNode()->GetId() << " ["
                   << device->GetMac()->GetShortAddress() << " | "

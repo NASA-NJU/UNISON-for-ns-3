@@ -18,7 +18,14 @@
 
 import os.path
 
-from ns import ns
+try:
+    from ns import ns
+except ModuleNotFoundError:
+    raise SystemExit(
+        "Error: ns3 Python module not found;"
+        " Python bindings may not be enabled"
+        " or your PYTHONPATH might not be properly configured"
+    )
 
 ns.LogComponentEnable("Ipv4ClickRouting", ns.LOG_LEVEL_ALL)
 ns.LogComponentEnable("Ipv4L3ClickProtocol", ns.LOG_LEVEL_ALL)
@@ -40,8 +47,9 @@ internet.Install(csmaNodes.Get(1))
 
 # Install Click on node A
 clickinternet = ns.ClickInternetStackHelper()
-clickinternet.SetClickFile(csmaNodes.Get(0),
-                           clickConfigFolder + "/nsclick-lan-single-interface.click")
+clickinternet.SetClickFile(
+    csmaNodes.Get(0), clickConfigFolder + "/nsclick-lan-single-interface.click"
+)
 clickinternet.SetRoutingTableElement(csmaNodes.Get(0), "rt")
 clickinternet.Install(csmaNodes.Get(0))
 

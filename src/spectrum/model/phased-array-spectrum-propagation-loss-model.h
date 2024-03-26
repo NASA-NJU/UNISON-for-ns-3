@@ -62,6 +62,13 @@ class PhasedArraySpectrumPropagationLossModel : public Object
     void SetNext(Ptr<PhasedArraySpectrumPropagationLossModel> next);
 
     /**
+     * Return the pointer to the next PhasedArraySpectrumPropagationLossModel, if any.
+     *
+     * @return Pointer to the next model, if any
+     */
+    Ptr<PhasedArraySpectrumPropagationLossModel> GetNext() const;
+
+    /**
      * This method is to be called to calculate
      *
      * @param txPsd the spectrum signal parameters.
@@ -70,18 +77,42 @@ class PhasedArraySpectrumPropagationLossModel : public Object
      * @param aPhasedArrayModel the instance of the phased antenna array of the sender
      * @param bPhasedArrayModel the instance of the phased antenna array of the receiver
      *
-     * @return set of values Vs frequency representing the received
-     * power in the same units used for the txPower parameter.
+     * @return SpectrumSignalParameters in which is updated the PSD to contain
+     * a set of values Vs frequency representing the received
+     * power in the same units used for the txPower parameter,
+     * and additional chanSpectrumMatrix is computed to support MIMO systems.
      */
-    Ptr<SpectrumValue> CalcRxPowerSpectralDensity(
+    Ptr<SpectrumSignalParameters> CalcRxPowerSpectralDensity(
         Ptr<const SpectrumSignalParameters> txPsd,
         Ptr<const MobilityModel> a,
         Ptr<const MobilityModel> b,
         Ptr<const PhasedArrayModel> aPhasedArrayModel,
         Ptr<const PhasedArrayModel> bPhasedArrayModel) const;
 
+    /**
+     * If this loss model uses objects of type RandomVariableStream,
+     * set the stream numbers to the integers starting with the offset
+     * 'stream'. Return the number of streams (possibly zero) that
+     * have been assigned.  If there are PhasedArraySpectrumPropagationLossModels
+     * chained together, this method will also assign streams to the
+     * downstream models.
+     *
+     * \param stream the stream index offset start
+     * \return the number of stream indices assigned by this model
+     */
+    int64_t AssignStreams(int64_t stream);
+
   protected:
     void DoDispose() override;
+    /**
+     * Assign a fixed random variable stream number to the random variables used by this model.
+     *
+     * Subclasses must implement this; those not using random variables can return zero.
+     *
+     * \param stream first stream index to use
+     * \return the number of stream indices assigned by this model
+     */
+    virtual int64_t DoAssignStreams(int64_t stream) = 0;
 
   private:
     /**
@@ -92,10 +123,12 @@ class PhasedArraySpectrumPropagationLossModel : public Object
      * @param aPhasedArrayModel the instance of the phased antenna array of the sender
      * @param bPhasedArrayModel the instance of the phased antenna array of the receiver
      *
-     * @return set of values Vs frequency representing the received
-     * power in the same units used for the txPower parameter.
+     * @return SpectrumSignalParameters in which is updated the PSD to contain
+     * a set of values Vs frequency representing the received
+     * power in the same units used for the txPower parameter,
+     * and additional chanSpectrumMatrix is set.
      */
-    virtual Ptr<SpectrumValue> DoCalcRxPowerSpectralDensity(
+    virtual Ptr<SpectrumSignalParameters> DoCalcRxPowerSpectralDensity(
         Ptr<const SpectrumSignalParameters> params,
         Ptr<const MobilityModel> a,
         Ptr<const MobilityModel> b,

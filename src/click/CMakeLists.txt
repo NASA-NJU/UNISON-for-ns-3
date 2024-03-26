@@ -17,6 +17,7 @@ find_external_library(
   PATH_SUFFIXES userlevel
                 ns
   SEARCH_PATHS ${NS3_WITH_CLICK}
+  OUTPUT_VARIABLE "NS3_CLICK_REASON"
 )
 
 if((NOT
@@ -58,10 +59,7 @@ build_lib(
     helper/click-internet-stack-helper.h
     model/ipv4-click-routing.h
     model/ipv4-l3-click-protocol.h
-  LIBRARIES_TO_LINK
-    ${libcore}
-    ${libnetwork}
-    ${libinternet}
-    ${click_LIBRARIES}
+  LIBRARIES_TO_LINK ${libinternet}
+                    ${click_LIBRARIES}
   TEST_SOURCES test/ipv4-click-routing-test.cc
 )

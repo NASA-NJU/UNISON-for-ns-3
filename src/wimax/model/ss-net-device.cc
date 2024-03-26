@@ -54,7 +54,7 @@ NS_OBJECT_ENSURE_REGISTERED(SubscriberStationNetDevice);
 Time
 SubscriberStationNetDevice::GetDefaultLostDlMapInterval()
 {
-    return (MicroSeconds(500000));
+    return MicroSeconds(500000);
 }
 
 TypeId
@@ -745,7 +745,7 @@ SubscriberStationNetDevice::Enqueue(Ptr<Packet> packet,
                           "Error while enqueuing  packet: incorrect header type");
 
             GrantManagementSubheader grantMgmntSubhdr;
-            grantMgmntSubhdr.SetPm(true);
+            grantMgmntSubhdr.SetPm(1);
             packet->AddHeader(grantMgmntSubhdr);
         }
     }

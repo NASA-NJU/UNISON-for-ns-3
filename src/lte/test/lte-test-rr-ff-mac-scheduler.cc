@@ -24,7 +24,6 @@
 #include "ns3/radio-bearer-stats-calculator.h"
 #include "ns3/string.h"
 #include <ns3/boolean.h>
-#include <ns3/config-store-module.h>
 #include <ns3/constant-position-mobility-model.h>
 #include <ns3/enum.h>
 #include <ns3/eps-bearer.h>
@@ -306,7 +305,7 @@ LenaRrFfMacSchedulerTestCase::DoRun()
     std::vector<uint64_t> dlDataRxed;
     if (m_errorModelEnabled)
     {
-        m_thrRefDl *= 0.95; // for couting the Vienna AMC behavior: BLER between 0% and 10%
+        m_thrRefDl *= 0.95; // for counting the Vienna AMC behavior: BLER between 0% and 10%
     }
     for (int i = 0; i < m_nUser; i++)
     {
@@ -327,7 +326,7 @@ LenaRrFfMacSchedulerTestCase::DoRun()
     std::vector<uint64_t> ulDataRxed;
     if (m_errorModelEnabled)
     {
-        m_thrRefUl *= 0.95; // for couting the Vienna AMC behavior: BLER between 0% and 10%
+        m_thrRefUl *= 0.95; // for counting the Vienna AMC behavior: BLER between 0% and 10%
     }
     for (int i = 0; i < m_nUser; i++)
     {

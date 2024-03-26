@@ -12,6 +12,7 @@ set(source_files
     helper/wifi-mac-helper.cc
     helper/wifi-radio-energy-model-helper.cc
     helper/yans-wifi-helper.cc
+    model/addba-extension.cc
     model/adhoc-wifi-mac.cc
     model/ampdu-subframe-header.cc
     model/ampdu-tag.cc
@@ -62,6 +63,7 @@ set(source_files
     model/interference-helper.cc
     model/mac-rx-middle.cc
     model/mac-tx-middle.cc
+    model/mgt-action-headers.cc
     model/mgt-headers.cc
     model/mpdu-aggregator.cc
     model/msdu-aggregator.cc
@@ -163,6 +165,7 @@ set(header_files
     helper/wifi-mac-helper.h
     helper/wifi-radio-energy-model-helper.h
     helper/yans-wifi-helper.h
+    model/addba-extension.h
     model/adhoc-wifi-mac.h
     model/ampdu-subframe-header.h
     model/ampdu-tag.h
@@ -213,6 +216,7 @@ set(header_files
     model/interference-helper.h
     model/mac-rx-middle.h
     model/mac-tx-middle.h
+    model/mgt-action-headers.h
     model/mgt-headers.h
     model/mpdu-aggregator.h
     model/msdu-aggregator.h
@@ -320,12 +324,8 @@ build_lib(
   SOURCE_FILES ${source_files}
   HEADER_FILES ${header_files}
   LIBRARIES_TO_LINK
-    ${libnetwork}
-    ${libpropagation}
     ${libenergy}
     ${libspectrum}
-    ${libantenna}
-    ${libmobility}
     ${gsl_libraries}
   TEST_SOURCES
     test/block-ack-test-suite.cc

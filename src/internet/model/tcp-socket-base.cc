@@ -164,7 +164,7 @@ TcpSocketBase::GetTypeId()
             .AddAttribute("UseEcn",
                           "Parameter to set ECN functionality",
                           EnumValue(TcpSocketState::Off),
-                          MakeEnumAccessor(&TcpSocketBase::SetUseEcn),
+                          MakeEnumAccessor<TcpSocketState::UseEcn_t>(&TcpSocketBase::SetUseEcn),
                           MakeEnumChecker(TcpSocketState::Off,
                                           "Off",
                                           TcpSocketState::On,
@@ -1689,7 +1689,8 @@ TcpSocketBase::EnterRecovery(uint32_t currentDelivered)
     }
 
     // (4.3) Retransmit the first data segment presumed dropped
-    DoRetransmit();
+    uint32_t sz = SendDataPacket(m_highRxAckMark, m_tcb->m_segmentSize, true);
+    NS_ASSERT_MSG(sz > 0, "SendDataPacket returned zero, indicating zero bytes were sent");
     // (4.4) Run SetPipe ()
     // (4.5) Proceed to step (C)
     // these steps are done after the ProcessAck function (SendPendingData)
@@ -1777,8 +1778,8 @@ TcpSocketBase::DupAck(uint32_t currentDelivered)
         // (2) If DupAcks < DupThresh but IsLost (HighACK + 1) returns true
         // (indicating at least three segments have arrived above the current
         // cumulative acknowledgment point, which is taken to indicate loss)
-        // go to step (4).
-        else if (m_txBuffer->IsLost(m_highRxAckMark + m_tcb->m_segmentSize))
+        // go to step (4).  Note that m_highRxAckMark is (HighACK + 1)
+        else if (m_txBuffer->IsLost(m_highRxAckMark))
         {
             EnterRecovery(currentDelivered);
             NS_ASSERT(m_tcb->m_congState == TcpSocketState::CA_RECOVERY);

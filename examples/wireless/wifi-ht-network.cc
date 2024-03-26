@@ -36,6 +36,7 @@
 #include "ns3/string.h"
 #include "ns3/tuple.h"
 #include "ns3/udp-client-server-helper.h"
+#include "ns3/udp-server.h"
 #include "ns3/uinteger.h"
 #include "ns3/yans-wifi-channel.h"
 #include "ns3/yans-wifi-helper.h"
@@ -176,7 +177,8 @@ main(int argc, char* argv[])
                 wifi.ConfigHtOptions("ShortGuardIntervalSupported", BooleanValue(sgi));
 
                 Ssid ssid = Ssid("ns3-80211n");
-                TupleValue<UintegerValue, UintegerValue, EnumValue, UintegerValue> channelValue;
+                TupleValue<UintegerValue, UintegerValue, EnumValue<WifiPhyBand>, UintegerValue>
+                    channelValue;
                 WifiPhyBand band = (frequency == 5.0 ? WIFI_PHY_BAND_5GHZ : WIFI_PHY_BAND_2_4GHZ);
                 channelValue.Set(WifiPhy::ChannelTuple{0, channelWidth, band, 0});
 

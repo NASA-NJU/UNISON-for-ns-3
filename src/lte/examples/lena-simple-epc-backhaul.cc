@@ -14,11 +14,11 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * Authors: Manuel Requena <manuel.requena@cttc.es>
+ * Author: Manuel Requena <manuel.requena@cttc.es>
  */
 
 #include "ns3/applications-module.h"
-#include "ns3/config-store-module.h"
+#include "ns3/config-store.h"
 #include "ns3/core-module.h"
 #include "ns3/internet-module.h"
 #include "ns3/lte-module.h"

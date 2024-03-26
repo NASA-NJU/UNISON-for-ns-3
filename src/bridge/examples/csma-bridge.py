@@ -1,17 +1,17 @@
-# /*
-#  * This program is free software; you can redistribute it and/or modify
-#  * it under the terms of the GNU General Public License version 2 as
-#  * published by the Free Software Foundation
-#  *
-#  * This program is distributed in the hope that it will be useful,
-#  * but WITHOUT ANY WARRANTY; without even the implied warranty of
-#  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#  * GNU General Public License for more details.
-#  *
-#  * You should have received a copy of the GNU General Public License
-#  * along with this program; if not, write to the Free Software
-#  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-#  */
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License version 2 as
+# published by the Free Software Foundation
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
 
 # Network topology
 #
@@ -32,12 +32,18 @@
 #  \ingroup bridge
 #  Bridge example connecting two broadcast domains.
 
-
-from ns import ns
+## Import ns-3
+try:
+    from ns import ns
+except ModuleNotFoundError:
+    raise SystemExit(
+        "Error: ns3 Python module not found;"
+        " Python bindings may not be enabled"
+        " or your PYTHONPATH might not be properly configured"
+    )
 
 
 def main(argv):
-
     #
     # Allow the user to override any of the defaults and the above Bind() at
     # run-time, via command-line arguments
@@ -48,14 +54,14 @@ def main(argv):
     #
     # Explicitly create the nodes required by the topology(shown above).
     #
-    #print "Create nodes."
+    # print "Create nodes."
     terminals = ns.network.NodeContainer()
     terminals.Create(4)
 
     csmaSwitch = ns.network.NodeContainer()
     csmaSwitch.Create(1)
 
-    #print "Build Topology"
+    # print "Build Topology"
     csma = ns.csma.CsmaHelper()
     csma.SetChannelAttribute("DataRate", ns.network.DataRateValue(ns.network.DataRate(5000000)))
     csma.SetChannelAttribute("Delay", ns.core.TimeValue(ns.core.MilliSeconds(2)))
@@ -66,7 +72,9 @@ def main(argv):
     switchDevices = ns.network.NetDeviceContainer()
 
     for i in range(4):
-        link = csma.Install(ns.network.NodeContainer(ns.network.NodeContainer(terminals.Get(i)), csmaSwitch))
+        link = csma.Install(
+            ns.network.NodeContainer(ns.network.NodeContainer(terminals.Get(i)), csmaSwitch)
+        )
         terminalDevices.Add(link.Get(0))
         switchDevices.Add(link.Get(1))
 
@@ -84,7 +92,7 @@ def main(argv):
 
     # We've got the "hardware" in place.  Now we need to add IP addresses.
     #
-    #print "Assign IP Addresses."
+    # print "Assign IP Addresses."
     ipv4 = ns.internet.Ipv4AddressHelper()
     ipv4.SetBase(ns.network.Ipv4Address("10.1.1.0"), ns.network.Ipv4Mask("255.255.255.0"))
     ipv4.Assign(terminalDevices)
@@ -92,12 +100,12 @@ def main(argv):
     #
     # Create an OnOff application to send UDP datagrams from node zero to node 1.
     #
-    #print "Create Applications."
-    port = 9   # Discard port(RFC 863)
+    # print "Create Applications."
+    port = 9  # Discard port(RFC 863)
 
     inet_sock_address = ns.network.InetSocketAddress(ns.network.Ipv4Address("10.1.1.2"), port)
     onoff = ns.applications.OnOffHelper("ns3::UdpSocketFactory", inet_sock_address.ConvertTo())
-    onoff.SetConstantRate (ns.network.DataRate ("500kb/s"))
+    onoff.SetConstantRate(ns.network.DataRate("500kb/s"))
 
     app = onoff.Install(ns.network.NodeContainer(terminals.Get(0)))
     # Start the application
@@ -114,8 +122,7 @@ def main(argv):
     # Create a similar flow from n3 to n0, starting at time 1.1 seconds
     #
     inet_address = ns.network.InetSocketAddress(ns.network.Ipv4Address("10.1.1.1"), port)
-    onoff.SetAttribute("Remote",
-                       ns.network.AddressValue(inet_address.ConvertTo()))
+    onoff.SetAttribute("Remote", ns.network.AddressValue(inet_address.ConvertTo()))
     app = onoff.Install(ns.network.NodeContainer(terminals.Get(3)))
     app.Start(ns.core.Seconds(1.1))
     app.Stop(ns.core.Seconds(10.0))
@@ -127,9 +134,9 @@ def main(argv):
     # Configure tracing of all enqueue, dequeue, and NetDevice receive events.
     # Trace output will be sent to the file "csma-bridge.tr"
     #
-    #print "Configure Tracing."
-    #ascii = ns.network.AsciiTraceHelper();
-    #csma.EnableAsciiAll(ascii.CreateFileStream ("csma-bridge.tr"));
+    # print "Configure Tracing."
+    # ascii = ns.network.AsciiTraceHelper();
+    # csma.EnableAsciiAll(ascii.CreateFileStream ("csma-bridge.tr"));
 
     #
     # Also configure some tcpdump traces; each interface will be traced.
@@ -143,14 +150,13 @@ def main(argv):
     #
     # Now, do the actual simulation.
     #
-    #print "Run Simulation."
+    # print "Run Simulation."
     ns.core.Simulator.Run()
     ns.core.Simulator.Destroy()
-    #print "Done."
+    # print "Done."
 
 
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     import sys
-    main(sys.argv)
 
+    main(sys.argv)

@@ -71,9 +71,9 @@ WifiRemoteStationManager::GetTypeId()
                           "If the size of the PSDU is bigger than this value, we use an RTS/CTS "
                           "handshake before sending the data frame."
                           "This value will not have any effect on some rate control algorithms.",
-                          UintegerValue(65535),
+                          UintegerValue(4692480),
                           MakeUintegerAccessor(&WifiRemoteStationManager::SetRtsCtsThreshold),
-                          MakeUintegerChecker<uint32_t>())
+                          MakeUintegerChecker<uint32_t>(0, 4692480))
             .AddAttribute(
                 "FragmentationThreshold",
                 "If the size of the PSDU is bigger than this value, we fragment it such that the "
@@ -100,7 +100,8 @@ WifiRemoteStationManager::GetTypeId()
                           "Protection mode used when non-ERP STAs are connected to an ERP AP: "
                           "Rts-Cts or Cts-To-Self",
                           EnumValue(WifiRemoteStationManager::CTS_TO_SELF),
-                          MakeEnumAccessor(&WifiRemoteStationManager::m_erpProtectionMode),
+                          MakeEnumAccessor<WifiRemoteStationManager::ProtectionMode>(
+                              &WifiRemoteStationManager::m_erpProtectionMode),
                           MakeEnumChecker(WifiRemoteStationManager::RTS_CTS,
                                           "Rts-Cts",
                                           WifiRemoteStationManager::CTS_TO_SELF,
@@ -109,7 +110,8 @@ WifiRemoteStationManager::GetTypeId()
                           "Protection mode used when non-HT STAs are connected to a HT AP: Rts-Cts "
                           "or Cts-To-Self",
                           EnumValue(WifiRemoteStationManager::CTS_TO_SELF),
-                          MakeEnumAccessor(&WifiRemoteStationManager::m_htProtectionMode),
+                          MakeEnumAccessor<WifiRemoteStationManager::ProtectionMode>(
+                              &WifiRemoteStationManager::m_htProtectionMode),
                           MakeEnumChecker(WifiRemoteStationManager::RTS_CTS,
                                           "Rts-Cts",
                                           WifiRemoteStationManager::CTS_TO_SELF,
@@ -142,6 +144,8 @@ WifiRemoteStationManager::WifiRemoteStationManager()
       m_shortSlotTimeEnabled(false)
 {
     NS_LOG_FUNCTION(this);
+    m_ssrc.fill(0);
+    m_slrc.fill(0);
 }
 
 WifiRemoteStationManager::~WifiRemoteStationManager()
@@ -166,13 +170,6 @@ WifiRemoteStationManager::SetupPhy(const Ptr<WifiPhy> phy)
     // transmit rate for automatic control responses like
     // acknowledgments.
     m_wifiPhy = phy;
-    m_defaultTxMode = phy->GetDefaultMode();
-    NS_ASSERT(m_defaultTxMode.IsMandatory());
-    if (GetHtSupported())
-    {
-        m_defaultTxMcs = HtPhy::GetHtMcs(0);
-    }
-    Reset();
 }
 
 void
@@ -182,7 +179,6 @@ WifiRemoteStationManager::SetupMac(const Ptr<WifiMac> mac)
     // We need to track our MAC because it is the object that knows the
     // full set of interframe spaces.
     m_wifiMac = mac;
-    Reset();
 }
 
 int64_t
@@ -701,13 +697,13 @@ WifiRemoteStationManager::GetCtsToSelfTxVector()
 }
 
 WifiTxVector
-WifiRemoteStationManager::GetRtsTxVector(Mac48Address address)
+WifiRemoteStationManager::GetRtsTxVector(Mac48Address address, uint16_t allowedWidth)
 {
-    NS_LOG_FUNCTION(this << address);
+    NS_LOG_FUNCTION(this << address << allowedWidth);
+    WifiTxVector v;
     if (address.IsGroup())
     {
         WifiMode mode = GetNonUnicastMode();
-        WifiTxVector v;
         v.SetMode(mode);
         v.SetPreambleType(
             GetPreambleForTransmission(mode.GetModulationClass(), GetShortPreambleEnabled()));
@@ -717,9 +713,31 @@ WifiRemoteStationManager::GetRtsTxVector(Mac48Address address)
         v.SetNTx(GetNumberOfAntennas());
         v.SetNss(1);
         v.SetNess(0);
-        return v;
     }
-    return DoGetRtsTxVector(Lookup(address));
+    else
+    {
+        v = DoGetRtsTxVector(Lookup(address));
+    }
+    auto modulation = v.GetModulationClass();
+
+    if (allowedWidth >= 40 &&
+        (modulation == WIFI_MOD_CLASS_DSSS || modulation == WIFI_MOD_CLASS_HR_DSSS))
+    {
+        // RTS must be sent in a non-HT duplicate PPDU because it must protect a frame being
+        // transmitted on at least 40 MHz. Change the modulation class to ERP-OFDM and the rate
+        // to 6 Mbps
+        v.SetMode(ErpOfdmPhy::GetErpOfdmRate6Mbps());
+        modulation = v.GetModulationClass();
+    }
+    // do not set allowedWidth as the TX width if the modulation class is (HR-)DSSS (allowedWidth
+    // may be >= 40 MHz) or allowedWidth is 22 MHz (the selected modulation class may be OFDM)
+    if (modulation != WIFI_MOD_CLASS_DSSS && modulation != WIFI_MOD_CLASS_HR_DSSS &&
+        allowedWidth != 22)
+    {
+        v.SetChannelWidth(allowedWidth);
+    }
+
+    return v;
 }
 
 WifiTxVector
@@ -1431,6 +1449,8 @@ WifiRemoteStation*
 WifiRemoteStationManager::Lookup(Mac48Address address) const
 {
     NS_LOG_FUNCTION(this << address);
+    NS_ASSERT(!address.IsGroup());
+    NS_ASSERT(address != m_wifiMac->GetAddress());
     auto stationIt = m_stations.find(address);
 
     if (stationIt != m_stations.end())
@@ -1675,13 +1695,16 @@ WifiRemoteStationManager::GetLdpcSupported(Mac48Address address) const
 WifiMode
 WifiRemoteStationManager::GetDefaultMode() const
 {
-    return m_defaultTxMode;
+    NS_ASSERT(m_wifiPhy);
+    auto defaultTxMode = m_wifiPhy->GetDefaultMode();
+    NS_ASSERT(defaultTxMode.IsMandatory());
+    return defaultTxMode;
 }
 
 WifiMode
 WifiRemoteStationManager::GetDefaultMcs() const
 {
-    return m_defaultTxMcs;
+    return HtPhy::GetHtMcs0();
 }
 
 WifiMode

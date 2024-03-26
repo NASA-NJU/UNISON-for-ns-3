@@ -38,6 +38,7 @@ previous versions.
 The following list contains the set of clang-format versions that are verified
 to produce consistent output among themselves.
 
+* clang-format-17
 * clang-format-16
 * clang-format-15
 * clang-format-14
@@ -114,8 +115,8 @@ check-style-clang-format.py
 To facilitate checking and fixing source code files according to the |ns3| coding style,
 |ns3| maintains the ``check-style-clang-format.py`` Python script (located in ``utils/``).
 This script is a wrapper to clang-format and provides useful options to check and fix
-source code files. Additionally, it checks and fixes trailing whitespace and tabs in text
-files.
+source code files. Additionally, it performs other manual checks and fixes in text files
+(described below).
 
 We recommend running this script over your newly introduced C++ files prior to submission
 as a Merge Request.
@@ -159,6 +160,9 @@ For quick-reference, the most used commands are listed below:
 
   # Specific directory or file
   /path/to/utils/check-style-clang-format.py --fix absolute_or_relative/path/to/directory_or_file
+
+  # Modified files
+  git diff --name-only | xargs ./utils/check-style-clang-format.py --fix
 
 Clang-tidy
 **********
@@ -1155,44 +1159,44 @@ expressions in if statements and variable declarations.
 
 For instance, the following code:
 
-  .. sourcecode:: cpp
+.. sourcecode:: cpp
 
-    bool IsPositive(int n)
-    {
-        if (n > 0)
-        {
-            return true;
-        }
-        else
-        {
-            return false;
-        }
-    }
+  bool IsPositive(int n)
+  {
+      if (n > 0)
+      {
+          return true;
+      }
+      else
+      {
+          return false;
+      }
+  }
 
-    void ProcessNumber(int n)
-    {
-        if (IsPositive(n) == true)
-        {
-            ...
-        }
-    }
+  void ProcessNumber(int n)
+  {
+      if (IsPositive(n) == true)
+      {
+          ...
+      }
+  }
 
 can be rewritten as:
 
-  .. sourcecode:: cpp
+.. sourcecode:: cpp
 
-    bool IsPositive(int n)
-    {
-        return n > 0;
-    }
+  bool IsPositive(int n)
+  {
+      return n > 0;
+  }
 
-    void ProcessNumber(int n)
-    {
-        if (IsPositive(n))
-        {
-            ...
-        }
-    }
+  void ProcessNumber(int n)
+  {
+      if (IsPositive(n))
+      {
+          ...
+      }
+  }
 
 Smart pointer boolean comparisons
 =================================
@@ -1348,6 +1352,32 @@ in the implementation files.
 If a developer would like to propose to raise this bar to include more
 features than this, please email the developers list. We will move this
 language support forward as our minimally supported compiler moves forward.
+
+Guidelines for using maps
+=========================
+
+Maps (associative containers) are used heavily in ns-3 models to store
+key/value pairs.  The C++ standard, over time, has added various methods to
+insert elements to maps, and the ns-3 codebase has made use of most or all
+of these constructs.  For the sake of uniformity and readability, the
+following guidelines are recommended for any new code.
+
+Prefer the use of ``std::map`` to ``std::unordered_map`` unless there is
+a measurable performance advantage.  Use ``std::unordered_map`` only for
+use cases in which the map does not need to be iterated or the iteration
+order does not affect the results of the operation (because different
+implementations of the hash function may lead to different iteration orders
+on different systems).
+
+Keep in mind that C++ now allows several methods to insert values into
+maps, and the behavior can be different when a value already exists for
+a key.  If the intended behavior is that the insertion should not overwrite
+an existing value for the key, ``try_emplace()`` can be a good choice.  If
+the intention is to allow the overwriting of a key/value pair,
+``insert_or_assign()`` can be a good choice.  Both of the above methods
+provide return values that can be checked-- in the case of ``try_emplace()``,
+whether the insertion succeeded or did not occur, and in the case of
+``insert_or_assign()``, whether an insertion or assignment occurred.
 
 Miscellaneous items
 ===================
@@ -1519,3 +1549,108 @@ explained here.
 
     // Avoid repeating the type name "MyClass" in std::less<>
     std::map<MyClass, int, std::less<MyClass>> myMap;
+
+
+CMake file formatting
+*********************
+
+The ``CMakeLists.txt`` and other ``*.cmake`` files follow the formatting rules defined in
+``build-support/cmake-format.yaml`` and ``build-support/cmake-format-modules.yaml``.
+
+The first set of rules applies to CMake files in all directories that are not modules,
+while the second one applies to files within modules.
+
+.. _cmake-format: https://cmake-format.readthedocs.io/en/latest/cmake-format.html
+
+Those rules are enforced via the `cmake-format`_ tool, that can be installed via Pip.
+
+.. sourcecode:: console
+
+    pip install cmake-format pyyaml
+
+After installing cmake-format, it can be called to fix the formatting of a CMake file
+with the following command:
+
+.. sourcecode:: console
+
+    cmake-format -c ./build-support/cmake-format.yaml CMakeLists.txt
+
+To check the formatting, add the `--check` option to the command, before specifying
+the list of CMake files.
+
+Instead of calling this command for every single CMake file, it is recommended to use
+the ``ns3`` script to run the custom targets that do that automatically.
+
+.. sourcecode:: console
+
+    # Check CMake formatting
+    ./ns3 build cmake-format-check
+
+    # Check and fix CMake formatting
+    ./ns3 build cmake-format
+
+Custom functions and macros need to be explicitly configured in the ``cmake-format.yaml`` files,
+otherwise their formatting will be broken.
+
+Python file formatting
+**********************
+
+.. _Black: https://black.readthedocs.io/en/stable/index.html
+.. _Isort: https://pycqa.github.io/isort/index.html
+.. _Black current style: https://black.readthedocs.io/en/stable/the_black_code_style/current_style.html
+
+Python format style and rule enforcement is based on the default settings for the `Black`_
+formatter tool and `Isort`_ import sorter tool. Black default format is detailed in `Black current style`_.
+
+The custom settings for both tools are set in the ``pyproject.toml`` file.
+
+These tools that can be installed via Pip, using the following command:
+
+.. sourcecode:: console
+
+    pip install black isort
+
+To check the formatting, add the `--check` option to the command:
+
+.. sourcecode:: console
+
+    black --check .
+    isort --check .
+
+To check and fix the formatting, run the commands as follows:
+
+.. sourcecode:: console
+
+    black .
+    isort .
+
+.. _MS Black formatter: https://marketplace.visualstudio.com/items?itemName=ms-python.black-formatter
+.. _MS Isort: https://marketplace.visualstudio.com/items?itemName=ms-python.isort
+
+For VS Code users, `MS Black formatter`_ and `MS Isort`_ extensions, which repackage
+Black and Isort for VS Code, can be installed to apply fixes regularly.
+To configure VS Code to automatically format code when saving, editing or pasting code,
+add the following configuration to ``.vscode/settings.json``:
+
+.. sourcecode:: json
+
+  {
+    "editor.formatOnPaste": true,
+    "editor.formatOnSave": true,
+    "editor.formatOnType": true,
+    "[python]": {
+      "editor.defaultFormatter": "ms-python.black-formatter",
+      "editor.codeActionsOnSave": {
+          "source.organizeImports": "explicit",
+      },
+    },
+    "black-formatter.args": [
+      "--config",
+      "pyproject.toml",
+    ],
+    "isort.check": true,
+    "isort.args": [
+      "--sp",
+      "pyproject.toml",
+    ],
+  }

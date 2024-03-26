@@ -21,7 +21,7 @@
 
 #include "ctrl-headers.h"
 #include "mac-rx-middle.h"
-#include "mgt-headers.h"
+#include "mgt-action-headers.h"
 #include "qos-utils.h"
 #include "wifi-mac-queue.h"
 #include "wifi-tx-vector.h"
@@ -756,6 +756,7 @@ BlockAckManager::NotifyOriginatorAgreementRejected(const Mac48Address& recipient
                                    OriginatorBlockAckAgreement::REJECTED);
     }
     it->second.first.SetState(OriginatorBlockAckAgreement::REJECTED);
+    m_unblockPackets(recipient, tid);
 }
 
 void

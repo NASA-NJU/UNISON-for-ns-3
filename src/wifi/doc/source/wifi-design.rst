@@ -189,6 +189,11 @@ Some implementation choices that are not imposed by the standard are listed belo
 * OperationalRateSet is assumed to contain all mandatory rates (see
   `issue 183 <https://gitlab.com/nsnam/ns-3-dev/-/issues/183>`_)
 * The wifi manager always selects the lowest basic rate for management frames.
+* If a STA (AP or non-AP) supports VHT, a Block Ack agreement is always setup once
+  a first packet is enqueued regardless of whether it will be transmitted in an A-MPDU.
+* Once an A-MSDU is created, it is no longer modified, even before it is actually transmitted
+  for the first time. This means that this A-MSDU cannot be aggregated to other MSDUs using A-MSDU
+  aggregation.
 
 Design Details
 **************
@@ -768,6 +773,25 @@ which would be ignored otherwise. This is illustrated in Figure :ref:`fig-cca-ch
 
    Illustration of signals tracking upon channel switching
 
+MU-MIMO PHY support
+###################
+
+There is a basic support for MU-MIMO at the PHY layer that has been introduced in release
+ns-3.40. The current model can be used for both downlink and uplink MU-MIMO transmissions.
+
+The use of OFDMA and MU-MIMO for Multi-User transmissions depends on how the TXVECTOR
+is filled in by the MAC layer (not implemented yet). Since mixed OFDMA and MU-MIMO
+configurations are not supported, the TXVECTOR determines it carries information for
+MU-MIMO if all users are assigned the same RU, otherwise it corresponds to an OFDMA
+transmission.
+
+At the PHY layer, OFDMA and MU-MIMO transmissions are handled in a similar way, the main difference
+lies in MU-MIMO having the same spectrum shared simultaneously with multiple transmitters (for
+the uplink direction). The current PHY abstraction model assumes perfect conditions where the
+interference helper is able to detect signals belonging to the same MU-MIMO transmission and make
+sure they do not interfere with each others. Interference with other signals, including other
+MU-MIMO transmissions, is still supported by the model.
+
 The MAC model
 =============
 
@@ -818,7 +842,10 @@ If the number of missed beacons exceeds the threshold, the STA will notify
 the rest of the device that the link is down (association is lost) and
 restart the scanning process. Note that this can also happen when an
 association request fails without explicit refusal (i.e., the AP fails to
-respond to association request).
+respond to association request). In case of non-AP MLDs, in order for losing
+association, it is necessary that no beacon is received on any link for an
+interval of duration equal to the maximum number of missed beacons times the
+interval between two consecutive Beacon frames.
 
 Roaming
 #######
@@ -899,6 +926,8 @@ one and only one of the following functions:
 
 *  Decrement the backoff timer.
 *  Initiate the transmission of a frame exchange sequence.
+*  Invoke the backoff procedure due to choosing not to transmit (to be included
+   in the version of the standard following IEEE 802.11-2020)
 *  Invoke the backoff procedure due to an internal collision.
 *  Do nothing.
 
@@ -1104,47 +1133,142 @@ Enhanced multi-link single radio operation (EMLSR)
 ##################################################
 
 The IEEE 802.11be amendment introduced EMLSR operating mode to allow a non-AP MLD to alternate
-frame exchanges over a subset of setup links identified as EMLSR links. |ns3| supports EMLSR
-operations as described in the following.
+frame exchanges over a subset of setup links identified as EMLSR links (see section 35.3.17 of
+IEEE 802.11be D4.1). |ns3| supports EMLSR operations as described in the following.
 
-Non-AP MLD side
----------------
+Architecture of a non-AP MLD supporting EMLSR operating mode
+------------------------------------------------------------
 
-A non-AP MLD supports EMLSR operating mode if the ``EmlsrActivated`` attribute of the EHT
-configuration is set to true. In such a case, the WifiMacHelper will install an EMLSR Manager
-by using the type and attribute values configured through the ``SetEmlsrManager`` method. The
-EMLSR Manager is a base class providing the ``EmlsrLinkSet`` attribute, which can be used to
-enable or disable EMLSR mode (after multi-link setup, EMLSR mode is disabled by default). Setting
-the ``EmlsrLinkSet`` attribute triggers the transmission of an EML Operating Mode Notification
-frame to the AP to communicate the new set of EMLSR links, if ML setup has been completed.
-Otherwise, the set of EMLSR links is stored and the EML Operating Mode Notification frame is
-sent as soon as the ML setup is completed. The selection of the link used to transmit
-the EML Operating Mode Notification frame is done by the EMLSR Manager subclass. The default
-EMLSR Manager subclass, ``DefaultEmlsrManager``, selects the link that was used to perform
-ML setup. When the non-AP MLD receives the acknowledgment for the EML Operating Mode Notification
-frame, it starts a timer whose duration is the transition timeout advertised by the AP MLD.
-When the timer expires, or the non-AP MLD receives an EML Operating Mode Notification frame
-from the AP MLD, the EMLSR mode is assumed to be enabled (or disabled).
+The architecture of a non-AP MLD supporting EMLSR operating mode is based on the assumption that
+only one PHY instance (referred to as the *main PHY*) has full TX/RX capabilities, while the other
+PHY instances (referred to as *auxiliary PHYs* or *aux PHYs* for brevity) have limited TX/RX
+capabilities. As a consequence, only the main PHY is able to carry out frame exchanges with the AP
+MLD. Given that frame exchanges can occur on any of the EMLSR links, the link on which the main PHY operates is dynamically switched during a simulation, as detailed below.
 
-AP MLD side
+Enabling/disabling EMLSR mode
+-----------------------------
+
+EMLSR mode can be enabled on the links (at least two) of a non-AP MLD that supports the EMLSR
+operating mode and performs ML setup with an AP MLD that supports the EMLSR operating mode. The
+``EmlsrActivated`` attribute of the EHT configuration of an MLD determines whether the EMLSR
+operating mode is supported by the MLD. When the ``EmlsrActivated`` attribute is set to true for
+a non-AP MLD, the WifiMacHelper will install an EMLSR Manager by using the type and attribute
+values configured through the ``SetEmlsrManager`` method.
+
+EMLSR mode on the links of a non-AP MLD can be enabled or disabled by using the ``EmlsrLinkSet``
+attribute of the EMLSR Manager base class (after multi-link setup, EMLSR mode is disabled by
+default). Setting the ``EmlsrLinkSet`` attribute triggers the transmission of an EML Operating
+Mode Notification frame to the AP to communicate the new set of EMLSR links, if ML setup has been
+completed. Otherwise, the set of EMLSR links is stored and the EML Operating Mode Notification
+frame is sent as soon as the ML setup is completed. Therefore, users can choose to enable EMLSR
+mode on some links upon the completion of ML setup by setting the ``EmlsrLinkSet`` attribute at
+(or before) initialization time; alternatively, they can leave the ``EmlsrLinkSet`` attribute
+empty at initialization time and set it at runtime to enable EMLSR mode on some links at a
+specific simulation time (after ML setup). The selection of the link used by the non-AP
+MLD to transmit the EML Operating Mode Notification frame is done by the EMLSR Manager subclass.
+The default EMLSR Manager subclass, ``DefaultEmlsrManager``, selects the link on which the main
+PHY is operating. When the non-AP MLD receives the acknowledgment for the EML Operating Mode
+Notification frame, it starts a timer whose duration is the transition timeout advertised by the AP MLD. When the timer expires, or the non-AP MLD receives an EML Operating Mode Notification
+frame from the AP MLD, the EMLSR mode is assumed to be enabled on the requested set of links
+(referred to as EMLSR links), if this set is not empty, or disabled, otherwise. The set of links
+on which it is requested to enable EMLSR mode must include the link on which the main PHY is
+operating; the PHY instances operating on the other links on which EMLSR mode is enabled are
+considered aux PHYs.
+
+The PHY instance acting as main PHY is configured through the ``MainPhyId`` attribute of the EMLSR
+Manager base class. Such a class also enables to define the TX/RX capabilities of the aux PHYs:
+
+* the ``AuxPhyMaxModClass`` attribute indicates the maximum modulation class supported by aux PHYs
+* the ``AuxPhyChannelWidth`` attribute indicates the maximum channel width (MHz) supported by aux
+  PHYs. The value of this attribute may be automatically capped based on the maximum supported
+  modulation class.
+* the ``AuxPhyTxCapable`` attribute indicates whether aux PHYs are capable of transmitting frames
+
+Downlink TXOP
+-------------
+
+.. _fig-emlsr-dl-txop:
+
+.. figure:: figures/emlsr-dl-txop.*
+   :align: center
+
+   EMLSR operations: Downlink TXOP
+
+When an AP MLD that supports EMLSR operating mode has to initiate a frame exchange on a link with
+a non-AP MLD that is operating in EMLSR mode on that link, it sends an MU-RTS Trigger Frame
+soliciting a response from the non-AP MLD (and possibly others) as the initial Control frame (ICF)
+for that exchange (see Figure :ref:`fig-emlsr-dl-txop`). The MU-RTS Trigger Frame is carried in a
+non-HT duplicate PPDU transmitted at a rate of 6 Mbps, 12 Mbps or 24 Mbps. When the
+transmission of an initial Control frame starts, the AP MLD blocks transmissions to the solicited
+EMLSR clients on the EMLSR links other than the link used to transmit the initial Control frame,
+so that the AP MLD does not initiate another frame exchange on such links. The MU-RTS Trigger
+Frame includes a Padding field whose transmission duration is the maximum among the padding
+delays advertised by all the EMLSR clients solicited by the MU-RTS Trigger Frame. The padding
+delay should be long enough to allow the EMLSR client to get ready to transmit the CTS response
+(e.g., make the main PHY switch to operate on the link where the DL TXOP is starting). In |ns3|,
+if the ICF is received by the main PHY, no link switch occurs. If the ICF is received by an aux
+PHY (as shown in Fig. :ref:`fig-emlsr-dl-txop`), the main PHY switches to operate on the link
+where the TXOP is starting at the end of the reception of the ICF (including the Padding field)
+and the main PHY sends the CTS response. In |ns3|, the behavior of the aux PHY that received the
+ICF is determined by the EMLSR Manager subclass. The ``DefaultEmlsrManager`` class provides the
+``SwitchAuxPhy`` attribute for this purpose. If this attribute is true, the aux PHY switches to
+operate on the link on which the main PHY was operating and stays on such a link even after
+the completion of the TXOP (as shown in Fig. :ref:`fig-emlsr-dl-txop`); if this attribute is
+false, the aux PHY does not perform any switch, but the main PHY switches back to operate on
+its original link once the TXOP is completed (as shown in Fig. :ref:`fig-emlsr-ul-txop`).
+
+
+The frame exchange with an EMLSR client is assumed to terminate when the AP MLD does not start a
+frame transmission a SIFS after the response to the last frame transmitted by the AP MLD or the
+AP MLD transmits a frame that is not addressed to the EMLSR client. When a frame exchange with an
+EMLSR client terminates, the AP MLD blocks transmissions on all the EMLSR links and starts a
+timer whose duration is the transition delay advertised by the EMLSR client. When the timer
+expires, the EMLSR client is assumed to be back to the listening operations and transmissions on
+all the EMLSR links are unblocked.
+
+The padding delay and the transition delay for an EMLSR client can be set through the
+``EmlsrPaddingDelay`` attribute and the ``EmlsrTransitionDelay`` attribute of the
+``EmlsrManager`` base class, respectively.
+
+Uplink TXOP
 -----------
-An AP MLD supports EMLSR operating mode if the ``EmlsrActivated`` attribute of the EHT
-configuration is set to true. When an AP MLD that supports EMLSR operating mode has to initiate a
-frame exchange with a non-AP MLD that is operating in EMLSR mode, it sends an MU-RTS Trigger Frame
-soliciting a response from the non-AP MLD (and possibly others) as the initial Control frame for
-that exchange. The MU-RTS Trigger Frame includes a Padding field whose transmission duration is the
-maximum among the padding delays advertised by all the EMLSR clients solicited by the MU-RTS
-Trigger Frame. Also, the MU-RTS Trigger Frame is carried in a non-HT (duplicate) PPDU transmitted
-at a rate of 6 Mbps, 12 Mbps or 24 Mbps. When the transmission of an initial Control frame starts,
-the AP MLD blocks transmissions to the solicited EMLSR clients on the EMLSR links other than the
-link used to transmit the initial Control frame, so that the AP MLD does not initiate another
-frame exchange on such links. The frame exchange with an EMLSR client is assumed to terminate
-when the AP MLD does not start a frame transmission a SIFS after the response to the last frame
-transmitted by the AP MLD or the AP MLD transmits a frame that is not addressed to the EMLSR
-client. When a frame exchange with an EMLSR client terminates, the AP MLD blocks transmissions on
-all the EMLSR links and starts a timer whose duration is the transition delay advertised by the
-EMLSR client. When the timer expires, the EMLSR client is assumed to be back to the listening
-operations and transmissions on all the EMLSR links are unblocked.
+
+.. _fig-emlsr-ul-txop:
+
+.. figure:: figures/emlsr-ul-txop.*
+   :align: center
+
+   EMLSR operations: Uplink TXOP
+
+An EMLSR client can start an UL TXOP on any of the EMLSR links. When channel access is obtained
+on a link where an aux PHY is operating, the aux PHY transmits an RTS frame and then the main PHY
+takes over the TXOP. Figure :ref:`fig-emlsr-ul-txop` shows that the EMLSR client obtains a TXOP on
+link 1, which the main PHY is operating on. Therefore, a data frame can be sent without
+protection. Clearly, the EMLSR client blocks transmissions on the other EMLSR links as soon as it
+starts transmitting the data frame, while the AP MLD blocks transmissions to the EMLSR client on
+the other EMLSR links as soon as it receives an MPDU from the EMLSR client. When the UL TXOP
+terminates, the AP MLD starts a transition delay timer, during which it does not attempt to start
+a frame exchange with the EMLSR client on any EMLSR link. The EMLSR client, instead, starts a
+MediumSyncDelay timer on all the EMLSR links other than the one on which the UL TXOP was carried
+out. While the MediumSyncDelay timer is running on a link, the EMLSR client can start an UL TXOP
+on that link, but it can perform at most a predefined number of attempts. The duration of the
+MediumSyncDelay timer, the maximum number of TXOP attempts and the threshold to be used instead
+of the normal CCA sensitivity for the primary 20 MHz channel are all advertised by the AP MLD and
+can be configured through the attributes of the ``EmlsrManager`` class: ``MediumSyncDuration``, ``MsdMaxNTxops`` and ``MsdOfdmEdThreshold``, respectively.
+
+Figure :ref:`fig-emlsr-ul-txop` also shows that, afterwards, the EMLSR client obtains a TXOP on
+link 0, which an aux PHY is operating on. The aux PHY transmits an RTS frame and, in the
+meantime, the main PHY is switched to operate on that link, receives the CTS response and
+transmits the data frame. In the example shown in Fig. :ref:`fig-emlsr-ul-txop`, the
+``SwitchAuxPhy`` attribute of the ``DefaultEmlsrManager`` class is set to false. This means that
+the aux PHY stays on link 0 and, therefore, no PHY is operating on link 1 while the main PHY is
+carrying out the UL TXOP on link 0. Once such UL TXOP terminates, the main PHY is switched back
+to operate on link 1. While the MediumSyncDelay timer is running on link 1, the EMLSR client
+obtains a TXOP on link 1 and, as mandated by the 802.11be specs, sends an RTS frame. If there is
+no response to the RTS frame, the EMLSR client can attempt to obtain the TXOP again and transmit
+another RTS frame. However, the number of attempts performed while the MediumSyncDelay timer is
+running is limited by the value advertised by the AP MLD and configured through the
+``MsdMaxNTxops`` attribute of the ``EmlsrManager`` class.
 
 Ack manager
 ###########
@@ -1396,7 +1520,7 @@ Depending on your goal, the common tasks are (in no particular order):
 * Wi-Fi queue management.  The files ``txop.*`` and ``qos-txop.*`` are of interest for this task.
 * Channel access management.  Users should modify the files ``channel-access-manager.*``, which grant access to
   ``Txop`` and ``QosTxop``.
-* Fragmentation and RTS threholds are handled by Wi-Fi remote station manager.  Note that Wi-Fi remote
+* Fragmentation and RTS thresholds are handled by Wi-Fi remote station manager.  Note that Wi-Fi remote
   station manager simply indicates if fragmentation and RTS are needed.  Fragmentation is handled by
   ``Txop`` or ``QosTxop`` while RTS/CTS transaction is handled by ``FrameExchangeManager``.
 * Modifying or creating new rate control algorithms can be done by creating a new child class of Wi-Fi remote

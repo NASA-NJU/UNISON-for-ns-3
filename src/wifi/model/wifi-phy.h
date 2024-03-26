@@ -86,14 +86,14 @@ class WifiPhy : public Object
      * Add the input listener to the list of objects to be notified of
      * PHY-level events.
      */
-    void RegisterListener(WifiPhyListener* listener);
+    void RegisterListener(const std::shared_ptr<WifiPhyListener>& listener);
     /**
      * \param listener the listener to be unregistered
      *
      * Remove the input listener from the list of objects to be notified of
      * PHY-level events.
      */
-    void UnregisterListener(WifiPhyListener* listener);
+    void UnregisterListener(const std::shared_ptr<WifiPhyListener>& listener);
 
     /**
      * \param callback the callback to invoke when PHY capabilities have changed.
@@ -110,6 +110,11 @@ class WifiPhy : public Object
     void StartReceivePreamble(Ptr<const WifiPpdu> ppdu,
                               RxPowerWattPerChannelBand& rxPowersW,
                               Time rxDuration);
+
+    /**
+     * \return whether the PHY is busy decoding the PHY header fields of a PPDU
+     */
+    bool IsReceivingPhyHeader() const;
 
     /**
      * For HE receptions only, check and possibly modify the transmit power restriction state at
@@ -509,6 +514,20 @@ class WifiPhy : public Object
     virtual void ConfigureStandard(WifiStandard standard);
 
     /**
+     * Set the maximum modulation class that has to be supported by this PHY object.
+     * The maximum modulation class supported will be the minimum between the given modulation
+     * class and the maximum modulation class supported based on the configured standard.
+     *
+     * \param modClass the given modulation class
+     */
+    void SetMaxModulationClassSupported(WifiModulationClass modClass);
+
+    /**
+     * \return the maximum modulation class that has to be supported by this PHY object.
+     */
+    WifiModulationClass GetMaxModulationClassSupported() const;
+
+    /**
      * Get the configured Wi-Fi standard
      *
      * \return the Wi-Fi standard that has been configured
@@ -868,7 +887,7 @@ class WifiPhy : public Object
     using ChannelTuple =
         std::tuple<uint8_t /* channel number */,
                    uint16_t /* channel width */,
-                   int /* WifiPhyBand */,
+                   WifiPhyBand /* WifiPhyBand */,
                    uint8_t /* primary20 index*/>; //!< Tuple identifying an operating channel
 
     /**
@@ -1201,12 +1220,10 @@ class WifiPhy : public Object
      * Perform any actions necessary when user changes operating channel after
      * initialization.
      *
-     * \return zero if the PHY can immediately switch channel, a positive value
-     *         indicating the amount of time to wait until the channel switch can
-     *         be performed or a negative value indicating that channel switch is
-     *         currently not possible (i.e., the radio is in sleep mode)
+     * \return the amount of time to wait until the channel switch can be performed or
+     * std::nullopt if channel switch is currently not possible (i.e., the radio is in sleep mode)
      */
-    Time GetDelayUntilChannelSwitch();
+    std::optional<Time> GetDelayUntilChannelSwitch();
     /**
      * Actually switch channel based on the stored channel settings.
      */
@@ -1218,7 +1235,7 @@ class WifiPhy : public Object
      *
      * \param ppdu the incoming PPDU or nullptr for any signal
      */
-    void SwitchMaybeToCcaBusy(const Ptr<const WifiPpdu> ppdu);
+    void SwitchMaybeToCcaBusy(const Ptr<const WifiPpdu> ppdu = nullptr);
     /**
      * Notify PHY state helper to switch to CCA busy state,
      *
@@ -1470,8 +1487,9 @@ class WifiPhy : public Object
      */
     static std::map<WifiModulationClass, Ptr<PhyEntity>>& GetStaticPhyEntities();
 
-    WifiStandard m_standard;        //!< WifiStandard
-    WifiPhyBand m_band;             //!< WifiPhyBand
+    WifiStandard m_standard;                    //!< WifiStandard
+    WifiModulationClass m_maxModClassSupported; //!< max modulation class supported
+    WifiPhyBand m_band;                         //!< WifiPhyBand
     ChannelTuple m_channelSettings; //!< Store operating channel settings until initialization
     WifiPhyOperatingChannel m_operatingChannel; //!< Operating channel
     bool m_fixedPhyBand; //!< True to prohibit changing PHY band after initialization

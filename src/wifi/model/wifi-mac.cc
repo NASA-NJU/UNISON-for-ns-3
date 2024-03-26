@@ -23,7 +23,7 @@
 #include "extended-capabilities.h"
 #include "mac-rx-middle.h"
 #include "mac-tx-middle.h"
-#include "mgt-headers.h"
+#include "mgt-action-headers.h"
 #include "qos-txop.h"
 #include "ssid.h"
 #include "wifi-mac-queue.h"
@@ -120,6 +120,14 @@ WifiMac::GetTypeId()
                           PointerValue(),
                           MakePointerAccessor(&WifiMac::GetBKQueue),
                           MakePointerChecker<QosTxop>())
+            .AddAttribute(
+                "MpduBufferSize",
+                "The size (in number of MPDUs) of the buffer used for each BlockAck "
+                "agreement in which this node is a recipient. The provided value is "
+                "capped to the maximum allowed value based on the supported standard.",
+                UintegerValue(1024),
+                MakeUintegerAccessor(&WifiMac::GetMpduBufferSize, &WifiMac::SetMpduBufferSize),
+                MakeUintegerChecker<uint16_t>(1, 1024))
             .AddAttribute("VO_MaxAmsduSize",
                           "Maximum length in bytes of an A-MSDU for AC_VO access class "
                           "(capped to 7935 for HT PPDUs and 11398 for VHT/HE/EHT PPDUs). "
@@ -289,19 +297,6 @@ WifiMac::GetTypeId()
                             "up from the physical layer.",
                             MakeTraceSourceAccessor(&WifiMac::m_macRxDropTrace),
                             "ns3::Packet::TracedCallback")
-            .AddTraceSource("TxOkHeader",
-                            "The header of successfully transmitted packet.",
-                            MakeTraceSourceAccessor(&WifiMac::m_txOkCallback),
-                            "ns3::WifiMacHeader::TracedCallback",
-                            TypeId::OBSOLETE,
-                            "Use the AckedMpdu trace instead.")
-            .AddTraceSource("TxErrHeader",
-                            "The header of unsuccessfuly transmitted packet.",
-                            MakeTraceSourceAccessor(&WifiMac::m_txErrCallback),
-                            "ns3::WifiMacHeader::TracedCallback",
-                            TypeId::OBSOLETE,
-                            "Depending on the failure type, use the NAckedMpdu trace, the "
-                            "DroppedMpdu trace or one of the traces associated with TX timeouts.")
             .AddTraceSource("AckedMpdu",
                             "An MPDU that was successfully acknowledged, via either a "
                             "Normal Ack or a Block Ack.",
@@ -433,6 +428,11 @@ void
 WifiMac::SetDevice(const Ptr<WifiNetDevice> device)
 {
     m_device = device;
+    if (GetHtSupported())
+    {
+        // the configured BlockAck buffer size can now be capped
+        m_mpduBufferSize = std::min(m_mpduBufferSize, GetMaxBaBufferSize());
+    }
 }
 
 Ptr<WifiNetDevice>
@@ -587,10 +587,8 @@ WifiMac::NotifyChannelSwitching(uint8_t linkId)
     // the PHY dependent parameters. In any case, this makes no harm
     ConfigurePhyDependentParameters(linkId);
 
-    // SetupPhy not only resets the remote station manager, but also sets the
-    // default TX mode and MCS, which is required when switching to a channel
-    // in a different band
-    GetLink(linkId).stationManager->SetupPhy(GetLink(linkId).phy);
+    // Reset remote station manager
+    GetLink(linkId).stationManager->Reset();
 }
 
 void
@@ -1404,7 +1402,7 @@ WifiMac::BlockUnicastTxOnLinks(WifiQueueBlockedReason reason,
             continue;
         }
 
-        for (const auto [acIndex, ac] : wifiAcList)
+        for (const auto& [acIndex, ac] : wifiAcList)
         {
             // block queues storing QoS data frames and control frames that use MLD addresses
             m_scheduler->BlockQueues(reason,
@@ -1445,8 +1443,11 @@ WifiMac::UnblockUnicastTxOnLinks(WifiQueueBlockedReason reason,
             continue;
         }
 
-        for (const auto [acIndex, ac] : wifiAcList)
+        for (const auto& [acIndex, ac] : wifiAcList)
         {
+            // save the status of the AC queues before unblocking the requested queues
+            auto hasFramesToTransmit = GetQosTxop(acIndex)->HasFramesToTransmit(linkId);
+
             // unblock queues storing QoS data frames and control frames that use MLD addresses
             m_scheduler->UnblockQueues(reason,
                                        acIndex,
@@ -1465,14 +1466,11 @@ WifiMac::UnblockUnicastTxOnLinks(WifiQueueBlockedReason reason,
                                        {linkId});
             // request channel access if needed (schedule now because multiple invocations
             // of this method may be done in a loop at the caller)
-            auto qosTxop = GetQosTxop(acIndex);
-            Simulator::ScheduleNow([=]() {
-                if (qosTxop->GetAccessStatus(linkId) == Txop::NOT_REQUESTED &&
-                    qosTxop->HasFramesToTransmit(linkId))
-                {
-                    GetLink(linkId).channelAccessManager->RequestAccess(qosTxop);
-                }
-            });
+            Simulator::ScheduleNow(&Txop::StartAccessAfterEvent,
+                                   GetQosTxop(acIndex),
+                                   linkId,
+                                   hasFramesToTransmit,
+                                   Txop::CHECK_MEDIUM_BUSY); // generate backoff if medium busy
         }
     }
 }
@@ -1836,6 +1834,36 @@ WifiMac::GetEhtSupported(const Mac48Address& address) const
     return false;
 }
 
+uint16_t
+WifiMac::GetMaxBaBufferSize(std::optional<Mac48Address> address) const
+{
+    if (address ? GetEhtSupported(*address) : GetEhtSupported())
+    {
+        return 1024;
+    }
+    if (address ? GetHeSupported(*address) : GetHeSupported())
+    {
+        return 256;
+    }
+    NS_ASSERT(address ? GetHtSupported(*address) : GetHtSupported());
+    return 64;
+}
+
+void
+WifiMac::SetMpduBufferSize(uint16_t size)
+{
+    NS_LOG_FUNCTION(this << size);
+
+    // the cap can be computed if the device has been configured
+    m_mpduBufferSize = m_device ? std::min(size, GetMaxBaBufferSize()) : size;
+}
+
+uint16_t
+WifiMac::GetMpduBufferSize() const
+{
+    return m_mpduBufferSize;
+}
+
 void
 WifiMac::SetVoBlockAckThreshold(uint8_t threshold)
 {
@@ -1940,7 +1968,7 @@ WifiMac::GetHtCapabilities(uint8_t linkId) const
     capabilities.SetLdpc(htConfiguration->GetLdpcSupported());
     capabilities.SetSupportedChannelWidth(htConfiguration->Get40MHzOperationSupported() ? 1 : 0);
     capabilities.SetShortGuardInterval20(sgiSupported);
-    capabilities.SetShortGuardInterval40(phy->GetChannelWidth() >= 40 && sgiSupported);
+    capabilities.SetShortGuardInterval40(sgiSupported);
     // Set Maximum A-MSDU Length subfield
     uint16_t maxAmsduSize =
         std::max({m_voMaxAmsduSize, m_viMaxAmsduSize, m_beMaxAmsduSize, m_bkMaxAmsduSize});
@@ -1966,7 +1994,9 @@ WifiMac::GetHtCapabilities(uint8_t linkId) const
         capabilities.SetRxMcsBitmask(mcs.GetMcsValue());
         uint8_t nss = (mcs.GetMcsValue() / 8) + 1;
         NS_ASSERT(nss > 0 && nss < 5);
-        uint64_t dataRate = mcs.GetDataRate(phy->GetChannelWidth(), sgiSupported ? 400 : 800, nss);
+        uint64_t dataRate = mcs.GetDataRate(htConfiguration->Get40MHzOperationSupported() ? 40 : 20,
+                                            sgiSupported ? 400 : 800,
+                                            nss);
         if (dataRate > maxSupportedRate)
         {
             maxSupportedRate = dataRate;
@@ -2022,8 +2052,8 @@ WifiMac::GetVhtCapabilities(uint8_t linkId) const
     capabilities.SetMaxAmpduLength(std::min(std::max(maxAmpduLength, 8191U), 1048575U));
 
     capabilities.SetRxLdpc(htConfiguration->GetLdpcSupported());
-    capabilities.SetShortGuardIntervalFor80Mhz((phy->GetChannelWidth() == 80) && sgiSupported);
-    capabilities.SetShortGuardIntervalFor160Mhz((phy->GetChannelWidth() == 160) && sgiSupported);
+    capabilities.SetShortGuardIntervalFor80Mhz(sgiSupported);
+    capabilities.SetShortGuardIntervalFor160Mhz(sgiSupported);
     uint8_t maxMcs = 0;
     for (const auto& mcs : phy->GetMcsList(WIFI_MOD_CLASS_VHT))
     {
@@ -2042,15 +2072,16 @@ WifiMac::GetVhtCapabilities(uint8_t linkId) const
         capabilities.SetTxMcsMap(maxMcs, nss);
     }
     uint64_t maxSupportedRateLGI = 0; // in bit/s
+    uint16_t maxWidth = vhtConfiguration->Get160MHzOperationSupported() ? 160 : 80;
     for (const auto& mcs : phy->GetMcsList(WIFI_MOD_CLASS_VHT))
     {
-        if (!mcs.IsAllowed(phy->GetChannelWidth(), 1))
+        if (!mcs.IsAllowed(maxWidth, 1))
         {
             continue;
         }
-        if (mcs.GetDataRate(phy->GetChannelWidth()) > maxSupportedRateLGI)
+        if (mcs.GetDataRate(maxWidth) > maxSupportedRateLGI)
         {
-            maxSupportedRateLGI = mcs.GetDataRate(phy->GetChannelWidth());
+            maxSupportedRateLGI = mcs.GetDataRate(maxWidth);
             NS_LOG_DEBUG("Updating maxSupportedRateLGI to " << maxSupportedRateLGI);
         }
     }
@@ -2074,18 +2105,20 @@ WifiMac::GetHeCapabilities(uint8_t linkId) const
 
     Ptr<WifiPhy> phy = GetLink(linkId).phy;
     Ptr<HtConfiguration> htConfiguration = GetHtConfiguration();
+    Ptr<VhtConfiguration> vhtConfiguration = GetVhtConfiguration();
     Ptr<HeConfiguration> heConfiguration = GetHeConfiguration();
     uint8_t channelWidthSet = 0;
-    if ((phy->GetChannelWidth() >= 40) && (phy->GetPhyBand() == WIFI_PHY_BAND_2_4GHZ))
+    if ((htConfiguration->Get40MHzOperationSupported()) &&
+        (phy->GetPhyBand() == WIFI_PHY_BAND_2_4GHZ))
     {
         channelWidthSet |= 0x01;
     }
-    if (((phy->GetChannelWidth() >= 80) || GetEhtSupported()) &&
-        ((phy->GetPhyBand() == WIFI_PHY_BAND_5GHZ) || (phy->GetPhyBand() == WIFI_PHY_BAND_6GHZ)))
+    // we assume that HE stations support 80 MHz operations
+    if ((phy->GetPhyBand() == WIFI_PHY_BAND_5GHZ) || (phy->GetPhyBand() == WIFI_PHY_BAND_6GHZ))
     {
         channelWidthSet |= 0x02;
     }
-    if ((phy->GetChannelWidth() >= 160) &&
+    if ((vhtConfiguration->Get160MHzOperationSupported()) &&
         ((phy->GetPhyBand() == WIFI_PHY_BAND_5GHZ) || (phy->GetPhyBand() == WIFI_PHY_BAND_6GHZ)))
     {
         channelWidthSet |= 0x04;
@@ -2167,7 +2200,7 @@ WifiMac::GetEhtCapabilities(uint8_t linkId) const
 
     const uint8_t maxTxNss = phy->GetMaxSupportedTxSpatialStreams();
     const uint8_t maxRxNss = phy->GetMaxSupportedRxSpatialStreams();
-    if (phy->GetChannelWidth() == 20)
+    if (auto htConfig = GetHtConfiguration(); !htConfig->Get40MHzOperationSupported())
     {
         for (auto maxMcs : {7, 9, 11, 13})
         {
@@ -2195,7 +2228,7 @@ WifiMac::GetEhtCapabilities(uint8_t linkId) const
                 phy->IsMcsSupported(WIFI_MOD_CLASS_EHT, maxMcs) ? maxTxNss : 0);
         }
     }
-    if (phy->GetChannelWidth() >= 160)
+    if (auto vhtConfig = GetVhtConfiguration(); vhtConfig->Get160MHzOperationSupported())
     {
         for (auto maxMcs : {9, 11, 13})
         {

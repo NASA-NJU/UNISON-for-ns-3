@@ -100,11 +100,12 @@ TestMultiUserScheduler::GetTypeId()
             .SetParent<MultiUserScheduler>()
             .SetGroupName("Wifi")
             .AddConstructor<TestMultiUserScheduler>()
-            .AddAttribute("ModulationClass",
-                          "Modulation class for DL MU PPDUs and TB PPDUs.",
-                          EnumValue(WIFI_MOD_CLASS_HE),
-                          MakeEnumAccessor(&TestMultiUserScheduler::m_modClass),
-                          MakeEnumChecker(WIFI_MOD_CLASS_HE, "HE", WIFI_MOD_CLASS_EHT, "EHT"));
+            .AddAttribute(
+                "ModulationClass",
+                "Modulation class for DL MU PPDUs and TB PPDUs.",
+                EnumValue(WIFI_MOD_CLASS_HE),
+                MakeEnumAccessor<WifiModulationClass>(&TestMultiUserScheduler::m_modClass),
+                MakeEnumChecker(WIFI_MOD_CLASS_HE, "HE", WIFI_MOD_CLASS_EHT, "EHT"));
     return tid;
 }
 
@@ -186,7 +187,8 @@ TestMultiUserScheduler::SelectTxFormat()
         m_txParams.Clear();
         // set the TXVECTOR used to send the Trigger Frame
         m_txParams.m_txVector =
-            m_apMac->GetWifiRemoteStationManager()->GetRtsTxVector(m_triggerHdr.GetAddr1());
+            m_apMac->GetWifiRemoteStationManager()->GetRtsTxVector(m_triggerHdr.GetAddr1(),
+                                                                   m_allowedWidth);
 
         if (!GetHeFem(SINGLE_LINK_OP_ID)->TryAddMpdu(item, m_txParams, m_availableTime) ||
             (m_availableTime != Time::Min() &&

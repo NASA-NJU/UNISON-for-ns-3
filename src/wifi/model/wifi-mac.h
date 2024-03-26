@@ -679,6 +679,27 @@ class WifiMac : public Object
     BlockAckReqType GetBarTypeAsRecipient(Mac48Address originator, uint8_t tid) const;
 
     /**
+     * Get the maximum Block Ack buffer size (in number of MPDUs) supported by the given device,
+     * if any, or by this device, otherwise, based on the supported standard.
+     *
+     * \param address the (MLD or link) address of the given device
+     * \return the maximum supported Block Ack buffer size (in number of MPDUs)
+     */
+    uint16_t GetMaxBaBufferSize(std::optional<Mac48Address> address = std::nullopt) const;
+
+    /**
+     * \param size the size (in number of MPDUs) of the buffer used for each BlockAck
+     *             agreement in which this node is a recipient
+     */
+    void SetMpduBufferSize(uint16_t size);
+
+    /**
+     * \return the size (in number of MPDUs) of the buffer used for each BlockAck
+     *             agreement in which this node is a recipient
+     */
+    uint16_t GetMpduBufferSize() const;
+
+    /**
      * Get the TID-to-Link Mapping negotiated with the given MLD (if any) for the given direction.
      * An empty mapping indicates the default mapping.
      *
@@ -1054,6 +1075,8 @@ class WifiMac : public Object
     uint32_t m_beMaxAmpduSize; ///< maximum A-MPDU size for AC_BE (in bytes)
     uint32_t m_bkMaxAmpduSize; ///< maximum A-MPDU size for AC_BK (in bytes)
 
+    uint16_t m_mpduBufferSize; //!< BlockAck buffer size (in number of MPDUs)
+
     /// @brief DL TID-to-Link Mapping negotiated with an MLD (identified by its MLD address)
     std::unordered_map<Mac48Address, WifiTidLinkMapping, WifiAddressHash> m_dlTidLinkMappings;
     /// @brief UL TID-to-Link Mapping negotiated with an MLD (identified by its MLD address)
@@ -1098,9 +1121,6 @@ class WifiMac : public Object
      * \see class CallBackTraceSource
      */
     TracedCallback<Ptr<const Packet>> m_macRxDropTrace;
-
-    TracedCallback<const WifiMacHeader&> m_txOkCallback;  ///< transmit OK callback
-    TracedCallback<const WifiMacHeader&> m_txErrCallback; ///< transmit error callback
 
     /**
      * TracedCallback signature for MPDU drop events.

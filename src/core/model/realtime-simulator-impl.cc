@@ -62,7 +62,8 @@ RealtimeSimulatorImpl::GetTypeId()
                 "SynchronizationMode",
                 "What to do if the simulation cannot keep up with real time.",
                 EnumValue(SYNC_BEST_EFFORT),
-                MakeEnumAccessor(&RealtimeSimulatorImpl::SetSynchronizationMode),
+                MakeEnumAccessor<SynchronizationMode>(
+                    &RealtimeSimulatorImpl::SetSynchronizationMode),
                 MakeEnumChecker(SYNC_BEST_EFFORT, "BestEffort", SYNC_HARD_LIMIT, "HardLimit"))
             .AddAttribute("HardLimit",
                           "Maximum acceptable real-time jitter (used in conjunction with "
@@ -453,16 +454,15 @@ RealtimeSimulatorImpl::Run()
             }
         }
 
-        if (!process)
+        if (process)
         {
-            // Sleep until signalled
-            tsNow = m_synchronizer->Synchronize(tsNow, tsDelay);
-
-            // Re-check event queue
-            continue;
+            ProcessOneEvent();
         }
-
-        ProcessOneEvent();
+        else
+        {
+            // Sleep until signalled and re-check event queue
+            m_synchronizer->Synchronize(tsNow, tsDelay);
+        }
     }
 
     //
@@ -498,11 +498,11 @@ RealtimeSimulatorImpl::Stop()
     m_stop = true;
 }
 
-void
+EventId
 RealtimeSimulatorImpl::Stop(const Time& delay)
 {
     NS_LOG_FUNCTION(this << delay);
-    Simulator::Schedule(delay, &Simulator::Stop);
+    return Simulator::Schedule(delay, &Simulator::Stop);
 }
 
 //

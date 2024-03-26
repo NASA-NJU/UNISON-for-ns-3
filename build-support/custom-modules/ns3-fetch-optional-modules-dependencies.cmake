@@ -2,13 +2,11 @@ include(ExternalProject)
 
 ExternalProject_Add(
   brite_dep
-  URL https://code.nsnam.org/BRITE/archive/30338f4f63b9.zip
-  URL_HASH MD5=b36ecf8f6b5f2cfae936ba1f1bfcff5c
+  GIT_REPOSITORY https://gitlab.com/nsnam/BRITE.git
+  GIT_TAG 29c301e828d2a4f303b3d0c69360c987b02d0745
   PREFIX brite_dep
   BUILD_IN_SOURCE TRUE
-  CONFIGURE_COMMAND make
-  BUILD_COMMAND make
-  INSTALL_COMMAND make install PREFIX=${CMAKE_OUTPUT_DIRECTORY}
+  CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${CMAKE_OUTPUT_DIRECTORY}
 )
 
 ExternalProject_Add(
@@ -18,21 +16,40 @@ ExternalProject_Add(
   PREFIX click_dep
   BUILD_IN_SOURCE TRUE
   UPDATE_DISCONNECTED TRUE
-  CONFIGURE_COMMAND ./configure --disable-linuxmodule --enable-nsclick
-                    --enable-wifi --prefix ${CMAKE_OUTPUT_DIRECTORY}
+  CONFIGURE_COMMAND
+    ./configure --disable-linuxmodule --enable-nsclick --enable-wifi --prefix
+    ${CMAKE_OUTPUT_DIRECTORY} --libdir ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}
   BUILD_COMMAND make -j${NumThreads}
   INSTALL_COMMAND make install
 )
 
 ExternalProject_Add(
   openflow_dep
-  URL https://code.nsnam.org/openflow/archive/d45e7d184151.zip
-  URL_HASH MD5=a068cdaec5523586921b2f1f81f10916
+  GIT_REPOSITORY https://gitlab.com/nsnam/openflow.git
+  GIT_TAG 4869d4f6900342440af02ea93a3d8040c8316e5f
   PREFIX openflow_dep
   BUILD_IN_SOURCE TRUE
-  CONFIGURE_COMMAND ./waf configure --prefix ${CMAKE_OUTPUT_DIRECTORY}
-  BUILD_COMMAND ./waf build
-  INSTALL_COMMAND ./waf install
+  CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${CMAKE_OUTPUT_DIRECTORY}
+)
+
+find_file(
+  BOOST_STATIC_ASSERT
+  NAMES static_assert.hpp
+  PATH_SUFFIXES boost
+  HINTS /usr/local
+)
+
+if(${BOOST_STATIC_ASSERT} STREQUAL "BOOST_STATIC_ASSERT-NOTFOUND")
+  message(FATAL_ERROR "Boost static assert is required by openflow")
+endif()
+
+get_filename_component(boost_dir ${BOOST_STATIC_ASSERT} DIRECTORY)
+
+install(
+  DIRECTORY ${boost_dir}
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+  USE_SOURCE_PERMISSIONS
+  PATTERN "boost/*"
 )
 
 install(
@@ -56,11 +73,12 @@ install(
   USE_SOURCE_PERMISSIONS
   PATTERN "boost/*"
 )
+
 install(
-  DIRECTORY ${CMAKE_OUTPUT_DIRECTORY}/lib/
+  DIRECTORY ${CMAKE_OUTPUT_DIRECTORY}/${libdir}/
   DESTINATION ${CMAKE_INSTALL_LIBDIR}
   USE_SOURCE_PERMISSIONS
-  PATTERN "lib/*"
+  PATTERN "${libdir}/*"
 )
 
 macro(add_dependency_to_optional_modules_dependencies)

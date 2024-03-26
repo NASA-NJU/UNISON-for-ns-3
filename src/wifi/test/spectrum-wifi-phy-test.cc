@@ -366,7 +366,7 @@ class SpectrumWifiPhyListenerTest : public SpectrumWifiPhyBasicTest
   private:
     void DoSetup() override;
     void DoRun() override;
-    TestPhyListener* m_listener; ///< listener
+    std::shared_ptr<TestPhyListener> m_listener; ///< listener
 };
 
 SpectrumWifiPhyListenerTest::SpectrumWifiPhyListenerTest()
@@ -382,7 +382,7 @@ void
 SpectrumWifiPhyListenerTest::DoSetup()
 {
     SpectrumWifiPhyBasicTest::DoSetup();
-    m_listener = new TestPhyListener;
+    m_listener = std::make_shared<TestPhyListener>();
     m_phy->RegisterListener(m_listener);
 }
 
@@ -403,7 +403,7 @@ SpectrumWifiPhyListenerTest::DoRun()
     NS_TEST_ASSERT_MSG_EQ(m_listener->m_notifyRxEndOk, 1, "Didn't receive NotifyRxEnd");
 
     Simulator::Destroy();
-    delete m_listener;
+    m_listener.reset();
 }
 
 /**
@@ -635,7 +635,7 @@ SpectrumWifiPhyFilterTest::RunOne()
                                                                         WIFI_STANDARD_80211ax,
                                                                         WIFI_PHY_BAND_5GHZ));
     m_txPhy->SetOperatingChannel(
-        WifiPhy::ChannelTuple{txChannelNum, m_txChannelWidth, (int)(WIFI_PHY_BAND_5GHZ), 0});
+        WifiPhy::ChannelTuple{txChannelNum, m_txChannelWidth, WIFI_PHY_BAND_5GHZ, 0});
 
     uint16_t rxFrequency;
     switch (m_rxChannelWidth)
@@ -660,7 +660,7 @@ SpectrumWifiPhyFilterTest::RunOne()
                                                                         WIFI_STANDARD_80211ax,
                                                                         WIFI_PHY_BAND_5GHZ));
     m_rxPhy->SetOperatingChannel(
-        WifiPhy::ChannelTuple{rxChannelNum, m_rxChannelWidth, (int)(WIFI_PHY_BAND_5GHZ), 0});
+        WifiPhy::ChannelTuple{rxChannelNum, m_rxChannelWidth, WIFI_PHY_BAND_5GHZ, 0});
 
     m_ruBands.clear();
     for (uint16_t bw = 160; bw >= 20; bw = bw / 2)
@@ -893,7 +893,7 @@ class SpectrumWifiPhyMultipleInterfacesTest : public TestCase
     std::vector<Ptr<MultiModelSpectrumChannel>> m_spectrumChannels; //!< Spectrum channels
     std::vector<Ptr<SpectrumWifiPhy>> m_txPhys{};                   //!< TX PHYs
     std::vector<Ptr<SpectrumWifiPhy>> m_rxPhys{};                   //!< RX PHYs
-    std::vector<std::unique_ptr<TestPhyListener>> m_listeners{};    //!< listeners
+    std::vector<std::shared_ptr<TestPhyListener>> m_listeners{};    //!< listeners
 
     std::vector<uint32_t> m_counts{0}; //!< count number of packets received by PHYs
 
@@ -1156,8 +1156,8 @@ SpectrumWifiPhyMultipleInterfacesTest::DoSetup()
             "PhyRxBegin",
             MakeCallback(&SpectrumWifiPhyMultipleInterfacesTest::RxCallback, this).Bind(index));
 
-        auto listener = std::make_unique<TestPhyListener>();
-        rxPhy->RegisterListener(listener.get());
+        auto listener = std::make_shared<TestPhyListener>();
+        rxPhy->RegisterListener(listener);
         m_listeners.push_back(std::move(listener));
 
         m_rxPhys.push_back(rxPhy);

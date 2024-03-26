@@ -87,4 +87,16 @@ SpectrumTransmitFilter::Filter(Ptr<const SpectrumSignalParameters> params,
     }
 }
 
+int64_t
+SpectrumTransmitFilter::AssignStreams(int64_t stream)
+{
+    auto currentStream = stream;
+    currentStream += DoAssignStreams(stream);
+    if (m_next)
+    {
+        currentStream += m_next->AssignStreams(currentStream);
+    }
+    return (currentStream - stream);
+}
+
 } // namespace ns3

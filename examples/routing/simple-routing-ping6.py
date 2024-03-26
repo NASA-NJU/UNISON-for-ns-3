@@ -27,7 +27,14 @@
 #                router
 #
 
-from ns import ns
+try:
+    from ns import ns
+except ModuleNotFoundError:
+    raise SystemExit(
+        "Error: ns3 Python module not found;"
+        " Python bindings may not be enabled"
+        " or your PYTHONPATH might not be properly configured"
+    )
 
 
 def main(argv):
@@ -73,7 +80,7 @@ def main(argv):
     print("Application")
     packetSize = 1024
     maxPacketCount = 5
-    interPacketInterval = ns.Seconds(1.)
+    interPacketInterval = ns.Seconds(1.0)
     # ping = ns.PingHelper(i2.GetAddress(1, 1).ConvertTo())
     ping = ns.PingHelper(i2.GetAddress(1, 1).ConvertTo())
 
@@ -98,7 +105,7 @@ def main(argv):
     ns.Simulator.Destroy()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import sys
 
     main(sys.argv)

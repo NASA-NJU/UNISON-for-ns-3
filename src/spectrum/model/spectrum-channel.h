@@ -92,7 +92,10 @@ class SpectrumChannel : public Channel
         Ptr<PhasedArraySpectrumPropagationLossModel> loss);
 
     /**
-     * Set the propagation delay model to be used
+     * Set the propagation delay model to be used.  This method will abort
+     * the simulation if there exists a previously set propagation delay model
+     * (i.e., unlike propagation loss models, multiple of which can be chained
+     * together, there is only one propagation delay model).
      * \param delay Ptr to the propagation delay model to be used.
      */
     void SetPropagationDelayModel(Ptr<PropagationDelayModel> delay);
@@ -101,20 +104,26 @@ class SpectrumChannel : public Channel
      * Get the frequency-dependent propagation loss model.
      * \returns a pointer to the propagation loss model.
      */
-    Ptr<SpectrumPropagationLossModel> GetSpectrumPropagationLossModel();
+    Ptr<SpectrumPropagationLossModel> GetSpectrumPropagationLossModel() const;
 
     /**
      * Get the frequency-dependent propagation loss model that is
      * compatible with the phased antenna arrays at TX and RX
      * \returns a pointer to the propagation loss model.
      */
-    Ptr<PhasedArraySpectrumPropagationLossModel> GetPhasedArraySpectrumPropagationLossModel();
+    Ptr<PhasedArraySpectrumPropagationLossModel> GetPhasedArraySpectrumPropagationLossModel() const;
 
     /**
      * Get the propagation loss model.
      * \returns a pointer to the propagation loss model.
      */
-    Ptr<PropagationLossModel> GetPropagationLossModel();
+    Ptr<PropagationLossModel> GetPropagationLossModel() const;
+
+    /**
+     * Get the propagation delay model that has been set on the channel.
+     * \returns a pointer to the propagation delay model.
+     */
+    Ptr<PropagationDelayModel> GetPropagationDelayModel() const;
 
     /**
      * Add the transmit filter to be used to filter possible signal receptions
@@ -131,7 +140,7 @@ class SpectrumChannel : public Channel
      * if more than one is present.
      * \returns a pointer to the transmit filter.
      */
-    Ptr<const SpectrumTransmitFilter> GetSpectrumTransmitFilter() const;
+    Ptr<SpectrumTransmitFilter> GetSpectrumTransmitFilter() const;
 
     /**
      * Used by attached PHY instances to transmit signals on the channel
@@ -139,6 +148,20 @@ class SpectrumChannel : public Channel
      * \param params the parameters of the signals being transmitted
      */
     virtual void StartTx(Ptr<SpectrumSignalParameters> params) = 0;
+
+    /**
+     * This method calls AssignStreams() on any/all of the PropagationLossModel,
+     * PropagationDelayModel, SpectrumPropagationLossModel,
+     * PhasedArraySpectrumPropagationLossModel, and SpectrumTransmitFilter
+     * objects that have been added to this channel.  If any of those
+     * objects are chained together (e.g., multiple PropagationDelayModel
+     * objects), the base class of that object is responsible for ensuring
+     * that all models in the chain have AssignStreams recursively called.
+     *
+     * \param stream the stream index offset start
+     * \return the number of stream indices assigned by this model
+     */
+    int64_t AssignStreams(int64_t stream);
 
     /**
      * \brief Remove a SpectrumPhy from a channel
@@ -206,6 +229,15 @@ class SpectrumChannel : public Channel
     typedef void (*SignalParametersTracedCallback)(Ptr<SpectrumSignalParameters> params);
 
   protected:
+    /**
+     * This provides a base class implementation that may be subclassed
+     * if needed by subclasses that might need additional stream assignments.
+     *
+     * \param stream first stream index to use
+     * \return the number of stream indices assigned by this model
+     */
+    virtual int64_t DoAssignStreams(int64_t stream);
+
     /**
      * The `PathLoss` trace source. Exporting the pointers to the Tx and Rx
      * SpectrumPhy and a pathloss value, in dB.

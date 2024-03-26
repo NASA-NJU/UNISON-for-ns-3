@@ -23,11 +23,9 @@ if(${ENABLE_MTP})
       model/mpi-interface.h
       model/mpi-receiver.h
       model/parallel-communication-interface.h
-    LIBRARIES_TO_LINK
-      ${libcore}
-      ${libnetwork}
-      ${libmtp}
-      ${MPI_CXX_LIBRARIES}
+    LIBRARIES_TO_LINK ${libnetwork}
+                      ${libmtp}
+                      ${MPI_CXX_LIBRARIES}
     TEST_SOURCES ${example_as_test_suite}
   )
 else()
@@ -47,10 +45,8 @@ else()
       model/mpi-interface.h
       model/mpi-receiver.h
       model/parallel-communication-interface.h
-    LIBRARIES_TO_LINK
-      ${libcore}
-      ${libnetwork}
-      ${MPI_CXX_LIBRARIES}
+    LIBRARIES_TO_LINK ${libnetwork}
+                      ${MPI_CXX_LIBRARIES}
     TEST_SOURCES ${example_as_test_suite}
   )
 endif()

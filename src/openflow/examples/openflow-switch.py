@@ -18,7 +18,14 @@
 #              Gabriel Ferreira <gabrielcarvfer@gmail.com>
 #
 
-from ns import ns
+try:
+    from ns import ns
+except ModuleNotFoundError:
+    raise SystemExit(
+        "Error: ns3 Python module not found;"
+        " Python bindings may not be enabled"
+        " or your PYTHONPATH might not be properly configured"
+    )
 
 ns.LogComponentEnable("OpenFlowInterface", ns.LOG_LEVEL_ALL)
 ns.LogComponentEnable("OpenFlowSwitchNetDevice", ns.LOG_LEVEL_ALL)
@@ -60,7 +67,9 @@ ipv4.Assign(terminalDevices)
 
 port = 9
 
-onoff = ns.OnOffHelper("ns3::UdpSocketFactory", ns.InetSocketAddress(ns.Ipv4Address("10.1.1.2"), port).ConvertTo())
+onoff = ns.OnOffHelper(
+    "ns3::UdpSocketFactory", ns.InetSocketAddress(ns.Ipv4Address("10.1.1.2"), port).ConvertTo()
+)
 onoff.SetConstantRate(ns.DataRate("500kb/s"))
 
 app = onoff.Install(terminals.Get(0))
@@ -68,12 +77,15 @@ app = onoff.Install(terminals.Get(0))
 app.Start(ns.Seconds(1.0))
 app.Stop(ns.Seconds(10.0))
 
-sink = ns.PacketSinkHelper("ns3::UdpSocketFactory",
-                           ns.InetSocketAddress(ns.Ipv4Address.GetAny(), port).ConvertTo())
+sink = ns.PacketSinkHelper(
+    "ns3::UdpSocketFactory", ns.InetSocketAddress(ns.Ipv4Address.GetAny(), port).ConvertTo()
+)
 app = sink.Install(terminals.Get(1))
 app.Start(ns.Seconds(0.0))
 
-onoff.SetAttribute("Remote", ns.AddressValue(ns.InetSocketAddress(ns.Ipv4Address("10.1.1.1"), port).ConvertTo()))
+onoff.SetAttribute(
+    "Remote", ns.AddressValue(ns.InetSocketAddress(ns.Ipv4Address("10.1.1.1"), port).ConvertTo())
+)
 app = onoff.Install(terminals.Get(3))
 app.Start(ns.Seconds(1.1))
 app.Stop(ns.Seconds(10.0))

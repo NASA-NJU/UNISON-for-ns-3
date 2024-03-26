@@ -53,12 +53,6 @@ Event::Event(Ptr<const WifiPpdu> ppdu, Time duration, RxPowerWattPerChannelBand&
 {
 }
 
-Event::~Event()
-{
-    m_ppdu = nullptr;
-    m_rxPowerW.clear();
-}
-
 Ptr<const WifiPpdu>
 Event::GetPpdu() const
 {
@@ -816,7 +810,7 @@ InterferenceHelper::GetPreviousPosition(Time moment, NiChangesPerBand::iterator 
 InterferenceHelper::NiChanges::iterator
 InterferenceHelper::AddNiChangeEvent(Time moment, NiChange change, NiChangesPerBand::iterator niIt)
 {
-    return niIt->second.insert(GetNextPosition(moment, niIt), std::make_pair(moment, change));
+    return niIt->second.insert(GetNextPosition(moment, niIt), {moment, change});
 }
 
 void

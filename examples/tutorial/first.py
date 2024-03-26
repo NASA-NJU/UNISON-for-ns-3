@@ -1,19 +1,26 @@
-# /*
-#  * This program is free software; you can redistribute it and/or modify
-#  * it under the terms of the GNU General Public License version 2 as
-#  * published by the Free Software Foundation;
-#  *
-#  * This program is distributed in the hope that it will be useful,
-#  * but WITHOUT ANY WARRANTY; without even the implied warranty of
-#  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#  * GNU General Public License for more details.
-#  *
-#  * You should have received a copy of the GNU General Public License
-#  * along with this program; if not, write to the Free Software
-#  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-#  */
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License version 2 as
+# published by the Free Software Foundation;
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
 
-from ns import ns
+try:
+    from ns import ns
+except ModuleNotFoundError:
+    raise SystemExit(
+        "Error: ns3 Python module not found;"
+        " Python bindings may not be enabled"
+        " or your PYTHONPATH might not be properly configured"
+    )
 
 # // Default Network Topology
 # //
@@ -38,8 +45,7 @@ stack = ns.internet.InternetStackHelper()
 stack.Install(nodes)
 
 address = ns.internet.Ipv4AddressHelper()
-address.SetBase(ns.network.Ipv4Address("10.1.1.0"),
-                ns.network.Ipv4Mask("255.255.255.0"))
+address.SetBase(ns.network.Ipv4Address("10.1.1.0"), ns.network.Ipv4Mask("255.255.255.0"))
 
 interfaces = address.Assign(devices)
 
@@ -61,4 +67,3 @@ clientApps.Stop(ns.core.Seconds(10.0))
 
 ns.core.Simulator.Run()
 ns.core.Simulator.Destroy()
-

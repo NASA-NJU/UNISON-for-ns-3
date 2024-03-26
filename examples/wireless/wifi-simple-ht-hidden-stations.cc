@@ -25,9 +25,11 @@
 #include "ns3/ipv4-address-helper.h"
 #include "ns3/log.h"
 #include "ns3/mobility-helper.h"
+#include "ns3/rng-seed-manager.h"
 #include "ns3/ssid.h"
 #include "ns3/string.h"
 #include "ns3/udp-client-server-helper.h"
+#include "ns3/udp-server.h"
 #include "ns3/uinteger.h"
 #include "ns3/yans-wifi-channel.h"
 #include "ns3/yans-wifi-helper.h"
@@ -62,6 +64,9 @@ main(int argc, char* argv[])
     bool enableRts = false;
     double minExpectedThroughput = 0;
     double maxExpectedThroughput = 0;
+
+    RngSeedManager::SetSeed(1);
+    RngSeedManager::SetRun(5);
 
     CommandLine cmd(__FILE__);
     cmd.AddValue("nMpdus", "Number of aggregated MPDUs", nMpdus);

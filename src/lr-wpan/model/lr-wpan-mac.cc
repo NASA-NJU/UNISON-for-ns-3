@@ -48,12 +48,51 @@ namespace ns3
 NS_LOG_COMPONENT_DEFINE("LrWpanMac");
 NS_OBJECT_ENSURE_REGISTERED(LrWpanMac);
 
+std::ostream&
+operator<<(std::ostream& os, const LrWpanMacState& state)
+{
+    switch (state)
+    {
+    case LrWpanMacState::MAC_IDLE:
+        os << "MAC IDLE";
+        break;
+    case LrWpanMacState::MAC_CSMA:
+        os << "CSMA";
+        break;
+    case LrWpanMacState::MAC_SENDING:
+        os << "SENDING";
+        break;
+    case LrWpanMacState::MAC_ACK_PENDING:
+        os << "ACK PENDING";
+        break;
+    case LrWpanMacState::CHANNEL_ACCESS_FAILURE:
+        os << "CHANNEL_ACCESS_FAILURE";
+        break;
+    case LrWpanMacState::CHANNEL_IDLE:
+        os << "CHANNEL IDLE";
+        break;
+    case LrWpanMacState::SET_PHY_TX_ON:
+        os << "SET PHY to TX ON";
+        break;
+    case LrWpanMacState::MAC_GTS:
+        os << "MAC GTS PERIOD";
+        break;
+    case LrWpanMacState::MAC_INACTIVE:
+        os << "SUPERFRAME INACTIVE PERIOD";
+        break;
+    case LrWpanMacState::MAC_CSMA_DEFERRED:
+        os << "CSMA DEFERRED TO NEXT PERIOD";
+        break;
+    }
+    return os;
+};
+
 TypeId
 LrWpanMac::GetTypeId()
 {
     static TypeId tid =
         TypeId("ns3::LrWpanMac")
-            .SetParent<Object>()
+            .SetParent<LrWpanMacBase>()
             .SetGroupName("LrWpan")
             .AddConstructor<LrWpanMac>()
             .AddAttribute("PanId",
@@ -175,7 +214,6 @@ LrWpanMac::LrWpanMac()
     m_macCoordShortAddress = Mac16Address("ff:ff");
     m_macCoordExtendedAddress = Mac64Address("ff:ff:ff:ff:ff:ff:ff:ed");
     m_deviceCapability = DeviceType::FFD;
-    m_associationStatus = ASSOCIATED;
     m_selfExt = Mac64Address::Allocate();
     m_macPromiscuousMode = false;
     m_macMaxFrameRetries = 3;
@@ -254,16 +292,12 @@ LrWpanMac::DoDispose()
     for (uint32_t i = 0; i < m_txQueue.size(); i++)
     {
         m_txQueue[i]->txQPkt = nullptr;
-        m_txQueue[i]->txQMsduHandle = 0;
     }
     m_txQueue.clear();
 
     for (uint32_t i = 0; i < m_indTxQueue.size(); i++)
     {
         m_indTxQueue[i]->txQPkt = nullptr;
-        m_indTxQueue[i]->seqNum = 0;
-        m_indTxQueue[i]->dstExtAddress = nullptr;
-        m_indTxQueue[i]->dstShortAddress = nullptr;
     }
     m_indTxQueue.clear();
 
@@ -368,7 +402,7 @@ LrWpanMac::McpsDataRequest(McpsDataRequestParams params, Ptr<Packet> p)
         // The frame could still be too large once headers are put on
         // in which case the phy will reject it instead
         NS_LOG_ERROR(this << " packet too big: " << p->GetSize());
-        confirmParams.m_status = IEEE_802_15_4_FRAME_TOO_LONG;
+        confirmParams.m_status = LrWpanMacStatus::FRAME_TOO_LONG;
         if (!m_mcpsDataConfirmCallback.IsNull())
         {
             m_mcpsDataConfirmCallback(confirmParams);
@@ -379,7 +413,7 @@ LrWpanMac::McpsDataRequest(McpsDataRequestParams params, Ptr<Packet> p)
     if ((params.m_srcAddrMode == NO_PANID_ADDR) && (params.m_dstAddrMode == NO_PANID_ADDR))
     {
         NS_LOG_ERROR(this << " Can not send packet with no Address field");
-        confirmParams.m_status = IEEE_802_15_4_INVALID_ADDRESS;
+        confirmParams.m_status = LrWpanMacStatus::INVALID_ADDRESS;
         if (!m_mcpsDataConfirmCallback.IsNull())
         {
             m_mcpsDataConfirmCallback(confirmParams);
@@ -406,7 +440,7 @@ LrWpanMac::McpsDataRequest(McpsDataRequestParams params, Ptr<Packet> p)
     default:
         NS_LOG_ERROR(this << " Can not send packet with incorrect Source Address mode = "
                           << params.m_srcAddrMode);
-        confirmParams.m_status = IEEE_802_15_4_INVALID_ADDRESS;
+        confirmParams.m_status = LrWpanMacStatus::INVALID_ADDRESS;
         if (!m_mcpsDataConfirmCallback.IsNull())
         {
             m_mcpsDataConfirmCallback(confirmParams);
@@ -433,7 +467,7 @@ LrWpanMac::McpsDataRequest(McpsDataRequestParams params, Ptr<Packet> p)
     default:
         NS_LOG_ERROR(this << " Can not send packet with incorrect Destination Address mode = "
                           << params.m_dstAddrMode);
-        confirmParams.m_status = IEEE_802_15_4_INVALID_ADDRESS;
+        confirmParams.m_status = LrWpanMacStatus::INVALID_ADDRESS;
         if (!m_mcpsDataConfirmCallback.IsNull())
         {
             m_mcpsDataConfirmCallback(confirmParams);
@@ -557,7 +591,7 @@ LrWpanMac::MlmeStartRequest(MlmeStartRequestParams params)
     if (GetShortAddress() == Mac16Address("ff:ff"))
     {
         NS_LOG_ERROR(this << " Invalid MAC short address");
-        confirmParams.m_status = MLMESTART_NO_SHORT_ADDRESS;
+        confirmParams.m_status = LrWpanMacStatus::NO_SHORT_ADDRESS;
         if (!m_mlmeStartConfirmCallback.IsNull())
         {
             m_mlmeStartConfirmCallback(confirmParams);
@@ -567,7 +601,7 @@ LrWpanMac::MlmeStartRequest(MlmeStartRequestParams params)
 
     if ((params.m_bcnOrd > 15) || (params.m_sfrmOrd > params.m_bcnOrd))
     {
-        confirmParams.m_status = MLMESTART_INVALID_PARAMETER;
+        confirmParams.m_status = LrWpanMacStatus::INVALID_PARAMETER;
         if (!m_mlmeStartConfirmCallback.IsNull())
         {
             m_mlmeStartConfirmCallback(confirmParams);
@@ -598,7 +632,7 @@ LrWpanMac::MlmeScanRequest(MlmeScanRequestParams params)
     {
         if (!m_mlmeScanConfirmCallback.IsNull())
         {
-            confirmParams.m_status = MLMESCAN_SCAN_IN_PROGRESS;
+            confirmParams.m_status = LrWpanMacStatus::SCAN_IN_PROGRESS;
             m_mlmeScanConfirmCallback(confirmParams);
         }
         NS_LOG_ERROR(this << " A channel scan is already in progress");
@@ -609,7 +643,7 @@ LrWpanMac::MlmeScanRequest(MlmeScanRequestParams params)
     {
         if (!m_mlmeScanConfirmCallback.IsNull())
         {
-            confirmParams.m_status = MLMESCAN_INVALID_PARAMETER;
+            confirmParams.m_status = LrWpanMacStatus::INVALID_PARAMETER;
             m_mlmeScanConfirmCallback(confirmParams);
         }
         NS_LOG_ERROR(this << "Invalid scan duration or unsupported scan type");
@@ -688,7 +722,7 @@ LrWpanMac::MlmeAssociateRequest(MlmeAssociateRequestParams params)
         {
             MlmeAssociateConfirmParams confirmParams;
             confirmParams.m_assocShortAddr = Mac16Address("FF:FF");
-            confirmParams.m_status = MLMEASSOC_INVALID_PARAMETER;
+            confirmParams.m_status = LrWpanMacStatus::INVALID_PARAMETER;
             m_mlmeAssociateConfirmCallback(confirmParams);
         }
     }
@@ -744,24 +778,7 @@ LrWpanMac::MlmeAssociateResponse(MlmeAssociateResponseParams params)
 
     CommandPayloadHeader macPayload(CommandPayloadHeader::ASSOCIATION_RESP);
     macPayload.SetShortAddr(params.m_assocShortAddr);
-    switch (params.m_status)
-    {
-    case LrWpanAssociationStatus::ASSOCIATED:
-        macPayload.SetAssociationStatus(CommandPayloadHeader::SUCCESSFUL);
-        break;
-    case LrWpanAssociationStatus::PAN_AT_CAPACITY:
-        macPayload.SetAssociationStatus(CommandPayloadHeader::FULL_CAPACITY);
-        break;
-    case LrWpanAssociationStatus::PAN_ACCESS_DENIED:
-        macPayload.SetAssociationStatus(CommandPayloadHeader::ACCESS_DENIED);
-        break;
-    case LrWpanAssociationStatus::ASSOCIATED_WITHOUT_ADDRESS:
-        NS_LOG_ERROR("Error, Associated without address");
-        break;
-    case LrWpanAssociationStatus::DISASSOCIATED:
-        NS_LOG_ERROR("Error, device not associated");
-        break;
-    }
+    macPayload.SetAssociationStatus(static_cast<uint8_t>(params.m_status));
 
     macHdr.SetSecDisable();
     macHdr.SetAckReq();
@@ -901,14 +918,14 @@ void
 LrWpanMac::MlmeSetRequest(LrWpanMacPibAttributeIdentifier id, Ptr<LrWpanMacPibAttributes> attribute)
 {
     MlmeSetConfirmParams confirmParams;
-    confirmParams.m_status = MLMESET_SUCCESS;
+    confirmParams.m_status = LrWpanMacStatus::SUCCESS;
 
     switch (id)
     {
     case macBeaconPayload:
         if (attribute->macBeaconPayload->GetSize() > lrwpan::aMaxBeaconPayloadLength)
         {
-            confirmParams.m_status = MLMESET_INVALID_PARAMETER;
+            confirmParams.m_status = LrWpanMacStatus::INVALID_PARAMETER;
         }
         else
         {
@@ -917,20 +934,20 @@ LrWpanMac::MlmeSetRequest(LrWpanMacPibAttributeIdentifier id, Ptr<LrWpanMacPibAt
         }
         break;
     case macBeaconPayloadLength:
-        confirmParams.m_status = MLMESET_INVALID_PARAMETER;
+        confirmParams.m_status = LrWpanMacStatus::INVALID_PARAMETER;
         break;
     case macShortAddress:
         m_shortAddress = attribute->macShortAddress;
         break;
     case macExtendedAddress:
-        confirmParams.m_status = MLMESET_READ_ONLY;
+        confirmParams.m_status = LrWpanMacStatus::READ_ONLY;
         break;
     case macPanId:
         m_macPanId = macPanId;
         break;
     default:
         // TODO: Add support for setting other attributes
-        confirmParams.m_status = MLMESET_UNSUPPORTED_ATTRIBUTE;
+        confirmParams.m_status = LrWpanMacStatus::UNSUPPORTED_ATTRIBUTE;
         break;
     }
 
@@ -944,7 +961,7 @@ LrWpanMac::MlmeSetRequest(LrWpanMacPibAttributeIdentifier id, Ptr<LrWpanMacPibAt
 void
 LrWpanMac::MlmeGetRequest(LrWpanMacPibAttributeIdentifier id)
 {
-    LrWpanMlmeGetConfirmStatus status = MLMEGET_SUCCESS;
+    LrWpanMacStatus status = LrWpanMacStatus::SUCCESS;
     Ptr<LrWpanMacPibAttributes> attributes = Create<LrWpanMacPibAttributes>();
 
     switch (id)
@@ -964,8 +981,14 @@ LrWpanMac::MlmeGetRequest(LrWpanMacPibAttributeIdentifier id)
     case macPanId:
         attributes->macPanId = m_macPanId;
         break;
+    case pCurrentChannel:
+        attributes->pCurrentChannel = m_phy->GetCurrentChannelNum();
+        break;
+    case pCurrentPage:
+        attributes->pCurrentPage = m_phy->GetCurrentPage();
+        break;
     default:
-        status = MLMEGET_UNSUPPORTED_ATTRIBUTE;
+        status = LrWpanMacStatus::UNSUPPORTED_ATTRIBUTE;
         break;
     }
 
@@ -1272,7 +1295,7 @@ LrWpanMac::LostAssocRespCommand()
     {
         MlmeAssociateConfirmParams confirmParams;
         confirmParams.m_assocShortAddr = Mac16Address("FF:FF");
-        confirmParams.m_status = MLMEASSOC_NO_DATA;
+        confirmParams.m_status = LrWpanMacStatus::NO_DATA;
         m_mlmeAssociateConfirmCallback(confirmParams);
     }
 }
@@ -1326,7 +1349,7 @@ LrWpanMac::EndStartRequest()
             if (!m_mlmeStartConfirmCallback.IsNull())
             {
                 MlmeStartConfirmParams confirmParams;
-                confirmParams.m_status = MLMESTART_SUCCESS;
+                confirmParams.m_status = LrWpanMacStatus::SUCCESS;
                 m_mlmeStartConfirmCallback(confirmParams);
             }
 
@@ -1409,12 +1432,12 @@ LrWpanMac::EndChannelScan()
             {
                 confirmParams.m_panDescList = m_panDescriptorList;
             }
-            confirmParams.m_status = MLMESCAN_SUCCESS;
+            confirmParams.m_status = LrWpanMacStatus::SUCCESS;
             break;
         case MLMESCAN_ACTIVE:
             if (m_panDescriptorList.empty())
             {
-                confirmParams.m_status = MLMESCAN_NO_BEACON;
+                confirmParams.m_status = LrWpanMacStatus::NO_BEACON;
             }
             else
             {
@@ -1422,12 +1445,12 @@ LrWpanMac::EndChannelScan()
                 {
                     confirmParams.m_panDescList = m_panDescriptorList;
                 }
-                confirmParams.m_status = MLMESCAN_SUCCESS;
+                confirmParams.m_status = LrWpanMacStatus::SUCCESS;
             }
             break;
         case MLMESCAN_ORPHAN:
             confirmParams.m_panDescList = {};
-            confirmParams.m_status = MLMESCAN_NO_BEACON;
+            confirmParams.m_status = LrWpanMacStatus::NO_BEACON;
             confirmParams.m_resultListSize = 0;
             // The device lost track of the coordinator and was unable
             // to locate it, disassociate from the network.
@@ -1491,7 +1514,7 @@ LrWpanMac::EndChannelEnergyScan()
 
         // All channels scanned, report success
         MlmeScanConfirmParams confirmParams;
-        confirmParams.m_status = MLMESCAN_SUCCESS;
+        confirmParams.m_status = LrWpanMacStatus::SUCCESS;
         confirmParams.m_chPage = m_phy->GetCurrentPage();
         confirmParams.m_scanType = m_scanParams.m_scanType;
         confirmParams.m_energyDetList = m_energyDetectList;
@@ -1666,7 +1689,7 @@ LrWpanMac::BeaconSearchTimeout()
     {
         MlmeSyncLossIndicationParams syncLossParams;
         // syncLossParams.m_logCh =
-        syncLossParams.m_lossReason = MLMESYNCLOSS_BEACON_LOST;
+        syncLossParams.m_lossReason = LrWpanMacStatus::BEACON_LOSS;
         syncLossParams.m_panId = m_macPanId;
         m_mlmeSyncLossIndicationCallback(syncLossParams);
 
@@ -1711,7 +1734,7 @@ LrWpanMac::CheckQueue()
     }
 }
 
-SuperframeField
+uint16_t
 LrWpanMac::GetSuperframeField()
 {
     SuperframeField sfrmSpec;
@@ -1736,7 +1759,7 @@ LrWpanMac::GetSuperframeField()
         sfrmSpec.SetAssocPermit(true);
     }
 
-    return sfrmSpec;
+    return sfrmSpec.GetSuperframe();
 }
 
 GtsFields
@@ -1774,84 +1797,6 @@ Ptr<LrWpanPhy>
 LrWpanMac::GetPhy()
 {
     return m_phy;
-}
-
-void
-LrWpanMac::SetMcpsDataIndicationCallback(McpsDataIndicationCallback c)
-{
-    m_mcpsDataIndicationCallback = c;
-}
-
-void
-LrWpanMac::SetMlmeAssociateIndicationCallback(MlmeAssociateIndicationCallback c)
-{
-    m_mlmeAssociateIndicationCallback = c;
-}
-
-void
-LrWpanMac::SetMlmeCommStatusIndicationCallback(MlmeCommStatusIndicationCallback c)
-{
-    m_mlmeCommStatusIndicationCallback = c;
-}
-
-void
-LrWpanMac::SetMlmeOrphanIndicationCallback(MlmeOrphanIndicationCallback c)
-{
-    m_mlmeOrphanIndicationCallback = c;
-}
-
-void
-LrWpanMac::SetMcpsDataConfirmCallback(McpsDataConfirmCallback c)
-{
-    m_mcpsDataConfirmCallback = c;
-}
-
-void
-LrWpanMac::SetMlmeStartConfirmCallback(MlmeStartConfirmCallback c)
-{
-    m_mlmeStartConfirmCallback = c;
-}
-
-void
-LrWpanMac::SetMlmeScanConfirmCallback(MlmeScanConfirmCallback c)
-{
-    m_mlmeScanConfirmCallback = c;
-}
-
-void
-LrWpanMac::SetMlmeAssociateConfirmCallback(MlmeAssociateConfirmCallback c)
-{
-    m_mlmeAssociateConfirmCallback = c;
-}
-
-void
-LrWpanMac::SetMlmeBeaconNotifyIndicationCallback(MlmeBeaconNotifyIndicationCallback c)
-{
-    m_mlmeBeaconNotifyIndicationCallback = c;
-}
-
-void
-LrWpanMac::SetMlmeSyncLossIndicationCallback(MlmeSyncLossIndicationCallback c)
-{
-    m_mlmeSyncLossIndicationCallback = c;
-}
-
-void
-LrWpanMac::SetMlmePollConfirmCallback(MlmePollConfirmCallback c)
-{
-    m_mlmePollConfirmCallback = c;
-}
-
-void
-LrWpanMac::SetMlmeSetConfirmCallback(MlmeSetConfirmCallback c)
-{
-    m_mlmeSetConfirmCallback = c;
-}
-
-void
-LrWpanMac::SetMlmeGetConfirmCallback(MlmeGetConfirmCallback c)
-{
-    m_mlmeGetConfirmCallback = c;
 }
 
 void
@@ -2184,42 +2129,51 @@ LrWpanMac::PdDataIndication(uint32_t psduLength, Ptr<Packet> p, uint8_t lqi)
                         // beginning of an Association).
                         m_csmaCa->Cancel();
 
-                        SuperframeField incomingSuperframe;
-                        incomingSuperframe = receivedMacPayload.GetSuperframeSpecField();
+                        SuperframeField incomingSuperframe(
+                            receivedMacPayload.GetSuperframeSpecField());
 
                         m_incomingBeaconOrder = incomingSuperframe.GetBeaconOrder();
                         m_incomingSuperframeOrder = incomingSuperframe.GetFrameOrder();
                         m_incomingFnlCapSlot = incomingSuperframe.GetFinalCapSlot();
 
-                        m_incomingBeaconInterval =
-                            (static_cast<uint32_t>(1 << m_incomingBeaconOrder)) *
-                            lrwpan::aBaseSuperframeDuration;
-                        m_incomingSuperframeDuration =
-                            lrwpan::aBaseSuperframeDuration *
-                            (static_cast<uint32_t>(1 << m_incomingSuperframeOrder));
-
-                        if (incomingSuperframe.IsBattLifeExt())
+                        if (m_incomingBeaconOrder < 15)
                         {
-                            m_csmaCa->SetBatteryLifeExtension(true);
+                            // Start Beacon-enabled mode
+                            m_csmaCa->SetSlottedCsmaCa();
+                            m_incomingBeaconInterval =
+                                (static_cast<uint32_t>(1 << m_incomingBeaconOrder)) *
+                                lrwpan::aBaseSuperframeDuration;
+                            m_incomingSuperframeDuration =
+                                lrwpan::aBaseSuperframeDuration *
+                                (static_cast<uint32_t>(1 << m_incomingSuperframeOrder));
+
+                            if (incomingSuperframe.IsBattLifeExt())
+                            {
+                                m_csmaCa->SetBatteryLifeExtension(true);
+                            }
+                            else
+                            {
+                                m_csmaCa->SetBatteryLifeExtension(false);
+                            }
+
+                            // TODO: get Incoming frame GTS Fields here
+
+                            // Begin CAP on the current device using info from
+                            // the Incoming superframe
+                            NS_LOG_DEBUG("Incoming superframe Active Portion "
+                                         << "(Beacon + CAP + CFP): " << m_incomingSuperframeDuration
+                                         << " symbols");
+
+                            m_incCapEvent = Simulator::ScheduleNow(&LrWpanMac::StartCAP,
+                                                                   this,
+                                                                   SuperframeType::INCOMING);
                         }
                         else
                         {
-                            m_csmaCa->SetBatteryLifeExtension(false);
+                            // Start non-beacon enabled mode
+                            m_csmaCa->SetUnSlottedCsmaCa();
                         }
 
-                        if (m_incomingBeaconOrder < 15 && !m_csmaCa->IsSlottedCsmaCa())
-                        {
-                            m_csmaCa->SetSlottedCsmaCa();
-                        }
-
-                        // TODO: get Incoming frame GTS Fields here
-
-                        // Begin CAP on the current device using info from the Incoming superframe
-                        NS_LOG_DEBUG("Incoming superframe Active Portion (Beacon + CAP + CFP): "
-                                     << m_incomingSuperframeDuration << " symbols");
-                        m_incCapEvent = Simulator::ScheduleNow(&LrWpanMac::StartCAP,
-                                                               this,
-                                                               SuperframeType::INCOMING);
                         m_setMacState =
                             Simulator::ScheduleNow(&LrWpanMac::SetLrWpanMacState, this, MAC_IDLE);
                     }
@@ -2384,7 +2338,7 @@ LrWpanMac::PdDataIndication(uint32_t psduLength, Ptr<Packet> p, uint8_t lqi)
                                 MlmeScanConfirmParams confirmParams;
                                 confirmParams.m_scanType = m_scanParams.m_scanType;
                                 confirmParams.m_chPage = m_scanParams.m_chPage;
-                                confirmParams.m_status = MLMESCAN_SUCCESS;
+                                confirmParams.m_status = LrWpanMacStatus::SUCCESS;
                                 m_mlmeScanConfirmCallback(confirmParams);
                             }
                             m_scanParams = {};
@@ -2464,8 +2418,7 @@ LrWpanMac::PdDataIndication(uint32_t psduLength, Ptr<Packet> p, uint8_t lqi)
                                     commStatusParams.m_srcExtAddr = macHdr.GetExtSrcAddr();
                                     commStatusParams.m_dstAddrMode = LrWpanMacHeader::EXTADDR;
                                     commStatusParams.m_dstExtAddr = macHdr.GetExtDstAddr();
-                                    commStatusParams.m_status =
-                                        LrWpanMlmeCommStatus::MLMECOMMSTATUS_SUCCESS;
+                                    commStatusParams.m_status = LrWpanMacStatus::SUCCESS;
                                     m_mlmeCommStatusIndicationCallback(commStatusParams);
                                 }
                                 // Remove element from Pending Transaction List
@@ -2487,8 +2440,7 @@ LrWpanMac::PdDataIndication(uint32_t psduLength, Ptr<Packet> p, uint8_t lqi)
                                 if (!m_mlmePollConfirmCallback.IsNull())
                                 {
                                     MlmePollConfirmParams pollConfirmParams;
-                                    pollConfirmParams.m_status =
-                                        LrWpanMlmePollConfirmStatus::MLMEPOLL_SUCCESS;
+                                    pollConfirmParams.m_status = LrWpanMacStatus::SUCCESS;
                                     m_mlmePollConfirmCallback(pollConfirmParams);
                                 }
                                 break;
@@ -2506,8 +2458,7 @@ LrWpanMac::PdDataIndication(uint32_t psduLength, Ptr<Packet> p, uint8_t lqi)
                                     commStatusParams.m_srcExtAddr = macHdr.GetExtSrcAddr();
                                     commStatusParams.m_dstAddrMode = LrWpanMacHeader::EXTADDR;
                                     commStatusParams.m_dstExtAddr = macHdr.GetExtDstAddr();
-                                    commStatusParams.m_status =
-                                        LrWpanMlmeCommStatus::MLMECOMMSTATUS_SUCCESS;
+                                    commStatusParams.m_status = LrWpanMacStatus::SUCCESS;
                                     m_mlmeCommStatusIndicationCallback(commStatusParams);
                                 }
                             }
@@ -2525,7 +2476,7 @@ LrWpanMac::PdDataIndication(uint32_t psduLength, Ptr<Packet> p, uint8_t lqi)
                                 Ptr<TxQueueElement> txQElement = m_txQueue.front();
                                 McpsDataConfirmParams confirmParams;
                                 confirmParams.m_msduHandle = txQElement->txQMsduHandle;
-                                confirmParams.m_status = IEEE_802_15_4_SUCCESS;
+                                confirmParams.m_status = LrWpanMacStatus::SUCCESS;
                                 m_mcpsDataConfirmCallback(confirmParams);
                             }
                         }
@@ -2614,7 +2565,7 @@ LrWpanMac::EnqueueTxQElement(Ptr<TxQueueElement> txQElement)
         {
             McpsDataConfirmParams confirmParams;
             confirmParams.m_msduHandle = txQElement->txQMsduHandle;
-            confirmParams.m_status = IEEE_802_15_4_TRANSACTION_OVERFLOW;
+            confirmParams.m_status = LrWpanMacStatus::TRANSACTION_OVERFLOW;
             m_mcpsDataConfirmCallback(confirmParams);
         }
         NS_LOG_DEBUG("TX Queue with size " << m_txQueue.size() << " is full, dropping packet");
@@ -2729,7 +2680,7 @@ LrWpanMac::PrepareRetransmission()
                 {
                     MlmeAssociateConfirmParams confirmParams;
                     confirmParams.m_assocShortAddr = Mac16Address("FF:FF");
-                    confirmParams.m_status = MLMEASSOC_NO_ACK;
+                    confirmParams.m_status = LrWpanMacStatus::NO_ACK;
                     m_mlmeAssociateConfirmCallback(confirmParams);
                 }
                 break;
@@ -2744,7 +2695,7 @@ LrWpanMac::PrepareRetransmission()
                     commStatusParams.m_srcExtAddr = macHdr.GetExtSrcAddr();
                     commStatusParams.m_dstAddrMode = LrWpanMacHeader::EXTADDR;
                     commStatusParams.m_dstExtAddr = macHdr.GetExtDstAddr();
-                    commStatusParams.m_status = LrWpanMlmeCommStatus::MLMECOMMSTATUS_NO_ACK;
+                    commStatusParams.m_status = LrWpanMacStatus::NO_ACK;
                     m_mlmeCommStatusIndicationCallback(commStatusParams);
                 }
                 RemovePendTxQElement(m_txPkt->Copy());
@@ -2764,7 +2715,7 @@ LrWpanMac::PrepareRetransmission()
                 if (!m_mlmePollConfirmCallback.IsNull())
                 {
                     MlmePollConfirmParams pollConfirmParams;
-                    pollConfirmParams.m_status = LrWpanMlmePollConfirmStatus::MLMEPOLL_NO_ACK;
+                    pollConfirmParams.m_status = LrWpanMacStatus::NO_ACK;
                     m_mlmePollConfirmCallback(pollConfirmParams);
                 }
                 break;
@@ -2785,7 +2736,7 @@ LrWpanMac::PrepareRetransmission()
             {
                 McpsDataConfirmParams confirmParams;
                 confirmParams.m_msduHandle = txQElement->txQMsduHandle;
-                confirmParams.m_status = IEEE_802_15_4_NO_ACK;
+                confirmParams.m_status = LrWpanMacStatus::NO_ACK;
                 m_mcpsDataConfirmCallback(confirmParams);
             }
         }
@@ -2861,7 +2812,7 @@ LrWpanMac::EnqueueInd(Ptr<Packet> p)
             commStatusParams.m_srcExtAddr = peekedMacHdr.GetExtSrcAddr();
             commStatusParams.m_dstAddrMode = LrWpanMacHeader::EXTADDR;
             commStatusParams.m_dstExtAddr = peekedMacHdr.GetExtDstAddr();
-            commStatusParams.m_status = MLMECOMMSTATUS_TRANSACTION_OVERFLOW;
+            commStatusParams.m_status = LrWpanMacStatus::TRANSACTION_OVERFLOW;
             m_mlmeCommStatusIndicationCallback(commStatusParams);
         }
         m_macIndTxDropTrace(p);
@@ -2908,8 +2859,7 @@ LrWpanMac::PurgeInd()
                     commStatusParams.m_srcExtAddr = peekedMacHdr.GetExtSrcAddr();
                     commStatusParams.m_dstAddrMode = LrWpanMacHeader::EXTADDR;
                     commStatusParams.m_dstExtAddr = peekedMacHdr.GetExtDstAddr();
-                    commStatusParams.m_status =
-                        LrWpanMlmeCommStatus::MLMECOMMSTATUS_TRANSACTION_EXPIRED;
+                    commStatusParams.m_status = LrWpanMacStatus::TRANSACTION_EXPIRED;
                     m_mlmeCommStatusIndicationCallback(commStatusParams);
                 }
             }
@@ -2919,7 +2869,7 @@ LrWpanMac::PurgeInd()
                 if (!m_mcpsDataConfirmCallback.IsNull())
                 {
                     McpsDataConfirmParams confParams;
-                    confParams.m_status = IEEE_802_15_4_TRANSACTION_EXPIRED;
+                    confParams.m_status = LrWpanMacStatus::TRANSACTION_EXPIRED;
                     m_mcpsDataConfirmCallback(confParams);
                 }
             }
@@ -3083,7 +3033,7 @@ LrWpanMac::PdDataConfirm(LrWpanPhyEnumeration status)
                     if (!m_mlmeStartConfirmCallback.IsNull())
                     {
                         MlmeStartConfirmParams mlmeConfirmParams;
-                        mlmeConfirmParams.m_status = MLMESTART_SUCCESS;
+                        mlmeConfirmParams.m_status = LrWpanMacStatus::SUCCESS;
                         m_mlmeStartConfirmCallback(mlmeConfirmParams);
                     }
                 }
@@ -3133,7 +3083,7 @@ LrWpanMac::PdDataConfirm(LrWpanPhyEnumeration status)
                         commStatusParams.m_dstExtAddr = macHdr.GetExtDstAddr();
                         commStatusParams.m_dstShortAddr = macHdr.GetShortDstAddr();
 
-                        commStatusParams.m_status = LrWpanMlmeCommStatus::MLMECOMMSTATUS_SUCCESS;
+                        commStatusParams.m_status = LrWpanMacStatus::SUCCESS;
                         m_mlmeCommStatusIndicationCallback(commStatusParams);
                     }
                 }
@@ -3151,7 +3101,7 @@ LrWpanMac::PdDataConfirm(LrWpanPhyEnumeration status)
                     NS_ASSERT_MSG(!m_txQueue.empty(), "TxQsize = 0");
                     Ptr<TxQueueElement> txQElement = m_txQueue.front();
                     confirmParams.m_msduHandle = txQElement->txQMsduHandle;
-                    confirmParams.m_status = IEEE_802_15_4_SUCCESS;
+                    confirmParams.m_status = LrWpanMacStatus::SUCCESS;
                     m_mcpsDataConfirmCallback(confirmParams);
                 }
                 ifsWaitTime = Seconds(static_cast<double>(GetIfsSize()) / symbolRate);
@@ -3196,20 +3146,18 @@ LrWpanMac::PdDataConfirm(LrWpanPhyEnumeration status)
                 {
                     MlmeAssociateConfirmParams confirmParams;
 
-                    switch (receivedMacPayload.GetAssociationStatus())
+                    switch (static_cast<LrWpanMacStatus>(receivedMacPayload.GetAssociationStatus()))
                     {
-                    case CommandPayloadHeader::SUCCESSFUL:
+                    case LrWpanMacStatus::SUCCESS:
                         // The assigned short address by the coordinator
                         SetShortAddress(receivedMacPayload.GetShortAddr());
                         m_macPanId = receivedMacHdr.GetSrcPanId();
 
-                        confirmParams.m_status =
-                            LrWpanMlmeAssociateConfirmStatus::MLMEASSOC_SUCCESS;
+                        confirmParams.m_status = LrWpanMacStatus::SUCCESS;
                         confirmParams.m_assocShortAddr = GetShortAddress();
                         break;
-                    case CommandPayloadHeader::FULL_CAPACITY:
-                        confirmParams.m_status =
-                            LrWpanMlmeAssociateConfirmStatus::MLMEASSOC_FULL_CAPACITY;
+                    case LrWpanMacStatus::FULL_CAPACITY:
+                        confirmParams.m_status = LrWpanMacStatus::FULL_CAPACITY;
                         m_macPanId = 0xffff;
                         m_macCoordShortAddress = Mac16Address("FF:FF");
                         m_macCoordExtendedAddress = Mac64Address("ff:ff:ff:ff:ff:ff:ff:ed");
@@ -3219,9 +3167,9 @@ LrWpanMac::PdDataConfirm(LrWpanPhyEnumeration status)
                         m_incomingBeaconOrder = 15;
                         m_incomingSuperframeOrder = 15;
                         break;
-                    case CommandPayloadHeader::ACCESS_DENIED:
-                        confirmParams.m_status =
-                            LrWpanMlmeAssociateConfirmStatus::MLMEASSOC_ACCESS_DENIED;
+                    case LrWpanMacStatus::ACCESS_DENIED:
+                    default:
+                        confirmParams.m_status = LrWpanMacStatus::ACCESS_DENIED;
                         m_macPanId = 0xffff;
                         m_macCoordShortAddress = Mac16Address("FF:FF");
                         m_macCoordExtendedAddress = Mac64Address("ff:ff:ff:ff:ff:ff:ff:ed");
@@ -3262,7 +3210,7 @@ LrWpanMac::PdDataConfirm(LrWpanPhyEnumeration status)
             {
                 McpsDataConfirmParams confirmParams;
                 confirmParams.m_msduHandle = txQElement->txQMsduHandle;
-                confirmParams.m_status = IEEE_802_15_4_FRAME_TOO_LONG;
+                confirmParams.m_status = LrWpanMacStatus::FRAME_TOO_LONG;
                 m_mcpsDataConfirmCallback(confirmParams);
             }
             RemoveFirstTxQElement();
@@ -3408,7 +3356,7 @@ LrWpanMac::PlmeSetAttributeConfirm(LrWpanPhyEnumeration status, LrWpanPibAttribu
                 MlmeScanConfirmParams confirmParams;
                 confirmParams.m_scanType = m_scanParams.m_scanType;
                 confirmParams.m_chPage = m_scanParams.m_chPage;
-                confirmParams.m_status = MLMESCAN_INVALID_PARAMETER;
+                confirmParams.m_status = LrWpanMacStatus::INVALID_PARAMETER;
                 m_mlmeScanConfirmCallback(confirmParams);
             }
             NS_LOG_ERROR(this << "Channel Scan: Invalid channel page");
@@ -3462,7 +3410,7 @@ LrWpanMac::PlmeSetAttributeConfirm(LrWpanPhyEnumeration status, LrWpanPibAttribu
                 MlmeScanConfirmParams confirmParams;
                 confirmParams.m_scanType = m_scanParams.m_scanType;
                 confirmParams.m_chPage = m_scanParams.m_chPage;
-                confirmParams.m_status = MLMESCAN_INVALID_PARAMETER;
+                confirmParams.m_status = LrWpanMacStatus::INVALID_PARAMETER;
                 if (!m_mlmeScanConfirmCallback.IsNull())
                 {
                     m_mlmeScanConfirmCallback(confirmParams);
@@ -3478,7 +3426,7 @@ LrWpanMac::PlmeSetAttributeConfirm(LrWpanPhyEnumeration status, LrWpanPibAttribu
                 MlmeScanConfirmParams confirmParams;
                 confirmParams.m_scanType = m_scanParams.m_scanType;
                 confirmParams.m_chPage = m_scanParams.m_chPage;
-                confirmParams.m_status = MLMESCAN_INVALID_PARAMETER;
+                confirmParams.m_status = LrWpanMacStatus::INVALID_PARAMETER;
                 m_mlmeScanConfirmCallback(confirmParams);
             }
             NS_LOG_ERROR("Channel " << m_channelScanIndex
@@ -3500,7 +3448,7 @@ LrWpanMac::PlmeSetAttributeConfirm(LrWpanPhyEnumeration status, LrWpanPibAttribu
             if (!m_mlmeStartConfirmCallback.IsNull())
             {
                 MlmeStartConfirmParams confirmParams;
-                confirmParams.m_status = MLMESTART_INVALID_PARAMETER;
+                confirmParams.m_status = LrWpanMacStatus::INVALID_PARAMETER;
                 m_mlmeStartConfirmCallback(confirmParams);
             }
             NS_LOG_ERROR("Invalid page parameter in MLME-start");
@@ -3518,7 +3466,7 @@ LrWpanMac::PlmeSetAttributeConfirm(LrWpanPhyEnumeration status, LrWpanPibAttribu
             if (!m_mlmeStartConfirmCallback.IsNull())
             {
                 MlmeStartConfirmParams confirmParams;
-                confirmParams.m_status = MLMESTART_INVALID_PARAMETER;
+                confirmParams.m_status = LrWpanMacStatus::INVALID_PARAMETER;
                 m_mlmeStartConfirmCallback(confirmParams);
             }
             NS_LOG_ERROR("Invalid channel parameter in MLME-start");
@@ -3549,7 +3497,7 @@ LrWpanMac::PlmeSetAttributeConfirm(LrWpanPhyEnumeration status, LrWpanPibAttribu
             {
                 MlmeAssociateConfirmParams confirmParams;
                 confirmParams.m_assocShortAddr = Mac16Address("FF:FF");
-                confirmParams.m_status = MLMEASSOC_INVALID_PARAMETER;
+                confirmParams.m_status = LrWpanMacStatus::INVALID_PARAMETER;
                 m_mlmeAssociateConfirmCallback(confirmParams);
             }
             NS_LOG_ERROR("Invalid page parameter in MLME-associate");
@@ -3577,7 +3525,7 @@ LrWpanMac::PlmeSetAttributeConfirm(LrWpanPhyEnumeration status, LrWpanPibAttribu
             {
                 MlmeAssociateConfirmParams confirmParams;
                 confirmParams.m_assocShortAddr = Mac16Address("FF:FF");
-                confirmParams.m_status = MLMEASSOC_INVALID_PARAMETER;
+                confirmParams.m_status = LrWpanMacStatus::INVALID_PARAMETER;
                 m_mlmeAssociateConfirmCallback(confirmParams);
             }
             NS_LOG_ERROR("Invalid channel parameter in MLME-associate");
@@ -3654,7 +3602,7 @@ LrWpanMac::SetLrWpanMacState(LrWpanMacState macState)
                 {
                     MlmeAssociateConfirmParams confirmParams;
                     confirmParams.m_assocShortAddr = Mac16Address("FF:FF");
-                    confirmParams.m_status = MLMEASSOC_CHANNEL_ACCESS_FAILURE;
+                    confirmParams.m_status = LrWpanMacStatus::CHANNEL_ACCESS_FAILURE;
                     m_mlmeAssociateConfirmCallback(confirmParams);
                 }
                 break;
@@ -3668,8 +3616,7 @@ LrWpanMac::SetLrWpanMacState(LrWpanMacState macState)
                     commStatusParams.m_srcExtAddr = macHdr.GetExtSrcAddr();
                     commStatusParams.m_dstAddrMode = LrWpanMacHeader::EXTADDR;
                     commStatusParams.m_dstExtAddr = macHdr.GetExtDstAddr();
-                    commStatusParams.m_status =
-                        LrWpanMlmeCommStatus::MLMECOMMSTATUS_CHANNEL_ACCESS_FAILURE;
+                    commStatusParams.m_status = LrWpanMacStatus::CHANNEL_ACCESS_FAILURE;
                     m_mlmeCommStatusIndicationCallback(commStatusParams);
                 }
                 RemovePendTxQElement(m_txPkt->Copy());
@@ -3688,8 +3635,7 @@ LrWpanMac::SetLrWpanMacState(LrWpanMacState macState)
                 if (!m_mlmePollConfirmCallback.IsNull())
                 {
                     MlmePollConfirmParams pollConfirmParams;
-                    pollConfirmParams.m_status =
-                        LrWpanMlmePollConfirmStatus::MLMEPOLL_CHANNEL_ACCESS_FAILURE;
+                    pollConfirmParams.m_status = LrWpanMacStatus::CHANNEL_ACCESS_FAILURE;
                     m_mlmePollConfirmCallback(pollConfirmParams);
                 }
                 break;
@@ -3703,8 +3649,7 @@ LrWpanMac::SetLrWpanMacState(LrWpanMacState macState)
                     commStatusParams.m_srcExtAddr = macHdr.GetExtSrcAddr();
                     commStatusParams.m_dstAddrMode = LrWpanMacHeader::EXTADDR;
                     commStatusParams.m_dstExtAddr = macHdr.GetExtDstAddr();
-                    commStatusParams.m_status =
-                        LrWpanMlmeCommStatus::MLMECOMMSTATUS_CHANNEL_ACCESS_FAILURE;
+                    commStatusParams.m_status = LrWpanMacStatus::CHANNEL_ACCESS_FAILURE;
                     m_mlmeCommStatusIndicationCallback(commStatusParams);
                 }
                 break;
@@ -3740,7 +3685,7 @@ LrWpanMac::SetLrWpanMacState(LrWpanMacState macState)
             {
                 McpsDataConfirmParams confirmParams;
                 confirmParams.m_msduHandle = m_txQueue.front()->txQMsduHandle;
-                confirmParams.m_status = IEEE_802_15_4_CHANNEL_ACCESS_FAILURE;
+                confirmParams.m_status = LrWpanMacStatus::CHANNEL_ACCESS_FAILURE;
                 m_mcpsDataConfirmCallback(confirmParams);
             }
             // remove the copy of the packet that was just sent
@@ -3775,18 +3720,6 @@ LrWpanMac::SetLrWpanMacState(LrWpanMacState macState)
 
         NS_LOG_DEBUG("****** PACKET DEFERRED to the next superframe *****");
     }
-}
-
-LrWpanAssociationStatus
-LrWpanMac::GetAssociationStatus() const
-{
-    return m_associationStatus;
-}
-
-void
-LrWpanMac::SetAssociationStatus(LrWpanAssociationStatus status)
-{
-    m_associationStatus = status;
 }
 
 void

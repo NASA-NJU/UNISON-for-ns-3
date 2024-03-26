@@ -26,6 +26,7 @@
 #include "ns3/assert.h"
 #include "ns3/attribute-container.h"
 #include "ns3/log.h"
+#include "ns3/mgt-action-headers.h"
 #include "ns3/wifi-mpdu.h"
 #include "ns3/wifi-net-device.h"
 #include "ns3/wifi-phy-state-helper.h"
@@ -59,15 +60,47 @@ EmlsrManager::GetTypeId()
             .AddAttribute(
                 "MainPhyId",
                 "The ID of the main PHY (position in the vector of PHYs held by "
-                "WifiNetDevice). This attribute cannot be set after initialization.",
+                "WifiNetDevice). This attribute cannot be set after construction.",
+                TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT, // prevent setting after construction
                 UintegerValue(0),
                 MakeUintegerAccessor(&EmlsrManager::SetMainPhyId, &EmlsrManager::GetMainPhyId),
                 MakeUintegerChecker<uint8_t>())
             .AddAttribute("AuxPhyChannelWidth",
-                          "The maximum channel width (MHz) supported by Aux PHYs",
+                          "The maximum channel width (MHz) supported by Aux PHYs. Note that the "
+                          "maximum channel width is capped to the maximum channel width supported "
+                          "by the configured maximum modulation class supported.",
+                          TypeId::ATTR_GET |
+                              TypeId::ATTR_CONSTRUCT, // prevent setting after construction
                           UintegerValue(20),
                           MakeUintegerAccessor(&EmlsrManager::m_auxPhyMaxWidth),
                           MakeUintegerChecker<uint16_t>(20, 160))
+            .AddAttribute("AuxPhyMaxModClass",
+                          "The maximum modulation class supported by Aux PHYs. Use "
+                          "WIFI_MOD_CLASS_OFDM for non-HT.",
+                          TypeId::ATTR_GET |
+                              TypeId::ATTR_CONSTRUCT, // prevent setting after construction
+                          EnumValue(WIFI_MOD_CLASS_OFDM),
+                          MakeEnumAccessor<WifiModulationClass>(&EmlsrManager::m_auxPhyMaxModClass),
+                          MakeEnumChecker(WIFI_MOD_CLASS_HR_DSSS,
+                                          "HR-DSSS",
+                                          WIFI_MOD_CLASS_ERP_OFDM,
+                                          "ERP-OFDM",
+                                          WIFI_MOD_CLASS_OFDM,
+                                          "OFDM",
+                                          WIFI_MOD_CLASS_HT,
+                                          "HT",
+                                          WIFI_MOD_CLASS_VHT,
+                                          "VHT",
+                                          WIFI_MOD_CLASS_HE,
+                                          "HE",
+                                          WIFI_MOD_CLASS_EHT,
+                                          "EHT"))
+            .AddAttribute("AuxPhyTxCapable",
+                          "Whether Aux PHYs are capable of transmitting PPDUs.",
+                          BooleanValue(true),
+                          MakeBooleanAccessor(&EmlsrManager::SetAuxPhyTxCapable,
+                                              &EmlsrManager::GetAuxPhyTxCapable),
+                          MakeBooleanChecker())
             .AddAttribute(
                 "EmlsrLinkSet",
                 "IDs of the links on which EMLSR mode will be enabled. An empty set "
@@ -86,6 +119,13 @@ EmlsrManager::GetTypeId()
 }
 
 EmlsrManager::EmlsrManager()
+    // The STA initializes dot11MSDTimerDuration to aPPDUMaxTime defined in Table 36-70
+    // (Sec. 35.3.16.8.1 of 802.11be D3.1)
+    : m_mediumSyncDuration(MicroSeconds(DEFAULT_MSD_DURATION_USEC)),
+      // The default value of dot11MSDOFDMEDthreshold is –72 dBm and the default value of
+      // dot11MSDTXOPMax is 1, respectively (Sec. 35.3.16.8.1 of 802.11be D3.1)
+      m_msdOfdmEdThreshold(DEFAULT_MSD_OFDM_ED_THRESH),
+      m_msdMaxNTxops(DEFAULT_MSD_MAX_N_TXOPS)
 {
     NS_LOG_FUNCTION(this);
 }
@@ -104,6 +144,10 @@ EmlsrManager::DoDispose()
                                             MakeCallback(&EmlsrManager::TxDropped, this));
     m_staMac = nullptr;
     m_transitionTimeoutEvent.Cancel();
+    for (auto& [id, status] : m_mediumSyncDelayStatus)
+    {
+        status.timer.Cancel();
+    }
     Object::DoDispose();
 }
 
@@ -150,6 +194,18 @@ EmlsrManager::GetCamStateReset() const
     return m_resetCamState;
 }
 
+void
+EmlsrManager::SetAuxPhyTxCapable(bool capable)
+{
+    m_auxPhyTxCapable = capable;
+}
+
+bool
+EmlsrManager::GetAuxPhyTxCapable() const
+{
+    return m_auxPhyTxCapable;
+}
+
 const std::set<uint8_t>&
 EmlsrManager::GetEmlsrLinks() const
 {
@@ -168,6 +224,17 @@ EmlsrManager::GetEhtFem(uint8_t linkId) const
     return StaticCast<EhtFrameExchangeManager>(m_staMac->GetFrameExchangeManager(linkId));
 }
 
+std::optional<Time>
+EmlsrManager::GetElapsedMediumSyncDelayTimer(uint8_t linkId) const
+{
+    if (const auto statusIt = m_mediumSyncDelayStatus.find(linkId);
+        statusIt != m_mediumSyncDelayStatus.cend() && statusIt->second.timer.IsRunning())
+    {
+        return m_mediumSyncDuration - Simulator::GetDelayLeft(statusIt->second.timer);
+    }
+    return std::nullopt;
+}
+
 void
 EmlsrManager::SetTransitionTimeout(Time timeout)
 {
@@ -179,6 +246,45 @@ std::optional<Time>
 EmlsrManager::GetTransitionTimeout() const
 {
     return m_emlsrTransitionTimeout;
+}
+
+void
+EmlsrManager::SetMediumSyncDuration(Time duration)
+{
+    NS_LOG_FUNCTION(this << duration.As(Time::US));
+    m_mediumSyncDuration = duration;
+}
+
+Time
+EmlsrManager::GetMediumSyncDuration() const
+{
+    return m_mediumSyncDuration;
+}
+
+void
+EmlsrManager::SetMediumSyncOfdmEdThreshold(int8_t threshold)
+{
+    NS_LOG_FUNCTION(this << threshold);
+    m_msdOfdmEdThreshold = threshold;
+}
+
+int8_t
+EmlsrManager::GetMediumSyncOfdmEdThreshold() const
+{
+    return m_msdOfdmEdThreshold;
+}
+
+void
+EmlsrManager::SetMediumSyncMaxNTxops(std::optional<uint8_t> nTxops)
+{
+    NS_LOG_FUNCTION(this << nTxops.has_value());
+    m_msdMaxNTxops = nTxops;
+}
+
+std::optional<uint8_t>
+EmlsrManager::GetMediumSyncMaxNTxops() const
+{
+    return m_msdMaxNTxops;
 }
 
 void
@@ -265,15 +371,22 @@ EmlsrManager::NotifyIcfReceived(uint8_t linkId)
         return;
     }
 
-    SwitchMainPhy(linkId, true); // channel switch should occur instantaneously
+    Simulator::ScheduleNow([=, this]() {
+        SwitchMainPhy(linkId,
+                      true, // channel switch should occur instantaneously
+                      RESET_BACKOFF,
+                      DONT_REQUEST_ACCESS);
 
-    // aux PHY received the ICF but main PHY will send the response
-    auto uid = auxPhy->GetPreviouslyRxPpduUid();
-    mainPhy->SetPreviouslyRxPpduUid(uid);
+        // aux PHY received the ICF but main PHY will send the response
+        auto uid = auxPhy->GetPreviouslyRxPpduUid();
+        mainPhy->SetPreviouslyRxPpduUid(uid);
+
+        DoNotifyIcfReceived(linkId);
+    });
 }
 
 void
-EmlsrManager::NotifyUlTxopStart(uint8_t linkId)
+EmlsrManager::NotifyUlTxopStart(uint8_t linkId, std::optional<Time> timeToCtsEnd)
 {
     NS_LOG_FUNCTION(this << linkId);
 
@@ -293,22 +406,36 @@ EmlsrManager::NotifyUlTxopStart(uint8_t linkId)
         }
     }
 
-    // if this TXOP is being started by an aux PHY, wait until the end of RTS transmission and
-    // then have the main PHY (instantaneously) take over the TXOP on this link. We may start the
-    // channel switch now and use the channel switch delay configured for the main PHY, but then
-    // we would have no guarantees that the channel switch is completed in RTS TX time plus SIFS.
+    // if this TXOP is being started by an aux PHY, schedule a channel switch for the main PHY
+    // such that the channel switch is completed by the time the CTS response is received. The
+    // delay has been passed by the FEM.
     if (m_staMac->GetLinkForPhy(m_mainPhyId) != linkId)
     {
         auto stateHelper = m_staMac->GetWifiPhy(linkId)->GetState();
         NS_ASSERT(stateHelper);
         NS_ASSERT_MSG(stateHelper->GetState() == TX,
                       "Expecting the aux PHY to be transmitting (an RTS frame)");
-        Simulator::Schedule(stateHelper->GetDelayUntilIdle(),
+        NS_ASSERT_MSG(timeToCtsEnd.has_value(),
+                      "Aux PHY is sending RTS, expected to get the time to CTS end");
+
+        auto mainPhy = m_staMac->GetDevice()->GetPhy(m_mainPhyId);
+
+        // the main PHY shall terminate the channel switch at the end of CTS reception;
+        // the time remaining to the end of CTS reception includes two propagation delays
+        const auto delay = *timeToCtsEnd - mainPhy->GetChannelSwitchDelay();
+
+        NS_ASSERT(delay.IsPositive());
+        NS_LOG_DEBUG("Schedule main Phy switch in " << delay.As(Time::US));
+        Simulator::Schedule(delay,
                             &EmlsrManager::SwitchMainPhy,
                             this,
                             linkId,
-                            true); // channel switch should occur instantaneously
+                            false,
+                            RESET_BACKOFF,
+                            DONT_REQUEST_ACCESS);
     }
+
+    DoNotifyUlTxopStart(linkId);
 }
 
 void
@@ -322,21 +449,59 @@ EmlsrManager::NotifyTxopEnd(uint8_t linkId)
         return;
     }
 
-    // unblock transmissions and resume medium access on other EMLSR links
-    for (auto id : m_staMac->GetLinkIds())
-    {
-        if (id != linkId && m_staMac->IsEmlsrLink(id))
+    DoNotifyTxopEnd(linkId);
+
+    Simulator::ScheduleNow([=, this]() {
+        // unblock transmissions and resume medium access on other EMLSR links
+        for (auto id : m_staMac->GetLinkIds())
         {
-            m_staMac->UnblockTxOnLink(id, WifiQueueBlockedReason::USING_OTHER_EMLSR_LINK);
-            m_staMac->GetChannelAccessManager(id)->NotifyStopUsingOtherEmlsrLink();
+            if (m_staMac->IsEmlsrLink(id))
+            {
+                m_staMac->UnblockTxOnLink(id, WifiQueueBlockedReason::USING_OTHER_EMLSR_LINK);
+                m_staMac->GetChannelAccessManager(id)->NotifyStopUsingOtherEmlsrLink();
+            }
         }
+
+        StartMediumSyncDelayTimer(linkId);
+    });
+}
+
+void
+EmlsrManager::SetCcaEdThresholdOnLinkSwitch(Ptr<WifiPhy> phy, uint8_t linkId)
+{
+    NS_LOG_FUNCTION(this << phy << linkId);
+
+    // if a MediumSyncDelay timer is running for the link on which the main PHY is going to
+    // operate, set the CCA ED threshold to the MediumSyncDelay OFDM ED threshold
+    if (auto statusIt = m_mediumSyncDelayStatus.find(linkId);
+        statusIt != m_mediumSyncDelayStatus.cend() && statusIt->second.timer.IsRunning())
+    {
+        NS_LOG_DEBUG("Setting CCA ED threshold of PHY " << phy << " to " << +m_msdOfdmEdThreshold
+                                                        << " on link " << +linkId);
+
+        // store the current CCA ED threshold in the m_prevCcaEdThreshold map, if not present
+        m_prevCcaEdThreshold.try_emplace(phy, phy->GetCcaEdThreshold());
+
+        phy->SetCcaEdThreshold(m_msdOfdmEdThreshold);
+    }
+    // otherwise, restore the previous value for the CCA ED threshold (if any)
+    else if (auto threshIt = m_prevCcaEdThreshold.find(phy);
+             threshIt != m_prevCcaEdThreshold.cend())
+    {
+        NS_LOG_DEBUG("Resetting CCA ED threshold of PHY " << phy << " to " << threshIt->second
+                                                          << " on link " << +linkId);
+        phy->SetCcaEdThreshold(threshIt->second);
+        m_prevCcaEdThreshold.erase(threshIt);
     }
 }
 
 void
-EmlsrManager::SwitchMainPhy(uint8_t linkId, bool noSwitchDelay)
+EmlsrManager::SwitchMainPhy(uint8_t linkId,
+                            bool noSwitchDelay,
+                            bool resetBackoff,
+                            bool requestAccess)
 {
-    NS_LOG_FUNCTION(this << linkId << noSwitchDelay);
+    NS_LOG_FUNCTION(this << linkId << noSwitchDelay << resetBackoff << requestAccess);
 
     auto mainPhy = m_staMac->GetDevice()->GetPhy(m_mainPhyId);
 
@@ -361,25 +526,206 @@ EmlsrManager::SwitchMainPhy(uint8_t linkId, bool noSwitchDelay)
                   "We should not ask the main PHY to switch channel while transmitting");
 
     // request the main PHY to switch channel
-    Simulator::ScheduleNow([=]() {
-        auto delay = mainPhy->GetChannelSwitchDelay();
-        NS_ASSERT_MSG(noSwitchDelay || delay <= m_lastAdvTransitionDelay,
-                      "Transition delay (" << m_lastAdvTransitionDelay.As(Time::US)
-                                           << ") should exceed the channel switch delay ("
-                                           << delay.As(Time::US) << ")");
-        if (noSwitchDelay)
+    auto delay = mainPhy->GetChannelSwitchDelay();
+    NS_ASSERT_MSG(noSwitchDelay || delay <= m_lastAdvTransitionDelay,
+                  "Transition delay (" << m_lastAdvTransitionDelay.As(Time::US)
+                                       << ") should exceed the channel switch delay ("
+                                       << delay.As(Time::US) << ")");
+    if (noSwitchDelay)
+    {
+        mainPhy->SetAttribute("ChannelSwitchDelay", TimeValue(Seconds(0)));
+    }
+    mainPhy->SetOperatingChannel(newMainPhyChannel);
+    // restore previous channel switch delay
+    if (noSwitchDelay)
+    {
+        mainPhy->SetAttribute("ChannelSwitchDelay", TimeValue(delay));
+    }
+    // re-enable short time slot, if needed
+    if (m_staMac->GetWifiRemoteStationManager(linkId)->GetShortSlotTimeEnabled())
+    {
+        mainPhy->SetSlot(MicroSeconds(9));
+    }
+
+    if (resetBackoff)
+    {
+        // reset the backoffs on the link left by the main PHY
+        m_staMac->GetChannelAccessManager(*currMainPhyLinkId)->ResetAllBackoffs();
+    }
+
+    const auto timeToSwitchEnd = noSwitchDelay ? Seconds(0) : mainPhy->GetChannelSwitchDelay();
+
+    if (requestAccess)
+    {
+        // schedule channel access request on the new link when switch is completed
+        Simulator::Schedule(timeToSwitchEnd, [=, this]() {
+            for (const auto& [acIndex, ac] : wifiAcList)
+            {
+                m_staMac->GetQosTxop(acIndex)->StartAccessAfterEvent(
+                    linkId,
+                    Txop::DIDNT_HAVE_FRAMES_TO_TRANSMIT,
+                    Txop::CHECK_MEDIUM_BUSY);
+            }
+        });
+    }
+
+    SetCcaEdThresholdOnLinkSwitch(mainPhy, linkId);
+    NotifyMainPhySwitch(*currMainPhyLinkId, linkId);
+}
+
+void
+EmlsrManager::SwitchAuxPhy(uint8_t currLinkId, uint8_t nextLinkId)
+{
+    NS_LOG_FUNCTION(this << currLinkId << nextLinkId);
+
+    auto auxPhy = GetStaMac()->GetWifiPhy(currLinkId);
+
+    auto newAuxPhyChannel = GetChannelForAuxPhy(nextLinkId);
+
+    NS_LOG_DEBUG("Aux PHY (" << auxPhy << ") is about to switch to " << newAuxPhyChannel
+                             << " to operate on link " << +nextLinkId);
+
+    GetStaMac()
+        ->GetChannelAccessManager(currLinkId)
+        ->NotifySwitchingEmlsrLink(auxPhy, newAuxPhyChannel, nextLinkId);
+
+    auxPhy->SetOperatingChannel(newAuxPhyChannel);
+    // re-enable short time slot, if needed
+    if (m_staMac->GetWifiRemoteStationManager(nextLinkId)->GetShortSlotTimeEnabled())
+    {
+        auxPhy->SetSlot(MicroSeconds(9));
+    }
+
+    // schedule channel access request on the new link when switch is completed
+    Simulator::Schedule(auxPhy->GetChannelSwitchDelay(), [=, this]() {
+        for (const auto& [acIndex, ac] : wifiAcList)
         {
-            mainPhy->SetAttribute("ChannelSwitchDelay", TimeValue(Seconds(0)));
-        }
-        mainPhy->SetOperatingChannel(newMainPhyChannel);
-        // restore previous channel switch delay
-        if (noSwitchDelay)
-        {
-            mainPhy->SetAttribute("ChannelSwitchDelay", TimeValue(delay));
+            m_staMac->GetQosTxop(acIndex)->StartAccessAfterEvent(
+                nextLinkId,
+                Txop::DIDNT_HAVE_FRAMES_TO_TRANSMIT,
+                Txop::CHECK_MEDIUM_BUSY);
         }
     });
 
-    NotifyMainPhySwitch(*currMainPhyLinkId, linkId);
+    SetCcaEdThresholdOnLinkSwitch(auxPhy, nextLinkId);
+}
+
+void
+EmlsrManager::StartMediumSyncDelayTimer(uint8_t linkId)
+{
+    NS_LOG_FUNCTION(this << linkId);
+
+    // iterate over all the other EMLSR links
+    for (auto id : m_staMac->GetLinkIds())
+    {
+        if (id != linkId && m_staMac->IsEmlsrLink(id))
+        {
+            const auto [it, inserted] = m_mediumSyncDelayStatus.try_emplace(id);
+
+            // reset the max number of TXOP attempts
+            it->second.msdNTxopsLeft = m_msdMaxNTxops;
+
+            // there are cases in which no PHY is operating on a link; e.g., the main PHY starts
+            // switching to a link on which an aux PHY gained a TXOP and sent an RTS, but the CTS
+            // is not received and the UL TXOP ends before the main PHY channel switch is
+            // completed. The MSD timer is started on the link left "uncovered" by the main PHY
+            if (auto phy = m_staMac->GetWifiPhy(id); phy && !it->second.timer.IsRunning())
+            {
+                NS_LOG_DEBUG("Setting CCA ED threshold on link "
+                             << +id << " to " << +m_msdOfdmEdThreshold << " PHY " << phy);
+                m_prevCcaEdThreshold[phy] = phy->GetCcaEdThreshold();
+                phy->SetCcaEdThreshold(m_msdOfdmEdThreshold);
+            }
+
+            // (re)start the timer
+            it->second.timer.Cancel();
+            it->second.timer = Simulator::Schedule(m_mediumSyncDuration,
+                                                   &EmlsrManager::MediumSyncDelayTimerExpired,
+                                                   this,
+                                                   id);
+        }
+    }
+}
+
+void
+EmlsrManager::CancelMediumSyncDelayTimer(uint8_t linkId)
+{
+    NS_LOG_FUNCTION(this << linkId);
+
+    auto timerIt = m_mediumSyncDelayStatus.find(linkId);
+
+    NS_ASSERT(timerIt != m_mediumSyncDelayStatus.cend() && timerIt->second.timer.IsRunning());
+
+    timerIt->second.timer.Cancel();
+    MediumSyncDelayTimerExpired(linkId);
+}
+
+void
+EmlsrManager::MediumSyncDelayTimerExpired(uint8_t linkId)
+{
+    NS_LOG_FUNCTION(this << linkId);
+
+    auto timerIt = m_mediumSyncDelayStatus.find(linkId);
+
+    NS_ASSERT(timerIt != m_mediumSyncDelayStatus.cend() && !timerIt->second.timer.IsRunning());
+
+    // reset the MSD OFDM ED threshold
+    auto phy = m_staMac->GetWifiPhy(linkId);
+
+    if (!phy)
+    {
+        // no PHY is operating on this link. This may happen when a MediumSyncDelay timer expires
+        // on the link left "uncovered" by the main PHY that is operating on another link (and the
+        // aux PHY of that link did not switch). In this case, do nothing, since the CCA ED
+        // threshold on the main PHY will be restored once the main PHY switches back to its link
+        return;
+    }
+
+    auto threshIt = m_prevCcaEdThreshold.find(phy);
+    NS_ASSERT_MSG(threshIt != m_prevCcaEdThreshold.cend(),
+                  "No value to restore for CCA ED threshold on PHY " << phy);
+    NS_LOG_DEBUG("Resetting CCA ED threshold of PHY " << phy << " to " << threshIt->second
+                                                      << " on link " << +linkId);
+    phy->SetCcaEdThreshold(threshIt->second);
+    m_prevCcaEdThreshold.erase(threshIt);
+}
+
+void
+EmlsrManager::DecrementMediumSyncDelayNTxops(uint8_t linkId)
+{
+    NS_LOG_FUNCTION(this << linkId);
+
+    const auto timerIt = m_mediumSyncDelayStatus.find(linkId);
+
+    NS_ASSERT(timerIt != m_mediumSyncDelayStatus.cend() && timerIt->second.timer.IsRunning());
+    NS_ASSERT(timerIt->second.msdNTxopsLeft != 0);
+
+    if (timerIt->second.msdNTxopsLeft)
+    {
+        --timerIt->second.msdNTxopsLeft.value();
+    }
+}
+
+void
+EmlsrManager::ResetMediumSyncDelayNTxops(uint8_t linkId)
+{
+    NS_LOG_FUNCTION(this << linkId);
+
+    auto timerIt = m_mediumSyncDelayStatus.find(linkId);
+
+    NS_ASSERT(timerIt != m_mediumSyncDelayStatus.cend() && timerIt->second.timer.IsRunning());
+    timerIt->second.msdNTxopsLeft.reset();
+}
+
+bool
+EmlsrManager::MediumSyncDelayNTxopsExceeded(uint8_t linkId)
+{
+    NS_LOG_FUNCTION(this << linkId);
+
+    auto timerIt = m_mediumSyncDelayStatus.find(linkId);
+
+    NS_ASSERT(timerIt != m_mediumSyncDelayStatus.cend() && timerIt->second.timer.IsRunning());
+    return timerIt->second.msdNTxopsLeft == 0;
 }
 
 MgtEmlOmn
@@ -535,13 +881,13 @@ EmlsrManager::ChangeEmlsrMode()
     // active mode or passive mode (depending on whether EMLSR mode has been enabled or disabled)
     m_staMac->NotifyEmlsrModeChanged(m_emlsrLinks);
     // Enforce the limit on the max channel width supported by aux PHYs
-    ApplyMaxChannelWidthOnAuxPhys();
+    ApplyMaxChannelWidthAndModClassOnAuxPhys();
 
     NotifyEmlsrModeChanged();
 }
 
 void
-EmlsrManager::ApplyMaxChannelWidthOnAuxPhys()
+EmlsrManager::ApplyMaxChannelWidthAndModClassOnAuxPhys()
 {
     NS_LOG_FUNCTION(this);
     auto currMainPhyLinkId = m_staMac->GetLinkForPhy(m_mainPhyId);
@@ -558,6 +904,8 @@ EmlsrManager::ApplyMaxChannelWidthOnAuxPhys()
             continue;
         }
 
+        auxPhy->SetMaxModulationClassSupported(m_auxPhyMaxModClass);
+
         NS_LOG_DEBUG("Aux PHY (" << auxPhy << ") is about to switch to " << channel
                                  << " to operate on link " << +linkId);
         // We cannot simply set the new channel, because otherwise the MAC will disable
@@ -565,12 +913,22 @@ EmlsrManager::ApplyMaxChannelWidthOnAuxPhys()
         // this channel switch must not have such a consequence. We already have a method
         // for doing so, i.e., inform the MAC that the PHY is switching channel to operate
         // on the "same" link.
-        m_staMac->GetChannelAccessManager(linkId)->NotifySwitchingEmlsrLink(auxPhy,
-                                                                            channel,
-                                                                            linkId);
+        auto cam = m_staMac->GetChannelAccessManager(linkId);
+        cam->NotifySwitchingEmlsrLink(auxPhy, channel, linkId);
 
         void (WifiPhy::*fp)(const WifiPhyOperatingChannel&) = &WifiPhy::SetOperatingChannel;
         Simulator::ScheduleNow(fp, auxPhy, channel);
+
+        // the way the ChannelAccessManager handles EMLSR link switch implies that a PHY listener
+        // is removed when the channel switch starts and another one is attached when the channel
+        // switch ends. In the meantime, no PHY is connected to the ChannelAccessManager. Inform
+        // the ChannelAccessManager that this channel switch is related to EMLSR operations, so
+        // that the ChannelAccessManager does not complain if events requiring access to the PHY
+        // occur during the channel switch.
+        cam->NotifyStartUsingOtherEmlsrLink();
+        Simulator::Schedule(auxPhy->GetChannelSwitchDelay(),
+                            &ChannelAccessManager::NotifyStopUsingOtherEmlsrLink,
+                            cam);
     }
 }
 
@@ -590,25 +948,27 @@ EmlsrManager::ComputeOperatingChannels()
         m_mainPhyChannels.emplace(linkId, channel);
 
         auto mainPhyChWidth = channel.GetWidth();
-        if (m_auxPhyMaxWidth >= mainPhyChWidth)
+        auto auxPhyMaxWidth =
+            std::min(m_auxPhyMaxWidth, GetMaximumChannelWidth(m_auxPhyMaxModClass));
+        if (auxPhyMaxWidth >= mainPhyChWidth)
         {
             // same channel can be used by aux PHYs
             m_auxPhyChannels.emplace(linkId, channel);
             continue;
         }
         // aux PHYs will operate on a primary subchannel
-        auto freq = channel.GetPrimaryChannelCenterFrequency(m_auxPhyMaxWidth);
+        auto freq = channel.GetPrimaryChannelCenterFrequency(auxPhyMaxWidth);
         auto chIt = WifiPhyOperatingChannel::FindFirst(0,
                                                        freq,
-                                                       m_auxPhyMaxWidth,
+                                                       auxPhyMaxWidth,
                                                        WIFI_STANDARD_UNSPECIFIED,
                                                        channel.GetPhyBand());
         NS_ASSERT_MSG(chIt != WifiPhyOperatingChannel::m_frequencyChannels.end(),
-                      "Primary" << m_auxPhyMaxWidth << " channel not found");
+                      "Primary" << auxPhyMaxWidth << " channel not found");
         m_auxPhyChannels.emplace(linkId, chIt);
         // find the P20 index for the channel used by the aux PHYs
         auto p20Index = channel.GetPrimaryChannelIndex(20);
-        while (mainPhyChWidth > m_auxPhyMaxWidth)
+        while (mainPhyChWidth > auxPhyMaxWidth)
         {
             mainPhyChWidth /= 2;
             p20Index /= 2;

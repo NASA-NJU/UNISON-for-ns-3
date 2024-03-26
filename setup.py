@@ -1,14 +1,15 @@
-import cmake_build_extension
-import setuptools
 import sys
 import sysconfig
 
+import cmake_build_extension
+import setuptools
+
 setuptools.setup(
     cmdclass=dict(build_ext=cmake_build_extension.BuildExtension),
-    packages=['ns', 'visualizer'],
+    packages=["ns", "visualizer"],
     package_dir={
-      'ns': './build-support/pip-wheel/ns',
-      'visualizer': './build-support/pip-wheel/visualizer'
+        "ns": "./build-support/pip-wheel/ns",
+        "visualizer": "./build-support/pip-wheel/visualizer",
     },
     ext_modules=[
         cmake_build_extension.CMakeExtension(
@@ -23,13 +24,12 @@ setuptools.setup(
                 "-DNS3_BINDINGS_INSTALL_DIR:STRING=INSTALL_PREFIX",
                 "-DNS3_FETCH_OPTIONAL_COMPONENTS:BOOL=ON",
                 "-DNS3_PIP_PACKAGING:BOOL=ON",
-                "-DNS3_USE_LIB64:BOOL=ON",
                 # Make CMake find python components from the currently running python
                 # https://catherineh.github.io/programming/2021/11/16/python-binary-distributions-whls-with-c17-cmake-auditwheel-and-manylinux
                 f"-DPython3_LIBRARY_DIRS={sysconfig.get_config_var('LIBDIR')}",
                 f"-DPython3_INCLUDE_DIRS={sysconfig.get_config_var('INCLUDEPY')}",
-                f"-DPython3_EXECUTABLE={sys.executable}"
-            ]
+                f"-DPython3_EXECUTABLE={sys.executable}",
+            ],
         ),
     ],
 )

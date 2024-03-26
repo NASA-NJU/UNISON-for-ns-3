@@ -62,7 +62,7 @@ TcpLedbat::GetTypeId()
             .AddAttribute("SSParam",
                           "Possibility of Slow Start",
                           EnumValue(DO_SLOWSTART),
-                          MakeEnumAccessor(&TcpLedbat::SetDoSs),
+                          MakeEnumAccessor<SlowStartType>(&TcpLedbat::SetDoSs),
                           MakeEnumChecker(DO_SLOWSTART, "yes", DO_NOT_SLOWSTART, "no"))
             .AddAttribute("MinCwnd",
                           "Minimum cWnd for Ledbat",
@@ -102,7 +102,7 @@ TcpLedbat::TcpLedbat()
     m_sndCwndCnt = 0;
     m_flag = LEDBAT_CAN_SS;
     m_minCwnd = 2;
-};
+}
 
 void
 TcpLedbat::InitCircBuf(OwdCircBuf& buffer)

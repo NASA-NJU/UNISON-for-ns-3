@@ -10,6 +10,7 @@ build_lib(
     model/lr-wpan-mac-header.cc
     model/lr-wpan-mac-pl-headers.cc
     model/lr-wpan-mac-trailer.cc
+    model/lr-wpan-mac-base.cc
     model/lr-wpan-mac.cc
     model/lr-wpan-net-device.cc
     model/lr-wpan-phy.cc
@@ -26,17 +27,13 @@ build_lib(
     model/lr-wpan-mac-header.h
     model/lr-wpan-mac-pl-headers.h
     model/lr-wpan-mac-trailer.h
+    model/lr-wpan-mac-base.h
     model/lr-wpan-mac.h
     model/lr-wpan-net-device.h
     model/lr-wpan-phy.h
     model/lr-wpan-spectrum-signal-parameters.h
     model/lr-wpan-spectrum-value-helper.h
-  LIBRARIES_TO_LINK
-    ${libnetwork}
-    ${libcore}
-    ${libmobility}
-    ${libspectrum}
-    ${libpropagation}
+  LIBRARIES_TO_LINK ${libspectrum}
   TEST_SOURCES
     test/lr-wpan-ack-test.cc
     test/lr-wpan-cca-test.cc

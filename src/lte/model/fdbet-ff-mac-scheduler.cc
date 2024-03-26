@@ -167,31 +167,25 @@ FdBetFfMacScheduler::DoCschedUeConfigReq(
         m_dlHarqCurrentProcessId.insert(std::pair<uint16_t, uint8_t>(params.m_rnti, 0));
         DlHarqProcessesStatus_t dlHarqPrcStatus;
         dlHarqPrcStatus.resize(8, 0);
-        m_dlHarqProcessesStatus.insert(
-            std::pair<uint16_t, DlHarqProcessesStatus_t>(params.m_rnti, dlHarqPrcStatus));
+        m_dlHarqProcessesStatus[params.m_rnti] = dlHarqPrcStatus;
         DlHarqProcessesTimer_t dlHarqProcessesTimer;
         dlHarqProcessesTimer.resize(8, 0);
-        m_dlHarqProcessesTimer.insert(
-            std::pair<uint16_t, DlHarqProcessesTimer_t>(params.m_rnti, dlHarqProcessesTimer));
+        m_dlHarqProcessesTimer[params.m_rnti] = dlHarqProcessesTimer;
         DlHarqProcessesDciBuffer_t dlHarqdci;
         dlHarqdci.resize(8);
-        m_dlHarqProcessesDciBuffer.insert(
-            std::pair<uint16_t, DlHarqProcessesDciBuffer_t>(params.m_rnti, dlHarqdci));
+        m_dlHarqProcessesDciBuffer[params.m_rnti] = dlHarqdci;
         DlHarqRlcPduListBuffer_t dlHarqRlcPdu;
         dlHarqRlcPdu.resize(2);
         dlHarqRlcPdu.at(0).resize(8);
         dlHarqRlcPdu.at(1).resize(8);
-        m_dlHarqProcessesRlcPduListBuffer.insert(
-            std::pair<uint16_t, DlHarqRlcPduListBuffer_t>(params.m_rnti, dlHarqRlcPdu));
+        m_dlHarqProcessesRlcPduListBuffer[params.m_rnti] = dlHarqRlcPdu;
         m_ulHarqCurrentProcessId.insert(std::pair<uint16_t, uint8_t>(params.m_rnti, 0));
         UlHarqProcessesStatus_t ulHarqPrcStatus;
         ulHarqPrcStatus.resize(8, 0);
-        m_ulHarqProcessesStatus.insert(
-            std::pair<uint16_t, UlHarqProcessesStatus_t>(params.m_rnti, ulHarqPrcStatus));
+        m_ulHarqProcessesStatus[params.m_rnti] = ulHarqPrcStatus;
         UlHarqProcessesDciBuffer_t ulHarqdci;
         ulHarqdci.resize(8);
-        m_ulHarqProcessesDciBuffer.insert(
-            std::pair<uint16_t, UlHarqProcessesDciBuffer_t>(params.m_rnti, ulHarqdci));
+        m_ulHarqProcessesDciBuffer[params.m_rnti] = ulHarqdci;
     }
     else
     {
@@ -214,13 +208,13 @@ FdBetFfMacScheduler::DoCschedLcConfigReq(
             fdbetsFlowPerf_t flowStatsDl;
             flowStatsDl.flowStart = Simulator::Now();
             flowStatsDl.totalBytesTransmitted = 0;
-            flowStatsDl.lastTtiBytesTrasmitted = 0;
+            flowStatsDl.lastTtiBytesTransmitted = 0;
             flowStatsDl.lastAveragedThroughput = 1;
             m_flowStatsDl.insert(std::pair<uint16_t, fdbetsFlowPerf_t>(params.m_rnti, flowStatsDl));
             fdbetsFlowPerf_t flowStatsUl;
             flowStatsUl.flowStart = Simulator::Now();
             flowStatsUl.totalBytesTransmitted = 0;
-            flowStatsUl.lastTtiBytesTrasmitted = 0;
+            flowStatsUl.lastTtiBytesTransmitted = 0;
             flowStatsUl.lastAveragedThroughput = 1;
             m_flowStatsUl.insert(std::pair<uint16_t, fdbetsFlowPerf_t>(params.m_rnti, flowStatsUl));
         }
@@ -303,9 +297,7 @@ FdBetFfMacScheduler::DoSchedDlRlcBufferReq(
 
     if (it == m_rlcBufferReq.end())
     {
-        m_rlcBufferReq.insert(
-            std::pair<LteFlowId_t, FfMacSchedSapProvider::SchedDlRlcBufferReqParameters>(flow,
-                                                                                         params));
+        m_rlcBufferReq[flow] = params;
     }
     else
     {
@@ -336,11 +328,11 @@ FdBetFfMacScheduler::GetRbgSize(int dlbandwidth)
     {
         if (dlbandwidth < FdBetType0AllocationRbg[i])
         {
-            return (i + 1);
+            return i + 1;
         }
     }
 
-    return (-1);
+    return -1;
 }
 
 unsigned int
@@ -360,7 +352,7 @@ FdBetFfMacScheduler::LcActivePerFlow(uint16_t rnti)
             break;
         }
     }
-    return (lcActive);
+    return lcActive;
 }
 
 bool
@@ -394,7 +386,7 @@ FdBetFfMacScheduler::UpdateHarqProcessId(uint16_t rnti)
 
     if (!m_harqOn)
     {
-        return (0);
+        return 0;
     }
 
     auto it = m_dlHarqCurrentProcessId.find(rnti);
@@ -423,7 +415,7 @@ FdBetFfMacScheduler::UpdateHarqProcessId(uint16_t rnti)
                        << rnti << " check before update with HarqProcessAvailability");
     }
 
-    return ((*it).second);
+    return (*it).second;
 }
 
 void
@@ -950,8 +942,7 @@ FdBetFfMacScheduler::DoSchedDlTriggerReq(
                 if (itMap == allocationMap.end())
                 {
                     tempMap.push_back(i);
-                    allocationMap.insert(
-                        std::pair<uint16_t, std::vector<uint16_t>>((*itMax).first, tempMap));
+                    allocationMap[(*itMax).first] = tempMap;
                 }
                 else
                 {
@@ -1023,7 +1014,7 @@ FdBetFfMacScheduler::DoSchedDlTriggerReq(
     // reset TTI stats of users
     for (auto itStats = m_flowStatsDl.begin(); itStats != m_flowStatsDl.end(); itStats++)
     {
-        (*itStats).second.lastTtiBytesTrasmitted = 0;
+        (*itStats).second.lastTtiBytesTransmitted = 0;
     }
 
     // generate the transmission opportunities by grouping the RBGs of the same RNTI and
@@ -1158,8 +1149,8 @@ FdBetFfMacScheduler::DoSchedDlTriggerReq(
         auto it = m_flowStatsDl.find((*itMap).first);
         if (it != m_flowStatsDl.end())
         {
-            (*it).second.lastTtiBytesTrasmitted = bytesTxed;
-            NS_LOG_INFO(this << " UE total bytes txed " << (*it).second.lastTtiBytesTrasmitted);
+            (*it).second.lastTtiBytesTransmitted = bytesTxed;
+            NS_LOG_INFO(this << " UE total bytes txed " << (*it).second.lastTtiBytesTransmitted);
         }
         else
         {
@@ -1174,15 +1165,15 @@ FdBetFfMacScheduler::DoSchedDlTriggerReq(
     NS_LOG_INFO(this << " Update UEs statistics");
     for (auto itStats = m_flowStatsDl.begin(); itStats != m_flowStatsDl.end(); itStats++)
     {
-        (*itStats).second.totalBytesTransmitted += (*itStats).second.lastTtiBytesTrasmitted;
+        (*itStats).second.totalBytesTransmitted += (*itStats).second.lastTtiBytesTransmitted;
         // update average throughput (see eq. 12.3 of Sec 12.3.1.2 of LTE – The UMTS Long Term
         // Evolution, Ed Wiley)
         (*itStats).second.lastAveragedThroughput =
             ((1.0 - (1.0 / m_timeWindow)) * (*itStats).second.lastAveragedThroughput) +
-            ((1.0 / m_timeWindow) * (double)((*itStats).second.lastTtiBytesTrasmitted / 0.001));
+            ((1.0 / m_timeWindow) * (double)((*itStats).second.lastTtiBytesTransmitted / 0.001));
         NS_LOG_INFO(this << " UE total bytes " << (*itStats).second.totalBytesTransmitted);
         NS_LOG_INFO(this << " UE average throughput " << (*itStats).second.lastAveragedThroughput);
-        (*itStats).second.lastTtiBytesTrasmitted = 0;
+        (*itStats).second.lastTtiBytesTransmitted = 0;
     }
 
     m_schedSapUser->SchedDlConfigInd(ret);
@@ -1214,9 +1205,8 @@ FdBetFfMacScheduler::DoSchedDlCqiInfoReq(
             if (it == m_p10CqiRxed.end())
             {
                 // create the new entry
-                m_p10CqiRxed.insert(std::pair<uint16_t, uint8_t>(
-                    rnti,
-                    params.m_cqiList.at(i).m_wbCqi.at(0))); // only codeword 0 at this stage (SISO)
+                m_p10CqiRxed[rnti] =
+                    params.m_cqiList.at(i).m_wbCqi.at(0); // only codeword 0 at this stage (SISO)
                 // generate correspondent timer
                 m_p10CqiTimers.insert(std::pair<uint16_t, uint32_t>(rnti, m_cqiTimersThreshold));
             }
@@ -1237,9 +1227,7 @@ FdBetFfMacScheduler::DoSchedDlCqiInfoReq(
             if (it == m_a30CqiRxed.end())
             {
                 // create the new entry
-                m_a30CqiRxed.insert(
-                    std::pair<uint16_t, SbMeasResult_s>(rnti,
-                                                        params.m_cqiList.at(i).m_sbMeasResult));
+                m_a30CqiRxed[rnti] = params.m_cqiList.at(i).m_sbMeasResult;
                 m_a30CqiTimers.insert(std::pair<uint16_t, uint32_t>(rnti, m_cqiTimersThreshold));
             }
             else
@@ -1264,7 +1252,7 @@ FdBetFfMacScheduler::EstimateUlSinr(uint16_t rnti, uint16_t rb)
     if (itCqi == m_ueCqi.end())
     {
         // no cqi info about this UE
-        return (NO_SINR);
+        return NO_SINR;
     }
     else
     {
@@ -1283,7 +1271,7 @@ FdBetFfMacScheduler::EstimateUlSinr(uint16_t rnti, uint16_t rb)
         double estimatedSinr = (sinrNum > 0) ? (sinrSum / sinrNum) : DBL_MAX;
         // store the value
         (*itCqi).second.at(rb) = estimatedSinr;
-        return (estimatedSinr);
+        return estimatedSinr;
     }
 }
 
@@ -1412,8 +1400,7 @@ FdBetFfMacScheduler::DoSchedUlTriggerReq(
     {
         if (!ret.m_dciList.empty())
         {
-            m_allocationMaps.insert(
-                std::pair<uint16_t, std::vector<uint16_t>>(params.m_sfnSf, rbgAllocationMap));
+            m_allocationMaps[params.m_sfnSf] = rbgAllocationMap;
             m_schedSapUser->SchedUlConfigInd(ret);
         }
 
@@ -1531,8 +1518,7 @@ FdBetFfMacScheduler::DoSchedUlTriggerReq(
             {
                 m_schedSapUser->SchedUlConfigInd(ret);
             }
-            m_allocationMaps.insert(
-                std::pair<uint16_t, std::vector<uint16_t>>(params.m_sfnSf, rbgAllocationMap));
+            m_allocationMaps[params.m_sfnSf] = rbgAllocationMap;
             return;
         }
 
@@ -1640,7 +1626,7 @@ FdBetFfMacScheduler::DoSchedUlTriggerReq(
         auto itStats = m_flowStatsUl.find((*it).first);
         if (itStats != m_flowStatsUl.end())
         {
-            (*itStats).second.lastTtiBytesTrasmitted = uldci.m_tbSize;
+            (*itStats).second.lastTtiBytesTransmitted = uldci.m_tbSize;
         }
         else
         {
@@ -1665,18 +1651,17 @@ FdBetFfMacScheduler::DoSchedUlTriggerReq(
     // update UEs stats
     for (auto itStats = m_flowStatsUl.begin(); itStats != m_flowStatsUl.end(); itStats++)
     {
-        (*itStats).second.totalBytesTransmitted += (*itStats).second.lastTtiBytesTrasmitted;
+        (*itStats).second.totalBytesTransmitted += (*itStats).second.lastTtiBytesTransmitted;
         // update average throughput (see eq. 12.3 of Sec 12.3.1.2 of LTE – The UMTS Long Term
         // Evolution, Ed Wiley)
         (*itStats).second.lastAveragedThroughput =
             ((1.0 - (1.0 / m_timeWindow)) * (*itStats).second.lastAveragedThroughput) +
-            ((1.0 / m_timeWindow) * (double)((*itStats).second.lastTtiBytesTrasmitted / 0.001));
+            ((1.0 / m_timeWindow) * (double)((*itStats).second.lastTtiBytesTransmitted / 0.001));
         NS_LOG_INFO(this << " UE total bytes " << (*itStats).second.totalBytesTransmitted);
         NS_LOG_INFO(this << " UE average throughput " << (*itStats).second.lastAveragedThroughput);
-        (*itStats).second.lastTtiBytesTrasmitted = 0;
+        (*itStats).second.lastTtiBytesTransmitted = 0;
     }
-    m_allocationMaps.insert(
-        std::pair<uint16_t, std::vector<uint16_t>>(params.m_sfnSf, rbgAllocationMap));
+    m_allocationMaps[params.m_sfnSf] = rbgAllocationMap;
     m_schedSapUser->SchedUlConfigInd(ret);
 }
 
@@ -1794,11 +1779,9 @@ FdBetFfMacScheduler::DoSchedUlCqiInfoReq(
                         newCqi.push_back(NO_SINR);
                     }
                 }
-                m_ueCqi.insert(
-                    std::pair<uint16_t, std::vector<double>>((*itMap).second.at(i), newCqi));
+                m_ueCqi[(*itMap).second.at(i)] = newCqi;
                 // generate correspondent timer
-                m_ueCqiTimers.insert(
-                    std::pair<uint16_t, uint32_t>((*itMap).second.at(i), m_cqiTimersThreshold));
+                m_ueCqiTimers[(*itMap).second.at(i)] = m_cqiTimersThreshold;
             }
             else
             {

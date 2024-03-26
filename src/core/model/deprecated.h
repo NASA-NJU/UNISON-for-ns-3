@@ -76,37 +76,16 @@
 
 /**
  * \ingroup core
+ * \def NS_DEPRECATED_3_41
+ * Tag for things deprecated in version ns-3.41.
+ */
+#define NS_DEPRECATED_3_41(msg) NS_DEPRECATED(msg)
+
+/**
+ * \ingroup core
  * \def NS_DEPRECATED_3_40
  * Tag for things deprecated in version ns-3.40.
  */
 #define NS_DEPRECATED_3_40(msg) NS_DEPRECATED(msg)
-
-/**
- * \ingroup core
- * \def NS_DEPRECATED_3_39
- * Tag for things deprecated in version ns-3.39.
- */
-#define NS_DEPRECATED_3_39(msg) NS_DEPRECATED(msg)
-
-/**
- * \ingroup core
- * \def NS_DEPRECATED_3_38
- * Tag for things deprecated in version ns-3.38.
- */
-#define NS_DEPRECATED_3_38(msg) NS_DEPRECATED(msg)
-
-/**
- * \ingroup core
- * \def NS_DEPRECATED_3_37
- * Tag for things deprecated in version ns-3.37.
- */
-#define NS_DEPRECATED_3_37(msg) NS_DEPRECATED(msg)
-
-/**
- * \ingroup core
- * \def NS_DEPRECATED_3_36
- * Tag for things deprecated in version ns-3.36.
- */
-#define NS_DEPRECATED_3_36(msg) NS_DEPRECATED(msg)
 
 #endif /* NS3_DEPRECATED_H */

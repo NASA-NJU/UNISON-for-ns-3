@@ -25,6 +25,7 @@
 #include "channel-access-manager.h"
 #include "mac-rx-middle.h"
 #include "mac-tx-middle.h"
+#include "mgt-action-headers.h"
 #include "mgt-headers.h"
 #include "msdu-aggregator.h"
 #include "qos-txop.h"
@@ -684,6 +685,26 @@ ApWifiMac::GetMultiLinkElement(uint8_t linkId, WifiMacType frameType, const Mac4
         TimeValue time;
         ehtConfiguration->GetAttribute("TransitionTimeout", time);
         mle.SetTransitionTimeout(time.Get());
+
+        // An AP affiliated with an AP MLD may include the Medium Synchronization Delay Information
+        // subfield in the Common Info field of the Basic Multi-Link element carried in transmitted
+        // (Re)Association Response or Multi-Link Probe Response frames to provide medium
+        // synchronization information used by the AP MLD. (Section 35.3.16.8.2 of 802.11be D3.1)
+        if (frameType == WIFI_MAC_MGT_ASSOCIATION_RESPONSE)
+        {
+            auto& commonInfo = mle.GetCommonInfoBasic();
+
+            ehtConfiguration->GetAttribute("MediumSyncDuration", time);
+            commonInfo.SetMediumSyncDelayTimer(time.Get());
+
+            IntegerValue ofdmEdThres;
+            ehtConfiguration->GetAttribute("MsdOfdmEdThreshold", ofdmEdThres);
+            commonInfo.SetMediumSyncOfdmEdThreshold(ofdmEdThres.Get());
+
+            UintegerValue maxNTxops;
+            ehtConfiguration->GetAttribute("MsdMaxNTxops", maxNTxops);
+            commonInfo.SetMediumSyncMaxNTxops(maxNTxops.Get());
+        }
     }
 
     // The MLD Capabilities And Operations subfield is present in the Common Info field of the
@@ -698,7 +719,7 @@ ApWifiMac::GetMultiLinkElement(uint8_t linkId, WifiMacType frameType, const Mac4
         mldCapabilities.emplace();
         mldCapabilities->maxNSimultaneousLinks = GetNLinks() - 1; // assuming STR for now
         mldCapabilities->srsSupport = 0;
-        EnumValue negSupport;
+        EnumValue<WifiTidToLinkMappingNegSupport> negSupport;
         ehtConfiguration->GetAttributeFailSafe("TidToLinkMappingNegSupport", negSupport);
         mldCapabilities->tidToLinkMappingSupport = negSupport.Get();
         mldCapabilities->freqSepForStrApMld = 0; // not supported yet
@@ -1957,7 +1978,7 @@ ApWifiMac::ReceiveAssocRequest(const AssocReqRefVariant& assoc,
                     return failure("Incorrect directions in TID-to-Link Mapping IEs");
                 }
 
-                EnumValue negSupport;
+                EnumValue<WifiTidToLinkMappingNegSupport> negSupport;
                 ehtConfig->GetAttributeFailSafe("TidToLinkMappingNegSupport", negSupport);
 
                 if (negSupport.Get() == 0)
@@ -2191,7 +2212,7 @@ ApWifiMac::ReceiveEmlOmn(MgtEmlOmn& frame, const Mac48Address& sender, uint8_t l
     // completed. For this purpose, we connect a callback to the PHY TX begin trace to catch
     // the Ack transmitted after the EML Notification frame.
     CallbackBase cb = Callback<void, WifiConstPsduMap, WifiTxVector, double>(
-        [=](WifiConstPsduMap psduMap, WifiTxVector txVector, double /* txPowerW */) {
+        [=, this](WifiConstPsduMap psduMap, WifiTxVector txVector, double /* txPowerW */) {
             NS_ASSERT_MSG(psduMap.size() == 1 && psduMap.begin()->second->GetNMpdus() == 1 &&
                               psduMap.begin()->second->GetHeader(0).IsAck(),
                           "Expected a Normal Ack after EML Notification frame");
@@ -2203,7 +2224,7 @@ ApWifiMac::ReceiveEmlOmn(MgtEmlOmn& frame, const Mac48Address& sender, uint8_t l
             ehtConfiguration->GetAttribute("TransitionTimeout", transitionTimeout);
 
             m_transitionTimeoutEvents[sender] =
-                Simulator::Schedule(ackDuration + transitionTimeout.Get(), [=]() {
+                Simulator::Schedule(ackDuration + transitionTimeout.Get(), [=, this]() {
                     for (uint8_t id = 0; id < GetNLinks(); id++)
                     {
                         auto linkAddress =

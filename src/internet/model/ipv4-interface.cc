@@ -237,12 +237,14 @@ Ipv4Interface::Send(Ptr<Packet> p, const Ipv4Header& hdr, Ipv4Address dest)
         if (dest == (*i).GetLocal())
         {
             p->AddHeader(hdr);
-            m_tc->Receive(m_device,
-                          p,
-                          Ipv4L3Protocol::PROT_NUMBER,
-                          m_device->GetBroadcast(),
-                          m_device->GetBroadcast(),
-                          NetDevice::PACKET_HOST);
+            Simulator::ScheduleNow(&TrafficControlLayer::Receive,
+                                   m_tc,
+                                   m_device,
+                                   p,
+                                   Ipv4L3Protocol::PROT_NUMBER,
+                                   m_device->GetBroadcast(),
+                                   m_device->GetBroadcast(),
+                                   NetDevice::PACKET_HOST);
             return;
         }
     }
@@ -349,7 +351,7 @@ Ipv4Interface::GetAddress(uint32_t index) const
         NS_FATAL_ERROR("index " << index << " out of bounds");
     }
     Ipv4InterfaceAddress addr;
-    return (addr); // quiet compiler
+    return addr; // quiet compiler
 }
 
 Ipv4InterfaceAddress
@@ -379,7 +381,7 @@ Ipv4Interface::RemoveAddress(uint32_t index)
     }
     NS_FATAL_ERROR("Address " << index << " not found");
     Ipv4InterfaceAddress addr;
-    return (addr); // quiet compiler
+    return addr; // quiet compiler
 }
 
 Ipv4InterfaceAddress

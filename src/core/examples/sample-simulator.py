@@ -1,22 +1,21 @@
-# -*- Mode:Python; -*-
-# /*
-#  * Copyright (c) 2010 INRIA
-#  *
-#  * This program is free software; you can redistribute it and/or modify
-#  * it under the terms of the GNU General Public License version 2 as
-#  * published by the Free Software Foundation;
-#  *
-#  * This program is distributed in the hope that it will be useful,
-#  * but WITHOUT ANY WARRANTY; without even the implied warranty of
-#  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#  * GNU General Public License for more details.
-#  *
-#  * You should have received a copy of the GNU General Public License
-#  * along with this program; if not, write to the Free Software
-#  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-#  *
-#  * Authors: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
-#  */
+#
+# Copyright (c) 2010 INRIA
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License version 2 as
+# published by the Free Software Foundation;
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+# Authors: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
+#
 #
 # Python version of sample-simulator.cc
 
@@ -25,20 +24,31 @@
 #  \ingroup simulator
 #  Python example program demonstrating use of various Schedule functions.
 
+## Import ns-3
+try:
+    from ns import ns
+except ModuleNotFoundError:
+    raise SystemExit(
+        "Error: ns3 Python module not found;"
+        " Python bindings may not be enabled"
+        " or your PYTHONPATH might not be properly configured"
+    )
 
-from ns import ns
 
 ## Example function - triggered at a random time.
 ## \return None.
 def RandomFunction():
-    print ("RandomFunction received event at", ns.core.Simulator.Now().GetSeconds(), "s")
+    print("RandomFunction received event at", ns.core.Simulator.Now().GetSeconds(), "s")
+
 
 ## Example function - triggered if an event is canceled (should not be called).
 ## \return None.
 def CancelledEvent():
-    print ("I should never be called... ")
+    print("I should never be called... ")
 
-ns.cppyy.cppdef("""
+
+ns.cppyy.cppdef(
+    """
     #include "CPyCppyy/API.h"
 
     using namespace ns3;
@@ -100,7 +110,8 @@ ns.cppyy.cppdef("""
     {
         return MakeEvent(&CancelledFunctionCpp);
     }
-   """)
+   """
+)
 
 
 def main(argv):
@@ -126,6 +137,8 @@ def main(argv):
 
     ns.core.Simulator.Destroy()
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     import sys
+
     main(sys.argv)

@@ -28,10 +28,7 @@ build_lib(
     helper/tap-bridge-helper.h
     model/tap-bridge.h
     model/tap-encode-decode.h
-  LIBRARIES_TO_LINK
-    ${libcore}
-    ${libinternet}
-    ${libnetwork}
+  LIBRARIES_TO_LINK ${libinternet}
 )
 
 add_definitions(
@@ -41,6 +38,7 @@ build_exec(
   EXECNAME tap-creator
   SOURCE_FILES model/tap-creator.cc
                model/tap-encode-decode.cc
+  LIBRARIES_TO_LINK ${libnetwork}
   EXECUTABLE_DIRECTORY_PATH ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/src/tap-bridge/
   INSTALL_DIRECTORY_PATH ${CMAKE_INSTALL_LIBEXECDIR}/ns3
   STANDALONE

@@ -20,6 +20,7 @@
 #include "channel-access-manager.h"
 
 #include "txop.h"
+#include "wifi-mac-queue.h"
 #include "wifi-phy-listener.h"
 #include "wifi-phy.h"
 
@@ -36,6 +37,8 @@ namespace ns3
 {
 
 NS_LOG_COMPONENT_DEFINE("ChannelAccessManager");
+
+NS_OBJECT_ENSURE_REGISTERED(ChannelAccessManager);
 
 /**
  * Listener for PHY events. Forwards to ChannelAccessManager.
@@ -168,6 +171,26 @@ class PhyListener : public ns3::WifiPhyListener
  *      Implement the channel access manager of all Txop holders
  ****************************************************************/
 
+TypeId
+ChannelAccessManager::GetTypeId()
+{
+    static TypeId tid =
+        TypeId("ns3::ChannelAccessManager")
+            .SetParent<ns3::Object>()
+            .SetGroupName("Wifi")
+            .AddConstructor<ChannelAccessManager>()
+            .AddAttribute("GenerateBackoffIfTxopWithoutTx",
+                          "Specify whether the backoff should be invoked when the AC gains the "
+                          "right to start a TXOP but it does not transmit any frame "
+                          "(e.g., due to constraints associated with EMLSR operations), "
+                          "provided that the queue is not actually empty.",
+                          BooleanValue(false),
+                          MakeBooleanAccessor(&ChannelAccessManager::SetGenerateBackoffOnNoTx,
+                                              &ChannelAccessManager::GetGenerateBackoffOnNoTx),
+                          MakeBooleanChecker());
+    return tid;
+}
+
 ChannelAccessManager::ChannelAccessManager()
     : m_lastAckTimeoutEnd(0),
       m_lastCtsTimeoutEnd(0),
@@ -177,7 +200,6 @@ ChannelAccessManager::ChannelAccessManager()
       m_lastTxEnd(0),
       m_lastSwitchingEnd(0),
       m_usingOtherEmlsrLink(false),
-      m_lastUsingOtherEmlsrLinkEnd(0),
       m_sleeping(false),
       m_off(false),
       m_linkId(0)
@@ -212,12 +234,12 @@ ChannelAccessManager::DoDispose()
     m_phyListeners.clear();
 }
 
-PhyListener*
+std::shared_ptr<PhyListener>
 ChannelAccessManager::GetPhyListener(Ptr<WifiPhy> phy) const
 {
     if (auto listenerIt = m_phyListeners.find(phy); listenerIt != m_phyListeners.end())
     {
-        return listenerIt->second.get();
+        return listenerIt->second;
     }
     return nullptr;
 }
@@ -227,9 +249,7 @@ ChannelAccessManager::SetupPhyListener(Ptr<WifiPhy> phy)
 {
     NS_LOG_FUNCTION(this << phy);
 
-    auto phyListener = GetPhyListener(phy);
-
-    if (phyListener)
+    if (auto phyListener = GetPhyListener(phy))
     {
         // a PHY listener for the given PHY already exists, it must be inactive
         NS_ASSERT_MSG(!phyListener->IsActive(),
@@ -239,7 +259,7 @@ ChannelAccessManager::SetupPhyListener(Ptr<WifiPhy> phy)
     }
     else
     {
-        phyListener = new PhyListener(this);
+        phyListener = std::make_shared<PhyListener>(this);
         m_phyListeners.emplace(phy, phyListener);
         phy->RegisterListener(phyListener);
     }
@@ -393,12 +413,15 @@ ChannelAccessManager::IsBusy() const
 }
 
 bool
-ChannelAccessManager::NeedBackoffUponAccess(Ptr<Txop> txop)
+ChannelAccessManager::NeedBackoffUponAccess(Ptr<Txop> txop,
+                                            bool hadFramesToTransmit,
+                                            bool checkMediumBusy)
 {
-    NS_LOG_FUNCTION(this << txop);
+    NS_LOG_FUNCTION(this << txop << hadFramesToTransmit << checkMediumBusy);
 
-    // No backoff needed if in sleep mode, off or when using another EMLSR link
-    if (m_sleeping || m_off || m_usingOtherEmlsrLink)
+    // No backoff needed if in sleep mode or off. Checking if m_phy is nullptr is a workaround
+    // needed for EMLSR and may be removed in the future
+    if (m_sleeping || m_off || !m_phy)
     {
         return false;
     }
@@ -426,10 +449,10 @@ ChannelAccessManager::NeedBackoffUponAccess(Ptr<Txop> txop)
      *    with that AC has now become non-empty and any other transmit queues
      *    associated with that AC are empty; the medium is busy on the primary channel
      */
-    if (!txop->HasFramesToTransmit(m_linkId) && txop->GetAccessStatus(m_linkId) != Txop::GRANTED &&
-        txop->GetBackoffSlots(m_linkId) == 0)
+    if (!hadFramesToTransmit && txop->HasFramesToTransmit(m_linkId) &&
+        txop->GetAccessStatus(m_linkId) != Txop::GRANTED && txop->GetBackoffSlots(m_linkId) == 0)
     {
-        if (!IsBusy())
+        if (checkMediumBusy && !IsBusy())
         {
             // medium idle. If this is a DCF, use immediate access (we can transmit
             // in a DIFS if the medium remains idle). If this is an EDCAF, update
@@ -453,17 +476,13 @@ void
 ChannelAccessManager::RequestAccess(Ptr<Txop> txop)
 {
     NS_LOG_FUNCTION(this << txop);
-    if (m_phy)
+    if (m_phy && txop->HasFramesToTransmit(m_linkId))
     {
         m_phy->NotifyChannelAccessRequested();
     }
-    if (m_usingOtherEmlsrLink)
-    {
-        NS_LOG_DEBUG("Channel access cannot be requested while using another EMLSR link");
-        return;
-    }
-    // Deny access if in sleep mode or off
-    if (m_sleeping || m_off)
+    // Deny access if in sleep mode or off. Checking if m_phy is nullptr is a workaround
+    // needed for EMLSR and may be removed in the future
+    if (m_sleeping || m_off || !m_phy)
     {
         return;
     }
@@ -558,6 +577,9 @@ ChannelAccessManager::DoGrantDcfAccess()
             }
             else
             {
+                // this TXOP did not transmit anything, make sure that backoff counter starts
+                // decreasing in a slot again
+                txop->UpdateBackoffSlotsNow(0, now, m_linkId);
                 // reset the current state to the EDCAF that won the contention
                 // but did not transmit anything
                 i--;
@@ -595,8 +617,6 @@ ChannelAccessManager::GetAccessGrantStart(bool ignoreNav) const
     Time ackTimeoutAccessStart = m_lastAckTimeoutEnd + sifs;
     Time ctsTimeoutAccessStart = m_lastCtsTimeoutEnd + sifs;
     Time switchingAccessStart = m_lastSwitchingEnd + sifs;
-    Time usingOtherEmlsrLinkAccessStart =
-        (m_usingOtherEmlsrLink ? Simulator::Now() : m_lastUsingOtherEmlsrLinkEnd) + sifs;
     Time accessGrantedStart;
     if (ignoreNav)
     {
@@ -605,7 +625,6 @@ ChannelAccessManager::GetAccessGrantStart(bool ignoreNav) const
                                        txAccessStart,
                                        ackTimeoutAccessStart,
                                        ctsTimeoutAccessStart,
-                                       usingOtherEmlsrLinkAccessStart,
                                        switchingAccessStart});
     }
     else
@@ -616,18 +635,15 @@ ChannelAccessManager::GetAccessGrantStart(bool ignoreNav) const
                                        navAccessStart,
                                        ackTimeoutAccessStart,
                                        ctsTimeoutAccessStart,
-                                       usingOtherEmlsrLinkAccessStart,
                                        switchingAccessStart});
     }
-    std::stringstream ss;
-    if (m_usingOtherEmlsrLink)
-    {
-        ss << ", using other EMLSR link access start=" << usingOtherEmlsrLinkAccessStart;
-    }
-    NS_LOG_INFO("access grant start=" << accessGrantedStart << ", rx access start=" << rxAccessStart
-                                      << ", busy access start=" << busyAccessStart
-                                      << ", tx access start=" << txAccessStart
-                                      << ", nav access start=" << navAccessStart << ss.str());
+    NS_LOG_INFO("access grant start=" << accessGrantedStart.As(Time::US)
+                                      << ", rx access start=" << rxAccessStart.As(Time::US)
+                                      << ", busy access start=" << busyAccessStart.As(Time::US)
+                                      << ", tx access start=" << txAccessStart.As(Time::US)
+                                      << ", nav access start=" << navAccessStart.As(Time::US)
+                                      << ", switching access start="
+                                      << switchingAccessStart.As(Time::US));
     return accessGrantedStart;
 }
 
@@ -638,7 +654,8 @@ ChannelAccessManager::GetBackoffStartFor(Ptr<Txop> txop)
     Time mostRecentEvent =
         std::max({txop->GetBackoffStart(m_linkId),
                   GetAccessGrantStart() + (txop->GetAifsn(m_linkId) * GetSlot())});
-    NS_LOG_DEBUG("Backoff start: " << mostRecentEvent.As(Time::US));
+    NS_LOG_DEBUG("Backoff start for " << txop->GetWifiMacQueue()->GetAc() << ": "
+                                      << mostRecentEvent.As(Time::US));
 
     return mostRecentEvent;
 }
@@ -648,7 +665,8 @@ ChannelAccessManager::GetBackoffEndFor(Ptr<Txop> txop)
 {
     NS_LOG_FUNCTION(this << txop);
     Time backoffEnd = GetBackoffStartFor(txop) + (txop->GetBackoffSlots(m_linkId) * GetSlot());
-    NS_LOG_DEBUG("Backoff end: " << backoffEnd.As(Time::US));
+    NS_LOG_DEBUG("Backoff end for " << txop->GetWifiMacQueue()->GetAc() << ": "
+                                    << backoffEnd.As(Time::US));
 
     return backoffEnd;
 }
@@ -799,6 +817,19 @@ ChannelAccessManager::DisableEdcaFor(Ptr<Txop> qosTxop, Time duration)
                                                 << " remaining slot(s)");
     qosTxop->UpdateBackoffSlotsNow(0, resume, m_linkId);
     DoRestartAccessTimeoutIfNeeded();
+}
+
+void
+ChannelAccessManager::SetGenerateBackoffOnNoTx(bool enable)
+{
+    NS_LOG_FUNCTION(this << enable);
+    m_generateBackoffOnNoTx = enable;
+}
+
+bool
+ChannelAccessManager::GetGenerateBackoffOnNoTx() const
+{
+    return m_generateBackoffOnNoTx;
 }
 
 void
@@ -967,6 +998,18 @@ ChannelAccessManager::ResetBackoff(Ptr<Txop> txop)
 }
 
 void
+ChannelAccessManager::ResetAllBackoffs()
+{
+    NS_LOG_FUNCTION(this);
+
+    for (const auto& txop : m_txops)
+    {
+        ResetBackoff(txop);
+    }
+    m_accessTimeout.Cancel();
+}
+
+void
 ChannelAccessManager::NotifySleepNow()
 {
     NS_LOG_FUNCTION(this);
@@ -1030,6 +1073,14 @@ void
 ChannelAccessManager::NotifyNavResetNow(Time duration)
 {
     NS_LOG_FUNCTION(this << duration);
+
+    if (!m_phy)
+    {
+        NS_LOG_DEBUG("Do not reset NAV, CTS may have been missed due to the main PHY switching "
+                     "to another link to take over a TXOP while receiving the CTS");
+        return;
+    }
+
     NS_LOG_DEBUG("nav reset for=" << duration);
     UpdateBackoff();
     m_lastNavEnd = Simulator::Now() + duration;
@@ -1086,18 +1137,7 @@ void
 ChannelAccessManager::NotifyStartUsingOtherEmlsrLink()
 {
     NS_LOG_FUNCTION(this);
-    // update backoff if a PHY is operating on this link
-    if (m_phy)
-    {
-        UpdateBackoff();
-    }
-    // Cancel timeout
-    if (m_accessTimeout.IsRunning())
-    {
-        m_accessTimeout.Cancel();
-    }
     m_usingOtherEmlsrLink = true;
-    UpdateLastIdlePeriod();
 }
 
 void
@@ -1105,16 +1145,13 @@ ChannelAccessManager::NotifyStopUsingOtherEmlsrLink()
 {
     NS_LOG_FUNCTION(this);
     m_usingOtherEmlsrLink = false;
-    m_lastUsingOtherEmlsrLinkEnd = Simulator::Now();
-    DoRestartAccessTimeoutIfNeeded();
 }
 
 void
 ChannelAccessManager::UpdateLastIdlePeriod()
 {
     NS_LOG_FUNCTION(this);
-    Time idleStart =
-        std::max({m_lastTxEnd, m_lastRx.end, m_lastSwitchingEnd, m_lastUsingOtherEmlsrLinkEnd});
+    Time idleStart = std::max({m_lastTxEnd, m_lastRx.end, m_lastSwitchingEnd});
     Time now = Simulator::Now();
 
     if (idleStart >= now)

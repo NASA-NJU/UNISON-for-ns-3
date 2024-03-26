@@ -60,6 +60,13 @@ class SpectrumPropagationLossModel : public Object
     void SetNext(Ptr<SpectrumPropagationLossModel> next);
 
     /**
+     * Return the pointer to the next SpectrumPropagationLossModel, if any.
+     *
+     * @return Pointer to the next model, if any.
+     */
+    Ptr<SpectrumPropagationLossModel> GetNext() const;
+
+    /**
      * This method is to be called to calculate
      *
      * @param params the spectrum signal parameters.
@@ -73,8 +80,30 @@ class SpectrumPropagationLossModel : public Object
                                                   Ptr<const MobilityModel> a,
                                                   Ptr<const MobilityModel> b) const;
 
+    /**
+     * If this loss model uses objects of type RandomVariableStream,
+     * set the stream numbers to the integers starting with the offset
+     * 'stream'. Return the number of streams (possibly zero) that
+     * have been assigned.  If there are SpectrumPropagationLossModels chained
+     * together, this method will also assign streams to the
+     * downstream models.
+     *
+     * \param stream the stream index offset start
+     * \return the number of stream indices assigned by this model
+     */
+    int64_t AssignStreams(int64_t stream);
+
   protected:
     void DoDispose() override;
+    /**
+     * Assign a fixed random variable stream number to the random variables used by this model.
+     *
+     * Subclasses must implement this; those not using random variables can return zero.
+     *
+     * \param stream first stream index to use
+     * \return the number of stream indices assigned by this model
+     */
+    virtual int64_t DoAssignStreams(int64_t stream) = 0;
 
   private:
     /**

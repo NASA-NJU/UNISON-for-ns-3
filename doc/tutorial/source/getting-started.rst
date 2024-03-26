@@ -61,7 +61,7 @@ the project provides an installation guide
 for various systems, available at
 https://www.nsnam.org/docs/installation/html/index.html.
 
-As of the most recent |ns3| release (ns-3.40), the following tools
+As of the most recent |ns3| release (ns-3.41), the following tools
 are needed to get started with |ns3|:
 
 ============  ===========================================================
@@ -69,7 +69,7 @@ Prerequisite  Package/version
 ============  ===========================================================
 C++ compiler  ``clang++`` or ``g++`` (g++ version 9 or greater)
 Python        ``python3`` version >=3.6
-CMake         ``cmake`` version >=3.10
+CMake         ``cmake`` version >=3.13
 Build system  ``make``, ``ninja``, ``xcodebuild`` (XCode)
 Git           any recent version (to access |ns3| from `GitLab.com <https://gitlab.com/nsnam/ns-3-dev/>`_)
 tar           any recent version (to unpack an `ns-3 release <https://www.nsnam.org/releases/>`_)
@@ -116,21 +116,21 @@ get a copy of a release by typing the following into your Linux shell
   $ cd
   $ mkdir workspace
   $ cd workspace
-  $ wget https://www.nsnam.org/release/ns-allinone-3.40.tar.bz2
-  $ tar xjf ns-allinone-3.40.tar.bz2
+  $ wget https://www.nsnam.org/release/ns-allinone-3.41.tar.bz2
+  $ tar xjf ns-allinone-3.41.tar.bz2
 
 Notice the use above of the ``wget`` utility, which is a command-line
 tool to fetch objects from the web; if you do not have this installed,
 you can use a browser for this step.
 
 Following these steps, if you change into the directory
-``ns-allinone-3.40``, you should see a number of files and directories
+``ns-allinone-3.41``, you should see a number of files and directories
 
 .. sourcecode:: text
 
-  $ cd ns-allinone-3.40
+  $ cd ns-allinone-3.41
   $ ls
-  bake  build.py  constants.py  netanim-3.109 ns-3.40  README.md  util.py
+  bake  build.py  constants.py  netanim-3.109 ns-3.41  README.md  util.py
 
 You are now ready to build the base |ns3| distribution and may skip ahead
 to the section on building |ns3|.
@@ -180,7 +180,7 @@ release number:
 
 .. sourcecode:: console
 
-  $ python3 download.py -n ns-3.40
+  $ python3 download.py -n ns-3.41
 
 After this step, the additional repositories of |ns3|, bake, pybindgen,
 and netanim will be downloaded to the ``ns-3-allinone`` directory.
@@ -249,9 +249,9 @@ distribution of your choice.
 
 There are a few configuration targets available:
 
-1.  ``ns-3.40``:  the code corresponding to the release
+1.  ``ns-3.41``:  the code corresponding to the release
 2.  ``ns-3-dev``:  a similar module but using the development code tree
-3.  ``ns-allinone-3.40``:  the module that includes other optional features
+3.  ``ns-allinone-3.41``:  the module that includes other optional features
     such as bake build system, netanim animator, and pybindgen
 4.  ``ns-3-allinone``:  similar to the released version of the allinone
     module, but for development code.
@@ -268,7 +268,7 @@ code either by inspection of the repository list or by going to the
 `"ns-3 Releases"
 <https://www.nsnam.org/releases>`_
 web page and clicking on the latest release link.  We'll proceed in
-this tutorial example with ``ns-3.40``.
+this tutorial example with ``ns-3.41``.
 
 We are now going to use the bake tool to pull down the various pieces of
 |ns3| you will be using.  First, we'll say a word about running bake.
@@ -297,7 +297,7 @@ Step into the workspace directory and type the following into your shell:
 
 .. sourcecode:: console
 
-  $ ./bake.py configure -e ns-allinone-3.40
+  $ ./bake.py configure -e ns-allinone-3.41
 
 Next, we'll ask bake to check whether we have enough tools to download
 various components.  Type:
@@ -347,7 +347,7 @@ should yield something like:
   >> Downloading click-ns-3.37 - OK
   >> Downloading BRITE - OK
   >> Downloading openflow-dev - OK
-  >> Downloading ns-3.40 (target directory:ns-3.40) - OK
+  >> Downloading ns-3.41 (target directory:ns-3.41) - OK
 
 The above suggests that three sources have been downloaded.  Check the
 ``source`` directory now and type ``ls``; one should see:
@@ -356,7 +356,7 @@ The above suggests that three sources have been downloaded.  Check the
 
   $ cd source
   $ ls
-  BRITE  click-ns-3.37  netanim-3.109  ns-3.40  openflow-dev
+  BRITE  click-ns-3.37  netanim-3.109  ns-3.41  openflow-dev
 
 You are now ready to build the |ns3| distribution.
 
@@ -386,7 +386,7 @@ native |ns3| build system, CMake, to be introduced later in this tutorial.
 
 If you downloaded
 using a tarball you should have a directory called something like
-``ns-allinone-3.40`` under your ``~/workspace`` directory.
+``ns-allinone-3.41`` under your ``~/workspace`` directory.
 Type the following:
 
 .. sourcecode:: console
@@ -419,7 +419,7 @@ and you should see something like:
 .. sourcecode:: text
 
   >> Building netanim-3.109 - OK
-  >> Building ns-3.40 - OK
+  >> Building ns-3.41 - OK
 
 There may be failures to build all components, but the build will proceed
 anyway if the component is optional.
@@ -1145,6 +1145,65 @@ If you choose run or debug, the executable targets will be executed.
 You can open the source files you want, put some breakpoints and then click debug to visually debug programs.
 
 .. figure:: ../figures/vscode/debugging.png
+
+Note: If you are running on Windows, you need to manually add your ns-3 library directory
+to the ``PATH`` environment variable. This can be accomplished in two ways.
+
+The first, is to set VSCode's ``settings.json`` file to include the following:
+
+.. sourcecode:: json
+
+  "cmake.environment": {
+        "PATH": "${env:PATH};${workspaceFolder}/build/lib"
+    }
+
+The second, a more permanent solution, with the following command:
+
+.. sourcecode:: terminal
+
+  > echo %PATH%
+  C:\Windows\System32\WindowsPowerShell\v1.0\;C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;
+  C:\Windows\System32\OpenSSH\;C:\Program Files\dotnet\;C:\Program Files\PuTTY\;C:\Program Files\VSCodium\bin;
+  C:\Program Files\Meld\;C:\Windows\System32\WindowsPowerShell\v1.0\;C:\Windows\system32;C:\Windows;
+  C:\Windows\System32\Wbem;C:\Windows\System32\OpenSSH\;C:\Program Files\dotnet\;C:\Program Files\PuTTY\;
+  C:\Program Files\VSCodium\bin;C:\Program Files\Meld\;C:\Users\username\AppData\Local\Microsoft\WindowsApps;
+
+  > setx PATH "%PATH%;C:\path\to\ns-3-dev\build\lib"
+
+  SUCCESS: Specified value was saved.
+
+  > echo %PATH%
+  C:\Windows\System32\WindowsPowerShell\v1.0\;C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;
+  ...
+  C:\Program Files\VSCodium\bin;C:\Program Files\Meld\;C:\Users\username\AppData\Local\Microsoft\WindowsApps;
+  C:\tools\source\ns-3-dev\build\lib;
+
+If you do not setup your ``PATH`` environment variable, you may end up having problems to debug that
+look like the following:
+
+.. sourcecode:: console
+
+  =thread-group-added,id="i1"
+  GNU gdb (GDB) 14.1
+  Copyright (C) 2023 Free Software Foundation, Inc.
+  License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
+  ...
+  ERROR: Unable to start debugging. GDB exited unexpectedly.
+  The program 'C:\tools\source\ns-3-dev\build\examples\wireless\ns3-dev-wifi-he-network-debug.exe' has exited with code 0 (0x00000000).
+
+  ERROR: During startup program exited with code 0xc0000135.
+
+Or
+
+.. sourcecode:: console
+
+  =thread-group-added,id="i1"
+  GNU gdb (GDB) 14.1
+  Copyright (C) 2023 Free Software Foundation, Inc.
+  License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
+  ...
+  ERROR: Unable to start debugging. Unexpected GDB output from command "-exec-run". During startup program exited with code 0xc0000135.
+  The program 'C:\tools\source\ns-3-dev\build\examples\wireless\ns3-dev-wifi-he-network-debug.exe' has exited with code 0 (0x00000000).
 
 JetBrains CLion
 ===============

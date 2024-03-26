@@ -22,7 +22,14 @@
 
 import sys
 
-from ns import ns
+try:
+    from ns import ns
+except ModuleNotFoundError:
+    raise SystemExit(
+        "Error: ns3 Python module not found;"
+        " Python bindings may not be enabled"
+        " or your PYTHONPATH might not be properly configured"
+    )
 
 # void
 # DevTxTrace (std::string context, Ptr<const Packet> p, Mac48Address address)
@@ -70,7 +77,8 @@ from ns import ns
 #   std::cout << " start="<<start<<" duration="<<duration<<std::endl;
 # }
 
-ns.cppyy.cppdef("""
+ns.cppyy.cppdef(
+    """
     using namespace ns3;
     void AdvancePosition(Ptr<Node> node){
         Ptr<MobilityModel> mob = node->GetObject<MobilityModel>();
@@ -80,7 +88,9 @@ ns.cppyy.cppdef("""
             return;
         mob->SetPosition(pos);
         Simulator::Schedule(Seconds(1.0), AdvancePosition, node);
-    }""")
+    }"""
+)
+
 
 def main(argv):
     ns.core.CommandLine().Parse(argv)
@@ -91,7 +101,7 @@ def main(argv):
     mobility = ns.mobility.MobilityHelper()
     stas = ns.network.NodeContainer()
     ap = ns.network.NodeContainer()
-    #NetDeviceContainer staDevs;
+    # NetDeviceContainer staDevs;
     packetSocket = ns.network.PacketSocketHelper()
 
     stas.Create(2)
@@ -109,15 +119,16 @@ def main(argv):
     wifiMac = ns.wifi.WifiMacHelper()
 
     # setup stas.
-    wifiMac.SetType("ns3::StaWifiMac",
-                    "ActiveProbing",
-                    ns.core.BooleanValue(True),
-                    "Ssid",
-                    ns.wifi.SsidValue(ssid))
+    wifiMac.SetType(
+        "ns3::StaWifiMac",
+        "ActiveProbing",
+        ns.core.BooleanValue(True),
+        "Ssid",
+        ns.wifi.SsidValue(ssid),
+    )
     staDevs = wifi.Install(wifiPhy, wifiMac, stas)
     # setup ap.
-    wifiMac.SetType("ns3::ApWifiMac",
-                    "Ssid", ns.wifi.SsidValue(ssid))
+    wifiMac.SetType("ns3::ApWifiMac", "Ssid", ns.wifi.SsidValue(ssid))
     wifi.Install(wifiPhy, wifiMac, ap)
 
     # mobility.
@@ -132,7 +143,7 @@ def main(argv):
     socket.SetProtocol(1)
 
     onoff = ns.applications.OnOffHelper("ns3::PacketSocketFactory", socket.ConvertTo())
-    onoff.SetConstantRate (ns.network.DataRate ("500kb/s"))
+    onoff.SetConstantRate(ns.network.DataRate("500kb/s"))
 
     apps = onoff.Install(ns.network.NodeContainer(stas.Get(0)))
     apps.Start(ns.core.Seconds(0.5))
@@ -140,13 +151,12 @@ def main(argv):
 
     ns.core.Simulator.Stop(ns.core.Seconds(44.0))
 
-  #   Config::Connect("/NodeList/*/DeviceList/*/Tx", MakeCallback(&DevTxTrace));
-  #   Config::Connect("/NodeList/*/DeviceList/*/Rx", MakeCallback(&DevRxTrace));
-  #   Config::Connect("/NodeList/*/DeviceList/*/Phy/RxOk", MakeCallback(&PhyRxOkTrace));
-  #   Config::Connect("/NodeList/*/DeviceList/*/Phy/RxError", MakeCallback(&PhyRxErrorTrace));
-  #   Config::Connect("/NodeList/*/DeviceList/*/Phy/Tx", MakeCallback(&PhyTxTrace));
-  #   Config::Connect("/NodeList/*/DeviceList/*/Phy/State", MakeCallback(&PhyStateTrace));
-
+    #   Config::Connect("/NodeList/*/DeviceList/*/Tx", MakeCallback(&DevTxTrace));
+    #   Config::Connect("/NodeList/*/DeviceList/*/Rx", MakeCallback(&DevRxTrace));
+    #   Config::Connect("/NodeList/*/DeviceList/*/Phy/RxOk", MakeCallback(&PhyRxOkTrace));
+    #   Config::Connect("/NodeList/*/DeviceList/*/Phy/RxError", MakeCallback(&PhyRxErrorTrace));
+    #   Config::Connect("/NodeList/*/DeviceList/*/Phy/Tx", MakeCallback(&PhyTxTrace));
+    #   Config::Connect("/NodeList/*/DeviceList/*/Phy/State", MakeCallback(&PhyStateTrace));
 
     ns.core.Simulator.Run()
     ns.core.Simulator.Destroy()
@@ -154,6 +164,5 @@ def main(argv):
     return 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main(sys.argv))
-

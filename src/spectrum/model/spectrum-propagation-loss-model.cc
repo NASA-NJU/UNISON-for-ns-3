@@ -59,6 +59,12 @@ SpectrumPropagationLossModel::SetNext(Ptr<SpectrumPropagationLossModel> next)
     m_next = next;
 }
 
+Ptr<SpectrumPropagationLossModel>
+SpectrumPropagationLossModel::GetNext() const
+{
+    return m_next;
+}
+
 Ptr<SpectrumValue>
 SpectrumPropagationLossModel::CalcRxPowerSpectralDensity(Ptr<const SpectrumSignalParameters> params,
                                                          Ptr<const MobilityModel> a,
@@ -70,6 +76,18 @@ SpectrumPropagationLossModel::CalcRxPowerSpectralDensity(Ptr<const SpectrumSigna
         rxPsd = m_next->CalcRxPowerSpectralDensity(params, a, b);
     }
     return rxPsd;
+}
+
+int64_t
+SpectrumPropagationLossModel::AssignStreams(int64_t stream)
+{
+    auto currentStream = stream;
+    currentStream += DoAssignStreams(stream);
+    if (m_next)
+    {
+        currentStream += m_next->AssignStreams(currentStream);
+    }
+    return (currentStream - stream);
 }
 
 } // namespace ns3

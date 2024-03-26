@@ -18,7 +18,14 @@
 # Modified by: Gabriel Ferreira <gabrielcarvfer@gmail.com>
 #
 
-from ns import ns
+try:
+    from ns import ns
+except ModuleNotFoundError:
+    raise SystemExit(
+        "Error: ns3 Python module not found;"
+        " Python bindings may not be enabled"
+        " or your PYTHONPATH might not be properly configured"
+    )
 
 ns.LogComponentEnable("BriteTopologyHelper", ns.LOG_LEVEL_ALL)
 
@@ -88,7 +95,7 @@ serverApps.Stop(ns.Seconds(5.0))
 
 echoClient = ns.UdpEchoClientHelper(serverInterfaces.GetAddress(0).ConvertTo(), 9)
 echoClient.SetAttribute("MaxPackets", ns.UintegerValue(1))
-echoClient.SetAttribute("Interval", ns.TimeValue(ns.Seconds(1.)))
+echoClient.SetAttribute("Interval", ns.TimeValue(ns.Seconds(1.0)))
 echoClient.SetAttribute("PacketSize", ns.UintegerValue(1024))
 
 clientApps = echoClient.Install(client.Get(0))

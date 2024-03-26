@@ -88,9 +88,15 @@ WifiPhy::GetTypeId()
                 "Note that the channel width can be left unspecified (0) if the channel "
                 "number uniquely identify a frequency channel for the given standard and band.",
                 StringValue("{0, 0, BAND_UNSPECIFIED, 0}"),
-                MakeTupleAccessor<UintegerValue, UintegerValue, EnumValue, UintegerValue>(
-                    (void(WifiPhy::*)(const ChannelTuple&)) & WifiPhy::SetOperatingChannel),
-                MakeTupleChecker<UintegerValue, UintegerValue, EnumValue, UintegerValue>(
+                MakeTupleAccessor<UintegerValue,
+                                  UintegerValue,
+                                  EnumValue<WifiPhyBand>,
+                                  UintegerValue>((void(WifiPhy::*)(const ChannelTuple&)) &
+                                                 WifiPhy::SetOperatingChannel),
+                MakeTupleChecker<UintegerValue,
+                                 UintegerValue,
+                                 EnumValue<WifiPhyBand>,
+                                 UintegerValue>(
                     MakeUintegerChecker<uint8_t>(0, 233),
                     MakeUintegerChecker<uint16_t>(0, 160),
                     MakeEnumChecker(WifiPhyBand::WIFI_PHY_BAND_2_4GHZ,
@@ -349,6 +355,7 @@ WifiPhy::WifiPhy()
       m_currentEvent(nullptr),
       m_previouslyRxPpduUid(UINT64_MAX),
       m_standard(WIFI_STANDARD_UNSPECIFIED),
+      m_maxModClassSupported(WIFI_MOD_CLASS_UNKNOWN),
       m_band(WIFI_PHY_BAND_UNSPECIFIED),
       m_sifs(Seconds(0)),
       m_slot(Seconds(0)),
@@ -401,12 +408,9 @@ void
 WifiPhy::DoDispose()
 {
     NS_LOG_FUNCTION(this);
-    m_endTxEvent.Cancel();
-    m_endPhyRxEvent.Cancel();
-    for (auto& phyEntity : m_phyEntities)
-    {
-        phyEntity.second->CancelAllEvents();
-    }
+
+    Reset();
+
     m_device = nullptr;
     m_mobility = nullptr;
     m_frameCaptureModel = nullptr;
@@ -420,12 +424,6 @@ WifiPhy::DoDispose()
     m_interference = nullptr;
     m_random = nullptr;
     m_state = nullptr;
-    m_currentEvent = nullptr;
-    for (auto& preambleEvent : m_currentPreambleEvents)
-    {
-        preambleEvent.second = nullptr;
-    }
-    m_currentPreambleEvents.clear();
 
     for (auto& phyEntity : m_phyEntities)
     {
@@ -460,13 +458,13 @@ WifiPhy::SetReceiveErrorCallback(RxErrorCallback callback)
 }
 
 void
-WifiPhy::RegisterListener(WifiPhyListener* listener)
+WifiPhy::RegisterListener(const std::shared_ptr<WifiPhyListener>& listener)
 {
     m_state->RegisterListener(listener);
 }
 
 void
-WifiPhy::UnregisterListener(WifiPhyListener* listener)
+WifiPhy::UnregisterListener(const std::shared_ptr<WifiPhyListener>& listener)
 {
     m_state->UnregisterListener(listener);
 }
@@ -947,6 +945,19 @@ WifiPhy::Configure80211be()
 }
 
 void
+WifiPhy::SetMaxModulationClassSupported(WifiModulationClass modClass)
+{
+    NS_LOG_FUNCTION(this << modClass);
+    m_maxModClassSupported = modClass;
+}
+
+WifiModulationClass
+WifiPhy::GetMaxModulationClassSupported() const
+{
+    return m_maxModClassSupported;
+}
+
+void
 WifiPhy::ConfigureStandard(WifiStandard standard)
 {
     NS_LOG_FUNCTION(this << standard);
@@ -955,6 +966,11 @@ WifiPhy::ConfigureStandard(WifiStandard standard)
                     "Cannot change standard");
 
     m_standard = standard;
+
+    if (m_maxModClassSupported == WIFI_MOD_CLASS_UNKNOWN)
+    {
+        m_maxModClassSupported = GetModulationClassForStandard(m_standard);
+    }
 
     if (!m_operatingChannel.IsSet())
     {
@@ -1094,37 +1110,30 @@ WifiPhy::SetOperatingChannel(const ChannelTuple& channelTuple)
         return;
     }
 
-    Time delay = Seconds(0);
-
     if (IsInitialized())
     {
-        delay = GetDelayUntilChannelSwitch();
-    }
-
-    if (delay.IsStrictlyNegative())
-    {
-        // switching channel is not possible now
-        return;
-    }
-    if (delay.IsStrictlyPositive())
-    {
-        // switching channel has been postponed
-        void (WifiPhy::*fp)(const ChannelTuple&) = &WifiPhy::SetOperatingChannel;
-        Simulator::Schedule(delay, fp, this, channelTuple);
-        return;
+        const auto delay = GetDelayUntilChannelSwitch();
+        if (!delay.has_value())
+        {
+            // switching channel is not possible now
+            return;
+        }
+        if (delay.value().IsStrictlyPositive())
+        {
+            // switching channel has been postponed
+            void (WifiPhy::*fp)(const ChannelTuple&) = &WifiPhy::SetOperatingChannel;
+            Simulator::Schedule(delay.value(), fp, this, channelTuple);
+            return;
+        }
     }
 
     // channel can be switched now.
     DoChannelSwitch();
 }
 
-Time
+std::optional<Time>
 WifiPhy::GetDelayUntilChannelSwitch()
 {
-    m_powerRestricted = false;
-    m_channelAccessRequested = false;
-    m_currentEvent = nullptr;
-    m_currentPreambleEvents.clear();
     if (!IsInitialized())
     {
         // this is not channel switch, this is initialization
@@ -1132,14 +1141,14 @@ WifiPhy::GetDelayUntilChannelSwitch()
         return Seconds(0);
     }
 
-    Time delay = Seconds(0);
-
     NS_ASSERT(!IsStateSwitching());
+    std::optional<Time> delay;
     switch (m_state->GetState())
     {
     case WifiPhyState::RX:
         NS_LOG_DEBUG("drop packet because of channel switching while reception");
         AbortCurrentReception(CHANNEL_SWITCHING);
+        delay = Seconds(0);
         break;
     case WifiPhyState::TX:
         NS_LOG_DEBUG("channel switching postponed until end of current transmission");
@@ -1147,15 +1156,11 @@ WifiPhy::GetDelayUntilChannelSwitch()
         break;
     case WifiPhyState::CCA_BUSY:
     case WifiPhyState::IDLE:
-        m_endPhyRxEvent.Cancel();
-        for (auto& phyEntity : m_phyEntities)
-        {
-            phyEntity.second->CancelAllEvents();
-        }
+        Reset();
+        delay = Seconds(0);
         break;
     case WifiPhyState::SLEEP:
         NS_LOG_DEBUG("channel switching ignored in sleep mode");
-        delay = Seconds(-1); // negative value to indicate switching not possible
         break;
     default:
         NS_ASSERT(false);
@@ -1170,12 +1175,15 @@ WifiPhy::DoChannelSwitch()
 {
     NS_LOG_FUNCTION(this);
 
+    m_powerRestricted = false;
+    m_channelAccessRequested = false;
+
     // Update unspecified parameters with default values
     {
         auto& [number, width, band, primary20] = m_channelSettings;
-        if (band == static_cast<int>(WIFI_PHY_BAND_UNSPECIFIED))
+        if (band == WIFI_PHY_BAND_UNSPECIFIED)
         {
-            band = static_cast<int>(GetDefaultPhyBand(m_standard));
+            band = GetDefaultPhyBand(m_standard);
         }
         if (width == 0 && number == 0)
         {
@@ -1351,7 +1359,16 @@ WifiPhy::SetSleepMode()
     case WifiPhyState::CCA_BUSY:
     case WifiPhyState::IDLE:
         NS_LOG_DEBUG("setting sleep mode");
-        m_state->SwitchToSleep();
+        // The PHY object may be in CCA_BUSY state because it is receiving a preamble. Cancel
+        // preamble events before switching to sleep state
+        Reset();
+        // It may happen that we request to switch to sleep at the same time the reception of
+        // a PPDU ends. In such a case, WifiPhyStateHelper::GetState() does not return RX
+        // (m_endRx equals now), we get here and set the state to SLEEP. However,
+        // WifiPhyStateHelper::DoSwitchFromRx() may be called after this function (at the same
+        // simulation time), thus hitting the assert that checks that the state is IDLE or
+        // CCA_BUSY.
+        Simulator::ScheduleNow(&WifiPhyStateHelper::SwitchToSleep, m_state);
         break;
     case WifiPhyState::SLEEP:
         NS_LOG_DEBUG("already in sleep mode");
@@ -1368,12 +1385,7 @@ WifiPhy::SetOffMode()
     NS_LOG_FUNCTION(this);
     m_powerRestricted = false;
     m_channelAccessRequested = false;
-    m_endPhyRxEvent.Cancel();
-    m_endTxEvent.Cancel();
-    for (auto& phyEntity : m_phyEntities)
-    {
-        phyEntity.second->CancelAllEvents();
-    }
+    Reset();
     m_state->SwitchToOff();
 }
 
@@ -1381,7 +1393,6 @@ void
 WifiPhy::ResumeFromSleep()
 {
     NS_LOG_FUNCTION(this);
-    m_currentPreambleEvents.clear();
     switch (m_state->GetState())
     {
     case WifiPhyState::TX:
@@ -1395,7 +1406,7 @@ WifiPhy::ResumeFromSleep()
     case WifiPhyState::SLEEP: {
         NS_LOG_DEBUG("resuming from sleep mode");
         m_state->SwitchFromSleep();
-        SwitchMaybeToCcaBusy(nullptr);
+        SwitchMaybeToCcaBusy();
         break;
     }
     default: {
@@ -1423,7 +1434,7 @@ WifiPhy::ResumeFromOff()
     case WifiPhyState::OFF: {
         NS_LOG_DEBUG("resuming from off mode");
         m_state->SwitchFromOff();
-        SwitchMaybeToCcaBusy(nullptr);
+        SwitchMaybeToCcaBusy();
         break;
     }
     default: {
@@ -1725,7 +1736,7 @@ WifiPhy::Send(WifiConstPsduMap psdus, const WifiTxVector& txVector)
     NS_ASSERT(!m_state->IsStateTx() && !m_state->IsStateSwitching());
     NS_ASSERT(m_endTxEvent.IsExpired());
 
-    if (!txVector.IsValid())
+    if (!txVector.IsValid(m_band))
     {
         NS_FATAL_ERROR("TX-VECTOR is invalid!");
     }
@@ -1775,13 +1786,6 @@ WifiPhy::Send(WifiConstPsduMap psdus, const WifiTxVector& txVector)
         AbortCurrentReception(RECEPTION_ABORTED_BY_TX);
     }
 
-    for (auto& it : m_phyEntities)
-    {
-        it.second->CancelRunningEndPreambleDetectionEvents();
-    }
-    m_currentPreambleEvents.clear();
-    m_endPhyRxEvent.Cancel();
-
     if (m_powerRestricted)
     {
         NS_LOG_DEBUG("Transmitting with power restriction for " << txDuration.As(Time::NS));
@@ -1829,6 +1833,8 @@ WifiPhy::Send(WifiConstPsduMap psdus, const WifiTxVector& txVector)
     m_powerRestricted = false;
 
     Simulator::Schedule(txDuration, &WifiPhy::Reset, this);
+
+    Simulator::Schedule(txDuration, &WifiPhy::SwitchMaybeToCcaBusy, this, nullptr);
 }
 
 uint64_t
@@ -1854,7 +1860,8 @@ WifiPhy::Reset()
     {
         phyEntity.second->CancelAllEvents();
     }
-    SwitchMaybeToCcaBusy(nullptr);
+    m_endPhyRxEvent.Cancel();
+    m_endTxEvent.Cancel();
 }
 
 void
@@ -1864,8 +1871,9 @@ WifiPhy::StartReceivePreamble(Ptr<const WifiPpdu> ppdu,
 {
     NS_LOG_FUNCTION(this << ppdu << rxDuration);
     WifiModulationClass modulation = ppdu->GetModulation();
-    auto it = m_phyEntities.find(modulation);
-    if (it != m_phyEntities.end())
+    NS_ASSERT(m_maxModClassSupported != WIFI_MOD_CLASS_UNKNOWN);
+    if (auto it = m_phyEntities.find(modulation);
+        it != m_phyEntities.end() && modulation <= m_maxModClassSupported)
     {
         it->second->StartReceivePreamble(ppdu, rxPowersW, rxDuration);
     }
@@ -1875,8 +1883,14 @@ WifiPhy::StartReceivePreamble(Ptr<const WifiPpdu> ppdu,
         // structure)
         NS_LOG_DEBUG("Unsupported modulation received (" << modulation << "), consider as noise");
         m_interference->Add(ppdu, rxDuration, rxPowersW);
-        SwitchMaybeToCcaBusy(nullptr);
+        SwitchMaybeToCcaBusy();
     }
+}
+
+bool
+WifiPhy::IsReceivingPhyHeader() const
+{
+    return m_endPhyRxEvent.IsRunning();
 }
 
 void
@@ -2088,7 +2102,7 @@ WifiPhy::GetLastRxEndTime() const
 }
 
 void
-WifiPhy::SwitchMaybeToCcaBusy(const Ptr<const WifiPpdu> ppdu)
+WifiPhy::SwitchMaybeToCcaBusy(const Ptr<const WifiPpdu> ppdu /* = nullptr */)
 {
     NS_LOG_FUNCTION(this);
     GetLatestPhyEntity()->SwitchMaybeToCcaBusy(ppdu);
@@ -2112,10 +2126,7 @@ WifiPhy::AbortCurrentReception(WifiPhyRxfailureReason reason)
         {
             phyEntity.second->CancelAllEvents();
         }
-        if (m_endPhyRxEvent.IsRunning())
-        {
-            m_endPhyRxEvent.Cancel();
-        }
+        m_endPhyRxEvent.Cancel();
         m_interference->NotifyRxEnd(Simulator::Now(), GetCurrentFrequencyRange());
         if (!m_currentEvent)
         {
@@ -2126,15 +2137,23 @@ WifiPhy::AbortCurrentReception(WifiPhyRxfailureReason reason)
         {
             m_state->SwitchFromRxAbort(GetChannelWidth());
         }
-        for (auto it = m_currentPreambleEvents.begin(); it != m_currentPreambleEvents.end(); ++it)
+        if (reason == RECEPTION_ABORTED_BY_TX)
         {
-            if (it->second == m_currentEvent)
-            {
-                it = m_currentPreambleEvents.erase(it);
-                break;
-            }
+            Reset();
         }
-        m_currentEvent = nullptr;
+        else
+        {
+            for (auto it = m_currentPreambleEvents.begin(); it != m_currentPreambleEvents.end();
+                 ++it)
+            {
+                if (it->second == m_currentEvent)
+                {
+                    it = m_currentPreambleEvents.erase(it);
+                    break;
+                }
+            }
+            m_currentEvent = nullptr;
+        }
     }
 }
 

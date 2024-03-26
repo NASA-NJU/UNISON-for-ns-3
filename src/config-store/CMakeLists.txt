@@ -1,3 +1,6 @@
+set(gtk3_sources)
+set(gtk3_headers)
+set(gtk_libraries)
 if(${GTK3_FOUND})
   set(gtk3_sources
       model/display-functions.cc
@@ -19,11 +22,10 @@ if(${GTK3_FOUND})
         -Wl,--allow-shlib-undefined
     )
   endif()
-  if(${GCC})
-    add_definitions(-Wno-parentheses)
-  endif()
 endif()
 
+set(xml2_sources)
+set(xml2_libraries)
 if(${LIBXML2_FOUND})
   set(xml2_sources
       model/xml-config.cc
@@ -49,7 +51,6 @@ build_lib(
     model/config-store.h
   LIBRARIES_TO_LINK
     ${libcore}
-    ${libnetwork}
     ${xml2_libraries}
     ${gtk_libraries}
 )

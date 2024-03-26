@@ -30,6 +30,7 @@
 #include "ns3/ssid.h"
 #include "ns3/tuple.h"
 #include "ns3/udp-client-server-helper.h"
+#include "ns3/udp-server.h"
 #include "ns3/uinteger.h"
 #include "ns3/yans-wifi-channel.h"
 #include "ns3/yans-wifi-helper.h"
@@ -149,7 +150,7 @@ main(int argc, char* argv[])
     WifiMacHelper mac;
     WifiHelper wifi;
     Ssid ssid = Ssid("ns3");
-    TupleValue<UintegerValue, UintegerValue, EnumValue, UintegerValue> channelValue;
+    TupleValue<UintegerValue, UintegerValue, EnumValue<WifiPhyBand>, UintegerValue> channelValue;
 
     const auto& [staStandard, staBand] = ConvertStringToStandardAndBand(staVersion);
     wifi.SetStandard(staStandard);

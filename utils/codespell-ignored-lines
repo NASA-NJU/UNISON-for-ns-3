@@ -33,8 +33,8 @@ if [ "$filterin" != "" ] ; then
     echo "$filterin"
 
 #./src/visualizer/visualizer/hud.py:93-94
-            tbe = math.log10(dx_over_ndiv)#;   /* looking for approx. 'ndiv' divisions in a length 'dx' */
-            div = pow(10, rint(tbe))#;         /* div: power of 10 closest to dx/ndiv */
+            tbe = math.log10(dx_over_ndiv)
+            div = pow(10, rint(tbe))
 
 #./utils/tests/test-ns3.py:2944
             'convert {image} -colorspace HSI -channel b -separate +channel -scale 1x1 -format "%[fx:100*u]" info:'
@@ -48,6 +48,42 @@ Network Animator nam.  It is not possible to run a simulation
 #./src/openflow/model/openflow-switch-net-device.cc:544, 548
                 arp_h->ar_tha);                                       // Target hardware address.
             arp_h->ar_hln = sizeof arp_h->ar_tha;                     // Hardware address length.
+
+# Names and emails
+ * Author: Manuel Requena <manuel.requena@cttc.es>
+ *   Manuel Requena <manuel.requena@cttc.es>
+ *   Dave Täht <d@taht.net>
+.. [Pal19] J. Palmei, S. Gupta, P. Imputato, J. Morton, M. Tahiliani, S. Avallone, and D. Taht, Design and Evaluation of COBALT Queue Discipline, 2019 IEEE International Symposium on Local and Metropolitan Area Networks (LANMAN), Paris, France, 2019.
+.. [Hoe18] T. Hoiland-Jørgensen, D. Taht and J. Morton, "Piece of CAKE: A Comprehensive Queue Management Solution for Home Gateways," 2018 IEEE International Symposium on Local and Metropolitan Area Networks (LANMAN), Washington, DC, USA, 2018.
+.. [Hoe16] T. Hoeiland-Joergensen, P. McKenney, D. Taht, J. Gettys and E. Dumazet, The FlowQueue-CoDel Packet Scheduler and Active Queue Management Algorithm, IETF draft.  Available online at `<https://tools.ietf.org/html/draft-ietf-aqm-fq-codel>`_
+   Morton,  Mohit P. Tahiliani, Stefano Avallone and Dave Taht (2019).
+ * Author: Jaume Nin <jnin@cttc.cat>
+ *   Jaume Nin <jnin@cttc.cat>
+ * Author: Jaume Nin <jaume.nin@cttc.cat>
+ *   Jaume Nin <jaume.nin@cttc.cat>
+ * Author: Jaume Nin <jaume.nin@cttc.es>
+ * Author: Jaume Nin <jnin@cttc.es>
+ *   Jaume Nin <jnin@cttc.es>
+ * Copyright (c) 2014 Universita' degli Studi di Napoli "Federico II"
+ *               2014 Universita' degli Studi di Napoli "Federico II"
+ * Copyright (c) 2015 Universita' degli Studi di Napoli Federico II
+ * Copyright (c) 2015 Universita' degli Studi di Napoli "Federico II"
+ *               2015 Universita' degli Studi di Napoli Federico II
+ * Copyright (c) 2016 Universita' degli Studi di Napoli Federico II
+ * Copyright (c) 2017 Universita' degli Studi di Napoli Federico II
+ *               2017 Università' degli Studi di Napoli Federico II
+ *               2017 Universita' degli Studi di Napoli Federico II
+ * Copyright (c) 2018 Universita' degli Studi di Napoli Federico II
+ * Copyright (c) 2019 Universita' degli Studi di Napoli Federico II
+ * Copyright (c) 2020 Universita' degli Studi di Napoli Federico II
+ * Copyright (c) 2021 2020 Universita' degli Studi di Napoli Federico II
+ * Copyright (c) 2021 Universita' degli Studi di Napoli Federico II
+ * Copyright (c) 2022 Universita' degli Studi di Napoli Federico II
+ * Copyright (c) 2022 Universita' degli Studi di Napoli "Federico II"
+ * Copyright (c) 2023 Universita' degli Studi di Napoli Federico II
+
+./src/core/examples/hash-example.cc
+6ed21de2  brand-newness       peripherial
 
 ./src/dsr/model/dsr-routing.cc:243, 246, 3360, 3363
             .AddAttribute("GratReplyHoldoff",
@@ -83,6 +119,9 @@ static ns3::GlobalValue g_rate("VRCrate",
 ./src/lte/model/lte-mi-error-model.h:23:
  *      for mobIlE Video AppLications) project, which is a
 
+./src/traffic-control/doc/tbf.rst:84:
+.. [Ref2] J. Vehent; Journey to the Center of the Linux Kernel: Traffic Control, Shaping and QoS; Available online at `<https://web.archive.org/web/20190930031243/http://wiki.linuxwall.info/doku.php/en:ressources:dossiers:networking:traffic_control#tbf_-_token_bucket_filter>`_.
+
 ./src/traffic-control/model/codel-queue-disc.h:17:
  * Codel, the COntrolled DELay Queueing discipline
 
@@ -117,5 +156,8 @@ static ns3::GlobalValue g_rate("VRCrate",
   * (wifi) Enumerated value `MDAOP_ADVERTISMENTS` from `mgmt-headers.h` was renamed `MDAOP_ADVERTISEMENTS`.
   * (wifi) Define `IE_BEAMLINK_MAINENANCE` from `wifi-information-element.h` was renamed `IE_BEAMLINK_MAINTENANCE`.
   * (wimax) Attribute `m_nrRecivedFecBlocks` from `simple-ofdm-wimax-phy.h` was renamed `m_nrReceivedFecBlocks`.
+  * (lte) Struct member `fdbetsFlowPerf_t::lastTtiBytesTrasmitted` in file `fdbet-ff-mac-scheduler.h` was renamed `fdbetsFlowPerf_t::lastTtiBytesTransmitted`.
+  * (lte) Struct member `tdbetsFlowPerf_t::lastTtiBytesTrasmitted` in file `tdbet-ff-mac-scheduler.h` was renamed `fdbetsFlowPerf_t::lastTtiBytesTransmitted`.
+  * (lte) Struct member `pfsFlowPerf_t::lastTtiBytesTrasmitted` in file `pf-ff-mac-scheduler.h` was renamed `fdbetsFlowPerf_t::lastTtiBytesTransmitted`.
 * The spelling of the attribute `IntialCellVoltage` from `LiIonEnergySource` was corrected to `InitialCellVoltage`; this will affect existing users who were using the attribute with the misspelling.
 * The attribute `Recievers` in class `YansWifiPhy` was misspelled, so this has been corrected to `Receivers`.

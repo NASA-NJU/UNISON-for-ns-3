@@ -57,7 +57,7 @@ Model history
 +++++++++++++
 
 Until the ns-3.10 release, |ns3| contained a port of the TCP model from `GTNetS
-<http://www.ece.gatech.edu/research/labs/MANIACS/GTNetS/index.html>`_,
+<https://web.archive.org/web/20210928123443/http://griley.ece.gatech.edu/MANIACS/GTNetS/index.html>`_,
 developed initially by George Riley and ported to |ns3| by Raj Bhattacharjea.
 This implementation was substantially rewritten by Adriam Tam for ns-3.10.
 In 2015, the TCP module was redesigned in order to create a better
@@ -88,6 +88,10 @@ Recovery algorithm.
 
 In the ns-3.34 release, the default congestion control algorithm was set
 to CUBIC from NewReno.
+
+CUBIC was extended to support Reno-friendliness (see RFC 9438 Section 4.3) in
+the ns-3.41 release.  This feature is called 'TCP friendliness' in earlier
+versions of the CUBIC RFCs, and in the Linux and ns-3 implementations.
 
 Acknowledgments
 +++++++++++++++
@@ -417,11 +421,10 @@ algorithm uses observations of delay increases in the slow start
 phase of window growth to try to exit slow start before window growth
 causes queue overflow.
 
-CUBIC is documented in :rfc:`8312`, and the |ns3| implementation is based
-on the RFC more so than the Linux implementation, although the Linux 4.4
-kernel implementation (through the Direct Code Execution environment) has
-been used to validate the behavior and is fairly well aligned (see below
-section on validation).
+CUBIC is documented in :rfc:`9438`, and the |ns3| implementation is patterned
+partly on the Linux implementation and partly on the RFC, although the Linux
+4.4 kernel implementation (through the Direct Code Execution environment) has
+been used to validate the behavior.
 
 Linux Reno
 ^^^^^^^^^^
@@ -1030,6 +1033,13 @@ environment. Some differences were noted:
   them back-to-back. Currently, ns-3 paces out all packets eligible to
   be sent in the same manner.
 
+It is important to also note that the current model does not implement
+Section 3.5 of RFC 8257 regarding the handling of packet loss.  This
+requirement states that DCTCP must react to lost packets in the same way
+as does a conventional TCP (as specified in RFC 5681).  The current
+DCTCP model does not implement this, and should therefore only be used
+in simulations that do not involve any packet loss on the DCTCP flows.
+
 More information about DCTCP is available in the RFC 8257:
 https://tools.ietf.org/html/rfc8257
 
@@ -1596,7 +1606,7 @@ SACK based loss recovery is used when sender and receiver support SACK options.
 In the case when SACK options are disabled, the NewReno modification handles
 the recovery.
 
-At the start of recovery phase the congestion window is reduced diffently for
+At the start of recovery phase the congestion window is reduced differently for
 NewReno and SACK based recovery. For NewReno the reduction is done as given below:
 
 .. math::  cWnd = ssThresh

@@ -29,6 +29,8 @@
 #include "ns3/object.h"
 #include "ns3/traced-callback.h"
 
+#include <list>
+#include <memory>
 #include <vector>
 
 namespace ns3
@@ -93,13 +95,13 @@ class WifiPhyStateHelper : public Object
      *
      * \param listener the WifiPhyListener to register
      */
-    void RegisterListener(WifiPhyListener* listener);
+    void RegisterListener(const std::shared_ptr<WifiPhyListener>& listener);
     /**
      * Remove WifiPhyListener from this WifiPhyStateHelper.
      *
      * \param listener the WifiPhyListener to unregister
      */
-    void UnregisterListener(WifiPhyListener* listener);
+    void UnregisterListener(const std::shared_ptr<WifiPhyListener>& listener);
     /**
      * Return the current state of WifiPhy.
      *
@@ -309,11 +311,24 @@ class WifiPhyStateHelper : public Object
                                      WifiPreamble preamble,
                                      uint8_t power);
 
+    /**
+     * Notify all WifiPhyListener objects of the given PHY event.
+     *
+     * \tparam FUNC \deduced Member function type
+     * \tparam Ts \deduced Function argument types
+     * \param f the member function to invoke
+     * \param args arguments to pass to the member function
+     */
+    template <typename FUNC, typename... Ts>
+    void NotifyListeners(FUNC f, Ts&&... args);
+
   private:
     /**
-     * typedef for a list of WifiPhyListeners
+     * typedef for a list of WifiPhyListeners. We use weak pointers so that unregistering a
+     * listener is not necessary to delete a listener (reference count is not incremented by
+     * weak pointers).
      */
-    typedef std::vector<WifiPhyListener*> Listeners;
+    typedef std::list<std::weak_ptr<WifiPhyListener>> Listeners;
 
     /**
      * Log the idle and CCA busy states.
@@ -321,72 +336,16 @@ class WifiPhyStateHelper : public Object
     void LogPreviousIdleAndCcaBusyStates();
 
     /**
-     * Notify all WifiPhyListener that the transmission has started for the given duration.
-     *
-     * \param duration the duration of the transmission
-     * \param txPowerDbm the nominal TX power in dBm
-     */
-    void NotifyTxStart(Time duration, double txPowerDbm);
-    /**
-     * Notify all WifiPhyListener that the reception has started for the given duration.
-     *
-     * \param duration the duration of the reception
-     */
-    void NotifyRxStart(Time duration);
-    /**
-     * Notify all WifiPhyListener that the reception was successful.
-     */
-    void NotifyRxEndOk();
-    /**
-     * Notify all WifiPhyListener that the reception was not successful.
-     */
-    void NotifyRxEndError();
-    /**
-     * Notify all WifiPhyListener that the CCA has started for the given duration.
-     *
-     * \param duration the duration of the CCA state
-     * \param channelType the channel type for which the CCA busy state is reported.
-     * \param per20MhzDurations vector that indicates for how long each 20 MHz subchannel
-     *        (corresponding to the index of the element in the vector) is busy and where a zero
-     * duration indicates that the subchannel is idle. The vector is non-empty if  the PHY supports
-     * 802.11ax or later and if the operational channel width is larger than 20 MHz.
-     */
-    void NotifyCcaBusyStart(Time duration,
-                            WifiChannelListType channelType,
-                            const std::vector<Time>& per20MhzDurations);
-    /**
-     * Notify all WifiPhyListener that we are switching channel with the given channel
-     * switching delay.
-     *
-     * \param duration the delay to switch the channel
-     */
-    void NotifySwitchingStart(Time duration);
-    /**
-     * Notify all WifiPhyListener that we are going to sleep
-     */
-    void NotifySleep();
-    /**
-     * Notify all WifiPhyListener that we are going to switch off
-     */
-    void NotifyOff();
-    /**
-     * Notify all WifiPhyListener that we woke up
-     */
-    void NotifyWakeup();
-    /**
      * Switch the state from RX.
      */
     void DoSwitchFromRx();
-    /**
-     * Notify all WifiPhyListener that we are going to switch on
-     */
-    void NotifyOn();
 
     /**
      * The trace source fired when state is changed.
      */
     TracedCallback<Time, Time, WifiPhyState> m_stateLogger;
 
+    NS_LOG_TEMPLATE_DECLARE;        //!< the log component
     bool m_sleeping;                ///< sleeping
     bool m_isOff;                   ///< switched off
     Time m_endTx;                   ///< end transmit
@@ -409,6 +368,40 @@ class WifiPhyStateHelper : public Object
     RxOkCallback m_rxOkCallback;       ///< receive OK callback
     RxErrorCallback m_rxErrorCallback; ///< receive error callback
 };
+
+} // namespace ns3
+
+/***************************************************************
+ *  Implementation of the templates declared above.
+ ***************************************************************/
+
+namespace ns3
+{
+
+template <typename FUNC, typename... Ts>
+void
+WifiPhyStateHelper::NotifyListeners(FUNC f, Ts&&... args)
+{
+    NS_LOG_FUNCTION(this);
+    // In some cases (e.g., when notifying an EMLSR client of a link switch), a notification
+    // to a PHY listener involves the addition and/or removal of a PHY listener, thus modifying
+    // the list we are iterating over. This is dangerous, so ensure that we iterate over a copy
+    // of the list of PHY listeners. The copied list contains shared pointers to the PHY listeners
+    // to prevent them from being deleted.
+    std::list<std::shared_ptr<WifiPhyListener>> listeners;
+    std::transform(m_listeners.cbegin(),
+                   m_listeners.cend(),
+                   std::back_inserter(listeners),
+                   [](auto&& listener) { return listener.lock(); });
+
+    for (const auto& listener : listeners)
+    {
+        if (listener)
+        {
+            std::invoke(f, listener, std::forward<Ts>(args)...);
+        }
+    }
+}
 
 } // namespace ns3
 

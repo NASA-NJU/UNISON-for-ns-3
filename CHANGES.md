@@ -13,6 +13,66 @@ Note that users who upgrade the simulator across versions, or who work directly 
 
 This file is a best-effort approach to solving this issue; we will do our best but can guarantee that there will be things that fall through the cracks, unfortunately. If you, as a user, can suggest improvements to this file based on your experience, please contribute a patch or drop us a note on ns-developers mailing list.
 
+Changes from ns-3.40 to ns-3.41
+-------------------------------
+
+### New API
+
+* (core) Added `BernoulliRandomVariable` class implementing the bernoulli random variable, and `BinomialRandomVariable` class implementing the binomial random variable.
+* (core) Added wrapper around `UniformRandomVariable` to meet the C++11 requirements of UniformRandomBitGenerator.
+* (core) Added method to `GetStopEvent()` from `Simulator`
+* (internet) It is now possible to set the TOS field for IPv4 ICMP Echo Requests/Responses, via a new `Tos` attribute.
+* (spectrum) `SpectrumSignalParameters` is extended to include two new members called: `spectrumChannelMatrix` and `precodingMatrix` which are the key information needed to support MIMO simulations.
+* (spectrum) `SpectrumChannel::AssignStreams()` is added, to allow random variable stream assignment for all propagation loss and delay models added to the channel.
+* (wifi) Added new attribute `ChannelAccessManager:GenerateBackoffIfTxopWithoutTx` to invoke the backoff procedure when an AC gains the right to start a TXOP but it does not transmit any frame, provided that the queue is not actually empty. No transmission may occur,e.g., due to constraints associated with EMLSR operations. This possibility is specified by the current draft revision of the IEEE 802.11 standard.
+
+### Changes to existing API
+
+* (antenna) `UniformPlannarArray` has new attributes `NumVerticalPorts`, `NumHorizontalPorts`, and `IsDualPolarized`.
+* (antenna) `GetNumberOfElements` is renamed to `GetNumElems` for the sake of simplifying the long lines of code that use complex mathematical expressions.
+* (core) The EnumValue class now also supports enum class in addition to plain enums.  As a result of this change, attributes that wrap enums must update the syntax for the `MakeEnumAccessor` method call. Where you once were able to write, for example (from attribute-test-suite.cc):
+
+  ```cpp
+  MakeEnumAccessor(&AttributeObjectTest::m_enum),
+  ```
+
+  you must now write it with a template parameter such as:
+
+  ```cpp
+  MakeEnumAccessor<Test_e>(&AttributeObjectTest::m_enum),
+  ```
+* (internet) Deprecated `Ipv4::WeakEsModel` and `Ipv4::GetWeakEsModel()`, `Ipv4::SetWeakEsModel(bool)` methods. Moved `Ipv6L3Protocol::StrongEndSystemModel` to `Ipv6::StrongEndSystemModel` and added `Ipv4::StrongEndSystemModel` with corresponding `GetStrongEndSystemModel()` and `SetStrongEndSystemModel(bool)` methods to improve end system model configuration options.
+* (lr-wpan) Change the CapabilityField parameter in `LrWpanMac::MlmeAssociateRequest` and `LrWpanMac::MlmeAssociateIndication` to a standard bitmap.
+* (lr-wpan) Change the MAC SuperframeField usage to a standard bitmap, this change impact parameters in the `BeaconPayloadHeader`.
+* (lr-wpan) Create a new abstract class that defines the form of any Lr-wpan MAC layers (`LrWpanMacBase`).
+* (lr-wpan) Add the capability to see the enum values of the MAC transition states in log prints for easier debugging.
+* (lr-wpan) Group MAC status enumerations into a single `LrWpanMacStatus` enumeration in `lr-wpan-mac-base.h.`
+* The spelling of the following files, classes, functions, constants, defines and enumerated values was corrected; this will affect existing users who were using them with the misspelling.
+  * (lte) Struct member `fdbetsFlowPerf_t::lastTtiBytesTrasmitted` in file `fdbet-ff-mac-scheduler.h` was renamed `fdbetsFlowPerf_t::lastTtiBytesTransmitted`.
+  * (lte) Struct member `tdbetsFlowPerf_t::lastTtiBytesTrasmitted` in file `tdbet-ff-mac-scheduler.h` was renamed `fdbetsFlowPerf_t::lastTtiBytesTransmitted`.
+  * (lte) Struct member `pfsFlowPerf_t::lastTtiBytesTrasmitted` in file `pf-ff-mac-scheduler.h` was renamed `fdbetsFlowPerf_t::lastTtiBytesTransmitted`.
+* (sixlowpan) Remove `ForceEtherType` and `EtherType` attributes, and use RFC 7973 EtherType for interfaces supporting an EtherType.
+* (spectrum) `PhasedArraySpectrumPropagationLossModel::CalcRxPowerSpectralDensity` return type is changed from `Ptr<SpectrumValue>` to `Ptr<SpectrumSignalParameters>` to support MIMO, because when multiple transmit and receive antenna ports are present, it is not enough to have a single PSD (represented by `Ptr<SpectrumValue>`) but also the 3D channel matrix is needed per receive and transmit antenna port. Notice that `CalcRxPowerSpectralDensity` is typically called from within `MultiModelSpectrumChannel`, but if some external ns-3 module is calling directly this function, it can still access to its original return value through `Ptr<SpectrumSignalParameters>` which contains `Ptr<SpectrumValue>`.
+* (wifi) The `HeConfiguration::MpduBufferSize` attribute is now obsolete. Use the `WifiMac::MpduBufferSize` attribute instead.
+* (wifi) The `LinkSetupCanceled` trace source of `StaWifiMac` has been obsoleted because disassociation does not occur at link level for non-AP MLDs.
+* (wifi) The default value for `WifiRemoteStationManager::RtsCtsThreshold` has been increased from 65535 to 4692480.
+* (wifi) `SpectrumWifiHelper::SpectrumChannelSwitched()` is now static
+
+### Changes to build system
+
+* In preparation to enable C++20, the following actions have been taken due to compiler issues:
+  * Precompiled headers have been disabled in GCC versions >= 12.2.
+  * The `restrict` warning has been disabled in GCC versions 12.1-12.3.1.
+* Raised minimum CMake version to 3.13.
+* Raised minimum C++ version to C++20.
+* Added guard rails for scratch targets missing or containing more than one `main` function.
+
+### Changed behavior
+* (sixlowpan) Now uses RFC 7973 Ethertype by default
+* (spectrum) SpectrumChannel objects and the loss/delay models attached are now automatically initialized (Object::Initialize) at time zero
+* (tcp) TCP Cubic (the default congestion control in ns-3) now supports TCP-friendliness by default (see RFC 9438 Section 4.3), making the congestion window growth somewhat more aggressive.  This follows the default Linux behavior.
+* (wifi) Increase the duration of the timer started when waiting for an ADDBA_RESPONSE from 1ms to 5ms to better account for the time required by the recipient to access the medium and complete the frame exchange (which may involve protection with (MU-)RTS/CTS).
+
 Changes from ns-3.39 to ns-3.40
 -------------------------------
 
@@ -48,7 +108,7 @@ Changes from ns-3.38 to ns-3.39
 
 ### New API
 
-* (lr-wpan) Added support for orphan scans. Orphan scans can now be performed using the existing `LrWpanMac::MlmeScanRequest`; This orphan scan use the added orphan notification commands and coordinator realigment commands. Usage is shown in added `lr-wpan-orphan-scan.cc` example and in the `TestOrphanScan` included in `lr-wpan-mac-test.cc`.
+* (lr-wpan) Added support for orphan scans. Orphan scans can now be performed using the existing `LrWpanMac::MlmeScanRequest`; This orphan scan use the added orphan notification commands and coordinator realignment commands. Usage is shown in added `lr-wpan-orphan-scan.cc` example and in the `TestOrphanScan` included in `lr-wpan-mac-test.cc`.
 * (network) Added `Mac64Address::ConvertToInt`. Converts a Mac64Address object to a uint64_t.
 * (network) Added `Mac16Address::ConvertToInt`. Converts a Mac16Address object to a uint16_t.
 * (network) Added `Mac16Address::Mac16Address(uint16t addr)` and `Mac16Address::Mac64Address(uint64t addr)` constructors.
@@ -360,6 +420,7 @@ Changes from ns-3.33 to ns-3.34
 * The **wifi BCC AWGN error rate tables** have been aligned with the ones provided by MATLAB and users may note a few dB difference when using BCC at high SNR and high MCS.
 * **`ThreeGppChannelModel` has been fixed**: cluster and sub-cluster angles could have been generated with inclination angles outside the inclination range `[0, pi]`, and have now been constrained to the correct range.
 * The **LTE RLC Acknowledged Mode (AM) transmit buffer** is now limited by default to a size of (`1024 * 10`) bytes. Configuration of unlimited behavior can still be made by passing the value of zero to the new attribute `MaxTxBufferSize`.
+* A **non-AP MLD loses association** when receiving no beacon an any link link for an interval of duration equal to the maximum number of missed beacons times the interval between two consecutive Beacon frames.
 
 Changes from ns-3.32 to ns-3.33
 -------------------------------
@@ -489,7 +550,7 @@ Changes from ns-3.30 to ns-3.31
 * (as reported above) previously the `Config::Connect` and `Config::Set` families of functions would fail silently if the attribute or trace source didn't exist on the path given (typically due to spelling errors). Now those functions will throw a fatal error. If you need the old behavior use the new `...FailSafe ()` variants.
 * Attempting to deserialize an enum name which wasn't registered with `MakeEnumChecker` now causes a fatal error, rather failing silently. (This can be triggered by setting an enum Attribute from a StringValue.)
 * As a result of the above API changes in `MobilityBuildingInfo` and `BuildingsHelper` classes, a building aware pathloss models, e.g., `HybridBuildingsPropagationLossModel` is now able to accurately compute the pathloss for a node moving in and out of buildings in a simulation. See [issue 80](https://gitlab.com/nsnam/ns-3-dev/issues/80) for discussion.
-* The implementation of the **Wi-Fi channel access** functions has been improved to make them more conformant to the IEEE 802.11-2016 standard. Concerning the DCF, the backoff procedure is no longer invoked when a packet is queued for transmission and the medium has not been idle for a DIFS, but it is invoked if the medium is busy or does not remain idle for a DIFS after the packet has been queued. Concerning the EDCAF, tranmissions are now correctly aligned at slot boundaries.
+* The implementation of the **Wi-Fi channel access** functions has been improved to make them more conformant to the IEEE 802.11-2016 standard. Concerning the DCF, the backoff procedure is no longer invoked when a packet is queued for transmission and the medium has not been idle for a DIFS, but it is invoked if the medium is busy or does not remain idle for a DIFS after the packet has been queued. Concerning the EDCAF, transmissions are now correctly aligned at slot boundaries.
 * Various wifi physical layer behavior around channel occupancy calculation, phy state calculation, and handling different channel widths has been updated.
 
 Changes from ns-3.29 to ns-3.30

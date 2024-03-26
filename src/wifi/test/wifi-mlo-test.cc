@@ -613,7 +613,7 @@ void
 MultiLinkOperationsTestBase::DoSetup()
 {
     RngSeedManager::SetSeed(1);
-    RngSeedManager::SetRun(2);
+    RngSeedManager::SetRun(3);
     int64_t streamNumber = 30;
 
     NodeContainer wifiApNode;
@@ -932,12 +932,14 @@ MultiLinkSetupTest::DoSetup()
     MultiLinkOperationsTestBase::DoSetup();
 
     m_staMacs[0]->SetAttribute("ActiveProbing", BooleanValue(m_scanType == WifiScanType::ACTIVE));
-    m_apMac->GetEhtConfiguration()->SetAttribute("TidToLinkMappingNegSupport",
-                                                 EnumValue(m_apNegSupport));
+    m_apMac->GetEhtConfiguration()->SetAttribute(
+        "TidToLinkMappingNegSupport",
+        EnumValue(static_cast<WifiTidToLinkMappingNegSupport>(m_apNegSupport)));
     // For non-AP MLD, it does not make sense to set the negotiation type to 0 (unless the AP MLD
     // also advertises 0) or 1 (the AP MLD is discarded if it advertises a support of 3)
     auto staEhtConfig = m_staMacs[0]->GetEhtConfiguration();
-    staEhtConfig->SetAttribute("TidToLinkMappingNegSupport", EnumValue(3));
+    staEhtConfig->SetAttribute("TidToLinkMappingNegSupport",
+                               EnumValue(WIFI_TID_TO_LINK_MAPPING_ANY_LINK_SET));
     staEhtConfig->SetAttribute("TidToLinkMappingDl", StringValue(m_dlTidLinkMappingStr));
     staEhtConfig->SetAttribute("TidToLinkMappingUl", StringValue(m_ulTidLinkMappingStr));
 
@@ -2422,6 +2424,7 @@ class MultiLinkMuTxTest : public MultiLinkOperationsTestBase
     std::vector<PacketSocketAddress> m_sockets; ///< packet socket addresses for STAs
     std::size_t m_nPackets;                     ///< number of application packets to generate
     std::size_t m_blockAckCount{0};             ///< transmitted BlockAck counter
+    std::size_t m_tfCount{0};                   ///< transmitted Trigger Frame counter
     // std::size_t m_blockAckReqCount{0};     ///< transmitted BlockAckReq counter
     std::map<AddrSeqNoPair, std::size_t> m_inflightCount; ///< max number of simultaneous
                                                           ///< transmissions of each data frame
@@ -2569,6 +2572,13 @@ MultiLinkMuTxTest::Transmit(Ptr<WifiMac> mac,
                     m_staMacs[i]->GetDevice()->GetNode()->AddApplication(
                         GetApplication(m_sockets[i], m_nPackets, 450, txDuration, i * 4));
                 }
+            }
+            if (++m_tfCount == m_staMacs[0]->GetSetupLinkIds().size())
+            {
+                // a TF has been sent on all the setup links, we can now disable UL OFDMA
+                auto muScheduler = m_apMac->GetObject<MultiUserScheduler>();
+                NS_TEST_ASSERT_MSG_NE(muScheduler, nullptr, "Expected an aggregated MU scheduler");
+                muScheduler->SetAttribute("EnableUlOfdma", BooleanValue(false));
             }
             break;
         default:;
@@ -2778,13 +2788,12 @@ MultiLinkMuTxTest::DoSetup()
     }
 
     // aggregate MU scheduler
-    auto muScheduler = CreateObjectWithAttributes<RrMultiUserScheduler>(
-        "EnableUlOfdma",
-        BooleanValue(m_muTrafficPattern == WifiMuTrafficPattern::UL_MU),
-        "EnableBsrp",
-        BooleanValue(false),
-        "UlPsduSize",
-        UintegerValue(2000));
+    auto muScheduler = CreateObjectWithAttributes<RrMultiUserScheduler>("EnableUlOfdma",
+                                                                        BooleanValue(false),
+                                                                        "EnableBsrp",
+                                                                        BooleanValue(false),
+                                                                        "UlPsduSize",
+                                                                        UintegerValue(2000));
     m_apMac->AggregateObject(muScheduler);
 
     // install post reception error model on all devices
@@ -2861,6 +2870,7 @@ MultiLinkMuTxTest::StartTraffic()
         Simulator::Schedule(m_nStations * MilliSeconds(50), [this]() {
             auto muScheduler = m_apMac->GetObject<MultiUserScheduler>();
             NS_TEST_ASSERT_MSG_NE(muScheduler, nullptr, "Expected an aggregated MU scheduler");
+            muScheduler->SetAttribute("EnableUlOfdma", BooleanValue(true));
             muScheduler->SetAccessReqInterval(MilliSeconds(3));
             // channel access is requested only once
             muScheduler->SetAccessReqInterval(Seconds(0));

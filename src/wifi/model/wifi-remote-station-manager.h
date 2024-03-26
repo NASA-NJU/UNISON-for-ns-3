@@ -816,11 +816,12 @@ class WifiRemoteStationManager : public Object
     WifiTxVector GetDataTxVector(const WifiMacHeader& header, uint16_t allowedWidth);
     /**
      * \param address remote address
+     * \param allowedWidth the allowed width in MHz for the data frame being protected
      *
      * \return the TXVECTOR to use to send the RTS prior to the
      *         transmission of the data packet itself.
      */
-    WifiTxVector GetRtsTxVector(Mac48Address address);
+    WifiTxVector GetRtsTxVector(Mac48Address address, uint16_t allowedWidth);
     /**
      * Return a TXVECTOR for the CTS frame given the destination and the mode of the RTS
      * used by the sender.
@@ -1489,9 +1490,6 @@ class WifiRemoteStationManager : public Object
 
     StationStates m_states; //!< States of known stations
     Stations m_stations;    //!< Information for each known stations
-
-    WifiMode m_defaultTxMode; //!< The default transmission mode
-    WifiMode m_defaultTxMcs;  //!< The default transmission modulation-coding scheme (MCS)
 
     uint32_t m_maxSsrc;                //!< Maximum STA short retry count (SSRC)
     uint32_t m_maxSlrc;                //!< Maximum STA long retry count (SLRC)
