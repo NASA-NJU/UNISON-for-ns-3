@@ -49,32 +49,32 @@ class MultithreadedSimulatorImpl : public SimulatorImpl
     /** Default constructor. */
     MultithreadedSimulatorImpl();
     /** Destructor. */
-    ~MultithreadedSimulatorImpl();
+    ~MultithreadedSimulatorImpl() override;
 
     // virtual from SimulatorImpl
-    virtual void Destroy();
-    virtual bool IsFinished() const;
-    virtual void Stop();
-    virtual void Stop(const Time& delay);
-    virtual EventId Schedule(const Time& delay, EventImpl* event);
-    virtual void ScheduleWithContext(uint32_t context, const Time& delay, EventImpl* event);
-    virtual EventId ScheduleNow(EventImpl* event);
-    virtual EventId ScheduleDestroy(EventImpl* event);
-    virtual void Remove(const EventId& id);
-    virtual void Cancel(const EventId& id);
-    virtual bool IsExpired(const EventId& id) const;
-    virtual void Run();
-    virtual Time Now() const;
-    virtual Time GetDelayLeft(const EventId& id) const;
-    virtual Time GetMaximumSimulationTime() const;
-    virtual void SetScheduler(ObjectFactory schedulerFactory);
-    virtual uint32_t GetSystemId() const;
-    virtual uint32_t GetContext() const;
-    virtual uint64_t GetEventCount() const;
+    void Destroy() override;
+    bool IsFinished() const override;
+    void Stop() override;
+    EventId Stop(const Time& delay) override;
+    EventId Schedule(const Time& delay, EventImpl* event) override;
+    void ScheduleWithContext(uint32_t context, const Time& delay, EventImpl* event) override;
+    EventId ScheduleNow(EventImpl* event) override;
+    EventId ScheduleDestroy(EventImpl* event) override;
+    void Remove(const EventId& id) override;
+    void Cancel(const EventId& id) override;
+    bool IsExpired(const EventId& id) const override;
+    void Run() override;
+    Time Now() const override;
+    Time GetDelayLeft(const EventId& id) const override;
+    Time GetMaximumSimulationTime() const override;
+    void SetScheduler(ObjectFactory schedulerFactory) override;
+    uint32_t GetSystemId() const override;
+    uint32_t GetContext() const override;
+    uint64_t GetEventCount() const override;
 
   private:
     // Inherited from Object
-    virtual void DoDispose();
+    void DoDispose() override;
 
     /**
      * @brief Automatically divides the to-be-simulated topology

@@ -21,7 +21,6 @@ build_lib(
     model/logical-process.h
     model/mtp-interface.h
     model/multithreaded-simulator-impl.h
-  LIBRARIES_TO_LINK ${libcore}
-                    ${libnetwork}
+  LIBRARIES_TO_LINK ${libnetwork}
   TEST_SOURCES ${example_as_test_suite}
 )

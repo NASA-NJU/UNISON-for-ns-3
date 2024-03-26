@@ -118,11 +118,11 @@ MultithreadedSimulatorImpl::Stop()
     }
 }
 
-void
+EventId
 MultithreadedSimulatorImpl::Stop(const Time& delay)
 {
     NS_LOG_FUNCTION(this << delay.GetTimeStep());
-    Simulator::Schedule(delay, &Simulator::Stop);
+    return Simulator::Schedule(delay, &Simulator::Stop);
 }
 
 EventId
