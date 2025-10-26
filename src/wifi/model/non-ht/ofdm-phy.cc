@@ -260,8 +260,7 @@ OfdmPhy::GetPayloadDuration(uint32_t size,
 
     // The number of OFDM symbols in the data field when BCC encoding
     // is used is given in equation 19-32 of the IEEE 802.11-2016 standard.
-    double numSymbols =
-        lrint(ceil((GetNumberServiceBits() + size * 8.0 + 6.0) / (numDataBitsPerSymbol)));
+    double numSymbols = ceil((GetNumberServiceBits() + size * 8.0 + 6.0) / (numDataBitsPerSymbol));
 
     Time payloadDuration =
         FemtoSeconds(static_cast<uint64_t>(numSymbols * symbolDuration.GetFemtoSeconds()));
@@ -617,7 +616,7 @@ OfdmPhy::CalculateDataRate(Time symbolDuration,
                            double codingRate)
 {
     double symbolRate = (1e9 / static_cast<double>(symbolDuration.GetNanoSeconds()));
-    return lrint(ceil(symbolRate * usableSubCarriers * numberOfBitsPerSubcarrier * codingRate));
+    return ceil(symbolRate * usableSubCarriers * numberOfBitsPerSubcarrier * codingRate);
 }
 
 uint16_t
@@ -710,8 +709,9 @@ class ConstructorOfdm
     ConstructorOfdm()
     {
         ns3::OfdmPhy::InitializeModes();
-        ns3::WifiPhy::AddStaticPhyEntity(ns3::WIFI_MOD_CLASS_OFDM,
-                                         ns3::Create<ns3::OfdmPhy>()); // default variant will do
+        ns3::WifiPhy::AddStaticPhyEntity(
+            ns3::WIFI_MOD_CLASS_OFDM,
+            std::make_shared<ns3::OfdmPhy>()); // default variant will do
     }
 } g_constructor_ofdm; ///< the constructor for OFDM modes
 

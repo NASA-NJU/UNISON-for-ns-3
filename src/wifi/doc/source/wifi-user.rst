@@ -216,7 +216,7 @@ For example, this code configures a node with 3 antennas that supports 2 spatial
  wifiPhyHelper.Set("MaxSupportedTxSpatialStreams", UintegerValue(2));
  wifiPhyHelper.Set("MaxSupportedRxSpatialStreams", UintegerValue(1));
 
-802.11n PHY layer can support both 20 (default) or 40 MHz channel width, and 802.11ac/ax PHY layer can use either 20, 40, 80 (default) or 160 MHz channel width.  See below for further documentation on setting the frequency, channel width, and channel number.
+802.11n PHY layer can support both 20 (default) or 40 MHz channel width, and 802.11ac/ax PHY layer can use either 20, 40, 80 (default), 160 or 320 MHz channel width.  See below for further documentation on setting the frequency, channel width, and channel number.
 
 .. sourcecode:: cpp
 
@@ -264,7 +264,7 @@ providing either a StringValue object or an AttributeContainerValue object:
 
 .. sourcecode:: cpp
 
-  AttributeContainerValue<TupleValue<UintegerValue, UintegerValue, EnumValue, UintegerValue>, ';'> value;
+  WifiPhy::ChannelSettingsValue value;
   value.Set(WifiPhy::ChannelSegments{{38, 40, WIFI_PHY_BAND_5GHZ, 0}});
 
 In both cases, the operating channel will be channel 38 in the 5 GHz band, which
@@ -283,7 +283,7 @@ The operating channel settings can then be configured in a number of ways:
 
 .. sourcecode:: cpp
 
-  AttributeContainerValue<TupleValue<UintegerValue, UintegerValue, EnumValue, UintegerValue>, ';'> value;
+  WifiPhy::ChannelSettingsValue value;
   value.Set(WifiPhy::ChannelSegments{{38, 40, WIFI_PHY_BAND_5GHZ, 0}});
   YansWifiPhyHelper wifiPhyHelper = YansWifiPhyHelper::Default();
   wifiPhyHelper.Set("ChannelSettings", value);
@@ -475,33 +475,35 @@ The following channel numbers are well-defined for 5 GHz standards:
    +------------------+-------------------------------------------+
 
 
-The following channel numbers are well-defined for 6 GHz standards (802.11ax only):
+The following channel numbers are well-defined for 6 GHz standards (802.11ax and later):
 
 .. table:: 6 GHz channel numbers
    :widths: 20 70
 
-   +------------------+-------------------------------------------+
-   | ``ChannelWidth`` | ``ChannelNumber``                         |
-   +------------------+-------------------------------------------+
-   | 20 MHz           | 1, 5, 9, 13, 17, 21, 25, 29, 33, 37, 41,  |
-   |                  | 45, 49, 53, 57, 61, 65, 69, 73, 77, 81,   |
-   |                  | 85, 89, 93, 97, 101, 105, 109, 113, 117,  |
-   |                  | 121, 125, 129, 133, 137, 141, 145, 149,   |
-   |                  | 153, 157, 161, 165, 169, 173, 177, 181,   |
-   |                  | 185, 189, 193, 197, 201, 205, 209, 213,   |
-   |                  | 217, 221, 225, 229, 233                   |
-   +------------------+-------------------------------------------+
-   | 40 MHz           | 3, 11, 19, 27, 35, 43, 51, 59, 67, 75,    |
-   |                  | 83, 91, 99, 107, 115, 123, 131, 139, 147, |
-   |                  | 155, 163, 171, 179, 187, 195, 203, 211,   |
-   |                  | 219, 227                                  |
-   +------------------+-------------------------------------------+
-   | 80 MHz           | 7, 23, 39, 55, 71, 87, 103, 119, 135,     |
-   |                  | 151, 167, 183, 199, 215                   |
-   +------------------+-------------------------------------------+
-   | 160 MHz          | 15, 47, 79, 111, 143, 175, 207            |
-   +------------------+-------------------------------------------+
-
+   +-------------------+------------------------------------------+
+   | ``ChannelWidth``  | ``ChannelNumber``                        |
+   +-------------------+------------------------------------------+
+   | 20 MHz            | 1, 5, 9, 13, 17, 21, 25, 29, 33, 37, 41, |
+   |                   | 45, 49, 53, 57, 61, 65, 69, 73, 77, 81,  |
+   |                   | 85, 89, 93, 97, 101, 105, 109, 113, 117, |
+   |                   | 121, 125, 129, 133, 137, 141, 145, 149,  |
+   |                   | 153, 157, 161, 165, 169, 173, 177, 181,  |
+   |                   | 185, 189, 193, 197, 201, 205, 209, 213,  |
+   |                   | 217, 221, 225, 229, 233                  |
+   +-------------------+------------------------------------------+
+   | 40 MHz            | 3, 11, 19, 27, 35, 43, 51, 59, 67, 75,   |
+   |                   | 83, 91, 99, 107, 115, 123, 131, 139, 147,|
+   |                   | 155, 163, 171, 179, 187, 195, 203, 211,  |
+   |                   | 219, 227                                 |
+   +-------------------+------------------------------------------+
+   | 80 MHz            | 7, 23, 39, 55, 71, 87, 103, 119, 135,    |
+   |                   | 151, 167, 183, 199, 215                  |
+   +-------------------+------------------------------------------+
+   | 160 MHz           | 15, 47, 79, 111, 143, 175, 207           |
+   +-------------------+------------------------------------------+
+   | 320 MHz (802.11be | 31, 95, 159 (320 MHz-1)                  |
+   | and later)        | 63, 127, 191 (320 MHz-2)                 |
+   +-------------------+------------------------------------------+
 
 The channel number may be set either before or after creation of the
 WifiPhy object.
@@ -532,6 +534,9 @@ such as:
 
 In the above, while channel number 14 is well-defined in practice for 802.11b
 only, it is for 2.4 GHz band, not 5 GHz band.
+
+If a limitation is configured for the supported bandwidth of the PHY radio through the MaxRadioBw attribute,
+the simulator will exit with an error if the configured bandwidth exceeds the maximum allowed bandwidth.
 
 WifiPhy::Primary20MHzIndex
 ++++++++++++++++++++++++++
@@ -575,6 +580,32 @@ Otherwise, they are applied immediately.
 The wifi standard can be configured only once, i.e., it is not possible to
 change standard during a simulation. It is instead possible to change the
 channel settings at any time.
+
+Advertisement of the channel width
+++++++++++++++++++++++++++++++++++
+
+STAs are advertizing their channel width in capabilities and operations (for APs) information elements
+contained in management frames.
+
+The channel width that is being advertised is the value that is returned by WifiPhy::ChannelWidth, which corresponds to
+the value that is set in the ChannelSettings attribute (or the total width in case of non-contiguous channel operation).
+
+Not all the channel widths can be advertised for non-AP STAs, depending on the standard and the band.
+This is not a problem as long as the AP the non-AP STA is associated with is operating on the same channel width
+or on a narrower one. Otherwise, the AP might select a larger channel width for the transmission of downlink PPDUs,
+which would then be dropped by the PHY of the non-AP STA.
+
+For example, since VHT Capabilities Information Elements only allow the advertisement of 80 and 160 MHz channel widths,
+a VHT non-AP STA with its ChannelSettings set to use a 40 MHz channel width won't be able to receive any downlink PPDUs
+if the VHT AP has its ChannelSettings set to operate on an 80 MHz channel width.
+
+It is possible to configure the behavior of the association manager to either abort the simulation when such
+a problematic situation is detected (default) or to allow the association anyway, depending on the configured value
+for the ``ns3::WifiMac::AllowAssociationWithDifferentChannelWidth`` attribute.
+
+If the default association manager is used, it is also possible to skip candidate APs that are operating on a
+larger channel width than the non-AP STA and which would result in the problematic situation described above.
+This is done by setting the ``ns3::WifiMac::SkipCandidateAPsWithLargerChannelWidth`` attribute to true.
 
 
 SpectrumWifiPhyHelper
@@ -1309,6 +1340,66 @@ You can export statistics from this helper for use cases such as printing in you
     auto records = coHelper.GetDeviceRecords();
 
 You can refer an example program in ``src/wifi/examples/wifi-co-trace-example.cc`` on how to use these APIs.
+
+WifiStaticSetupHelper
+=====================
+
+Wi-Fi devices normally exchange management frames over the air to perform association or setup
+various features. In many simulations, users are not interested in the actual exchange of such
+management frames because they want to evaluate the performance of the network when the requested
+features are already established. In such cases, actually exchanging management frames not only
+constitutes a waste of computing resources, but it could also lead to unexpected results due to
+collisions among the required management frames.
+
+The purpose of the ``WifiStaticSetupHelper`` is to statically setup wifi devices at the exact time
+the simulation starts without actually exchanging management frames over the air. Currently, the
+following operations can be statically setup:
+
+* legacy association/ML setup (note that channel scanning is automatically disabled by the helper)
+* establishment of block ack agreements
+* enabling EMLSR mode on EMLSR client links
+
+The ``WifiStaticSetupHelper`` is made of various static functions to perform the operations above,
+which can be called once the installation and configuration of the wifi is completed.
+For example, the following line of code:
+
+.. sourcecode:: cpp
+
+    WifiStaticSetupHelper::SetStaticAssociation(apDev, staDevices);
+
+performs association or ML setup (depending on whether involved devices are single-link or multi-link)
+between the AP ``apDev`` and the non-AP STAs included in the ``staDevices`` container of devices.
+Additionally, the following line of code:
+
+.. sourcecode:: cpp
+
+    WifiStaticSetupHelper::SetStaticBlockAck(apDev, staDev, 0);
+
+establishes a Block Ack agreement for TID 0 between the AP ``apDev`` and the non-AP STA ``staDev``,
+with the AP being the originator and the non-AP STA the recipient.
+
+To enable EMLSR mode on the links specified via the ``EmlsrManager::EmlsrLinkSet`` attribute, the
+following line of code can be used:
+
+.. sourcecode:: cpp
+
+    WifiStaticSetupHelper::SetStaticEmlsr(apDev, staDev);
+
+where ``apDev`` is the AP device and ``staDev`` is the EMLSR client device.
+
+In case wifi devices exchange IPv4 or IPv6 traffic, it is also convenient to statically setup their
+ARP or NDISC cache, so that ARP Request/Response frames do not need to be actually exchanged. This
+can be achieved by calling:
+
+.. sourcecode:: cpp
+
+    NeighborCacheHelper nbCache;
+    nbCache.PopulateNeighborCache();
+
+after assigning IP addresses to the devices in the network.
+
+For an example usage of these static helpers, you can refer to the
+``/examples/wireless/wifi-{ht,vht,he,eht}-network.cc`` example programs.
 
 HT configuration
 ================

@@ -95,9 +95,8 @@ class LteUeComponentCarrierManager : public Object
     std::map<uint8_t, LteMacSapProvider*>
         m_macSapProvidersMap; //!< Map of pointers to SAP to interfaces of the MAC instance if the
                               //!< flows of this UE.
+};
 
-}; // end of class LteUeComponentCarrierManager
-
-} // end of namespace ns3
+} // namespace ns3
 
 #endif /* LTE_UE_COMPONENT_CARRIER_MANAGER_H */

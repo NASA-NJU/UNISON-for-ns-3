@@ -76,7 +76,8 @@ class HashTestCase : public TestCase
     void Check(const std::string hashName, const int bits, const uint64_t hash);
     void DoRun() override;
 
-}; // class HashTestCase
+    // end of class HashTestCase
+};
 
 HashTestCase::HashTestCase(const std::string name)
     : TestCase(name),
@@ -415,11 +416,12 @@ IncrementalTestCase::DoRun()
     key2 = "Incremental.";
     key12 = key1 + key2;
 
-    std::cout << GetName() << "checking with key: "
-              << "\"" << key1 << "\"[" << key1.size() << "] + "
-              << "\"" << key2 << "\"[" << key2.size() << "]" << std::endl;
-    std::cout << GetName() << "equivalent to:     "
-              << "\"" << key12 << "\"[" << key12.size() << "]" << std::endl;
+    std::cout << GetName() << "checking with key: ";
+    std::cout << "\"" << key1 << "\"[" << key1.size() << "] + ";
+    std::cout << "\"" << key2 << "\"[" << key2.size() << "]" << std::endl;
+
+    std::cout << GetName() << "equivalent to:     ";
+    std::cout << "\"" << key12 << "\"[" << key12.size() << "]" << std::endl;
 
     DoHash("default", Hasher());
     DoHash("murmur3", Hasher(Create<Hash::Function::Murmur3>()));

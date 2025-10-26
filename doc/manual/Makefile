@@ -1,6 +1,4 @@
-EPSTOPDF = epstopdf
-DIA = dia
-CONVERT = convert -density 300
+include $(CURDIR)/../sphinx/defines.mk
 
 SRC = ../../src
 # Temporary source directory, for build
@@ -45,6 +43,7 @@ SOURCES = \
 	source/tracing.rst \
 	source/troubleshoot.rst \
 	source/utilities.rst \
+	source/working-with-cilicon.rst \
 	source/working-with-cmake.rst \
 	source/working-with-docker.rst \
 	source/working-with-git.rst \
@@ -64,7 +63,8 @@ SOURCES = \
 # documentation formats (html, latex...) the following formats are supported:
 #  1) a single .dia file (preferred option, because it can be edited)
 #  2) a single .eps file
-#  3) both a .pdf and .png file
+#  3) a single .png file
+#  4) both a .pdf and .png file
 
 SOURCEFIGS = \
     figures/software-organization.dia \
@@ -92,6 +92,10 @@ SOURCEFIGS = \
 	figures/vtune-uarch-core-stats.png \
 	figures/vtune-uarch-profiling-summary.png \
 	figures/vtune-uarch-wifi-stats.png \
+	figures/perf.svg \
+	figures/perf-lte-frequency-reuse.png \
+	figures/perf-chunk-processor.png \
+	figures/perf-detail.png \
 	${SRC}/stats/doc/Stat-framework-arch.png \
 	${SRC}/stats/doc/Wifi-default.png \
 	${SRC}/stats/doc/dcf-overview.dia \
@@ -135,15 +139,7 @@ RESCALE = ../../utils/rescale-pdf.sh
 	@$(EPSTOPDF) $< -o=$@ >/dev/null
 	@if test x$($@_width) != x; then $(RESCALE) $($@_width) $@ ; fi
 
-# You can set these variables from the command line.
-SPHINXOPTS    = -W --keep-going
-SPHINXBUILD   = sphinx-build
-PAPER         =
-BUILDDIR      = build
-
 # Internal variables.
-PAPEROPT_a4     = -D latex_paper_size=a4
-PAPEROPT_letter = -D latex_paper_size=letter
 ALLSPHINXOPTS   = -d $(BUILDDIR)/doctrees $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) $(SOURCETEMP)
 
 .PHONY: help clean html dirhtml singlehtml pickle json htmlhelp qthelp devhelp epub latex latexpdf text man changes linkcheck doctest

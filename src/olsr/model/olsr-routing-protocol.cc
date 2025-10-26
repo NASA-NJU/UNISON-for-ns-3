@@ -252,7 +252,7 @@ RoutingProtocol::RoutingProtocol()
 {
     m_uniformRandomVariable = CreateObject<UniformRandomVariable>();
 
-    m_hnaRoutingTable = Create<Ipv4StaticRouting>();
+    m_hnaRoutingTable = CreateObject<Ipv4StaticRouting>();
 }
 
 RoutingProtocol::~RoutingProtocol()
@@ -3032,6 +3032,7 @@ RoutingProtocol::RouteInput(Ptr<const Packet> p,
         NS_LOG_LOGIC("No dynamic route, check network routes");
         if (m_hnaRoutingTable->RouteInput(p, header, idev, ucb, mcb, lcb, ecb))
         {
+            // NOLINTNEXTLINE(readability-simplify-boolean-expr)
             return true;
         }
         else

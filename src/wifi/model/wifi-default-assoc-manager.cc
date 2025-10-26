@@ -13,6 +13,7 @@
 #include "wifi-net-device.h"
 #include "wifi-phy.h"
 
+#include "ns3/boolean.h"
 #include "ns3/log.h"
 #include "ns3/simulator.h"
 #include "ns3/vht-configuration.h"
@@ -40,7 +41,16 @@ WifiDefaultAssocManager::GetTypeId()
                           "notified within this amount of time, we give up setting up that link.",
                           TimeValue(MilliSeconds(5)),
                           MakeTimeAccessor(&WifiDefaultAssocManager::m_channelSwitchTimeout),
-                          MakeTimeChecker(Seconds(0)));
+                          MakeTimeChecker(Seconds(0)))
+            .AddAttribute(
+                "SkipAssocIncompatibleChannelWidth",
+                "If set to true, it does not include APs with incompatible channel width with the "
+                "STA in the list of candidate APs. An incompatible channel width is one that the "
+                "STA cannot advertise to the AP, unless AP operates on a channel width that is "
+                "equal or lower than that channel width.",
+                BooleanValue(false),
+                MakeBooleanAccessor(&WifiDefaultAssocManager::m_skipAssocIncompatibleChannelWidth),
+                MakeBooleanChecker());
     return tid;
 }
 
@@ -206,13 +216,13 @@ WifiDefaultAssocManager::EndScanning()
                     // switching channel while a PHY is in sleep state fails
                     phy->ResumeFromSleep();
                 }
-                // switch this link to using the channel used by a reported AP (or its primary80
-                // in case the reported AP is using a 160 MHz and the non-AP MLD does not support
-                // 160 MHz operations)
-                if (apChannel.GetTotalWidth() > MHz_u{80} &&
-                    !phy->GetDevice()->GetVhtConfiguration()->m_160MHzSupported)
+
+                // switch this link to using the channel used by a reported AP (or one of its
+                // primary subchannels in case the reported AP has larger channel width than the one
+                // supported by the non-AP MLD)
+                if (apChannel.GetTotalWidth() > phy->GetChannelWidth())
                 {
-                    apChannel = apChannel.GetPrimaryChannel(MHz_u{80});
+                    apChannel = apChannel.GetPrimaryChannel(phy->GetChannelWidth());
                 }
 
                 NS_LOG_DEBUG("Switch link " << +linkId << " to using " << apChannel);
@@ -290,7 +300,8 @@ WifiDefaultAssocManager::ChannelSwitchTimeout(uint8_t linkId)
 bool
 WifiDefaultAssocManager::CanBeInserted(const StaWifiMac::ApInfo& apInfo) const
 {
-    return (m_waitBeaconEvent.IsPending() || m_probeRequestEvent.IsPending());
+    return ((m_waitBeaconEvent.IsPending() || m_probeRequestEvent.IsPending()) &&
+            (!m_skipAssocIncompatibleChannelWidth || IsChannelWidthCompatible(apInfo)));
 }
 
 bool

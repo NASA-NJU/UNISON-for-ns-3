@@ -45,7 +45,7 @@ jobs:
           python3 -c "import re, subprocess;print('cache_misses=%d' % int(re.findall('cache_miss(.*)', subprocess.check_output(['ccache', '--print-stats']).decode())[0]))" >> $GITHUB_ENV
       - name: Run tests and examples
         if: env.cache_misses != '0'
-        run: python3 test.py --no-build
+        run: python3 test.py --no-build --verbose-failed
 
   Codecov:
     runs-on: ubuntu-latest
@@ -151,17 +151,18 @@ jobs:
           python3 -c "import re, subprocess;print('cache_misses=%d' % int(re.findall('cache_miss(.*)', subprocess.check_output(['ccache', '--print-stats']).decode())[0]))" >> $GITHUB_ENV
       - name: Run tests and examples
         if: env.cache_misses != '0'
-        run: python3 test.py --no-build
+        run: python3 test.py --no-build --verbose-failed
 
   Mac_OS_X:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ macos-latest, macos-13 ]
+        os: [ macos-latest, macos-14 ]
     steps:
       - uses: actions/checkout@v4
       - name: Install required packages
         run: |
+          brew uninstall cmake ninja
           brew install ninja cmake ccache libxml2 gsl open-mpi #qt5
       - name: Get timestamp
         id: time
@@ -195,7 +196,7 @@ jobs:
           python3 -c "import re, subprocess;print('cache_misses=%d' % int(re.findall('cache_miss(.*)', subprocess.check_output(['ccache', '--print-stats']).decode())[0]))" >> $GITHUB_ENV
       - name: Run tests and examples
         if: env.cache_misses != '0'
-        run: ./test.py --no-build
+        run: ./test.py --no-build --verbose-failed
   Windows_Visual_Studio:
     runs-on: windows-latest
     defaults:
@@ -209,12 +210,10 @@ jobs:
           %comspec% /k ""C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\Tools\VsDevCmd.bat""
           python ns3 configure --enable-tests --enable-examples --enable-asserts -d release -- -G"Visual Studio 17 2022" -A x64 -T ClangCL
       - name: Build ns-3
-        continue-on-error: true
         run: |
           %comspec% /k ""C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\Tools\VsDevCmd.bat""
           python ns3 build
       - name: Run tests and examples
-        continue-on-error: true
         run: |
           set PATH=%CD%\build;%PATH%
-          python .\test.py --no-build
+          python .\test.py --no-build --verbose-failed

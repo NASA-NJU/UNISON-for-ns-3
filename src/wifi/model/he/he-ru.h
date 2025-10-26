@@ -26,26 +26,6 @@ class HeRu
 {
   public:
     /**
-     * The different HE Resource Unit (RU) types.
-     */
-    enum RuType
-    {
-        RU_26_TONE = 0,
-        RU_52_TONE,
-        RU_106_TONE,
-        RU_242_TONE,
-        RU_484_TONE,
-        RU_996_TONE,
-        RU_2x996_TONE
-    };
-
-    /// (lowest index, highest index) pair defining a subcarrier range
-    typedef std::pair<int16_t, int16_t> SubcarrierRange;
-
-    /// a vector of subcarrier ranges defining a subcarrier group
-    typedef std::vector<SubcarrierRange> SubcarrierGroup;
-
-    /**
      * RU Specification. Stores the information carried by the RU Allocation subfield
      * of the User Info field of Trigger frames (see 9.3.1.22.1 of 802.11ax D8.0).
      * Note that primary80MHz must be true if ruType is RU_2x996_TONE.
@@ -59,7 +39,7 @@ class HeRu
         /**
          * Default constructor
          */
-        RuSpec();
+        RuSpec() = default;
         /**
          * Constructor
          *
@@ -119,39 +99,36 @@ class HeRu
         bool operator<(const RuSpec& other) const;
 
       private:
-        RuType m_ruType;     //!< RU type
-        std::size_t m_index; /**< RU index (starting at 1) as defined by Tables 27-7
+        RuType m_ruType{};     //!< RU type
+        std::size_t m_index{}; /**< RU index (starting at 1) as defined by Tables 27-7
                                   to 27-9 of 802.11ax D8.0 */
-        bool m_primary80MHz; //!< true if the RU is allocated in the primary 80MHz channel
+        bool m_primary80MHz{}; //!< true if the RU is allocated in the primary 80MHz channel
     };
 
     /**
-     * Struct providing a function call operator to compare two RUs.
+     * Get the primary 80 MHz flag of a given RU transmitted in a PPDU.
+     * The flag identifies whether the RU is in the primary 80 MHz.
+     *
+     * @param bw the bandwidth of the PPDU (20, 40, 80, 160)
+     * @param ruType the RU type (number of tones)
+     * @param phyIndex the PHY index (starting at 1) of the RU
+     * @param p20Index the index of the primary20 channel
+     * @return the primary 80 MHz flag
      */
-    struct RuSpecCompare
-    {
-        /**
-         * Constructor.
-         *
-         * @param channelWidth the channel width
-         * @param p20Index the index of the primary20 channel
-         */
-        RuSpecCompare(MHz_u channelWidth, uint8_t p20Index);
-        /**
-         * Function call operator.
-         *
-         * @param lhs left hand side RU
-         * @param rhs right hand side RU
-         * @return true if the left hand side RU has its leftmost tone at a lower
-         *         frequency than the leftmost tone of the right hand side RU,
-         *         false otherwise
-         */
-        bool operator()(const RuSpec& lhs, const RuSpec& rhs) const;
+    static bool GetPrimary80MHzFlag(MHz_u bw,
+                                    RuType ruType,
+                                    std::size_t phyIndex,
+                                    uint8_t p20Index);
 
-      private:
-        MHz_u m_channelWidth; ///< The channel width
-        uint8_t m_p20Index;   ///< Primary20 channel index
-    };
+    /**
+     * Get the index of a given RU transmitted in a PPDU within its 80 MHz segment.
+     *
+     * @param bw the bandwidth of the PPDU (20, 40, 80, 160)
+     * @param ruType the RU type (number of tones)
+     * @param phyIndex the PHY index (starting at 1) of the RU
+     * @return the index within the 80 MHz segment
+     */
+    static std::size_t GetIndexIn80MHzSegment(MHz_u bw, RuType ruType, std::size_t phyIndex);
 
     /**
      * Get the number of distinct RUs of the given type (number of tones)
@@ -171,7 +148,7 @@ class HeRu
      * @param ruType the RU type (number of tones)
      * @return the set of distinct RUs available
      */
-    static std::vector<HeRu::RuSpec> GetRusOfType(MHz_u bw, HeRu::RuType ruType);
+    static std::vector<RuSpec> GetRusOfType(MHz_u bw, RuType ruType);
 
     /**
      * Get the set of 26-tone RUs that can be additionally allocated if the given
@@ -181,7 +158,7 @@ class HeRu
      * @param ruType the RU type (number of tones)
      * @return the set of 26-tone RUs that can be additionally allocated
      */
-    static std::vector<HeRu::RuSpec> GetCentral26TonesRus(MHz_u bw, HeRu::RuType ruType);
+    static std::vector<RuSpec> GetCentral26TonesRus(MHz_u bw, RuType ruType);
 
     /**
      * Get the subcarrier group of the RU having the given PHY index among all the
@@ -212,22 +189,6 @@ class HeRu
     static bool DoesOverlap(MHz_u bw, RuSpec ru, const std::vector<RuSpec>& v);
 
     /**
-     * Check whether the given RU overlaps with the given tone ranges.
-     * Note that for channel width of 160 MHz the returned range is relative to
-     * the 160 MHz channel (i.e. -1012 to 1012).
-     *
-     * @param bw the bandwidth of the HE PPDU (20, 40, 80, 160)
-     * @param ru the given RU allocation
-     * @param toneRanges the given set of tone ranges
-     * @param p20Index the index of the primary20 channel
-     * @return true if the given RU overlaps with the given set of tone ranges.
-     */
-    static bool DoesOverlap(MHz_u bw,
-                            RuSpec ru,
-                            const SubcarrierGroup& toneRanges,
-                            uint8_t p20Index);
-
-    /**
      * Find the RU allocation of the given RU type overlapping the given
      * reference RU allocation.
      * Note that an assert is generated if the RU allocation is not found.
@@ -238,22 +199,6 @@ class HeRu
      * @return the searched RU allocation.
      */
     static RuSpec FindOverlappingRu(MHz_u bw, RuSpec referenceRu, RuType searchedRuType);
-
-    /**
-     * Get the approximate bandwidth occupied by a RU.
-     *
-     * @param ruType the RU type
-     * @return the approximate bandwidth occupied by the RU
-     */
-    static MHz_u GetBandwidth(RuType ruType);
-
-    /**
-     * Get the RU corresponding to the approximate bandwidth.
-     *
-     * @param bandwidth the approximate bandwidth occupied by the RU
-     * @return the RU type
-     */
-    static RuType GetRuType(MHz_u bandwidth);
 
     /**
      * Given the channel bandwidth and the number of stations candidate for being
@@ -272,12 +217,6 @@ class HeRu
                                               std::size_t& nStations,
                                               std::size_t& nCentral26TonesRus);
 
-    /// (bandwidth, number of tones) pair
-    typedef std::pair<MHz_u, RuType> BwTonesPair;
-
-    /// map (bandwidth, number of tones) pairs to the group of subcarrier ranges
-    typedef std::map<BwTonesPair, std::vector<SubcarrierGroup>> SubcarrierGroups;
-
     /// Subcarrier groups for all RUs (with indices being applicable to primary 80 MHz channel)
     static const SubcarrierGroups m_heRuSubcarrierGroups;
 
@@ -288,28 +227,29 @@ class HeRu
     static const RuAllocationMap m_heRuAllocations;
 
     /// Get the RU specs based on RU_ALLOCATION
-    /// @param ruAllocation 8 bit RU_ALLOCATION value
+    /// @param ruAllocation 9 bit RU_ALLOCATION value
     /// @return RU spec associated with the RU_ALLOCATION
-    static std::vector<RuSpec> GetRuSpecs(uint8_t ruAllocation);
+    static std::vector<RuSpec> GetRuSpecs(uint16_t ruAllocation);
 
     /// Get the RU_ALLOCATION value for equal size RUs
     /// @param ruType equal size RU type (generated by GetEqualSizedRusForStations)
     /// @param isOdd if number of stations is an odd number
+    /// @param hasUsers whether it contributes to User field(s) in the content channel this RU
+    /// Allocation belongs to
     /// @return RU_ALLOCATION value
-    static uint8_t GetEqualizedRuAllocation(RuType ruType, bool isOdd);
+    static uint16_t GetEqualizedRuAllocation(RuType ruType, bool isOdd, bool hasUsers);
 
-    /// Empty 242-tone RU identifier
-    static constexpr uint8_t EMPTY_242_TONE_RU = 113;
+  private:
+    /**
+     * Get the number of 26-tone RUs that can be allocated if returned RU size is greater than 26
+     * tones.
+     *
+     * @param bw the bandwidth (MHz) of the HE PPDU (20, 40, 80, 160)
+     * @param ruType the RU type (number of tones)
+     * @return the number of 26-tone RUs that can be allocated
+     */
+    static uint8_t GetNumCentral26TonesRus(MHz_u bw, RuType ruType);
 };
-
-/**
- * @brief Stream insertion operator.
- *
- * @param os the stream
- * @param ruType the RU type
- * @returns a reference to the stream
- */
-std::ostream& operator<<(std::ostream& os, const HeRu::RuType& ruType);
 
 /**
  * @brief Stream insertion operator.

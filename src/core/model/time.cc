@@ -181,7 +181,7 @@ Time::Time(const std::string& s)
         *this = Time::FromDouble(v, Time::S);
     }
 
-    if (g_markingTimes)
+    if (MarkingTimes())
     {
         Mark(this);
     }
@@ -280,6 +280,12 @@ Time::SetResolution(Unit unit, Resolution* resolution, const bool convert /* = t
     resolution->unit = unit;
 }
 
+bool
+Time::MarkingTimes()
+{
+    return (g_markingTimes != nullptr);
+}
+
 // static
 void
 Time::ClearMarkedTimes()
@@ -307,7 +313,7 @@ Time::ClearMarkedTimes()
         g_markingTimes->erase(g_markingTimes->begin(), g_markingTimes->end());
         g_markingTimes = nullptr;
     }
-} // Time::ClearMarkedTimes
+}
 
 // static
 void
@@ -330,7 +336,7 @@ Time::Mark(Time* const time)
             NS_LOG_WARN("already recorded " << time << "!");
         }
     }
-} // Time::Mark ()
+}
 
 // static
 void
@@ -358,7 +364,7 @@ Time::Clear(Time* const time)
             NS_LOG_LOGIC("\t[" << g_markingTimes->size() << "] removing  " << time);
         }
     }
-} // Time::Clear ()
+}
 
 // static
 void
@@ -389,8 +395,7 @@ Time::ConvertTimes(const Unit unit)
     NS_LOG_LOGIC("clearing MarkedTimes");
     g_markingTimes->erase(g_markingTimes->begin(), g_markingTimes->end());
     g_markingTimes = nullptr;
-
-} // Time::ConvertTimes ()
+}
 
 // static
 Time::Unit
@@ -558,8 +563,7 @@ MakeTimeChecker(const Time min, const Time max)
         {
             NS_LOG_FUNCTION_NOARGS();
             std::ostringstream oss;
-            oss << "Time"
-                << " " << m_minValue << ":" << m_maxValue;
+            oss << "Time " << m_minValue << ":" << m_maxValue;
             return oss.str();
         }
 

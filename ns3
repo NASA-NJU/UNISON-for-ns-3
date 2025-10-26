@@ -26,6 +26,11 @@ run_verbose = True
 path_sep = ";" if ";" in os.environ["PATH"] else ":"
 path_variable = "$PATH" if path_sep == ":" else "%PATH%"
 
+try:
+    TERMINAL_WIDTH = os.get_terminal_size().columns
+except OSError:
+    TERMINAL_WIDTH = 80  # assume 80 columns when grepping
+
 
 # Prints everything in the print_buffer on exit
 def exit_handler(dry_run):
@@ -107,6 +112,19 @@ def parse_args(argv):
         default=None,
         dest="main_help",
     )
+    parser.add_argument(
+        "--compile-or-die",
+        help=(
+            "Build and test each individual commit between a base and an head commits.\n"
+            "This is especially useful when preparing MRs or rewriting git history, and ensuring refactor-or-die "
+            "principle is being followed"
+        ),
+        action="store",
+        nargs=2,
+        type=str,
+        default=[None, None],
+        metavar="compile_or_die",
+    )
     parser_help = sub_parser.add_parser("help", help="Print a summary of available commands")
     parser_help.add_argument(
         "help", help="Print a summary of available commands", action="store_true", default=False
@@ -166,7 +184,11 @@ def parse_args(argv):
     )
 
     parser_configure.add_argument(
-        "--cxx-standard", help="Compile NS-3 with the given C++ standard", type=str, default=None
+        "--cxx-standard",
+        help="Compile NS-3 with the given C++ standard",
+        type=str,
+        default=None,
+        choices=["23", "26"],
     )
 
     # On-Off options
@@ -219,7 +241,7 @@ def parse_args(argv):
     )
     parser_configure.add_argument(
         "--disable-modules",
-        help='List of modules not to build (e.g. "lte;wimax")',
+        help='List of modules not to build (e.g. "lte;wifi")',
         action="store",
         type=str,
         default=None,
@@ -521,7 +543,7 @@ def parse_args(argv):
             if custom_exit in e.message:
                 error_message = f"Exiting due to {e.message[e.message.index(custom_exit):]}"
         # Format error message to better fit the terminal width
-        print("\n".join(textwrap.wrap(error_message, width=os.get_terminal_size().columns)))
+        print("\n".join(textwrap.wrap(error_message, width=TERMINAL_WIDTH)))
         exit(1)
 
     # If run doesn't have a target, print the help message of the run parser
@@ -1181,8 +1203,6 @@ def extract_cmakecache_settings(current_cmake_cache_folder):
     current_settings.extend(re.findall("(CMAKE_GENERATOR):.*=(.*)", contents))  # extract generator
     current_settings.extend(re.findall("(CMAKE_CXX_COMPILER):.*=(.*)", contents))  # C++ compiler
     current_settings.extend(re.findall("(CMAKE_CXX_FLAGS):.*=(.*)", contents))  # C++ flags
-    current_settings.extend(re.findall("(CMAKE_C_COMPILER):.*=(.*)", contents))  # C compiler
-    current_settings.extend(re.findall("(CMAKE_C_FLAGS):.*=(.*)", contents))  # C flags
     current_settings.extend(
         re.findall("(CMAKE_INSTALL_PREFIX):.*=(.*)", contents)
     )  # installation directory
@@ -1507,8 +1527,12 @@ def run_step(args, target_to_run, target_args):
             # running mpi on the CI?
             if target_to_run in ["mpiexec", "mpirun"] and os.getenv("MPI_CI"):
                 if shutil.which("ompi_info"):
+                    try:
+                        subprocess.check_call([target_to_run, "--allow-run-as-root", "dir"])
+                        target_args = ["--allow-run-as-root"] + target_args
+                    except subprocess.CalledProcessError:
+                        pass
                     target_args = ["--oversubscribe"] + target_args
-                target_args = ["--allow-run-as-root"] + target_args
 
     program_arguments = [*debugging_software, target_to_run, *target_args]
 
@@ -1569,11 +1593,7 @@ def print_targets_list(ns3_modules: list, ns3_programs: dict) -> None:
     def list_to_table(targets_list: list) -> str:
         # Set column width and check how much is space is left at the end
         columnwidth = 30
-        try:
-            terminal_width = os.get_terminal_size().columns
-        except OSError:
-            terminal_width = 80  # assume 80 columns when grepping
-        dead_space = terminal_width % columnwidth
+        dead_space = TERMINAL_WIDTH % columnwidth
 
         # Filter the targets with names longer than the column width
         large_items = list(filter(lambda x: len(x) >= columnwidth, targets_list))
@@ -1587,7 +1607,7 @@ def print_targets_list(ns3_modules: list, ns3_programs: dict) -> None:
             current_end = len(output)
             # If the terminal width minus the written columns is smaller than the dead space,
             # we add a new line and start counting the width of the new line from it
-            if terminal_width - (current_end - prev_new_line) < dead_space:
+            if TERMINAL_WIDTH - (current_end - prev_new_line) < dead_space:
                 prev_new_line = len(output)
                 output += "\n"
             # After the new line or space, add the item plus some spacing
@@ -1651,6 +1671,121 @@ def show_build_version(build_version_string, exit_early=True):
 
     if exit_early:
         exit(0)
+
+
+def compile_or_die(base_commit, head_commit):
+    try:
+        import git.exc
+        from git import Repo
+    except ImportError:
+        raise Exception("Missing pip package 'GitPython'.")
+
+    if shutil.which("git") is None:
+        raise Exception("Missing program 'git'.")
+
+    # Load ns-3 and module git repositories
+    NS3_DIR = os.path.abspath(os.path.dirname(__file__))
+    SRC_DIR = os.path.join(NS3_DIR, "src")
+    CONTRIB_DIR = os.path.join(NS3_DIR, "contrib")
+    git_repos_dirs = [NS3_DIR]
+    git_repos_dirs.extend(map(lambda x: os.path.join(SRC_DIR, x), os.listdir(SRC_DIR)))
+    git_repos_dirs.extend(map(lambda x: os.path.join(CONTRIB_DIR, x), os.listdir(CONTRIB_DIR)))
+    git_repos_dirs = list(filter(lambda x: os.path.isdir(x), git_repos_dirs))
+    git_repos_dirs = list(filter(lambda x: os.path.exists(os.path.join(x, ".git")), git_repos_dirs))
+    git_repos = []
+    for repo_dir in git_repos_dirs:
+        try:
+            git_repos.append(Repo(repo_dir))
+        except Exception as e:
+            raise Exception(f"Failed to load git repository in {repo_dir}: {e}")
+
+    # Check which particular repo we are testing (contain both base and top commits)
+    tested_repo = None
+    commits = None
+    for git_repo in git_repos:
+        commits = list(git_repo.iter_commits(all=True))
+        base_commit_object = list(filter(lambda x: x.hexsha == base_commit, commits))
+        head_commit_object = list(filter(lambda x: x.hexsha == head_commit, commits))
+        if base_commit_object and head_commit_object:
+            tested_repo = git_repo
+            break
+
+    if not tested_repo:
+        raise Exception("Base and head commits were not found in any of the git repositories")
+
+    # Filter commits we want to test
+    commits_sha = list(map(lambda x: x.hexsha, commits))
+    commits = commits[commits_sha.index(head_commit) : commits_sha.index(base_commit) + 1]
+
+    # Check if there are uncommitted changes, that will be lost if we proceed
+    diff = tested_repo.git.diff()
+    if diff:
+        print(
+            "Interrupted compile-or-die testing to prevent data loss."
+            "Uncommitted changes were found. Commit them or remove them before proceeding."
+        )
+        exit(-1)
+
+    # Check if head commit has a branch attached to it
+    branches_with_head_commit = list(
+        filter(
+            lambda x: x.commit.hexsha == head_commit and x.name != "compileOrDieTest",
+            list(tested_repo.branches),
+        )
+    )
+    if not branches_with_head_commit:
+        # If not, then create one (compileOrDieBackup), otherwise we could lose data
+        compile_or_die_backup_branch = list(
+            filter(lambda x: x.name == "compileOrDieBackup", list(tested_repo.branches))
+        )
+        if not compile_or_die_backup_branch:
+            # If the backup branch does not exist, we can safely create it
+            tested_repo.create_head("compileOrDieBackup", commits[0]).checkout()
+        else:
+            # If the backup branch already exist, we actually need to check if there
+            # is another branch attached to it, otherwise we could lose data
+            branches_of_backup = list(
+                filter(
+                    lambda x: x.commit.hexsha == compile_or_die_backup_branch.commit.hexsha,
+                    list(tested_repo.branches),
+                )
+            )
+            if len(branches_of_backup) == 1:
+                print(
+                    "Interrupted compile-or-die testing to prevent data loss."
+                    "Make sure the head commit of the compileOrDieBackup branch has a second branch attached to it."
+                )
+                exit(-1)
+            compile_or_die_backup_branch[0].set_commit(commits[0])
+            compile_or_die_backup_branch[0].checkout()
+            compile_or_die_backup_branch[0].repo.git.reset("--hard")
+
+    # Checkout the test branch
+    compile_or_die_test_branch = tested_repo.create_head("compileOrDieTest")
+
+    # Reset the test branch to a specific commit, then hard reset it
+    # From oldest to newest
+    commits = list(reversed(commits))
+    print(f"Compile-or-die with commits: {list(map(lambda x: x.hexsha, commits))}")
+    for commit in commits:
+        print(f"\tTesting commit {commit.hexsha}")
+        compile_or_die_test_branch.set_commit(commit)
+        compile_or_die_test_branch.checkout()
+        compile_or_die_test_branch.repo.git.reset("--hard")
+        try:
+            ret = subprocess.run(
+                [sys.executable, "./test.py", "--verbose-failed"],
+                cwd=ns3_path,
+                capture_output=True,
+                shell=False,
+            )
+            if ret.returncode != 0:
+                print("\t\t" + ret.stdout.decode().replace("\n", "\n\t\t"))
+        except Exception as e:
+            tested_repo.checkout("compileOrDieBackup")  # Revert to head commit
+            print(f"Failed compile-or-die testing in commit {commit}")
+            exit(1)
+    exit(0)
 
 
 # Debugging this with PyCharm is a no no. It refuses to work hanging indefinitely
@@ -1875,6 +2010,10 @@ def main():
 
     if ns3_modules is None:
         project_not_configured()
+
+    # Entry point for compile-or-die
+    if args.compile_or_die[0] and args.compile_or_die[1]:
+        compile_or_die(*args.compile_or_die)
 
     # We could also replace the "ns3-" prefix used in .lock-ns3 with the "lib" prefix currently used in cmake
     ns3_modules = [module.replace("ns3-", "") for module in ns3_modules]

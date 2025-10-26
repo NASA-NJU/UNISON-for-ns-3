@@ -30,6 +30,7 @@
 #include "ns3/wifi-psdu.h"
 
 #include <iomanip>
+#include <utility>
 
 using namespace ns3;
 
@@ -302,40 +303,79 @@ TestMultiUserScheduler::ComputeWifiTxVector()
     }
     NS_ABORT_MSG_IF(staList.size() != 4, "There must be 4 associated stations");
 
-    HeRu::RuType ruType;
+    RuType ruType;
     switch (static_cast<uint16_t>(bw))
     {
-    case 20:
-        ruType = HeRu::RU_52_TONE;
-        m_txVector.SetRuAllocation({112}, 0);
+    case 20: {
+        ruType = RuType::RU_52_TONE;
+        const uint16_t ruAllocPer20 = IsEht(m_txVector.GetPreambleType()) ? 24 : 112;
+        m_txVector.SetRuAllocation({ruAllocPer20}, 0);
         break;
-    case 40:
-        ruType = HeRu::RU_106_TONE;
-        m_txVector.SetRuAllocation({96, 96}, 0);
+    }
+    case 40: {
+        ruType = RuType::RU_106_TONE;
+        const uint16_t ruAllocPer20 = IsEht(m_txVector.GetPreambleType()) ? 48 : 96;
+        m_txVector.SetRuAllocation({ruAllocPer20, ruAllocPer20}, 0);
         break;
-    case 80:
-        ruType = HeRu::RU_242_TONE;
-        m_txVector.SetRuAllocation({192, 192, 192, 192}, 0);
+    }
+    case 80: {
+        ruType = RuType::RU_242_TONE;
+        const uint16_t ruAllocPer20 = IsEht(m_txVector.GetPreambleType()) ? 64 : 112;
+        m_txVector.SetRuAllocation({ruAllocPer20, ruAllocPer20, ruAllocPer20, ruAllocPer20}, 0);
         break;
-    case 160:
-        ruType = HeRu::RU_484_TONE;
-        m_txVector.SetRuAllocation({200, 200, 200, 200, 200, 200, 200, 200}, 0);
+    }
+    case 160: {
+        ruType = RuType::RU_484_TONE;
+        const uint16_t ruAllocPer20 = IsEht(m_txVector.GetPreambleType()) ? 72 : 200;
+        m_txVector.SetRuAllocation({ruAllocPer20,
+                                    ruAllocPer20,
+                                    ruAllocPer20,
+                                    ruAllocPer20,
+                                    ruAllocPer20,
+                                    ruAllocPer20,
+                                    ruAllocPer20,
+                                    ruAllocPer20},
+                                   0);
         break;
+    }
+    case 320: {
+        ruType = RuType::RU_996_TONE;
+        NS_ASSERT(IsEht(m_txVector.GetPreambleType()));
+        m_txVector.SetRuAllocation({80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80},
+                                   0);
+        break;
+    }
     default:
-        NS_ABORT_MSG("Unsupported channel width");
+        NS_ABORT_MSG("Unsupported channel width: " << bw);
     }
 
-    bool primary80 = true;
-    std::size_t ruIndex = 1;
-
+    auto primary80OrLow80{true};
+    auto primary160{true};
+    std::size_t ruIndex{1};
     for (auto& sta : staList)
     {
-        if (bw == MHz_u{160} && ruIndex == 3)
+        auto index{ruIndex};
+        if (bw > MHz_u{80})
         {
-            ruIndex = 1;
-            primary80 = false;
+            if (!IsEht(m_txVector.GetPreambleType()))
+            {
+                index = HeRu::GetIndexIn80MHzSegment(bw, ruType, ruIndex);
+                primary80OrLow80 = HeRu::GetPrimary80MHzFlag(bw, ruType, ruIndex, 0);
+            }
+            else
+            {
+                index = EhtRu::GetIndexIn80MHzSegment(bw, ruType, ruIndex);
+                const auto& [p160, p80OrLow80] = EhtRu::GetPrimaryFlags(bw, ruType, ruIndex, 0);
+                primary160 = p160;
+                primary80OrLow80 = p80OrLow80;
+            }
         }
-        m_txVector.SetHeMuUserInfo(sta.first, {{ruType, ruIndex++, primary80}, 11, 1});
+        const auto ru =
+            IsEht(m_txVector.GetPreambleType())
+                ? WifiRu::RuSpec(EhtRu::RuSpec{ruType, index, primary160, primary80OrLow80})
+                : WifiRu::RuSpec(HeRu::RuSpec{ruType, index, primary80OrLow80});
+        m_txVector.SetHeMuUserInfo(sta.first, {ru, 11, 1});
+        ruIndex++;
     }
     m_txVector.SetSigBMode(VhtPhy::GetVhtMcs5());
 }
@@ -541,6 +581,9 @@ OfdmaAckSequenceTest::OfdmaAckSequenceTest(const Params& params)
     case 160:
         m_muRtsRuAllocation = 68;
         break;
+    case 320:
+        m_muRtsRuAllocation = 69;
+        break;
     default:
         NS_ABORT_MSG("Unhandled channel width (" << m_channelWidth << " MHz)");
     }
@@ -582,7 +625,10 @@ OfdmaAckSequenceTest::Transmit(std::string context,
     // request/response, ADDBA request, ...)
     if (!psduMap.begin()->second->GetHeader(0).IsBeacon() && Simulator::Now() >= Seconds(1.5))
     {
-        Time txDuration = WifiPhy::CalculateTxDuration(psduMap, txVector, WIFI_PHY_BAND_5GHZ);
+        Time txDuration = WifiPhy::CalculateTxDuration(
+            psduMap,
+            txVector,
+            (m_channelWidth < MHz_u{320}) ? WIFI_PHY_BAND_5GHZ : WIFI_PHY_BAND_6GHZ);
         m_txPsdus.push_back({Simulator::Now(), Simulator::Now() + txDuration, psduMap, txVector});
 
         for (const auto& [staId, psdu] : psduMap)
@@ -685,7 +731,10 @@ OfdmaAckSequenceTest::Transmit(std::string context,
         {
             // the AP is starting the transmission of the Basic Trigger frame, so generate
             // the configured number of packets at STAs, which are sent in HE TB PPDUs
-            Time txDuration = WifiPhy::CalculateTxDuration(psduMap, txVector, WIFI_PHY_BAND_5GHZ);
+            Time txDuration = WifiPhy::CalculateTxDuration(
+                psduMap,
+                txVector,
+                (m_channelWidth < MHz_u{320}) ? WIFI_PHY_BAND_5GHZ : WIFI_PHY_BAND_6GHZ);
             for (uint16_t i = 0; i < m_nStations; i++)
             {
                 Ptr<PacketSocketClient> client = CreateObject<PacketSocketClient>();
@@ -2068,8 +2117,11 @@ OfdmaAckSequenceTest::DoRun()
     case 160:
         phy.Set("ChannelSettings", StringValue("{50, 160, BAND_5GHZ, 0}"));
         break;
+    case 320:
+        phy.Set("ChannelSettings", StringValue("{31, 320, BAND_6GHZ, 0}"));
+        break;
     default:
-        NS_ABORT_MSG("Invalid channel bandwidth (must be 20, 40, 80 or 160)");
+        NS_ABORT_MSG("Invalid channel bandwidth: " << m_channelWidth);
     }
 
     Config::SetDefault("ns3::HeConfiguration::MuBeAifsn",
@@ -2175,9 +2227,12 @@ OfdmaAckSequenceTest::DoRun()
                                                          : WIFI_STANDARD_80211be);
     m_staDevices = NetDeviceContainer(m_staDevices, wifi.Install(phy, mac, wifiNewStaNodes));
 
-    // create a listening VHT station
-    wifi.SetStandard(WIFI_STANDARD_80211ac);
-    wifi.Install(phy, mac, Create<Node>());
+    if (m_channelWidth < MHz_u{320})
+    {
+        // create a listening VHT station
+        wifi.SetStandard(WIFI_STANDARD_80211ac);
+        wifi.Install(phy, mac, CreateObject<Node>());
+    }
 
     wifi.SetStandard(m_scenario == WifiOfdmaScenario::HE ? WIFI_STANDARD_80211ax
                                                          : WIFI_STANDARD_80211be);
@@ -2351,86 +2406,100 @@ WifiMacOfdmaTestSuite::WifiMacOfdmaTestSuite()
     : TestSuite("wifi-mac-ofdma", Type::UNIT)
 {
     using MuEdcaParams = std::initializer_list<OfdmaAckSequenceTest::MuEdcaParameterSet>;
+    using ChannelWidths = std::initializer_list<std::pair<MHz_u, MHz_u>>;
 
-    for (auto& muEdcaParameterSet : MuEdcaParams{{0, 0, 0, 0} /* no MU EDCA */,
-                                                 {0, 127, 2047, 100} /* EDCA disabled */,
+    for (auto& muEdcaParameterSet : MuEdcaParams{{0, 0, 0, 0},        /* no MU EDCA */
+                                                 {0, 127, 2047, 100}, /* EDCA disabled */
                                                  {10, 127, 2047, 100} /* worse parameters */})
     {
         for (const auto scenario :
              {WifiOfdmaScenario::HE, WifiOfdmaScenario::HE_EHT, WifiOfdmaScenario::EHT})
         {
-            AddTestCase(new OfdmaAckSequenceTest(
-                            {.channelWidth = MHz_u{20},
-                             .dlMuAckType = WifiAcknowledgment::DL_MU_BAR_BA_SEQUENCE,
-                             .maxAmpduSize = 10000,
-                             .txopLimit = 5632,
-                             .continueTxopAfterBsrp = false, // unused because non-zero TXOP limit
-                             .skipMuRtsBeforeBsrp = true,
-                             .protectedIfResponded = false,
-                             .nPktsPerSta = 15,
-                             .muEdcaParameterSet = muEdcaParameterSet,
-                             .scenario = scenario}),
-                        TestCase::Duration::QUICK);
-            AddTestCase(new OfdmaAckSequenceTest(
-                            {.channelWidth = MHz_u{20},
-                             .dlMuAckType = WifiAcknowledgment::DL_MU_AGGREGATE_TF,
-                             .maxAmpduSize = 10000,
-                             .txopLimit = 5632,
-                             .continueTxopAfterBsrp = false, // unused because non-zero TXOP limit
-                             .skipMuRtsBeforeBsrp = false,
-                             .protectedIfResponded = false,
-                             .nPktsPerSta = 15,
-                             .muEdcaParameterSet = muEdcaParameterSet,
-                             .scenario = scenario}),
-                        TestCase::Duration::QUICK);
-            AddTestCase(new OfdmaAckSequenceTest(
-                            {.channelWidth = MHz_u{20},
-                             .dlMuAckType = WifiAcknowledgment::DL_MU_TF_MU_BAR,
-                             .maxAmpduSize = 10000,
-                             .txopLimit = 5632,
-                             .continueTxopAfterBsrp = false, // unused because non-zero TXOP limit
-                             .skipMuRtsBeforeBsrp = true,
-                             .protectedIfResponded = true,
-                             .nPktsPerSta = 15,
-                             .muEdcaParameterSet = muEdcaParameterSet,
-                             .scenario = scenario}),
-                        TestCase::Duration::QUICK);
-            AddTestCase(
-                new OfdmaAckSequenceTest({.channelWidth = MHz_u{40},
-                                          .dlMuAckType = WifiAcknowledgment::DL_MU_BAR_BA_SEQUENCE,
-                                          .maxAmpduSize = 10000,
-                                          .txopLimit = 0,
-                                          .continueTxopAfterBsrp = true,
-                                          .skipMuRtsBeforeBsrp = false,
-                                          .protectedIfResponded = false,
-                                          .nPktsPerSta = 15,
-                                          .muEdcaParameterSet = muEdcaParameterSet,
-                                          .scenario = scenario}),
-                TestCase::Duration::QUICK);
-            AddTestCase(
-                new OfdmaAckSequenceTest({.channelWidth = MHz_u{40},
-                                          .dlMuAckType = WifiAcknowledgment::DL_MU_AGGREGATE_TF,
-                                          .maxAmpduSize = 10000,
-                                          .txopLimit = 0,
-                                          .continueTxopAfterBsrp = false,
-                                          .skipMuRtsBeforeBsrp = true,
-                                          .protectedIfResponded = false,
-                                          .nPktsPerSta = 15,
-                                          .muEdcaParameterSet = muEdcaParameterSet,
-                                          .scenario = scenario}),
-                TestCase::Duration::QUICK);
-            AddTestCase(
-                new OfdmaAckSequenceTest({.channelWidth = MHz_u{40},
-                                          .dlMuAckType = WifiAcknowledgment::DL_MU_TF_MU_BAR,
-                                          .maxAmpduSize = 10000,
-                                          .txopLimit = 0,
-                                          .continueTxopAfterBsrp = true,
-                                          .skipMuRtsBeforeBsrp = false,
-                                          .protectedIfResponded = true,
-                                          .nPktsPerSta = 15,
-                                          .muEdcaParameterSet = muEdcaParameterSet,
-                                          .scenario = scenario}),
-                TestCase::Duration::QUICK);
+            // limit test to 2 channel widths per TXOP limit combination
+            for (const auto& [chWidth1, chWidth2] : ChannelWidths{{MHz_u{20}, MHz_u{40}},
+                                                                  {MHz_u{80}, MHz_u{160}},
+                                                                  {MHz_u{320}, MHz_u{320}}})
+            {
+                if ((chWidth1 > MHz_u{160}) && (scenario < WifiOfdmaScenario::EHT))
+                {
+                    continue;
+                }
+                AddTestCase(
+                    new OfdmaAckSequenceTest(
+                        {.channelWidth = chWidth1,
+                         .dlMuAckType = WifiAcknowledgment::DL_MU_BAR_BA_SEQUENCE,
+                         .maxAmpduSize = 10000,
+                         .txopLimit = 5632,
+                         .continueTxopAfterBsrp = false, // unused because non-zero TXOP limit
+                         .skipMuRtsBeforeBsrp = true,
+                         .protectedIfResponded = false,
+                         .nPktsPerSta = 15,
+                         .muEdcaParameterSet = muEdcaParameterSet,
+                         .scenario = scenario}),
+                    TestCase::Duration::QUICK);
+                AddTestCase(
+                    new OfdmaAckSequenceTest(
+                        {.channelWidth = chWidth1,
+                         .dlMuAckType = WifiAcknowledgment::DL_MU_AGGREGATE_TF,
+                         .maxAmpduSize = 10000,
+                         .txopLimit = 5632,
+                         .continueTxopAfterBsrp = false, // unused because non-zero TXOP limit
+                         .skipMuRtsBeforeBsrp = false,
+                         .protectedIfResponded = false,
+                         .nPktsPerSta = 15,
+                         .muEdcaParameterSet = muEdcaParameterSet,
+                         .scenario = scenario}),
+                    TestCase::Duration::QUICK);
+                AddTestCase(
+                    new OfdmaAckSequenceTest(
+                        {.channelWidth = chWidth1,
+                         .dlMuAckType = WifiAcknowledgment::DL_MU_TF_MU_BAR,
+                         .maxAmpduSize = 10000,
+                         .txopLimit = 5632,
+                         .continueTxopAfterBsrp = false, // unused because non-zero TXOP limit
+                         .skipMuRtsBeforeBsrp = true,
+                         .protectedIfResponded = true,
+                         .nPktsPerSta = 15,
+                         .muEdcaParameterSet = muEdcaParameterSet,
+                         .scenario = scenario}),
+                    TestCase::Duration::QUICK);
+                AddTestCase(new OfdmaAckSequenceTest(
+                                {.channelWidth = chWidth2,
+                                 .dlMuAckType = WifiAcknowledgment::DL_MU_BAR_BA_SEQUENCE,
+                                 .maxAmpduSize = 10000,
+                                 .txopLimit = 0,
+                                 .continueTxopAfterBsrp = true,
+                                 .skipMuRtsBeforeBsrp = false,
+                                 .protectedIfResponded = false,
+                                 .nPktsPerSta = 15,
+                                 .muEdcaParameterSet = muEdcaParameterSet,
+                                 .scenario = scenario}),
+                            TestCase::Duration::QUICK);
+                AddTestCase(
+                    new OfdmaAckSequenceTest({.channelWidth = chWidth2,
+                                              .dlMuAckType = WifiAcknowledgment::DL_MU_AGGREGATE_TF,
+                                              .maxAmpduSize = 10000,
+                                              .txopLimit = 0,
+                                              .continueTxopAfterBsrp = false,
+                                              .skipMuRtsBeforeBsrp = true,
+                                              .protectedIfResponded = false,
+                                              .nPktsPerSta = 15,
+                                              .muEdcaParameterSet = muEdcaParameterSet,
+                                              .scenario = scenario}),
+                    TestCase::Duration::QUICK);
+                AddTestCase(
+                    new OfdmaAckSequenceTest({.channelWidth = chWidth2,
+                                              .dlMuAckType = WifiAcknowledgment::DL_MU_TF_MU_BAR,
+                                              .maxAmpduSize = 10000,
+                                              .txopLimit = 0,
+                                              .continueTxopAfterBsrp = true,
+                                              .skipMuRtsBeforeBsrp = false,
+                                              .protectedIfResponded = true,
+                                              .nPktsPerSta = 15,
+                                              .muEdcaParameterSet = muEdcaParameterSet,
+                                              .scenario = scenario}),
+                    TestCase::Duration::QUICK);
+            }
         }
     }
 }

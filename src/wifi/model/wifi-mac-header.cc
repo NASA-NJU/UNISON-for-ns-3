@@ -787,6 +787,16 @@ WifiMacHeader::GetDuration() const
     return MicroSeconds(m_duration);
 }
 
+bool
+WifiMacHeader::HasNav() const
+{
+    // When the contents of a received Duration/ID field, treated as an unsigned integer,
+    // are greater than 32 768, the contents are interpreted as appropriate for the frame
+    // type and subtype or ignored if the receiving MAC entity does not have a defined
+    // interpretation for that type and subtype (IEEE 802.11-2016 sec. 10.27.3)
+    return (GetRawDuration() & 0x8000) == 0;
+}
+
 uint16_t
 WifiMacHeader::GetSequenceControl() const
 {
@@ -1184,6 +1194,8 @@ WifiMacHeader::Print(std::ostream& os) const
         break;
     case WIFI_MAC_CTL_BACKREQ:
     case WIFI_MAC_CTL_BACKRESP:
+        os << "RA=" << m_addr1 << ", TA=" << m_addr2 << ", Duration/ID=" << m_duration << "us";
+        break;
     case WIFI_MAC_CTL_CTLWRAPPER:
     case WIFI_MAC_CTL_END:
     case WIFI_MAC_CTL_END_ACK:

@@ -26,13 +26,13 @@ namespace ns3
 
 NS_LOG_COMPONENT_DEFINE("FdBetFfMacScheduler");
 
-/// FdBetType0AllocationRbg array
+/// FdBetType0AllocationRbg array (see table 7.1.6.1-1 of 36.213)
 static const int FdBetType0AllocationRbg[4] = {
     10,  // RBG size 1
     26,  // RBG size 2
     63,  // RBG size 3
     110, // RBG size 4
-};       // see table 7.1.6.1-1 of 36.213
+};
 
 NS_OBJECT_ENSURE_REGISTERED(FdBetFfMacScheduler);
 
@@ -988,17 +988,15 @@ FdBetFfMacScheduler::DoSchedDlTriggerReq(
                         itMax = it;
                         metricMax = metric;
                     }
-                } // end for estAveThr
+                }
 
                 rbgMap.at(i) = true;
-
-            } // end for free RBGs
+            }
 
             i++;
 
         } while (i < rbgNum); // end for RBGs
-
-    } // end if estAveThr
+    }
 
     // reset TTI stats of users
     for (auto itStats = m_flowStatsDl.begin(); itStats != m_flowStatsDl.end(); itStats++)
@@ -1147,7 +1145,7 @@ FdBetFfMacScheduler::DoSchedDlTriggerReq(
         }
 
         itMap++;
-    }                               // end while allocation
+    }
     ret.m_nrOfPdcchOfdmSymbols = 1; /// \todo check correct value according the DCIs txed
 
     // update UEs stats

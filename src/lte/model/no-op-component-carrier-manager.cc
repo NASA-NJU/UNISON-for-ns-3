@@ -206,14 +206,14 @@ NoOpComponentCarrierManager::DoSetupDataRadioBearer(EpsBearer bearer,
             lci.mbrDl = 0;
             lci.gbrUl = 0;
             lci.gbrDl = 0;
-        } // data flows only on PC
+        }
         NS_LOG_DEBUG(this << " RNTI " << lci.rnti << "Lcid " << (uint16_t)lci.lcId << " lcGroup "
                           << (uint16_t)lci.lcGroup);
         entry.componentCarrierId = ncc;
         entry.lc = lci;
         entry.msu = m_ccmMacSapUser;
         res.push_back(entry);
-    } // end for
+    }
 
     auto lcidIt = rntiIt->second.m_rlcLcInstantiated.find(lcid);
     if (lcidIt == rntiIt->second.m_rlcLcInstantiated.end())
@@ -478,4 +478,4 @@ RrComponentCarrierManager::DoUlReceiveSr(uint16_t rnti, uint8_t /* componentCarr
     }
 }
 
-} // end of namespace ns3
+} // namespace ns3

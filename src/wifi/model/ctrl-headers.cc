@@ -1187,8 +1187,8 @@ CtrlTriggerUserInfoField::CtrlTriggerUserInfoField(TriggerFrameType triggerType,
       m_ulFecCodingType(false),
       m_ulMcs(0),
       m_ulDcm(false),
-      m_ps160(true),
-      m_ulTargetRssi(0),
+      m_ps160(false),
+      m_ulTargetRxPower(0),
       m_triggerType(triggerType),
       m_basicTriggerDependentUserInfo(0)
 {
@@ -1218,7 +1218,7 @@ CtrlTriggerUserInfoField::operator=(const CtrlTriggerUserInfoField& userInfo)
     m_ulDcm = userInfo.m_ulDcm;
     m_ps160 = userInfo.m_ps160;
     m_bits26To31 = userInfo.m_bits26To31;
-    m_ulTargetRssi = userInfo.m_ulTargetRssi;
+    m_ulTargetRxPower = userInfo.m_ulTargetRxPower;
     m_basicTriggerDependentUserInfo = userInfo.m_basicTriggerDependentUserInfo;
     m_muBarTriggerDependentUserInfo = userInfo.m_muBarTriggerDependentUserInfo;
     return *this;
@@ -1291,7 +1291,7 @@ CtrlTriggerUserInfoField::Serialize(Buffer::Iterator start) const
     i.WriteHtolsbU32(userInfo);
     // Here we need to write 8 bits covering the UL Target RSSI (7 bits) and B39, which is
     // reserved in the HE variant and the PS160 subfield in the EHT variant.
-    uint8_t bit32To39 = m_ulTargetRssi;
+    uint8_t bit32To39 = m_ulTargetRxPower;
     if (m_variant == TriggerFrameVariant::EHT)
     {
         bit32To39 |= (m_ps160 ? 1 << 7 : 0);
@@ -1348,7 +1348,7 @@ CtrlTriggerUserInfoField::Deserialize(Buffer::Iterator start)
     }
 
     uint8_t bit32To39 = i.ReadU8();
-    m_ulTargetRssi = bit32To39 & 0x7f; // B39 is reserved in HE variant
+    m_ulTargetRxPower = bit32To39 & 0x7f; // B39 is reserved in HE variant
     if (m_variant == TriggerFrameVariant::EHT)
     {
         m_ps160 = (bit32To39 >> 7) == 1;
@@ -1391,6 +1391,9 @@ CtrlTriggerUserInfoField::GetPreambleType() const
 void
 CtrlTriggerUserInfoField::SetAid12(uint16_t aid)
 {
+    NS_ASSERT_MSG((m_variant == TriggerFrameVariant::HE) || (aid != AID_SPECIAL_USER),
+                  std::to_string(AID_SPECIAL_USER)
+                      << " is reserved for Special User Info Field in EHT variant");
     m_aid12 = aid & 0x0fff;
 }
 
@@ -1413,95 +1416,116 @@ CtrlTriggerUserInfoField::HasRaRuForUnassociatedSta() const
 }
 
 void
-CtrlTriggerUserInfoField::SetRuAllocation(HeRu::RuSpec ru)
+CtrlTriggerUserInfoField::SetRuAllocation(WifiRu::RuSpec ru)
 {
-    NS_ABORT_MSG_IF(ru.GetIndex() == 0, "Valid indices start at 1");
+    const auto ruIndex = WifiRu::GetIndex(ru);
+    const auto ruType = WifiRu::GetRuType(ru);
+    NS_ABORT_MSG_IF(ruIndex == 0, "Valid indices start at 1");
     NS_ABORT_MSG_IF(m_triggerType == TriggerFrameType::MU_RTS_TRIGGER,
                     "SetMuRtsRuAllocation() must be used for MU-RTS");
 
-    switch (ru.GetRuType())
+    switch (ruType)
     {
-    case HeRu::RU_26_TONE:
-        m_ruAllocation = ru.GetIndex() - 1;
+    case RuType::RU_26_TONE:
+        m_ruAllocation = ruIndex - 1;
+        NS_ABORT_MSG_IF(!WifiRu::IsHe(ru) && (m_ruAllocation == 18), "Reserved value.");
+        NS_ASSERT(m_ruAllocation <= 36);
         break;
-    case HeRu::RU_52_TONE:
-        m_ruAllocation = ru.GetIndex() + 36;
+    case RuType::RU_52_TONE:
+        m_ruAllocation = ruIndex + 36;
+        NS_ASSERT(m_ruAllocation <= 52);
         break;
-    case HeRu::RU_106_TONE:
-        m_ruAllocation = ru.GetIndex() + 52;
+    case RuType::RU_106_TONE:
+        m_ruAllocation = ruIndex + 52;
+        NS_ASSERT(m_ruAllocation <= 60);
         break;
-    case HeRu::RU_242_TONE:
-        m_ruAllocation = ru.GetIndex() + 60;
+    case RuType::RU_242_TONE:
+        m_ruAllocation = ruIndex + 60;
+        NS_ASSERT(m_ruAllocation <= 64);
         break;
-    case HeRu::RU_484_TONE:
-        m_ruAllocation = ru.GetIndex() + 64;
+    case RuType::RU_484_TONE:
+        m_ruAllocation = ruIndex + 64;
+        NS_ASSERT(m_ruAllocation <= 67);
         break;
-    case HeRu::RU_996_TONE:
+    case RuType::RU_996_TONE:
         m_ruAllocation = 67;
         break;
-    case HeRu::RU_2x996_TONE:
+    case RuType::RU_2x996_TONE:
         m_ruAllocation = 68;
+        break;
+    case RuType::RU_4x996_TONE:
+        m_ruAllocation = 69;
         break;
     default:
         NS_FATAL_ERROR("RU type unknown.");
         break;
     }
 
-    NS_ABORT_MSG_IF(m_ruAllocation > 68, "Reserved value.");
+    NS_ABORT_MSG_IF(m_ruAllocation > 69, "Reserved value.");
+
+    auto b0 = (WifiRu::IsHe(ru) && !std::get<HeRu::RuSpec>(ru).GetPrimary80MHz()) ||
+              (WifiRu::IsEht(ru) && !std::get<EhtRu::RuSpec>(ru).GetPrimary80MHzOrLower80MHz());
+    m_ps160 = (WifiRu::IsEht(ru) && !std::get<EhtRu::RuSpec>(ru).GetPrimary160MHz());
 
     m_ruAllocation <<= 1;
-    if (!ru.GetPrimary80MHz())
+    if (b0)
     {
         m_ruAllocation++;
     }
 }
 
-HeRu::RuSpec
+WifiRu::RuSpec
 CtrlTriggerUserInfoField::GetRuAllocation() const
 {
     NS_ABORT_MSG_IF(m_triggerType == TriggerFrameType::MU_RTS_TRIGGER,
                     "GetMuRtsRuAllocation() must be used for MU-RTS");
 
-    HeRu::RuType ruType;
+    RuType ruType;
     std::size_t index;
 
-    bool primary80MHz = ((m_ruAllocation & 0x01) == 0);
+    const auto primaryOrLower80MHz = ((m_ruAllocation & 0x01) == 0);
 
     uint8_t val = m_ruAllocation >> 1;
 
     if (val < 37)
     {
-        ruType = HeRu::RU_26_TONE;
+        ruType = RuType::RU_26_TONE;
         index = val + 1;
     }
     else if (val < 53)
     {
-        ruType = HeRu::RU_52_TONE;
+        ruType = RuType::RU_52_TONE;
         index = val - 36;
     }
     else if (val < 61)
     {
-        ruType = HeRu::RU_106_TONE;
+        ruType = RuType::RU_106_TONE;
         index = val - 52;
     }
     else if (val < 65)
     {
-        ruType = HeRu::RU_242_TONE;
+        ruType = RuType::RU_242_TONE;
         index = val - 60;
     }
     else if (val < 67)
     {
-        ruType = HeRu::RU_484_TONE;
+        ruType = RuType::RU_484_TONE;
         index = val - 64;
     }
     else if (val == 67)
     {
-        ruType = HeRu::RU_996_TONE;
+        ruType = RuType::RU_996_TONE;
         index = 1;
     }
     else if (val == 68)
     {
-        ruType = HeRu::RU_2x996_TONE;
+        ruType = RuType::RU_2x996_TONE;
+        index = 1;
+    }
+    else if (val == 69)
+    {
+        NS_ASSERT(m_variant == TriggerFrameVariant::EHT);
+        ruType = RuType::RU_4x996_TONE;
         index = 1;
     }
     else
@@ -1509,7 +1533,12 @@ CtrlTriggerUserInfoField::GetRuAllocation() const
         NS_FATAL_ERROR("Reserved value.");
     }
 
-    return HeRu::RuSpec(ruType, index, primary80MHz);
+    if (m_variant == TriggerFrameVariant::EHT)
+    {
+        return EhtRu::RuSpec{ruType, index, !m_ps160, primaryOrLower80MHz};
+    }
+
+    return HeRu::RuSpec{ruType, index, primaryOrLower80MHz};
 }
 
 void
@@ -1518,16 +1547,21 @@ CtrlTriggerUserInfoField::SetMuRtsRuAllocation(uint8_t value)
     NS_ABORT_MSG_IF(m_triggerType != TriggerFrameType::MU_RTS_TRIGGER,
                     "SetMuRtsRuAllocation() can only be used for MU-RTS");
     NS_ABORT_MSG_IF(
-        value < 61 || value > 68,
+        value < 61 || value > 69,
         "Value "
             << +value
             << " is not admitted for B7-B1 of the RU Allocation subfield of MU-RTS Trigger Frames");
 
     m_ruAllocation = (value << 1);
-    if (value == 68)
+    if (value >= 68)
     {
-        // set B0 for 160 MHz and 80+80 MHz indication
+        // set B0 for 160 MHz, 80+80 MHz and 320 MHz indication
         m_ruAllocation++;
+    }
+    if (value == 69)
+    {
+        // set 160 for 320 MHz indication
+        m_ps160 = true;
     }
 }
 
@@ -1538,7 +1572,7 @@ CtrlTriggerUserInfoField::GetMuRtsRuAllocation() const
                     "GetMuRtsRuAllocation() can only be used for MU-RTS");
     uint8_t value = (m_ruAllocation >> 1);
     NS_ABORT_MSG_IF(
-        value < 61 || value > 68,
+        value < 61 || value > 69,
         "Value "
             << +value
             << " is not admitted for B7-B1 of the RU Allocation subfield of MU-RTS Trigger Frames");
@@ -1643,31 +1677,31 @@ CtrlTriggerUserInfoField::GetMoreRaRu() const
 }
 
 void
-CtrlTriggerUserInfoField::SetUlTargetRssiMaxTxPower()
+CtrlTriggerUserInfoField::SetUlTargetRxPowerMaxTxPower()
 {
-    m_ulTargetRssi = 127; // see Table 9-25i of 802.11ax amendment D3.0
+    m_ulTargetRxPower = 127; // see Table 9-54 of 802.11-2024
 }
 
 void
-CtrlTriggerUserInfoField::SetUlTargetRssi(int8_t dBm)
+CtrlTriggerUserInfoField::SetUlTargetRxPower(int8_t dBm)
 {
     NS_ABORT_MSG_IF(dBm < -110 || dBm > -20, "Invalid values for signal power");
 
-    m_ulTargetRssi = static_cast<uint8_t>(110 + dBm);
+    m_ulTargetRxPower = static_cast<uint8_t>(110 + dBm);
 }
 
 bool
-CtrlTriggerUserInfoField::IsUlTargetRssiMaxTxPower() const
+CtrlTriggerUserInfoField::IsUlTargetRxPowerMaxTxPower() const
 {
-    return (m_ulTargetRssi == 127);
+    return (m_ulTargetRxPower == 127);
 }
 
 int8_t
-CtrlTriggerUserInfoField::GetUlTargetRssi() const
+CtrlTriggerUserInfoField::GetUlTargetRxPower() const
 {
-    NS_ABORT_MSG_IF(m_ulTargetRssi == 127, "STA must use its max TX power");
+    NS_ABORT_MSG_IF(m_ulTargetRxPower == 127, "STA must use its max TX power");
 
-    return static_cast<int8_t>(m_ulTargetRssi) - 110;
+    return static_cast<int8_t>(m_ulTargetRxPower) - 110;
 }
 
 void
@@ -1727,6 +1761,176 @@ CtrlTriggerUserInfoField::GetMuBarTriggerDepUserInfo() const
     return m_muBarTriggerDependentUserInfo;
 }
 
+/*****************************************
+ * Trigger frame - Special User Info field
+ *****************************************/
+
+CtrlTriggerSpecialUserInfoField::CtrlTriggerSpecialUserInfoField(TriggerFrameType triggerType)
+    : m_triggerType(triggerType)
+{
+}
+
+CtrlTriggerSpecialUserInfoField&
+CtrlTriggerSpecialUserInfoField::operator=(const CtrlTriggerSpecialUserInfoField& other)
+{
+    // check for self-assignment
+    if (&other == this)
+    {
+        return *this;
+    }
+
+    m_triggerType = other.m_triggerType;
+    m_ulBwExt = other.m_ulBwExt;
+    m_muBarTriggerDependentUserInfo = other.m_muBarTriggerDependentUserInfo;
+
+    return *this;
+}
+
+uint32_t
+CtrlTriggerSpecialUserInfoField::GetSerializedSize() const
+{
+    uint32_t size = 0;
+    size += 5; // User Info (excluding Trigger Dependent User Info)
+
+    switch (m_triggerType)
+    {
+    case TriggerFrameType::BASIC_TRIGGER:
+    case TriggerFrameType::BFRP_TRIGGER:
+        size += 1;
+        break;
+    case TriggerFrameType::MU_BAR_TRIGGER:
+        size +=
+            m_muBarTriggerDependentUserInfo.GetSerializedSize(); // BAR Control and BAR Information
+        break;
+    default:;
+        // The Trigger Dependent User Info subfield is not present in the other variants
+    }
+
+    return size;
+}
+
+Buffer::Iterator
+CtrlTriggerSpecialUserInfoField::Serialize(Buffer::Iterator start) const
+{
+    NS_ABORT_MSG_IF(m_triggerType == TriggerFrameType::BFRP_TRIGGER,
+                    "BFRP Trigger frame is not supported");
+    NS_ABORT_MSG_IF(m_triggerType == TriggerFrameType::GCR_MU_BAR_TRIGGER,
+                    "GCR-MU-BAR Trigger frame is not supported");
+    NS_ABORT_MSG_IF(m_triggerType == TriggerFrameType::NFRP_TRIGGER,
+                    "NFRP Trigger frame is not supported");
+
+    Buffer::Iterator i = start;
+
+    uint32_t userInfo = 0;
+    userInfo |= (AID_SPECIAL_USER & 0x0fff);
+    userInfo |= (static_cast<uint32_t>(m_ulBwExt) << 15);
+    i.WriteHtolsbU32(userInfo);
+    i.WriteU8(0);
+    // TODO: EHT Spatial Reuse and U-SIG Disregard And Validate
+
+    if (m_triggerType == TriggerFrameType::BASIC_TRIGGER)
+    {
+        // The length is one octet and all the subfields are reserved in a Basic Trigger frame and
+        // in a BFRP Trigger frame
+        i.WriteU8(0);
+    }
+    else if (m_triggerType == TriggerFrameType::MU_BAR_TRIGGER)
+    {
+        m_muBarTriggerDependentUserInfo.Serialize(i);
+        i.Next(m_muBarTriggerDependentUserInfo.GetSerializedSize());
+    }
+
+    return i;
+}
+
+Buffer::Iterator
+CtrlTriggerSpecialUserInfoField::Deserialize(Buffer::Iterator start)
+{
+    NS_ABORT_MSG_IF(m_triggerType == TriggerFrameType::BFRP_TRIGGER,
+                    "BFRP Trigger frame is not supported");
+    NS_ABORT_MSG_IF(m_triggerType == TriggerFrameType::GCR_MU_BAR_TRIGGER,
+                    "GCR-MU-BAR Trigger frame is not supported");
+    NS_ABORT_MSG_IF(m_triggerType == TriggerFrameType::NFRP_TRIGGER,
+                    "NFRP Trigger frame is not supported");
+
+    Buffer::Iterator i = start;
+
+    const auto userInfo = i.ReadLsbtohU32();
+    i.ReadU8();
+    // TODO: EHT Spatial Reuse and U-SIG Disregard And Validate
+
+    const uint16_t aid12 = userInfo & 0x0fff;
+    NS_ABORT_MSG_IF(aid12 != AID_SPECIAL_USER, "Failed to deserialize Special User Info field");
+    m_ulBwExt = (userInfo >> 15) & 0x03;
+
+    if (m_triggerType == TriggerFrameType::BASIC_TRIGGER)
+    {
+        i.ReadU8();
+    }
+    else if (m_triggerType == TriggerFrameType::MU_BAR_TRIGGER)
+    {
+        const auto len = m_muBarTriggerDependentUserInfo.Deserialize(i);
+        i.Next(len);
+    }
+
+    return i;
+}
+
+TriggerFrameType
+CtrlTriggerSpecialUserInfoField::GetType() const
+{
+    return m_triggerType;
+}
+
+void
+CtrlTriggerSpecialUserInfoField::SetUlBwExt(MHz_u bw)
+{
+    switch (static_cast<uint16_t>(bw))
+    {
+    case 20:
+    case 40:
+    case 80:
+        m_ulBwExt = 0;
+        break;
+    case 160:
+        m_ulBwExt = 1;
+        break;
+    case 320:
+        m_ulBwExt = 2;
+        // TODO: differentiate channelization 1 from channelization 2
+        break;
+    default:
+        NS_FATAL_ERROR("Bandwidth value not allowed.");
+        break;
+    }
+}
+
+uint8_t
+CtrlTriggerSpecialUserInfoField::GetUlBwExt() const
+{
+    return m_ulBwExt;
+}
+
+void
+CtrlTriggerSpecialUserInfoField::SetMuBarTriggerDepUserInfo(const CtrlBAckRequestHeader& bar)
+{
+    NS_ABORT_MSG_IF(m_triggerType != TriggerFrameType::MU_BAR_TRIGGER,
+                    "Not a MU-BAR Trigger frame");
+    NS_ABORT_MSG_IF(bar.GetType().m_variant != BlockAckReqType::COMPRESSED &&
+                        bar.GetType().m_variant != BlockAckReqType::MULTI_TID,
+                    "BAR Control indicates it is neither the Compressed nor the Multi-TID variant");
+    m_muBarTriggerDependentUserInfo = bar;
+}
+
+const CtrlBAckRequestHeader&
+CtrlTriggerSpecialUserInfoField::GetMuBarTriggerDepUserInfo() const
+{
+    NS_ABORT_MSG_IF(m_triggerType != TriggerFrameType::MU_BAR_TRIGGER,
+                    "Not a MU-BAR Trigger frame");
+
+    return m_muBarTriggerDependentUserInfo;
+}
+
 /***********************************
  *       Trigger frame
  ***********************************/
@@ -1750,6 +1954,7 @@ CtrlTriggerHeader::CtrlTriggerHeader()
 CtrlTriggerHeader::CtrlTriggerHeader(TriggerFrameType type, const WifiTxVector& txVector)
     : CtrlTriggerHeader()
 {
+    m_triggerType = type;
     NS_ABORT_MSG_IF(m_triggerType == TriggerFrameType::MU_RTS_TRIGGER,
                     "This constructor cannot be used for MU-RTS");
 
@@ -1766,7 +1971,13 @@ CtrlTriggerHeader::CtrlTriggerHeader(TriggerFrameType type, const WifiTxVector& 
                      << txVector.GetPreambleType());
     }
 
-    m_triggerType = type;
+    // special user is always present if solicited TB PPDU format is EHT or later
+    if (txVector.GetModulationClass() >= WifiModulationClass::WIFI_MOD_CLASS_EHT)
+    {
+        NS_ASSERT(m_variant == TriggerFrameVariant::EHT);
+        m_specialUserInfoField.emplace(m_triggerType);
+    }
+
     SetUlBandwidth(txVector.GetChannelWidth());
     SetUlLength(txVector.GetLength());
     const auto gi = txVector.GetGuardInterval().GetNanoSeconds();
@@ -1778,6 +1989,7 @@ CtrlTriggerHeader::CtrlTriggerHeader(TriggerFrameType type, const WifiTxVector& 
     {
         m_giAndLtfType = 2;
     }
+
     for (auto& userInfo : txVector.GetHeMuUserInfoMap())
     {
         CtrlTriggerUserInfoField& ui = AddUserInfoField();
@@ -1811,6 +2023,8 @@ CtrlTriggerHeader::operator=(const CtrlTriggerHeader& trigger)
     m_apTxPower = trigger.m_apTxPower;
     m_ulSpatialReuse = trigger.m_ulSpatialReuse;
     m_padding = trigger.m_padding;
+    m_specialUserInfoField.reset();
+    m_specialUserInfoField = trigger.m_specialUserInfoField;
     m_userInfoFields.clear();
     m_userInfoFields = trigger.m_userInfoFields;
     return *this;
@@ -1850,6 +2064,11 @@ CtrlTriggerHeader::SetVariant(TriggerFrameVariant variant)
     NS_ABORT_MSG_IF(!m_userInfoFields.empty(),
                     "Cannot change Common Info field variant if User Info fields are present");
     m_variant = variant;
+    // special user is always present if User Info field variant is EHT or later
+    if (!m_specialUserInfoField && (m_variant >= TriggerFrameVariant::EHT))
+    {
+        m_specialUserInfoField.emplace(m_triggerType);
+    }
 }
 
 TriggerFrameVariant
@@ -1868,6 +2087,12 @@ CtrlTriggerHeader::GetSerializedSize() const
     if (m_triggerType == TriggerFrameType::GCR_MU_BAR_TRIGGER)
     {
         size += 4;
+    }
+
+    if (m_specialUserInfoField)
+    {
+        NS_ASSERT(m_variant == TriggerFrameVariant::EHT);
+        size += m_specialUserInfoField->GetSerializedSize();
     }
 
     for (auto& ui : m_userInfoFields)
@@ -1909,6 +2134,12 @@ CtrlTriggerHeader::Serialize(Buffer::Iterator start) const
 
     i.WriteHtolsbU64(commonInfo);
 
+    if (m_specialUserInfoField)
+    {
+        NS_ASSERT(m_variant == TriggerFrameVariant::EHT);
+        i = m_specialUserInfoField->Serialize(i);
+    }
+
     for (auto& ui : m_userInfoFields)
     {
         i = ui.Serialize(i);
@@ -1946,6 +2177,18 @@ CtrlTriggerHeader::Deserialize(Buffer::Iterator start)
                     "GCR-MU-BAR Trigger frame is not supported");
     NS_ABORT_MSG_IF(m_triggerType == TriggerFrameType::NFRP_TRIGGER,
                     "NFRP Trigger frame is not supported");
+
+    if (m_variant == TriggerFrameVariant::EHT)
+    {
+        m_specialUserInfoField.reset();
+        const auto userInfo = i.ReadLsbtohU16();
+        i.Prev(2);
+        if (const auto aid12 = userInfo & 0x0fff; aid12 == AID_SPECIAL_USER)
+        {
+            m_specialUserInfoField.emplace(m_triggerType);
+            i = m_specialUserInfoField->Deserialize(i);
+        }
+    }
 
     while (i.GetRemainingSize() >= 2)
     {
@@ -2125,17 +2368,35 @@ CtrlTriggerHeader::SetUlBandwidth(MHz_u bw)
         m_ulBandwidth = 2;
         break;
     case 160:
+    case 320:
         m_ulBandwidth = 3;
         break;
     default:
         NS_FATAL_ERROR("Bandwidth value not allowed.");
         break;
     }
+    if (bw > MHz_u{160})
+    {
+        NS_ASSERT(m_specialUserInfoField);
+    }
+    if (m_specialUserInfoField)
+    {
+        NS_ASSERT(m_variant == TriggerFrameVariant::EHT);
+        m_specialUserInfoField->SetUlBwExt(bw);
+    }
 }
 
 MHz_u
 CtrlTriggerHeader::GetUlBandwidth() const
 {
+    if (m_specialUserInfoField)
+    {
+        NS_ASSERT(m_variant == TriggerFrameVariant::EHT);
+        if (m_specialUserInfoField->GetUlBwExt() > 1)
+        {
+            return MHz_u{320};
+        }
+    }
     return (1 << m_ulBandwidth) * MHz_u{20};
 }
 
@@ -2243,8 +2504,10 @@ CtrlTriggerHeader::GetPaddingSize() const
 CtrlTriggerHeader
 CtrlTriggerHeader::GetCommonInfoField() const
 {
-    // make a copy of this Trigger Frame and remove the User Info fields from the copy
+    // make a copy of this Trigger Frame and remove the User Info fields (including the Special User
+    // Info field) from the copy
     CtrlTriggerHeader trigger(*this);
+    trigger.m_specialUserInfoField.reset();
     trigger.m_userInfoFields.clear();
     return trigger;
 }
@@ -2352,11 +2615,10 @@ CtrlTriggerHeader::IsValid() const
 
     // check that allocated RUs do not overlap
     // TODO This is not a problem in case of UL MU-MIMO
-    std::vector<HeRu::RuSpec> prevRus;
-
+    std::vector<WifiRu::RuSpec> prevRus;
     for (auto& ui : m_userInfoFields)
     {
-        if (HeRu::DoesOverlap(GetUlBandwidth(), ui.GetRuAllocation(), prevRus))
+        if (WifiRu::DoesOverlap(GetUlBandwidth(), ui.GetRuAllocation(), prevRus))
         {
             return false;
         }

@@ -5,7 +5,7 @@
  *
  */
 
-/**
+/*
  * This is an example on how to configure the channel model classes to simulate
  * a vehicular environment.
  * The channel condition is determined using the model specified in [1], Table 6.2-1.
@@ -38,6 +38,7 @@
 
 using namespace ns3;
 
+/// the log component
 NS_LOG_COMPONENT_DEFINE("ThreeGppV2vChannelExample");
 
 static Ptr<ThreeGppPropagationLossModel>
@@ -46,7 +47,7 @@ static Ptr<ThreeGppSpectrumPropagationLossModel>
     m_spectrumLossModel;                       //!< the SpectrumPropagationLossModel object
 static Ptr<ChannelConditionModel> m_condModel; //!< the ChannelConditionModel object
 
-/*
+/**
  * @brief A structure that holds the parameters for the ComputeSnr
  * function. In this way the problem with the limited
  * number of parameters of method Schedule is avoided.
@@ -150,13 +151,10 @@ PrintGnuplottableBuildingListToFile(std::string filename)
         NS_LOG_ERROR("Can't open file " << filename);
         return;
     }
-    uint32_t index = 0;
     for (auto it = BuildingList::Begin(); it != BuildingList::End(); ++it)
     {
-        ++index;
         Box box = (*it)->GetBoundaries();
-        outFile << "set object " << index << " rect from " << box.xMin << "," << box.yMin << " to "
-                << box.xMax << "," << box.yMax << std::endl;
+        outFile << box.xMin << " " << box.yMin << " " << box.xMax << " " << box.yMax << std::endl;
     }
 }
 
@@ -358,7 +356,7 @@ main(int argc, char* argv[])
 
     for (int i = 0; i < simTime / timeRes; i++)
     {
-        ComputeSnrParams params{txMob, rxMob, txParams, noiseFigure, txAntenna, rxAntenna};
+        ComputeSnrParams params{txMob, rxMob, txParams->Copy(), noiseFigure, txAntenna, rxAntenna};
         Simulator::Schedule(timeRes * i, &ComputeSnr, params);
     }
 

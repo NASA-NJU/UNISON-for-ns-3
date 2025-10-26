@@ -11,6 +11,7 @@
 #define WIFI_MODE_H
 
 #include "wifi-phy-common.h"
+#include "wifi-standard-constants.h"
 
 #include "ns3/attribute-helper.h"
 #include "ns3/callback.h"
@@ -19,9 +20,6 @@
 
 namespace ns3
 {
-
-/// STA_ID to identify a single user (SU)
-static constexpr uint16_t SU_STA_ID = 65535;
 
 class WifiTxVector;
 
@@ -113,6 +111,9 @@ class WifiMode
     uint16_t GetConstellationSize() const;
     /**
      * @returns the MCS value.
+     *
+     * This method cannot be called for non-HT modulations, because Modulation and Coding Scheme
+     * (MCS) is a concept introduced by the 802.11n amendment.
      */
     uint8_t GetMcsValue() const;
     /**

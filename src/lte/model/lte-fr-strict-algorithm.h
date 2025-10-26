@@ -142,9 +142,8 @@ class LteFrStrictAlgorithm : public LteFfrAlgorithm
 
     /// The expected measurement identity
     uint8_t m_measId;
+};
 
-}; // end of class LteFrStrictAlgorithm
-
-} // end of namespace ns3
+} // namespace ns3
 
 #endif /* LTE_FR_STRICT_ALGORITHM_H */

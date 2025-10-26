@@ -353,17 +353,33 @@ class FrameExchangeManager : public Object
     virtual void ProtectionCompleted();
 
     /**
-     * Update the NAV, if needed, based on the Duration/ID of the given <i>psdu</i>.
+     * Update the NAV, if needed, based on the Duration/ID of the given MAC header and the given
+     * surplus.
      *
-     * @param psdu the received PSDU
-     * @param txVector TxVector of the received PSDU
+     * @param hdr the given MAC header
+     * @param txVector TxVector of the PSDU containing the MAC header
+     * @param surplus the surplus to add to the Duration/ID value. This is needed, e.g., when
+     *                setting the NAV at the end of the reception of the MAC header
      */
-    virtual void UpdateNav(Ptr<const WifiPsdu> psdu, const WifiTxVector& txVector);
+    virtual void UpdateNav(const WifiMacHeader& hdr,
+                           const WifiTxVector& txVector,
+                           const Time& surplus = Time{0});
 
     /**
      * Reset the NAV upon expiration of the NAV reset timer.
      */
     virtual void NavResetTimeout();
+
+    /**
+     * Set the TXNAV upon sending an MPDU.
+     *
+     * @param mpdu the MPDU being sent
+     * @param txDuration the TX duration of the MPDU
+     */
+    void SetTxNav(Ptr<const WifiMpdu> mpdu, const Time& txDuration);
+
+    /// Reset the TXNAV
+    void ResetTxNav();
 
     /**
      * This method is called when the reception of a PSDU fails.
@@ -595,10 +611,12 @@ class FrameExchangeManager : public Object
      * Send CTS after receiving RTS.
      *
      * @param rtsHdr the header of the received RTS
-     * @param rtsTxMode the TX mode used to transmit the RTS
+     * @param rtsTxVector the TXVECTOR used to transmit the RTS
      * @param rtsSnr the SNR of the RTS in linear scale
      */
-    virtual void SendCtsAfterRts(const WifiMacHeader& rtsHdr, WifiMode rtsTxMode, double rtsSnr);
+    virtual void SendCtsAfterRts(const WifiMacHeader& rtsHdr,
+                                 const WifiTxVector& rtsTxVector,
+                                 double rtsSnr);
 
     /**
      * Send CTS after receiving RTS.
@@ -688,17 +706,22 @@ class FrameExchangeManager : public Object
      */
     virtual void CtsTimeout(Ptr<WifiMpdu> rts, const WifiTxVector& txVector);
     /**
-     * Take required actions when the CTS timer fired after sending an RTS to
-     * protect the given PSDU expires.
+     * Take required actions when the CTS timer fired after sending an (MU-)RTS to
+     * protect the given PSDU map expires.
      *
-     * @param psdu the PSDU protected by the failed RTS
+     * @param psduMap the PSDU map protected by the failed (MU-)RTS
      */
-    void DoCtsTimeout(Ptr<WifiPsdu> psdu);
+    void DoCtsTimeout(const WifiPsduMap& psduMap);
 
     /**
      * @return whether CW shall be updated on CTS timeout
      */
     virtual bool GetUpdateCwOnCtsTimeout() const;
+
+    /**
+     * @return whether an (MU-)RTS failure shall be reported to the remote station manager
+     */
+    virtual bool GetReportRtsFailed() const;
 
     /**
      * Reset this frame exchange manager.

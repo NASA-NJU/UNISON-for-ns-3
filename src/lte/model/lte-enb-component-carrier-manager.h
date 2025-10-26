@@ -210,9 +210,8 @@ class LteEnbComponentCarrierManager : public Object
     LteCcmRrcSapProvider*
         m_ccmRrcSapProvider; //!< A pointer to the SAP interface of the CCM instance to receive API
                              //!< calls from the eNodeB RRC instance.
+};
 
-}; // end of class LteEnbComponentCarrierManager
-
-} // end of namespace ns3
+} // namespace ns3
 
 #endif /* LTE_ENB_COMPONENT_CARRIER_MANAGER_H */

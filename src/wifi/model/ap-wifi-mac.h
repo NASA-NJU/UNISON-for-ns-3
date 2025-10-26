@@ -59,6 +59,8 @@ using AssocReqRefVariant = std::variant<std::reference_wrapper<MgtAssocRequestHe
 class ApWifiMac : public WifiMac
 {
   public:
+    friend class WifiStaticSetupHelper;
+
     /**
      * @brief Get the type ID.
      * @return the object TypeId
@@ -122,6 +124,9 @@ class ApWifiMac : public WifiMac
      * @return the Association ID allocated by the AP to the station, SU_STA_ID if unallocated
      */
     uint16_t GetAssociationId(Mac48Address addr, uint8_t linkId) const;
+
+    /// @return the next Association ID to be allocated by the AP
+    uint16_t GetNextAssociationId() const;
 
     /**
      * Get the ID of a link (if any) that has been setup with the station having the given MAC
@@ -326,14 +331,36 @@ class ApWifiMac : public WifiMac
     void ParseReportedStaInfo(const AssocReqRefVariant& assoc, Mac48Address from, uint8_t linkId);
 
     /**
-     * Take necessary actions upon receiving the given EML Operating Mode Notification frame
-     * from the given station on the given link.
+     * Process the EML Operating Mode Notification frame received from the given station on the
+     * given link.
      *
      * @param frame the received EML Operating Mode Notification frame
      * @param sender the MAC address of the sender of the frame
      * @param linkId the ID of the link over which the frame was received
      */
-    void ReceiveEmlOmn(MgtEmlOmn& frame, const Mac48Address& sender, uint8_t linkId);
+    void ReceiveEmlOmn(const MgtEmlOmn& frame, const Mac48Address& sender, uint8_t linkId);
+
+    /**
+     * Respond to the EML Operating Mode Notification frame received from the given station on the
+     * given link.
+     *
+     * @param frame the received EML Operating Mode Notification frame
+     * @param sender the MAC address of the sender of the frame
+     * @param linkId the ID of the link over which the frame was received
+     */
+    void RespondToEmlOmn(MgtEmlOmn frame, const Mac48Address& sender, uint8_t linkId);
+
+    /**
+     * Take necessary actions upon completion of an exchange of EML Operating Mode Notification
+     * frames.
+     *
+     * @param frame the received EML Operating Mode Notification frame
+     * @param sender the MAC address of the sender of the frame
+     * @param linkId the ID of the link over which the frame was received
+     */
+    void EmlOmnExchangeCompleted(const MgtEmlOmn& frame,
+                                 const Mac48Address& sender,
+                                 uint8_t linkId);
 
     /**
      * The packet we sent was successfully received by the receiver
@@ -623,11 +650,6 @@ class ApWifiMac : public WifiMac
     void DoDispose() override;
     void DoInitialize() override;
 
-    /**
-     * @return the next Association ID to be allocated by the AP
-     */
-    uint16_t GetNextAssociationId() const;
-
     Ptr<Txop> m_beaconTxop;        //!< Dedicated Txop for beacons
     bool m_enableBeaconGeneration; //!< Flag whether beacons are being generated
     Time m_beaconInterval;         //!< Beacon interval
@@ -639,6 +661,7 @@ class ApWifiMac : public WifiMac
     Time m_bsrLifetime;            //!< Lifetime of Buffer Status Reports
     /// transition timeout events running for EMLSR clients
     std::map<Mac48Address, EventId> m_transitionTimeoutEvents;
+    uint8_t m_grpAddrBuIndicExp; //!< Group Addressed BU Indication Exponent of EHT Operation IE
     Ptr<ApEmlsrManager> m_apEmlsrManager; ///< AP EMLSR Manager
     Ptr<GcrManager> m_gcrManager;         //!< GCR Manager
 

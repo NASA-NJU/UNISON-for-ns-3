@@ -46,8 +46,6 @@ class RttEstimator : public Object
 
     ~RttEstimator() override;
 
-    TypeId GetInstanceTypeId() const override;
-
     /**
      * @brief Add a new measurement to the estimator. Pure virtual function.
      * @param t the new RTT measure.
@@ -91,6 +89,8 @@ class RttEstimator : public Object
     Time m_initialEstimatedRtt; //!< Initial RTT estimation
 
   protected:
+    void NotifyConstructionCompleted() override;
+
     Time m_estimatedRtt;       //!< Current estimate
     Time m_estimatedVariation; //!< Current estimate variation
     uint32_t m_nSamples;       //!< Number of samples
@@ -125,8 +125,6 @@ class RttMeanDeviation : public RttEstimator
      * @param r the object to copy
      */
     RttMeanDeviation(const RttMeanDeviation& r);
-
-    TypeId GetInstanceTypeId() const override;
 
     /**
      * @brief Add a new measurement to the estimator.

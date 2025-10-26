@@ -33,7 +33,32 @@ class WifiPhy;
 class PhyListener;
 class Txop;
 class FrameExchangeManager;
+class WifiTxVector;
 enum AcIndex : uint8_t; // opaque enum declaration
+
+/**
+ * @brief Enumeration values for the outcome of the check whether channel access is expected to be
+ *        gained within a given time interval
+ * @see ChannelAccessManager::GetExpectedAccessWithin
+ * @ingroup wifi
+ */
+enum class WifiExpectedAccessReason : uint8_t
+{
+    ACCESS_EXPECTED = 0,
+    NOT_REQUESTED,
+    NOTHING_TO_TX,
+    RX_END,
+    BUSY_END,
+    TX_END,
+    NAV_END,
+    ACK_TIMER_END,
+    CTS_TIMER_END,
+    SWITCHING_END,
+    NO_PHY_END,
+    SLEEP_END,
+    OFF_END,
+    BACKOFF_END
+};
 
 /**
  * @brief Manage a set of ns3::Txop
@@ -171,6 +196,21 @@ class ChannelAccessManager : public Object
     Time GetBackoffEndFor(Ptr<Txop> txop) const;
 
     /**
+     * Check whether channel access is expected to be granted within the given delay. If it is,
+     * ACCESS_EXPECTED is returned. If channel access is not expected to be granted because no
+     * AC has requested channel access, NOT_REQUESTED is returned. If no AC has frames to send,
+     * NOTHING_TO_TX is returned. If any of the times returned by DoGetAccessGrantStart() exceeds
+     * the given deadline, the reason corresponding to the earliest of such times is returned.
+     * Otherwise, it means that access cannot be granted in time due to the backoff slots to wait
+     * and BACKOFF_END is returned.
+     *
+     * @see DoGetAccessGrantStart
+     * @param delay the given delay
+     * @return ACCESS_EXPECTED or the reason why channel access is not expected to be gained in time
+     */
+    WifiExpectedAccessReason GetExpectedAccessWithin(const Time& delay) const;
+
+    /**
      * @return the time until the NAV has been set
      */
     Time GetNavEnd() const;
@@ -235,9 +275,11 @@ class ChannelAccessManager : public Object
     void NotifyRxEndOkNow();
     /**
      * Notify the Txop that a packet reception was just
-     * completed unsuccessfuly.
+     * completed unsuccessfully.
+     *
+     * @param txVector the TXVECTOR used for transmission
      */
-    void NotifyRxEndErrorNow();
+    void NotifyRxEndErrorNow(const WifiTxVector& txVector);
     /**
      * @param duration expected duration of transmission
      *
@@ -408,6 +450,20 @@ class ChannelAccessManager : public Object
     Time GetBackoffEndFor(Ptr<Txop> txop, Time accessGrantStart) const;
 
     /**
+     * Return a map containing (Time, WifiExpectedAccessReason) pairs sorted in increasing order
+     * of times. For each of the events preventing channel access (e.g., medium busy, RX state,
+     * TX state, etc), a pair is present in the map indicating the latest known time for which
+     * channel access cannot be granted due to that event. Therefore, the returned map does not
+     * contain a pair for some WifiExpectedAccessReason enum values (ACCESS_EXPECTED, NOTHING_TO_TX,
+     * NOT_REQUESTED and BACKOFF_END).
+     *
+     * @param ignoreNav whether NAV should be ignored
+     * @return a map containing (Time, WifiExpectedAccessReason) pairs sorted in increasing order
+     *         of times
+     */
+    std::multimap<Time, WifiExpectedAccessReason> DoGetAccessGrantStart(bool ignoreNav) const;
+
+    /**
      * This method determines whether the medium has been idle during a period (of
      * non-null duration) immediately preceding the time this method is called. If
      * so, the last idle start time and end time for each channel type are updated.
@@ -480,9 +536,12 @@ class ChannelAccessManager : public Object
     std::map<WifiChannelListType, Timespan>
         m_lastIdle;               //!< the last idle start and end time for each channel type
     Time m_lastSwitchingEnd;      //!< the last switching end time
-    bool m_sleeping;              //!< flag whether it is in sleeping state
-    bool m_off;                   //!< flag whether it is in off state
+    Timespan m_lastSleep;         //!< the last sleep start and end time
+    Timespan m_lastOff;           //!< the last off start and end time
     Time m_eifsNoDifs;            //!< EIFS no DIFS time
+    Timespan m_lastNoPhy;         //!< the last start and end time no PHY was operating on the link
+    mutable Time m_cachedSifs;    //!< cached value for SIFS, to be only used without a PHY
+    mutable Time m_cachedSlot;    //!< cached value for slot, to be only used without a PHY
     EventId m_accessTimeout;      //!< the access timeout ID
     bool m_generateBackoffOnNoTx; //!< whether the backoff should be invoked when the AC gains the
                                   //!< right to start a TXOP but it does not transmit any frame
@@ -490,6 +549,8 @@ class ChannelAccessManager : public Object
                                   //!< provided that the queue is not actually empty
     bool m_proactiveBackoff; //!< whether a new backoff value is generated when a CCA busy period
                              //!< starts and the backoff counter is zero
+    Time m_resetBackoffThreshold; //!< if no PHY operates on a link for a period greater than this
+                                  //!< threshold, the backoff on that link is reset
 
     /// Information associated with each PHY that is going to operate on another EMLSR link
     struct EmlsrLinkSwitchInfo
@@ -511,6 +572,11 @@ class ChannelAccessManager : public Object
     uint8_t m_nSlotsLeft;                  //!< fire the NSlotsLeftAlert trace source when the
                                            //!< backoff counter with the minimum value among all
                                            //!< ACs reaches this value
+    Time m_nSlotsLeftMinDelay; //!< the minimum gap between the end of a medium busy event and
+                               //!< the time the NSlotsLeftAlert trace source can be fired
+
+    /// default value for the NSlotsLeftMinDelay attribute, corresponds to a PIFS in 5GHz/6GHz bands
+    static const Time DEFAULT_N_SLOTS_LEFT_MIN_DELAY;
 
     /**
      * TracedCallback signature for NSlotsLeft alerts.
@@ -526,6 +592,15 @@ class ChannelAccessManager : public Object
 
     NSlotsLeftTracedCallback m_nSlotsLeftCallback; //!< traced callback for NSlotsLeft alerts
 };
+
+/**
+ * @brief Stream insertion operator.
+ *
+ * @param os the stream
+ * @param reason the expected access reason
+ * @return a reference to the stream
+ */
+std::ostream& operator<<(std::ostream& os, const WifiExpectedAccessReason& reason);
 
 } // namespace ns3
 

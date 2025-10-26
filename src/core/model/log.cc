@@ -233,13 +233,6 @@ LogComponent::EnvVarCheck()
 }
 
 bool
-LogComponent::IsEnabled(const LogLevel level) const
-{
-    //  LogComponentEnableEnvVar ();
-    return level & m_levels;
-}
-
-bool
 LogComponent::IsNoneEnabled() const
 {
     return m_levels == 0;
@@ -475,8 +468,8 @@ CheckEnvironmentVariables()
                                << flag << "\" in env variable NS_LOG for component name "
                                << component);
             }
-        } // for flag
-    }     // for component
+        }
+    }
 }
 
 void

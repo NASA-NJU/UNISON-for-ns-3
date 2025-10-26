@@ -59,6 +59,7 @@ ThreeGppHttpServer::GetTypeId()
                           PointerValue(),
                           MakePointerAccessor(&ThreeGppHttpServer::m_httpVariables),
                           MakePointerChecker<ThreeGppHttpVariables>())
+            // NS_DEPRECATED_3_44
             .AddAttribute("LocalAddress",
                           "The local address of the server, "
                           "i.e., the address on which to bind the Rx socket.",
@@ -67,6 +68,7 @@ ThreeGppHttpServer::GetTypeId()
                           MakeAddressChecker(),
                           TypeId::SupportLevel::DEPRECATED,
                           "Replaced by Local in ns-3.44.")
+            // NS_DEPRECATED_3_44
             .AddAttribute("LocalPort",
                           "Port on which the application listen for incoming packets.",
                           UintegerValue(80), // the default HTTP port
@@ -282,10 +284,10 @@ ThreeGppHttpServer::StartApplication()
         m_initialSocket->SetRecvCallback(
             MakeCallback(&ThreeGppHttpServer::ReceivedDataCallback, this));
         m_initialSocket->SetSendCallback(MakeCallback(&ThreeGppHttpServer::SendCallback, this));
-    } // end of `if (m_initialSocket == 0)`
+    }
 
     SwitchToState(STARTED);
-} // end of `void StartApplication ()`
+}
 
 void
 ThreeGppHttpServer::StopApplication()
@@ -442,8 +444,8 @@ ThreeGppHttpServer::ReceivedDataCallback(Ptr<Socket> socket)
         {
         case ThreeGppHttpHeader::MAIN_OBJECT: {
             const auto processingDelay = m_httpVariables->GetMainObjectGenerationDelay();
-            NS_LOG_INFO(this << " Will finish generating a main object"
-                             << " in " << processingDelay.As(Time::S) << ".");
+            NS_LOG_INFO(this << " Will finish generating a main object in "
+                             << processingDelay.As(Time::S) << ".");
             m_txBuffer->RecordNextServe(socket,
                                         Simulator::Schedule(processingDelay,
                                                             &ThreeGppHttpServer::ServeNewMainObject,
@@ -454,8 +456,8 @@ ThreeGppHttpServer::ReceivedDataCallback(Ptr<Socket> socket)
         }
         case ThreeGppHttpHeader::EMBEDDED_OBJECT: {
             const auto processingDelay = m_httpVariables->GetEmbeddedObjectGenerationDelay();
-            NS_LOG_INFO(this << " Will finish generating an embedded object"
-                             << " in " << processingDelay.As(Time::S) << ".");
+            NS_LOG_INFO(this << " Will finish generating an embedded object in "
+                             << processingDelay.As(Time::S) << ".");
             m_txBuffer->RecordNextServe(
                 socket,
                 Simulator::Schedule(processingDelay,
@@ -469,10 +471,8 @@ ThreeGppHttpServer::ReceivedDataCallback(Ptr<Socket> socket)
             NS_FATAL_ERROR("Invalid packet.");
             break;
         }
-
-    } // end of `while ((packet = socket->RecvFrom (from)))`
-
-} // end of `void ReceivedDataCallback (Ptr<Socket> socket)`
+    }
+}
 
 void
 ThreeGppHttpServer::SendCallback(Ptr<Socket> socket, uint32_t availableBufferSize)
@@ -494,12 +494,12 @@ ThreeGppHttpServer::SendCallback(Ptr<Socket> socket, uint32_t availableBufferSiz
         switch (m_txBuffer->GetBufferContentType(socket))
         {
         case ThreeGppHttpHeader::MAIN_OBJECT:
-            NS_LOG_INFO(this << " Transmission of main object is suspended"
-                             << " after " << actualSent << " bytes.");
+            NS_LOG_INFO(this << " Transmission of main object is suspended after " << actualSent
+                             << " bytes.");
             break;
         case ThreeGppHttpHeader::EMBEDDED_OBJECT:
-            NS_LOG_INFO(this << " Transmission of embedded object is suspended"
-                             << " after " << actualSent << " bytes.");
+            NS_LOG_INFO(this << " Transmission of embedded object is suspended after " << actualSent
+                             << " bytes.");
             break;
         default:
             NS_FATAL_ERROR("Invalid Tx buffer content type.");
@@ -522,8 +522,7 @@ ThreeGppHttpServer::SendCallback(Ptr<Socket> socket, uint32_t availableBufferSiz
         }
     }
 #endif /* NS3_LOG_ENABLE */
-
-} // end of `void SendCallback (Ptr<Socket> socket, uint32_t availableBufferSize)`
+}
 
 void
 ThreeGppHttpServer::ServeNewMainObject(Ptr<Socket> socket)
@@ -538,8 +537,8 @@ ThreeGppHttpServer::ServeNewMainObject(Ptr<Socket> socket)
 
     if (actualSent < objectSize)
     {
-        NS_LOG_INFO(this << " Transmission of main object is suspended"
-                         << " after " << actualSent << " bytes.");
+        NS_LOG_INFO(this << " Transmission of main object is suspended after " << actualSent
+                         << " bytes.");
     }
     else
     {
@@ -560,8 +559,8 @@ ThreeGppHttpServer::ServeNewEmbeddedObject(Ptr<Socket> socket)
 
     if (actualSent < objectSize)
     {
-        NS_LOG_INFO(this << " Transmission of embedded object is suspended"
-                         << " after " << actualSent << " bytes.");
+        NS_LOG_INFO(this << " Transmission of embedded object is suspended after " << actualSent
+                         << " bytes.");
     }
     else
     {
@@ -636,14 +635,11 @@ ThreeGppHttpServer::ServeFromTxBuffer(Ptr<Socket> socket)
     }
     else
     {
-        NS_LOG_INFO(this << " Failed to send object,"
-                         << " GetErrNo= " << socket->GetErrno() << ","
-                         << " suspending transmission"
-                         << " and waiting for another Tx opportunity.");
+        NS_LOG_INFO(this << " Failed to send object, GetErrNo= " << socket->GetErrno()
+                         << ", suspending transmission and waiting for another Tx opportunity.");
         return 0;
     }
-
-} // end of `uint32_t ServeFromTxBuffer (Ptr<Socket> socket)`
+}
 
 void
 ThreeGppHttpServer::SwitchToState(ThreeGppHttpServer::State_t state)

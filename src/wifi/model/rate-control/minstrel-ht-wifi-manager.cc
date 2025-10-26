@@ -79,6 +79,16 @@ const std::map<WifiModulationClass, MinstrelHtWifiManager::StandardInfo> minstre
             .maxStreams = 8,
         },
     },
+    {
+        WIFI_MOD_CLASS_EHT,
+        {
+            .groupType = WIFI_MINSTREL_GROUP_EHT,
+            .maxMcs = 13,
+            .maxWidth = MHz_u{320},
+            .guardIntervals = {NanoSeconds(3200), NanoSeconds(1600), NanoSeconds(800)},
+            .maxStreams = 8,
+        },
+    },
 };
 
 /// MinstrelHtWifiRemoteStation structure
@@ -307,10 +317,15 @@ MinstrelHtWifiManager::DoInitialize()
         m_numGroups += GetNumGroups(WIFI_MOD_CLASS_HE);
         m_numRates = minstrelHtStandardInfos.at(WIFI_MOD_CLASS_HE).maxMcs + 1;
     }
+    if (GetEhtSupported())
+    {
+        m_numGroups += GetNumGroups(WIFI_MOD_CLASS_EHT);
+        m_numRates = minstrelHtStandardInfos.at(WIFI_MOD_CLASS_EHT).maxMcs + 1;
+    }
 
     /**
      *  Initialize the groups array.
-     *  The HT groups come first, then the VHT ones, and finally the HE ones.
+     *  The HT groups come first, then the VHT ones, then the HE ones, and finally the EHT ones.
      *  Minstrel maintains different types of indexes:
      *  - A global continuous index, which identifies all rates within all groups, in [0,
      * m_numGroups * m_numRates]
@@ -339,6 +354,12 @@ MinstrelHtWifiManager::DoInitialize()
     {
         // Initialize all HE groups
         InitializeGroups(WIFI_MOD_CLASS_HE);
+    }
+
+    if (GetEhtSupported())
+    {
+        // Initialize all EHT groups
+        InitializeGroups(WIFI_MOD_CLASS_EHT);
     }
 }
 
@@ -1321,8 +1342,7 @@ MinstrelHtWifiManager::FindRate(MinstrelHtWifiRemoteStation* station)
                     /// set the rate that we're currently sampling
                     station->m_sampleRate = sampleIdx;
 
-                    NS_LOG_DEBUG("FindRate "
-                                 << "sampleRate=" << sampleIdx);
+                    NS_LOG_DEBUG("FindRate sampleRate=" << sampleIdx);
                     station->m_sampleTries--;
                     return sampleIdx;
                 }
@@ -1337,8 +1357,7 @@ MinstrelHtWifiManager::FindRate(MinstrelHtWifiRemoteStation* station)
                         /// set the rate that we're currently sampling
                         station->m_sampleRate = sampleIdx;
 
-                        NS_LOG_DEBUG("FindRate "
-                                     << "sampleRate=" << sampleIdx);
+                        NS_LOG_DEBUG("FindRate sampleRate=" << sampleIdx);
                         station->m_sampleTries--;
                         return sampleIdx;
                     }
@@ -1353,8 +1372,7 @@ MinstrelHtWifiManager::FindRate(MinstrelHtWifiRemoteStation* station)
 
     /// Continue using the best rate.
 
-    NS_LOG_DEBUG("FindRate "
-                 << "maxTpRrate=" << station->m_maxTpRate);
+    NS_LOG_DEBUG("FindRate maxTpRrate=" << station->m_maxTpRate);
     return station->m_maxTpRate;
 }
 
@@ -1673,6 +1691,12 @@ MinstrelHtWifiManager::RateInit(MinstrelHtWifiRemoteStation* station)
         {
             station->m_groupsTable[groupId].m_supported = false;
 
+            if ((m_minstrelGroups[groupId].type == WIFI_MINSTREL_GROUP_EHT) &&
+                !GetEhtSupported(station))
+            {
+                // It is a EHT group but the receiver does not support EHT: skip
+                continue;
+            }
             if ((m_minstrelGroups[groupId].type == WIFI_MINSTREL_GROUP_HE) &&
                 !GetHeSupported(station))
             {
@@ -1685,10 +1709,18 @@ MinstrelHtWifiManager::RateInit(MinstrelHtWifiRemoteStation* station)
                 // It is a VHT group but the receiver does not support VHT: skip
                 continue;
             }
-            if ((m_minstrelGroups[groupId].type != WIFI_MINSTREL_GROUP_HE) &&
+            if ((m_minstrelGroups[groupId].type != WIFI_MINSTREL_GROUP_EHT) &&
+                GetEhtSupported(station) && m_useLatestAmendmentOnly)
+            {
+                // It is not a EHT group and the receiver supports EHT: skip since
+                // UseLatestAmendmentOnly attribute is enabled
+                continue;
+            }
+            if (!GetEhtSupported(station) &&
+                (m_minstrelGroups[groupId].type != WIFI_MINSTREL_GROUP_HE) &&
                 GetHeSupported(station) && m_useLatestAmendmentOnly)
             {
-                // It is not a HE group and the receiver supports HE: skip since
+                // It is not a HE group and the receiver supports HE (but not EHT): skip since
                 // UseLatestAmendmentOnly attribute is enabled
                 continue;
             }
@@ -1814,9 +1846,7 @@ MinstrelHtWifiManager::CalculateRetransmits(MinstrelHtWifiRemoteStation* station
     uint32_t cwMax = 1023;
     Time cwTime;
     Time txTime;
-    Time dataTxTime;
     const auto slotTime = GetPhy()->GetSlot();
-    const auto ackTime = GetPhy()->GetSifs() + GetPhy()->GetBlockAckTxTime();
 
     if (station->m_groupsTable[groupId].m_ratesTable[rateId].ewmaProb < 1)
     {
@@ -1827,16 +1857,15 @@ MinstrelHtWifiManager::CalculateRetransmits(MinstrelHtWifiRemoteStation* station
         station->m_groupsTable[groupId].m_ratesTable[rateId].retryCount = 2;
         station->m_groupsTable[groupId].m_ratesTable[rateId].retryUpdated = true;
 
-        dataTxTime =
-            GetFirstMpduTxTime(
-                groupId,
-                GetMcsSupported(station,
-                                station->m_groupsTable[groupId].m_ratesTable[rateId].mcsIndex)) +
-            GetMpduTxTime(
-                groupId,
-                GetMcsSupported(station,
-                                station->m_groupsTable[groupId].m_ratesTable[rateId].mcsIndex)) *
-                (station->m_avgAmpduLen - 1);
+        auto mode =
+            GetMcsSupported(station, station->m_groupsTable[groupId].m_ratesTable[rateId].mcsIndex);
+        WifiTxVector txVector;
+        txVector.SetMode(mode);
+        txVector.SetPreambleType(GetPreambleForTransmission(mode.GetModulationClass()));
+
+        const auto dataTxTime = GetFirstMpduTxTime(groupId, mode) +
+                                GetMpduTxTime(groupId, mode) * (station->m_avgAmpduLen - 1);
+        const auto ackTime = GetPhy()->GetSifs() + GetEstimatedAckTxTime(txVector);
 
         /* Contention time for first 2 tries */
         cwTime = (cw / 2) * slotTime;
@@ -2099,6 +2128,19 @@ MinstrelHtWifiManager::GetHeGroupId(uint8_t streams, Time guardInterval, MHz_u c
 }
 
 std::size_t
+MinstrelHtWifiManager::GetEhtGroupId(uint8_t streams, Time guardInterval, MHz_u chWidth)
+{
+    NS_LOG_FUNCTION(this << streams << guardInterval << chWidth);
+    // This check is needed since HT is not supported in 6 GHz band
+    std::size_t allHtGroups = (GetHtSupported()) ? GetNumGroups(WIFI_MOD_CLASS_HT) : 0;
+    // This check is needed since VHT is not supported in 2.4 and 6 GHz bands
+    std::size_t allVhtGroups = (GetVhtSupported()) ? GetNumGroups(WIFI_MOD_CLASS_VHT) : 0;
+    const auto allHeGroups = GetNumGroups(WIFI_MOD_CLASS_HE);
+    const auto ehtGroupId = GetIdInGroup(WIFI_MOD_CLASS_EHT, streams, guardInterval, chWidth);
+    return allHtGroups + allVhtGroups + allHeGroups + ehtGroupId;
+}
+
+std::size_t
 MinstrelHtWifiManager::GetGroupIdForType(McsGroupType type,
                                          uint8_t streams,
                                          Time guardInterval,
@@ -2112,6 +2154,8 @@ MinstrelHtWifiManager::GetGroupIdForType(McsGroupType type,
         return GetVhtGroupId(streams, guardInterval, chWidth);
     case WIFI_MINSTREL_GROUP_HE:
         return GetHeGroupId(streams, guardInterval, chWidth);
+    case WIFI_MINSTREL_GROUP_EHT:
+        return GetEhtGroupId(streams, guardInterval, chWidth);
     default:
         NS_ABORT_MSG("Unknown group type: " << type);
     }

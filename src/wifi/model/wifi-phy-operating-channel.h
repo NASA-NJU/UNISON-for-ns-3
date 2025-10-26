@@ -12,8 +12,9 @@
 
 #include "wifi-phy-band.h"
 #include "wifi-phy-common.h"
+#include "wifi-ru.h"
 
-#include "ns3/he-ru.h"
+#include "ns3/wifi-export.h"
 
 #include <optional>
 #include <set>
@@ -26,7 +27,7 @@ namespace ns3
 /**
  * A structure containing the information about a frequency channel
  */
-struct FrequencyChannelInfo
+struct WIFI_EXPORT FrequencyChannelInfo
 {
     /**
      * @brief spaceship operator.
@@ -58,7 +59,7 @@ std::ostream& operator<<(std::ostream& os, const FrequencyChannelInfo& info);
  *
  * Class that keeps track of all information about the current PHY operating channel.
  */
-class WifiPhyOperatingChannel
+class WIFI_EXPORT WifiPhyOperatingChannel
 {
   public:
     /// Typedef for a const iterator pointing to a channel in the set of available channels
@@ -127,6 +128,13 @@ class WifiPhyOperatingChannel
 
     static const std::set<FrequencyChannelInfo>
         m_frequencyChannels; //!< Available frequency channels
+
+    /**
+     * Return a reference to the set of all available frequency channels
+     *
+     * @return reference to the set of frequency channels
+     */
+    static const std::set<FrequencyChannelInfo>& GetFrequencyChannels();
 
     /**
      * Return true if a valid channel has been set, false otherwise.
@@ -360,7 +368,7 @@ class WifiPhyOperatingChannel
                                    MHz_u width,
                                    WifiStandard standard,
                                    WifiPhyBand band,
-                                   ConstIterator start = m_frequencyChannels.begin());
+                                   ConstIterator start = GetFrequencyChannels().begin());
 
     /**
      * Get channel number of the primary channel
@@ -388,7 +396,7 @@ class WifiPhyOperatingChannel
      *              it is the width of the PPDU for which the RU is allocated
      * @return the channel indices of the minimum subset of 20 MHz channels containing the given RU
      */
-    std::set<uint8_t> Get20MHzIndicesCoveringRu(HeRu::RuSpec ru, MHz_u width) const;
+    std::set<uint8_t> Get20MHzIndicesCoveringRu(WifiRu::RuSpec ru, MHz_u width) const;
 
     /**
      * Get the index of the segment that contains a given primary channel.

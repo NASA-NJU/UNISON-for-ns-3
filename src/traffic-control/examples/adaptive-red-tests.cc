@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 2015 NITK Surathkal
  *
@@ -498,10 +497,8 @@ main(int argc, char* argv[])
 
     if (writeForPlot)
     {
-        filePlotQueueDisc << pathOut << "/"
-                          << "ared-queue-disc.plotme";
-        filePlotQueueDiscAvg << pathOut << "/"
-                             << "ared-queue-disc_avg.plotme";
+        filePlotQueueDisc << pathOut << "/ared-queue-disc.plotme";
+        filePlotQueueDiscAvg << pathOut << "/ared-queue-disc_avg.plotme";
 
         remove(filePlotQueueDisc.str().c_str());
         remove(filePlotQueueDiscAvg.str().c_str());

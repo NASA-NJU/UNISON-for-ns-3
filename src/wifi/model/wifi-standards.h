@@ -10,10 +10,10 @@
 #define WIFI_STANDARD_H
 
 #include "wifi-phy-band.h"
-#include "wifi-types.h"
 #include "wifi-units.h"
 
 #include "ns3/abort.h"
+#include "ns3/wifi-export.h"
 
 #include <list>
 #include <map>
@@ -78,7 +78,18 @@ operator<<(std::ostream& os, WifiStandard standard)
 /**
  * @brief map a given standard configured by the user to the allowed PHY bands
  */
-extern const std::map<WifiStandard, std::list<WifiPhyBand>> wifiStandards;
+WIFI_EXPORT extern const std::map<WifiStandard, std::list<WifiPhyBand>> wifiStandards;
+
+/**
+ * @ingroup wifi
+ * @brief Enumeration of frequency channel types
+ */
+enum class FrequencyChannelType : uint8_t
+{
+    DSSS = 0,
+    OFDM,
+    CH_80211P
+};
 
 /**
  * Get the type of the frequency channel for the given standard

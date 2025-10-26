@@ -243,9 +243,8 @@ class LteFfrAlgorithm : public Object
     bool m_enabledInUplink; /**< If true FR algorithm will also work in Uplink*/
 
     bool m_needReconfiguration; /**< If true FR algorithm will be reconfigured*/
+};
 
-}; // end of class LteFfrAlgorithm
-
-} // end of namespace ns3
+} // namespace ns3
 
 #endif /* LTE_FFR_ALGORITHM_H */

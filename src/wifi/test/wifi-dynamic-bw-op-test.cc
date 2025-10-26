@@ -123,6 +123,7 @@ WifiUseAvailBwTest::Transmit(uint8_t bss,
 {
     auto psdu = psduMap.begin()->second;
     Time now = Simulator::Now();
+    const auto band = DynamicCast<WifiNetDevice>(m_apDevices.Get(0))->GetPhy()->GetPhyBand();
 
     // Log all frames that are not management frames (we are only interested in data
     // frames and acknowledgments) and have been transmitted after 400ms (so as to
@@ -130,7 +131,7 @@ WifiUseAvailBwTest::Transmit(uint8_t bss,
     if (!psdu->GetHeader(0).IsMgt() && now > MilliSeconds(400))
     {
         m_txPsdus.push_back({now,
-                             WifiPhy::CalculateTxDuration(psduMap, txVector, WIFI_PHY_BAND_5GHZ),
+                             WifiPhy::CalculateTxDuration(psduMap, txVector, band),
                              bss,
                              psdu->GetHeader(0),
                              psdu->GetNMpdus(),
@@ -140,8 +141,8 @@ WifiUseAvailBwTest::Transmit(uint8_t bss,
     NS_LOG_INFO(now << " BSS " << +bss << " " << psdu->GetHeader(0).GetTypeString() << " seq "
                     << psdu->GetHeader(0).GetSequenceNumber() << " to " << psdu->GetAddr1()
                     << " #MPDUs " << psdu->GetNMpdus() << " size " << psdu->GetSize()
-                    << " TX duration "
-                    << WifiPhy::CalculateTxDuration(psduMap, txVector, WIFI_PHY_BAND_5GHZ) << "\n"
+                    << " TX duration " << WifiPhy::CalculateTxDuration(psduMap, txVector, band)
+                    << "\n"
                     << "TXVECTOR " << txVector << "\n");
 
     // when AP of BSS 1 starts transmitting (after 1.5 s), we generate packets
@@ -154,8 +155,8 @@ WifiUseAvailBwTest::Transmit(uint8_t bss,
         client->SetAttribute("Interval", TimeValue(MicroSeconds(0)));
         client->SetRemote(m_sockets[0]);
         m_apDevices.Get(0)->GetNode()->AddApplication(client);
-        client->SetStartTime(Seconds(0)); // start now
-        client->SetStopTime(Seconds(1));  // stop in a second
+        client->SetStartTime(TimeStep(1)); // start shortly after the start of PPDU in BSS 1
+        client->SetStopTime(Seconds(1));   // stop in a second
         client->Initialize();
 
         // after 1us (to allow for propagation delay), the largest idle primary
@@ -191,11 +192,16 @@ WifiUseAvailBwTest::DoRun()
     SpectrumWifiPhyHelper phy;
     phy.SetChannel(spectrumChannel);
 
+    // increase TX power to ensure signal spread over 160 MHz will trigger CCA busy indication on
+    // each 20 MHz subchannel
+    phy.Set("TxPowerStart", DoubleValue(20));
+    phy.Set("TxPowerEnd", DoubleValue(20));
+
     WifiHelper wifi;
-    wifi.SetStandard(WIFI_STANDARD_80211ax);
+    wifi.SetStandard(WIFI_STANDARD_80211be);
     wifi.SetRemoteStationManager("ns3::ConstantRateWifiManager",
                                  "DataMode",
-                                 StringValue("HeMcs0"),
+                                 StringValue("EhtMcs0"),
                                  "ControlMode",
                                  StringValue("OfdmRate6Mbps"));
 
@@ -463,6 +469,21 @@ WifiDynamicBwOpTestSuite::WifiDynamicBwOpTestSuite()
      */
     AddTestCase(
         new WifiUseAvailBwTest({"{50, 160, BAND_5GHZ, 5}", "{42, 80, BAND_5GHZ, 2}"}, MHz_u{80}),
+        TestCase::Duration::QUICK);
+    /**
+     *                                                  ────────────── primary 160 ──────────────
+     *                                                           primary20
+     *          ┌────┬────┬────┬────┬────┬────┬────┬────┬────┬────┬────┬────┬────┬────┬────┬────┐
+     *  BSS 0   │  1 │  5 │  9 │ 13 │ 17 │ 21 │ 25 │ 29 │ 33 │ 37 │ 41 │ 45 │ 49 │ 53 │ 57 │ 61 │
+     *          └────┴────┴────┴────┴────┴────┴────┴────┴────┴────┴────┴────┴────┴────┴────┴────┘
+     *
+     *          ┌────┬────┬────┬────┬────┬────┬────┬────┐
+     *  BSS 1   │  1 │  5 │  9 │ 13 │ 17 │ 21 │ 25 │ 29 │
+     *          └────┴────┴────┴────┴────┴────┴────┴────┘
+     *                                            primary20
+     */
+    AddTestCase(
+        new WifiUseAvailBwTest({"{31, 320, BAND_6GHZ, 10}", "{15, 160, BAND_6GHZ, 7}"}, 160),
         TestCase::Duration::QUICK);
 }
 

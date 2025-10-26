@@ -19,6 +19,7 @@
 #include "ns3/ptr.h"
 
 #include <ostream>
+#include <set>
 #include <vector>
 
 /**
@@ -38,9 +39,6 @@ namespace ns3
 class WifiNetDevice;
 class WifiMode;
 class Time;
-
-/// maximum propagation delay
-static constexpr uint8_t MAX_PROPAGATION_DELAY_USEC = 1;
 
 /**
  * typedef for a pair of start and stop frequencies to represent a band
@@ -515,7 +513,8 @@ enum WifiChannelListType : uint8_t
     WIFI_CHANLIST_PRIMARY = 0,
     WIFI_CHANLIST_SECONDARY,
     WIFI_CHANLIST_SECONDARY40,
-    WIFI_CHANLIST_SECONDARY80
+    WIFI_CHANLIST_SECONDARY80,
+    WIFI_CHANLIST_SECONDARY160
 };
 
 /**
@@ -538,8 +537,10 @@ operator<<(std::ostream& os, WifiChannelListType type)
         return (os << "SECONDARY40");
     case WIFI_CHANLIST_SECONDARY80:
         return (os << "SECONDARY80");
+    case WIFI_CHANLIST_SECONDARY160:
+        return (os << "SECONDARY160");
     default:
-        NS_FATAL_ERROR("Unknown wifi channel type");
+        NS_FATAL_ERROR("Unknown wifi channel type " << +type);
         return (os << "UNKNOWN");
     }
 }
@@ -572,6 +573,8 @@ operator<<(std::ostream& os, WifiChannelWidthType width)
         return (os << "160MHz");
     case WifiChannelWidthType::CW_80_PLUS_80MHZ:
         return (os << "80+80MHz");
+    case WifiChannelWidthType::CW_320MHZ:
+        return (os << "320MHz");
     case WifiChannelWidthType::CW_2160MHZ:
         return (os << "2160MHz");
     default:
@@ -682,6 +685,15 @@ bool IsUlMu(WifiPreamble preamble);
 WifiModulationClass GetModulationClassForStandard(WifiStandard standard);
 
 /**
+ * Get the supported channel width set that can be advertised in PHY capabilities.
+ *
+ * @param standard the standard
+ * @param band the PHY band
+ * @return the supported channel width set that can be advertised for the given standard and band
+ */
+std::set<MHz_u> GetSupportedChannelWidthSet(WifiStandard standard, WifiPhyBand band);
+
+/**
  * Get the maximum channel width allowed for the given modulation class.
  *
  * @param modulation the modulation class
@@ -704,6 +716,56 @@ MHz_u GetChannelWidthInMhz(WifiChannelWidthType width);
  * @return true if the provided preamble corresponds to an EHT transmission
  */
 bool IsEht(WifiPreamble preamble);
+
+/**
+ * @brief map a given channel list type to the corresponding scaling factor
+ */
+const std::map<WifiChannelListType, dBm_u> channelTypeToScalingFactor{
+    {WIFI_CHANLIST_PRIMARY, 0.0},
+    {WIFI_CHANLIST_SECONDARY, 0.0},
+    {WIFI_CHANLIST_SECONDARY40, 3.0},
+    {WIFI_CHANLIST_SECONDARY80, 6.0},
+    {WIFI_CHANLIST_SECONDARY160, 12.0},
+};
+
+/**
+ * A struct for both SNR and PER
+ */
+struct SnrPer
+{
+    double snr{0.0}; ///< SNR in linear scale
+    double per{1.0}; ///< PER
+
+    /**
+     * Default constructor.
+     */
+    SnrPer()
+    {
+    }
+
+    /**
+     * Constructor for SnrPer.
+     *
+     * @param s the SNR in linear scale
+     * @param p the PER
+     */
+    SnrPer(double s, double p)
+        : snr(s),
+          per(p)
+    {
+    }
+};
+
+/**
+ * A pair containing information on the PHY header chunk, namely
+ * the start and stop times of the chunk and the WifiMode used.
+ */
+typedef std::pair<std::pair<Time /* start */, Time /* stop */>, WifiMode> PhyHeaderChunkInfo;
+/**
+ * A map of PhyHeaderChunkInfo elements per PPDU field.
+ * @see PhyHeaderChunkInfo
+ */
+typedef std::map<WifiPpduField, PhyHeaderChunkInfo> PhyHeaderSections;
 
 } // namespace ns3
 

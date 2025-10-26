@@ -322,6 +322,7 @@ FrameExchangeManager::ReceivedMacHdr(const WifiMacHeader& macHdr,
 {
     NS_LOG_FUNCTION(this << macHdr << txVector << psduDuration.As(Time::MS));
     m_ongoingRxInfo = {macHdr, txVector, Simulator::Now() + psduDuration};
+    UpdateNav(macHdr, txVector, psduDuration);
 }
 
 std::optional<std::reference_wrapper<const FrameExchangeManager::OngoingRxInfo>>
@@ -612,14 +613,8 @@ FrameExchangeManager::ForwardMpduDown(Ptr<WifiMpdu> mpdu, WifiTxVector& txVector
     auto psdu = Create<WifiPsdu>(mpdu, false);
     FinalizeMacHeader(psdu);
     m_allowedWidth = std::min(m_allowedWidth, txVector.GetChannelWidth());
-    auto txDuration = WifiPhy::CalculateTxDuration(psdu, txVector, m_phy->GetPhyBand());
-    // The TXNAV timer is a single timer, shared by the EDCAFs within a STA, that is initialized
-    // with the duration from the Duration/ID field in the frame most recently successfully
-    // transmitted by the TXOP holder, except for PS-Poll frames. (Sec.10.23.2.2 IEEE 802.11-2020)
-    if (!mpdu->GetHeader().IsPsPoll())
-    {
-        m_txNav = Max(m_txNav, Simulator::Now() + txDuration + mpdu->GetHeader().GetDuration());
-    }
+    const auto txDuration = WifiPhy::CalculateTxDuration(psdu, txVector, m_phy->GetPhyBand());
+    SetTxNav(mpdu, txDuration);
     m_phy->Send(psdu, txVector);
 }
 
@@ -871,13 +866,13 @@ FrameExchangeManager::DoSendCtsAfterRts(const WifiMacHeader& rtsHdr,
 
 void
 FrameExchangeManager::SendCtsAfterRts(const WifiMacHeader& rtsHdr,
-                                      WifiMode rtsTxMode,
+                                      const WifiTxVector& rtsTxVector,
                                       double rtsSnr)
 {
-    NS_LOG_FUNCTION(this << rtsHdr << rtsTxMode << rtsSnr);
+    NS_LOG_FUNCTION(this << rtsHdr << rtsTxVector << rtsSnr);
 
     WifiTxVector ctsTxVector =
-        GetWifiRemoteStationManager()->GetCtsTxVector(rtsHdr.GetAddr2(), rtsTxMode);
+        GetWifiRemoteStationManager()->GetCtsTxVector(rtsHdr.GetAddr2(), rtsTxVector.GetMode());
     DoSendCtsAfterRts(rtsHdr, ctsTxVector, rtsSnr);
 }
 
@@ -1018,11 +1013,11 @@ FrameExchangeManager::TransmissionFailed(bool forceCurrentCw)
         m_dcf->UpdateFailedCw(m_linkId);
     }
     m_sentFrameTo.clear();
+    // reset TXNAV because transmission failed
+    ResetTxNav();
     // A non-QoS station always releases the channel upon a transmission failure
     NotifyChannelReleased(m_dcf);
     m_dcf = nullptr;
-    // reset TXNAV because transmission failed
-    m_txNav = Simulator::Now();
 }
 
 void
@@ -1089,44 +1084,62 @@ FrameExchangeManager::CtsTimeout(Ptr<WifiMpdu> rts, const WifiTxVector& txVector
 {
     NS_LOG_FUNCTION(this << *rts << txVector);
 
-    DoCtsTimeout(Create<WifiPsdu>(m_mpdu, true));
+    DoCtsTimeout(WifiPsduMap{{SU_STA_ID, Create<WifiPsdu>(m_mpdu, true)}});
     m_mpdu = nullptr;
 }
 
 void
-FrameExchangeManager::DoCtsTimeout(Ptr<WifiPsdu> psdu)
+FrameExchangeManager::DoCtsTimeout(const WifiPsduMap& psduMap)
 {
-    NS_LOG_FUNCTION(this << *psdu);
+    NS_LOG_FUNCTION(this << psduMap);
 
-    // GetUpdateCwOnCtsTimeout() needs to be called before resetting m_sentRtsTo
+    // these functions need to be called before resetting m_sentRtsTo
     const auto updateCw = GetUpdateCwOnCtsTimeout();
+    const auto reportRts = GetReportRtsFailed();
 
     m_sentRtsTo.clear();
-    for (const auto& mpdu : *PeekPointer(psdu))
+    for (const auto& [staId, psdu] : psduMap)
     {
-        if (mpdu->IsQueued())
+        for (const auto& mpdu : *PeekPointer(psdu))
         {
-            mpdu->ResetInFlight(m_linkId);
+            if (mpdu->IsQueued())
+            {
+                mpdu->ResetInFlight(m_linkId);
+            }
         }
-    }
 
-    GetWifiRemoteStationManager()->ReportRtsFailed(psdu->GetHeader(0));
-    if (auto droppedMpdu = DropMpduIfRetryLimitReached(psdu))
-    {
-        GetWifiRemoteStationManager()->ReportFinalRtsFailed(droppedMpdu->GetHeader());
-    }
+        if (const auto& hdr = psdu->GetHeader(0);
+            !GetIndividuallyAddressedRecipient(m_mac, hdr).IsGroup())
+        {
+            if (reportRts)
+            {
+                GetWifiRemoteStationManager()->ReportRtsFailed(hdr);
+            }
 
-    // Make the sequence numbers of the MPDUs available again if the MPDUs have never
-    // been transmitted, both in case the MPDUs have been discarded and in case the
-    // MPDUs have to be transmitted (because a new sequence number is assigned to
-    // MPDUs that have never been transmitted and are selected for transmission)
-    ReleaseSequenceNumbers(psdu);
+            if (auto droppedMpdu = DropMpduIfRetryLimitReached(psdu))
+            {
+                GetWifiRemoteStationManager()->ReportFinalRtsFailed(droppedMpdu->GetHeader());
+            }
+        }
+
+        // Make the sequence numbers of the MPDUs available again if the MPDUs have never
+        // been transmitted, both in case the MPDUs have been discarded and in case the
+        // MPDUs have to be transmitted (because a new sequence number is assigned to
+        // MPDUs that have never been transmitted and are selected for transmission)
+        ReleaseSequenceNumbers(psdu);
+    }
 
     TransmissionFailed(!updateCw);
 }
 
 bool
 FrameExchangeManager::GetUpdateCwOnCtsTimeout() const
+{
+    return true;
+}
+
+bool
+FrameExchangeManager::GetReportRtsFailed() const
 {
     return true;
 }
@@ -1243,11 +1256,9 @@ FrameExchangeManager::Receive(Ptr<const WifiPsdu> psdu,
             // has been correctly received)
             NS_ASSERT(perMpduStatus.empty() || (perMpduStatus.size() == 1 && perMpduStatus[0]));
             // Ack and CTS do not carry Addr2
-            if (!psdu->GetHeader(0).IsAck() && !psdu->GetHeader(0).IsCts())
+            if (const auto& hdr = psdu->GetHeader(0); !hdr.IsAck() && !hdr.IsCts())
             {
-                GetWifiRemoteStationManager()->ReportRxOk(psdu->GetHeader(0).GetAddr2(),
-                                                          rxSignalInfo,
-                                                          txVector);
+                GetWifiRemoteStationManager()->ReportRxOk(psdu->GetAddr2(), rxSignalInfo, txVector);
             }
             ReceiveMpdu(*(psdu->begin()), rxSignalInfo, txVector, perMpduStatus.empty());
         }
@@ -1285,23 +1296,26 @@ FrameExchangeManager::PostProcessFrame(Ptr<const WifiPsdu> psdu, const WifiTxVec
 {
     NS_LOG_FUNCTION(this << psdu << txVector);
 
-    UpdateNav(psdu, txVector);
+    UpdateNav(psdu->GetHeader(0), txVector);
 }
 
 void
-FrameExchangeManager::UpdateNav(Ptr<const WifiPsdu> psdu, const WifiTxVector& txVector)
+FrameExchangeManager::UpdateNav(const WifiMacHeader& hdr,
+                                const WifiTxVector& txVector,
+                                const Time& surplus)
 {
-    NS_LOG_FUNCTION(this << psdu << txVector);
+    NS_LOG_FUNCTION(this << hdr << txVector << surplus.As(Time::US));
 
-    if (!psdu->HasNav())
+    if (!hdr.HasNav())
     {
         return;
     }
 
-    Time duration = psdu->GetDuration();
+    Time duration = hdr.GetDuration();
     NS_LOG_DEBUG("Duration/ID=" << duration);
+    duration += surplus;
 
-    if (psdu->GetAddr1() == m_self)
+    if (hdr.GetAddr1() == m_self)
     {
         // When the received frame's RA is equal to the STA's own MAC address, the STA
         // shall not update its NAV (IEEE 802.11-2016, sec. 10.3.2.4)
@@ -1325,14 +1339,16 @@ FrameExchangeManager::UpdateNav(Ptr<const WifiPsdu> psdu, const WifiTxVector& tx
         // The “CTS_Time” shall be calculated using the length of the CTS frame and the data
         // rate at which the RTS frame used for the most recent NAV update was received
         // (IEEE 802.11-2016 sec. 10.3.2.4)
-        if (psdu->GetHeader(0).IsRts())
+        if (hdr.IsRts())
         {
+            auto addr2 = hdr.GetAddr2();
             WifiTxVector ctsTxVector =
-                GetWifiRemoteStationManager()->GetCtsTxVector(psdu->GetAddr2(), txVector.GetMode());
+                GetWifiRemoteStationManager()->GetCtsTxVector(addr2, txVector.GetMode());
             Time navResetDelay =
                 2 * m_phy->GetSifs() +
                 WifiPhy::CalculateTxDuration(GetCtsSize(), ctsTxVector, m_phy->GetPhyBand()) +
                 WifiPhy::CalculatePhyPreambleAndHeaderDuration(ctsTxVector) + 2 * m_phy->GetSlot();
+            m_navResetEvent.Cancel();
             m_navResetEvent =
                 Simulator::Schedule(navResetDelay, &FrameExchangeManager::NavResetTimeout, this);
         }
@@ -1348,6 +1364,29 @@ FrameExchangeManager::NavResetTimeout()
     NS_LOG_FUNCTION(this);
     m_navEnd = Simulator::Now();
     m_channelAccessManager->NotifyNavResetNow(Seconds(0));
+}
+
+void
+FrameExchangeManager::SetTxNav(Ptr<const WifiMpdu> mpdu, const Time& txDuration)
+{
+    // The TXNAV timer is a single timer, shared by the EDCAFs within a STA, that is initialized
+    // with the duration from the Duration/ID field in the frame most recently successfully
+    // transmitted by the TXOP holder, except for PS-Poll frames. The TXNAV timer begins counting
+    // down from the end of the transmission of the PPDU containing that frame.
+    // (Sec.10.23.2.2 IEEE 802.11-2020)
+    if (!mpdu->GetHeader().IsPsPoll())
+    {
+        const auto txNav = Simulator::Now() + txDuration + mpdu->GetHeader().GetDuration();
+        NS_LOG_DEBUG("Setting TXNAV to " << txNav.As(Time::S));
+        m_txNav = Max(m_txNav, txNav);
+    }
+}
+
+void
+FrameExchangeManager::ResetTxNav()
+{
+    NS_LOG_FUNCTION(this);
+    m_txNav = Simulator::Now();
 }
 
 bool
@@ -1386,7 +1425,7 @@ FrameExchangeManager::ReceiveMpdu(Ptr<const WifiMpdu> mpdu,
                                                      &FrameExchangeManager::SendCtsAfterRts,
                                                      this,
                                                      hdr,
-                                                     txVector.GetMode(),
+                                                     txVector,
                                                      rxSnr);
             }
             else

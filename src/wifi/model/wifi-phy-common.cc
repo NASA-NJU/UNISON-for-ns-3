@@ -232,6 +232,45 @@ GetModulationClassForStandard(WifiStandard standard)
     return modulationClass;
 }
 
+std::set<MHz_u>
+GetSupportedChannelWidthSet(WifiStandard standard, WifiPhyBand band)
+{
+    switch (standard)
+    {
+    case WIFI_STANDARD_80211p:
+        return {MHz_u{5}};
+    case WIFI_STANDARD_80211a:
+    case WIFI_STANDARD_80211g:
+        return {MHz_u{20}};
+    case WIFI_STANDARD_80211b:
+        return {MHz_u{22}};
+    case WIFI_STANDARD_80211n:
+        return {MHz_u{20}, MHz_u{40}};
+    case WIFI_STANDARD_80211ac:
+        return {MHz_u{80}, MHz_u{160}};
+    case WIFI_STANDARD_80211ax:
+        return (band == WifiPhyBand::WIFI_PHY_BAND_2_4GHZ)
+                   ? std::set<MHz_u>{MHz_u{20}, MHz_u{40}}
+                   : std::set<MHz_u>{MHz_u{20}, MHz_u{80}, MHz_u{160}};
+    case WIFI_STANDARD_80211be:
+        switch (band)
+        {
+        case WifiPhyBand::WIFI_PHY_BAND_2_4GHZ:
+            return {MHz_u{20}, MHz_u{40}};
+        case WifiPhyBand::WIFI_PHY_BAND_5GHZ:
+            return {MHz_u{20}, MHz_u{80}, MHz_u{160}};
+        case WifiPhyBand::WIFI_PHY_BAND_6GHZ:
+            return {MHz_u{20}, MHz_u{80}, MHz_u{160}, MHz_u{320}};
+        default:
+            NS_ABORT_MSG("Unknown band: " << band);
+            return {};
+        }
+    default:
+        NS_ABORT_MSG("Unknown standard: " << standard);
+        return {};
+    }
+}
+
 MHz_u
 GetMaximumChannelWidth(WifiModulationClass modulation)
 {
@@ -245,14 +284,11 @@ GetMaximumChannelWidth(WifiModulationClass modulation)
         return MHz_u{20};
     case WIFI_MOD_CLASS_HT:
         return MHz_u{40};
-    // NOLINTBEGIN(bugprone-branch-clone)
     case WIFI_MOD_CLASS_VHT:
     case WIFI_MOD_CLASS_HE:
         return MHz_u{160};
     case WIFI_MOD_CLASS_EHT:
-        return MHz_u{
-            160}; // TODO update when 320 MHz channels are supported and remove clang-tidy guards
-    // NOLINTEND(bugprone-branch-clone)
+        return MHz_u{320};
     default:
         NS_ABORT_MSG("Unknown modulation class: " << modulation);
         return MHz_u{0};
@@ -281,6 +317,8 @@ GetChannelWidthInMhz(WifiChannelWidthType width)
     case WifiChannelWidthType::CW_160MHZ:
     case WifiChannelWidthType::CW_80_PLUS_80MHZ:
         return MHz_u{160};
+    case WifiChannelWidthType::CW_320MHZ:
+        return MHz_u{320};
     case WifiChannelWidthType::CW_2160MHZ:
         return MHz_u{2160};
     default:

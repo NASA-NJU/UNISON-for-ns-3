@@ -468,14 +468,14 @@ class AnimationInterface
         uint8_t r; ///< r
         uint8_t g; ///< g
         uint8_t b; ///< b
-    };             ///< RGB structure
+    };
 
     /// P2pLinkNodeIdPair structure
     struct P2pLinkNodeIdPair
     {
         uint32_t fromNode; ///< from node
         uint32_t toNode;   ///< to node
-    };                     ///< P2P link node id pair
+    };
 
     /// LinkProperties structure
     struct LinkProperties
@@ -483,7 +483,7 @@ class AnimationInterface
         std::string fromNodeDescription; ///< from node description
         std::string toNodeDescription;   ///< to node description
         std::string linkDescription;     ///< link description
-    };                                   ///< link properties
+    };
 
     /// LinkPairCompare structure
     struct LinkPairCompare
@@ -516,14 +516,14 @@ class AnimationInterface
     {
         std::string destination; ///< destination
         uint32_t fromNodeId;     ///< from node ID
-    };                           ///< IPv4 route track element
+    };
 
     /// Ipv4RoutePathElement structure
     struct Ipv4RoutePathElement
     {
         uint32_t nodeId;     ///< node ID
         std::string nextHop; ///< next hop
-    };                       ///< IPv4 route path element
+    };
 
     /// ProtocolType enumeration
     enum ProtocolType
@@ -531,7 +531,6 @@ class AnimationInterface
         UAN,
         LTE,
         WIFI,
-        WIMAX,
         CSMA,
         LRWPAN
     };
@@ -541,7 +540,7 @@ class AnimationInterface
     {
         double width;  ///< width
         double height; ///< height
-    };                 ///< node size
+    };
 
     typedef std::map<P2pLinkNodeIdPair, LinkProperties, LinkPairCompare>
         LinkPropertiesMap;                                       ///< LinkPropertiesMap typedef
@@ -652,7 +651,6 @@ class AnimationInterface
     uint32_t m_wifiPhyRxDropCounterId; ///< wifi Phy receive drop counter ID
 
     AnimUidPacketInfoMap m_pendingWifiPackets;   ///< pending wifi packets
-    AnimUidPacketInfoMap m_pendingWimaxPackets;  ///< pending wimax packets
     AnimUidPacketInfoMap m_pendingLrWpanPackets; ///< pending LR-WPAN packets
     AnimUidPacketInfoMap m_pendingLtePackets;    ///< pending LTE packets
     AnimUidPacketInfoMap m_pendingCsmaPackets;   ///< pending CSMA packets
@@ -1078,20 +1076,6 @@ class AnimationInterface
      * @param p the packet
      */
     void LrWpanPhyRxBeginTrace(std::string context, Ptr<const Packet> p);
-    /**
-     * WIMax transmit trace function
-     * @param context the context
-     * @param p the packet
-     * @param m the MAC address
-     */
-    void WimaxTxTrace(std::string context, Ptr<const Packet> p, const Mac48Address& m);
-    /**
-     * WIMax receive trace function
-     * @param context the context
-     * @param p the packet
-     * @param m the MAC address
-     */
-    void WimaxRxTrace(std::string context, Ptr<const Packet> p, const Mac48Address& m);
     /**
      * CSMA Phy transmit begin trace function
      * @param context the context

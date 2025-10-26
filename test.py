@@ -8,6 +8,7 @@ import argparse
 import fnmatch
 import os
 import queue
+import re
 import shutil
 import signal
 import subprocess
@@ -1248,7 +1249,7 @@ def run_tests():
         # user wants to run everything.
         #
         if len(args.example):
-            build_cmd = "./ns3 build %s" % os.path.basename(args.example)
+            build_cmd = "./ns3 build %s" % os.path.basename(args.example.replace("*", ""))
         else:
             build_cmd = "./ns3"
 
@@ -1407,8 +1408,8 @@ def run_tests():
                 standard_out = standard_out.decode()
             list_items = standard_out.split("\n")
             list_items.sort()
-        print("Test Type    Test Name")
-        print("---------    ---------")
+        print("Test Type            Test Name")
+        print("---------------      ---------")
         for item in list_items:
             if len(item.strip()):
                 print(item)
@@ -1424,7 +1425,7 @@ def run_tests():
             python_examples_sorted.sort()
             examples_sorted.extend(python_examples_sorted)
         for item in examples_sorted:
-            print("example     ", item)
+            print("example             ", item)
         print()
 
     if args.kinds or args.list:
@@ -1656,11 +1657,15 @@ def run_tests():
                 multiple = ""
             else:
                 multiple = " --stop-on-failure"
-            if len(args.fullness):
-                fullness = args.fullness.upper()
-                fullness = " --fullness=%s" % fullness
-            else:
-                fullness = " --fullness=QUICK"
+
+            if args.fullness:
+                if len(args.fullness):
+                    fullness = args.fullness.upper()
+                    fullness = " --fullness=%s" % fullness
+                else:
+                    fullness = " --fullness=QUICK"
+            elif args.only_fullness:
+                fullness = " --only-fullness=%s" % args.only_fullness.upper()
 
             path_cmd = os.path.join(
                 "utils", test_runner_name + " --test-name=%s%s%s" % (test, multiple, fullness)
@@ -1710,14 +1715,51 @@ def run_tests():
     #  ./test.py:                                           run all of the examples
     #  ./test.py --constrain=unit                           run no examples
     #  ./test.py --constrain=example                        run all of the examples
-    #  ./test.py --suite=some-test-suite:                   run no examples
-    #  ./test.py --example=some-example:                    run the single example
-    #  ./test.py --suite=some-suite --example=some-example: run the single example
+    #  ./test.py --suite=some-test-suite                    run no examples
+    #  ./test.py --example=some-example                     run the single example with no parameters
+    #  ./test.py --example="some-example --args=2"          run the single example with custom parameters
+    #  ./test.py --example=some-example*                    run the all examples-to-run.py instances with said example
+    #  ./test.py --suite=some-suite --example=some-example  run the single example
     #
     #
-    if len(args.suite) == 0 and len(args.example) == 0 and len(args.pyexample) == 0:
+    if len(args.suite) == 0 and len(args.pyexample) == 0:
         if len(args.constrain) == 0 or args.constrain == "example":
             if ENABLE_EXAMPLES:
+                if args.example:
+                    if args.example.endswith("*"):
+                        # If an example name is passed without arguments, we filter all examples containing said program
+                        example_tests = list(
+                            filter(lambda x: args.example[:-1] in x[0], example_tests)
+                        )
+                        args.example_args = []
+                    else:
+                        example_tests = list(
+                            filter(
+                                lambda x: " ".join([args.example, *args.example_args])
+                                == x[0].split("/")[-1],
+                                example_tests,
+                            )
+                        )
+                        args.example_args = []
+
+                    if not example_tests or args.example_args:
+                        # If an example name is passed with arguments, we create an example entry for said example
+                        example_name = " ".join([args.example, *args.example_args])
+                        example_path = "%s%s-%s%s" % (
+                            APPNAME,
+                            VERSION,
+                            args.example,
+                            BUILD_PROFILE_SUFFIX,
+                        )
+                        if example_path in ns3_runnable_programs_dictionary:
+                            example_path = ns3_runnable_programs_dictionary[example_path]
+                            example_path += ".exe" if sys.platform == "win32" else ""
+                            example_path = " ".join([example_path, *args.example_args])
+                            example_tests = [(example_name, example_path, "True", "True", "QUICK")]
+                        else:
+                            print("No example matching the name %s" % example_name)
+                            example_tests = []
+
                 for name, test, do_run, do_valgrind_run, fullness in example_tests:
                     # Remove any arguments and directory names from test.
                     test_name = test.split(" ", 1)[0]
@@ -1771,44 +1813,6 @@ def run_tests():
                             input_queue.put(job)
                             jobs = jobs + 1
                             total_tests = total_tests + 1
-
-    elif len(args.example):
-        # Add the proper prefix and suffix to the example name to
-        # match what is done in the CMakeLists.txt file.
-        example_name = "%s%s-%s%s" % (APPNAME, VERSION, args.example, BUILD_PROFILE_SUFFIX)
-
-        key_list = []
-        for key in ns3_runnable_programs_dictionary:
-            key_list.append(key)
-        example_name_key_list = fnmatch.filter(key_list, example_name)
-
-        if len(example_name_key_list) == 0:
-            print("No example matching the name %s" % args.example)
-        else:
-            #
-            # If you tell me to run an example, I will try and run the example
-            # irrespective of any condition.
-            #
-            for example_name_iter in example_name_key_list:
-                example_path = ns3_runnable_programs_dictionary[example_name_iter]
-                example_path = os.path.abspath(example_path)
-                job = Job()
-                job.set_is_example(True)
-                job.set_is_pyexample(False)
-                job.set_display_name(example_path)
-                job.set_tmp_file_name("")
-                job.set_cwd(testpy_output_dir)
-                job.set_basedir(os.getcwd())
-                job.set_tempdir(testpy_output_dir)
-                job.set_shell_command(example_path)
-                job.set_build_path(args.buildpath)
-
-                if args.verbose:
-                    print("Queue %s" % example_name_iter)
-
-                input_queue.put(job)
-                jobs = jobs + 1
-                total_tests = total_tests + 1
 
     #
     # Run some Python examples as smoke tests.  We have a list of all of
@@ -1994,11 +1998,17 @@ def run_tests():
                 status = "CRASH"
                 status_print = colors.PINK + status + colors.NORMAL
 
-        print("[%d/%d]" % (i, total_tests), end=" ")
+        print("[%d/%d] %s" % (i + 1, total_tests, status_print), end="")
+
         if args.duration or args.constrain == "performance":
-            print("%s (%.3f): %s %s" % (status_print, job.elapsed_time, kind, job.display_name))
-        else:
-            print("%s: %s %s" % (status_print, kind, job.display_name))
+            print(" (%.3f)" % job.elapsed_time, end="")
+
+        print(":", end="")
+
+        if "NS_COMMANDLINE_INTROSPECTION" in os.environ:
+            print(" Wrote example usage for", end="")
+
+        print(" %s %s" % (kind, job.display_name))
 
         if job.is_example or job.is_pyexample:
             #
@@ -2231,6 +2241,17 @@ def run_tests():
         return 1  # catchall for general errors
 
 
+def split_program_and_arguments(argv):
+    split_argv = re.findall(r'(?:".*[|*]?"|\S)+', argv)
+    program = ""
+    program_args = []
+    if split_argv:
+        program = split_argv[0]
+    if len(split_argv) > 1:
+        program_args = split_argv[1:]
+    return program, program_args
+
+
 def main(argv):
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -2275,8 +2296,9 @@ def main(argv):
         default=False,
         help="If examples use reference data files, get them to re-generate them",
     )
+    fullness_group = parser.add_mutually_exclusive_group(required=False)
 
-    parser.add_argument(
+    fullness_group.add_argument(
         "-f",
         "--fullness",
         action="store",
@@ -2284,6 +2306,16 @@ def main(argv):
         default="QUICK",
         choices=["QUICK", "EXTENSIVE", "TAKES_FOREVER"],
         help="choose the duration of tests to run: QUICK, EXTENSIVE, or TAKES_FOREVER, where EXTENSIVE includes QUICK and TAKES_FOREVER includes QUICK and EXTENSIVE (only QUICK tests are run by default)",
+    )
+
+    fullness_group.add_argument(
+        "-of",
+        "--only-fullness",
+        action="store",
+        type=str,
+        default=None,
+        choices=["QUICK", "EXTENSIVE", "TAKES_FOREVER"],
+        help="choose the duration of tests to run: QUICK, EXTENSIVE, or TAKES_FOREVER (only tests marked with fullness will be executed)",
     )
 
     parser.add_argument(
@@ -2422,6 +2454,8 @@ def main(argv):
 
     global args
     args = parser.parse_args()
+    args.example, exargs = split_program_and_arguments(args.example)
+    setattr(args, "example_args", exargs)
     signal.signal(signal.SIGINT, sigint_hook)
 
     # From waf/waflib/Options.py

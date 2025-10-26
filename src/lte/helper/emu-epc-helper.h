@@ -47,7 +47,6 @@ class EmuEpcHelper : public NoBackhaulEpcHelper
      * @return The object TypeId.
      */
     static TypeId GetTypeId();
-    TypeId GetInstanceTypeId() const override;
     void DoDispose() override;
 
     // inherited from EpcHelper
@@ -55,6 +54,9 @@ class EmuEpcHelper : public NoBackhaulEpcHelper
                 Ptr<NetDevice> lteEnbNetDevice,
                 std::vector<uint16_t> cellIds) override;
     void AddX2Interface(Ptr<Node> enbNode1, Ptr<Node> enbNode2) override;
+
+  protected:
+    void NotifyConstructionCompleted() override;
 
   private:
     /**

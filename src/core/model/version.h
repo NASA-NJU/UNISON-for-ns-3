@@ -91,7 +91,7 @@ class Version
 {
   public:
     /**
-     * Returns the ns-3 version tag of the closest ancestor commit.
+     * Returns the ns-3 version tag of the closest ancestor commit prefixed with ns-3.
      *
      * The format of the tag is
      * @verbatim ns3-<major>.<minor>[.patch] \endverbatim
@@ -258,8 +258,7 @@ class Version
      * @return String containing full version
      */
     static std::string LongVersion();
-
-}; // class Version
+};
 
 } // namespace ns3
 

@@ -330,9 +330,11 @@ class Txop : public Object
      */
     virtual void NotifySleep(uint8_t linkId);
     /**
-     * When off operation occurs, the queue gets cleaned up.
+     * Notify that the given link is switched off.
+     *
+     * @param linkId the ID of the given link
      */
-    virtual void NotifyOff();
+    virtual void NotifyOff(uint8_t linkId);
     /**
      * When wake up operation occurs on a link, channel access on that link
      * will be restarted.
@@ -423,6 +425,14 @@ class Txop : public Object
     void StartBackoffNow(uint32_t nSlots, uint8_t linkId);
 
     /**
+     * Return the current number of backoff slots on the given link.
+     *
+     * @param linkId the ID of the given link
+     * @return the current number of backoff slots
+     */
+    uint32_t GetBackoffSlots(uint8_t linkId) const;
+
+    /**
      * Check if the Txop has frames to transmit over the given link
      * @param linkId the ID of the given link.
      * @return true if the Txop has frames to transmit.
@@ -494,13 +504,6 @@ class Txop : public Object
      */
     void RequestAccess(uint8_t linkId);
 
-    /**
-     * Return the current number of backoff slots on the given link.
-     *
-     * @param linkId the ID of the given link
-     * @return the current number of backoff slots
-     */
-    uint32_t GetBackoffSlots(uint8_t linkId) const;
     /**
      * Return the time when the backoff procedure started on the given link.
      *

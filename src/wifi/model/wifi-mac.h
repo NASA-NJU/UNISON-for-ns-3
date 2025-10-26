@@ -89,6 +89,8 @@ typedef std::unordered_map<uint16_t /* staId */, Ptr<WifiPsdu> /* PSDU */> WifiP
 class WifiMac : public Object
 {
   public:
+    friend class WifiStaticSetupHelper;
+
     /**
      * @brief Get the type ID.
      * @return the object TypeId
@@ -101,6 +103,10 @@ class WifiMac : public Object
     // Delete copy constructor and assignment operator to avoid misuse
     WifiMac(const WifiMac&) = delete;
     WifiMac& operator=(const WifiMac&) = delete;
+
+    /// type of the management frames
+    using MgtFrameType =
+        std::variant<MgtBeaconHeader, MgtProbeResponseHeader, MgtAssocResponseHeader>;
 
     /**
      * Assign a fixed random variable stream number to the random variables
@@ -337,7 +343,7 @@ class WifiMac : public Object
      * @param linkIds the IDs of the links to block
      */
     void BlockUnicastTxOnLinks(WifiQueueBlockedReason reason,
-                               const Mac48Address& address,
+                               Mac48Address address,
                                const std::set<uint8_t>& linkIds);
 
     /**
@@ -350,7 +356,7 @@ class WifiMac : public Object
      * @param linkIds the IDs of the links to unblock
      */
     void UnblockUnicastTxOnLinks(WifiQueueBlockedReason reason,
-                                 const Mac48Address& address,
+                                 Mac48Address address,
                                  const std::set<uint8_t>& linkIds);
 
     /**
@@ -811,6 +817,24 @@ class WifiMac : public Object
                          uint8_t tid,
                          uint8_t linkId) const;
 
+    /// Information reported by ICF drop trace
+    struct IcfDropInfo
+    {
+        WifiIcfDrop reason{}; ///< the reason why the ICF was dropped by the EMLSR client
+        uint8_t linkId{};     ///< the ID of the link on which the ICF was dropped
+        Mac48Address sender;  ///< the sender of the ICF
+    };
+
+    /**
+     * TracedCallback signature for ICF drop events.
+     *
+     * @param info information reported by ICF drop trace
+     */
+    typedef void (*IcfDropCallback)(const IcfDropInfo& info);
+
+    /// TracedCallback for ICF drop events typedef
+    using IcfDropTracedCallback = TracedCallback<const IcfDropInfo&>;
+
   protected:
     void DoInitialize() override;
     void DoDispose() override;
@@ -964,6 +988,17 @@ class WifiMac : public Object
     void UpdateTidToLinkMapping(const Mac48Address& mldAddr,
                                 WifiDirection dir,
                                 const WifiTidLinkMapping& mapping);
+
+    /**
+     * Update capabilities information from the given management frame.
+     *
+     * @param frame the body of the given management frame
+     * @param addr MAC address of the sender
+     * @param linkId ID of the link the management frame was received over
+     */
+    void RecordCapabilities(const MgtFrameType& frame, const Mac48Address& addr, uint8_t linkId);
+
+    UniformRandomBitGenerator m_shuffleLinkIdsGen; //!< random number generator to shuffle link IDs
 
     Ptr<MacRxMiddle> m_rxMiddle; //!< RX middle (defragmentation etc.)
     Ptr<MacTxMiddle> m_txMiddle; //!< TX middle (aggregation etc.)
@@ -1244,8 +1279,6 @@ class WifiMac : public Object
     uint16_t m_mpduBufferSize;  //!< BlockAck buffer size (in number of MPDUs)
     uint32_t m_frameRetryLimit; //!< the frame retry limit
 
-    UniformRandomBitGenerator m_shuffleLinkIdsGen; //!< random number generator to shuffle link IDs
-
     bool m_robustAVStreamingSupported; ///< flag whether robust AV streaming is supported
 
     /// @brief DL TID-to-Link Mapping negotiated with an MLD (identified by its MLD address)
@@ -1379,17 +1412,6 @@ class WifiMac : public Object
      * This trace source is fed by a WifiTxTimer object.
      */
     PsduMapResponseTimeoutTracedCallback m_psduMapResponseTimeoutCallback;
-
-    /**
-     * TracedCallback signature for ICF drop events.
-     *
-     * @param reason the reason why the ICF was dropped by the EMLSR client
-     * @param linkId the ID of the link on which the ICF was dropped
-     */
-    typedef void (*IcfDropCallback)(WifiIcfDrop reason, uint8_t linkId);
-
-    /// TracedCallback for ICF drop events typedef
-    using IcfDropTracedCallback = TracedCallback<WifiIcfDrop, uint8_t>;
 
     IcfDropTracedCallback m_icfDropCallback; //!< traced callback for ICF drop events
 };

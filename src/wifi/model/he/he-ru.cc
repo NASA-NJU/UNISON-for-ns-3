@@ -10,6 +10,7 @@
 
 #include "ns3/abort.h"
 #include "ns3/assert.h"
+#include "ns3/wifi-ru.h"
 
 #include <optional>
 #include <tuple>
@@ -17,9 +18,9 @@
 namespace ns3
 {
 
-const HeRu::SubcarrierGroups HeRu::m_heRuSubcarrierGroups = {
-    // RUs in a 20 MHz HE PPDU (Table 28-6)
-    {{MHz_u{20}, HeRu::RU_26_TONE},
+const SubcarrierGroups HeRu::m_heRuSubcarrierGroups{
+    // RUs in a 20 MHz HE PPDU (Table 27-7 IEEE802.11ax-2021)
+    {{MHz_u{20}, RuType::RU_26_TONE},
      {/* 1 */ {{-121, -96}},
       /* 2 */ {{-95, -70}},
       /* 3 */ {{-68, -43}},
@@ -29,17 +30,17 @@ const HeRu::SubcarrierGroups HeRu::m_heRuSubcarrierGroups = {
       /* 7 */ {{43, 68}},
       /* 8 */ {{70, 95}},
       /* 9 */ {{96, 121}}}},
-    {{MHz_u{20}, HeRu::RU_52_TONE},
+    {{MHz_u{20}, RuType::RU_52_TONE},
      {/* 1 */ {{-121, -70}},
       /* 2 */ {{-68, -17}},
       /* 3 */ {{17, 68}},
       /* 4 */ {{70, 121}}}},
-    {{MHz_u{20}, HeRu::RU_106_TONE},
+    {{MHz_u{20}, RuType::RU_106_TONE},
      {/* 1 */ {{-122, -17}},
       /* 2 */ {{17, 122}}}},
-    {{MHz_u{20}, HeRu::RU_242_TONE}, {/* 1 */ {{-122, -2}, {2, 122}}}},
-    // RUs in a 40 MHz HE PPDU (Table 28-7)
-    {{MHz_u{40}, HeRu::RU_26_TONE},
+    {{MHz_u{20}, RuType::RU_242_TONE}, {/* 1 */ {{-122, -2}, {2, 122}}}},
+    // RUs in a 40 MHz HE PPDU (Table 27-8 IEEE802.11ax-2021)
+    {{MHz_u{40}, RuType::RU_26_TONE},
      {/* 1 */ {{-243, -218}},
       /* 2 */ {{-217, -192}},
       /* 3 */ {{-189, -164}},
@@ -58,7 +59,7 @@ const HeRu::SubcarrierGroups HeRu::m_heRuSubcarrierGroups = {
       /* 16 */ {{164, 189}},
       /* 17 */ {{192, 217}},
       /* 18 */ {{218, 243}}}},
-    {{MHz_u{40}, HeRu::RU_52_TONE},
+    {{MHz_u{40}, RuType::RU_52_TONE},
      {/* 1 */ {{-243, -192}},
       /* 2 */ {{-189, -138}},
       /* 3 */ {{-109, -58}},
@@ -67,17 +68,17 @@ const HeRu::SubcarrierGroups HeRu::m_heRuSubcarrierGroups = {
       /* 6 */ {{58, 109}},
       /* 7 */ {{138, 189}},
       /* 8 */ {{192, 243}}}},
-    {{MHz_u{40}, HeRu::RU_106_TONE},
+    {{MHz_u{40}, RuType::RU_106_TONE},
      {/* 1 */ {{-243, -138}},
       /* 2 */ {{-109, -4}},
       /* 3 */ {{4, 109}},
       /* 4 */ {{138, 243}}}},
-    {{MHz_u{40}, HeRu::RU_242_TONE},
+    {{MHz_u{40}, RuType::RU_242_TONE},
      {/* 1 */ {{-244, -3}},
       /* 2 */ {{3, 244}}}},
-    {{MHz_u{40}, HeRu::RU_484_TONE}, {/* 1 */ {{-244, -3}, {3, 244}}}},
-    // RUs in an 80 MHz HE PPDU (Table 28-8)
-    {{MHz_u{80}, HeRu::RU_26_TONE},
+    {{MHz_u{40}, RuType::RU_484_TONE}, {/* 1 */ {{-244, -3}, {3, 244}}}},
+    // RUs in an 80 MHz HE PPDU (Table 27-9 IEEE802.11ax-2021)
+    {{MHz_u{80}, RuType::RU_26_TONE},
      {/* 1 */ {{-499, -474}},
       /* 2 */ {{-473, -448}},
       /* 3 */ {{-445, -420}},
@@ -115,7 +116,7 @@ const HeRu::SubcarrierGroups HeRu::m_heRuSubcarrierGroups = {
       /* 35 */ {{420, 445}},
       /* 36 */ {{448, 473}},
       /* 37 */ {{474, 499}}}},
-    {{MHz_u{80}, HeRu::RU_52_TONE},
+    {{MHz_u{80}, RuType::RU_52_TONE},
      {/* 1 */ {{-499, -448}},
       /* 2 */ {{-445, -394}},
       /* 3 */ {{-365, -314}},
@@ -132,7 +133,7 @@ const HeRu::SubcarrierGroups HeRu::m_heRuSubcarrierGroups = {
       /* 14 */ {{314, 365}},
       /* 15 */ {{394, 445}},
       /* 16 */ {{448, 499}}}},
-    {{MHz_u{80}, HeRu::RU_106_TONE},
+    {{MHz_u{80}, RuType::RU_106_TONE},
      {/* 1 */ {{-499, -394}},
       /* 2 */ {{-365, -260}},
       /* 3 */ {{-257, -152}},
@@ -141,248 +142,230 @@ const HeRu::SubcarrierGroups HeRu::m_heRuSubcarrierGroups = {
       /* 6 */ {{152, 257}},
       /* 7 */ {{260, 365}},
       /* 8 */ {{394, 499}}}},
-    {{MHz_u{80}, HeRu::RU_242_TONE},
+    {{MHz_u{80}, RuType::RU_242_TONE},
      {/* 1 */ {{-500, -259}},
       /* 2 */ {{-258, -17}},
       /* 3 */ {{17, 258}},
       /* 4 */ {{259, 500}}}},
-    {{MHz_u{80}, HeRu::RU_484_TONE},
+    {{MHz_u{80}, RuType::RU_484_TONE},
      {/* 1 */ {{-500, -17}},
       /* 2 */ {{17, 500}}}},
-    {{MHz_u{80}, HeRu::RU_996_TONE}, {/* 1 */ {{-500, -3}, {3, 500}}}},
+    {{MHz_u{80}, RuType::RU_996_TONE}, {/* 1 */ {{-500, -3}, {3, 500}}}},
 };
 
 // Table 27-26 IEEE802.11ax-2021
 const HeRu::RuAllocationMap HeRu::m_heRuAllocations = {
     // clang-format off
     {0,
-     {HeRu::RuSpec{HeRu::RU_26_TONE, 1, true},
-      HeRu::RuSpec{HeRu::RU_26_TONE, 2, true},
-      HeRu::RuSpec{HeRu::RU_26_TONE, 3, true},
-      HeRu::RuSpec{HeRu::RU_26_TONE, 4, true},
-      HeRu::RuSpec{HeRu::RU_26_TONE, 5, true},
-      HeRu::RuSpec{HeRu::RU_26_TONE, 6, true},
-      HeRu::RuSpec{HeRu::RU_26_TONE, 7, true},
-      HeRu::RuSpec{HeRu::RU_26_TONE, 8, true},
-      HeRu::RuSpec{HeRu::RU_26_TONE, 9, true}}},
+     {HeRu::RuSpec{RuType::RU_26_TONE, 1, true},
+      HeRu::RuSpec{RuType::RU_26_TONE, 2, true},
+      HeRu::RuSpec{RuType::RU_26_TONE, 3, true},
+      HeRu::RuSpec{RuType::RU_26_TONE, 4, true},
+      HeRu::RuSpec{RuType::RU_26_TONE, 5, true},
+      HeRu::RuSpec{RuType::RU_26_TONE, 6, true},
+      HeRu::RuSpec{RuType::RU_26_TONE, 7, true},
+      HeRu::RuSpec{RuType::RU_26_TONE, 8, true},
+      HeRu::RuSpec{RuType::RU_26_TONE, 9, true}}},
     {1,
-     {HeRu::RuSpec{HeRu::RU_26_TONE, 1, true},
-      HeRu::RuSpec{HeRu::RU_26_TONE, 2, true},
-      HeRu::RuSpec{HeRu::RU_26_TONE, 3, true},
-      HeRu::RuSpec{HeRu::RU_26_TONE, 4, true},
-      HeRu::RuSpec{HeRu::RU_26_TONE, 5, true},
-      HeRu::RuSpec{HeRu::RU_26_TONE, 6, true},
-      HeRu::RuSpec{HeRu::RU_26_TONE, 7, true},
-      HeRu::RuSpec{HeRu::RU_52_TONE, 4, true}}},
+     {HeRu::RuSpec{RuType::RU_26_TONE, 1, true},
+      HeRu::RuSpec{RuType::RU_26_TONE, 2, true},
+      HeRu::RuSpec{RuType::RU_26_TONE, 3, true},
+      HeRu::RuSpec{RuType::RU_26_TONE, 4, true},
+      HeRu::RuSpec{RuType::RU_26_TONE, 5, true},
+      HeRu::RuSpec{RuType::RU_26_TONE, 6, true},
+      HeRu::RuSpec{RuType::RU_26_TONE, 7, true},
+      HeRu::RuSpec{RuType::RU_52_TONE, 4, true}}},
     {2,
-     {HeRu::RuSpec{HeRu::RU_26_TONE, 1, true},
-      HeRu::RuSpec{HeRu::RU_26_TONE, 2, true},
-      HeRu::RuSpec{HeRu::RU_26_TONE, 3, true},
-      HeRu::RuSpec{HeRu::RU_26_TONE, 4, true},
-      HeRu::RuSpec{HeRu::RU_26_TONE, 5, true},
-      HeRu::RuSpec{HeRu::RU_52_TONE, 3, true},
-      HeRu::RuSpec{HeRu::RU_26_TONE, 8, true},
-      HeRu::RuSpec{HeRu::RU_26_TONE, 9, true}}},
+     {HeRu::RuSpec{RuType::RU_26_TONE, 1, true},
+      HeRu::RuSpec{RuType::RU_26_TONE, 2, true},
+      HeRu::RuSpec{RuType::RU_26_TONE, 3, true},
+      HeRu::RuSpec{RuType::RU_26_TONE, 4, true},
+      HeRu::RuSpec{RuType::RU_26_TONE, 5, true},
+      HeRu::RuSpec{RuType::RU_52_TONE, 3, true},
+      HeRu::RuSpec{RuType::RU_26_TONE, 8, true},
+      HeRu::RuSpec{RuType::RU_26_TONE, 9, true}}},
     {3,
-     {HeRu::RuSpec{HeRu::RU_26_TONE, 1, true},
-      HeRu::RuSpec{HeRu::RU_26_TONE, 2, true},
-      HeRu::RuSpec{HeRu::RU_26_TONE, 3, true},
-      HeRu::RuSpec{HeRu::RU_26_TONE, 4, true},
-      HeRu::RuSpec{HeRu::RU_26_TONE, 5, true},
-      HeRu::RuSpec{HeRu::RU_52_TONE, 3, true},
-      HeRu::RuSpec{HeRu::RU_52_TONE, 4, true}}},
+     {HeRu::RuSpec{RuType::RU_26_TONE, 1, true},
+      HeRu::RuSpec{RuType::RU_26_TONE, 2, true},
+      HeRu::RuSpec{RuType::RU_26_TONE, 3, true},
+      HeRu::RuSpec{RuType::RU_26_TONE, 4, true},
+      HeRu::RuSpec{RuType::RU_26_TONE, 5, true},
+      HeRu::RuSpec{RuType::RU_52_TONE, 3, true},
+      HeRu::RuSpec{RuType::RU_52_TONE, 4, true}}},
     {4,
-     {HeRu::RuSpec{HeRu::RU_26_TONE, 1, true},
-      HeRu::RuSpec{HeRu::RU_26_TONE, 2, true},
-      HeRu::RuSpec{HeRu::RU_52_TONE, 2, true},
-      HeRu::RuSpec{HeRu::RU_26_TONE, 5, true},
-      HeRu::RuSpec{HeRu::RU_26_TONE, 6, true},
-      HeRu::RuSpec{HeRu::RU_26_TONE, 7, true},
-      HeRu::RuSpec{HeRu::RU_26_TONE, 8, true},
-      HeRu::RuSpec{HeRu::RU_26_TONE, 9, true}}},
+     {HeRu::RuSpec{RuType::RU_26_TONE, 1, true},
+      HeRu::RuSpec{RuType::RU_26_TONE, 2, true},
+      HeRu::RuSpec{RuType::RU_52_TONE, 2, true},
+      HeRu::RuSpec{RuType::RU_26_TONE, 5, true},
+      HeRu::RuSpec{RuType::RU_26_TONE, 6, true},
+      HeRu::RuSpec{RuType::RU_26_TONE, 7, true},
+      HeRu::RuSpec{RuType::RU_26_TONE, 8, true},
+      HeRu::RuSpec{RuType::RU_26_TONE, 9, true}}},
     {5,
-     {HeRu::RuSpec{HeRu::RU_26_TONE, 1, true},
-      HeRu::RuSpec{HeRu::RU_26_TONE, 2, true},
-      HeRu::RuSpec{HeRu::RU_52_TONE, 2, true},
-      HeRu::RuSpec{HeRu::RU_26_TONE, 5, true},
-      HeRu::RuSpec{HeRu::RU_26_TONE, 6, true},
-      HeRu::RuSpec{HeRu::RU_26_TONE, 7, true},
-      HeRu::RuSpec{HeRu::RU_52_TONE, 4, true}}},
+     {HeRu::RuSpec{RuType::RU_26_TONE, 1, true},
+      HeRu::RuSpec{RuType::RU_26_TONE, 2, true},
+      HeRu::RuSpec{RuType::RU_52_TONE, 2, true},
+      HeRu::RuSpec{RuType::RU_26_TONE, 5, true},
+      HeRu::RuSpec{RuType::RU_26_TONE, 6, true},
+      HeRu::RuSpec{RuType::RU_26_TONE, 7, true},
+      HeRu::RuSpec{RuType::RU_52_TONE, 4, true}}},
     {6,
-     {HeRu::RuSpec{HeRu::RU_26_TONE, 1, true},
-      HeRu::RuSpec{HeRu::RU_26_TONE, 2, true},
-      HeRu::RuSpec{HeRu::RU_52_TONE, 2, true},
-      HeRu::RuSpec{HeRu::RU_26_TONE, 5, true},
-      HeRu::RuSpec{HeRu::RU_52_TONE, 3, true},
-      HeRu::RuSpec{HeRu::RU_26_TONE, 8, true},
-      HeRu::RuSpec{HeRu::RU_26_TONE, 9, true}}},
+     {HeRu::RuSpec{RuType::RU_26_TONE, 1, true},
+      HeRu::RuSpec{RuType::RU_26_TONE, 2, true},
+      HeRu::RuSpec{RuType::RU_52_TONE, 2, true},
+      HeRu::RuSpec{RuType::RU_26_TONE, 5, true},
+      HeRu::RuSpec{RuType::RU_52_TONE, 3, true},
+      HeRu::RuSpec{RuType::RU_26_TONE, 8, true},
+      HeRu::RuSpec{RuType::RU_26_TONE, 9, true}}},
     {7,
-     {HeRu::RuSpec{HeRu::RU_26_TONE, 1, true},
-      HeRu::RuSpec{HeRu::RU_26_TONE, 2, true},
-      HeRu::RuSpec{HeRu::RU_52_TONE, 2, true},
-      HeRu::RuSpec{HeRu::RU_26_TONE, 5, true},
-      HeRu::RuSpec{HeRu::RU_52_TONE, 3, true},
-      HeRu::RuSpec{HeRu::RU_52_TONE, 4, true}}},
+     {HeRu::RuSpec{RuType::RU_26_TONE, 1, true},
+      HeRu::RuSpec{RuType::RU_26_TONE, 2, true},
+      HeRu::RuSpec{RuType::RU_52_TONE, 2, true},
+      HeRu::RuSpec{RuType::RU_26_TONE, 5, true},
+      HeRu::RuSpec{RuType::RU_52_TONE, 3, true},
+      HeRu::RuSpec{RuType::RU_52_TONE, 4, true}}},
     {8,
-     {HeRu::RuSpec{HeRu::RU_52_TONE, 1, true},
-      HeRu::RuSpec{HeRu::RU_26_TONE, 3, true},
-      HeRu::RuSpec{HeRu::RU_26_TONE, 4, true},
-      HeRu::RuSpec{HeRu::RU_26_TONE, 5, true},
-      HeRu::RuSpec{HeRu::RU_26_TONE, 6, true},
-      HeRu::RuSpec{HeRu::RU_26_TONE, 7, true},
-      HeRu::RuSpec{HeRu::RU_26_TONE, 8, true},
-      HeRu::RuSpec{HeRu::RU_26_TONE, 9, true}}},
+     {HeRu::RuSpec{RuType::RU_52_TONE, 1, true},
+      HeRu::RuSpec{RuType::RU_26_TONE, 3, true},
+      HeRu::RuSpec{RuType::RU_26_TONE, 4, true},
+      HeRu::RuSpec{RuType::RU_26_TONE, 5, true},
+      HeRu::RuSpec{RuType::RU_26_TONE, 6, true},
+      HeRu::RuSpec{RuType::RU_26_TONE, 7, true},
+      HeRu::RuSpec{RuType::RU_26_TONE, 8, true},
+      HeRu::RuSpec{RuType::RU_26_TONE, 9, true}}},
     {9,
-     {HeRu::RuSpec{HeRu::RU_52_TONE, 1, true},
-      HeRu::RuSpec{HeRu::RU_26_TONE, 3, true},
-      HeRu::RuSpec{HeRu::RU_26_TONE, 4, true},
-      HeRu::RuSpec{HeRu::RU_26_TONE, 5, true},
-      HeRu::RuSpec{HeRu::RU_26_TONE, 6, true},
-      HeRu::RuSpec{HeRu::RU_26_TONE, 7, true},
-      HeRu::RuSpec{HeRu::RU_52_TONE, 4, true}}},
+     {HeRu::RuSpec{RuType::RU_52_TONE, 1, true},
+      HeRu::RuSpec{RuType::RU_26_TONE, 3, true},
+      HeRu::RuSpec{RuType::RU_26_TONE, 4, true},
+      HeRu::RuSpec{RuType::RU_26_TONE, 5, true},
+      HeRu::RuSpec{RuType::RU_26_TONE, 6, true},
+      HeRu::RuSpec{RuType::RU_26_TONE, 7, true},
+      HeRu::RuSpec{RuType::RU_52_TONE, 4, true}}},
     {10,
-     {HeRu::RuSpec{HeRu::RU_52_TONE, 1, true},
-      HeRu::RuSpec{HeRu::RU_26_TONE, 3, true},
-      HeRu::RuSpec{HeRu::RU_26_TONE, 4, true},
-      HeRu::RuSpec{HeRu::RU_26_TONE, 5, true},
-      HeRu::RuSpec{HeRu::RU_52_TONE, 3, true},
-      HeRu::RuSpec{HeRu::RU_26_TONE, 8, true},
-      HeRu::RuSpec{HeRu::RU_26_TONE, 9, true}}},
+     {HeRu::RuSpec{RuType::RU_52_TONE, 1, true},
+      HeRu::RuSpec{RuType::RU_26_TONE, 3, true},
+      HeRu::RuSpec{RuType::RU_26_TONE, 4, true},
+      HeRu::RuSpec{RuType::RU_26_TONE, 5, true},
+      HeRu::RuSpec{RuType::RU_52_TONE, 3, true},
+      HeRu::RuSpec{RuType::RU_26_TONE, 8, true},
+      HeRu::RuSpec{RuType::RU_26_TONE, 9, true}}},
     {11,
-     {HeRu::RuSpec{HeRu::RU_52_TONE, 1, true},
-      HeRu::RuSpec{HeRu::RU_26_TONE, 3, true},
-      HeRu::RuSpec{HeRu::RU_26_TONE, 4, true},
-      HeRu::RuSpec{HeRu::RU_26_TONE, 5, true},
-      HeRu::RuSpec{HeRu::RU_52_TONE, 3, true},
-      HeRu::RuSpec{HeRu::RU_52_TONE, 4, true}}},
+     {HeRu::RuSpec{RuType::RU_52_TONE, 1, true},
+      HeRu::RuSpec{RuType::RU_26_TONE, 3, true},
+      HeRu::RuSpec{RuType::RU_26_TONE, 4, true},
+      HeRu::RuSpec{RuType::RU_26_TONE, 5, true},
+      HeRu::RuSpec{RuType::RU_52_TONE, 3, true},
+      HeRu::RuSpec{RuType::RU_52_TONE, 4, true}}},
     {12,
-     {HeRu::RuSpec{HeRu::RU_52_TONE, 1, true},
-      HeRu::RuSpec{HeRu::RU_52_TONE, 2, true},
-      HeRu::RuSpec{HeRu::RU_26_TONE, 5, true},
-      HeRu::RuSpec{HeRu::RU_26_TONE, 6, true},
-      HeRu::RuSpec{HeRu::RU_26_TONE, 7, true},
-      HeRu::RuSpec{HeRu::RU_26_TONE, 8, true},
-      HeRu::RuSpec{HeRu::RU_26_TONE, 9, true}}},
+     {HeRu::RuSpec{RuType::RU_52_TONE, 1, true},
+      HeRu::RuSpec{RuType::RU_52_TONE, 2, true},
+      HeRu::RuSpec{RuType::RU_26_TONE, 5, true},
+      HeRu::RuSpec{RuType::RU_26_TONE, 6, true},
+      HeRu::RuSpec{RuType::RU_26_TONE, 7, true},
+      HeRu::RuSpec{RuType::RU_26_TONE, 8, true},
+      HeRu::RuSpec{RuType::RU_26_TONE, 9, true}}},
     {13,
-     {HeRu::RuSpec{HeRu::RU_52_TONE, 1, true},
-      HeRu::RuSpec{HeRu::RU_52_TONE, 2, true},
-      HeRu::RuSpec{HeRu::RU_26_TONE, 5, true},
-      HeRu::RuSpec{HeRu::RU_26_TONE, 6, true},
-      HeRu::RuSpec{HeRu::RU_26_TONE, 7, true},
-      HeRu::RuSpec{HeRu::RU_52_TONE, 4, true}}},
+     {HeRu::RuSpec{RuType::RU_52_TONE, 1, true},
+      HeRu::RuSpec{RuType::RU_52_TONE, 2, true},
+      HeRu::RuSpec{RuType::RU_26_TONE, 5, true},
+      HeRu::RuSpec{RuType::RU_26_TONE, 6, true},
+      HeRu::RuSpec{RuType::RU_26_TONE, 7, true},
+      HeRu::RuSpec{RuType::RU_52_TONE, 4, true}}},
     {14,
-     {HeRu::RuSpec{HeRu::RU_52_TONE, 1, true},
-      HeRu::RuSpec{HeRu::RU_52_TONE, 2, true},
-      HeRu::RuSpec{HeRu::RU_26_TONE, 5, true},
-      HeRu::RuSpec{HeRu::RU_52_TONE, 3, true},
-      HeRu::RuSpec{HeRu::RU_26_TONE, 8, true},
-      HeRu::RuSpec{HeRu::RU_26_TONE, 9, true}}},
+     {HeRu::RuSpec{RuType::RU_52_TONE, 1, true},
+      HeRu::RuSpec{RuType::RU_52_TONE, 2, true},
+      HeRu::RuSpec{RuType::RU_26_TONE, 5, true},
+      HeRu::RuSpec{RuType::RU_52_TONE, 3, true},
+      HeRu::RuSpec{RuType::RU_26_TONE, 8, true},
+      HeRu::RuSpec{RuType::RU_26_TONE, 9, true}}},
     {15,
-     {HeRu::RuSpec{HeRu::RU_52_TONE, 1, true},
-      HeRu::RuSpec{HeRu::RU_52_TONE, 2, true},
-      HeRu::RuSpec{HeRu::RU_26_TONE, 5, true},
-      HeRu::RuSpec{HeRu::RU_52_TONE, 3, true},
-      HeRu::RuSpec{HeRu::RU_52_TONE, 4, true}}},
+     {HeRu::RuSpec{RuType::RU_52_TONE, 1, true},
+      HeRu::RuSpec{RuType::RU_52_TONE, 2, true},
+      HeRu::RuSpec{RuType::RU_26_TONE, 5, true},
+      HeRu::RuSpec{RuType::RU_52_TONE, 3, true},
+      HeRu::RuSpec{RuType::RU_52_TONE, 4, true}}},
     {16,
-     {HeRu::RuSpec{HeRu::RU_52_TONE, 1, true},
-      HeRu::RuSpec{HeRu::RU_52_TONE, 2, true},
-      HeRu::RuSpec{HeRu::RU_106_TONE, 2, true}}},
+     {HeRu::RuSpec{RuType::RU_52_TONE, 1, true},
+      HeRu::RuSpec{RuType::RU_52_TONE, 2, true},
+      HeRu::RuSpec{RuType::RU_106_TONE, 2, true}}},
     {24,
-     {HeRu::RuSpec{HeRu::RU_106_TONE, 1, true},
-      HeRu::RuSpec{HeRu::RU_52_TONE, 3, true},
-      HeRu::RuSpec{HeRu::RU_52_TONE, 4, true}}},
+     {HeRu::RuSpec{RuType::RU_106_TONE, 1, true},
+      HeRu::RuSpec{RuType::RU_52_TONE, 3, true},
+      HeRu::RuSpec{RuType::RU_52_TONE, 4, true}}},
     {32,
-     {HeRu::RuSpec{HeRu::RU_26_TONE, 1, true},
-      HeRu::RuSpec{HeRu::RU_26_TONE, 2, true},
-      HeRu::RuSpec{HeRu::RU_26_TONE, 3, true},
-      HeRu::RuSpec{HeRu::RU_26_TONE, 4, true},
-      HeRu::RuSpec{HeRu::RU_26_TONE, 5, true},
-      HeRu::RuSpec{HeRu::RU_106_TONE, 2, true}}},
+     {HeRu::RuSpec{RuType::RU_26_TONE, 1, true},
+      HeRu::RuSpec{RuType::RU_26_TONE, 2, true},
+      HeRu::RuSpec{RuType::RU_26_TONE, 3, true},
+      HeRu::RuSpec{RuType::RU_26_TONE, 4, true},
+      HeRu::RuSpec{RuType::RU_26_TONE, 5, true},
+      HeRu::RuSpec{RuType::RU_106_TONE, 2, true}}},
     {40,
-     {HeRu::RuSpec{HeRu::RU_26_TONE, 1, true},
-      HeRu::RuSpec{HeRu::RU_26_TONE, 2, true},
-      HeRu::RuSpec{HeRu::RU_52_TONE, 2, true},
-      HeRu::RuSpec{HeRu::RU_26_TONE, 5, true},
-      HeRu::RuSpec{HeRu::RU_106_TONE, 2, true}}},
+     {HeRu::RuSpec{RuType::RU_26_TONE, 1, true},
+      HeRu::RuSpec{RuType::RU_26_TONE, 2, true},
+      HeRu::RuSpec{RuType::RU_52_TONE, 2, true},
+      HeRu::RuSpec{RuType::RU_26_TONE, 5, true},
+      HeRu::RuSpec{RuType::RU_106_TONE, 2, true}}},
     {48,
-     {HeRu::RuSpec{HeRu::RU_52_TONE, 1, true},
-      HeRu::RuSpec{HeRu::RU_26_TONE, 3, true},
-      HeRu::RuSpec{HeRu::RU_26_TONE, 4, true},
-      HeRu::RuSpec{HeRu::RU_26_TONE, 5, true},
-      HeRu::RuSpec{HeRu::RU_106_TONE, 2, true}}},
+     {HeRu::RuSpec{RuType::RU_52_TONE, 1, true},
+      HeRu::RuSpec{RuType::RU_26_TONE, 3, true},
+      HeRu::RuSpec{RuType::RU_26_TONE, 4, true},
+      HeRu::RuSpec{RuType::RU_26_TONE, 5, true},
+      HeRu::RuSpec{RuType::RU_106_TONE, 2, true}}},
     {56,
-     {HeRu::RuSpec{HeRu::RU_52_TONE, 1, true},
-      HeRu::RuSpec{HeRu::RU_52_TONE, 2, true},
-      HeRu::RuSpec{HeRu::RU_26_TONE, 5, true},
-      HeRu::RuSpec{HeRu::RU_106_TONE, 2, true}}},
+     {HeRu::RuSpec{RuType::RU_52_TONE, 1, true},
+      HeRu::RuSpec{RuType::RU_52_TONE, 2, true},
+      HeRu::RuSpec{RuType::RU_26_TONE, 5, true},
+      HeRu::RuSpec{RuType::RU_106_TONE, 2, true}}},
     {64,
-     {HeRu::RuSpec{HeRu::RU_106_TONE, 1, true},
-      HeRu::RuSpec{HeRu::RU_26_TONE, 5, true},
-      HeRu::RuSpec{HeRu::RU_26_TONE, 6, true},
-      HeRu::RuSpec{HeRu::RU_26_TONE, 7, true},
-      HeRu::RuSpec{HeRu::RU_26_TONE, 8, true},
-      HeRu::RuSpec{HeRu::RU_26_TONE, 9, true}}},
+     {HeRu::RuSpec{RuType::RU_106_TONE, 1, true},
+      HeRu::RuSpec{RuType::RU_26_TONE, 5, true},
+      HeRu::RuSpec{RuType::RU_26_TONE, 6, true},
+      HeRu::RuSpec{RuType::RU_26_TONE, 7, true},
+      HeRu::RuSpec{RuType::RU_26_TONE, 8, true},
+      HeRu::RuSpec{RuType::RU_26_TONE, 9, true}}},
     {72,
-     {HeRu::RuSpec{HeRu::RU_106_TONE, 1, true},
-      HeRu::RuSpec{HeRu::RU_26_TONE, 5, true},
-      HeRu::RuSpec{HeRu::RU_26_TONE, 6, true},
-      HeRu::RuSpec{HeRu::RU_26_TONE, 7, true},
-      HeRu::RuSpec{HeRu::RU_52_TONE, 4, true}}},
+     {HeRu::RuSpec{RuType::RU_106_TONE, 1, true},
+      HeRu::RuSpec{RuType::RU_26_TONE, 5, true},
+      HeRu::RuSpec{RuType::RU_26_TONE, 6, true},
+      HeRu::RuSpec{RuType::RU_26_TONE, 7, true},
+      HeRu::RuSpec{RuType::RU_52_TONE, 4, true}}},
     {80,
-     {HeRu::RuSpec{HeRu::RU_106_TONE, 1, true},
-      HeRu::RuSpec{HeRu::RU_26_TONE, 5, true},
-      HeRu::RuSpec{HeRu::RU_52_TONE, 3, true},
-      HeRu::RuSpec{HeRu::RU_26_TONE, 8, true},
-      HeRu::RuSpec{HeRu::RU_26_TONE, 9, true}}},
+     {HeRu::RuSpec{RuType::RU_106_TONE, 1, true},
+      HeRu::RuSpec{RuType::RU_26_TONE, 5, true},
+      HeRu::RuSpec{RuType::RU_52_TONE, 3, true},
+      HeRu::RuSpec{RuType::RU_26_TONE, 8, true},
+      HeRu::RuSpec{RuType::RU_26_TONE, 9, true}}},
     {88,
-     {HeRu::RuSpec{HeRu::RU_106_TONE, 1, true},
-      HeRu::RuSpec{HeRu::RU_26_TONE, 5, true},
-      HeRu::RuSpec{HeRu::RU_52_TONE, 3, true},
-      HeRu::RuSpec{HeRu::RU_52_TONE, 4, true}}},
+     {HeRu::RuSpec{RuType::RU_106_TONE, 1, true},
+      HeRu::RuSpec{RuType::RU_26_TONE, 5, true},
+      HeRu::RuSpec{RuType::RU_52_TONE, 3, true},
+      HeRu::RuSpec{RuType::RU_52_TONE, 4, true}}},
     {96,
-     {HeRu::RuSpec{HeRu::RU_106_TONE, 1, true},
-      HeRu::RuSpec{HeRu::RU_106_TONE, 2, true}}},
+     {HeRu::RuSpec{RuType::RU_106_TONE, 1, true},
+      HeRu::RuSpec{RuType::RU_106_TONE, 2, true}}},
     {112,
-     {HeRu::RuSpec{HeRu::RU_52_TONE, 1, true},
-      HeRu::RuSpec{HeRu::RU_52_TONE, 2, true},
-      HeRu::RuSpec{HeRu::RU_52_TONE, 3, true},
-      HeRu::RuSpec{HeRu::RU_52_TONE, 4, true}}},
+     {HeRu::RuSpec{RuType::RU_52_TONE, 1, true},
+      HeRu::RuSpec{RuType::RU_52_TONE, 2, true},
+      HeRu::RuSpec{RuType::RU_52_TONE, 3, true},
+      HeRu::RuSpec{RuType::RU_52_TONE, 4, true}}},
     {128,
-     {HeRu::RuSpec{HeRu::RU_106_TONE, 1, true},
-      HeRu::RuSpec{HeRu::RU_26_TONE, 5, true},
-      HeRu::RuSpec{HeRu::RU_106_TONE, 2, true}}},
+     {HeRu::RuSpec{RuType::RU_106_TONE, 1, true},
+      HeRu::RuSpec{RuType::RU_26_TONE, 5, true},
+      HeRu::RuSpec{RuType::RU_106_TONE, 2, true}}},
     {192,
-      {HeRu::RuSpec{HeRu::RU_242_TONE, 1, true}}},
+      {HeRu::RuSpec{RuType::RU_242_TONE, 1, true}}},
     {200,
-      {HeRu::RuSpec{HeRu::RU_484_TONE, 1, true}}},
+      {HeRu::RuSpec{RuType::RU_484_TONE, 1, true}}},
     {208,
-      {HeRu::RuSpec{HeRu::RU_996_TONE, 1, true}}},
+      {HeRu::RuSpec{RuType::RU_996_TONE, 1, true}}},
     // clang-format on
 };
 
-HeRu::RuSpecCompare::RuSpecCompare(MHz_u channelWidth, uint8_t p20Index)
-    : m_channelWidth(channelWidth),
-      m_p20Index(p20Index)
-{
-}
-
-bool
-HeRu::RuSpecCompare::operator()(const HeRu::RuSpec& lhs, const HeRu::RuSpec& rhs) const
-{
-    const auto lhsIndex = lhs.GetPhyIndex(m_channelWidth, m_p20Index);
-    const auto rhsIndex = rhs.GetPhyIndex(m_channelWidth, m_p20Index);
-    const auto lhsStartTone =
-        HeRu::GetSubcarrierGroup(m_channelWidth, lhs.GetRuType(), lhsIndex).front().first;
-    const auto rhsStartTone =
-        HeRu::GetSubcarrierGroup(m_channelWidth, rhs.GetRuType(), rhsIndex).front().first;
-    return lhsStartTone < rhsStartTone;
-}
-
 std::vector<HeRu::RuSpec>
-HeRu::GetRuSpecs(uint8_t ruAllocation)
+HeRu::GetRuSpecs(uint16_t ruAllocation)
 {
     std::optional<std::size_t> idx;
-    if (((ruAllocation >= 0) && (ruAllocation <= 15)) || (ruAllocation == 112))
+    if ((ruAllocation <= 15) || (ruAllocation == 112))
     {
         idx = ruAllocation;
     }
@@ -405,34 +388,29 @@ HeRu::GetRuSpecs(uint8_t ruAllocation)
     }
     else
     {
-        NS_FATAL_ERROR("Reserved RU allocation " << +ruAllocation);
+        NS_FATAL_ERROR("Reserved RU allocation " << ruAllocation);
     }
     return idx.has_value() ? m_heRuAllocations.at(idx.value()) : std::vector<HeRu::RuSpec>{};
 }
 
-uint8_t
-HeRu::GetEqualizedRuAllocation(RuType ruType, bool isOdd)
+uint16_t
+HeRu::GetEqualizedRuAllocation(RuType ruType, bool isOdd, bool hasUsers)
 {
     switch (ruType)
     {
-    case HeRu::RU_26_TONE:
+    case RuType::RU_26_TONE:
         return 0;
-    case HeRu::RU_52_TONE:
+    case RuType::RU_52_TONE:
         return isOdd ? 15 : 112;
-    case HeRu::RU_106_TONE:
+    case RuType::RU_106_TONE:
         return isOdd ? 128 : 96;
-    case HeRu::RU_242_TONE:
-        return 192;
-    case HeRu::RU_484_TONE:
-        return 200;
+    case RuType::RU_242_TONE:
+        return hasUsers ? 192 : 113;
+    case RuType::RU_484_TONE:
+        return hasUsers ? 200 : 114;
     default:
-        return 208;
+        return hasUsers ? 208 : 115;
     }
-}
-
-HeRu::RuSpec::RuSpec()
-    : m_index(0) // indicates undefined RU
-{
 }
 
 HeRu::RuSpec::RuSpec(RuType ruType, std::size_t index, bool primary80MHz)
@@ -443,7 +421,7 @@ HeRu::RuSpec::RuSpec(RuType ruType, std::size_t index, bool primary80MHz)
     NS_ABORT_MSG_IF(index == 0, "Index cannot be zero");
 }
 
-HeRu::RuType
+RuType
 HeRu::RuSpec::GetRuType() const
 {
     NS_ABORT_MSG_IF(m_index == 0, "Undefined RU");
@@ -469,7 +447,7 @@ HeRu::RuSpec::GetPhyIndex(MHz_u bw, uint8_t p20Index) const
 {
     bool primary80IsLower80 = (p20Index < bw / MHz_u{40});
 
-    if (bw < MHz_u{160} || m_ruType == HeRu::RU_2x996_TONE ||
+    if (bw < MHz_u{160} || m_ruType == RuType::RU_2x996_TONE ||
         (primary80IsLower80 && m_primary80MHz) || (!primary80IsLower80 && !m_primary80MHz))
     {
         return m_index;
@@ -480,10 +458,39 @@ HeRu::RuSpec::GetPhyIndex(MHz_u bw, uint8_t p20Index) const
     }
 }
 
+bool
+HeRu::GetPrimary80MHzFlag(MHz_u bw, RuType ruType, std::size_t phyIndex, uint8_t p20Index)
+{
+    if (bw < MHz_u{160} || ruType == RuType::RU_2x996_TONE)
+    {
+        return true;
+    }
+    const auto primary80IsLower80 = (p20Index < bw / MHz_u{40});
+    const auto indicesPer80MHz = GetNRus(MHz_u{80}, ruType);
+    return ((primary80IsLower80 && (phyIndex <= indicesPer80MHz)) ||
+            (!primary80IsLower80 && (phyIndex > indicesPer80MHz)));
+}
+
+std::size_t
+HeRu::GetIndexIn80MHzSegment(MHz_u bw, RuType ruType, std::size_t phyIndex)
+{
+    std::size_t index{phyIndex};
+    const auto indicesPer80MHz = GetNRus(MHz_u{80}, ruType);
+    if (WifiRu::GetBandwidth(ruType) > MHz_u{80})
+    {
+        index = 1;
+    }
+    else if (bw > MHz_u{80} && phyIndex > indicesPer80MHz)
+    {
+        index = (((phyIndex - 1) % indicesPer80MHz) + 1);
+    }
+    return index;
+}
+
 std::size_t
 HeRu::GetNRus(MHz_u bw, RuType ruType)
 {
-    if (bw == MHz_u{160} && ruType == RU_2x996_TONE)
+    if (bw == MHz_u{160} && ruType == RuType::RU_2x996_TONE)
     {
         return 1;
     }
@@ -501,9 +508,14 @@ HeRu::GetNRus(MHz_u bw, RuType ruType)
 }
 
 std::vector<HeRu::RuSpec>
-HeRu::GetRusOfType(MHz_u bw, HeRu::RuType ruType)
+HeRu::GetRusOfType(MHz_u bw, RuType ruType)
 {
-    if (ruType == HeRu::RU_2x996_TONE)
+    if (GetNRus(bw, ruType) == 0)
+    {
+        return {};
+    }
+
+    if (ruType == RuType::RU_2x996_TONE)
     {
         NS_ASSERT(bw >= MHz_u{160});
         return {{ruType, 1, true}};
@@ -531,11 +543,11 @@ HeRu::GetRusOfType(MHz_u bw, HeRu::RuType ruType)
 }
 
 std::vector<HeRu::RuSpec>
-HeRu::GetCentral26TonesRus(MHz_u bw, HeRu::RuType ruType)
+HeRu::GetCentral26TonesRus(MHz_u bw, RuType ruType)
 {
     std::vector<std::size_t> indices;
 
-    if (ruType == HeRu::RU_52_TONE || ruType == HeRu::RU_106_TONE)
+    if (ruType == RuType::RU_52_TONE || ruType == RuType::RU_106_TONE)
     {
         if (bw == MHz_u{20})
         {
@@ -550,7 +562,7 @@ HeRu::GetCentral26TonesRus(MHz_u bw, HeRu::RuType ruType)
             indices.insert(indices.end(), {5, 14, 19, 24, 33});
         }
     }
-    else if (ruType == HeRu::RU_242_TONE || ruType == HeRu::RU_484_TONE)
+    else if (ruType == RuType::RU_242_TONE || ruType == RuType::RU_484_TONE)
     {
         if (bw >= MHz_u{80})
         {
@@ -570,19 +582,19 @@ HeRu::GetCentral26TonesRus(MHz_u bw, HeRu::RuType ruType)
     {
         for (const auto& index : indices)
         {
-            ret.emplace_back(HeRu::RU_26_TONE, index, primary80MHz);
+            ret.emplace_back(RuType::RU_26_TONE, index, primary80MHz);
         }
     }
     return ret;
 }
 
-HeRu::SubcarrierGroup
+SubcarrierGroup
 HeRu::GetSubcarrierGroup(MHz_u bw, RuType ruType, std::size_t phyIndex)
 {
-    if (ruType == HeRu::RU_2x996_TONE) // handle special case of RU covering 160 MHz channel
+    if (ruType == RuType::RU_2x996_TONE) // handle special case of RU covering 160 MHz channel
     {
         NS_ABORT_MSG_IF(bw != MHz_u{160}, "2x996 tone RU can only be used on 160 MHz band");
-        return {{-1012, -3}, {3, 1012}};
+        return {{-1012, -515}, {-509, -12}, {12, 509}, {515, 1012}};
     }
 
     // Determine the shift to apply to tone indices for 160 MHz channel (i.e. -1012 to 1012), since
@@ -619,7 +631,7 @@ bool
 HeRu::DoesOverlap(MHz_u bw, RuSpec ru, const std::vector<RuSpec>& v)
 {
     // A 2x996-tone RU spans 160 MHz, hence it overlaps with any other RU
-    if (bw == MHz_u{160} && ru.GetRuType() == RU_2x996_TONE && !v.empty())
+    if (bw == MHz_u{160} && ru.GetRuType() == RuType::RU_2x996_TONE && !v.empty())
     {
         return true;
     }
@@ -631,6 +643,12 @@ HeRu::DoesOverlap(MHz_u bw, RuSpec ru, const std::vector<RuSpec>& v)
     SubcarrierGroup rangesRu = GetSubcarrierGroup(bw, ru.GetRuType(), ru.GetIndex());
     for (auto& p : v)
     {
+        // A 2x996-tone RU spans 160 MHz, hence it overlaps
+        if (bw == MHz_u{160} && p.GetRuType() == RuType::RU_2x996_TONE)
+        {
+            return true;
+        }
+
         if (ru.GetPrimary80MHz() != p.GetPrimary80MHz())
         {
             // the two RUs are located in distinct 80MHz bands
@@ -651,29 +669,6 @@ HeRu::DoesOverlap(MHz_u bw, RuSpec ru, const std::vector<RuSpec>& v)
     return false;
 }
 
-bool
-HeRu::DoesOverlap(MHz_u bw, RuSpec ru, const SubcarrierGroup& toneRanges, uint8_t p20Index)
-{
-    for (const auto& range : toneRanges)
-    {
-        if (bw == MHz_u{160} && ru.GetRuType() == RU_2x996_TONE)
-        {
-            return true;
-        }
-
-        SubcarrierGroup rangesRu =
-            GetSubcarrierGroup(bw, ru.GetRuType(), ru.GetPhyIndex(bw, p20Index));
-        for (auto& r : rangesRu)
-        {
-            if (range.second >= r.first && r.second >= range.first)
-            {
-                return true;
-            }
-        }
-    }
-    return false;
-}
-
 HeRu::RuSpec
 HeRu::FindOverlappingRu(MHz_u bw, RuSpec referenceRu, RuType searchedRuType)
 {
@@ -685,7 +680,7 @@ HeRu::FindOverlappingRu(MHz_u bw, RuSpec referenceRu, RuType searchedRuType)
     {
         primary80MhzFlags.push_back(true);
         primary80MhzFlags.push_back(false);
-        numRusPer80Mhz = (searchedRuType == HeRu::RU_2x996_TONE ? 1 : numRus / 2);
+        numRusPer80Mhz = (searchedRuType == RuType::RU_2x996_TONE ? 1 : numRus / 2);
     }
     else
     {
@@ -712,38 +707,6 @@ HeRu::FindOverlappingRu(MHz_u bw, RuSpec referenceRu, RuType searchedRuType)
 }
 
 std::ostream&
-operator<<(std::ostream& os, const HeRu::RuType& ruType)
-{
-    switch (ruType)
-    {
-    case HeRu::RU_26_TONE:
-        os << "26-tones";
-        break;
-    case HeRu::RU_52_TONE:
-        os << "52-tones";
-        break;
-    case HeRu::RU_106_TONE:
-        os << "106-tones";
-        break;
-    case HeRu::RU_242_TONE:
-        os << "242-tones";
-        break;
-    case HeRu::RU_484_TONE:
-        os << "484-tones";
-        break;
-    case HeRu::RU_996_TONE:
-        os << "996-tones";
-        break;
-    case HeRu::RU_2x996_TONE:
-        os << "2x996-tones";
-        break;
-    default:
-        NS_FATAL_ERROR("Unknown RU type");
-    }
-    return os;
-}
-
-std::ostream&
 operator<<(std::ostream& os, const HeRu::RuSpec& ru)
 {
     os << "RU{" << ru.GetRuType() << "/" << ru.GetIndex() << "/"
@@ -752,57 +715,7 @@ operator<<(std::ostream& os, const HeRu::RuSpec& ru)
     return os;
 }
 
-MHz_u
-HeRu::GetBandwidth(RuType ruType)
-{
-    switch (ruType)
-    {
-    case RU_26_TONE:
-        return MHz_u{2};
-    case RU_52_TONE:
-        return MHz_u{4};
-    case RU_106_TONE:
-        return MHz_u{8};
-    case RU_242_TONE:
-        return MHz_u{20};
-    case RU_484_TONE:
-        return MHz_u{40};
-    case RU_996_TONE:
-        return MHz_u{80};
-    case RU_2x996_TONE:
-        return MHz_u{160};
-    default:
-        NS_ABORT_MSG("RU type " << ruType << " not found");
-        return MHz_u{0};
-    }
-}
-
-HeRu::RuType
-HeRu::GetRuType(MHz_u bandwidth)
-{
-    switch (static_cast<uint16_t>(bandwidth))
-    {
-    case 2:
-        return RU_26_TONE;
-    case 4:
-        return RU_52_TONE;
-    case 8:
-        return RU_106_TONE;
-    case 20:
-        return RU_242_TONE;
-    case 40:
-        return RU_484_TONE;
-    case 80:
-        return RU_996_TONE;
-    case 160:
-        return RU_2x996_TONE;
-    default:
-        NS_ABORT_MSG(bandwidth << " MHz bandwidth not found");
-        return RU_242_TONE;
-    }
-}
-
-HeRu::RuType
+RuType
 HeRu::GetEqualSizedRusForStations(MHz_u bandwidth,
                                   std::size_t& nStations,
                                   std::size_t& nCentral26TonesRus)
@@ -831,15 +744,23 @@ HeRu::GetEqualSizedRusForStations(MHz_u bandwidth,
     {
         NS_ABORT_IF(bandwidth != MHz_u{160} || nStations != 1);
         nRusAssigned = 1;
-        ruType = RU_2x996_TONE;
+        ruType = RuType::RU_2x996_TONE;
     }
 
     nStations = nRusAssigned;
+    nCentral26TonesRus = GetNumCentral26TonesRus(bandwidth, ruType);
 
+    return ruType;
+}
+
+uint8_t
+HeRu::GetNumCentral26TonesRus(MHz_u bandwidth, RuType ruType)
+{
+    uint8_t nCentral26TonesRus{0};
     switch (ruType)
     {
-    case RU_52_TONE:
-    case RU_106_TONE:
+    case RuType::RU_52_TONE:
+    case RuType::RU_106_TONE:
         if (bandwidth == MHz_u{20})
         {
             nCentral26TonesRus = 1;
@@ -853,8 +774,8 @@ HeRu::GetEqualSizedRusForStations(MHz_u bandwidth,
             nCentral26TonesRus = 5;
         }
         break;
-    case RU_242_TONE:
-    case RU_484_TONE:
+    case RuType::RU_242_TONE:
+    case RuType::RU_484_TONE:
         nCentral26TonesRus = (bandwidth >= MHz_u{80} ? 1 : 0);
         break;
     default:
@@ -866,7 +787,7 @@ HeRu::GetEqualSizedRusForStations(MHz_u bandwidth,
         nCentral26TonesRus *= 2;
     }
 
-    return ruType;
+    return nCentral26TonesRus;
 }
 
 bool

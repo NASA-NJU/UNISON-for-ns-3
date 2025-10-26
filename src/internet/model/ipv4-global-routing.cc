@@ -78,6 +78,15 @@ Ipv4GlobalRouting::AddHostRouteTo(Ipv4Address dest, Ipv4Address nextHop, uint32_
     NS_LOG_FUNCTION(this << dest << nextHop << interface);
     auto route = new Ipv4RoutingTableEntry();
     *route = Ipv4RoutingTableEntry::CreateHostRouteTo(dest, nextHop, interface);
+    for (auto routePointer : m_hostRoutes)
+    {
+        if (*routePointer == *route)
+        {
+            NS_LOG_LOGIC("Route already exists");
+            delete route;
+            return;
+        }
+    }
     m_hostRoutes.push_back(route);
 }
 
@@ -87,6 +96,15 @@ Ipv4GlobalRouting::AddHostRouteTo(Ipv4Address dest, uint32_t interface)
     NS_LOG_FUNCTION(this << dest << interface);
     auto route = new Ipv4RoutingTableEntry();
     *route = Ipv4RoutingTableEntry::CreateHostRouteTo(dest, interface);
+    for (auto routePointer : m_hostRoutes)
+    {
+        if (*routePointer == *route)
+        {
+            NS_LOG_LOGIC("Route already exists");
+            delete route;
+            return;
+        }
+    }
     m_hostRoutes.push_back(route);
 }
 
@@ -99,6 +117,15 @@ Ipv4GlobalRouting::AddNetworkRouteTo(Ipv4Address network,
     NS_LOG_FUNCTION(this << network << networkMask << nextHop << interface);
     auto route = new Ipv4RoutingTableEntry();
     *route = Ipv4RoutingTableEntry::CreateNetworkRouteTo(network, networkMask, nextHop, interface);
+    for (auto routePointer : m_networkRoutes)
+    {
+        if (*routePointer == *route)
+        {
+            NS_LOG_LOGIC("Route already exists");
+            delete route;
+            return;
+        }
+    }
     m_networkRoutes.push_back(route);
 }
 
@@ -108,6 +135,15 @@ Ipv4GlobalRouting::AddNetworkRouteTo(Ipv4Address network, Ipv4Mask networkMask, 
     NS_LOG_FUNCTION(this << network << networkMask << interface);
     auto route = new Ipv4RoutingTableEntry();
     *route = Ipv4RoutingTableEntry::CreateNetworkRouteTo(network, networkMask, interface);
+    for (auto routePointer : m_networkRoutes)
+    {
+        if (*routePointer == *route)
+        {
+            NS_LOG_LOGIC("Route already exists");
+            delete route;
+            return;
+        }
+    }
     m_networkRoutes.push_back(route);
 }
 
@@ -120,6 +156,15 @@ Ipv4GlobalRouting::AddASExternalRouteTo(Ipv4Address network,
     NS_LOG_FUNCTION(this << network << networkMask << nextHop << interface);
     auto route = new Ipv4RoutingTableEntry();
     *route = Ipv4RoutingTableEntry::CreateNetworkRouteTo(network, networkMask, nextHop, interface);
+    for (auto routePointer : m_ASexternalRoutes)
+    {
+        if (*routePointer == *route)
+        {
+            NS_LOG_LOGIC("Route already exists");
+            delete route;
+            return;
+        }
+    }
     m_ASexternalRoutes.push_back(route);
 }
 
@@ -154,9 +199,13 @@ Ipv4GlobalRouting::LookupGlobal(Ipv4Address dest, uint32_t flowHash, Ptr<NetDevi
     if (allRoutes.empty()) // if no host route is found
     {
         NS_LOG_LOGIC("Number of m_networkRoutes" << m_networkRoutes.size());
+        // store the length of the longest mask.
+        uint16_t longest_mask = 0;
         for (auto j = m_networkRoutes.begin(); j != m_networkRoutes.end(); j++)
         {
             Ipv4Mask mask = (*j)->GetDestNetworkMask();
+            uint16_t masklen = mask.GetPrefixLength();
+
             Ipv4Address entry = (*j)->GetDestNetwork();
             if (mask.IsMatch(dest, entry))
             {
@@ -168,8 +217,23 @@ Ipv4GlobalRouting::LookupGlobal(Ipv4Address dest, uint32_t flowHash, Ptr<NetDevi
                         continue;
                     }
                 }
-                allRoutes.push_back(*j);
                 NS_LOG_LOGIC(allRoutes.size() << "Found global network route" << *j);
+                if (masklen < longest_mask) // Not interested if got shorter mask
+                {
+                    NS_LOG_LOGIC("Previous match longer, skipping");
+                    continue;
+                }
+                else if (masklen == longest_mask)
+                {
+                    NS_LOG_LOGIC("Equal mask length, adding this to the list");
+                    allRoutes.push_back(*j);
+                }
+                else
+                {
+                    NS_LOG_LOGIC("Longer mask length found, clearing the list and adding");
+                    allRoutes.clear();
+                    allRoutes.push_back(*j);
+                }
             }
         }
     }

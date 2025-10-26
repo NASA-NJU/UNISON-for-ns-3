@@ -214,6 +214,12 @@ class DockerContainerManager:
                     os.environ[key] = value
                     del setting, key, value
 
+        # Check if we can use Docker (docker-on-docker is a pain)
+        try:
+            docker.ps()
+        except DockerException as e:
+            currentTestCase.skipTest(f"python-on-whales returned:{e.__str__()}")
+
         # Create Docker client instance and start it
         ## The Python-on-whales container instance
         self.container = docker.run(
@@ -933,7 +939,7 @@ class NS3ConfigureTestCase(NS3BaseTestCase):
         """
         # Try filtering disabled modules to disable lte and modules that depend on it.
         return_code, stdout, stderr = run_ns3(
-            "configure -G \"{generator}\" --disable-modules='lte;wimax'"
+            "configure -G \"{generator}\" --disable-modules='lte;wifi'"
         )
         self.config_ok(return_code, stdout, stderr)
 
@@ -941,7 +947,7 @@ class NS3ConfigureTestCase(NS3BaseTestCase):
         enabled_modules = get_enabled_modules()
         self.assertLess(len(enabled_modules), len(self.ns3_modules))
         self.assertNotIn("ns3-lte", enabled_modules)
-        self.assertNotIn("ns3-wimax", enabled_modules)
+        self.assertNotIn("ns3-wifi", enabled_modules)
 
         # Try cleaning the list of enabled modules to reset to the normal configuration.
         return_code, stdout, stderr = run_ns3("configure -G \"{generator}\" --disable-modules=''")
@@ -1121,7 +1127,7 @@ class NS3ConfigureTestCase(NS3BaseTestCase):
                     'lte',
                     #comment2,
                     #comment3
-                    'network', 'internet','wimax'""",
+                    'network', 'internet','wifi'""",
                             examples="True",
                             tests="True",
                         )
@@ -1129,7 +1135,7 @@ class NS3ConfigureTestCase(NS3BaseTestCase):
                 else:
                     f.write(
                         ns3rc_template.format(
-                            modules="'core', 'lte', 'network', 'internet', 'wimax'",
+                            modules="'core', 'lte', 'network', 'internet', 'wifi'",
                             examples="True",
                             tests="True",
                         )
@@ -1144,7 +1150,7 @@ class NS3ConfigureTestCase(NS3BaseTestCase):
             self.assertIn("ns3-core", enabled_modules)
             self.assertIn("ns3-internet", enabled_modules)
             self.assertIn("ns3-lte", enabled_modules)
-            self.assertIn("ns3-wimax", enabled_modules)
+            self.assertIn("ns3-wifi", enabled_modules)
             self.assertTrue(get_test_enabled())
             self.assertGreater(len(get_programs_list()), len(self.ns3_executables))
 
@@ -1801,7 +1807,7 @@ class NS3ConfigureTestCase(NS3BaseTestCase):
         """
 
         run_ns3("clean")
-        with DockerContainerManager(self, "gcc:12.1") as container:
+        with DockerContainerManager(self, "gcc:12") as container:
             # Install basic packages
             container.execute("apt-get update")
             container.execute("apt-get install -y python3 ninja-build cmake g++ lld")
@@ -1869,14 +1875,14 @@ class NS3ConfigureTestCase(NS3BaseTestCase):
         """
 
         run_ns3("clean")
-        with DockerContainerManager(self, "ubuntu:22.04") as container:
+        with DockerContainerManager(self, "ubuntu:24.04") as container:
             container.execute("apt-get update")
-            container.execute("apt-get install -y python3 ninja-build cmake clang-12")
+            container.execute("apt-get install -y python3 ninja-build cmake clang-18")
 
             # Enable ClangTimeTrace without git (it should fail)
             try:
                 container.execute(
-                    "./ns3 configure -G Ninja --enable-modules=core --enable-examples --enable-tests -- -DCMAKE_CXX_COMPILER=/usr/bin/clang++-12 -DNS3_CLANG_TIMETRACE=ON"
+                    "./ns3 configure -G Ninja --enable-modules=core --enable-examples --enable-tests -- -DCMAKE_CXX_COMPILER=/usr/bin/clang++-18 -DNS3_CLANG_TIMETRACE=ON"
                 )
             except DockerException as e:
                 self.assertIn("could not find git for clone of ClangBuildAnalyzer", e.stderr)
@@ -1886,7 +1892,7 @@ class NS3ConfigureTestCase(NS3BaseTestCase):
             # Enable ClangTimeTrace without git (it should succeed)
             try:
                 container.execute(
-                    "./ns3 configure -G Ninja --enable-modules=core --enable-examples --enable-tests -- -DCMAKE_CXX_COMPILER=/usr/bin/clang++-12 -DNS3_CLANG_TIMETRACE=ON"
+                    "./ns3 configure -G Ninja --enable-modules=core --enable-examples --enable-tests -- -DCMAKE_CXX_COMPILER=/usr/bin/clang++-18 -DNS3_CLANG_TIMETRACE=ON"
                 )
             except DockerException as e:
                 self.assertIn("could not find git for clone of ClangBuildAnalyzer", e.stderr)
@@ -1908,7 +1914,7 @@ class NS3ConfigureTestCase(NS3BaseTestCase):
             # Now try with GCC, which should fail during the configuration
             run_ns3("clean")
             container.execute("apt-get install -y g++")
-            container.execute("apt-get remove -y clang-12")
+            container.execute("apt-get remove -y clang-18")
 
             try:
                 container.execute(
@@ -1929,15 +1935,15 @@ class NS3ConfigureTestCase(NS3BaseTestCase):
         """
 
         run_ns3("clean")
-        with DockerContainerManager(self, "ubuntu:20.04") as container:
+        with DockerContainerManager(self, "ubuntu:24.04") as container:
             container.execute("apt-get update")
             container.execute("apt-get remove -y g++")
-            container.execute("apt-get install -y python3 cmake g++-10 clang-11")
+            container.execute("apt-get install -y python3 cmake g++-11 clang-18")
 
             # Enable Ninja tracing without using the Ninja generator
             try:
                 container.execute(
-                    "./ns3 configure --enable-modules=core --enable-ninja-tracing -- -DCMAKE_CXX_COMPILER=/usr/bin/clang++-11"
+                    "./ns3 configure --enable-modules=core --enable-ninja-tracing -- -DCMAKE_CXX_COMPILER=/usr/bin/clang++-18"
                 )
             except DockerException as e:
                 self.assertIn("Ninjatracing requires the Ninja generator", e.stderr)
@@ -1949,7 +1955,7 @@ class NS3ConfigureTestCase(NS3BaseTestCase):
             # Enable Ninjatracing support without git (should fail)
             try:
                 container.execute(
-                    "./ns3 configure -G Ninja --enable-modules=core --enable-ninja-tracing -- -DCMAKE_CXX_COMPILER=/usr/bin/clang++-11"
+                    "./ns3 configure -G Ninja --enable-modules=core --enable-ninja-tracing -- -DCMAKE_CXX_COMPILER=/usr/bin/clang++-18"
                 )
             except DockerException as e:
                 self.assertIn("could not find git for clone of NinjaTracing", e.stderr)
@@ -1958,7 +1964,7 @@ class NS3ConfigureTestCase(NS3BaseTestCase):
             # Enable Ninjatracing support with git (it should succeed)
             try:
                 container.execute(
-                    "./ns3 configure -G Ninja --enable-modules=core --enable-ninja-tracing -- -DCMAKE_CXX_COMPILER=/usr/bin/clang++-11"
+                    "./ns3 configure -G Ninja --enable-modules=core --enable-ninja-tracing -- -DCMAKE_CXX_COMPILER=/usr/bin/clang++-18"
                 )
             except DockerException as e:
                 self.assertTrue(False, "Failed to configure with Ninjatracing")
@@ -1987,7 +1993,7 @@ class NS3ConfigureTestCase(NS3BaseTestCase):
             # Enable Clang TimeTrace feature for more detailed traces
             try:
                 container.execute(
-                    "./ns3 configure -G Ninja --enable-modules=core --enable-ninja-tracing -- -DCMAKE_CXX_COMPILER=/usr/bin/clang++-11 -DNS3_CLANG_TIMETRACE=ON"
+                    "./ns3 configure -G Ninja --enable-modules=core --enable-ninja-tracing -- -DCMAKE_CXX_COMPILER=/usr/bin/clang++-18 -DNS3_CLANG_TIMETRACE=ON"
                 )
             except DockerException as e:
                 self.assertTrue(False, "Failed to configure Ninjatracing with Clang's TimeTrace")
@@ -2359,9 +2365,9 @@ class NS3BuildBaseTestCase(NS3BaseTestCase):
             for import_method in ns3_import_methods:
                 test_cmake_project = (
                     """
-                                     cmake_minimum_required(VERSION 3.12..3.12)
+                                     cmake_minimum_required(VERSION 3.20..3.20)
                                      project(ns3_consumer CXX)
-                                     set(CMAKE_CXX_STANDARD 20)
+                                     set(CMAKE_CXX_STANDARD 23)
                                      set(CMAKE_CXX_STANDARD_REQUIRED ON)
                                      add_executable(test main.cpp)
                                      """
@@ -3189,8 +3195,68 @@ class NS3ExpectedUseTestCase(NS3BaseTestCase):
 
 class NS3QualityControlTestCase(unittest.TestCase):
     """!
-    ns-3 tests to control the quality of the repository over time,
-    by checking the state of URLs listed and more
+    ns-3 tests to control the quality of the repository over time
+    """
+
+    def test_01_CheckImageBrightness(self):
+        """!
+        Check if images in the docs are above a brightness threshold.
+        This should prevent screenshots with dark UI themes.
+        @return None
+        """
+        if shutil.which("convert") is None:
+            self.skipTest("Imagemagick was not found")
+
+        from pathlib import Path
+
+        # Scan for images
+        image_extensions = ["png", "jpg"]
+        images = []
+        for extension in image_extensions:
+            images += list(Path("./doc").glob("**/figures/*.{ext}".format(ext=extension)))
+            images += list(Path("./doc").glob("**/figures/**/*.{ext}".format(ext=extension)))
+
+        # Get the brightness of an image on a scale of 0-100%
+        imagemagick_get_image_brightness = 'convert {image} -colorspace HSI -channel b -separate +channel -scale 1x1 -format "%[fx:100*u]" info:'
+
+        # We could invert colors of target image to increase its brightness
+        # convert source.png -channel RGB -negate target.png
+        brightness_threshold = 50
+        for image in images:
+            brightness = subprocess.check_output(
+                imagemagick_get_image_brightness.format(image=image).split()
+            )
+            brightness = float(brightness.decode().strip("'\""))
+            self.assertGreater(
+                brightness,
+                brightness_threshold,
+                "Image darker than threshold (%d < %d): %s"
+                % (brightness, brightness_threshold, image),
+            )
+
+    def test_02_CheckForBrokenLogs(self):
+        """!
+        Check if one of the log statements of examples/tests contains/exposes a bug.
+        @return None
+        """
+        # First enable examples and tests with sanitizers
+        return_code, stdout, stderr = run_ns3(
+            'configure -G "{generator}" -d release --enable-examples --enable-tests --enable-sanitizers'
+        )
+        self.assertEqual(return_code, 0)
+
+        # Then build and run tests setting the environment variable
+        return_code, stdout, stderr = run_program(
+            "test.py", "", python=True, env={"TEST_LOGS": "1"}
+        )
+        self.assertEqual(return_code, 0)
+
+
+class NS3QualityControlThatCanFailTestCase(unittest.TestCase):
+    """!
+    ns-3 complementary tests, allowed to fail, to help control
+    the quality of the repository over time, by checking the
+    state of URLs listed and more
     """
 
     def test_01_CheckForDeadLinksInSources(self):
@@ -3237,6 +3303,8 @@ class NS3QualityControlTestCase(unittest.TestCase):
             "http://en.wikipedia.org/wiki/Namespace_(computer_science",
             "http://en.wikipedia.org/wiki/Bonobo_(component_model",
             "http://msdn.microsoft.com/en-us/library/aa365247(v=vs.85",
+            "https://github.com/rui314/mold/releases/download/v1.4.2/mold-1.4.2-{arch",
+            "http://www.nsnam.org/bugzilla/show_bug.cgi?id=",
             # historical links
             "http://www.research.att.com/info/kpv/",
             "http://www.research.att.com/~gsf/",
@@ -3386,59 +3454,6 @@ class NS3QualityControlTestCase(unittest.TestCase):
         test_return_code, stdout, stderr = run_program("test.py", "", python=True)
         self.assertEqual(test_return_code, 0)
 
-    def test_03_CheckImageBrightness(self):
-        """!
-        Check if images in the docs are above a brightness threshold.
-        This should prevent screenshots with dark UI themes.
-        @return None
-        """
-        if shutil.which("convert") is None:
-            self.skipTest("Imagemagick was not found")
-
-        from pathlib import Path
-
-        # Scan for images
-        image_extensions = ["png", "jpg"]
-        images = []
-        for extension in image_extensions:
-            images += list(Path("./doc").glob("**/figures/*.{ext}".format(ext=extension)))
-            images += list(Path("./doc").glob("**/figures/**/*.{ext}".format(ext=extension)))
-
-        # Get the brightness of an image on a scale of 0-100%
-        imagemagick_get_image_brightness = 'convert {image} -colorspace HSI -channel b -separate +channel -scale 1x1 -format "%[fx:100*u]" info:'
-
-        # We could invert colors of target image to increase its brightness
-        # convert source.png -channel RGB -negate target.png
-        brightness_threshold = 50
-        for image in images:
-            brightness = subprocess.check_output(
-                imagemagick_get_image_brightness.format(image=image).split()
-            )
-            brightness = float(brightness.decode().strip("'\""))
-            self.assertGreater(
-                brightness,
-                brightness_threshold,
-                "Image darker than threshold (%d < %d): %s"
-                % (brightness, brightness_threshold, image),
-            )
-
-    def test_04_CheckForBrokenLogs(self):
-        """!
-        Check if one of the log statements of examples/tests contains/exposes a bug.
-        @return None
-        """
-        # First enable examples and tests with sanitizers
-        return_code, stdout, stderr = run_ns3(
-            'configure -G "{generator}" -d release --enable-examples --enable-tests --enable-sanitizers'
-        )
-        self.assertEqual(return_code, 0)
-
-        # Then build and run tests setting the environment variable
-        return_code, stdout, stderr = run_program(
-            "test.py", "", python=True, env={"TEST_LOGS": "1"}
-        )
-        self.assertEqual(return_code, 0)
-
 
 def main():
     """!
@@ -3470,6 +3485,7 @@ def main():
         ],
         "extras": [
             NS3DependenciesTestCase,
+            NS3QualityControlThatCanFailTestCase,
         ],
     }
 
@@ -3482,6 +3498,7 @@ def main():
     parser.add_argument("-tn", "--test-name", action="store", default=None, type=str)
     parser.add_argument("-rtn", "--resume-from-test-name", action="store", default=None, type=str)
     parser.add_argument("-q", "--quiet", action="store_true", default=False)
+    parser.add_argument("-f", "--failfast", action="store_true", default=False)
     args = parser.parse_args(sys.argv[1:])
 
     loader = unittest.TestLoader()
@@ -3517,7 +3534,7 @@ def main():
         shutil.move(ns3rc_script, ns3rc_script_bak)
 
     # Run tests and fail as fast as possible
-    runner = unittest.TextTestRunner(failfast=True, verbosity=1 if args.quiet else 2)
+    runner = unittest.TextTestRunner(failfast=args.failfast, verbosity=1 if args.quiet else 2)
     runner.run(suite)
 
     # After completing the tests successfully, restore the ns3rc file

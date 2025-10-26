@@ -128,9 +128,8 @@ class SimpleUeComponentCarrierManager : public LteUeComponentCarrierManager
   protected:
     LteMacSapUser* m_ccmMacSapUser;         //!< Interface to the UE RLC instance.
     LteMacSapProvider* m_ccmMacSapProvider; //!< Receive API calls from the UE RLC instance
+};
 
-}; // end of class SimpleUeComponentCarrierManager
-
-} // end of namespace ns3
+} // namespace ns3
 
 #endif /* SIMPLE_UE_COMPONENT_CARRIER_MANAGER_H */

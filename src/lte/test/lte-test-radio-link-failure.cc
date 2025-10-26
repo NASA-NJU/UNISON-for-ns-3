@@ -167,6 +167,7 @@ LteRadioLinkFailureTestCase::DoRun()
     // LogComponentEnable ("LteUeRrc", logLevel);
     // LogComponentEnable ("LteEnbRrc", logLevel);
     // LogComponentEnable ("LteRadioLinkFailureTest", logLevel);
+    SetDataDir(NS_TEST_SOURCEDIR);
 
     Config::SetDefault("ns3::MacStatsCalculator::DlOutputFilename",
                        StringValue(CreateTempDirFilename("DlMacStats.txt")));
@@ -375,8 +376,7 @@ LteRadioLinkFailureTestCase::DoRun()
             dlClientApps.Start(Seconds(0.27));
             ulServerApps.Start(Seconds(0.27));
             ulClientApps.Start(Seconds(0.27));
-
-        } // end for b
+        }
     }
 
     lteHelper->EnableTraces();
@@ -424,7 +424,7 @@ LteRadioLinkFailureTestCase::DoRun()
         CheckIdle(ueDevs.Get(u), enbDevs);
     }
     Simulator::Destroy();
-} // end of void LteRadioLinkFailureTestCase::DoRun ()
+}
 
 void
 LteRadioLinkFailureTestCase::JumpAway(Vector UeJumpAwayPosition)

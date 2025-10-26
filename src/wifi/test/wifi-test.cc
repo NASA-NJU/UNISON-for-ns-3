@@ -1508,7 +1508,7 @@ Bug2222TestCase::DoRun()
  *
  * The scenario considers a UDP transmission between a 40 MHz 802.11ac station and a
  * 40 MHz 802.11ac access point. All transmission parameters are checked so as
- * to ensure that only 2 {starting frequency, channelWidth, Number of subbands
+ * to ensure that only 3 {starting frequency, channelWidth, Number of subbands
  * in SpectrumModel, modulation type} tuples are used.
  *
  * See \bugid{2843}
@@ -1688,33 +1688,48 @@ Bug2843TestCase::DoRun()
     // {starting frequency, channelWidth, Number of subbands in SpectrumModel, modulation type}
     // tuples
     std::size_t numberTuples = m_distinctTuples.size();
-    NS_TEST_ASSERT_MSG_EQ(numberTuples, 2, "Only two distinct tuples expected");
-    NS_TEST_ASSERT_MSG_EQ(std::get<0>(m_distinctTuples[0]) - Hz_u{20e6},
+    NS_TEST_ASSERT_MSG_EQ(numberTuples, 3, "Only three distinct tuples expected");
+    NS_TEST_EXPECT_MSG_EQ(std::get<0>(m_distinctTuples[0]) - Hz_u{20e6},
                           std::get<0>(m_distinctTuples[1]),
                           "The starting frequency of the first tuple should be shifted 20 MHz to "
                           "the right wrt second tuple");
     // Note that the first tuple should the one initiated by the beacon, i.e. non-HT OFDM (20 MHz)
-    NS_TEST_ASSERT_MSG_EQ(std::get<1>(m_distinctTuples[0]),
+    NS_TEST_EXPECT_MSG_EQ(std::get<1>(m_distinctTuples[0]),
                           MHz_u{20},
                           "First tuple's channel width should be 20 MHz");
-    NS_TEST_ASSERT_MSG_EQ(std::get<2>(m_distinctTuples[0]),
+    NS_TEST_EXPECT_MSG_EQ(std::get<2>(m_distinctTuples[0]),
                           193,
                           "First tuple should have 193 subbands (64+DC, 20MHz+DC, inband and 64*2 "
                           "out-of-band, 20MHz on each side)");
-    NS_TEST_ASSERT_MSG_EQ(std::get<3>(m_distinctTuples[0]),
+    NS_TEST_EXPECT_MSG_EQ(std::get<3>(m_distinctTuples[0]),
                           WifiModulationClass::WIFI_MOD_CLASS_OFDM,
                           "First tuple should be OFDM");
-    // Second tuple
-    NS_TEST_ASSERT_MSG_EQ(std::get<1>(m_distinctTuples[1]),
+    // Second tuple: data frames, VHT (40 MHz)
+    NS_TEST_EXPECT_MSG_EQ(std::get<1>(m_distinctTuples[1]),
                           channelWidth,
                           "Second tuple's channel width should be 40 MHz");
-    NS_TEST_ASSERT_MSG_EQ(std::get<2>(m_distinctTuples[1]),
+    NS_TEST_EXPECT_MSG_EQ(std::get<2>(m_distinctTuples[1]),
                           385,
                           "Second tuple should have 385 subbands (128+DC, 40MHz+DC, inband and "
                           "128*2 out-of-band, 40MHz on each side)");
-    NS_TEST_ASSERT_MSG_EQ(std::get<3>(m_distinctTuples[1]),
+    NS_TEST_EXPECT_MSG_EQ(std::get<3>(m_distinctTuples[1]),
                           WifiModulationClass::WIFI_MOD_CLASS_VHT,
                           "Second tuple should be VHT_OFDM");
+    // Third tuple: control response frames, non-HT (OFDM) duplicate (40 MHz)
+    NS_TEST_EXPECT_MSG_EQ(std::get<0>(m_distinctTuples[1]),
+                          std::get<0>(m_distinctTuples[2]),
+                          "The starting frequency of the third tuple should be the same as the "
+                          "second tuple");
+    NS_TEST_EXPECT_MSG_EQ(std::get<1>(m_distinctTuples[2]),
+                          channelWidth,
+                          "Third tuple's channel width should be 40 MHz");
+    NS_TEST_EXPECT_MSG_EQ(std::get<2>(m_distinctTuples[2]),
+                          385,
+                          "Third tuple should have 385 subbands (128+DC, 40MHz+DC, inband and "
+                          "128*2 out-of-band, 40MHz on each side)");
+    NS_TEST_EXPECT_MSG_EQ(std::get<3>(m_distinctTuples[2]),
+                          WifiModulationClass::WIFI_MOD_CLASS_OFDM,
+                          "Third tuple should be OFDM");
 }
 
 //-----------------------------------------------------------------------------
@@ -2603,7 +2618,7 @@ class Issue40TestCase : public TestCase
     uint16_t m_rxCount; ///< Count number of successfully received data packets
     uint16_t m_txCount; ///< Count number of transmitted data packets
     uint16_t
-        m_txMacFinalDataFailedCount; ///< Count number of unsuccessfuly transmitted data packets
+        m_txMacFinalDataFailedCount; ///< Count number of unsuccessfully transmitted data packets
 };
 
 Issue40TestCase::Issue40TestCase()
@@ -2721,7 +2736,7 @@ Issue40TestCase::RunOne(bool useAmpdu)
                         staDevice.Get(0)->GetAddress());
 
     // Transmit a second data packet once the station is away from the access point: it should be
-    // sent with the same high modulation and be unsuccessfuly received
+    // sent with the same high modulation and be unsuccessfully received
     Simulator::Schedule(Seconds(2),
                         &Issue40TestCase::SendPackets,
                         this,
@@ -3579,7 +3594,7 @@ class HeRuMcsDataRateTestCase : public TestCase
      * standard tables)
      * @returns true if data rates are the same, false otherwise
      */
-    bool CheckDataRate(HeRu::RuType ruType,
+    bool CheckDataRate(RuType ruType,
                        std::string mcs,
                        uint8_t nss,
                        Time guardInterval,
@@ -3593,7 +3608,7 @@ HeRuMcsDataRateTestCase::HeRuMcsDataRateTestCase()
 }
 
 bool
-HeRuMcsDataRateTestCase::CheckDataRate(HeRu::RuType ruType,
+HeRuMcsDataRateTestCase::CheckDataRate(RuType ruType,
                                        std::string mcs,
                                        uint8_t nss,
                                        Time guardInterval,
@@ -3634,18 +3649,18 @@ HeRuMcsDataRateTestCase::DoRun()
     bool retval = true;
 
     // 26-tone RU, browse over all MCSs, GIs and Nss's (up to 4, current max)
-    retval = retval && CheckDataRate(HeRu::RU_26_TONE, "HeMcs0", 1, NanoSeconds(800), 9) &&
-             CheckDataRate(HeRu::RU_26_TONE, "HeMcs1", 1, NanoSeconds(1600), 17) &&
-             CheckDataRate(HeRu::RU_26_TONE, "HeMcs2", 1, NanoSeconds(3200), 23) &&
-             CheckDataRate(HeRu::RU_26_TONE, "HeMcs3", 1, NanoSeconds(3200), 30) &&
-             CheckDataRate(HeRu::RU_26_TONE, "HeMcs4", 2, NanoSeconds(1600), 100) &&
-             CheckDataRate(HeRu::RU_26_TONE, "HeMcs5", 3, NanoSeconds(1600), 200) &&
-             CheckDataRate(HeRu::RU_26_TONE, "HeMcs6", 4, NanoSeconds(1600), 300) &&
-             CheckDataRate(HeRu::RU_26_TONE, "HeMcs7", 4, NanoSeconds(3200), 300) &&
-             CheckDataRate(HeRu::RU_26_TONE, "HeMcs8", 4, NanoSeconds(1600), 400) &&
-             CheckDataRate(HeRu::RU_26_TONE, "HeMcs9", 4, NanoSeconds(3200), 400) &&
-             CheckDataRate(HeRu::RU_26_TONE, "HeMcs10", 4, NanoSeconds(1600), 500) &&
-             CheckDataRate(HeRu::RU_26_TONE, "HeMcs11", 4, NanoSeconds(3200), 500);
+    retval = retval && CheckDataRate(RuType::RU_26_TONE, "HeMcs0", 1, NanoSeconds(800), 9) &&
+             CheckDataRate(RuType::RU_26_TONE, "HeMcs1", 1, NanoSeconds(1600), 17) &&
+             CheckDataRate(RuType::RU_26_TONE, "HeMcs2", 1, NanoSeconds(3200), 23) &&
+             CheckDataRate(RuType::RU_26_TONE, "HeMcs3", 1, NanoSeconds(3200), 30) &&
+             CheckDataRate(RuType::RU_26_TONE, "HeMcs4", 2, NanoSeconds(1600), 100) &&
+             CheckDataRate(RuType::RU_26_TONE, "HeMcs5", 3, NanoSeconds(1600), 200) &&
+             CheckDataRate(RuType::RU_26_TONE, "HeMcs6", 4, NanoSeconds(1600), 300) &&
+             CheckDataRate(RuType::RU_26_TONE, "HeMcs7", 4, NanoSeconds(3200), 300) &&
+             CheckDataRate(RuType::RU_26_TONE, "HeMcs8", 4, NanoSeconds(1600), 400) &&
+             CheckDataRate(RuType::RU_26_TONE, "HeMcs9", 4, NanoSeconds(3200), 400) &&
+             CheckDataRate(RuType::RU_26_TONE, "HeMcs10", 4, NanoSeconds(1600), 500) &&
+             CheckDataRate(RuType::RU_26_TONE, "HeMcs11", 4, NanoSeconds(3200), 500);
 
     NS_TEST_EXPECT_MSG_EQ(
         retval,
@@ -3653,12 +3668,12 @@ HeRuMcsDataRateTestCase::DoRun()
         "26-tone RU  data rate verification for different MCSs, GIs, and Nss's failed");
 
     // Check other RU sizes
-    retval = retval && CheckDataRate(HeRu::RU_52_TONE, "HeMcs2", 1, NanoSeconds(1600), 50) &&
-             CheckDataRate(HeRu::RU_106_TONE, "HeMcs9", 1, NanoSeconds(800), 500) &&
-             CheckDataRate(HeRu::RU_242_TONE, "HeMcs5", 1, NanoSeconds(1600), 650) &&
-             CheckDataRate(HeRu::RU_484_TONE, "HeMcs3", 1, NanoSeconds(1600), 650) &&
-             CheckDataRate(HeRu::RU_996_TONE, "HeMcs5", 1, NanoSeconds(3200), 2450) &&
-             CheckDataRate(HeRu::RU_2x996_TONE, "HeMcs3", 1, NanoSeconds(3200), 2450);
+    retval = retval && CheckDataRate(RuType::RU_52_TONE, "HeMcs2", 1, NanoSeconds(1600), 50) &&
+             CheckDataRate(RuType::RU_106_TONE, "HeMcs9", 1, NanoSeconds(800), 500) &&
+             CheckDataRate(RuType::RU_242_TONE, "HeMcs5", 1, NanoSeconds(1600), 650) &&
+             CheckDataRate(RuType::RU_484_TONE, "HeMcs3", 1, NanoSeconds(1600), 650) &&
+             CheckDataRate(RuType::RU_996_TONE, "HeMcs5", 1, NanoSeconds(3200), 2450) &&
+             CheckDataRate(RuType::RU_2x996_TONE, "HeMcs3", 1, NanoSeconds(3200), 2450);
 
     NS_TEST_EXPECT_MSG_EQ(retval,
                           true,

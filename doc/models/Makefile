@@ -1,6 +1,4 @@
-EPSTOPDF = epstopdf
-DIA = dia
-CONVERT = convert -density 300
+include $(CURDIR)/../sphinx/defines.mk
 
 SRC = ../../src
 # Temporary source directory, for build
@@ -18,10 +16,7 @@ SOURCES = \
 	source/network.rst \
 	source/emulation-overview.rst \
 	source/traffic-control.rst \
-	$(SRC)/antenna/doc/source/antenna.rst \
-	$(SRC)/antenna/doc/source/antenna-design.rst \
-	$(SRC)/antenna/doc/source/antenna-user.rst \
-	$(SRC)/antenna/doc/source/antenna-testing.rst \
+	$(SRC)/antenna/doc/antenna.rst \
 	$(SRC)/aodv/doc/aodv.rst \
 	$(SRC)/applications/doc/applications.rst \
 	$(SRC)/bridge/doc/bridge.rst \
@@ -78,7 +73,6 @@ SOURCES = \
 	$(SRC)/wifi/doc/source/wifi-testing.rst \
 	$(SRC)/wifi/doc/source/wifi-changelog.rst \
 	$(SRC)/wifi/doc/source/wifi-references.rst \
-	$(SRC)/wimax/doc/wimax.rst \
 	$(SRC)/uan/doc/uan.rst \
 	$(SRC)/topology-read/doc/topology.rst \
 	$(SRC)/traffic-control/doc/traffic-control-layer.rst \
@@ -107,17 +101,20 @@ SOURCES = \
 # documentation formats (html, latex...) the following formats are supported:
 #  1) a single .dia file (preferred option, because it can be edited)
 #  2) a single .eps file
-#  3) both a .pdf and .png file
+#  3) a single .png file
+#  4) both a .pdf and .png file
 SOURCEFIGS = \
 	figures/testbed.dia \
 	figures/emulated-channel.dia \
-	$(SRC)/antenna/doc/source/figures/antenna-coordinate-system.dia	\
-	$(SRC)/antenna/doc/source/figures/circular-antenna-pattern.png	\
+	$(SRC)/antenna/doc/figures/antenna-coordinate-system.dia	\
+	$(SRC)/antenna/doc/figures/circular-antenna-pattern.png	\
 	$(SRC)/applications/doc/http-embedded-object-size.png \
 	$(SRC)/applications/doc/http-main-object-size.png \
 	$(SRC)/applications/doc/http-num-of-embedded-objects.png \
 	$(SRC)/applications/doc/http-parsing-time.png \
 	$(SRC)/applications/doc/http-reading-time.png \
+	$(SRC)/dsr/doc/figures/dsrRreq.dia \
+	$(SRC)/dsr/doc/figures/dsrRrep.dia \
 	$(SRC)/network/doc/packet.dia \
 	$(SRC)/network/doc/node.dia \
 	$(SRC)/network/doc/buffer.dia \
@@ -126,6 +123,7 @@ SOURCEFIGS = \
 	$(SRC)/internet/doc/internet-node-recv.dia \
 	$(SRC)/internet/doc/routing.dia \
 	$(SRC)/internet/doc/routing-specialization.dia \
+	$(SRC)/internet/doc/global-routing-limitation.dia \
 	$(SRC)/internet/doc/figures/tcp-state-machine.png \
 	$(SRC)/internet/doc/figures/dctcp-10ms-50mbps-tcp-throughput.pdf \
 	$(SRC)/internet/doc/figures/dctcp-10ms-50mbps-tcp-throughput.png \
@@ -170,7 +168,6 @@ SOURCEFIGS = \
 	$(SRC)/wifi/doc/source/figures/spectrum-wifi-phy-multiple-interfaces.png \
 	$(SRC)/wifi/doc/source/figures/cca-channel-switching-multiple-interfaces.pdf \
 	$(SRC)/wifi/doc/source/figures/cca-channel-switching-multiple-interfaces.png \
-	$(SRC)/wimax/doc/WimaxArchitecture.dia \
 	$(SRC)/lte/doc/source/figures/epc-ctrl-arch.dia \
 	$(SRC)/lte/doc/source/figures/epc-data-flow-dl.dia \
 	$(SRC)/lte/doc/source/figures/epc-data-flow-dl-with-split.dia \
@@ -355,18 +352,22 @@ SOURCEFIGS = \
 	$(SRC)/spectrum/doc/two-ray-spectrum-loss-model-3gpp-radiation-pattern.png \
 	$(SRC)/spectrum/doc/two-ray-spectrum-loss-model-iso-radiation-pattern.png \
 	$(SRC)/spectrum/doc/three-gpp-gain-reference-gain-vs-fc.png \
+	$(SRC)/spectrum/doc/hexagonal-wraparound-cdf-comparison.png \
+	$(SRC)/spectrum/doc/hexagonal-wraparound-topology.png \
+	$(SRC)/spectrum/doc/hexagonal-wraparound-execution-and-median-thr.png \
 	$(SRC)/traffic-control/doc/classful-queue-disc.dia \
 	$(SRC)/traffic-control/doc/multi-queue-aware-queue-disc.dia \
 	$(SRC)/traffic-control/doc/figures/collision_prob.jpeg \
 	$(SRC)/traffic-control/doc/figures/overlapped.jpeg \
-	$(SRC)/lr-wpan/doc/lr-wpan-arch.dia \
-	$(SRC)/lr-wpan/doc/lr-wpan-assocSequence.dia \
-	$(SRC)/lr-wpan/doc/lr-wpan-data-example.dia \
-	$(SRC)/lr-wpan/doc/lr-wpan-phy.dia \
-	$(SRC)/lr-wpan/doc/lr-wpan-primitives.dia \
-	$(SRC)/lr-wpan/doc/802-15-4-ber.eps \
-	$(SRC)/lr-wpan/doc/802-15-4-per-sens.eps \
-	$(SRC)/lr-wpan/doc/802-15-4-psr-distance.eps \
+	$(SRC)/lr-wpan/doc/figures/lr-wpan-arch.dia \
+	$(SRC)/lr-wpan/doc/figures/lr-wpan-assocSequence.dia \
+	$(SRC)/lr-wpan/doc/figures/lr-wpan-data-example.dia \
+	$(SRC)/lr-wpan/doc/figures/lr-wpan-phy.dia \
+	$(SRC)/lr-wpan/doc/figures/lr-wpan-primitives.dia \
+	$(SRC)/lr-wpan/doc/figures/802-15-4-ber.eps \
+	$(SRC)/lr-wpan/doc/figures/802-15-4-per-sens.eps \
+	$(SRC)/lr-wpan/doc/figures/802-15-4-psr-distance.eps \
+	$(SRC)/flow-monitor/doc/figures/flowmonitorArq.dia \
 	$(SRC)/energy/doc/figures/dischargeCurve.png \
 	$(SRC)/energy/doc/figures/energyFramework.dia \
 	$(SRC)/energy/doc/figures/leadacid.png \
@@ -375,7 +376,9 @@ SOURCEFIGS = \
 	$(SRC)/energy/doc/figures/nimh.png \
 	$(SRC)/zigbee/doc/figures/zigbeeStackArch.dia \
 	$(SRC)/zigbee/doc/figures/manyToOne.dia \
-	$(SRC)/zigbee/doc/figures/mesh.dia
+	$(SRC)/zigbee/doc/figures/mesh.dia \
+	$(SRC)/internet-apps/doc/figures/dhcpv6-message-exchange.dia \
+	$(SRC)/internet-apps/doc/figures/stateful-dhcpv6-format.dia
 
 # specify figures from which .png and .pdf figures need to be
 # generated (all dia and eps figures)
@@ -391,13 +394,13 @@ IMAGES_EPS = \
 	$(FIGURES)/internet-node-recv.eps \
 	$(FIGURES)/routing.eps \
 	$(FIGURES)/routing-specialization.eps \
+	$(FIGURES)/global-routing-limitation.eps \
 	$(FIGURES)/WifiArchitecture.eps \
 	$(FIGURES)/PhyEntityHierarchy.eps \
 	$(FIGURES)/WifiPpduHierarchy.eps \
 	$(FIGURES)/FemHierarchy.eps \
 	$(FIGURES)/wifi-phy-rx-trace-helper.eps \
 	$(FIGURES)/snir.eps \
-	$(FIGURES)/WimaxArchitecture.eps \
 	$(FIGURES)/epc-ctrl-arch.eps \
 	$(FIGURES)/epc-data-flow-dl.eps \
 	$(FIGURES)/epc-data-flow-dl-with-split.eps \
@@ -474,6 +477,9 @@ IMAGES_EPS = \
 	$(FIGURES)/802-15-4-per-sens.eps \
 	$(FIGURES)/802-15-4-psr-distance.eps \
 	$(FIGURES)/energyFramework.eps \
+	$(FIGURES)/flowmonitorArq.eps \
+	$(FIGURES)/dsrRreq.eps \
+	$(FIGURES)/dsrRrep.eps \
 	$(FIGURES)/clear-channel.eps \
 	$(FIGURES)/assoc-manager.eps \
 	$(FIGURES)/emlsr-dl-txop.eps \
@@ -500,7 +506,10 @@ IMAGES_EPS = \
 	$(FIGURES)/lena-radio-link-failure-two-enb.eps \
 	$(FIGURES)/zigbeeStackArch.eps \
 	$(FIGURES)/manyToOne.eps \
-	$(FIGURES)/mesh.eps
+	$(FIGURES)/mesh.eps \
+	$(FIGURES)/dhcpv6-message-exchange.eps \
+	$(FIGURES)/stateful-dhcpv6-format.eps
+
 
 # rescale pdf figures as necessary
 $(FIGURES)/testbed.pdf_width = 5in
@@ -514,6 +523,7 @@ $(FIGURES)/internet-node-send.pdf_width = 5in
 $(FIGURES)/internet-node-recv.pdf_width = 5in
 $(FIGURES)/routing.pdf_width = 6in
 $(FIGURES)/routing-specialization.pdf_width = 5in
+$(FIGURES)/global-routing-limitation.pdf_width = 6in
 $(FIGURES)/snir.pdf_width = 3in
 $(FIGURES)/lte-interference-test-scenario.pdf_width = 3in
 $(FIGURES)/epc-ctrl-arch.pdf_width = 8cm
@@ -592,15 +602,7 @@ RESCALE = ../../utils/rescale-pdf.sh
 	@$(EPSTOPDF) $< -o=$@ >/dev/null
 	@if test x$($@_width) != x; then $(RESCALE) $($@_width) $@ ; fi
 
-# You can set these variables from the command line.
-SPHINXOPTS    = -W --keep-going
-SPHINXBUILD   = sphinx-build
-PAPER         =
-BUILDDIR      = build
-
 # Internal variables.
-PAPEROPT_a4     = -D latex_paper_size=a4
-PAPEROPT_letter = -D latex_paper_size=letter
 ALLSPHINXOPTS   = -d $(BUILDDIR)/doctrees $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) $(SOURCETEMP)
 
 .PHONY: help clean html dirhtml singlehtml pickle json htmlhelp qthelp devhelp epub latex latexpdf text man changes linkcheck doctest

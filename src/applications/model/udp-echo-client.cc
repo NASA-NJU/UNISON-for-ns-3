@@ -41,18 +41,19 @@ UdpEchoClient::GetTypeId()
                           TimeValue(Seconds(1)),
                           MakeTimeAccessor(&UdpEchoClient::m_interval),
                           MakeTimeChecker())
+            // NS_DEPRECATED_3_44
             .AddAttribute(
                 "RemoteAddress",
                 "The destination Address of the outbound packets",
                 AddressValue(),
                 MakeAddressAccessor(
-                    (void(UdpEchoClient::*)(const Address&)) &
-                        UdpEchoClient::SetRemote, // this is needed to indicate which version of the
-                                                  // function overload to use
+                    // this is needed to indicate which version of the function overload to use
+                    static_cast<void (UdpEchoClient::*)(const Address&)>(&UdpEchoClient::SetRemote),
                     &UdpEchoClient::GetRemote),
                 MakeAddressChecker(),
                 TypeId::SupportLevel::DEPRECATED,
                 "Replaced by Remote in ns-3.44.")
+            // NS_DEPRECATED_3_44
             .AddAttribute("RemotePort",
                           "The destination port of the outbound packets",
                           UintegerValue(UdpEchoClient::DEFAULT_PORT),

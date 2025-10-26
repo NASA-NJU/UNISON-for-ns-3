@@ -17,10 +17,6 @@
 namespace ns3
 {
 
-/// aRxPHYStartDelay value to use when waiting for a new frame in the context of EMLSR operations
-/// (Sec. 35.3.17 of 802.11be D3.1)
-extern const Time EMLSR_RX_PHY_START_DELAY;
-
 class MgtEmlOmn;
 
 /**
@@ -171,7 +167,7 @@ class EhtFrameExchangeManager : public HeFrameExchangeManager
     void SetIcfPaddingAndTxVector(CtrlTriggerHeader& trigger, WifiTxVector& txVector) const;
 
     /// ICF drop reason traced callback (WifiMac exposes this trace source)
-    TracedCallback<WifiIcfDrop, uint8_t> m_icfDropCallback;
+    WifiMac::IcfDropTracedCallback m_icfDropCallback;
 
   protected:
     void DoDispose() override;
@@ -180,6 +176,7 @@ class EhtFrameExchangeManager : public HeFrameExchangeManager
     void ForwardPsduMapDown(WifiConstPsduMap psduMap, WifiTxVector& txVector) override;
     void CtsAfterMuRtsTimeout(Ptr<WifiMpdu> muRts, const WifiTxVector& txVector) override;
     bool GetUpdateCwOnCtsTimeout() const override;
+    bool GetReportRtsFailed() const override;
     void SendCtsAfterMuRts(const WifiMacHeader& muRtsHdr,
                            const CtrlTriggerHeader& trigger,
                            double muRtsSnr) override;
@@ -192,13 +189,11 @@ class EhtFrameExchangeManager : public HeFrameExchangeManager
                      RxSignalInfo rxSignalInfo,
                      const WifiTxVector& txVector,
                      bool inAmpdu) override;
-    void EndReceiveAmpdu(Ptr<const WifiPsdu> psdu,
-                         const RxSignalInfo& rxSignalInfo,
-                         const WifiTxVector& txVector,
-                         const std::vector<bool>& perMpduStatus) override;
     void NavResetTimeout() override;
     void IntraBssNavResetTimeout() override;
-    void SendCtsAfterRts(const WifiMacHeader& rtsHdr, WifiMode rtsTxMode, double rtsSnr) override;
+    void SendCtsAfterRts(const WifiMacHeader& rtsHdr,
+                         const WifiTxVector& rtsTxVector,
+                         double rtsSnr) override;
     void PsduRxError(Ptr<const WifiPsdu> psdu) override;
     void ReceivedQosNullAfterBsrpTf(Mac48Address sender) override;
     void SendQosNullFramesInTbPpdu(const CtrlTriggerHeader& trigger,
@@ -242,16 +237,22 @@ class EhtFrameExchangeManager : public HeFrameExchangeManager
      * is not involved in any DL or UL TXOP on another link.
      *
      * @param address the link MAC address of the given EMLSR client
+     * @param checkThisLink whether to check if the EMLSR client is involved in a DL TXOP on
+     *                      this link
      * @return whether transmissions could be unblocked
      */
-    bool UnblockEmlsrLinksIfAllowed(Mac48Address address);
+    bool UnblockEmlsrLinksIfAllowed(Mac48Address address, bool checkThisLink);
+
+    bool m_earlyTxopEndDetect; ///< whether the Duration/ID value of the frame being transmitted
+                               ///< or received can be used to early detect an ongoing TXOP end
 
   private:
     /**
+     * @param icf the received ICF
      * @return whether the received ICF must be dropped because we are unable to process it
      *         (e.g., another EMLSR link is being used or there is no time for main PHY switch)
      */
-    bool DropReceivedIcf();
+    bool DropReceivedIcf(Ptr<const WifiMpdu> icf);
 
     /**
      * For each EMLSR client in the given set of clients that did not respond to a frame requesting
@@ -263,14 +264,23 @@ class EhtFrameExchangeManager : public HeFrameExchangeManager
     void SwitchToListeningOrUnblockLinks(const std::set<Mac48Address>& clients);
 
     /**
-     * Generate an in-device interference of the given power on the given link for the given
-     * duration.
+     * Generate an in-device interference of the given power for the given duration for the given
+     * PHY.
      *
-     * @param linkId the ID of the link on which in-device interference is generated
+     * @param phy the PHY for which in-device interference is generated
      * @param duration the duration of the in-device interference
      * @param txPower the TX power
      */
-    void GenerateInDeviceInterference(uint8_t linkId, Time duration, Watt_u txPower);
+    void GenerateInDeviceInterference(Ptr<WifiPhy> phy, Time duration, Watt_u txPower);
+
+    /**
+     * Generate in-device interference caused by a transmission on this link for all the other PHYs
+     * of this EMLSR client.
+     *
+     * @param txDuration the duration of the transmission
+     * @param txVector the TXVECTOR used to transmit the frame
+     */
+    void GenerateInDeviceInterferenceForAll(const Time& txDuration, const WifiTxVector& txVector);
 
     /**
      * Update the TXOP end timer when starting a frame transmission.
@@ -301,8 +311,8 @@ class EhtFrameExchangeManager : public HeFrameExchangeManager
      */
     void TxopEnd(const std::optional<Mac48Address>& txopHolder);
 
-    bool m_icfReceived{false}; //!< whether an ICF has been received and needs to be notified to
-                               //!< the EMLSR manager after post-processing the frame
+    bool m_dlTxopStart{false}; //!< whether a DL TXOP start is detected and needs to be notified to
+                               //!< the EMLSR manager after post-processing the initial frame
     EventId m_ongoingTxopEnd;  //!< event indicating the possible end of the current TXOP (of which
                                //!< we are not the holder)
     std::unordered_map<Mac48Address, EventId, WifiAddressHash>

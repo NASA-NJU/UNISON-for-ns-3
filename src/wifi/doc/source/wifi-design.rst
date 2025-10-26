@@ -803,9 +803,12 @@ Infrastructure association
 
 Association in infrastructure mode is a high-level MAC function performed by
 the Association Manager, which is implemented through a base class (``WifiAssocManager``)
-and a default subclass (``WifiDefaultAssocManager``). The interaction between
-the station MAC, the Association Manager base class and subclass is illustrated
-in Figure :ref:`fig-assoc-manager`.
+and a default subclass (``WifiDefaultAssocManager``), and controlled by the ``AssocType``
+attribute of the ``StaWifiMac`` class. This attribute controls whether the non-AP STA/MLD
+performs a legacy association or an ML setup with the AP device (the latter is only available for
+EHT devices associating with a multi-link AP; if this option is selected when this condition is not
+met, it falls back to legacy association automatically). The interaction between the station MAC,
+the Association Manager base class and subclass is illustrated in Figure :ref:`fig-assoc-manager`.
 
 .. _fig-assoc-manager:
 
@@ -1165,11 +1168,12 @@ MLD. Given that frame exchanges can occur on any of the EMLSR links, the link on
 Enabling/disabling EMLSR mode
 -----------------------------
 
-EMLSR mode can be enabled on the links (at least two) of a non-AP MLD that supports the EMLSR
+EMLSR mode can be enabled on the link(s) of a non-AP EHT device that supports the EMLSR
 operating mode and performs ML setup with an AP MLD that supports the EMLSR operating mode. The
-``EmlsrActivated`` attribute of the EHT configuration of an MLD determines whether the EMLSR
-operating mode is supported by the MLD. When the ``EmlsrActivated`` attribute is set to true for
-a non-AP MLD, the WifiMacHelper will install an EMLSR Manager by using the type and attribute
+``EmlsrActivated`` attribute of the EHT configuration of an EHT device determines whether the EMLSR
+operating mode is supported by the device. When the ``EmlsrActivated`` attribute is set to true for
+a non-AP EHT device and the ``ns3::StaWifiMac::AssocType`` attribute is set to ``ML_SETUP``, the
+WifiMacHelper will install an EMLSR Manager by using the type and attribute
 values configured through the ``SetEmlsrManager`` method.
 
 EMLSR mode on the links of a non-AP MLD can be enabled or disabled by using the ``EmlsrLinkSet``
@@ -1207,6 +1211,13 @@ true, the behavior is as follows. For DL TXOPs, aux PHYs are put to sleep after 
 for UL TXOPs, aux PHYs are put to sleep when the CTS frame is received, if RTS/CTS is used, or when
 the transmission of the data frame starts, otherwise. Aux PHYs are resumed from sleep when the TXOP
 ends.
+
+EMLSR operations, as detailed below, may lead to situations in which no PHY operates on a link for
+a certain time interval. Whether to freeze or reset the backoff counters for that link during such
+intervals is controlled by the ``ResetBackoffThreshold`` attribute of the ``ChannelAccessManager``:
+if the duration of the interval during which no PHY operates on a link is longer than the value of
+this attribute, the backoff counters are reset; otherwise, they are frozen until a PHY is connected
+to the link.
 
 Downlink TXOP
 -------------
@@ -1357,14 +1368,19 @@ auxiliary link. The following conditions must all hold in order to request the m
 to the auxiliary link:
 
 * the main PHY is not in TX state
-* the main PHY is not switching nor is it trying to get channel access on another auxiliary link
+* the main PHY is not switching (unless switching can be interrupted, see below) nor is it trying
+  to get channel access on another auxiliary link
 * no MediumSyncDelay timer is running on the auxiliary link or the maximum number of TXOP attempts
   has not yet been reached
-* the main PHY is expected to get channel access on the auxiliary link more quickly, i.e., ALL the
-  ACs with queued frames (that can be transmitted on the link on which the main PHY is currently
-  operating) and with priority higher than or equal to that of the AC for which Aux PHY gained TXOP
-  have their backoff counter greater than the maximum between the expected delay in gaining channel
-  access on the auxiliary and the channel switch delay (plus PIFS if we cannot use aux PHY CCA)
+* the main PHY is expected to get channel access on the auxiliary link more quickly. More precisely,
+  let AC X be the AC that is about to gain channel access on the aux PHY link, the main PHY is
+  requested to switch if we do not expect any AC, with priority higher than or equal to AC X and
+  with frames to send on the main PHY link, to gain channel access on the main PHY link before AC X
+  is able to start transmitting on the aux PHY link.
+
+Note that the last condition is not checked if the ``CheckAccessOnMainPhyLink`` attribute is set to
+false and AC X has a priority higher than or equal to the AC specified by the ``MinAcToSkipCheckAccess``
+attribute.
 
 If the main PHY switches to the auxiliary link, it cannot transmit as soon as it completes the
 channel switch, but it has to verify that the medium has been virtually and physically idle
@@ -1403,28 +1419,61 @@ a reason to postpone the switch. The switch back to the preferred link is postpo
 A similar check is applied to possibly postpone the switch back to the preferred link when the
 SwitchMainPhyBack timer expires.
 
+The Advanced EMLSR Manager provides the ``KeepMainPhyAfterDlTxop`` attribute to control the behavior
+of the main PHY at the end of a DL TXOP carried out on an aux PHY link, in case aux PHYs are not TX
+capable and do not switch link. If such attribute is set to false (default value), the main PHY
+immediately switches back to the preferred link. If such attribute is set to true, it is checked
+whether channel access on the aux PHY link is expected to be gained within a switch main PHY back
+delay plus a channel switch delay: if it is, the main PHY stays on the aux PHY link and a switch
+main PHY back timer is started; otherwise, the main PHY switches back to the preferred link.
+
 The Advanced EMLSR Manager also connects a callback to the ``NSlotsLeftAlert`` trace source of the
-Channel Access Manager, which sends notifications when at most a configurable number of slots
-remain until the backoff of an AC expires. When the Advanced EMLSR Manager receives such a
-notification, it evaluates the opportunity of switching the main PHY to the auxiliary link on which
-the notification has been received. Specifically, the Advanced EMLSR Manager performs the check
-described above to determine whether the potential UL transmit opportunity shall be dropped (it is
-dropped if a PPDU being received on another EMLSR link might be an ICF and the ``AllowUlTxopInRx``
-attribute is set to false) and then it checks whether it is convenient for the main PHY to switch
-to the auxiliary link as described above (with the exception that the expected delay until backoff
-end is also taken into account). If the main PHY is requested to switch to the auxiliary link and
-the backoff on the auxiliary link counts down to zero while the main PHY is switching, a NAV and
-CCA check is performed as described above (by the aux PHY in the PIFS period preceding the main PHY
-channel switch end or by the main PHY in the PIFS period following the main PHY channel switch end).
-Similarly, a NAV and CCA check is performed (by the main PHY) if the remaining backoff time when
-the main PHY switch is completed is less than a PIFS. Otherwise, SwitchMainPhyBack timer is started
-having a duration of SwitchMainPhyBackDelay plus the remaining time until the backoff of the AC
-involved in the Channel Access Manager notification is expected to expire.
+Channel Access Manager, which sends notifications when at most a configurable number of slots remain
+until the backoff of an AC expires. It must be noted that this notification is only sent if channel
+access has been requested by the AC for which the number of remaining backoff slots has reached
+the given threshold. Thus, if an AC terminates a TXOP and generates a new backoff value, but it
+has no packets in the queue, then channel access is not requested and the notification is not
+scheduled; if a new packet arrives after that the backoff counter has reached zero, channel access
+is requested and notification is sent immediately (while channel access is gained at the next slot
+boundary, which may be a few microseconds later). If channel access is requested while the backoff
+counter is non-zero, the notification is sent when the number of slots remaining until the backoff
+of an AC expires reaches the configured value, if the backoff counter starts at a value greater than
+or equal to the configured value, or as soon as the notification can be sent based on the value of
+the ``NSlotsLeftMinDelay`` attribute  of the Channel Access Manager. This attribute indicates the
+minimum amount of time that must elapse since the start of the AIFS to enable the dispatching of
+the notification. Example:
+
+::
+
+  BE AC (thus AIFS = SIFS + 3 * slots), Backoff = 3, NSlotsLeft >= 5, NSlotsLeftMinDelay = PIFS
+
+  |------AIFS--------|
+  | SIFS | s | s | s | s | s | s |
+             ^
+             |
+      send notification
+
+When the Advanced EMLSR Manager receives such a notification, it evaluates the opportunity of
+switching the main PHY to the auxiliary link on which the notification has been received. Specifically,
+the Advanced EMLSR Manager performs the check described above to determine whether the potential UL
+transmit opportunity shall be dropped (it is dropped if a PPDU being received on another EMLSR link
+might be an ICF and the ``AllowUlTxopInRx`` attribute is set to false) and then it checks whether it is
+convenient for the main PHY to switch to the auxiliary link as described above (with the exception that
+the expected delay until backoff end is also taken into account). If the main PHY is requested to switch
+to the auxiliary link and the backoff on the auxiliary link counts down to zero while the main PHY is
+switching, a NAV and CCA check is performed as described above (by the aux PHY in the PIFS period
+preceding the main PHY channel switch end or by the main PHY in the PIFS period following the main PHY
+channel switch end). If the remaining backoff time when the main PHY completes the switch to the aux
+PHY link is greater than or equal to a PIFS, no NAV and CCA check is scheduled, as the main PHY has
+enough time to perform CCA on the aux PHY link. If the remaining backoff time when the main PHY
+completes the switch to the aux PHY link is less than a PIFS, the UL TXOP starts as soon as the
+backoff counter reaches zero, if aux PHY CCA can be used, or a PIFS after the end of the main PHY
+switch (provided that the NAV and CCA check indicates medium idle), if main PHY CCA is requested.
 
 The Advanced EMLSR Manager has the ``InterruptSwitch`` attribute that can be set to true to
 interrupt a main PHY switch when it is determined that the main PHY shall switch to a different
 link while still completing the previous switch; in such cases, the previous switch is interrupted
-and the new channel switch starts. This opportunity is exploited in two situations:
+and the new channel switch starts. This opportunity is exploited in some situations:
 
 * If the main PHY is switching while a TX capable aux PHY transmits an RTS to start an UL TXOP,
   the main PHY switch can be interrupted and the main PHY can start switching to the link on
@@ -1434,6 +1483,26 @@ and the new channel switch starts. This opportunity is exploited in two situatio
   a CTS timeout occurs while the main PHY is switching. If the aux PHYs do not switch link, the
   main PHY switch is interrupted and the main PHY returns to the preferred link; if the aux PHYs
   switch link, the main PHY switch is interrupted and the main PHY returns to the link it just left.
+* If the main PHY is switching while an aux PHY is receiving an ICF, the switch can be interrupted
+  so that the main PHY can start switching to the aux PHY link and be ready to operate on that link
+  upon reception of the ICF.
+* If channel access is gained, or is about to be gained, on a link on which a non-TX capable aux PHY
+  is operating and the main PHY is switching, the main PHY switch can be interrupted and the main
+  PHY can start switching to the aux PHY link, provided that the main PHY was not switching to start
+  a (DL or UL) TXOP and the other conditions to request the main PHY to switch are satisfied.
+
+AP EMLSR Manager
+----------------
+A manager which takes EMLSR specific decisions can also be installed on the AP MLD side. The base
+class is named ``ApEmlsrManager``, which is inherited by the ``DefaultApEmlsrManager`` and the
+``AdvancedApEmlsrManager``. One of the choices that the AP MLD has to take is how to behave in case
+the transmission of an ICF fails due to a cross link collision, i.e., an ICF that is addressed to
+EMLSR client(s) fails because the EMLSR client(s) are sending or have sent an ICF on another EMLSR
+link. By default, an ICF failure is treated just like any other failure: the contention window is
+updated and the failure is notified to the remote station manager. However, the advanced AP EMLSR
+manager provides two attributes, ``UpdateCwAfterFailedIcf`` and ``ReportFailedIcf``, that can be
+used, respectively, to control whether to update the contention window and report the failure to the
+remote station manager in case of ICF failure due to cross link collision.
 
 EMLSR traces
 ------------
@@ -1462,10 +1531,12 @@ EMLSR clients:
     switching and be operating on the link the ICF is received on at the end of the ICF reception
 
 * The ``StaWifiMac::EmlsrLinkSwitch`` trace provides information about start/end of EMLSR link
-  switch events: when a PHY operating on a link starts switching to another link, the trace provides
-  the ID of the link the PHY is leaving and a null pointer (indicating that no PHY is operating on
-  that link); when a PHY completes switching to a link, the trace provides the ID of the link and a
-  pointer to the PHY (which is now operating on that link)
+  switch events. This trace is fired: (i) when a PHY operating on a link starts switching to
+  another link, thus the PHY is disconnected from the previous link; (ii) when a PHY is connected
+  to a new link after performing a channel switch. This trace provides: the ID of the previous link,
+  in case the PHY is disconnected, or the ID of the new link, in case the PHY is connected; a
+  pointer to the PHY that switches link; a boolean value indicating if the PHY is connected to
+  (true) or disconnected from (false) the given link
 * The ``EmlsrManager::MainPhySwitch`` trace is fired when the main PHY switches channel to operate
   on another link. Information associated with the main PHY switch is provided through a struct
   that is inherited from ``struct EmlsrMainPhySwitchTrace``. Different inherited structs are defined
@@ -1478,20 +1549,33 @@ EMLSR clients:
   * ``EmlsrUlTxopRtsSentByAuxPhyTrace``: main PHY is starting switching to another link to take over
     an UL TXOP started by a TX capable aux PHY that transmitted an RTS frame on that link
   * ``EmlsrTxopEndedTrace``: main PHY is starting switching because a (DL or UL) TXOP ended. This
-    trace has a parameter, remTime, whose value is set as follows. When a TXOP ends after a
-    successful transmission and aux PHYs do not switch link, the main PHY switches back to the
-    preferred link; in such a case, the remTime parameter is set to zero. However, a TXOP may end
-    due to a CTS timeout after that a TX capable aux PHY had sent an RTS to start an UL TXOP and
-    the main PHY may be switching when the CTS timeout occurs. If the main PHY switch cannot be
-    interrupted (see case a) in Fig. :ref:`fig-emlsr-txop-ended-trace`), which is the case with the
-    Default EMLSR Manager or with the Advanced EMLSR Manager when the ``InterruptSwitch`` attribute
-    is false, the remTime parameter is set to the remaining channel switch delay at the time the
-    TXOP ends. If the main PHY switch can be interrupted (see case b) in Fig.
-    :ref:`fig-emlsr-txop-ended-trace`), which is the case with the Advanced EMLSR Manager when the
-    ``InterruptSwitch`` attribute is true, the remTime parameter indicates the time that was left
-    to complete the previous channel switch. Note that, in the latter case, this channel switch can
-    also occur when the aux PHYs switch link, as the main PHY returns to the link it was operating
-    on before starting the previous channel switch.
+    trace is called when aux PHYs do not switch link and the main PHY switches back to the preferred
+    link when a TXOP carried out on another link ends
+  * ``EmlsrRtsSentByAuxPhyCtsTimeoutTrace``: main PHY is starting switching after a CTS timeout
+    occurred on the link on which an RTS was transmitted to start an UL TXOP. This trace
+    has a parameter, sinceCtsTimeout, that provides the time elapsed since the CTS timeout occurred.
+    Normally, this trace is called when aux PHYs do not switch links, because the main PHY has to
+    return to the preferred link upon CTS timeout, because a TXOP did not start. In some cases, the
+    main PHY may be switching when CTS timeout occurs; this happens when an aux PHY that is TX
+    capable transmits an RTS and the main PHY starts switching to the aux PHY link. In such a case,
+    the main PHY completes the current link switch and then it starts switching to return back to
+    the preferred link (see case (a) in Fig. :ref:`fig-emlsr-txop-ended-trace`). If the
+    main PHY switch can be interrupted (see case (b) in Fig. :ref:`fig-emlsr-txop-ended-trace`),
+    which is the case with the Advanced EMLSR Manager when the ``InterruptSwitch`` attribute is
+    false, the previous switch is interrupted and the main PHY starts switching to the previous
+    link (in this case, the time elapsed since the CTS timeout occurred is zero). This holds true
+    for both the case aux PHYs do not switch link and the case aux PHYs switch link.
+  * ``EmlsrSwitchMainPhyBackTrace``: main PHY is switching back to the preferred link after that it
+    did not manage to gain channel access on an aux PHY link before the expiration of the switch
+    main PHY back timer, whose duration is set to the value of the
+    ``ns3::AdvancedEmlsrManager::SwitchMainPhyBackDelay`` attribute. The main PHY can switch back
+    before the timer expiration in case it is determined that channel access is not expected to be
+    gained within the timer expiration plus a channel switch delay. This trace has three parameters:
+    the time elapsed since the switch main PHY back timer started, the reason for switching back
+    before the timer expiration (if that is the case) and a boolean value indicating whether
+    the main PHY is switching when it is requested to switch back. This trace is provided by the
+    ``AdvancedEmlsrManager`` and is only fired when aux PHYs are not TX capable and do not switch
+    link.
 
 Ack manager
 ###########

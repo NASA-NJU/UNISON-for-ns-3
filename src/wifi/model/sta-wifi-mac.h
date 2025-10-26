@@ -34,6 +34,18 @@ class EmlsrManager;
 /**
  * @ingroup wifi
  *
+ * Type of association performed by this device (provided that it is supported by the standard
+ * configured for this device).
+ */
+enum class WifiAssocType : uint8_t
+{
+    LEGACY = 0,
+    ML_SETUP
+};
+
+/**
+ * @ingroup wifi
+ *
  * Scan type (active or passive)
  */
 enum class WifiScanType : uint8_t
@@ -136,10 +148,7 @@ class StaWifiMac : public WifiMac
     friend class ::AmpduAggregationTest;
     friend class ::MultiLinkOperationsTestBase;
     friend class ::ProbeExchTest;
-
-    /// type of the management frames used to get info about APs
-    using MgtFrameType =
-        std::variant<MgtBeaconHeader, MgtProbeResponseHeader, MgtAssocResponseHeader>;
+    friend class WifiStaticSetupHelper;
 
     /**
      * Struct to hold information regarding observed AP through
@@ -267,6 +276,9 @@ class StaWifiMac : public WifiMac
      */
     uint16_t GetAssociationId() const;
 
+    /// @return the type of association procedure performed by this device
+    WifiAssocType GetAssocType() const;
+
     /**
      * Enable or disable Power Save mode on the given link.
      *
@@ -316,7 +328,8 @@ class StaWifiMac : public WifiMac
      * Notify that the given PHY switched channel to operate on another EMLSR link.
      *
      * @param phy the given PHY
-     * @param linkId the ID of the EMLSR link on which the given PHY is operating
+     * @param linkId the ID of the EMLSR link on which the given PHY operates after
+     *               the channel switch
      * @param delay the delay after which the channel switch will be completed
      */
     void NotifySwitchingEmlsrLink(Ptr<WifiPhy> phy, uint8_t linkId, Time delay);
@@ -452,19 +465,27 @@ class StaWifiMac : public WifiMac
     void ReceiveAssocResp(Ptr<const WifiMpdu> mpdu, uint8_t linkId);
 
     /**
-     * Update associated AP's information from the given management frame (Beacon,
-     * Probe Response or Association Response). If STA is not associated, this
-     * information will be used for the association process.
+     * Update operations information from the given management frame.
+     *
+     * @param frame the body of the given management frame
+     * @param addr MAC address of the sender
+     * @param linkId ID of the link the management frame was received over
+     */
+    void RecordOperations(const MgtFrameType& frame, const Mac48Address& addr, uint8_t linkId);
+
+    /**
+     * Update operational settings based on associated AP's information provided by the given
+     * management frame (Beacon, Probe Response or Association Response).
      *
      * @param frame the body of the given management frame
      * @param apAddr MAC address of the AP
      * @param bssid MAC address of BSSID
      * @param linkId ID of the link the management frame was received over
      */
-    void UpdateApInfo(const MgtFrameType& frame,
-                      const Mac48Address& apAddr,
-                      const Mac48Address& bssid,
-                      uint8_t linkId);
+    void ApplyOperationalSettings(const MgtFrameType& frame,
+                                  const Mac48Address& apAddr,
+                                  const Mac48Address& bssid,
+                                  uint8_t linkId);
 
     /**
      * Get the (Re)Association Request frame to send on a given link. The returned frame
@@ -633,6 +654,7 @@ class StaWifiMac : public WifiMac
     MacState m_state;                             ///< MAC state
     uint16_t m_aid;                               ///< Association AID
     Ptr<WifiAssocManager> m_assocManager;         ///< Association Manager
+    WifiAssocType m_assocType;                    ///< type of association
     Ptr<EmlsrManager> m_emlsrManager;             ///< EMLSR Manager
     Time m_waitBeaconTimeout;                     ///< wait beacon timeout
     Time m_probeRequestTimeout;                   ///< probe request timeout
@@ -641,6 +663,7 @@ class StaWifiMac : public WifiMac
     uint32_t m_maxMissedBeacons;                  ///< maximum missed beacons
     EventId m_beaconWatchdog;                     //!< beacon watchdog
     Time m_beaconWatchdogEnd{0};                  //!< beacon watchdog end
+    bool m_enableScanning;                        //!< enable channel scanning
     bool m_activeProbing;                         ///< active probing
     Ptr<RandomVariableStream> m_probeDelay;       ///< RandomVariable used to randomize the time
                                                   ///< of the first Probe Response on each channel
@@ -653,12 +676,13 @@ class StaWifiMac : public WifiMac
     /// store the UL TID-to-Link Mapping included in the Association Request frame
     WifiTidLinkMapping m_ulTidLinkMappingInAssocReq;
 
-    TracedCallback<Mac48Address> m_assocLogger;                    ///< association logger
-    TracedCallback<uint8_t, Mac48Address> m_setupCompleted;        ///< link setup completed logger
-    TracedCallback<Mac48Address> m_deAssocLogger;                  ///< disassociation logger
-    TracedCallback<Time> m_beaconArrival;                          ///< beacon arrival logger
-    TracedCallback<ApInfo> m_beaconInfo;                           ///< beacon info logger
-    TracedCallback<uint8_t, Ptr<WifiPhy>> m_emlsrLinkSwitchLogger; ///< EMLSR link switch logger
+    TracedCallback<Mac48Address> m_assocLogger;             ///< association logger
+    TracedCallback<uint8_t, Mac48Address> m_setupCompleted; ///< link setup completed logger
+    TracedCallback<Mac48Address> m_deAssocLogger;           ///< disassociation logger
+    TracedCallback<Time> m_beaconArrival;                   ///< beacon arrival logger
+    TracedCallback<ApInfo> m_beaconInfo;                    ///< beacon info logger
+    TracedCallback<uint8_t, Ptr<WifiPhy>, bool>
+        m_emlsrLinkSwitchLogger; ///< EMLSR link switch logger
 
     /// TracedCallback signature for link setup completed/canceled events
     using LinkSetupCallback = void (*)(uint8_t /* link ID */, Mac48Address /* AP address */);

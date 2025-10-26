@@ -10,12 +10,13 @@ set(source_files
     model/friis-spectrum-propagation-loss.cc
     model/half-duplex-ideal-phy-signal-parameters.cc
     model/half-duplex-ideal-phy.cc
+    model/hexagonal-wraparound-model.cc
     model/ism-spectrum-value-helper.cc
     model/matrix-based-channel-model.cc
     model/microwave-oven-spectrum-value-helper.cc
-    model/two-ray-spectrum-propagation-loss-model.cc
     model/multi-model-spectrum-channel.cc
     model/non-communicating-net-device.cc
+    model/phased-array-spectrum-propagation-loss-model.cc
     model/single-model-spectrum-channel.cc
     model/spectrum-analyzer.cc
     model/spectrum-channel.cc
@@ -27,15 +28,16 @@ set(source_files
     model/spectrum-model.cc
     model/spectrum-phy.cc
     model/spectrum-propagation-loss-model.cc
-    model/spectrum-transmit-filter.cc
-    model/phased-array-spectrum-propagation-loss-model.cc
     model/spectrum-signal-parameters.cc
+    model/spectrum-transmit-filter.cc
     model/spectrum-value.cc
     model/three-gpp-channel-model.cc
     model/three-gpp-spectrum-propagation-loss-model.cc
     model/trace-fading-loss-model.cc
     model/tv-spectrum-transmitter.cc
+    model/two-ray-spectrum-propagation-loss-model.cc
     model/waveform-generator.cc
+    model/wraparound-model.cc
 )
 
 set(header_files
@@ -50,12 +52,13 @@ set(header_files
     model/friis-spectrum-propagation-loss.h
     model/half-duplex-ideal-phy-signal-parameters.h
     model/half-duplex-ideal-phy.h
+    model/hexagonal-wraparound-model.h
     model/ism-spectrum-value-helper.h
     model/matrix-based-channel-model.h
     model/microwave-oven-spectrum-value-helper.h
-    model/two-ray-spectrum-propagation-loss-model.h
     model/multi-model-spectrum-channel.h
     model/non-communicating-net-device.h
+    model/phased-array-spectrum-propagation-loss-model.h
     model/single-model-spectrum-channel.h
     model/spectrum-analyzer.h
     model/spectrum-channel.h
@@ -67,26 +70,28 @@ set(header_files
     model/spectrum-model.h
     model/spectrum-phy.h
     model/spectrum-propagation-loss-model.h
-    model/spectrum-transmit-filter.h
-    model/phased-array-spectrum-propagation-loss-model.h
     model/spectrum-signal-parameters.h
+    model/spectrum-transmit-filter.h
     model/spectrum-value.h
     model/three-gpp-channel-model.h
     model/three-gpp-spectrum-propagation-loss-model.h
     model/trace-fading-loss-model.h
     model/tv-spectrum-transmitter.h
+    model/two-ray-spectrum-propagation-loss-model.h
     model/waveform-generator.h
-    test/spectrum-test.h
+    model/wraparound-model.h
+    utils/spectrum-test.h
 )
 
 build_lib(
   LIBNAME spectrum
   SOURCE_FILES ${source_files}
   HEADER_FILES ${header_files}
-  LIBRARIES_TO_LINK ${libpropagation}
-                    ${libantenna}
+  LIBRARIES_TO_LINK
+    ${libpropagation}
+    ${libantenna}
+    ${libbuildings}
   TEST_SOURCES
-    test/two-ray-splm-test-suite.cc
     test/spectrum-ideal-phy-test.cc
     test/spectrum-interference-test.cc
     test/spectrum-value-test.cc
@@ -94,4 +99,6 @@ build_lib(
     test/three-gpp-channel-test-suite.cc
     test/tv-helper-distribution-test.cc
     test/tv-spectrum-transmitter-test.cc
+    test/two-ray-splm-test-suite.cc
+    test/wraparound-model-test.cc
 )

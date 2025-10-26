@@ -45,6 +45,7 @@ WifiRemoteStationManager::GetTypeId()
         TypeId("ns3::WifiRemoteStationManager")
             .SetParent<Object>()
             .SetGroupName("Wifi")
+            // NS_DEPRECATED_3_44
             .AddAttribute("MaxSsrc",
                           "The maximum number of retransmission attempts for any packet with size "
                           "<= RtsCtsThreshold. "
@@ -54,6 +55,7 @@ WifiRemoteStationManager::GetTypeId()
                           MakeUintegerChecker<uint32_t>(),
                           TypeId::SupportLevel::OBSOLETE,
                           "Use WifiMac::FrameRetryLimit instead")
+            // NS_DEPRECATED_3_44
             .AddAttribute("MaxSlrc",
                           "The maximum number of retransmission attempts for any packet with size "
                           "> RtsCtsThreshold. "
@@ -74,18 +76,19 @@ WifiRemoteStationManager::GetTypeId()
                 BooleanValue(false),
                 MakeBooleanAccessor(&WifiRemoteStationManager::m_incrRetryCountUnderBa),
                 MakeBooleanChecker())
-            .AddAttribute("RtsCtsThreshold",
-                          "If the size of the PSDU is bigger than this value, we use an RTS/CTS "
-                          "handshake before sending the data frame."
-                          "This value will not have any effect on some rate control algorithms.",
-                          UintegerValue(4692480),
-                          MakeUintegerAccessor(&WifiRemoteStationManager::SetRtsCtsThreshold),
-                          MakeUintegerChecker<uint32_t>(0, 4692480))
+            .AddAttribute(
+                "RtsCtsThreshold",
+                "If the size of the PSDU is bigger than this value, we use an RTS/CTS "
+                "handshake before sending the data frame."
+                "This value will not have any effect on some rate control algorithms.",
+                UintegerValue(WIFI_DEFAULT_RTS_THRESHOLD),
+                MakeUintegerAccessor(&WifiRemoteStationManager::SetRtsCtsThreshold),
+                MakeUintegerChecker<uint32_t>(WIFI_MIN_RTS_THRESHOLD, WIFI_MAX_RTS_THRESHOLD))
             .AddAttribute("RtsCtsTxDurationThresh",
                           "If this threshold is a strictly positive value and the TX duration of "
                           "the PSDU is greater than or equal to this threshold, we use an RTS/CTS "
                           "handshake before sending the data frame.",
-                          TimeValue(Time{0}),
+                          TimeValue(),
                           MakeTimeAccessor(&WifiRemoteStationManager::m_rtsCtsTxDurationThresh),
                           MakeTimeChecker())
             .AddAttribute(
@@ -94,10 +97,10 @@ WifiRemoteStationManager::GetTypeId()
                 "size of the fragments are equal or smaller. "
                 "This value does not apply when it is carried in an A-MPDU. "
                 "This value will not have any effect on some rate control algorithms.",
-                UintegerValue(65535),
+                UintegerValue(WIFI_DEFAULT_FRAG_THRESHOLD),
                 MakeUintegerAccessor(&WifiRemoteStationManager::DoSetFragmentationThreshold,
                                      &WifiRemoteStationManager::DoGetFragmentationThreshold),
-                MakeUintegerChecker<uint32_t>())
+                MakeUintegerChecker<uint32_t>(WIFI_MIN_FRAG_THRESHOLD, WIFI_MAX_FRAG_THRESHOLD))
             .AddAttribute("NonUnicastMode",
                           "Wifi mode used for non-unicast transmissions.",
                           WifiModeValue(),
@@ -700,6 +703,32 @@ WifiRemoteStationManager::GetCtsToSelfTxVector()
                         false);
 }
 
+void
+WifiRemoteStationManager::AdjustTxVectorForCtlResponse(WifiTxVector& txVector,
+                                                       MHz_u allowedWidth) const
+{
+    NS_LOG_FUNCTION(this << txVector << allowedWidth);
+
+    auto modulation = txVector.GetModulationClass();
+
+    if (allowedWidth >= 40 &&
+        (modulation == WIFI_MOD_CLASS_DSSS || modulation == WIFI_MOD_CLASS_HR_DSSS))
+    {
+        // control frame must be sent in a non-HT duplicate PPDU because it must protect a frame
+        // being transmitted on at least 40 MHz. Change the modulation class to ERP-OFDM and the
+        // rate to 6 Mbps
+        txVector.SetMode(ErpOfdmPhy::GetErpOfdmRate6Mbps());
+        modulation = txVector.GetModulationClass();
+    }
+    // do not set allowedWidth as the TX width if the modulation class is (HR-)DSSS (allowedWidth
+    // may be 20 MHz) or allowedWidth is 22 MHz (the selected modulation class may be OFDM)
+    if (modulation != WIFI_MOD_CLASS_DSSS && modulation != WIFI_MOD_CLASS_HR_DSSS &&
+        allowedWidth != 22)
+    {
+        txVector.SetChannelWidth(allowedWidth);
+    }
+}
+
 WifiTxVector
 WifiRemoteStationManager::GetRtsTxVector(Mac48Address address, MHz_u allowedWidth)
 {
@@ -722,24 +751,8 @@ WifiRemoteStationManager::GetRtsTxVector(Mac48Address address, MHz_u allowedWidt
     {
         v = DoGetRtsTxVector(Lookup(address));
     }
-    auto modulation = v.GetModulationClass();
 
-    if (allowedWidth >= 40 &&
-        (modulation == WIFI_MOD_CLASS_DSSS || modulation == WIFI_MOD_CLASS_HR_DSSS))
-    {
-        // RTS must be sent in a non-HT duplicate PPDU because it must protect a frame being
-        // transmitted on at least 40 MHz. Change the modulation class to ERP-OFDM and the rate
-        // to 6 Mbps
-        v.SetMode(ErpOfdmPhy::GetErpOfdmRate6Mbps());
-        modulation = v.GetModulationClass();
-    }
-    // do not set allowedWidth as the TX width if the modulation class is (HR-)DSSS (allowedWidth
-    // may be >= 40 MHz) or allowedWidth is 22 MHz (the selected modulation class may be OFDM)
-    if (modulation != WIFI_MOD_CLASS_DSSS && modulation != WIFI_MOD_CLASS_HR_DSSS &&
-        allowedWidth != 22)
-    {
-        v.SetChannelWidth(allowedWidth);
-    }
+    AdjustTxVectorForCtlResponse(v, allowedWidth);
 
     return v;
 }
@@ -808,6 +821,9 @@ WifiRemoteStationManager::GetAckTxVector(Mac48Address to, const WifiTxVector& da
     v.SetChannelWidth(m_wifiPhy->GetTxBandwidth(ackMode));
     v.SetGuardInterval(GetGuardIntervalForMode(ackMode, m_wifiPhy->GetDevice()));
     v.SetNss(1);
+
+    AdjustTxVectorForCtlResponse(v, dataTxVector.GetChannelWidth());
+
     return v;
 }
 
@@ -825,6 +841,9 @@ WifiRemoteStationManager::GetBlockAckTxVector(Mac48Address to,
     v.SetChannelWidth(m_wifiPhy->GetTxBandwidth(blockAckMode));
     v.SetGuardInterval(GetGuardIntervalForMode(blockAckMode, m_wifiPhy->GetDevice()));
     v.SetNss(1);
+
+    AdjustTxVectorForCtlResponse(v, dataTxVector.GetChannelWidth());
+
     return v;
 }
 
@@ -1149,9 +1168,9 @@ WifiRemoteStationManager::DoIncrementRetryCountOnTxFailure(WifiRemoteStation* st
     const auto& hdr = psdu->GetHeader(0);
 
     if (hdr.IsMgt() || (hdr.IsData() && !hdr.IsQosData()) ||
-        (hdr.IsQosData() && (!m_wifiMac->GetBaAgreementEstablishedAsOriginator(
-                                hdr.GetAddr1(),
-                                hdr.GetQosTid() || m_incrRetryCountUnderBa))))
+        (hdr.IsQosData() &&
+         (!m_wifiMac->GetBaAgreementEstablishedAsOriginator(hdr.GetAddr1(), hdr.GetQosTid()) ||
+          m_incrRetryCountUnderBa)))
     {
         psdu->IncrementRetryCount();
     }
@@ -1335,13 +1354,12 @@ void
 WifiRemoteStationManager::DoSetFragmentationThreshold(uint32_t threshold)
 {
     NS_LOG_FUNCTION(this << threshold);
-    if (threshold < 256)
+    if (threshold < WIFI_MIN_FRAG_THRESHOLD)
     {
-        /*
-         * ASN.1 encoding of the MAC and PHY MIB (256 ... 8000)
-         */
-        NS_LOG_WARN("Fragmentation threshold should be larger than 256. Setting to 256.");
-        m_fragmentationThreshold = 256;
+        NS_LOG_WARN("Fragmentation threshold should be larger than "
+                    << WIFI_MIN_FRAG_THRESHOLD << ". Setting to " << WIFI_MIN_FRAG_THRESHOLD
+                    << ".");
+        m_fragmentationThreshold = WIFI_MIN_FRAG_THRESHOLD;
     }
     else
     {
@@ -1468,12 +1486,8 @@ WifiRemoteStationManager::GetMostRecentRssi(Mac48Address address) const
 std::shared_ptr<WifiRemoteStationState>
 WifiRemoteStationManager::LookupState(Mac48Address address) const
 {
-    NS_LOG_FUNCTION(this << address);
-    auto stateIt = m_states.find(address);
-
-    if (stateIt != m_states.end())
+    if (const auto stateIt = m_states.find(address); stateIt != m_states.cend())
     {
-        NS_LOG_DEBUG("WifiRemoteStationManager::LookupState returning existing state");
         return stateIt->second;
     }
 
@@ -1487,9 +1501,13 @@ WifiRemoteStationManager::LookupState(Mac48Address address) const
     state->m_erpOfdmSupported = false;
     state->m_ofdmSupported = false;
     state->m_htCapabilities = nullptr;
+    state->m_htOperation = nullptr;
     state->m_vhtCapabilities = nullptr;
+    state->m_vhtOperation = nullptr;
     state->m_heCapabilities = nullptr;
+    state->m_heOperation = nullptr;
     state->m_ehtCapabilities = nullptr;
+    state->m_ehtOperation = nullptr;
     state->m_mleCommonInfo = nullptr;
     state->m_emlsrEnabled = false;
     state->m_channelWidth = m_wifiPhy->GetChannelWidth();
@@ -1571,6 +1589,18 @@ WifiRemoteStationManager::AddStationHtCapabilities(Mac48Address from,
 }
 
 void
+WifiRemoteStationManager::AddStationHtOperation(Mac48Address from, const HtOperation& htOperation)
+{
+    NS_LOG_FUNCTION(this << from << htOperation);
+    auto state = LookupState(from);
+    if (htOperation.GetStaChannelWidth() == 0)
+    {
+        state->m_channelWidth = MHz_u{20};
+    }
+    state->m_htOperation = Create<const HtOperation>(htOperation);
+}
+
+void
 WifiRemoteStationManager::AddStationExtendedCapabilities(
     Mac48Address from,
     const ExtendedCapabilities& extendedCapabilities)
@@ -1609,6 +1639,34 @@ WifiRemoteStationManager::AddStationVhtCapabilities(Mac48Address from,
 }
 
 void
+WifiRemoteStationManager::AddStationVhtOperation(Mac48Address from,
+                                                 const VhtOperation& vhtOperation)
+{
+    NS_LOG_FUNCTION(this << from << vhtOperation);
+    auto state = LookupState(from);
+    /*
+     * Table 9-274 (VHT Operation Information subfields) of 802.11-2020:
+     * Set to 0 for 20 MHz or 40 MHz BSS bandwidth.
+     * Set to 1 for 80 MHz, 160 MHz or 80+80 MHz BSS bandwidth.
+     */
+    if (vhtOperation.GetChannelWidth() == 0)
+    {
+        state->m_channelWidth = std::min(MHz_u{40}, state->m_channelWidth);
+    }
+    else if (vhtOperation.GetChannelWidth() == 1)
+    {
+        state->m_channelWidth = std::min(MHz_u{160}, state->m_channelWidth);
+    }
+    state->m_vhtOperation = Create<const VhtOperation>(vhtOperation);
+}
+
+Ptr<const VhtOperation>
+WifiRemoteStationManager::GetStationVhtOperation(Mac48Address from)
+{
+    return LookupState(from)->m_vhtOperation;
+}
+
+void
 WifiRemoteStationManager::AddStationHeCapabilities(Mac48Address from,
                                                    const HeCapabilities& heCapabilities)
 {
@@ -1625,6 +1683,10 @@ WifiRemoteStationManager::AddStationHeCapabilities(Mac48Address from,
         else if (heCapabilities.GetChannelWidthSet() & 0x02)
         {
             state->m_channelWidth = MHz_u{80};
+        }
+        else if (heCapabilities.GetChannelWidthSet() == 0x00)
+        {
+            state->m_channelWidth = MHz_u{20};
         }
         // For other cases at 5 GHz, the supported channel width is set by the VHT capabilities
     }
@@ -1660,6 +1722,34 @@ WifiRemoteStationManager::AddStationHeCapabilities(Mac48Address from,
 }
 
 void
+WifiRemoteStationManager::AddStationHeOperation(Mac48Address from, const HeOperation& heOperation)
+{
+    NS_LOG_FUNCTION(this << from << heOperation);
+    auto state = LookupState(from);
+    if (auto operation6GHz = heOperation.m_6GHzOpInfo)
+    {
+        switch (operation6GHz->m_chWid)
+        {
+        case 0:
+            state->m_channelWidth = MHz_u{20};
+            break;
+        case 1:
+            state->m_channelWidth = MHz_u{40};
+            break;
+        case 2:
+            state->m_channelWidth = MHz_u{80};
+            break;
+        case 3:
+            state->m_channelWidth = MHz_u{160};
+            break;
+        default:
+            NS_FATAL_ERROR("Invalid channel width value in 6 GHz Operation Information field");
+        }
+    }
+    state->m_heOperation = Create<const HeOperation>(heOperation);
+}
+
+void
 WifiRemoteStationManager::AddStationHe6GhzCapabilities(
     const Mac48Address& from,
     const He6GhzBandCapabilities& he6GhzCapabilities)
@@ -1678,6 +1768,12 @@ WifiRemoteStationManager::AddStationEhtCapabilities(Mac48Address from,
     // Used by all stations to record EHT capabilities of remote stations
     NS_LOG_FUNCTION(this << from << ehtCapabilities);
     auto state = LookupState(from);
+    if (ehtCapabilities.m_phyCapabilities.support320MhzIn6Ghz &&
+        (m_wifiPhy->GetPhyBand() == WIFI_PHY_BAND_6GHZ))
+    {
+        state->m_channelWidth = MHz_u{320};
+    }
+    // For other cases, the supported channel width is set by the HT/VHT capabilities
     for (const auto& mcs : m_wifiPhy->GetMcsList(WIFI_MOD_CLASS_EHT))
     {
         for (uint8_t mapType = 0; mapType < EhtMcsAndNssSet::EHT_MCS_MAP_TYPE_MAX; ++mapType)
@@ -1694,6 +1790,38 @@ WifiRemoteStationManager::AddStationEhtCapabilities(Mac48Address from,
 }
 
 void
+WifiRemoteStationManager::AddStationEhtOperation(Mac48Address from,
+                                                 const EhtOperation& ehtOperation)
+{
+    NS_LOG_FUNCTION(this << from << ehtOperation);
+    auto state = LookupState(from);
+    if (auto opControl = ehtOperation.m_opInfo)
+    {
+        switch (opControl->control.channelWidth)
+        {
+        case 0:
+            state->m_channelWidth = MHz_u{20};
+            break;
+        case 1:
+            state->m_channelWidth = MHz_u{40};
+            break;
+        case 2:
+            state->m_channelWidth = MHz_u{80};
+            break;
+        case 3:
+            state->m_channelWidth = MHz_u{160};
+            break;
+        case 4:
+            state->m_channelWidth = MHz_u{320};
+            break;
+        default:
+            NS_FATAL_ERROR("Invalid channel width value in EHT Operation Information field");
+        }
+    }
+    state->m_ehtOperation = Create<const EhtOperation>(ehtOperation);
+}
+
+void
 WifiRemoteStationManager::AddStationMleCommonInfo(
     Mac48Address from,
     const std::shared_ptr<CommonInfoBasicMle>& mleCommonInfo)
@@ -1702,14 +1830,21 @@ WifiRemoteStationManager::AddStationMleCommonInfo(
     auto state = LookupState(from);
     state->m_mleCommonInfo = mleCommonInfo;
     // insert another entry in m_states indexed by the MLD address and pointing to the same state
-    const_cast<WifiRemoteStationManager*>(this)->m_states.insert(
-        {mleCommonInfo->m_mldMacAddress, state});
+    const_cast<WifiRemoteStationManager*>(this)->m_states.insert_or_assign(
+        mleCommonInfo->m_mldMacAddress,
+        state);
 }
 
 Ptr<const HtCapabilities>
 WifiRemoteStationManager::GetStationHtCapabilities(Mac48Address from)
 {
     return LookupState(from)->m_htCapabilities;
+}
+
+Ptr<const HtOperation>
+WifiRemoteStationManager::GetStationHtOperation(Mac48Address from)
+{
+    return LookupState(from)->m_htOperation;
 }
 
 Ptr<const ExtendedCapabilities>
@@ -1730,6 +1865,12 @@ WifiRemoteStationManager::GetStationHeCapabilities(Mac48Address from)
     return LookupState(from)->m_heCapabilities;
 }
 
+Ptr<const HeOperation>
+WifiRemoteStationManager::GetStationHeOperation(Mac48Address from)
+{
+    return LookupState(from)->m_heOperation;
+}
+
 Ptr<const He6GhzBandCapabilities>
 WifiRemoteStationManager::GetStationHe6GhzCapabilities(const Mac48Address& from) const
 {
@@ -1740,6 +1881,12 @@ Ptr<const EhtCapabilities>
 WifiRemoteStationManager::GetStationEhtCapabilities(Mac48Address from)
 {
     return LookupState(from)->m_ehtCapabilities;
+}
+
+Ptr<const EhtOperation>
+WifiRemoteStationManager::GetStationEhtOperation(Mac48Address from)
+{
+    return LookupState(from)->m_ehtOperation;
 }
 
 std::optional<std::reference_wrapper<CommonInfoBasicMle::EmlCapabilities>>

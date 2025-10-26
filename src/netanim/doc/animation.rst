@@ -87,7 +87,7 @@ Building NetAnim
 ================
 Prerequisites
 ~~~~~~~~~~~~~
-Qt5 (5.4 and over) is required to build NetAnim. The ns-3 Installation Guide
+Qt5 (5.4 and over) and CMake are required to build NetAnim. The ns-3 Installation Guide
 lists some packages to install for some
 `Linux <https://www.nsnam.org/docs/installation/html/linux.html#optional>`_ systems,
 for `macOS <https://www.nsnam.org/docs/installation/html/macos.html#optional>`, and
@@ -102,28 +102,22 @@ To build NetAnim use the following commands:
 
 .. sourcecode:: bash
 
-  $ cd netanim
-  $ make clean
-  $ qmake NetAnim.pro
-  $ make
+   $ git clone https://gitlab.com/nsnam/netanim.git
+   $ cd netanim
+   $ mkdir build && cd build
+   $ cmake .. && cmake --build .
 
-
-Note: qmake could be "qmake-qt5" in some systems
-
-This should create an executable named "NetAnim" in the same directory:
-
-.. sourcecode:: bash
-
-  $ ls -l NetAnim
- -rwxr-xr-x 1 john john 390395 2012-05-22 08:32 NetAnim
+This should create an executable named "netanim" in the `build/bin` directory.
+If you prefer, you can move or copy this binary to another directory on
+your file system.
 
 Usage
 =====
 Using NetAnim is a two-step process
 
-Step 1:Generate the animation XML trace file during simulation using "ns3::AnimationInterface" in the |ns3| code base.
+Step 1: Generate the animation XML trace file during simulation using "ns3::AnimationInterface" in the |ns3| code base.
 
-Step 2:Load the XML trace file generated in Step 1 with the offline Qt-based animator named NetAnim.
+Step 2: Load the XML trace file generated in Step 1 with NetAnim.
 
 Step 1: Generate XML animation trace file
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -203,7 +197,6 @@ Using the above constructor ensures that each animation XML trace file has only 
 With the above statement, AnimationInterface records the meta-data of each packet in the xml trace file. Metadata can be used by NetAnim to provide better statistics and filter, along with providing some brief information about the packet such as TCP sequence number or source & destination IP address during packet animation.
 
 CAUTION: Enabling this feature will result in larger XML trace files.
-Please do NOT enable this feature when using Wimax links.
 
 ::
 
@@ -231,7 +224,7 @@ The counter with Id 89 is obtained using AnimationInterface::AddNodeCounter. An 
 Step 2: Loading the XML in NetAnim
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-1. Assuming NetAnim was built, use the command "./NetAnim" to launch NetAnim. Please review the section "Building NetAnim" if NetAnim is not available.
+1. Assuming NetAnim was built, use the command "./netanim" to launch NetAnim. Please review the section "Building NetAnim" if NetAnim is not available.
 2. When NetAnim is opened, click on the File open button at the top-left corner, select the XML file generated during Step 1.
 3. Hit the green play button to begin animation.
 
@@ -240,6 +233,8 @@ http://www.youtube.com/watch?v=tz_hUuNwFDs
 
 Wiki
 ====
-For detailed instructions on installing "NetAnim", F.A.Qs and loading the XML trace file
+For more documentation on "NetAnim", F.A.Qs and loading the XML trace file
 (mentioned earlier) using NetAnim please refer:
 http://www.nsnam.org/wiki/NetAnim
+
+Please note that the wiki may refer to stale installation instructions.

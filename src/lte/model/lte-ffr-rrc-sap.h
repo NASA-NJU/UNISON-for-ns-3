@@ -148,7 +148,8 @@ class MemberLteFfrRrcSapProvider : public LteFfrRrcSapProvider
   private:
     C* m_owner; ///< the owner class
 
-}; // end of class MemberLteFfrRrcSapProvider
+    // end of class MemberLteFfrRrcSapProvider
+};
 
 template <class C>
 MemberLteFfrRrcSapProvider<C>::MemberLteFfrRrcSapProvider(C* owner)
@@ -214,7 +215,8 @@ class MemberLteFfrRrcSapUser : public LteFfrRrcSapUser
   private:
     C* m_owner; ///< the owner class
 
-}; // end of class LteFfrRrcSapUser
+    // end of class LteFfrRrcSapUser
+};
 
 template <class C>
 MemberLteFfrRrcSapUser<C>::MemberLteFfrRrcSapUser(C* owner)
@@ -245,6 +247,6 @@ MemberLteFfrRrcSapUser<C>::SendLoadInformation(EpcX2Sap::LoadInformationParams p
     m_owner->DoSendLoadInformation(params);
 }
 
-} // end of namespace ns3
+} // namespace ns3
 
 #endif /* LTE_FFR_RRC_SAP_H */

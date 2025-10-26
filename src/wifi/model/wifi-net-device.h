@@ -28,9 +28,6 @@ class VhtConfiguration;
 class HeConfiguration;
 class EhtConfiguration;
 
-/// This value conforms to the 802.11 specification
-static const uint16_t MAX_MSDU_SIZE = 2304;
-
 /**
  * @defgroup wifi Wifi Models
  *
@@ -171,6 +168,11 @@ class WifiNetDevice : public NetDevice
      * @return pointer to EhtConfiguration if it exists
      */
     Ptr<EhtConfiguration> GetEhtConfiguration() const;
+
+    /**
+     *  @return true if device supports EMLSR, otherwise false
+     */
+    bool IsEmlsrActivated() const;
 
     void SetIfIndex(const uint32_t index) override;
     uint32_t GetIfIndex() const override;

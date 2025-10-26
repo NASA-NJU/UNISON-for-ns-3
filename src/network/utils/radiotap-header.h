@@ -83,6 +83,14 @@ class RadiotapHeader : public Header
     void Print(std::ostream& os) const override;
 
     /**
+     * @brief Set the ieee80211_radiotap_header. This method must be called
+     * before any other Set* method.
+     *
+     * @param numPresentWords Number of it_present words in the radiotap header.
+     */
+    void SetWifiHeader(std::size_t numPresentWords);
+
+    /**
      * @brief Set the Time Synchronization Function Timer (TSFT) value.  Valid for
      * received frames only.
      *
@@ -773,6 +781,25 @@ class RadiotapHeader : public Header
     void SetEhtFields(const EhtFields& ehtFields);
 
   private:
+    static constexpr int MIN_HEADER_SIZE{8}; //!< the minimum size of the radiotap header
+
+    /**
+     * Serialize the TSFT radiotap header.
+     *
+     * @param start An iterator which points to where the header should be written.
+     */
+    void SerializeTsft(Buffer::Iterator& start) const;
+
+    /**
+     * Deserialize the TSFT radiotap header.
+     *
+     * @param start An iterator which points to where the header should be read.
+     * @param bytesRead the number of bytes already read.
+
+     * @returns The number of bytes read.
+     */
+    uint32_t DeserializeTsft(Buffer::Iterator start, uint32_t bytesRead);
+
     /**
      * Serialize the Channel radiotap header.
      *
@@ -1031,12 +1058,12 @@ class RadiotapHeader : public Header
         RADIOTAP_EHT_SIG = 0x00000004
     };
 
-    uint16_t m_length{8};                   //!< entire length of radiotap data + header
-    uint32_t m_present{0};                  //!< bits describing which fields follow header
-    std::optional<uint32_t> m_presentExt{}; //!< optional extended present bitmask
+    uint16_t m_length{MIN_HEADER_SIZE}; //!< entire length of radiotap data + header
+    std::vector<uint32_t> m_present{0}; //!< bits describing which fields follow header
 
-    uint64_t m_tsft{0}; //!< Time Synchronization Function Timer (when the first bit of the MPDU
-                        //!< arrived at the MAC)
+    uint8_t m_tsftPad{0}; //!< TSFT padding.
+    uint64_t m_tsft{0};   //!< Time Synchronization Function Timer (when the first bit of the MPDU
+                          //!< arrived at the MAC)
 
     uint8_t m_flags{FRAME_FLAG_NONE}; //!< Properties of transmitted and received frames.
 

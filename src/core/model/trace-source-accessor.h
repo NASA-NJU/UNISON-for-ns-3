@@ -138,7 +138,7 @@ namespace ns3
  */
 template <typename T, typename SOURCE>
 Ptr<const TraceSourceAccessor>
-DoMakeTraceSourceAccessor(SOURCE T::*a)
+DoMakeTraceSourceAccessor(SOURCE T::* a)
 {
     struct Accessor : public TraceSourceAccessor
     {
@@ -186,7 +186,7 @@ DoMakeTraceSourceAccessor(SOURCE T::*a)
             return true;
         }
 
-        SOURCE T::*m_source;
+        SOURCE T::* m_source;
     }* accessor = new Accessor();
 
     accessor->m_source = a;

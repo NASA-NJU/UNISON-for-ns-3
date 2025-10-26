@@ -26,13 +26,13 @@ namespace ns3
 
 NS_LOG_COMPONENT_DEFINE("TtaFfMacScheduler");
 
-/// TTA type 0 allocation RBG
+/// TTA type 0 allocation RBG (see table 7.1.6.1-1 of 36.213)
 static const int TtaType0AllocationRbg[4] = {
     10,  // RBG size 1
     26,  // RBG size 2
     63,  // RBG size 3
     110, // RBG size 4
-};       // see table 7.1.6.1-1 of 36.213
+};
 
 NS_OBJECT_ENSURE_REGISTERED(TtaFfMacScheduler);
 
@@ -936,9 +936,8 @@ TtaFfMacScheduler::DoSchedDlTriggerReq(
                             itMax = it;
                         }
                     }
-                } // end if cqi
-
-            } // end for m_rlcBufferReq
+                }
+            }
 
             if (itMax == m_flowStatsDl.end())
             {
@@ -962,8 +961,8 @@ TtaFfMacScheduler::DoSchedDlTriggerReq(
                 }
                 NS_LOG_INFO(this << " UE assigned " << (*itMax));
             }
-        } // end for RBG free
-    }     // end for RBGs
+        }
+    }
 
     // generate the transmission opportunities by grouping the RBGs of the same RNTI and
     // creating the correspondent DCIs
@@ -1142,7 +1141,7 @@ TtaFfMacScheduler::DoSchedDlTriggerReq(
         ret.m_buildDataList.push_back(newEl);
 
         itMap++;
-    }                               // end while allocation
+    }
     ret.m_nrOfPdcchOfdmSymbols = 1; /// \todo check correct value according the DCIs txed
 
     m_schedSapUser->SchedDlConfigInd(ret);

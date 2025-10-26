@@ -152,7 +152,8 @@ WifiDefaultAckManager::IsResponseNeeded(Ptr<const WifiMpdu> mpdu,
     }
     // * no other frame belonging to this BA agreement is queued (because, in such
     //   a case, a Block Ack is not going to be requested anytime soon)
-    if (auto queueId = WifiContainerQueueId(WIFI_QOSDATA_QUEUE, WIFI_UNICAST, origReceiver, tid);
+    if (auto queueId =
+            WifiContainerQueueId(WIFI_QOSDATA_QUEUE, WifiRcvAddr::UNICAST, origReceiver, tid);
         edca->GetWifiMacQueue()->GetNPackets(queueId) -
             edca->GetBaManager()->GetNBufferedPackets(origReceiver, tid) - seqNumbers.size() <
         1)
@@ -703,7 +704,10 @@ WifiDefaultAckManager::GetAckInfoIfAggregatedMuBar(Ptr<const WifiMpdu> mpdu,
         acknowledgment->stationsReplyingWithBlockAck.emplace(
             receiver,
             WifiDlMuAggregateTf::BlockAckInfo{
-                GetMuBarSize({m_mac->GetBarTypeAsOriginator(receiver, tid)}),
+                GetMuBarSize(IsEht(txParams.m_txVector.GetPreambleType()) ? TriggerFrameVariant::EHT
+                                                                          : TriggerFrameVariant::HE,
+                             txParams.m_txVector.GetChannelWidth(),
+                             {m_mac->GetBarTypeAsOriginator(receiver, tid)}),
                 edca->GetBaManager()->GetBlockAckReqHeader(
                     mpdu->GetOriginal()->GetHeader().GetAddr1(),
                     tid),
@@ -754,7 +758,10 @@ WifiDefaultAckManager::TryUlMuTransmission(Ptr<const WifiMpdu> mpdu,
                 NS_LOG_INFO("Unallocated RU");
                 continue;
             }
-            NS_ABORT_MSG_IF(aid12 == 0 || aid12 > 2007, "Allocation of RA-RUs is not supported");
+            const auto maxAid =
+                IsEht(txParams.m_txVector.GetPreambleType()) ? EHT_MAX_AID : MAX_AID;
+            NS_ABORT_MSG_IF(aid12 < MIN_AID || aid12 > maxAid,
+                            "Allocation of RA-RUs is not supported");
 
             const auto it = apMac->GetStaList(m_linkId).find(aid12);
             NS_ASSERT(it != apMac->GetStaList(m_linkId).end());

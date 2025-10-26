@@ -126,7 +126,7 @@ HtFrameExchangeManager::NeedSetupBlockAck(Mac48Address recipient, uint8_t tid)
     // NOLINTEND(bugprone-branch-clone)
     else
     {
-        WifiContainerQueueId queueId{WIFI_QOSDATA_QUEUE, WIFI_UNICAST, recipient, tid};
+        WifiContainerQueueId queueId{WIFI_QOSDATA_QUEUE, WifiRcvAddr::UNICAST, recipient, tid};
         uint32_t packets = qosTxop->GetWifiMacQueue()->GetNPackets(queueId);
         establish =
             (m_mac->Is6GhzBand(m_linkId) ||
@@ -152,7 +152,7 @@ HtFrameExchangeManager::NeedSetupGcrBlockAck(const WifiMacHeader& header)
         m_mpduAggregator->GetMaxAmpduSize(groupAddress, tid, WIFI_MOD_CLASS_HT);
     const auto isGcrBa = (m_apMac->GetGcrManager()->GetRetransmissionPolicy() ==
                           GroupAddressRetransmissionPolicy::GCR_BLOCK_ACK);
-    WifiContainerQueueId queueId{WIFI_QOSDATA_QUEUE, WIFI_GROUPCAST, groupAddress, tid};
+    WifiContainerQueueId queueId{WIFI_QOSDATA_QUEUE, WifiRcvAddr::GROUPCAST, groupAddress, tid};
 
     for (const auto& recipients =
              m_apMac->GetGcrManager()->GetMemberStasForGroupAddress(groupAddress);
@@ -570,7 +570,7 @@ HtFrameExchangeManager::GetBar(AcIndex ac,
             if (bar->GetHeader().GetAddr2() == m_self && recipientMld)
             {
                 WifiContainerQueueId queueId{WIFI_CTL_QUEUE,
-                                             WIFI_UNICAST,
+                                             WifiRcvAddr::UNICAST,
                                              *recipientMld,
                                              std::nullopt};
                 Ptr<WifiMpdu> otherBar;
@@ -606,7 +606,7 @@ HtFrameExchangeManager::GetBar(AcIndex ac,
         {
             WifiContainerQueueId queueId(
                 WIFI_QOSDATA_QUEUE,
-                WIFI_UNICAST,
+                WifiRcvAddr::UNICAST,
                 GetWifiRemoteStationManager()->GetMldAddress(recipient).value_or(recipient),
                 tid);
             // check if data is queued and can be transmitted on this link
@@ -624,18 +624,21 @@ HtFrameExchangeManager::GetBar(AcIndex ac,
         }
     }
 
-    if (selectedBar && selectedBar->GetHeader().GetAddr2() != m_self)
+    if (selectedBar)
     {
-        // the selected BAR has MLD addresses in Addr1/Addr2, replace them with link addresses
-        // and move to the appropriate container queue
-        NS_ASSERT(selectedBar->GetHeader().GetAddr2() == m_mac->GetAddress());
-        DequeueMpdu(selectedBar);
-        const auto currAddr1 = selectedBar->GetHeader().GetAddr1();
-        auto addr1 =
-            GetWifiRemoteStationManager()->GetAffiliatedStaAddress(currAddr1).value_or(currAddr1);
-        selectedBar->GetHeader().SetAddr1(addr1);
-        selectedBar->GetHeader().SetAddr2(m_self);
-        queue->Enqueue(selectedBar);
+        if (const auto currAddr1 = selectedBar->GetHeader().GetAddr1();
+            currAddr1 == m_mac->GetMldAddress(currAddr1))
+        {
+            // the selected BAR has MLD addresses in Addr1/Addr2, replace them with link addresses
+            // and move to the appropriate container queue
+            DequeueMpdu(selectedBar);
+            const auto addr1 =
+                GetWifiRemoteStationManager()->GetAffiliatedStaAddress(currAddr1).value_or(
+                    currAddr1);
+            selectedBar->GetHeader().SetAddr1(addr1);
+            selectedBar->GetHeader().SetAddr2(m_self);
+            queue->Enqueue(selectedBar);
+        }
     }
 
     return selectedBar;
@@ -1031,19 +1034,28 @@ HtFrameExchangeManager::GetPsduDurationId(Time txDuration, const WifiTxParameter
     NS_LOG_FUNCTION(this << txDuration << &txParams);
 
     NS_ASSERT(m_edca);
+    NS_ASSERT(txParams.m_acknowledgment &&
+              txParams.m_acknowledgment->acknowledgmentTime.has_value());
+
+    const auto singleDurationId = *txParams.m_acknowledgment->acknowledgmentTime;
 
     if (m_edca->GetTxopLimit(m_linkId).IsZero())
     {
-        NS_ASSERT(txParams.m_acknowledgment &&
-                  txParams.m_acknowledgment->acknowledgmentTime.has_value());
-        return *txParams.m_acknowledgment->acknowledgmentTime;
+        return singleDurationId;
     }
 
     // under multiple protection settings, if the TXOP limit is not null, Duration/ID
     // is set to cover the remaining TXOP time (Sec. 9.2.5.2 of 802.11-2016).
     // The TXOP holder may exceed the TXOP limit in some situations (Sec. 10.22.2.8
     // of 802.11-2016)
-    return std::max(m_edca->GetRemainingTxop(m_linkId) - txDuration, Seconds(0));
+    auto duration = std::max(m_edca->GetRemainingTxop(m_linkId) - txDuration, Seconds(0));
+
+    if (m_protectSingleExchange)
+    {
+        duration = std::min(duration, singleDurationId + m_singleExchangeProtectionSurplus);
+    }
+
+    return duration;
 }
 
 void
@@ -1123,7 +1135,7 @@ HtFrameExchangeManager::CtsTimeout(Ptr<WifiMpdu> rts, const WifiTxVector& txVect
         return;
     }
 
-    DoCtsTimeout(m_psdu);
+    DoCtsTimeout(WifiPsduMap{{SU_STA_ID, m_psdu}});
     m_psdu = nullptr;
 }
 
@@ -1364,14 +1376,8 @@ HtFrameExchangeManager::ForwardPsduDown(Ptr<const WifiPsdu> psdu, WifiTxVector& 
         txVector.SetAggregation(true);
     }
 
-    auto txDuration = WifiPhy::CalculateTxDuration(psdu, txVector, m_phy->GetPhyBand());
-    // The TXNAV timer is a single timer, shared by the EDCAFs within a STA, that is initialized
-    // with the duration from the Duration/ID field in the frame most recently successfully
-    // transmitted by the TXOP holder, except for PS-Poll frames. (Sec.10.23.2.2 IEEE 802.11-2020)
-    if (!psdu->GetHeader(0).IsPsPoll())
-    {
-        m_txNav = Max(m_txNav, Simulator::Now() + txDuration + psdu->GetDuration());
-    }
+    const auto txDuration = WifiPhy::CalculateTxDuration(psdu, txVector, m_phy->GetPhyBand());
+    SetTxNav(*psdu->begin(), txDuration);
 
     m_phy->Send(psdu, txVector);
 }

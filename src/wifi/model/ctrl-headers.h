@@ -11,12 +11,13 @@
 
 #include "block-ack-type.h"
 #include "wifi-phy-common.h"
+#include "wifi-ru.h"
 
-#include "ns3/he-ru.h"
 #include "ns3/header.h"
 #include "ns3/mac48-address.h"
 
 #include <list>
+#include <optional>
 #include <vector>
 
 namespace ns3
@@ -674,14 +675,14 @@ class CtrlTriggerUserInfoField
      *
      * @param ru the RU this User Info field is allocating
      */
-    void SetRuAllocation(HeRu::RuSpec ru);
+    void SetRuAllocation(WifiRu::RuSpec ru);
     /**
      * Get the RU specified by the RU Allocation subfield.
      * This method cannot be called on MU-RTS Trigger Frames (call GetMuRtsRuAllocation instead).
      *
      * @return the RU this User Info field is allocating
      */
-    HeRu::RuSpec GetRuAllocation() const;
+    WifiRu::RuSpec GetRuAllocation() const;
     /**
      * Set the RU Allocation subfield based on the given value for the B7-B1 bits.
      * This method can only be called on MU-RTS Trigger Frames.
@@ -802,32 +803,32 @@ class CtrlTriggerUserInfoField
      */
     bool GetMoreRaRu() const;
     /**
-     * Set the UL Target RSSI subfield to indicate to the station to transmit an
+     * Set the UL Target Receive Power subfield to indicate to the station to transmit an
      * HE TB PPDU response at its maximum transmit power for the assigned MCS
      */
-    void SetUlTargetRssiMaxTxPower();
+    void SetUlTargetRxPowerMaxTxPower();
     /**
-     * Set the UL Target RSSI subfield to indicate the expected receive signal
+     * Set the UL Target Receive Power subfield to indicate the expected receive signal
      * power in dBm
      *
      * @param dBm the expected receive signal power (a value between -110 and -20)
      */
-    void SetUlTargetRssi(int8_t dBm);
+    void SetUlTargetRxPower(int8_t dBm);
     /**
-     * Return true if the UL Target RSSI subfield indicates to the station to transmit
+     * Return true if the UL Target Receive Power subfield indicates to the station to transmit
      * an HE TB PPDU response at its maximum transmit power for the assigned MCS
      *
-     * @return true if the UL Target RSSI subfield indicates to the station to transmit
+     * @return true if the UL Target Receive Power subfield indicates to the station to transmit
      * an HE TB PPDU response at its maximum transmit power for the assigned MCS
      */
-    bool IsUlTargetRssiMaxTxPower() const;
+    bool IsUlTargetRxPowerMaxTxPower() const;
     /**
      * Get the expected receive signal power for the solicited HE TB PPDU. This
-     * method can only be called if IsUlTargetRssiMaxTxPower returns false.
+     * method can only be called if IsUlTargetRxPowerMaxTxPower returns false.
      *
      * @return the expected receive signal power in dBm
      */
-    int8_t GetUlTargetRssi() const;
+    int8_t GetUlTargetRxPower() const;
     /**
      * Set the Trigger Dependent User Info subfield for Basic Trigger frames.
      *
@@ -902,12 +903,113 @@ class CtrlTriggerUserInfoField
         } raRuInformation; //!< Used when AID12 is 0 or 2045
     } m_bits26To31;        //!< Fields occupying bits 26-31 in the User Info field
 
-    uint8_t m_ulTargetRssi;                  //!< Expected receive signal power
+    uint8_t m_ulTargetRxPower;               //!< Expected receive signal power
     TriggerFrameType m_triggerType;          //!< Trigger frame type
     uint8_t m_basicTriggerDependentUserInfo; //!< Basic Trigger variant of Trigger Dependent User
                                              //!< Info subfield
     CtrlBAckRequestHeader
         m_muBarTriggerDependentUserInfo; //!< MU-BAR variant of Trigger Dependent User Info subfield
+};
+
+/**
+ * @ingroup wifi
+ * @brief Special User Info field of Trigger frames.
+ *
+ * Trigger frames have been extended by 802.11be amendment and may include one Special User Info
+ * field for a solicited EHT TB PPDU (see Section 9.3.1.22.3 of D7.0). The Special User Info field
+ * is located immediately after the Common Info field, it does not carry user specific information
+ * but carries extended common information not provided in the Common Info field.
+ */
+class CtrlTriggerSpecialUserInfoField
+{
+  public:
+    /**
+     * Constructor
+     *
+     * @param triggerType the Trigger frame type
+     */
+    explicit CtrlTriggerSpecialUserInfoField(TriggerFrameType triggerType);
+
+    /**
+     * Copy assignment operator.
+     *
+     * @param other the Special User Info field to copy
+     * @return a reference to the copied object
+     *
+     * Checks that the given Special User Info fields is included in the same type of Trigger Frame.
+     */
+    CtrlTriggerSpecialUserInfoField& operator=(const CtrlTriggerSpecialUserInfoField& other);
+
+    /**
+     * Get the expected size of this Special User Info field
+     *
+     * @return the expected size of this Special User Info field.
+     */
+    uint32_t GetSerializedSize() const;
+
+    /**
+     * Serialize the Special User Info field to the given buffer.
+     *
+     * @param start an iterator which points to where the header should
+     *        be written
+     * @return Buffer::Iterator to the next available buffer
+     */
+    Buffer::Iterator Serialize(Buffer::Iterator start) const;
+
+    /**
+     * Deserialize the Special User Info field from the given buffer.
+     *
+     * @param start an iterator which points to where the header should
+     *        read from
+     * @return Buffer::Iterator to the next available buffer
+     */
+    Buffer::Iterator Deserialize(Buffer::Iterator start);
+
+    /**
+     * Get the type of the Trigger Frame this Special User Info field belongs to.
+     *
+     * @return the type of the Trigger Frame this Special User Info field belongs to
+     */
+    TriggerFrameType GetType() const;
+
+    /**
+     * Set the UL Bandwidth Extension subfield value of the solicited EHT TB PPDU.
+     *
+     * @param bw bandwidth (allowed values: 20 MHz, 40 MHz, 80 MHz, 160 MHz, 320 MHz)
+     */
+    void SetUlBwExt(MHz_u bw);
+
+    /**
+     * Get the UL Bandwidth Extension subfield value of the solicited EHT TB PPDU.
+     *
+     * @return the UL Bandwidth Extension subfield value
+     */
+    uint8_t GetUlBwExt() const;
+
+    /**
+     * Set the Trigger Dependent Special User Info subfield for the MU-BAR variant of Trigger
+     * frames, which includes the BAR Type subfield. The BAR Type subfield must indicate a
+     * Compressed BAR in an MU BAR Trigger frame.
+     *
+     * @param bar the BlockAckRequest header object including the BAR Control
+     *            subfield and the BAR Information subfield
+     */
+    void SetMuBarTriggerDepUserInfo(const CtrlBAckRequestHeader& bar);
+
+    /**
+     * Get the Trigger Dependent Special User Info subfield for the MU-BAR variant of
+     * Trigger frames, which includes a BAR Type subfield.
+     *
+     * @return the BlockAckRequest header object including the BAR Control
+     *         subfield and the BAR Information subfield
+     */
+    const CtrlBAckRequestHeader& GetMuBarTriggerDepUserInfo() const;
+
+  private:
+    TriggerFrameType m_triggerType{};                        //!< Trigger type
+    uint8_t m_ulBwExt{};                                     //!< UL Bandwidth Extension
+    CtrlBAckRequestHeader m_muBarTriggerDependentUserInfo{}; //!< MU-BAR variant of Trigger
+                                                             //!< Dependent User Info subfield
 };
 
 /**
@@ -1116,15 +1218,15 @@ class CtrlTriggerHeader : public Header
      */
     bool GetCsRequired() const;
     /**
-     * Set the bandwidth of the solicited HE TB PPDU.
+     * Set the bandwidth of the solicited HE/EHT TB PPDU.
      *
-     * @param bw bandwidth (allowed values: 20, 40, 80, 160)
+     * @param bw bandwidth (allowed values: 20, 40, 80, 160, 320)
      */
     void SetUlBandwidth(MHz_u bw);
     /**
-     * Get the bandwidth of the solicited HE TB PPDU.
+     * Get the bandwidth of the solicited HE/EHT TB PPDU.
      *
-     * @return the bandwidth (20, 40, 80 or 160)
+     * @return the bandwidth (20, 40, 80, 160 or 320)
      */
     MHz_u GetUlBandwidth() const;
     /**
@@ -1139,15 +1241,15 @@ class CtrlTriggerHeader : public Header
      */
     void SetGiAndLtfType(Time guardInterval, uint8_t ltfType);
     /**
-     * Get the guard interval duration of the solicited HE TB PPDU.
+     * Get the guard interval duration of the solicited HE/EHT TB PPDU.
      *
-     * @return the guard interval duration  of the solicited HE TB PPDU
+     * @return the guard interval duration of the solicited HE/EHT TB PPDU
      */
     Time GetGuardInterval() const;
     /**
-     * Get the LTF type of the solicited HE TB PPDU.
+     * Get the LTF type of the solicited HE/EHT TB PPDU.
      *
-     * @return the LTF type of the solicited HE TB PPDU
+     * @return the LTF type of the solicited HE/EHT TB PPDU
      */
     uint8_t GetLtfType() const;
     /**
@@ -1338,6 +1440,9 @@ class CtrlTriggerHeader : public Header
     uint8_t m_apTxPower;            //!< Tx Power used by AP to transmit the Trigger Frame
     uint16_t m_ulSpatialReuse;      //!< Value for the Spatial Reuse field in HE-SIG-A
     std::size_t m_padding;          //!< the size in bytes of the Padding field
+
+    std::optional<CtrlTriggerSpecialUserInfoField>
+        m_specialUserInfoField; //!< Special User Info field (EHT variant only)
 
     /**
      * List of User Info fields

@@ -52,13 +52,13 @@ to install ``g++``.
 
 The following table provides package names for installing CMake and Ninja build system from Homebrew or MacPorts.
 
-  +--------------------+-------------------------------+-------------------------------------+
-  | **ns-3 Version**   | **Homebrew packages**         | **MacPorts packages**               |
-  +====================+===============================+=====================================+
-  | 3.36 and later     | ``cmake ninja``               | ``cmake ninja``                     |
-  +--------------------+-------------------------------+-------------------------------------+
-  | 3.35 and earlier   | None                          | None                                |
-  +--------------------+-------------------------------+-------------------------------------+
++--------------------+-------------------------------+-------------------------------------+
+| **ns-3 Version**   | **Homebrew packages**         | **MacPorts packages**               |
++====================+===============================+=====================================+
+| 3.36 and later     | ``cmake ninja``               | ``cmake ninja``                     |
++--------------------+-------------------------------+-------------------------------------+
+| 3.35 and earlier   | None                          | None                                |
++--------------------+-------------------------------+-------------------------------------+
 
 You will know you are done when you can successfully type `clang++ -v` at the command line, and when you type `cmake --help` and it identifies that you have at least one installed generator (in the below example, Unix Makefiles):
 
@@ -75,29 +75,40 @@ You will know you are done when you can successfully type `clang++ -v` at the co
 Recommended
 ***********
 
-  +-----------------------------+------------------------+-----------------------------------+
-  | **Feature**                 | **Homebrew packages**  | **MacPorts packages**             |
-  +=============================+========================+===================================+
-  | Compiler cache optimization | ``ccache``             | ``ccache``                        |
-  +-----------------------------+------------------------+-----------------------------------+
-  | Code linting                | ``clang-format llvm``  | clang-format included with        |
-  |                             |                        | ``clang``, need to select         |
-  |                             |                        | ``clang-XX llvm-XX`` versions     |
-  +-----------------------------+------------------------+-----------------------------------+
-  | Debugging                   | None                   | ``gdb ddd`` (ddd requires gdb)    |
-  +-----------------------------+------------------------+-----------------------------------+
++-----------------------------+----------------------------+-----------------------------------+
+| **Feature**                 | **Homebrew packages**      | **MacPorts packages**             |
++=============================+============================+===================================+
+| Compiler cache optimization | ``ccache``                 | ``ccache``                        |
++-----------------------------+----------------------------+-----------------------------------+
+| Code linting                | clang-format included with | clang-format included with        |
+|                             | ``llvm``, need to select   | ``clang``, need to select         |
+|                             | ``llvm@XX`` version        | ``clang-XX llvm-XX`` versions     |
++-----------------------------+----------------------------+-----------------------------------+
 
 .. note::
-  The ``llvm`` Homebrew package provides ``clang-tidy``, but please note that the binary is
-  placed at ``/opt/homebrew/opt/llvm/bin/clang-tidy`` so you may need to add this path to your
-  ``$PATH`` variable.
+
+  macOS development tools are based on clang, so installing llvm and clang using Homebrew or
+  MacPorts is typically unnecessary. However, ``clang-tidy`` might be missing, and the
+  ``clang-format`` version might be not the expected one. In these cases it is suggested to
+  install the ``llvm`` package either though Homebrew or MacPorts.
 
 .. note::
+
+  Homebrew provides a ``clang-format`` package, but its version might be incompatible with
+  the one used by |ns3|.
+
+  The ``llvm`` Homebrew package provides ``clang-tidy`` and ``clang-format``, but the binary
+  is placed at ``/opt/homebrew/opt/llvm@XX/bin/clang-tidy`` (where ``XX`` is the installed
+  version number such as ``18``), so you will need to add this path to your ``$PATH`` variable.
+
+.. note::
+
   Likewise, when using MacPorts, the ``clang-tidy`` and ``clang-format`` binaries will be
-  placed in ``/opt/local/libexec/llvm-XX/bin`` (where ``XX` is the installed version number
-  such as ``16``), so you will need to add this to your ``$PATH`` variable.
+  placed in ``/opt/local/libexec/llvm-XX/bin`` (where ``XX`` is the installed version number
+  such as ``18``), so you will need to add this to your ``$PATH`` variable.
 
 .. note::
+
   For debugging, ``lldb`` is the default debugger for llvm.  Memory checkers such as
   Memory Graph exist for macOS, but the ns-3 team doesn't have experience with it as a
   substitution for ``valgrind`` (which is reported to not work on M1 Macs).
@@ -109,42 +120,42 @@ Please see below subsections for Python-related package requirements.
 
 For MacPorts packages we show the most recent package version available as of early 2023.
 
-  +-----------------------------+----------------------------------+--------------------------+
-  | **Feature**                 | **Homebrew packages**            | **MacPort packages**     |
-  +=============================+==================================+==========================+
-  | Reading pcap traces         | ``wireshark``                    | ``wireshark4``           |
-  +-----------------------------+----------------------------------+--------------------------+
-  | Database support            | ``sqlite``                       | ``sqlite3``              |
-  +-----------------------------+----------------------------------+--------------------------+
-  | NetAnim animator            | ``qt@5``                         | ``qt513``                |
-  +-----------------------------+----------------------------------+--------------------------+
-  | MPI-based distributed       |                                  | ``openmpi``              |
-  | simulation                  | ``open-mpi``                     |                          |
-  +-----------------------------+----------------------------------+--------------------------+
-  | Building Doxygen            | ``doxygen graphviz imagemagick`` | ``doxygen graphviz``     |
-  |                             |                                  | ``ImageMagick``          |
-  +-----------------------------+----------------------------------+--------------------------+
-  | Sphinx documentation        | ``sphinx-doc texlive``           | ``dia texlive``          |
-  |                             |                                  | ``texlive-fonts-extra``  |
-  |                             |                                  | ``texlive-latex-extra``  |
-  |                             |                                  | ``py3XX-sphinx``, with   |
-  |                             |                                  | `XX`` the Python minor   |
-  |                             |                                  | version such as `12`     |
-  +-----------------------------+----------------------------------+--------------------------+
-  | Eigen3                      | ``eigen``                        | ``eigen3``               |
-  +-----------------------------+----------------------------------+--------------------------+
-  | GNU Scientific Library      | ``gsl``                          | ``gsl``                  |
-  +-----------------------------+----------------------------------+--------------------------+
-  | XML config store            | ``libxml2``                      | ``libxml2``              |
-  +-----------------------------+----------------------------------+--------------------------+
-  | GTK-based config store      | ``gtk+3``                        | ``gtk3`` or ``gtk4``     |
-  +-----------------------------+----------------------------------+--------------------------+
-  | Emulation with virtual      |                                  |                          |
-  | machines                    | Not available for macOS          | Not available for macOS  |
-  +-----------------------------+----------------------------------+--------------------------+
-  | Support for openflow,       | ``boost``                        | ``boost``                |
-  | CircularApertureAntennaModel|                                  |                          |
-  +-----------------------------+----------------------------------+--------------------------+
++-----------------------------+----------------------------------+--------------------------+
+| **Feature**                 | **Homebrew packages**            | **MacPort packages**     |
++=============================+==================================+==========================+
+| Reading pcap traces         | ``wireshark``                    | ``wireshark4``           |
++-----------------------------+----------------------------------+--------------------------+
+| Database support            | ``sqlite``                       | ``sqlite3``              |
++-----------------------------+----------------------------------+--------------------------+
+| NetAnim animator            | ``qt@5``                         | ``qt513``                |
++-----------------------------+----------------------------------+--------------------------+
+| MPI-based distributed       |                                  | ``openmpi``              |
+| simulation                  | ``open-mpi``                     |                          |
++-----------------------------+----------------------------------+--------------------------+
+| Building Doxygen            | ``doxygen graphviz imagemagick`` | ``doxygen graphviz``     |
+|                             |                                  | ``ImageMagick``          |
++-----------------------------+----------------------------------+--------------------------+
+| Sphinx documentation        | ``sphinx-doc texlive``           | ``dia texlive``          |
+|                             |                                  | ``texlive-fonts-extra``  |
+|                             |                                  | ``texlive-latex-extra``  |
+|                             |                                  | ``py3XX-sphinx``, with   |
+|                             |                                  | `XX`` the Python minor   |
+|                             |                                  | version such as `12`     |
++-----------------------------+----------------------------------+--------------------------+
+| Eigen3                      | ``eigen``                        | ``eigen3``               |
++-----------------------------+----------------------------------+--------------------------+
+| GNU Scientific Library      | ``gsl``                          | ``gsl``                  |
++-----------------------------+----------------------------------+--------------------------+
+| XML config store            | ``libxml2``                      | ``libxml2``              |
++-----------------------------+----------------------------------+--------------------------+
+| GTK-based config store      | ``gtk+3``                        | ``gtk3`` or ``gtk4``     |
++-----------------------------+----------------------------------+--------------------------+
+| Emulation with virtual      |                                  |                          |
+| machines                    | Not available for macOS          | Not available for macOS  |
++-----------------------------+----------------------------------+--------------------------+
+| Support for openflow,       | ``boost``                        | ``boost``                |
+| CircularApertureAntennaModel|                                  |                          |
++-----------------------------+----------------------------------+--------------------------+
 
 Caveats and troubleshooting
 ***************************

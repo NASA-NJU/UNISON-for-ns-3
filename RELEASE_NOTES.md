@@ -12,6 +12,108 @@ a [GitLab.com issue tracker](https://gitlab.com/nsnam/ns-3-dev/-/issues) number,
 and references prefixed by '!' refer to a
 [GitLab.com merge request](https://gitlab.com/nsnam/ns-3-dev/-/merge_requests) number.
 
+## Release 3.46
+
+This release is available from:
+<https://www.nsnam.org/release/ns-3.46.tar.bz2>
+
+### Supported platforms
+
+This release is intended to work on systems with the following minimal
+requirements (Note: not all ns-3 features are available on all systems):
+
+- g++-11.1 or later, or LLVM/clang++-17 or later
+- Python 3.8 or later
+- CMake 3.20 or later
+- (macOS only) Xcode 16.2 or later
+- (Windows only) Msys2/MinGW64, Msys2/UCRT64 and ClangCL/MSVC toolchains, or WSL2
+
+Note that the minimum C++ compiler versions have increased since the last release.
+
+The version of clang-format enforced by the check-style-clang-format.py script for
+this release is version 20 only; the previous ns-3 release was compatible with versions 15-19.
+
+Version 20 of the clang-tidy linter is now supported and recommended, although versions 15-19
+are still compatible.
+
+Python API requires [Cppyy](https://cppyy.readthedocs.io/en/latest/installation.html) and has only
+been tested on Linux. As of this release, the latest known version to work with ns-3 is cppyy==3.5.0.
+
+### New user-visible features
+
+ns-3 has switched to the C++23 standard by default.
+
+The wimax module was removed and moved to the ns-3 App Store.
+
+- (antenna) !2516 - Reformatted documentation
+- (documentation) !2519 - Improve models documentation look and feel
+- (core) A stacktrace will now be printed on fatal errors in supported platforms.
+- (zigbee) !2512 - Added Groupcast (Multicast) support
+- (zigbee) Added basic APS layer support
+- (spectrum) !2452 - Added new wraparound model support for spectrum channels, and the hexagonal wraparound model, typical of cellular deployments
+
+### Bugs fixed
+
+- (examples) #1146 - Fixed three-gpp-v2v-channel-example to prevent pathloss from being incorrectly accumulated over time
+- (internet) #851 - NeighborCacheHelper entries are no longer removed due to LinkUp events
+- (internet) #809 - Fixed IPv4,6 Raw Socket fragmentation issue
+- (internet) #1251 - Added check for longest prefix match in GlobalRouting
+- (stats) #295 - Added 100 ms timeout for sqlite3 operations to prevent hangs
+- (wifi) !2524 - Fix corrupted radiotap header when EHT is used.
+- (wifi) Block transmission on other EMLSR links as soon as it is detected that the main PHY is receiving an A-MPDU, to prevent that the EMLSR client starts an UL TXOP before the end of the A-MPDU
+- (wifi) EMLSR clients can switch to listening operations when receiving the MAC header of a broadcast frame that is not a Trigger Frame nor a Multi-STA BA
+- (wifi) Immediate channel access should not be postponed by a backoff slot if channel access is requested at a slot boundary
+- (wifi) Reset backoffs only if PHY went to sleep or off for more than a threshold
+
+## Release 3.45
+
+This release is available from:
+<https://www.nsnam.org/release/ns-3.45.tar.bz2>
+
+### Supported platforms
+
+This release is intended to work on systems with the following minimal
+requirements (Note: not all ns-3 features are available on all systems):
+
+- g++-10.1 or later, or LLVM/clang++-11 or later
+- Python 3.8 or later
+- CMake 3.13 or later
+- (macOS only) Xcode 13.1.6 or later
+- (Windows only) Msys2/MinGW64 and Msys2/UCRT64 toolchains or WSL2
+
+Python API requires [Cppyy](https://cppyy.readthedocs.io/en/latest/installation.html) and has only
+been tested on Linux. As of this release, the latest known version to work with ns-3 is cppyy==3.5.0.
+
+The required Doxygen version for documentation generation is now version 1.13.
+
+Note that the ns-3 allinone archive has been redesigned for this release; the
+allinone release no longer contains the `netanim` animator or the `bake` build tools
+but instead contains ns-3 plus additional contributed ns-3 modules that are known
+to work with the release.
+
+### New user-visible features
+
+- (dsr) !2403 - Reformatted documentation and added a new concept figure.
+- (flow-monitor) !2387 - Reformatted documentation and added a new concept figure.
+- (internet-apps) !2084 - GSoC 2024 DHCPV6 application added.
+- (lr-wpan) - !2429 - Renamed example lr-wpan-mlme to lr-wpan-beacon-mode.
+- (lr-wpan) - !2429 - Documentation update and small reformat fixes.
+- (wifi) 320 MHz channel support was added to the 802.11be model
+- (wifi) Added the `ProtectSingleExchange` attribute to the `QosFrameExchangeManager` to choose whether the NAV protection should cover the entire TXOP or only the current frame exchange when the TXOP limit is non-zero. In that case, the Duration/ID field in frames establishing the protection is set to the time remaining until the end of the current frame exchange. It is also possible to select whether the NAV duration should be extended by an additional time to protect beyond end of the immediate frame exchange via the `SingleExchangeProtectionSurplus` attribute of the `QosFrameExchangeManager`.
+
+### Bugs fixed
+
+- (bindings) #1187 - Fix library filtering to skip non-ns-3 libraries with "ns3" in their names.
+- (flow-monitor) #1202 - Create XML file in text mode
+- (internet) !2486 - Fix #809 - Ping for v4,v6 works now if fragmentation occurs.
+- (mobility) !2397 - Fix Rectangle::GetClosestSideOrCorner. It could assign the incorrect side when the checked position was outside the rectangle.
+- (wifi) #2368 - Fix various issues related to Content Channels and RU allocation. Fixes mostly covers cases where OFDMA is used with central 26 tones, where a single user is being assigned the whole PPDU bandwidth or where a RU is larger than 20 MHz.
+- (wifi) Various fixes to the EMLSR model have been made
+- (wifi) Fix the time the `NSlotsLeftAlert` trace source of `ChannelAccessManager` is fired (it cannot be earlier than the access grant start time)
+- (wifi) Fix the EIFS computation, which depends on the modulation class of the PPDU whose reception failed rather than on the latest standard supported by a device
+- (wifi) #1158 - Reintroduce WifiPpdu's destructor due to PIMPL
+- (zigbee) !2383 - Fix malformed RREP command with missing command options field.
+
 ## Release 3.44
 
 This release adds the zigbee module and otherwise contains maintenance and small feature updates
@@ -61,6 +163,8 @@ The minimum clang-format version is version 15.
 - (wifi) 2009! - Added WifiTxStatsHelper for Wi-Fi MAC-level tracing.
 - (wifi) - Added support for 802.11aa groupcast with retries (GCR). Both unsolicited retries (GCR-UR) and Block Ack (GCR-BA) mechanisms are implemented.
 - (zigbee) Added a new Zigbee module.
+- (wifi) Trigger frames have been extended to support Special User Info field
+- (wifi) Added support for 802.11be STAs to operate on 320 MHz in 6 GHz band.
 
 ### Bugs fixed
 

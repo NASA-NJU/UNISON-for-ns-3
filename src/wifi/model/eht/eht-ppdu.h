@@ -41,7 +41,7 @@ class EhtPpdu : public HePpdu
         uint8_t m_bandwidth : 3 {0};    ///< Bandwidth field
         uint8_t m_bssColor : 6 {0};     ///< BSS color field
         uint8_t m_ppduType : 2 {0};     ///< PPDU Type And Compressed Mode field
-    };                                  // struct EhtTbPhyHeader
+    };
 
     /**
      * PHY header for EHT MU PPDUs
@@ -65,7 +65,7 @@ class EhtPpdu : public HePpdu
                                                      //!< carried in EHT-SIG common subfields
 
         HeSigBContentChannels m_contentChannels; //!< EHT-SIG Content Channels
-    };                                           // struct EhtMuPhyHeader
+    };
 
     /// type of the EHT PHY header
     using EhtPhyHeader = std::variant<std::monostate, EhtTbPhyHeader, EhtMuPhyHeader>;
@@ -90,6 +90,7 @@ class EhtPpdu : public HePpdu
             TxPsdFlag flag);
 
     WifiPpduType GetType() const override;
+    Ptr<const WifiPsdu> GetPsdu(uint8_t bssColor, uint16_t staId = SU_STA_ID) const override;
     Ptr<WifiPpdu> Copy() const override;
 
     /**
@@ -150,6 +151,12 @@ class EhtPpdu : public HePpdu
                                     uint8_t ehtPpduType,
                                     std::optional<bool> isLow80MHz);
 
+  protected:
+    WifiRu::RuSpec GetRuSpec(std::size_t ruAllocIndex,
+                             MHz_u bw,
+                             RuType ruType,
+                             std::size_t phyIndex) const override;
+
   private:
     bool IsDlMu() const override;
     bool IsUlMu() const override;
@@ -161,7 +168,7 @@ class EhtPpdu : public HePpdu
      * @param txVector the TXVECTOR that was used for this PPDU
      * @param ppduDuration the transmission duration of this PPDU
      */
-    void SetPhyHeaders(const WifiTxVector& txVector, Time ppduDuration);
+    void SetPhyHeaders(const WifiTxVector& txVector, Time ppduDuration) override;
 
     /**
      * Fill in the EHT PHY header.
@@ -170,8 +177,26 @@ class EhtPpdu : public HePpdu
      */
     void SetEhtPhyHeader(const WifiTxVector& txVector);
 
+    /**
+     * Convert channel width expressed in MHz to bandwidth field encoding in U-SIG.
+     *
+     * @param channelWidth the channel width in MHz to use for the transmission
+     * @param channel the operating channel of the PHY
+     * @return the value used to encode the bandwidth field in U-SIG
+     */
+    static uint8_t GetChannelWidthEncodingFromMhz(MHz_u channelWidth,
+                                                  const WifiPhyOperatingChannel& channel);
+
+    /**
+     * Convert channel width expressed in MHz from bandwidth field encoding in U-SIG.
+     *
+     * @param bandwidth the value of the bandwidth field in U-SIG
+     * @return the channel width in MHz
+     */
+    static MHz_u GetChannelWidthMhzFromEncoding(uint8_t bandwidth);
+
     EhtPhyHeader m_ehtPhyHeader; //!< the EHT PHY header
-};                               // class EhtPpdu
+};
 
 } // namespace ns3
 

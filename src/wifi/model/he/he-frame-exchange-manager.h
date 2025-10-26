@@ -99,13 +99,13 @@ class HeFrameExchangeManager : public VhtFrameExchangeManager
      * Return whether the received frame is classified as intra-BSS. It is assumed that
      * this station is already associated with an AP.
      *
-     * @param psdu the received PSDU
+     * @param hdr the MAC header of the received PSDU
      * @param txVector TX vector of the received PSDU
      * @return true if the received frame is classified as intra-BSS, false otherwise
      *         (the received frame is classified as inter-BSS or it cannot be classified
      *         as intra-BSS or inter-BSS)
      */
-    bool IsIntraBssPpdu(Ptr<const WifiPsdu> psdu, const WifiTxVector& txVector) const;
+    bool IsIntraBssPpdu(const WifiMacHeader& hdr, const WifiTxVector& txVector) const;
 
     /**
      * This method is intended to be called a SIFS after the reception of a Trigger Frame
@@ -144,7 +144,9 @@ class HeFrameExchangeManager : public VhtFrameExchangeManager
     void NormalAckTimeout(Ptr<WifiMpdu> mpdu, const WifiTxVector& txVector) override;
     void BlockAckTimeout(Ptr<WifiPsdu> psdu, const WifiTxVector& txVector) override;
     void CtsTimeout(Ptr<WifiMpdu> rts, const WifiTxVector& txVector) override;
-    void UpdateNav(Ptr<const WifiPsdu> psdu, const WifiTxVector& txVector) override;
+    void UpdateNav(const WifiMacHeader& hdr,
+                   const WifiTxVector& txVector,
+                   const Time& surplus = Time{0}) override;
     void NavResetTimeout() override;
     void StartProtection(const WifiTxParameters& txParams) override;
     void ProtectionCompleted() override;
@@ -190,13 +192,6 @@ class HeFrameExchangeManager : public VhtFrameExchangeManager
      * @param txVector the TXVECTOR used to transmit the MU-RTS frame
      */
     virtual void CtsAfterMuRtsTimeout(Ptr<WifiMpdu> muRts, const WifiTxVector& txVector);
-
-    /**
-     * Called when no CTS frame is received after an MU-RTS.
-     *
-     * @param psduMap the PSDU map protected by the failed MU-RTS
-     */
-    void DoCtsAfterMuRtsTimeout(const WifiPsduMap& psduMap);
 
     /**
      * Send CTS after receiving an MU-RTS.

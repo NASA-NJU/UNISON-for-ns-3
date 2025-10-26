@@ -54,6 +54,8 @@ class EhtPhy : public HePhy
                             const WifiTxVector& txVector,
                             Time ppduDuration) override;
     WifiMode GetSigBMode(const WifiTxVector& txVector) const override;
+    Time CalculateNonHeDurationForHeTb(const WifiTxVector& txVector) const override;
+    Time CalculateNonHeDurationForHeMu(const WifiTxVector& txVector) const override;
 
     /**
      * Initialize all EHT modes.
@@ -249,9 +251,12 @@ class EhtPhy : public HePhy
                                 PhyFieldRxStatus status,
                                 WifiPpduField field) override;
     WifiPhyRxfailureReason GetFailureReason(WifiPpduField field) const override;
-    Time CalculateNonHeDurationForHeTb(const WifiTxVector& txVector) const override;
-    Time CalculateNonHeDurationForHeMu(const WifiTxVector& txVector) const override;
     uint32_t GetSigBSize(const WifiTxVector& txVector) const override;
+    dBm_u GetCcaThreshold(const Ptr<const WifiPpdu> ppdu,
+                          WifiChannelListType channelType) const override;
+    const std::map<MHz_u, WifiChannelListType>& GetCcaSecondaryChannels() const override;
+    PhyEntity::CcaIndication GetCcaIndicationOnSecondary(const Ptr<const WifiPpdu> ppdu) override;
+    std::vector<Time> GetPer20MHzDurations(const Ptr<const WifiPpdu> ppdu) override;
 
     /**
      * Create and return the EHT MCS corresponding to
@@ -278,8 +283,24 @@ class EhtPhy : public HePhy
      */
     static uint64_t CalculateNonHtReferenceRate(WifiCodeRate codeRate, uint16_t constellationSize);
 
+    /**
+     * @param channelWidth the channel width
+     * @return he number of usable subcarriers for data
+     */
+    static uint16_t GetUsableSubcarriers(MHz_u channelWidth);
+
+    /**
+     * Compute the CCA threshold for Per 20MHz check.
+     * This threshold is used for CCA check when signal is not occupying P20 or for Per 20MHz CCA
+     * check.
+     *
+     * @param ppdu the incoming PPDU or nullptr for any signal
+     * @return the CCA threshold for Per 20MHz check
+     */
+    dBm_u Per20MHzCcaThreshold(const Ptr<const WifiPpdu> ppdu) const;
+
     static const PpduFormats m_ehtPpduFormats; //!< EHT PPDU formats
-};                                             // class EhtPhy
+};
 
 } // namespace ns3
 

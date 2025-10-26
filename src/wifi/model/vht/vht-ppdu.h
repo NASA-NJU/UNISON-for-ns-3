@@ -124,7 +124,9 @@ class VhtPpdu : public OfdmPpdu
 
         /// This is used to decide whether MU SIG-B should be added or not
         bool m_mu;
-    }; // class VhtSigHeader
+
+        // end of class VhtSigHeader
+    };
 
     /**
      * Create a VHT PPDU.
@@ -187,7 +189,7 @@ class VhtPpdu : public OfdmPpdu
                                    const VhtSigHeader& vhtSig) const;
 
     VhtSigHeader m_vhtSig; //!< the VHT-SIG PHY header
-};                         // class VhtPpdu
+};
 
 } // namespace ns3
 

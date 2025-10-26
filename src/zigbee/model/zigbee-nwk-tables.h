@@ -8,8 +8,8 @@
  *  Alberto Gallegos Ramonet <alramonet@is.tokushima-u.ac.jp>
  */
 
-#ifndef ZIGBEE_TABLES_H
-#define ZIGBEE_TABLES_H
+#ifndef ZIGBEE_NWK_TABLES_H
+#define ZIGBEE_NWK_TABLES_H
 
 #include "zigbee-nwk-fields.h"
 
@@ -924,10 +924,10 @@ class BroadcastTransactionRecord : public SimpleRefCount<BroadcastTransactionRec
     void Print(Ptr<OutputStreamWrapper> stream) const;
 
   private:
-    Mac16Address m_srcAddr;        //!< The 16-bit network address of the broadcast initiator.
-    uint8_t m_sequenceNumber;      //!< The RREQ sequence number of the initiator's broadcast.
-    Time m_expirationTime;         //!< An indicator of when the entry expires
-    uint8_t m_broadcastRetryCount; //!< The number of times this BCST has been retried.
+    Mac16Address m_srcAddr;           //!< The 16-bit network address of the broadcast initiator.
+    uint8_t m_sequenceNumber{0};      //!< The RREQ sequence number of the initiator's broadcast.
+    Time m_expirationTime;            //!< An indicator of when the entry expires
+    uint8_t m_broadcastRetryCount{1}; //!< The number of times this BCST has been retried.
 };
 
 /**
@@ -1298,6 +1298,13 @@ class BroadcastTransactionTable
     bool LookUpEntry(uint8_t seq, Ptr<BroadcastTransactionRecord>& entryFound);
 
     /**
+     * Delete a broadcast transaction record (BTR) from the broadcast transaction table (BTT).
+     *
+     * @param seq The sequence number of the broadcasted frame to delete.
+     */
+    void Delete(uint8_t seq);
+
+    /**
      * Purge expired entries from the broadcast transaction table (BTT).
      */
     void Purge();
@@ -1324,4 +1331,4 @@ class BroadcastTransactionTable
 } // namespace zigbee
 } // namespace ns3
 
-#endif /* ZIGBEE_TABLES_H */
+#endif /* ZIGBEE_NWK_TABLES_H */

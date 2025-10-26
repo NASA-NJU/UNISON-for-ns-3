@@ -1,19 +1,19 @@
 # ##############################################################################
 # Required CMake version            #
 # ##############################################################################
-cmake_minimum_required(VERSION 3.13..3.13)
+cmake_minimum_required(VERSION 3.20..3.20)
 
 # ##############################################################################
 # Project name                        #
 # ##############################################################################
-project(NS3 CXX C)
+project(NS3 CXX)
 
 file(STRINGS VERSION NS3_VER)
 
 # minimum compiler versions
-set(AppleClang_MinVersion 13.1.6)
-set(Clang_MinVersion 11.0.0)
-set(GNU_MinVersion 10.1.0)
+set(AppleClang_MinVersion 15.0.0)
+set(Clang_MinVersion 17.0.0)
+set(GNU_MinVersion 11.0.0)
 
 # common options
 option(NS3_ASSERT "Enable assert on failure" OFF)
@@ -102,7 +102,7 @@ set(NS3_ENABLED_MODULES ""
     CACHE STRING "List of modules to enable (e.g. core;network;internet)"
 )
 set(NS3_DISABLED_MODULES "" CACHE STRING
-                                  "List of modules to disable (e.g. lte;wimax)"
+                                  "List of modules to disable (e.g. lte;wifi)"
 )
 
 # Filter in the modules from which examples and tests will be built

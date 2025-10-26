@@ -631,13 +631,6 @@ Ipv4L3Protocol::Receive(Ptr<NetDevice> device,
         }
     }
 
-    for (auto i = m_sockets.begin(); i != m_sockets.end(); ++i)
-    {
-        NS_LOG_LOGIC("Forwarding to raw socket");
-        Ptr<Ipv4RawSocketImpl> socket = *i;
-        socket->ForwardUp(packet, ipHeader, ipv4Interface);
-    }
-
     if (m_enableDpd && ipHeader.GetDestination().IsMulticast() && UpdateDuplicate(packet, ipHeader))
     {
         NS_LOG_LOGIC("Dropping received packet -- duplicate.");
@@ -1095,6 +1088,14 @@ Ipv4L3Protocol::LocalDeliver(Ptr<const Packet> packet, const Ipv4Header& ip, uin
 
     m_localDeliverTrace(ipHeader, p, iif);
 
+    Ptr<Ipv4Interface> ipv4Interface = GetInterface(iif);
+
+    for (auto& socket : m_sockets)
+    {
+        NS_LOG_INFO("Delivering to raw socket " << socket);
+        socket->ForwardUp(p, ipHeader, ipv4Interface);
+    }
+
     Ptr<IpL4Protocol> protocol = GetProtocol(ipHeader.GetProtocol(), iif);
     if (protocol)
     {
@@ -1398,19 +1399,6 @@ bool
 Ipv4L3Protocol::GetIpForward() const
 {
     return m_ipForward;
-}
-
-void
-Ipv4L3Protocol::SetWeakEsModel(bool model)
-{
-    NS_LOG_FUNCTION(this << model);
-    m_strongEndSystemModel = !model;
-}
-
-bool
-Ipv4L3Protocol::GetWeakEsModel() const
-{
-    return !m_strongEndSystemModel;
 }
 
 void

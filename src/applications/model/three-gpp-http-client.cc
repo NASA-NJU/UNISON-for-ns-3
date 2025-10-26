@@ -59,6 +59,7 @@ ThreeGppHttpClient::GetTypeId()
                 PointerValue(),
                 MakePointerAccessor(&ThreeGppHttpClient::m_httpVariables),
                 MakePointerChecker<ThreeGppHttpVariables>())
+            // NS_DEPRECATED_3_44
             .AddAttribute("RemoteServerAddress",
                           "The address of the destination server.",
                           AddressValue(),
@@ -66,6 +67,7 @@ ThreeGppHttpClient::GetTypeId()
                           MakeAddressChecker(),
                           TypeId::SupportLevel::DEPRECATED,
                           "Replaced by Remote in ns-3.44.")
+            // NS_DEPRECATED_3_44
             .AddAttribute("RemoteServerPort",
                           "The destination port of the outbound packets.",
                           UintegerValue(80), // the default HTTP port
@@ -364,10 +366,8 @@ ThreeGppHttpClient::ReceivedDataCallback(Ptr<Socket> socket)
             NS_FATAL_ERROR("Invalid state " << GetStateString() << " for ReceivedData().");
             break;
         }
-
-    } // end of `while ((packet = socket->RecvFrom (from)))`
-
-} // end of `void ReceivedDataCallback (Ptr<Socket> socket)`
+    }
+}
 
 void
 ThreeGppHttpClient::OpenConnection()
@@ -435,7 +435,7 @@ ThreeGppHttpClient::OpenConnection()
                                 MakeCallback(&ThreeGppHttpClient::ErrorCloseCallback, this));
     m_socket->SetRecvCallback(MakeCallback(&ThreeGppHttpClient::ReceivedDataCallback, this));
     m_socket->SetAttribute("MaxSegLifetime", DoubleValue(0.02)); // 20 ms.
-} // end of `void OpenConnection ()`
+}
 
 void
 ThreeGppHttpClient::RequestMainObject()
@@ -472,8 +472,7 @@ ThreeGppHttpClient::RequestMainObject()
         SwitchToState(EXPECTING_MAIN_OBJECT);
         m_pageLoadStartTs = Simulator::Now(); // start counting page loading time
     }
-
-} // end of `void RequestMainObject ()`
+}
 
 void
 ThreeGppHttpClient::RequestEmbeddedObject()
@@ -518,8 +517,7 @@ ThreeGppHttpClient::RequestEmbeddedObject()
         m_embeddedObjectsToBeRequested--;
         SwitchToState(EXPECTING_EMBEDDED_OBJECT);
     }
-
-} // end of `void RequestEmbeddedObject ()`
+}
 
 void
 ThreeGppHttpClient::ReceiveMainObject(Ptr<Packet> packet, const Address& from)
@@ -573,7 +571,7 @@ ThreeGppHttpClient::ReceiveMainObject(Ptr<Packet> packet, const Address& from)
     }
 
     EnterParsingTime();
-} // end of `void ReceiveMainObject (Ptr<Packet> packet)`
+}
 
 void
 ThreeGppHttpClient::ReceiveEmbeddedObject(Ptr<Packet> packet, const Address& from)
@@ -643,7 +641,7 @@ ThreeGppHttpClient::ReceiveEmbeddedObject(Ptr<Packet> packet, const Address& fro
         FinishReceivingPage(); // trigger callback for page loading time
         EnterReadingTime();
     }
-} // end of `void ReceiveEmbeddedObject (Ptr<Packet> packet)`
+}
 
 void
 ThreeGppHttpClient::Receive(Ptr<Packet> packet)
@@ -680,11 +678,9 @@ ThreeGppHttpClient::Receive(Ptr<Packet> packet)
      */
     if (m_objectBytesToBeReceived < contentSize)
     {
-        NS_LOG_WARN(this << " The received packet"
-                         << " (" << contentSize << " bytes of content)"
-                         << " is larger than"
-                         << " the content that we expected to receive"
-                         << " (" << m_objectBytesToBeReceived << " bytes).");
+        NS_LOG_WARN(this << " The received packet (" << contentSize << " bytes of content)"
+                         << " is larger than the content that we expected to receive ("
+                         << m_objectBytesToBeReceived << " bytes).");
         // Stop expecting any more packet of this object.
         m_objectBytesToBeReceived = 0;
         m_constructedPacket = nullptr;
@@ -698,8 +694,7 @@ ThreeGppHttpClient::Receive(Ptr<Packet> packet)
             m_constructedPacket->AddAtEnd(packetCopy);
         }
     }
-
-} // end of `void Receive (packet)`
+}
 
 void
 ThreeGppHttpClient::EnterParsingTime()
@@ -754,8 +749,7 @@ ThreeGppHttpClient::ParseMainObject()
         FinishReceivingPage(); // trigger callback for page loading time
         EnterReadingTime();
     }
-
-} // end of `void ParseMainObject ()`
+}
 
 void
 ThreeGppHttpClient::EnterReadingTime()
@@ -816,10 +810,9 @@ ThreeGppHttpClient::SwitchToState(ThreeGppHttpClient::State_t state)
     {
         if (m_objectBytesToBeReceived > 0)
         {
-            NS_FATAL_ERROR("Cannot start a new receiving session"
-                           << " if the previous object"
-                           << " (" << m_objectBytesToBeReceived << " bytes)"
-                           << " is not completely received yet.");
+            NS_FATAL_ERROR("Cannot start a new receiving session if the previous object ("
+                           << m_objectBytesToBeReceived
+                           << " bytes) is not completely received yet.");
         }
     }
 

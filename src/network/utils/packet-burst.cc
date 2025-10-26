@@ -11,8 +11,8 @@
 #include "ns3/log.h"
 #include "ns3/packet.h"
 
+#include <cstdint>
 #include <list>
-#include <stdint.h>
 
 namespace ns3
 {
@@ -56,7 +56,7 @@ Ptr<PacketBurst>
 PacketBurst::Copy() const
 {
     NS_LOG_FUNCTION(this);
-    Ptr<PacketBurst> burst = Create<PacketBurst>();
+    Ptr<PacketBurst> burst = CreateObject<PacketBurst>();
 
     for (auto iter = m_packets.begin(); iter != m_packets.end(); ++iter)
     {

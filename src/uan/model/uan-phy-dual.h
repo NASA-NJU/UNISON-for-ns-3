@@ -47,7 +47,8 @@ class UanPhyCalcSinrDual : public UanPhyCalcSinr
                       UanPdp pdp,
                       const UanTransducer::ArrivalList& arrivalList) const override;
 
-}; // class UanPhyCalcSinrDual
+    // end of class UanPhyCalcSinrDual
+};
 
 /**
  * @ingroup uan
@@ -229,7 +230,7 @@ class UanPhyDual : public UanPhy
 
     /** A packet was received successfully. */
     ns3::TracedCallback<Ptr<const Packet>, double, UanTxMode> m_rxOkLogger;
-    /** A packet was received unsuccessfuly. */
+    /** A packet was received unsuccessfully. */
     ns3::TracedCallback<Ptr<const Packet>, double, UanTxMode> m_rxErrLogger;
     /** A packet was sent from this Phy. */
     ns3::TracedCallback<Ptr<const Packet>, double, UanTxMode> m_txLogger;
@@ -257,7 +258,8 @@ class UanPhyDual : public UanPhy
   protected:
     void DoDispose() override;
 
-}; // class UanPhyDual
+    // end of class UanPhyDual
+};
 
 } // namespace ns3
 

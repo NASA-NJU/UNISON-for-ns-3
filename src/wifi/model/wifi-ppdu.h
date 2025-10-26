@@ -73,7 +73,7 @@ class WifiPpdu : public SimpleRefCount<WifiPpdu>
     /**
      * Destructor for WifiPpdu.
      */
-    virtual ~WifiPpdu() = default;
+    virtual ~WifiPpdu();
 
     /**
      * Get the TXVECTOR used to send the PPDU.
@@ -219,7 +219,7 @@ class WifiPpdu : public SimpleRefCount<WifiPpdu>
                                          always be obtained from the PHY headers, especially for
                                          non-HT PPDU, since we do not sense the spectrum to
                                          determine the occupied channel width for simplicity. */
-};                          // class WifiPpdu
+};
 
 /**
  * @brief Stream insertion operator.
