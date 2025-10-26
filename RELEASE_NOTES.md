@@ -12,6 +12,44 @@ a [GitLab.com issue tracker](https://gitlab.com/nsnam/ns-3-dev/-/issues) number,
 and references prefixed by '!' refer to a
 [GitLab.com merge request](https://gitlab.com/nsnam/ns-3-dev/-/merge_requests) number.
 
+## Release 3.46.1
+
+ns-3.46.1 is a small update to ns-3.46 to fix build issues discovered after release.
+There should be no model behavior or API changes compared with ns-3.46.
+
+This release is available from:
+<https://www.nsnam.org/release/ns-3.46.1.tar.bz2>
+
+### Supported platforms
+
+This release is intended to work on systems with the following minimal
+requirements (Note: not all ns-3 features are available on all systems):
+
+- g++-11.1 or later, or LLVM/clang++-17 or later
+- Python 3.8 or later
+- CMake 3.20 or later
+- (macOS only) Xcode 16.2 or later
+- (Windows only) Msys2/MinGW64, Msys2/UCRT64 and ClangCL/MSVC toolchains, or WSL2
+
+The version of clang-format enforced by the check-style-clang-format.py script for
+this release is version 20 only.
+
+Version 20 of the clang-tidy linter is now supported and recommended, although versions 15-19
+are still compatible.
+
+Python API requires [Cppyy](https://cppyy.readthedocs.io/en/latest/installation.html) and has only
+been tested on Linux. As of this release, the latest known version to work with ns-3 is cppyy==3.5.0.
+
+### New user-visible features
+
+- (doc) New module documentation for mobility and propagation modules
+
+### Bugs fixed
+
+- (build) The ns3 script was not compatible with Python 3.14
+- (build) A missing header include in test.cc was breaking the g++-12 build
+- (build) Fixed OpenMPI-based build on Alpine Linux
+
 ## Release 3.46
 
 This release is available from:
