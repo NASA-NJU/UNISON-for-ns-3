@@ -182,7 +182,7 @@ LogicalProcess::ProcessOneRound()
     Time grantedTime =
         Min(MtpInterface::GetSmallestTime() + m_lookAhead, MtpInterface::GetNextPublicTime());
 
-    auto start = std::chrono::system_clock::now();
+    auto start = std::chrono::steady_clock::now();
 
     // process events
     while (Next() <= grantedTime)
@@ -199,7 +199,7 @@ LogicalProcess::ProcessOneRound()
         next.impl->Unref();
     }
 
-    auto end = std::chrono::system_clock::now();
+    auto end = std::chrono::steady_clock::now();
     m_executionTime = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
 }
 
