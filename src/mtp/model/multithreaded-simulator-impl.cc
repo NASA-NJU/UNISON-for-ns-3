@@ -138,7 +138,11 @@ MultithreadedSimulatorImpl::ScheduleWithContext(uint32_t context,
                                                 EventImpl* event)
 {
     NS_LOG_FUNCTION(this << context << delay.GetTimeStep() << event);
-    LogicalProcess* remote = MtpInterface::GetSystem(NodeList::GetNode(context)->GetSystemId());
+    if (m_savedNodeList.GetN() <= context)
+    {
+        m_savedNodeList = NodeContainer::GetGlobal();
+    }
+    LogicalProcess* remote = MtpInterface::GetSystem(m_savedNodeList.Get(context)->GetSystemId());
     MtpInterface::GetSystem()->ScheduleWithContext(remote, context, delay, event);
 }
 

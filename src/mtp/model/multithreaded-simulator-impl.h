@@ -31,6 +31,7 @@
 #include "ns3/nstime.h"
 #include "ns3/object-factory.h"
 #include "ns3/simulator-impl.h"
+#include "ns3/node-container.h"
 
 #include <list>
 
@@ -94,6 +95,7 @@ class MultithreadedSimulatorImpl : public SimulatorImpl
     Time m_minLookahead;
     TypeId m_schedulerTypeId;
     std::list<EventId> m_destroyEvents;
+    NodeContainer m_savedNodeList;
 };
 
 } // namespace ns3
