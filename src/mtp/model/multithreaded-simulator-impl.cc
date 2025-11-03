@@ -138,12 +138,10 @@ MultithreadedSimulatorImpl::ScheduleWithContext(uint32_t context,
                                                 EventImpl* event)
 {
     NS_LOG_FUNCTION(this << context << delay.GetTimeStep() << event);
-    if (m_savedNodeList.GetN() <= context)
-    {
-        m_savedNodeList = NodeContainer::GetGlobal();
-    }
-    LogicalProcess* remote = MtpInterface::GetSystem(m_savedNodeList.Get(context)->GetSystemId());
-    MtpInterface::GetSystem()->ScheduleWithContext(remote, context, delay, event);
+    const bool useSaved = (context < m_savedNodeList.GetN());
+    Ptr<Node> node = useSaved ? m_savedNodeList.Get(context) : NodeList::GetNode(context);
+    LogicalProcess* remote = MtpInterface::GetSystem(node->GetSystemId());
+    remote->ScheduleWithContext(remote, context, delay, event);
 }
 
 EventId
@@ -303,6 +301,7 @@ MultithreadedSimulatorImpl::Partition()
     NS_LOG_FUNCTION(this);
     uint32_t systemId = 0;
     const NodeContainer nodes = NodeContainer::GetGlobal();
+    m_savedNodeList = NodeContainer::GetGlobal();
     bool* visited = new bool[nodes.GetN()]{false};
     std::queue<Ptr<Node>> q;
 
